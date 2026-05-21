@@ -1,0 +1,6 @@
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "commit_message": {
+    "prompt": "按照 Conventional Commits 格式用英语生成 commit 信息，命令式，首行≤50字，仅多模块加scope。复杂变更用-列表补充。只返回commit message。"
+  }
+}
