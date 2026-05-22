@@ -1,6 +1,6 @@
-# RSP：Rules, Spec, Plan
+# RSP：Rules, Specs, Plans
 
-RSP = **Rules（规则）、Spec（规格）、Plan（计划）** — 轻量级 AI 辅助开发工作流。
+RSP = **Rules（规则）、Specs（规格）、Plans（计划）** — 轻量级 AI 辅助开发工作流。
 
 ## 快速开始
 
@@ -33,7 +33,7 @@ cd my-project && rsp init
 .rsp/
 ├── config.yaml                # 项目配置
 ├── rules/                     # 技术约束
-├── spec/                      # 项目级架构
+├── specs/                     # 项目级架构
 │   └── INDEX.md               # 从归档提取的 spec 摘要
 ├── features/                  # 特性文件
 │   ├── auth/

@@ -1,6 +1,6 @@
-# RSP: Rules, Spec, Plan
+# RSP: Rules, Specs, Plans
 
-RSP = **Rules, Spec, Plan** — a lightweight AI-assisted development workflow.
+RSP = **Rules, Specs, Plans** — a lightweight AI-assisted development workflow.
 
 ## Quick start
 
@@ -34,7 +34,7 @@ For other tools (Cursor, Claude Code, Copilot), add the path to the appropriate 
 ├── config.yaml                # project config (custom statuses, priorities, sections)
 ├── rules/                     # technical constraints, long-lived
 │   └── rsp-rules.md
-├── spec/                      # project-level architecture
+├── specs/                     # project-level architecture
 │   └── INDEX.md               # extracted spec summaries from archived features
 ├── features/                  # feature files (flat or nested)
 │   ├── login.md

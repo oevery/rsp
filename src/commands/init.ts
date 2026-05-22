@@ -21,10 +21,11 @@ async function detectProjectName(): Promise<string> {
 
 /** AGENTS.md body declaring RSP collaboration mode */
 const AGENTS_BODY = `## Collaboration Mode
-This project uses **RSP** (Rules, Spec, Plan) — see \`.rsp/rules/\` for the full workflow definition (start with \`rsp-rules.md\`).
+This project uses **RSP** (Rules, Specs, Plans) — see \`.rsp/rules/\` for the full workflow definition (start with \`rsp-rules.md\`).
 
 Key conventions:
 - \`.rsp/rules/\` — technical constraints and coding conventions
+- \`.rsp/specs/\` — project-level architecture and design reference
 - \`.rsp/features/<name>.md\` — feature definitions (spec + plan + tests)
 - \`.rsp/active.d/\` — currently active features (path = feature name)
 - \`.rsp/archive/\` — completed features
@@ -69,7 +70,7 @@ export async function initProject() {
   return withRspLock('init', async () => {
     const dirs = [
       join(RSP_DIR, 'rules'),
-      join(RSP_DIR, 'spec'),
+      join(RSP_DIR, 'specs'),
       join(RSP_DIR, 'features'),
       join(RSP_DIR, 'archive'),
     ]
@@ -91,9 +92,9 @@ export async function initProject() {
       created = true
     }
 
-    const specIndexPath = join(RSP_DIR, 'spec', 'INDEX.md')
+    const specIndexPath = join(RSP_DIR, 'specs', 'INDEX.md')
     if (!existsSync(specIndexPath)) {
-      await writeFile(specIndexPath, '# Spec Index\n\n_Extracted from archived features._\n')
+      await writeFile(specIndexPath, '# Specs Index\n\n_Extracted from archived features._\n')
       created = true
     }
 
@@ -129,7 +130,7 @@ export async function initProject() {
 
     if (isNew) {
       console.log(`\n  ${pc.green('RSP scaffolded.')}\n`)
-      console.log(`  Created: .rsp/rules/\n           .rsp/spec/\n           .rsp/features/\n           .rsp/archive/\n           .rsp/.gitignore\n           .rsp/config.yaml\n           AGENTS.md\n`)
+      console.log(`  Created: .rsp/rules/\n           .rsp/specs/\n           .rsp/features/\n           .rsp/archive/\n           .rsp/.gitignore\n           .rsp/config.yaml\n           AGENTS.md\n`)
       console.log(`  ${pc.cyan('Next:')} rsp new <name>\n  ${pc.dim('Also:')} rsp status  rsp deps\n`)
     }
     else if (created) {

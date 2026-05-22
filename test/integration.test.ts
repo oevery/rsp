@@ -28,7 +28,7 @@ function archivePath(...parts: string[]) {
 }
 
 function specPath(...parts: string[]) {
-  return rspPath('spec', ...parts)
+  return rspPath('specs', ...parts)
 }
 
 beforeAll(async () => {
@@ -37,7 +37,7 @@ beforeAll(async () => {
   origCwd = process.cwd()
   process.chdir(testDir)
 
-  const dirs = ['rules', 'spec', 'features', 'archive', 'active.d']
+  const dirs = ['rules', 'specs', 'features', 'archive', 'active.d']
   for (const d of dirs)
     await mkdir(rspPath(d), { recursive: true })
 })

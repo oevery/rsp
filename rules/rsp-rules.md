@@ -5,14 +5,14 @@ description: RSP rules for Rules, Spec, and Plan driven development.
 
 # RSP
 
-RSP = Rules, Spec, Plan.
+RSP = Rules, Specs, Plans.
 
 ## Structure
 
 ```text
 .rsp/
 ├── rules/                    # technical constraints, long-lived
-├── spec/                     # project-level architecture (optional)
+├── specs/                    # project-level architecture (optional)
 ├── features/                 # active features
 │   ├── <name>.md             # or <domain>/<name>.md for grouping
 ├── active.d/                 # active feature markers
@@ -25,7 +25,7 @@ RSP = Rules, Spec, Plan.
 ## File roles
 
 - `rules/` — stable technical constraints, coding conventions, architecture decisions. One or more files, split by domain (e.g., `frontend.md`, `api.md`). Do not put business requirements here.
-- `spec/` — project-level architecture and design reference. Use for cross-cutting concerns, system diagrams, ADRs. Per-feature details go in `features/`.
+- \`specs/\` — project-level architecture and design reference. Use for cross-cutting concerns, system diagrams, ADRs. Per-feature details go in \`features/\`.
 - `features/<name>.md` — a complete feature definition, optionally grouped by domain subdirectory (e.g., `features/auth/login.md`). Contains YAML frontmatter, `## Spec` (what), `## Plan` (how), `## Tests`, and optional `## Notes`.
 - `active.d/` — active feature tracking. Mirrors the `features/` directory structure (e.g., `active.d/payments/checkout`). Each file is an empty marker; the file path is the source of truth. All features in `active.d/` are considered active.
 
@@ -36,7 +36,7 @@ RSP = Rules, Spec, Plan.
 3. If empty, ask the user or suggest `rsp new <name>`.
 4. Read the referenced `features/<name>.md`.
 5. Read `rules/` for technical constraints.
-6. Optionally read `spec/` for architecture context and `config.yaml` for customized statuses/priorities.
+6. Optionally read \`specs/\` for architecture context and \`config.yaml\` for customized statuses/priorities.
 
 ## Token optimization
 

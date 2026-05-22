@@ -11,7 +11,7 @@ import { runCheck } from './check.js'
 /**
  * Archive a completed feature: moves the feature file to .rsp/archive/,
  * clears active markers, updates archive index, and optionally
- * appends the extracted spec summary to .rsp/spec/INDEX.md.
+ * appends the extracted spec summary to .rsp/specs/INDEX.md.
  */
 export async function closeFeature(name: string) {
   return withRspLock('close-feature', async () => {
@@ -106,7 +106,7 @@ async function runCheckIfHasDependents(name: string) {
   }
 }
 async function updateSpecIndex(name: string, date: string) {
-  const specIndexPath = join(RSP_DIR, 'spec', 'INDEX.md')
+  const specIndexPath = join(RSP_DIR, 'specs', 'INDEX.md')
   const archiveDir = join(RSP_DIR, 'archive')
   const escaped = name.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')
   const lineRe = new RegExp(`^\\| \\d{4}-\\d{2}-\\d{2} \\| ${escaped} \\|`, 'm')
@@ -141,7 +141,7 @@ async function updateSpecIndex(name: string, date: string) {
       return
 
     if (!existing.includes('| Date | Feature | Summary |')) {
-      await writeFile(specIndexPath, `# Spec Index\n\n| Date | Feature | Summary |\n|------|---------|---------|\n${line}\n`)
+      await writeFile(specIndexPath, `# Specs Index\n\n| Date | Feature | Summary |\n|------|---------|---------|\n${line}\n`)
     }
     else {
       await appendFile(specIndexPath, line)

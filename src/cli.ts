@@ -125,7 +125,7 @@ export async function runCli(rawArgs = process.argv.slice(2)) {
     meta: {
       name: 'rsp',
       version,
-      description: 'RSP (Rules, Spec, Plan) workflow for AI-assisted development',
+      description: 'RSP (Rules, Specs, Plans) workflow for AI-assisted development',
     },
     subCommands: {
       'init': initCommand,
