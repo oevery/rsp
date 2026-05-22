@@ -15,12 +15,12 @@ npx @oevery/rsp init
 cd my-project && rsp init
 ```
 
-然后将 \`.rsp/rules/rsp-rules.md\` 添加到 AI 工具的指令文件中。例如 Kilo Code 的 \`kilo.jsonc\`：
+然后将 \`.rsp/rules/*.md\` 添加到 AI 工具的指令文件中。例如 Kilo Code 的 \`kilo.jsonc\`：
 
 ```json
 {
   "instructions": [
-    ".rsp/rules/rsp-rules.md"
+    ".rsp/rules/*.md"
   ]
 }
 ```

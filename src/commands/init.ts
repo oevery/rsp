@@ -21,7 +21,7 @@ async function detectProjectName(): Promise<string> {
 
 /** AGENTS.md body declaring RSP collaboration mode */
 const AGENTS_BODY = `## Collaboration Mode
-This project uses **RSP** (Rules, Spec, Plan) — see \`.rsp/rules/rsp-rules.md\` for the full workflow definition.
+This project uses **RSP** (Rules, Spec, Plan) — see \`.rsp/rules/\` for the full workflow definition (start with \`rsp-rules.md\`).
 
 Key conventions:
 - \`.rsp/rules/\` — technical constraints and coding conventions

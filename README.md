@@ -15,12 +15,12 @@ npx @oevery/rsp init
 cd my-project && rsp init
 ```
 
-Then add \`.rsp/rules/rsp-rules.md\` to your AI tool's instructions. For example, in Kilo Code's \`kilo.jsonc\`:
+Then add \`.rsp/rules/*.md\` to your AI tool's instructions. For example, in Kilo Code's \`kilo.jsonc\`:
 
 ```json
 {
   "instructions": [
-    ".rsp/rules/rsp-rules.md"
+    ".rsp/rules/*.md"
   ]
 }
 ```

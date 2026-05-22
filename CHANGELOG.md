@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1 (2026-05-23)
+
+- Remove auto-generated `AGENTS.md` from repository (belongs in user projects, not the package)
+- Use `.rsp/rules/*.md` glob pattern in config examples instead of single file reference
+
 ## 1.0.0 (2026-05-22)
 
 - Initial release of RSP (Rules, Spec, Plan) workflow for AI-assisted development
