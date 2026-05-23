@@ -430,6 +430,130 @@ describe('deps command', () => {
     const { showDependencies } = await import('../src/commands/deps.js')
     await expect(showDependencies(true)).resolves.toBeUndefined()
   })
+
+  it('focuses dependency output on one feature', async () => {
+    const depsDir = join(tmpdir(), 'rsp-deps-focus-test', randomUUID())
+    await mkdir(join(depsDir, '.rsp', 'features'), { recursive: true })
+    await writeFile(join(depsDir, '.rsp', 'features', 'base.md'), `---
+status: draft
+priority: medium
+tags:
+---
+# Feature: base
+
+## Spec
+- Summary: Base
+
+## Plan
+- [ ] base
+`)
+    await writeFile(join(depsDir, '.rsp', 'features', 'consumer.md'), `---
+status: draft
+priority: medium
+tags:
+depends-on:
+  - base
+---
+# Feature: consumer
+
+## Spec
+- Summary: Consumer
+
+## Plan
+- [ ] consumer
+`)
+    await writeFile(join(depsDir, '.rsp', 'features', 'leaf.md'), `---
+status: draft
+priority: medium
+tags:
+depends-on:
+  - consumer
+---
+# Feature: leaf
+
+## Spec
+- Summary: Leaf
+
+## Plan
+- [ ] leaf
+`)
+
+    const cliPath = join(fileURLToPath(new URL('..', import.meta.url)), 'dist', 'cli.mjs')
+    const output = execSync(`node ${cliPath} deps --focus consumer`, { cwd: depsDir, encoding: 'utf-8' })
+
+    expect(output).toContain('base')
+    expect(output).toContain('consumer')
+    expect(output).toContain('leaf')
+  })
+
+  it('shows reverse dependents for one feature', async () => {
+    const depsDir = join(tmpdir(), 'rsp-deps-reverse-test', randomUUID())
+    await mkdir(join(depsDir, '.rsp', 'features'), { recursive: true })
+    await writeFile(join(depsDir, '.rsp', 'features', 'base.md'), `---
+status: draft
+priority: medium
+tags:
+---
+# Feature: base
+
+## Spec
+- Summary: Base
+
+## Plan
+- [ ] base
+`)
+    await writeFile(join(depsDir, '.rsp', 'features', 'consumer-a.md'), `---
+status: draft
+priority: medium
+tags:
+depends-on:
+  - base
+---
+# Feature: consumer-a
+
+## Spec
+- Summary: Consumer A
+
+## Plan
+- [ ] consumer-a
+`)
+    await writeFile(join(depsDir, '.rsp', 'features', 'consumer-b.md'), `---
+status: draft
+priority: medium
+tags:
+depends-on:
+  - base
+---
+# Feature: consumer-b
+
+## Spec
+- Summary: Consumer B
+
+## Plan
+- [ ] consumer-b
+`)
+    await writeFile(join(depsDir, '.rsp', 'features', 'other.md'), `---
+status: draft
+priority: medium
+tags:
+---
+# Feature: other
+
+## Spec
+- Summary: Other
+
+## Plan
+- [ ] other
+`)
+
+    const cliPath = join(fileURLToPath(new URL('..', import.meta.url)), 'dist', 'cli.mjs')
+    const output = execSync(`node ${cliPath} deps --reverse base`, { cwd: depsDir, encoding: 'utf-8' })
+
+    expect(output).toContain('consumer-a')
+    expect(output).toContain('consumer-b')
+    expect(output).not.toContain('other')
+    expect(output).not.toMatch(/^\s*base\s+/m)
+  })
 })
 
 describe('status command filters', () => {

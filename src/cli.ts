@@ -186,9 +186,21 @@ const depsCommand = defineCommand({
       description: 'Output as Mermaid.js graph',
       default: false,
     },
+    focus: {
+      type: 'string',
+      description: 'Show only a feature and its direct dependency neighborhood',
+    },
+    reverse: {
+      type: 'string',
+      description: 'Show only features that depend on the given feature',
+    },
   },
   async run({ args }) {
-    await showDependencies(Boolean(args.mermaid))
+    await showDependencies({
+      mermaid: Boolean(args.mermaid),
+      focus: typeof args.focus === 'string' ? args.focus : undefined,
+      reverse: typeof args.reverse === 'string' ? args.reverse : undefined,
+    })
   },
 })
 
