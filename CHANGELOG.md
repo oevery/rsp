@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.0 (2026-05-24)
+
+- Add `rsp status` filters: `--active`, `--blocked`, and `--stale <days>`
+- Add `rsp deps --focus <name>` and `--reverse <name>` for focused dependency inspection
+- Tighten lifecycle safety with dependency-aware `rsp close` checks and cleanup of empty parent directories
+- Add initialization preflight checks for `rsp new`, `rsp add rules`, and `rsp add spec`
+- Improve `rsp doctor` with direct repair hints, config.yaml semantic diagnostics, and archive filename convention checks
+- Support CRLF frontmatter parsing and stabilize `rsp check` empty-project return values
+- Improve CLI boundary handling for invalid filter combinations and stale-day arguments
+
 ## 1.0.3 (2026-05-23)
 
 - Fix npm CLI entrypoint packaging by moving the published bin to `bin/rsp.mjs`

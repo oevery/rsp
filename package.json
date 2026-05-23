@@ -1,7 +1,7 @@
 {
   "name": "@oevery/rsp",
   "type": "module",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "RSP (Rules, Specs, Plans) workflow for AI-assisted development",
   "author": "oevery",
   "license": "MIT",
