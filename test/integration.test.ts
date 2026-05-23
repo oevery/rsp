@@ -1,6 +1,6 @@
 import { execSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
-import { existsSync } from 'node:fs'
+import { existsSync, utimesSync } from 'node:fs'
 import { cp, mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -429,6 +429,139 @@ describe('deps command', () => {
   it('shows mermaid output', async () => {
     const { showDependencies } = await import('../src/commands/deps.js')
     await expect(showDependencies(true)).resolves.toBeUndefined()
+  })
+})
+
+describe('status command filters', () => {
+  it('filters to active features', async () => {
+    const statusDir = join(tmpdir(), 'rsp-status-active-test', randomUUID())
+    await mkdir(join(statusDir, '.rsp', 'rules'), { recursive: true })
+    await mkdir(join(statusDir, '.rsp', 'specs'), { recursive: true })
+    await mkdir(join(statusDir, '.rsp', 'features'), { recursive: true })
+    await mkdir(join(statusDir, '.rsp', 'active.d'), { recursive: true })
+    await writeFile(join(statusDir, '.rsp', 'rules', 'rsp-rules.md'), '# rules\n')
+    await writeFile(join(statusDir, '.rsp', 'specs', 'design.md'), '# design\n')
+    await writeFile(join(statusDir, '.rsp', 'features', 'active-one.md'), `---
+status: draft
+priority: medium
+tags:
+---
+# Feature: active-one
+
+## Spec
+- Summary: Active feature
+
+## Plan
+- [ ] work
+`)
+    await writeFile(join(statusDir, '.rsp', 'features', 'inactive-one.md'), `---
+status: draft
+priority: medium
+tags:
+---
+# Feature: inactive-one
+
+## Spec
+- Summary: Inactive feature
+
+## Plan
+- [ ] work
+`)
+    await writeFile(join(statusDir, '.rsp', 'active.d', 'active-one'), '')
+
+    const cliPath = join(fileURLToPath(new URL('..', import.meta.url)), 'dist', 'cli.mjs')
+    const output = execSync(`node ${cliPath} status --active`, { cwd: statusDir, encoding: 'utf-8' })
+
+    expect(output).toContain('active-one')
+    expect(output).not.toContain('inactive-one')
+  })
+
+  it('filters to blocked features', async () => {
+    const statusDir = join(tmpdir(), 'rsp-status-blocked-test', randomUUID())
+    await mkdir(join(statusDir, '.rsp', 'rules'), { recursive: true })
+    await mkdir(join(statusDir, '.rsp', 'specs'), { recursive: true })
+    await mkdir(join(statusDir, '.rsp', 'features'), { recursive: true })
+    await writeFile(join(statusDir, '.rsp', 'rules', 'rsp-rules.md'), '# rules\n')
+    await writeFile(join(statusDir, '.rsp', 'specs', 'design.md'), '# design\n')
+    await writeFile(join(statusDir, '.rsp', 'features', 'blocked-one.md'), `---
+status: blocked
+priority: high
+tags:
+---
+# Feature: blocked-one
+
+## Spec
+- Summary: Blocked feature
+
+## Plan
+- [ ] wait
+`)
+    await writeFile(join(statusDir, '.rsp', 'features', 'ready-one.md'), `---
+status: ready
+priority: medium
+tags:
+---
+# Feature: ready-one
+
+## Spec
+- Summary: Ready feature
+
+## Plan
+- [ ] ship
+`)
+
+    const cliPath = join(fileURLToPath(new URL('..', import.meta.url)), 'dist', 'cli.mjs')
+    const output = execSync(`node ${cliPath} status --blocked`, { cwd: statusDir, encoding: 'utf-8' })
+
+    expect(output).toContain('blocked-one')
+    expect(output).not.toContain('ready-one')
+  })
+
+  it('filters to stale features by age', async () => {
+    const statusDir = join(tmpdir(), 'rsp-status-stale-test', randomUUID())
+    await mkdir(join(statusDir, '.rsp', 'rules'), { recursive: true })
+    await mkdir(join(statusDir, '.rsp', 'specs'), { recursive: true })
+    await mkdir(join(statusDir, '.rsp', 'features'), { recursive: true })
+    await writeFile(join(statusDir, '.rsp', 'rules', 'rsp-rules.md'), '# rules\n')
+    await writeFile(join(statusDir, '.rsp', 'specs', 'design.md'), '# design\n')
+
+    const stalePath = join(statusDir, '.rsp', 'features', 'stale-one.md')
+    const freshPath = join(statusDir, '.rsp', 'features', 'fresh-one.md')
+    await writeFile(stalePath, `---
+status: draft
+priority: medium
+tags:
+---
+# Feature: stale-one
+
+## Spec
+- Summary: Old feature
+
+## Plan
+- [ ] revisit
+`)
+    await writeFile(freshPath, `---
+status: draft
+priority: medium
+tags:
+---
+# Feature: fresh-one
+
+## Spec
+- Summary: New feature
+
+## Plan
+- [ ] revisit
+`)
+
+    const oldDate = new Date(Date.now() - 20 * 24 * 60 * 60 * 1000)
+    utimesSync(stalePath, oldDate, oldDate)
+
+    const cliPath = join(fileURLToPath(new URL('..', import.meta.url)), 'dist', 'cli.mjs')
+    const output = execSync(`node ${cliPath} status --stale 14`, { cwd: statusDir, encoding: 'utf-8' })
+
+    expect(output).toContain('stale-one')
+    expect(output).not.toContain('fresh-one')
   })
 })
 

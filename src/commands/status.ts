@@ -22,11 +22,17 @@ interface StatusRecord {
   isBlocked: boolean
 }
 
+interface StatusOptions {
+  active?: boolean
+  blocked?: boolean
+  stale?: number
+}
+
 /**
  * Display project status: active features, progress, dependencies,
  * blocked items, feature age, and archive trends.
  */
-export async function showStatus() {
+export async function showStatus(options: StatusOptions = {}) {
   const featuresDir = join(RSP_DIR, 'features')
 
   const activeSet = new Set<string>()
@@ -108,6 +114,25 @@ export async function showStatus() {
     records.push({ name, status, progress, age, depends, isActive, isBlocked })
   }
 
+  const filteredRecords = records.filter((record) => {
+    if (options.active && !record.isActive)
+      return false
+    if (options.blocked && !record.isBlocked)
+      return false
+    if (typeof options.stale === 'number') {
+      const ageDays = Number(record.age)
+      if (!Number.isFinite(ageDays) || ageDays < options.stale)
+        return false
+    }
+    return true
+  })
+
+  if (filteredRecords.length === 0) {
+    console.log(`  ${pc.dim('No features match the current filters.')}`)
+    console.log()
+    return
+  }
+
   // Header
   const pad = (s: string, w: number) => s.padEnd(w)
   console.log(`  ${pad('Feature', COL_FEATURE)} ${pad('Status', COL_STATUS)} ${pad('Age(d)', COL_AGE)} ${pad('Progress', COL_PROGRESS)} Depends On`)
@@ -115,7 +140,7 @@ export async function showStatus() {
 
   let blockedCount = 0
 
-  for (const r of records) {
+  for (const r of filteredRecords) {
     const marker = r.isActive ? pc.cyan('*') : ' '
     const namePadded = r.name.padEnd(COL_FEATURE - 1)
     const statusPadded = String(r.status).padEnd(COL_STATUS)
@@ -135,10 +160,11 @@ export async function showStatus() {
   console.log()
 
   // Summary block
-  const total = records.length
-  const doneCount = records.filter(r => r.status === 'done').length
+  const total = filteredRecords.length
+  const doneCount = filteredRecords.filter(r => r.status === 'done').length
+  const activeCount = filteredRecords.filter(r => r.isActive).length
 
-  console.log(`  ${pc.bold('Summary:')} ${total} feature(s), ${activeSet.size} active, ${doneCount} done, ${pc.yellow(String(blockedCount))} blocked`)
+  console.log(`  ${pc.bold('Summary:')} ${total} feature(s), ${activeCount} active, ${doneCount} done, ${pc.yellow(String(blockedCount))} blocked`)
   console.log()
 
   // Archive trend
@@ -146,7 +172,7 @@ export async function showStatus() {
 
   // Blocked features highlight
   if (blockedCount > 0) {
-    const blocked = records.filter(r => r.isBlocked)
+    const blocked = filteredRecords.filter(r => r.isBlocked)
     console.log(`  ${pc.yellow('Blocked:')} ${blocked.map(r => r.name).join(', ')}`)
     console.log()
   }

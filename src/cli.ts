@@ -135,8 +135,29 @@ const statusCommand = defineCommand({
     name: 'status',
     description: 'Show project status summary',
   },
-  async run() {
-    await showStatus()
+  args: {
+    active: {
+      type: 'boolean',
+      description: 'Show only active features',
+      default: false,
+    },
+    blocked: {
+      type: 'boolean',
+      description: 'Show only blocked features',
+      default: false,
+    },
+    stale: {
+      type: 'string',
+      description: 'Show only features with age >= days',
+    },
+  },
+  async run({ args }) {
+    const stale = args.stale === undefined ? undefined : Number(args.stale)
+    await showStatus({
+      active: Boolean(args.active),
+      blocked: Boolean(args.blocked),
+      stale: Number.isFinite(stale) ? stale : undefined,
+    })
   },
 })
 
