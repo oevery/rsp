@@ -77,6 +77,12 @@ tags:
     const result = parseFrontmatter(content)
     expect(result).toEqual({})
   })
+
+  it('extracts frontmatter from CRLF markdown content', () => {
+    const content = '---\r\nstatus: draft\r\npriority: medium\r\n---\r\n# Feature\r\n'
+    const result = parseFrontmatter(content)
+    expect(result).toEqual({ status: 'draft', priority: 'medium' })
+  })
 })
 
 describe('countCheckboxes', () => {

@@ -66,7 +66,7 @@ export function parseYamlLines(lines: string[]): Record<string, unknown> {
  * Returns null if no frontmatter block is found.
  */
 export function parseFrontmatter(content: string): Frontmatter | null {
-  const m = content.match(/^---\n([\s\S]*?)\n(?:---|\.\.\.)\n/)
+  const m = content.match(/^---\r?\n([\s\S]*?)\r?\n(?:---|\.\.\.)\r?\n/)
   if (!m)
     return null
   return parseYamlLines(m[1].split('\n')) as Frontmatter

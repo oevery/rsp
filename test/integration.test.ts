@@ -233,6 +233,26 @@ depends-on:
     const errors = await runCheck()
     expect(errors).toBeGreaterThan(1)
   })
+
+  it('accepts a valid feature file with CRLF frontmatter', async () => {
+    const windowsDir = join(tmpdir(), 'rsp-crlf-check-test', randomUUID())
+    await mkdir(join(windowsDir, '.rsp', 'features'), { recursive: true })
+    await writeFile(join(windowsDir, '.rsp', 'features', 'windows-style.md'), '---\r\nstatus: draft\r\npriority: medium\r\ntags:\r\n---\r\n# Feature: windows-style\r\n\r\n## Spec\r\n- Summary: Windows line endings\r\n\r\n## Plan\r\n- [ ] Keep parsing\r\n')
+
+    const cwd = process.cwd()
+    process.chdir(windowsDir)
+    clearConfigCache()
+
+    try {
+      const { runCheck } = await import('../src/commands/check.js')
+      const errors = await runCheck()
+      expect(errors).toBe(0)
+    }
+    finally {
+      process.chdir(cwd)
+      clearConfigCache()
+    }
+  })
 })
 
 describe('archive index', () => {
