@@ -1,3 +1,8 @@
+---
+name: rsp
+description: Use this skill when adopting, operating, auditing, or repairing an RSP project and its .rsp structure.
+---
+
 # RSP Skill
 
 Use this skill when you are actively operating on an RSP project: initializing RSP, deciding how to update `AGENTS.md`, adding durable rules/specs, starting or closing features, or auditing the setup.

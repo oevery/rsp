@@ -72,8 +72,10 @@ Read in order:
 可选安装示例：
 
 ```bash
-npx skills add @oevery/rsp
+npx skills add oevery/rsp --skill rsp
 ```
+
+这个仓库发布的 skill 名称是 `rsp`，位于 `skills/rsp/`。
 
 然后只在接入 RSP、审计设置或整理项目级 rules/specs 时加载这个 skill。
 

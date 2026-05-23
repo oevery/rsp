@@ -72,8 +72,10 @@ Use `skills/rsp/SKILL.md` for step-by-step setup, workflow, and auditing guidanc
 Example optional installation flow:
 
 ```bash
-npx skills add @oevery/rsp
+npx skills add oevery/rsp --skill rsp
 ```
+
+This repository publishes a skill named `rsp` under `skills/rsp/`.
 
 Then load the installed RSP skill only when you are adopting RSP, auditing setup, or reorganizing project-level rules/specs.
 
