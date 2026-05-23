@@ -109,6 +109,11 @@ rsp add rules <name>            创建 .rsp/rules/<name>.md
 rsp add spec <name>             创建 .rsp/specs/<name>.md 并重建 specs 索引
 rsp new <name> [summary]        创建 .rsp/features/<name>.md
 rsp close <name>                归档到 .rsp/archives/ + 更新归档索引
+rsp status [--active|--blocked|--stale <days>]
+                                 查看项目状态摘要，并支持轻量筛选
+rsp check                       校验 feature 文件结构与依赖一致性
+rsp deps [--mermaid|--focus <name>|--reverse <name>]
+                                 查看依赖摘要、Mermaid 图或局部依赖视图
 rsp doctor                      检查接入健康和常见问题
 rsp specs-index                 重新生成 specs 索引
 rsp archive-index               重新生成 archives 索引

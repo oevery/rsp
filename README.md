@@ -109,6 +109,11 @@ rsp add rules <name>            Create .rsp/rules/<name>.md
 rsp add spec <name>             Create .rsp/specs/<name>.md and rebuild specs index
 rsp new <name> [summary]        Create .rsp/features/<name>.md
 rsp close <name>                Archive to .rsp/archives/ + update archive index
+rsp status [--active|--blocked|--stale <days>]
+                                 Show project status summary with optional filters
+rsp check                       Validate feature files and dependency consistency
+rsp deps [--mermaid|--focus <name>|--reverse <name>]
+                                 Show dependency summary, graph, or focused view
 rsp doctor                      Check setup health and common issues
 rsp specs-index                 Rebuild specs INDEX.md
 rsp archive-index               Rebuild archives INDEX.md
