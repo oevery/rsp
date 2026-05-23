@@ -153,10 +153,15 @@ const statusCommand = defineCommand({
   },
   async run({ args }) {
     const stale = args.stale === undefined ? undefined : Number(args.stale)
+    if (args.stale !== undefined && Number.isFinite(stale) === false) {
+      console.error(`  Error: --stale must be a number of days`)
+      process.exit(1)
+    }
+
     await showStatus({
       active: Boolean(args.active),
       blocked: Boolean(args.blocked),
-      stale: Number.isFinite(stale) ? stale : undefined,
+      stale,
     })
   },
 })

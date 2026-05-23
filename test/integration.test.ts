@@ -596,6 +596,36 @@ tags:
     expect(output).not.toContain('other')
     expect(output).not.toMatch(/^\s*base\s+/m)
   })
+
+  it('rejects using focus and reverse together', async () => {
+    const depsDir = join(tmpdir(), 'rsp-deps-conflict-test', randomUUID())
+    await mkdir(join(depsDir, '.rsp', 'features'), { recursive: true })
+    await writeFile(join(depsDir, '.rsp', 'features', 'base.md'), `---
+status: draft
+priority: medium
+tags:
+---
+# Feature: base
+
+## Spec
+- Summary: Base
+
+## Plan
+- [ ] base
+`)
+
+    const cliPath = join(fileURLToPath(new URL('..', import.meta.url)), 'dist', 'cli.mjs')
+    let output = ''
+    try {
+      execSync(`node ${cliPath} deps --focus base --reverse base`, { cwd: depsDir, encoding: 'utf-8', stdio: 'pipe' })
+    }
+    catch (error) {
+      const execError = error as { stdout?: string, stderr?: string }
+      output = `${execError.stdout || ''}${execError.stderr || ''}`
+    }
+
+    expect(output).toContain('Use either --focus or --reverse, not both')
+  })
 })
 
 describe('status command filters', () => {
@@ -728,6 +758,27 @@ tags:
 
     expect(output).toContain('stale-one')
     expect(output).not.toContain('fresh-one')
+  })
+
+  it('rejects non-numeric stale filter values', async () => {
+    const statusDir = join(tmpdir(), 'rsp-status-stale-invalid-test', randomUUID())
+    await mkdir(join(statusDir, '.rsp', 'rules'), { recursive: true })
+    await mkdir(join(statusDir, '.rsp', 'specs'), { recursive: true })
+    await mkdir(join(statusDir, '.rsp', 'features'), { recursive: true })
+    await writeFile(join(statusDir, '.rsp', 'rules', 'rsp-rules.md'), '# rules\n')
+    await writeFile(join(statusDir, '.rsp', 'specs', 'design.md'), '# design\n')
+
+    const cliPath = join(fileURLToPath(new URL('..', import.meta.url)), 'dist', 'cli.mjs')
+    let output = ''
+    try {
+      execSync(`node ${cliPath} status --stale abc`, { cwd: statusDir, encoding: 'utf-8', stdio: 'pipe' })
+    }
+    catch (error) {
+      const execError = error as { stdout?: string, stderr?: string }
+      output = `${execError.stdout || ''}${execError.stderr || ''}`
+    }
+
+    expect(output).toContain('--stale must be a number of days')
   })
 })
 
