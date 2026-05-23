@@ -153,8 +153,8 @@ const statusCommand = defineCommand({
   },
   async run({ args }) {
     const stale = args.stale === undefined ? undefined : Number(args.stale)
-    if (args.stale !== undefined && Number.isFinite(stale) === false) {
-      console.error(`  Error: --stale must be a number of days`)
+    if (args.stale !== undefined && (Number.isFinite(stale) === false || Number.isInteger(stale) === false || stale < 0)) {
+      console.error(`  Error: --stale must be a non-negative integer number of days`)
       process.exit(1)
     }
 

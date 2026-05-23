@@ -783,7 +783,49 @@ tags:
       output = `${execError.stdout || ''}${execError.stderr || ''}`
     }
 
-    expect(output).toContain('--stale must be a number of days')
+    expect(output).toContain('--stale must be a non-negative integer number of days')
+  })
+
+  it('rejects negative stale filter values', async () => {
+    const statusDir = join(tmpdir(), 'rsp-status-stale-negative-test', randomUUID())
+    await mkdir(join(statusDir, '.rsp', 'rules'), { recursive: true })
+    await mkdir(join(statusDir, '.rsp', 'specs'), { recursive: true })
+    await mkdir(join(statusDir, '.rsp', 'features'), { recursive: true })
+    await writeFile(join(statusDir, '.rsp', 'rules', 'rsp-rules.md'), '# rules\n')
+    await writeFile(join(statusDir, '.rsp', 'specs', 'design.md'), '# design\n')
+
+    const cliPath = join(fileURLToPath(new URL('..', import.meta.url)), 'dist', 'cli.mjs')
+    let output = ''
+    try {
+      execSync(`node ${cliPath} status --stale -1`, { cwd: statusDir, encoding: 'utf-8', stdio: 'pipe' })
+    }
+    catch (error) {
+      const execError = error as { stdout?: string, stderr?: string }
+      output = `${execError.stdout || ''}${execError.stderr || ''}`
+    }
+
+    expect(output).toContain('--stale must be a non-negative integer number of days')
+  })
+
+  it('rejects fractional stale filter values', async () => {
+    const statusDir = join(tmpdir(), 'rsp-status-stale-fractional-test', randomUUID())
+    await mkdir(join(statusDir, '.rsp', 'rules'), { recursive: true })
+    await mkdir(join(statusDir, '.rsp', 'specs'), { recursive: true })
+    await mkdir(join(statusDir, '.rsp', 'features'), { recursive: true })
+    await writeFile(join(statusDir, '.rsp', 'rules', 'rsp-rules.md'), '# rules\n')
+    await writeFile(join(statusDir, '.rsp', 'specs', 'design.md'), '# design\n')
+
+    const cliPath = join(fileURLToPath(new URL('..', import.meta.url)), 'dist', 'cli.mjs')
+    let output = ''
+    try {
+      execSync(`node ${cliPath} status --stale 0.5`, { cwd: statusDir, encoding: 'utf-8', stdio: 'pipe' })
+    }
+    catch (error) {
+      const execError = error as { stdout?: string, stderr?: string }
+      output = `${execError.stdout || ''}${execError.stderr || ''}`
+    }
+
+    expect(output).toContain('--stale must be a non-negative integer number of days')
   })
 })
 
