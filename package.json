@@ -21,7 +21,7 @@
     "workflow"
   ],
   "bin": {
-    "rsp": "./bin/rsp.mjs"
+    "rsp": "bin/rsp.mjs"
   },
   "files": [
     "bin/",
