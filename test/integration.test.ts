@@ -44,6 +44,9 @@ beforeAll(async () => {
   const dirs = ['rules', 'specs', 'features', 'archives', 'active.d']
   for (const d of dirs)
     await mkdir(rspPath(d), { recursive: true })
+
+  await writeFile(rulesPath('rsp-rules.md'), '# RSP Rules\n')
+  await writeFile(specPath('design.md'), '# Project Design: Integration Test\n')
 })
 
 afterAll(() => {
@@ -165,6 +168,25 @@ depends-on:
     expect(output).toContain('cannot close "base" because it is still referenced by: consumer')
     expect(existsSync(join(dependentDir, '.rsp', 'features', 'base.md'))).toBe(true)
     expect(existsSync(join(dependentDir, '.rsp', 'archives', `${new Date().toISOString().slice(0, 10)}_base.md`))).toBe(false)
+  })
+
+  it('refuses to create a feature before rsp init', async () => {
+    const uninitializedDir = join(tmpdir(), 'rsp-new-preinit-test', randomUUID())
+    await mkdir(uninitializedDir, { recursive: true })
+
+    const cliPath = join(fileURLToPath(new URL('..', import.meta.url)), 'dist', 'cli.mjs')
+    let output = ''
+    try {
+      execSync(`node ${cliPath} new preinit-test`, { cwd: uninitializedDir, encoding: 'utf-8', stdio: 'pipe' })
+    }
+    catch (error) {
+      const execError = error as { stdout?: string, stderr?: string }
+      output = `${execError.stdout || ''}${execError.stderr || ''}`
+    }
+
+    expect(output).toContain('RSP is not initialized in this project')
+    expect(output).toContain('Run: rsp init')
+    expect(existsSync(join(uninitializedDir, '.rsp'))).toBe(false)
   })
 })
 

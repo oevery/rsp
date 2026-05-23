@@ -11,19 +11,28 @@ import { buildArchiveIndex } from './archive-index.js'
  * Create a new feature file under .rsp/features/<name>.md.
  */
 export async function newFeature(name: string, summary = '') {
+  if (!name) {
+    console.error(`  ${pc.red('Usage:')} rsp new <name> [summary]`)
+    process.exit(1)
+  }
+  if (/^[a-z0-9-]+(?:\/[a-z0-9-]+)*$/.test(name) === false) {
+    console.error(`  ${pc.red('Error:')} feature name must be kebab-case with optional subdirectory (lowercase, digits, hyphens, slashes)`)
+    process.exit(1)
+  }
+  if (name === 'init') {
+    console.error(`  ${pc.red('Error:')} "init" is a reserved workflow name, not a feature name`)
+    process.exit(1)
+  }
+
+  const rspRulesPath = join(RSP_DIR, 'rules', 'rsp-rules.md')
+  const designPath = join(RSP_DIR, 'specs', 'design.md')
+  if (!existsSync(rspRulesPath) || !existsSync(designPath)) {
+    console.error(`  ${pc.red('Error:')} RSP is not initialized in this project`)
+    console.error(`  ${pc.dim('Run: rsp init')}`)
+    process.exit(1)
+  }
+
   return withRspLock('new-feature', async () => {
-    if (!name) {
-      console.error(`  ${pc.red('Usage:')} rsp new <name> [summary]`)
-      process.exit(1)
-    }
-    if (/^[a-z0-9-]+(?:\/[a-z0-9-]+)*$/.test(name) === false) {
-      console.error(`  ${pc.red('Error:')} feature name must be kebab-case with optional subdirectory (lowercase, digits, hyphens, slashes)`)
-      process.exit(1)
-    }
-    if (name === 'init') {
-      console.error(`  ${pc.red('Error:')} "init" is a reserved workflow name, not a feature name`)
-      process.exit(1)
-    }
 
     const featurePath = join(RSP_DIR, 'features', `${name}.md`)
     await mkdir(dirname(featurePath), { recursive: true })
