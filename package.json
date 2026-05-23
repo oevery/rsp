@@ -1,7 +1,7 @@
 {
   "name": "@oevery/rsp",
   "type": "module",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "RSP (Rules, Specs, Plans) workflow for AI-assisted development",
   "author": "oevery",
   "license": "MIT",
@@ -21,9 +21,10 @@
     "workflow"
   ],
   "bin": {
-    "rsp": "./dist/cli.mjs"
+    "rsp": "./bin/rsp.mjs"
   },
   "files": [
+    "bin/",
     "dist/",
     "rules/"
   ],

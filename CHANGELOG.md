@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.3 (2026-05-23)
+
+- Fix npm CLI entrypoint packaging by moving the published bin to `bin/rsp.mjs`
+- Keep `dist/cli.mjs` as the built CLI implementation and add a lightweight wrapper for `npx` compatibility
+- Include `bin/` in the published package so the wrapper ships with the release
+
 ## 1.0.2 (2026-05-23)
 
 - Rename `.rsp/spec/` → `.rsp/specs/` throughout (consistent with plural `rules/`, `features/`)
