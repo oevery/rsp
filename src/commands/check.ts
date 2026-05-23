@@ -45,7 +45,7 @@ export async function runCheck() {
   const featureFiles = existsSync(featuresDir) ? await walkMarkdownFiles(featuresDir) : []
   if (featureFiles.length === 0) {
     console.log(`  ${pc.dim('No feature files to check.')}\n`)
-    return
+    return 0
   }
 
   const allDeps = new Map<string, string[]>()

@@ -88,7 +88,7 @@ describe('full workflow integration', () => {
 
   it('passes check on valid features', async () => {
     const { runCheck } = await import('../src/commands/check.js')
-    await expect(runCheck()).resolves.toBeDefined()
+    await expect(runCheck()).resolves.toBe(0)
   })
 
   it('closes a feature', async () => {
@@ -263,6 +263,25 @@ depends-on:
 
     const cwd = process.cwd()
     process.chdir(windowsDir)
+    clearConfigCache()
+
+    try {
+      const { runCheck } = await import('../src/commands/check.js')
+      const errors = await runCheck()
+      expect(errors).toBe(0)
+    }
+    finally {
+      process.chdir(cwd)
+      clearConfigCache()
+    }
+  })
+
+  it('returns 0 when no feature files exist', async () => {
+    const emptyDir = join(tmpdir(), 'rsp-empty-check-test', randomUUID())
+    await mkdir(join(emptyDir, '.rsp', 'features'), { recursive: true })
+
+    const cwd = process.cwd()
+    process.chdir(emptyDir)
     clearConfigCache()
 
     try {
