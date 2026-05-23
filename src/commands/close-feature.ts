@@ -26,6 +26,13 @@ export async function closeFeature(name: string) {
       process.exit(1)
     }
 
+    const dependents = await findDependents(name)
+    if (dependents.length > 0) {
+      console.error(`  ${pc.red('Error:')} cannot close "${name}" because it is still referenced by: ${dependents.join(', ')}`)
+      console.error(`  ${pc.dim('Remove or update those depends-on entries before archiving this feature.')}`)
+      process.exit(1)
+    }
+
     const date = new Date().toISOString().slice(0, 10)
     const dir = dirname(name)
     const base = basename(name)
@@ -72,24 +79,35 @@ export async function closeFeature(name: string) {
   })
 }
 
+async function findDependents(name: string): Promise<string[]> {
+  const featuresDir = join(RSP_DIR, 'features')
+  const allFeatureFiles = await walkMarkdownFiles(featuresDir)
+  const dependents: string[] = []
+
+  for (const fp of allFeatureFiles) {
+    const featureName = fp === join(featuresDir, `${name}.md`)
+      ? name
+      : fp.replace(`${featuresDir}/`, '').replace(/\.md$/, '')
+
+    if (featureName === name)
+      continue
+
+    const content = await readFile(fp, 'utf-8')
+    const fm = parseFrontmatter(content)
+    if (!fm || !fm['depends-on'])
+      continue
+
+    const deps = Array.isArray(fm['depends-on']) ? fm['depends-on'] : [fm['depends-on']]
+    if (deps.includes(name))
+      dependents.push(featureName)
+  }
+
+  return dependents.sort()
+}
+
 async function runCheckIfHasDependents(name: string) {
   try {
-    const featuresDir = join(RSP_DIR, 'features')
-    const allFeatureFiles = await walkMarkdownFiles(featuresDir)
-    let hasDependents = false
-
-    for (const fp of allFeatureFiles) {
-      const content = await readFile(fp, 'utf-8')
-      const fm = parseFrontmatter(content)
-      if (!fm || !fm['depends-on'])
-        continue
-
-      const deps = Array.isArray(fm['depends-on']) ? fm['depends-on'] : [fm['depends-on']]
-      if (deps.includes(name)) {
-        hasDependents = true
-        break
-      }
-    }
+    const hasDependents = (await findDependents(name)).length > 0
 
     if (hasDependents)
       await runCheck()

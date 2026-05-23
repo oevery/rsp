@@ -116,6 +116,56 @@ describe('full workflow integration', () => {
     const { showStatus } = await import('../src/commands/status.js')
     await expect(showStatus()).resolves.toBeUndefined()
   })
+
+  it('refuses to close a feature that still has dependents', async () => {
+    const dependentDir = join(tmpdir(), 'rsp-close-dependent-test', randomUUID())
+    await mkdir(join(dependentDir, '.rsp', 'features'), { recursive: true })
+    await mkdir(join(dependentDir, '.rsp', 'active.d'), { recursive: true })
+    await mkdir(join(dependentDir, '.rsp', 'archives'), { recursive: true })
+    await writeFile(join(dependentDir, '.rsp', 'archives', 'INDEX.md'), '# Archive Index\n')
+    await writeFile(join(dependentDir, '.rsp', 'features', 'base.md'), `---
+status: draft
+priority: medium
+tags:
+---
+# Feature: base
+
+## Spec
+- Summary: Base feature
+
+## Plan
+- [ ] Keep it open
+`)
+    await writeFile(join(dependentDir, '.rsp', 'features', 'consumer.md'), `---
+status: draft
+priority: medium
+tags:
+depends-on:
+  - base
+---
+# Feature: consumer
+
+## Spec
+- Summary: Depends on base
+
+## Plan
+- [ ] Use base
+`)
+
+    const cliPath = join(fileURLToPath(new URL('..', import.meta.url)), 'dist', 'cli.mjs')
+    let output = ''
+    try {
+      execSync(`node ${cliPath} close base`, { cwd: dependentDir, encoding: 'utf-8', stdio: 'pipe' })
+    }
+    catch (error) {
+      const execError = error as { stdout?: string, stderr?: string }
+      output = `${execError.stdout || ''}${execError.stderr || ''}`
+    }
+
+    expect(output).toContain('cannot close "base" because it is still referenced by: consumer')
+    expect(existsSync(join(dependentDir, '.rsp', 'features', 'base.md'))).toBe(true)
+    expect(existsSync(join(dependentDir, '.rsp', 'archives', `${new Date().toISOString().slice(0, 10)}_base.md`))).toBe(false)
+  })
 })
 
 describe('check detects issues', () => {
