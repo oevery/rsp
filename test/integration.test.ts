@@ -395,16 +395,20 @@ describe('add commands', () => {
     expect(content).toContain('# Project Rules')
   })
 
-  it('uses detected project name when adding design spec', async () => {
+  it('adds a spec file in an initialized project with local package metadata', async () => {
     const designDir = join(tmpdir(), 'rsp-add-design-test', randomUUID())
+    await mkdir(join(designDir, '.rsp', 'rules'), { recursive: true })
     await mkdir(join(designDir, '.rsp', 'specs'), { recursive: true })
+    await writeFile(join(designDir, '.rsp', 'rules', 'rsp-rules.md'), '# rules\n')
+    await writeFile(join(designDir, '.rsp', 'specs', 'design.md'), '# Project Design: placeholder\n')
+    await writeFile(join(designDir, '.rsp', 'specs', 'INDEX.md'), '# Spec Index\n')
     await writeFile(join(designDir, 'package.json'), '{"name":"design-target"}\n')
 
     const cliPath = join(fileURLToPath(new URL('..', import.meta.url)), 'dist', 'cli.mjs')
-    execSync(`node ${cliPath} add spec design`, { cwd: designDir })
+    execSync(`node ${cliPath} add spec shell-layout`, { cwd: designDir })
 
-    const content = await readFile(join(designDir, '.rsp', 'specs', 'design.md'), 'utf-8')
-    expect(content).toContain('# Project Design: design-target')
+    const content = await readFile(join(designDir, '.rsp', 'specs', 'shell-layout.md'), 'utf-8')
+    expect(content).toContain('# Shell Layout')
   })
 
   it('adds a spec file and rebuilds specs index', async () => {
@@ -417,6 +421,44 @@ describe('add commands', () => {
     const indexContent = await readFile(specPath('INDEX.md'), 'utf-8')
     expect(indexContent).toContain('domain-model.md')
     expect(indexContent).toContain('Domain Model')
+  })
+
+  it('refuses to add a rules file before rsp init', async () => {
+    const uninitializedDir = join(tmpdir(), 'rsp-add-rules-preinit-test', randomUUID())
+    await mkdir(uninitializedDir, { recursive: true })
+
+    const cliPath = join(fileURLToPath(new URL('..', import.meta.url)), 'dist', 'cli.mjs')
+    let output = ''
+    try {
+      execSync(`node ${cliPath} add rules team-conventions`, { cwd: uninitializedDir, encoding: 'utf-8', stdio: 'pipe' })
+    }
+    catch (error) {
+      const execError = error as { stdout?: string, stderr?: string }
+      output = `${execError.stdout || ''}${execError.stderr || ''}`
+    }
+
+    expect(output).toContain('RSP is not initialized in this project')
+    expect(output).toContain('Run: rsp init')
+    expect(existsSync(join(uninitializedDir, '.rsp'))).toBe(false)
+  })
+
+  it('refuses to add a spec file before rsp init', async () => {
+    const uninitializedDir = join(tmpdir(), 'rsp-add-spec-preinit-test', randomUUID())
+    await mkdir(uninitializedDir, { recursive: true })
+
+    const cliPath = join(fileURLToPath(new URL('..', import.meta.url)), 'dist', 'cli.mjs')
+    let output = ''
+    try {
+      execSync(`node ${cliPath} add spec domain-model`, { cwd: uninitializedDir, encoding: 'utf-8', stdio: 'pipe' })
+    }
+    catch (error) {
+      const execError = error as { stdout?: string, stderr?: string }
+      output = `${execError.stdout || ''}${execError.stderr || ''}`
+    }
+
+    expect(output).toContain('RSP is not initialized in this project')
+    expect(output).toContain('Run: rsp init')
+    expect(existsSync(join(uninitializedDir, '.rsp'))).toBe(false)
   })
 })
 

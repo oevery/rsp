@@ -22,12 +22,20 @@ async function detectProjectName(): Promise<string> {
 }
 
 export async function addRules(name: string, projectName = 'project') {
-  return withRspLock('add-rules', async () => {
-    if (!name || !NAME_RE.test(name)) {
-      console.error(`  ${pc.red('Error:')} rule name must be kebab-case with optional subdirectory`)
-      process.exit(1)
-    }
+  if (!name || !NAME_RE.test(name)) {
+    console.error(`  ${pc.red('Error:')} rule name must be kebab-case with optional subdirectory`)
+    process.exit(1)
+  }
 
+  const rspRulesPath = join(RSP_DIR, 'rules', 'rsp-rules.md')
+  const designPath = join(RSP_DIR, 'specs', 'design.md')
+  if (!existsSync(rspRulesPath) || !existsSync(designPath)) {
+    console.error(`  ${pc.red('Error:')} RSP is not initialized in this project`)
+    console.error(`  ${pc.dim('Run: rsp init')}`)
+    process.exit(1)
+  }
+
+  return withRspLock('add-rules', async () => {
     const dir = join(RSP_DIR, 'rules')
     const path = join(dir, `${name}.md`)
     if (existsSync(path)) {
