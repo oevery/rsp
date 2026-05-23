@@ -90,7 +90,7 @@ async function checkArchiveNaming(): Promise<number> {
 
   const invalidFiles = archiveFiles
     .map(fp => relative(archivesDir, fp))
-    .filter(fp => /^[^/]*\d{4}-\d{2}-\d{2}_.+\.md$/.test(fp.split('/').at(-1) || '') === false)
+    .filter(fp => /^\d{4}-\d{2}-\d{2}_.+\.md$/.test(fp.split('/').at(-1) || '') === false)
 
   if (invalidFiles.length === 0) {
     console.log(`  ${pc.green('✓')} archived feature files follow the date_name.md convention`)
