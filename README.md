@@ -1,125 +1,128 @@
 # RSP: Rules, Specs, Plans
 
-RSP = **Rules, Specs, Plans** — a lightweight AI-assisted development workflow.
+English | [简体中文](./README.zh-CN.md)
+
+RSP = **Rules, Specs, Plans**. A lightweight AI-assisted workflow for project rules, specs, and feature plans.
 
 ## Quick start
 
 ```bash
-# Install globally
-npm install -g @oevery/rsp
-
-# Or run directly with npx
-npx @oevery/rsp init
-
-# Scaffold a project
-cd my-project && rsp init
+npx -y @oevery/rsp init
+npx -y @oevery/rsp doctor
 ```
 
-Then add \`.rsp/rules/*.md\` to your AI tool's instructions. For example, in Kilo Code's \`kilo.jsonc\`:
+## Core idea
 
-```json
-{
-  "instructions": [
-    ".rsp/rules/*.md"
-  ]
-}
-```
-
-For other tools (Cursor, Claude Code, Copilot), add the path to the appropriate config file. The same file works everywhere — see [Platform-agnostic](#platform-agnostic).
-
-## Project structure
+- `rules/` stores durable constraints.
+- `specs/` stores project-level design docs.
+- `features/` stores active work.
+- `active.d/` mirrors active features with empty marker files.
+- `archives/` stores completed work.
 
 ```text
 .rsp/
-├── config.yaml                # project config (custom statuses, priorities, sections)
-├── rules/                     # technical constraints, long-lived
-│   └── rsp-rules.md
-├── specs/                     # project-level architecture
-│   └── INDEX.md               # extracted spec summaries from archived features
-├── features/                  # feature files (flat or nested)
-│   ├── login.md
-│   ├── auth/
-│   │   └── login.md
-│   └── payments/
-│       └── checkout.md
-├── active.d/                  # active feature markers (path = feature name)
-│   ├── login
-│   ├── auth/
-│   │   └── login
-│   └── payments/
-│       └── checkout
-├── archive/
-│   ├── INDEX.md               # auto-generated archive index
-│   ├── 2026-05-22_login.md
-│   └── payments/
-│       └── 2026-05-22_checkout.md
+├── rules/
+│   ├── rsp-rules.md
+│   └── project-rules.md      # optional
+├── specs/
+│   ├── INDEX.md              # auto-generated
+│   └── design.md
+├── features/
+│   └── <name>.md
+├── active.d/
+│   └── <name>
+└── archives/
+    └── INDEX.md              # auto-generated
 ```
 
-Each `active.d/` entry is an empty file whose path mirrors `features/`. Multiple entries mean parallel features. AI reads `active.d/` to find what's in progress. Features can be organized flat (`login.md`) or in domain subdirectories (`auth/login.md`, `payments/checkout.md`).
+## File ownership
 
-Each feature file is self-contained, with optional delta markers and structured scenarios:
+- `AGENTS.md`: only the `<!-- rsp:begin --> ... <!-- rsp:end -->` block is managed by RSP.
+- `.rsp/specs/INDEX.md`: auto-generated. Rebuild with `rsp specs-index`.
+- `.rsp/archives/INDEX.md`: auto-generated. Rebuild with `rsp archive-index`.
+- `.rsp/specs/design.md`: created by `rsp init`, then owned by the project.
+- `.rsp/rules/project-rules.md`: optional; create only when the project has durable local rules.
 
-```markdown
----
-status: draft
-priority: medium
-tags:
-  - backend
----
-# Feature: User Login
+## AGENTS integration
 
-## Spec
-- Summary: Users can log in with email and password
-- Requirements:
-  - [ ] Login form submits email + password
-  - [ ] Backend validates credentials and returns JWT
-### ADDED           # optional: delta markers
-- OAuth 2.0 login support
-### Scenario: Valid credentials
-- GIVEN a registered user
-- WHEN they submit email + password
-- THEN a JWT is returned
-- Constraints:
-  - Passwords must be hashed with bcrypt
+Managed block example:
 
-## Plan
-- [ ] Phase 1: Backend API
-  - [ ] Create /api/auth/login endpoint
-  - [ ] Implement password verification
-- [ ] Phase 2: Frontend
-  - [ ] Design login form UI
+```md
+<!-- rsp:begin -->
+## RSP Entry
 
-## Tests
-- [ ] tests/auth/login_test.ts — successful login
-- [ ] tests/auth/login_test.ts — invalid credentials
-
-## Blockers
--
+Read in order:
+1. .rsp/rules/*.md
+2. .rsp/specs/INDEX.md
+3. .rsp/specs/design.md
+4. .rsp/active.d/ and matching .rsp/features/*.md
+<!-- rsp:end -->
 ```
+
+`rsp init --agents-mode <mode>`:
+
+- `managed`: insert/update the managed block in `AGENTS.md`.
+- `skip`: scaffold `.rsp/` only.
+- `print`: scaffold `.rsp/` and print the managed block.
+
+## Skill
+
+Use `skills/rsp/SKILL.md` for step-by-step setup, workflow, and auditing guidance. It is intended for on-demand loading rather than always-on core rules.
+
+Example optional installation flow:
+
+```bash
+npx skills add @oevery/rsp
+```
+
+Then load the installed RSP skill only when you are adopting RSP, auditing setup, or reorganizing project-level rules/specs.
+
+## Recommended workflow
+
+New project:
+
+1. `npx -y @oevery/rsp init`
+2. Fill `.rsp/specs/design.md`
+3. Use `rsp add spec <name>` only when a new durable project doc is needed
+4. Use `rsp add rules project-rules` only when the project has stable local rules
+5. Start work with `rsp new <name>`
+
+Existing project with a rich `AGENTS.md`:
+
+1. `npx -y @oevery/rsp init --agents-mode managed`
+2. Keep the managed block thin
+3. Move durable design into `.rsp/specs/design.md`
+4. Use `rsp add spec <name>` or `rsp add rules <name>` only when needed
+
+AI-assisted setup:
+
+1. `npx -y @oevery/rsp init --agents-mode print`
+2. Let the AI adapt the managed block in `AGENTS.md`
+3. Have the AI fill `.rsp/specs/design.md`
+4. Run `rsp doctor`
 
 ## CLI
 
 ```text
-rsp init               Scaffold .rsp/ + AGENTS.md
-rsp new <name> [summary]    Create .rsp/features/<name>.md
-rsp close <name>       Archive to .rsp/archive/ + update spec index
-rsp status             Show project dashboard (age, blocked, trends)
-rsp check              Validate features (frontmatter, sections, deps, deltas, scenarios)
-rsp deps               Show dependency table
-rsp deps --mermaid     Output Mermaid.js dependency graph
-rsp archive-index      Rebuild archive INDEX.md
+rsp init --agents-mode <mode>   Scaffold .rsp/ + AGENTS.md
+rsp add rules <name>            Create .rsp/rules/<name>.md
+rsp add spec <name>             Create .rsp/specs/<name>.md and rebuild specs index
+rsp new <name> [summary]        Create .rsp/features/<name>.md
+rsp close <name>                Archive to .rsp/archives/ + update archive index
+rsp doctor                      Check setup health and common issues
+rsp specs-index                 Rebuild specs INDEX.md
+rsp archive-index               Rebuild archives INDEX.md
 ```
 
-## Customization
+## Doctor
 
-Edit `.rsp/config.yaml` to customize valid statuses, priorities, and required sections.
+`rsp doctor` is read-only.
 
-> **Note:** The built-in YAML parser supports a simple subset: `key: value` pairs, nested lists (`- item`), and `#` comments. Multi-line values, quoted strings, booleans, and nested maps are not supported.
+- Checks `.rsp/`, `rules/rsp-rules.md`, `specs/design.md`, `specs/INDEX.md`, `archives/INDEX.md`, and the managed `AGENTS.md` block.
+- Verifies generated index signatures.
+- Verifies `active.d` markers and `features/` are in sync.
+- Exits non-zero when issues are found.
 
 ## Platform-agnostic
 
-The \`.rsp/\` directory is a plain file convention — no tool lock-in. It works with Kilo Code, Cursor, Claude Code, Cline, GitHub Copilot, or any AI coding assistant that reads project files. Requires Node.js 18+.
-
-## License
-
-MIT
+`.rsp/` is a plain file convention. It works with Kilo Code, Cursor, Claude Code, Cline, GitHub Copilot, or any assistant that reads project files. Requires Node.js 18+.

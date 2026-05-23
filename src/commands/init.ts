@@ -1,41 +1,14 @@
+import type { InitArgs } from '../types.js'
 import { existsSync } from 'node:fs'
-import { cp, mkdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
+
 import { basename, join } from 'node:path'
-
 import { pc, PKG_ROOT, RSP_DIR } from '../core/config.js'
+import { generateDesignContent, generateProjectRulesContent, renderRspAgentsBlock, upsertRspAgentsBlock } from '../core/helpers.js'
 import { withRspLock } from '../core/lock.js'
+import { buildArchiveIndex } from './archive-index.js'
+import { buildSpecsIndex } from './specs-index.js'
 
-/** Detect project name from package.json or fall back to directory name. */
-async function detectProjectName(): Promise<string> {
-  try {
-    if (existsSync('package.json')) {
-      const raw = await readFile('package.json', 'utf-8')
-      const pkg = JSON.parse(raw)
-      if (pkg.name && pkg.name !== '')
-        return pkg.name
-    }
-  }
-  catch { /* fall through */ }
-  return basename(process.cwd())
-}
-
-/** AGENTS.md body declaring RSP collaboration mode */
-const AGENTS_BODY = `## Collaboration Mode
-This project uses **RSP** (Rules, Specs, Plans) — see \`.rsp/rules/\` for the full workflow definition (start with \`rsp-rules.md\`).
-
-Key conventions:
-- \`.rsp/rules/\` — technical constraints and coding conventions
-- \`.rsp/specs/\` — project-level architecture and design reference
-- \`.rsp/features/<name>.md\` — feature definitions (spec + plan + tests)
-- \`.rsp/active.d/\` — currently active features (path = feature name)
-- \`.rsp/archive/\` — completed features
-
-## Workflow
-- Run \`rsp status\` to see current project state
-- Run \`rsp new <name>\` to start a new feature
-- Run \`rsp close <name>\` to archive a completed feature`
-
-/** Default config.yaml template — RSP built-in defaults, commented out for reference */
 const CONFIG_TEMPLATE = `# RSP project configuration
 # Uncomment any section below to override defaults.
 #
@@ -62,82 +35,108 @@ const CONFIG_TEMPLATE = `# RSP project configuration
 #   - Plan
 `
 
-/**
- * Scaffold the .rsp/ directory structure and AGENTS.md in the current project.
- */
-export async function initProject() {
+async function detectProjectName(): Promise<string> {
+  try {
+    if (existsSync('package.json')) {
+      const raw = await readFile('package.json', 'utf-8')
+      const pkg = JSON.parse(raw)
+      if (pkg.name && pkg.name !== '')
+        return pkg.name
+    }
+  }
+  catch { /* fall through */ }
+  return basename(process.cwd())
+}
+
+async function ensureFile(path: string, content: string): Promise<boolean> {
+  if (existsSync(path))
+    return false
+  await writeFile(path, content)
+  return true
+}
+
+function toTitle(projectName: string): string {
+  return projectName.startsWith('@') ? projectName.split('/')[1] || projectName : projectName
+}
+
+export async function initProject(args: InitArgs = {}) {
   const isNew = !existsSync(RSP_DIR)
+  const projectName = await detectProjectName()
+
   return withRspLock('init', async () => {
     const dirs = [
       join(RSP_DIR, 'rules'),
       join(RSP_DIR, 'specs'),
       join(RSP_DIR, 'features'),
-      join(RSP_DIR, 'archive'),
+      join(RSP_DIR, 'active.d'),
+      join(RSP_DIR, 'archives'),
     ]
-
-    let created = false
 
     for (const d of dirs)
       await mkdir(d, { recursive: true })
 
-    const rulesDest = join(RSP_DIR, 'rules', 'rsp-rules.md')
-    if (!existsSync(rulesDest)) {
-      await cp(join(PKG_ROOT, 'rules', 'rsp-rules.md'), rulesDest)
-      created = true
-    }
+    let created = false
+    const bundledRules = await readFile(join(PKG_ROOT, 'rules', 'rsp-rules.md'), 'utf-8')
 
-    const configPath = join(RSP_DIR, 'config.yaml')
-    if (!existsSync(configPath)) {
-      await writeFile(configPath, CONFIG_TEMPLATE)
-      created = true
-    }
+    created = (await ensureFile(join(RSP_DIR, 'rules', 'rsp-rules.md'), bundledRules)) || created
+    created = (await ensureFile(join(RSP_DIR, 'config.yaml'), CONFIG_TEMPLATE)) || created
+    const createdSpecsIndex = await ensureFile(join(RSP_DIR, 'specs', 'INDEX.md'), '# Specs Index\n\n_Project-level specs and design notes._\n')
+    created = createdSpecsIndex || created
+    const createdDesign = await ensureFile(join(RSP_DIR, 'specs', 'design.md'), generateDesignContent(projectName))
+    created = createdDesign || created
+    const createdArchivesIndex = await ensureFile(join(RSP_DIR, 'archives', 'INDEX.md'), '# Archive Index\n')
+    created = createdArchivesIndex || created
+    created = (await ensureFile(join(RSP_DIR, 'features', '.gitkeep'), '')) || created
+    created = (await ensureFile(join(RSP_DIR, 'active.d', '.gitkeep'), '')) || created
+    created = (await ensureFile(join(RSP_DIR, '.gitignore'), '# Transient files that should not be committed\n.lock\n')) || created
 
-    const specIndexPath = join(RSP_DIR, 'specs', 'INDEX.md')
-    if (!existsSync(specIndexPath)) {
-      await writeFile(specIndexPath, '# Specs Index\n\n_Extracted from archived features._\n')
-      created = true
-    }
+    if (args.withProjectRules)
+      created = (await ensureFile(join(RSP_DIR, 'rules', 'project-rules.md'), generateProjectRulesContent(projectName))) || created
 
-    const gitignorePath = join(RSP_DIR, '.gitignore')
-    if (!existsSync(gitignorePath)) {
-      await writeFile(gitignorePath, '# Transient files that should not be committed\n.lock\n')
-      created = true
-    }
+    if (createdSpecsIndex || createdDesign)
+      await buildSpecsIndex({ acquireLock: false })
+    if (createdArchivesIndex)
+      await buildArchiveIndex({ acquireLock: false })
 
     const agentsPath = 'AGENTS.md'
-    const projectName = await detectProjectName()
-    if (existsSync(agentsPath)) {
-      const existing = await readFile(agentsPath, 'utf-8')
-      const rspRe = /\bRSP\b/
-      if (!rspRe.test(existing)) {
-        const h2Match = existing.match(/^## /m)
-        if (h2Match) {
-          const before = existing.slice(0, h2Match.index)
-          const after = existing.slice(h2Match.index)
-          await writeFile(agentsPath, `${before}${AGENTS_BODY}\n\n---\n\n${after}`)
-        }
-        else {
-          await writeFile(agentsPath, `${existing}\n\n${AGENTS_BODY}\n`)
-        }
+    const title = toTitle(projectName)
+    const mode = args.agentsMode ?? 'managed'
+
+    if (!existsSync(agentsPath)) {
+      if (mode === 'managed') {
+        await writeFile(agentsPath, `# ${title}\n\n${upsertRspAgentsBlock('').content}\n`)
         created = true
       }
     }
-    else {
-      const title = projectName.startsWith('@') ? projectName.split('/')[1] || projectName : projectName
-      await writeFile(agentsPath, `# ${title}\n\n${AGENTS_BODY}\n`)
-      created = true
+    else if (mode === 'managed') {
+      const existing = await readFile(agentsPath, 'utf-8')
+      const next = upsertRspAgentsBlock(existing)
+      if (next.changed) {
+        await writeFile(agentsPath, next.content)
+        created = true
+      }
+    }
+
+    if (mode === 'print') {
+      const managed = existsSync(agentsPath)
+        ? upsertRspAgentsBlock(await readFile(agentsPath, 'utf-8')).content
+        : `# ${title}\n\n${renderRspAgentsBlock()}\n`
+      console.log(`\n${managed}\n`)
     }
 
     if (isNew) {
-      console.log(`\n  ${pc.green('RSP scaffolded.')}\n`)
-      console.log(`  Created: .rsp/rules/\n           .rsp/specs/\n           .rsp/features/\n           .rsp/archive/\n           .rsp/.gitignore\n           .rsp/config.yaml\n           AGENTS.md\n`)
+      console.log(`
+  ${pc.green('RSP scaffolded.')}\n`)
+      console.log(`  Created: .rsp/rules/\n           .rsp/specs/\n           .rsp/features/\n           .rsp/active.d/\n           .rsp/archives/\n           .rsp/.gitignore\n           .rsp/config.yaml\n           .rsp/specs/design.md\n           AGENTS.md\n`)
       console.log(`  ${pc.cyan('Next:')} rsp new <name>\n  ${pc.dim('Also:')} rsp status  rsp deps\n`)
     }
     else if (created) {
-      console.log(`\n  ${pc.green('RSP initialized.')}\n`)
+      console.log(`
+  ${pc.green('RSP initialized.')}\n`)
     }
     else {
-      console.log(`\n  ${pc.yellow('RSP already initialized — nothing changed.')}\n`)
+      console.log(`
+  ${pc.yellow('RSP already initialized — nothing changed.')}\n`)
     }
   })
 }

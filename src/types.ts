@@ -31,6 +31,12 @@ export interface CloseFeatureArgs {
   name: string
 }
 
+/** Options for `rsp init`. */
+export interface InitArgs {
+  withProjectRules?: boolean
+  agentsMode?: 'managed' | 'skip' | 'print'
+}
+
 /** User-customizable project configuration from .rsp/config.yaml */
 export interface RspConfig {
   /** Custom status values (merged with built-in defaults) */

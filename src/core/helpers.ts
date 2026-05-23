@@ -5,6 +5,9 @@ import { readdir, stat } from 'node:fs/promises'
 import { join, relative } from 'node:path'
 import { RSP_DIR } from './config.js'
 
+const RSP_AGENTS_BEGIN = '<!-- rsp:begin -->'
+const RSP_AGENTS_END = '<!-- rsp:end -->'
+
 /**
  * Parse a simple YAML-like key-value + list structure from lines.
  * Used by both frontmatter and config.yaml parsers.
@@ -84,6 +87,8 @@ export async function walkMarkdownFiles(dir: string): Promise<string[]> {
   try {
     const items = await readdir(dir, { withFileTypes: true })
     for (const item of items) {
+      if (item.name.startsWith('.'))
+        continue
       const filePath = join(dir, item.name)
       if (item.isDirectory())
         files.push(...await walkMarkdownFiles(filePath))
@@ -103,6 +108,8 @@ export async function walkFiles(dir: string): Promise<string[]> {
   try {
     const items = await readdir(dir, { withFileTypes: true })
     for (const item of items) {
+      if (item.name.startsWith('.'))
+        continue
       const filePath = join(dir, item.name)
       if (item.isDirectory())
         files.push(...await walkFiles(filePath))
@@ -124,7 +131,6 @@ export function featureNameFromPath(featuresDir: string, filePath: string): stri
 
 /**
  * Generate a feature file content from the built-in template.
- * Supports {{name}} and {{summary}} placeholders.
  */
 export function generateFeatureContent(name: string, summary = ''): string {
   return `---
@@ -154,6 +160,129 @@ tags:
 ## Blockers
 -
 `
+}
+
+/** Render the managed RSP block for AGENTS.md. */
+export function renderRspAgentsBlock(): string {
+  return `${RSP_AGENTS_BEGIN}
+## RSP Entry
+
+Read in order:
+1. .rsp/rules/*.md
+2. .rsp/specs/INDEX.md
+3. .rsp/specs/design.md
+4. .rsp/active.d/ and matching .rsp/features/*.md
+
+Guidelines:
+- .rsp/rules/rsp-rules.md is required
+- .rsp/rules/project-rules.md is optional
+- Keep project design in .rsp/specs/
+- Add extra spec files only when they have durable value
+- Do not create a feature named 'init'
+${RSP_AGENTS_END}`
+}
+
+/** Update AGENTS.md with the managed RSP block while preserving user content. */
+export function upsertRspAgentsBlock(content: string): { content: string, changed: boolean } {
+  const block = renderRspAgentsBlock()
+  const managedRe = /<!-- rsp:begin -->[\s\S]*?<!-- rsp:end -->/
+  if (managedRe.test(content)) {
+    const next = content.replace(managedRe, block)
+    return { content: next, changed: next !== content }
+  }
+
+  const trimmed = content.trimStart()
+  const next = trimmed ? `${block}\n\n${trimmed}` : `${block}\n`
+  return { content: next, changed: true }
+}
+
+/** Check whether AGENTS.md already contains a managed RSP block. */
+export function hasRspAgentsBlock(content: string): boolean {
+  return content.includes(RSP_AGENTS_BEGIN) && content.includes(RSP_AGENTS_END)
+}
+
+/** Generate the default project design spec template. */
+export function generateDesignContent(projectName: string): string {
+  return `# Project Design: ${projectName}
+
+## Purpose
+- <what this project is responsible for>
+- <who or what it serves>
+
+## Scope
+- In scope:
+  - <major capability or boundary>
+- Out of scope:
+  - <intentional non-goal>
+
+## Structure
+- <important directory or subsystem> — <responsibility>
+
+## Constraints
+- <cross-cutting technical or operational constraint>
+`
+}
+
+/** Generate the optional project rules template. */
+export function generateProjectRulesContent(projectName: string): string {
+  return `---
+name: project-rules
+description: Project-specific rules for ${projectName}
+---
+
+# Project Rules
+
+## Scope
+- <rules that apply across the project>
+
+## Validation
+- <preferred validation commands>
+
+## Conventions
+- <project-specific conventions>
+`
+}
+
+/** Generate a generic rules file template. */
+export function generateRulesContent(name: string): string {
+  const title = toTitleCase(name)
+  return `---
+name: ${name}
+description: Project-specific rules for ${title}
+---
+
+# ${title}
+
+## Scope
+- <what this rules file governs>
+
+## Rules
+- <stable local rule>
+
+## Validation
+- <relevant validation command or check>
+`
+}
+
+/** Generate a generic project spec template. */
+export function generateSpecContent(name: string): string {
+  const title = toTitleCase(name)
+  return `# ${title}
+
+## Purpose
+- <why this project-level spec exists>
+
+## Details
+- <important project-level detail>
+`
+}
+
+function toTitleCase(value: string): string {
+  return value
+    .split(/[-/]/g)
+    .filter(Boolean)
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
 }
 
 /**

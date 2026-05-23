@@ -14,6 +14,8 @@ export const PKG_ROOT = join(__dirname, '..')
 export const RSP_DIR = '.rsp'
 /** Feature tracking via active.d/ directory (empty marker files, path = feature name) */
 export const ACTIVE_DIR = join(RSP_DIR, 'active.d')
+/** Archived feature storage directory */
+export const ARCHIVES_DIR = join(RSP_DIR, 'archives')
 /** File lock path (prevents concurrent rsp operations) */
 export const LOCK_PATH = join(RSP_DIR, '.lock')
 /** Project config file path */

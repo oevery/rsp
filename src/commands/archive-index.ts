@@ -7,17 +7,17 @@ import { parseFrontmatter, walkMarkdownFiles } from '../core/helpers.js'
 import { withRspLock } from '../core/lock.js'
 
 /**
- * Regenerate the .rsp/archive/INDEX.md file by scanning all archived
+ * Regenerate the .rsp/archives/INDEX.md file by scanning all archived
  * feature files and extracting date, name, and summary metadata.
  */
 export async function buildArchiveIndex({ acquireLock = true } = {}) {
   if (acquireLock)
     return withRspLock('archive-index', async () => buildArchiveIndex({ acquireLock: false }))
 
-  const archiveDir = join(RSP_DIR, 'archive')
+  const archiveDir = join(RSP_DIR, 'archives')
 
   if (!existsSync(archiveDir)) {
-    console.log(`  ${pc.dim('No archive directory.')}\n`)
+    console.log(`  ${pc.dim('No archives directory.')}\n`)
     return
   }
 
@@ -25,18 +25,18 @@ export async function buildArchiveIndex({ acquireLock = true } = {}) {
     .filter(fp => basename(fp) !== 'INDEX.md')
     .sort()
 
-  if (archiveFiles.length === 0) {
-    console.log(`  ${pc.dim('No archived features.')}\n`)
-    return
-  }
-
   const lines: string[] = []
   lines.push('# Archive Index')
   lines.push('')
   lines.push(`Generated: ${new Date().toISOString().slice(0, 10)}`)
   lines.push('')
-  lines.push('| Date | Feature | Summary |')
-  lines.push('|------|---------|---------|')
+  if (archiveFiles.length === 0) {
+    lines.push('_No archived features yet._')
+  }
+  else {
+    lines.push('| Date | Feature | Summary |')
+    lines.push('|------|---------|---------|')
+  }
 
   for (const fp of archiveFiles) {
     const base = basename(fp)

@@ -154,7 +154,7 @@ export async function showStatus() {
 
 /** Display archive trend: count per month from archive INDEX.md. */
 async function showArchiveTrend() {
-  const archiveDir = join(RSP_DIR, 'archive')
+  const archiveDir = join(RSP_DIR, 'archives')
   const indexPath = join(archiveDir, 'INDEX.md')
 
   if (!existsSync(indexPath))

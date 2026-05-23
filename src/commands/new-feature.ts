@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 
-import { ACTIVE_DIR, pc, RSP_DIR } from '../core/config.js'
+import { ACTIVE_DIR, ARCHIVES_DIR, pc, RSP_DIR } from '../core/config.js'
 import { generateFeatureContent } from '../core/helpers.js'
 import { withRspLock } from '../core/lock.js'
 import { buildArchiveIndex } from './archive-index.js'
@@ -18,6 +18,10 @@ export async function newFeature(name: string, summary = '') {
     }
     if (/^[a-z0-9-]+(?:\/[a-z0-9-]+)*$/.test(name) === false) {
       console.error(`  ${pc.red('Error:')} feature name must be kebab-case with optional subdirectory (lowercase, digits, hyphens, slashes)`)
+      process.exit(1)
+    }
+    if (name === 'init') {
+      console.error(`  ${pc.red('Error:')} "init" is a reserved workflow name, not a feature name`)
       process.exit(1)
     }
 
@@ -36,8 +40,7 @@ export async function newFeature(name: string, summary = '') {
     await writeFile(activeEntry, '')
 
     if (!existed) {
-      const archiveDir = join(RSP_DIR, 'archive')
-      const archiveIndex = join(archiveDir, 'INDEX.md')
+      const archiveIndex = join(ARCHIVES_DIR, 'INDEX.md')
       if (existsSync(archiveIndex))
         await buildArchiveIndex({ acquireLock: false })
     }

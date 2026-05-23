@@ -1,123 +1,98 @@
 ---
 name: rsp-rules
-description: RSP rules for Rules, Spec, and Plan driven development.
+description: Core RSP rules for Rules, Specs, and Plans driven development.
 ---
 
 # RSP
 
 RSP = Rules, Specs, Plans.
 
-## Structure
+## Core structure
 
 ```text
 .rsp/
-├── rules/                    # technical constraints, long-lived
-├── specs/                    # project-level architecture (optional)
-├── features/                 # active features
-│   ├── <name>.md             # or <domain>/<name>.md for grouping
-├── active.d/                 # active feature markers
-│   └── <name>                # empty marker file, mirrors features/
-├── archive/
-│   ├── INDEX.md              # auto-generated index
-│   └── YYYY-MM-DD_<name>.md
+├── rules/
+├── specs/
+├── features/
+├── active.d/
+├── archives/
+└── config.yaml
 ```
 
-## File roles
+## Managed boundaries
 
-- `rules/` — stable technical constraints, coding conventions, architecture decisions. One or more files, split by domain (e.g., `frontend.md`, `api.md`). Do not put business requirements here.
-- \`specs/\` — project-level architecture and design reference. Use for cross-cutting concerns, system diagrams, ADRs. Per-feature details go in \`features/\`.
-- `features/<name>.md` — a complete feature definition, optionally grouped by domain subdirectory (e.g., `features/auth/login.md`). Contains YAML frontmatter, `## Spec` (what), `## Plan` (how), `## Tests`, and optional `## Notes`.
-- `active.d/` — active feature tracking. Mirrors the `features/` directory structure (e.g., `active.d/payments/checkout`). Each file is an empty marker; the file path is the source of truth. All features in `active.d/` are considered active.
+- `AGENTS.md` is partially managed. RSP owns only the `<!-- rsp:begin --> ... <!-- rsp:end -->` block.
+- `specs/INDEX.md` is auto-generated. Rebuild it with `rsp specs-index` instead of editing it manually.
+- `archives/INDEX.md` is auto-generated. Rebuild it with `rsp archive-index` instead of editing it manually.
+- `design.md` is created by `rsp init` and then owned by the project.
+- `project-rules.md` is optional.
 
 ## Reading order
 
-1. Read `active.d/` to find active features.
-2. If multiple entries exist, ask which to focus on.
-3. If empty, ask the user or suggest `rsp new <name>`.
+1. Read `AGENTS.md` for entrypoint guidance.
+2. Read `active.d/` to find active features.
+3. If `active.d/` is empty, ask the user what to work on or suggest `npx -y @oevery/rsp new <name>`.
 4. Read the referenced `features/<name>.md`.
 5. Read `rules/` for technical constraints.
-6. Optionally read \`specs/\` for architecture context and \`config.yaml\` for customized statuses/priorities.
+6. Read `specs/design.md` and other project-level specs only when relevant to the current task.
 
-## Token optimization
+## File creation rules
 
-If [RTK (Token Killer)](https://kilo.ai) is available in the environment, prefix all `rsp` commands with `rtk` (e.g. `rtk rsp status`, `rtk rsp new`, `rtk rsp check`, `rtk rsp deps`) to reduce token consumption. RTK is detected by availability in `$PATH`.
+- `specs/design.md`: create by default with `rsp init`.
+- `rules/project-rules.md`: create only when the project has durable local rules worth preserving.
+- `rules/<name>.md`: create only for other durable rule sets.
+- `specs/<name>.md`: create only when the new document has durable project-level value and does not duplicate `design.md`.
+- `features/<name>.md`: create only for active work that should be tracked as a feature.
+- Do not create files merely for completeness.
 
-## Semantic checkboxes
+## Command-first creation
 
-Use in all checklists (Requirements, Plan, Tests):
+- Prefer RSP commands over direct file creation when creating new RSP-managed files.
+- Use `rsp init` to scaffold the base RSP structure.
+- Use `rsp add rules <name>` to create new durable rules files under `rules/`.
+- Use `rsp add spec <name>` to create new durable project-level spec files under `specs/`.
+- Use `rsp new <name>` to create new feature files under `features/`.
+- Use `rsp close <name>` to move completed work into `archives/`.
+- Direct file creation is acceptable only when no RSP command covers the target file.
+- After a file is created by command, edit its contents in place as needed.
 
-- `[ ]` = todo.
-- `[/]` = in progress.
-- `[-]` = dropped.
-- `[x]` = done and verified.
-- Use `[/]` to signal active ownership.
-- Use `[x]` only after validation.
+## Feature requirements
 
-## Feature file template
+Every feature file should contain these sections:
 
-```markdown
----
-status: draft                # draft | ready | in-progress | blocked | done
-priority: medium             # low | medium | high | critical
-depends-on:                  # optional: features this depends on
-  - <other-feature-name>
-tags:                        # optional: categorization
-  - backend
----
-# Feature: <name>
+- `## Spec`
+- `## Plan`
+- `## Tests`
+- `## Blockers`
 
-## Spec
-- Summary: <one-line>
-- Requirements:
-  - [ ] <verifiable item>
-- Constraints:
-  - <binding constraint>
+## Init constraints
 
-## Plan
-- [ ] Phase 1: <name>
-  - [ ] <task>
-- [ ] Phase 2: <name>
-
-## Tests
-- [ ] <test file or scenario>
-
-## Notes (optional)
-- <design decisions discovered during implementation>
-
-## Blockers
--
-```
-
-## Evolution rules
-
-- If requirements change during implementation, update `## Spec` explicitly — do not silently diverge.
-- If the scope grows beyond the original spec, consider closing the current feature and starting a new one (`close` then `new`).
-- Complex features may split into sub-features using subdirectories (`features/parent/child.md`).
-- After closing a feature, update or regenerate `archive/INDEX.md` via `rsp archive-index`.
-
-## Parallel features (always on)
-
-All features in `active.d/` are tracked as active by default. Parallelism is inherent:
-
-- `rsp new` always creates an entry in `active.d/`.
-- `rsp close` removes the entry from `active.d/`.
-- When `active.d/` has a single entry, that is the primary focus. When multiple entries exist, AI should ask the user which to focus on.
+- `rsp init` scaffolds project structure only. It must not create a feature file.
+- `rsp init` should create `features/`, `active.d/`, `archives/`, and `specs/design.md` up front.
+- `rsp init --agents-mode managed|skip|print` controls whether `AGENTS.md` is updated, skipped, or printed.
+- `managed` should update only the managed AGENTS block.
+- `skip` should leave `AGENTS.md` untouched.
+- `print` should scaffold `.rsp/` and print the managed AGENTS block without writing it.
+- `init` is a reserved workflow name. Do not create a feature named `init`.
 
 ## Agent behavior
 
-- Read `active.d/` first. If empty, ask what to work on. Also read `AGENTS.md` for project context.
-- **`rsp init`**: scaffold `.rsp/` + `AGENTS.md`. Detects project name from package.json.
-  - Post-init: confirm created paths, suggest `rsp new`, `rsp status`, `rsp deps`.
-- **`rsp new <name> [summary]`**: create `.rsp/features/<name>.md`. Name is kebab-case, supports subdirectories (`auth/login`). Optional one-line summary.
-  - After creation: confirm file exists, confirm `active.d/` marker was created.
-- **`rsp close <name>`**: archive to `.rsp/archive/YYYY-MM-DD_<name>.md`. Mirror subdirectory structure in archive.
-  - After archive: suggest `git add .rsp/archive/… && git commit`.
-  - Runs `rsp check` automatically if the feature had dependents.
-- **`rsp check`**: validate feature file integrity (frontmatter, sections, dependencies, cycles).
-- **`rsp deps`**: inspect dependency relationships before large refactors.
-- **`rsp status`**: view project dashboard at any time.
-- For cross-cutting or dependent features, add `depends-on:` in frontmatter.
-- Update the feature file as work progresses. Check off tasks and tests.
-- Before finishing, confirm code matches `## Spec` and `## Plan` reflects reality.
+- Read `active.d/` first.
+- Treat `AGENTS.md` as a navigation layer, not the long-term knowledge base.
+- Preserve content outside the managed AGENTS block unless explicitly asked to change it.
+- Keep project-wide design and durable context in `specs/design.md`.
+- Keep stable local rules in `rules/project-rules.md` or another durable rules file only when needed.
+- Use `rsp add rules project-rules` for the canonical optional project rules file.
+- Do not push long-lived project knowledge back into `AGENTS.md`.
+- `rsp doctor` is diagnostic only and must not mutate project files.
 
-> **Token tip**: If [RTK](https://kilo.ai) is installed, prefix shell commands with `rtk` (e.g. `rtk rsp status`) to reduce token consumption.
+## Prohibitions
+
+- Do not manually maintain `specs/INDEX.md` or `archives/INDEX.md`.
+- Do not create a feature named `init`.
+- Do not create `project-rules.md` by default when the project has no durable local rules.
+- Do not use `AGENTS.md` as the long-term storage location for project design or rules.
+- Do not create `specs` files that duplicate information already stored in `design.md` or durable rules files.
+- Do not create placeholder or empty-shell files merely for completeness.
+- Do not create new files under `.rsp/rules/`, `.rsp/specs/`, or `.rsp/features/` directly when an RSP command already exists for that file type.
+- Do not create archive entries directly under `.rsp/archives/`; use `rsp close <name>`.
