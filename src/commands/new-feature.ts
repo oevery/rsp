@@ -33,7 +33,6 @@ export async function newFeature(name: string, summary = '') {
   }
 
   return withRspLock('new-feature', async () => {
-
     const featurePath = join(RSP_DIR, 'features', `${name}.md`)
     await mkdir(dirname(featurePath), { recursive: true })
 
