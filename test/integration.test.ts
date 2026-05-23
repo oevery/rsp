@@ -516,6 +516,7 @@ describe('doctor command', () => {
     }
 
     expect(output).toContain('AGENTS.md missing managed RSP block')
+    expect(output).toContain('Run: rsp init --agents-mode managed')
   })
 
   it('reports generated index and active marker issues', async () => {
@@ -542,8 +543,30 @@ describe('doctor command', () => {
     }
 
     expect(output).toContain('specs/INDEX.md has generated signature')
+    expect(output).toContain('Run: rsp specs-index')
     expect(output).toContain('archives/INDEX.md has generated signature')
+    expect(output).toContain('Run: rsp archive-index')
     expect(output).toContain('feature files without active markers: orphan')
+    expect(output).toContain('Run: recreate the marker with rsp new <name> or archive the feature with rsp close <name>')
+  })
+
+  it('reports missing core files with direct repair commands', async () => {
+    const brokenDir = join(tmpdir(), 'rsp-doctor-missing-core-test', randomUUID())
+    await mkdir(brokenDir, { recursive: true })
+
+    const cliPath = join(fileURLToPath(new URL('..', import.meta.url)), 'dist', 'cli.mjs')
+    let output = ''
+    try {
+      output = execSync(`node ${cliPath} doctor`, { cwd: brokenDir, encoding: 'utf-8' })
+    }
+    catch (error) {
+      output = String((error as { stdout?: string }).stdout || '')
+    }
+
+    expect(output).toContain('.rsp exists')
+    expect(output).toContain('Run: rsp init')
+    expect(output).toContain('AGENTS.md missing')
+    expect(output).toContain('Run: rsp init --agents-mode managed')
   })
 })
 
