@@ -46,22 +46,11 @@ export async function closeFeature(name: string) {
     const activeEntry = join(ACTIVE_DIR, name)
     if (existsSync(activeEntry)) {
       await unlink(activeEntry)
-      let parent = dirname(activeEntry)
-      while (parent !== ACTIVE_DIR) {
-        try {
-          const remaining = await readdir(parent)
-          if (remaining.length === 0)
-            await rmdir(parent)
-          else
-            break
-        }
-        catch {
-          break
-        }
-        parent = dirname(parent)
-      }
+      await cleanupEmptyParentDirs(activeEntry, ACTIVE_DIR)
       activeCleared = true
     }
+
+    await cleanupEmptyParentDirs(srcPath, join(RSP_DIR, 'features'))
 
     const clearedMsg = activeCleared ? `  ${pc.dim('active.d cleared')}\n` : ''
     console.log(`  ${pc.green('Archived:')} ${archiveName}\n${clearedMsg}`)
@@ -114,5 +103,22 @@ async function runCheckIfHasDependents(name: string) {
   }
   catch {
     console.warn(`  ${pc.dim('⚠ could not verify dependents for')} "${name}"`)
+  }
+}
+
+async function cleanupEmptyParentDirs(path: string, stopDir: string) {
+  let parent = dirname(path)
+  while (parent !== stopDir) {
+    try {
+      const remaining = await readdir(parent)
+      if (remaining.length === 0)
+        await rmdir(parent)
+      else
+        break
+    }
+    catch {
+      break
+    }
+    parent = dirname(parent)
   }
 }

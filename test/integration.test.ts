@@ -115,6 +115,11 @@ describe('full workflow integration', () => {
     expect(existsSync(activeDPath('auth'))).toBe(false)
   })
 
+  it('cleans up empty features/ parent after closing subdirectory feature', async () => {
+    // auth/login was closed above; features/auth/ dir should be removed
+    expect(existsSync(featuresPath('auth'))).toBe(false)
+  })
+
   it('status shows no active features after all closed', async () => {
     const { showStatus } = await import('../src/commands/status.js')
     await expect(showStatus()).resolves.toBeUndefined()
