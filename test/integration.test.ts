@@ -1,7 +1,7 @@
 import { execSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import { existsSync, utimesSync } from 'node:fs'
-import { cp, mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
+import { cp, mkdir, readdir, readFile, unlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -83,12 +83,18 @@ describe('full workflow integration', () => {
 
   it('allows init as a feature name', async () => {
     const { newFeature } = await import('../src/commands/new-feature.js')
-    await newFeature('init', 'Bootstrap feature')
+    try {
+      await newFeature('init', 'Bootstrap feature')
 
-    const content = await readFile(featuresPath('init.md'), 'utf-8')
-    expect(content).toContain('# Feature: init')
-    expect(content).toContain('- Summary: Bootstrap feature')
-    expect(existsSync(activeDPath('init'))).toBe(true)
+      const content = await readFile(featuresPath('init.md'), 'utf-8')
+      expect(content).toContain('# Feature: init')
+      expect(content).toContain('- Summary: Bootstrap feature')
+      expect(existsSync(activeDPath('init'))).toBe(true)
+    }
+    finally {
+      await unlink(featuresPath('init.md'))
+      await unlink(activeDPath('init'))
+    }
   })
 
   it('lists feature with status', async () => {
