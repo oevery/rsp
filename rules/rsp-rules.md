@@ -73,7 +73,6 @@ Every feature file should contain these sections:
 - `managed` should update only the managed AGENTS block.
 - `skip` should leave `AGENTS.md` untouched.
 - `print` should scaffold `.rsp/` and print the managed AGENTS block without writing it.
-- `init` is a reserved workflow name. Do not create a feature named `init`.
 
 ## Agent behavior
 
@@ -89,7 +88,6 @@ Every feature file should contain these sections:
 ## Prohibitions
 
 - Do not manually maintain `specs/INDEX.md` or `archives/INDEX.md`.
-- Do not create a feature named `init`.
 - Do not create `project-rules.md` by default when the project has no durable local rules.
 - Do not use `AGENTS.md` as the long-term storage location for project design or rules.
 - Do not create `specs` files that duplicate information already stored in `design.md` or durable rules files.

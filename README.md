@@ -84,10 +84,11 @@ Then load the installed RSP skill only when you are adopting RSP, auditing setup
 New project:
 
 1. `npx -y @oevery/rsp init`
-2. Fill `.rsp/specs/design.md`
-3. Use `rsp add spec <name>` only when a new durable project doc is needed
-4. Use `rsp add rules project-rules` only when the project has stable local rules
-5. Start work with `rsp new <name>`
+2. Create `rsp new project-setup` to capture bootstrap facts and initial decisions
+3. Fill `.rsp/specs/design.md`
+4. Use `rsp add spec <name>` only when a new durable project doc is needed
+5. Use `rsp add rules project-rules` only when the project has stable local rules
+6. Start work with `rsp new <name>`
 
 Existing project with a rich `AGENTS.md`:
 
@@ -100,8 +101,9 @@ AI-assisted setup:
 
 1. `npx -y @oevery/rsp init --agents-mode print`
 2. Let the AI adapt the managed block in `AGENTS.md`
-3. Have the AI fill `.rsp/specs/design.md`
-4. Run `rsp doctor`
+3. Have the AI create `rsp new project-setup`
+4. Have the AI fill `.rsp/specs/design.md`
+5. Run `rsp doctor`
 
 ## CLI
 

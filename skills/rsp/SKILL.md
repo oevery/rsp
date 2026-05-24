@@ -23,15 +23,18 @@ If the project has no `.rsp/` yet:
    - `managed`: the project already uses `AGENTS.md` and should gain a thin managed RSP block
    - `skip`: do not modify `AGENTS.md`
    - `print`: print the managed block for manual or AI-assisted insertion
-3. Fill `specs/design.md`
-4. Run `rsp doctor`
+ 3. Create `rsp new project-setup` to capture project bootstrap facts, boundaries, and initial decisions
+ 4. Fill `features/project-setup.md`
+ 5. Fill `specs/design.md`
+ 6. Run `rsp doctor`
 
 If the project already has `.rsp/`:
 
 1. Check `AGENTS.md`
 2. Check `active.d/`
 3. Check `specs/design.md`
-4. Run `rsp doctor` before making structural changes when the setup looks inconsistent
+4. If the project still lacks a durable bootstrap feature, create `rsp new project-setup`
+5. Run `rsp doctor` before making structural changes when the setup looks inconsistent
 
 ## Command-first workflow
 
@@ -104,7 +107,7 @@ tags:
 ## Spec
 - Summary: <one-line>
 - Requirements:
-  - [ ] <verifiable item>
+  - <verifiable item>
 - Constraints:
   - <binding constraint>
 
@@ -118,6 +121,16 @@ tags:
 ## Blockers
 -
 ```
+
+## Project setup workflow
+
+Use this when adopting RSP into a repository or when the project lacks a durable bootstrap feature:
+
+1. Create `rsp new project-setup`
+2. Capture the project's purpose, boundaries, inputs, outputs, and platform constraints in the feature spec
+3. Move durable architecture facts into `.rsp/specs/design.md`
+4. Move stable validation or workflow constraints into `.rsp/rules/project-rules.md` when they are long-lived
+5. Keep `project-setup` open until the initial project model is settled, then start normal feature work
 
 ## Audit workflow
 

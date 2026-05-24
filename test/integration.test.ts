@@ -81,6 +81,16 @@ describe('full workflow integration', () => {
     expect(existsSync(activeDPath('auth', 'login'))).toBe(true)
   })
 
+  it('allows init as a feature name', async () => {
+    const { newFeature } = await import('../src/commands/new-feature.js')
+    await newFeature('init', 'Bootstrap feature')
+
+    const content = await readFile(featuresPath('init.md'), 'utf-8')
+    expect(content).toContain('# Feature: init')
+    expect(content).toContain('- Summary: Bootstrap feature')
+    expect(existsSync(activeDPath('init'))).toBe(true)
+  })
+
   it('lists feature with status', async () => {
     const { showStatus } = await import('../src/commands/status.js')
     await expect(showStatus()).resolves.toBeUndefined()
@@ -209,7 +219,7 @@ depends-on:
 ## Spec
 - Summary: Orphan feature
 - Requirements:
-  - [ ] nothing
+  - nothing
 
 ## Plan
 - [ ] Phase 1:
@@ -314,7 +324,7 @@ tags:
 ## Spec
 - Summary: An already archived feature
 - Requirements:
-  - [x] done
+  - done
 
 ## Plan
 - [x] done`

@@ -19,11 +19,6 @@ export async function newFeature(name: string, summary = '') {
     console.error(`  ${pc.red('Error:')} feature name must be kebab-case with optional subdirectory (lowercase, digits, hyphens, slashes)`)
     process.exit(1)
   }
-  if (name === 'init') {
-    console.error(`  ${pc.red('Error:')} "init" is a reserved workflow name, not a feature name`)
-    process.exit(1)
-  }
-
   const rspRulesPath = join(RSP_DIR, 'rules', 'rsp-rules.md')
   const designPath = join(RSP_DIR, 'specs', 'design.md')
   if (!existsSync(rspRulesPath) || !existsSync(designPath)) {

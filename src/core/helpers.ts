@@ -144,7 +144,7 @@ tags:
 ## Spec
 - Summary: ${summary || '<one-line summary>'}
 - Requirements:
-  - [ ] <verifiable requirement>
+  - <verifiable requirement>
 - Constraints:
   -
 
@@ -179,7 +179,6 @@ Guidelines:
 - .rsp/rules/project-rules.md is optional
 - Keep project design in .rsp/specs/
 - Add extra spec files only when they have durable value
-- Do not create a feature named 'init'
 ${RSP_AGENTS_END}`
 }
 

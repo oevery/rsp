@@ -141,7 +141,7 @@ describe('detectDeltaSections', () => {
   })
 
   it('returns false when no deltas', () => {
-    const content = `## Spec\n- Summary: x\n- Requirements:\n  - [ ] something`
+    const content = `## Spec\n- Summary: x\n- Requirements:\n  - something`
     const result = detectDeltaSections(content)
     expect(result.added).toBe(false)
     expect(result.modified).toBe(false)
@@ -239,6 +239,7 @@ describe('generateFeatureContent', () => {
   it('contains required sections', () => {
     const content = generateFeatureContent('test')
     expect(content).toContain('## Spec')
+    expect(content).toContain('- <verifiable requirement>')
     expect(content).toContain('## Plan')
     expect(content).toContain('## Tests')
   })

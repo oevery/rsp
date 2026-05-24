@@ -84,10 +84,11 @@ npx skills add oevery/rsp --skill rsp
 新项目：
 
 1. `npx -y @oevery/rsp init`
-2. 填写 `.rsp/specs/design.md`
-3. 只有在需要长期项目文档时才用 `rsp add spec <name>`
-4. 只有在存在稳定本地规则时才用 `rsp add rules project-rules`
-5. 使用 `rsp new <name>` 开始工作
+2. 创建 `rsp new project-setup`，收集启动事实和初始决策
+3. 填写 `.rsp/specs/design.md`
+4. 只有在需要长期项目文档时才用 `rsp add spec <name>`
+5. 只有在存在稳定本地规则时才用 `rsp add rules project-rules`
+6. 使用 `rsp new <name>` 开始工作
 
 已有复杂 `AGENTS.md` 的项目：
 
@@ -100,8 +101,9 @@ AI 协助接入：
 
 1. `npx -y @oevery/rsp init --agents-mode print`
 2. 让 AI 处理 `AGENTS.md` 的受管块
-3. 让 AI 填写 `.rsp/specs/design.md`
-4. 运行 `rsp doctor`
+3. 让 AI 创建 `rsp new project-setup`
+4. 让 AI 填写 `.rsp/specs/design.md`
+5. 运行 `rsp doctor`
 
 ## CLI
 
