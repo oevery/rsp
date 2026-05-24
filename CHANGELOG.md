@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0 (2026-05-24)
+
+- Add `rsp init --with-project-setup` to seed a project bootstrap feature during initialization.
+- Introduce the `project-setup` workflow and align docs, skill guidance, and templates around durable project capture.
+- Improve feature template formatting and `Spec` structure for clearer Markdown rendering.
+- Keep init-related tests isolated and update the onboarding flow to match the new workflow.
+
 ## 1.1.0 (2026-05-24)
 
 - Add `rsp status` filters: `--active`, `--blocked`, and `--stale <days>`
