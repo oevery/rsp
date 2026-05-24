@@ -42,6 +42,8 @@ npx -y @oevery/rsp doctor
 - `.rsp/archives/INDEX.md`：自动生成，使用 `rsp archive-index` 重建。
 - `.rsp/specs/design.md`：由 `rsp init` 创建，之后由项目维护。
 - `.rsp/rules/project-rules.md`：可选，仅在项目确有长期本地规则时创建。
+- 将长期架构、边界和跨模块技术约束放在 `.rsp/specs/design.md`。
+- 将稳定的工作流规则、验证要求和本地运行约束放在 `.rsp/rules/project-rules.md`。
 
 ## AGENTS 接入
 

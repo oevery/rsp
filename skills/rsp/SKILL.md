@@ -76,7 +76,7 @@ Rules:
 ## File placement guide
 
 - `specs/design.md`: project-wide design, boundaries, and durable context
-- `rules/project-rules.md`: canonical optional file for stable local validation steps, directory constraints, or workflow restrictions
+- `rules/project-rules.md`: canonical optional file for stable local validation steps, workflow restrictions, and other long-lived local operating constraints
 - `rules/<name>.md`: other durable rule sets
 - `specs/<name>.md`: additional durable project-level documents only when they do not duplicate `design.md`
 - `features/<name>.md`: active work only
@@ -128,8 +128,8 @@ Use this when adopting RSP into a repository or when the project lacks a durable
 
 1. Create `rsp new project-setup`
 2. Capture the project's purpose, boundaries, inputs, outputs, and platform constraints in the feature spec
-3. Move durable architecture facts into `.rsp/specs/design.md`
-4. Move stable validation or workflow constraints into `.rsp/rules/project-rules.md` when they are long-lived
+3. Move durable architecture facts and cross-cutting technical constraints into `.rsp/specs/design.md`
+4. Move stable validation rules, workflow constraints, and local operating constraints into `.rsp/rules/project-rules.md` when they are long-lived
 5. Keep `project-setup` open until the initial project model is settled, then start normal feature work
 
 ## Audit workflow

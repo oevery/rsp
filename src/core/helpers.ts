@@ -219,7 +219,7 @@ export function generateDesignContent(projectName: string): string {
 - <important directory or subsystem> — <responsibility>
 
 ## Constraints
-- <cross-cutting technical or operational constraint>
+- <cross-cutting technical or operational constraint, when it affects architecture>
 `
 }
 
@@ -233,7 +233,7 @@ description: Project-specific rules for ${projectName}
 # Project Rules
 
 ## Scope
-- <rules that apply across the project>
+- <stable local rules, workflow constraints, or validation expectations>
 
 ## Validation
 - <preferred validation commands>

@@ -26,6 +26,8 @@ RSP = Rules, Specs, Plans.
 - `archives/INDEX.md` is auto-generated. Rebuild it with `rsp archive-index` instead of editing it manually.
 - `design.md` is created by `rsp init` and then owned by the project.
 - `project-rules.md` is optional.
+- Keep durable architecture, boundaries, and cross-cutting technical constraints in `specs/design.md`.
+- Keep stable workflow rules, validation expectations, and local operating constraints in `rules/project-rules.md`.
 
 ## Reading order
 

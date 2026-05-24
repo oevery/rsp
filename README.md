@@ -42,6 +42,8 @@ npx -y @oevery/rsp doctor
 - `.rsp/archives/INDEX.md`: auto-generated. Rebuild with `rsp archive-index`.
 - `.rsp/specs/design.md`: created by `rsp init`, then owned by the project.
 - `.rsp/rules/project-rules.md`: optional; create only when the project has durable local rules.
+- Keep durable architecture, boundaries, and cross-cutting technical constraints in `.rsp/specs/design.md`.
+- Keep stable workflow rules, validation expectations, and local operating constraints in `.rsp/rules/project-rules.md`.
 
 ## AGENTS integration
 
