@@ -23,10 +23,10 @@ If the project has no `.rsp/` yet:
    - `managed`: the project already uses `AGENTS.md` and should gain a thin managed RSP block
    - `skip`: do not modify `AGENTS.md`
    - `print`: print the managed block for manual or AI-assisted insertion
- 3. Create `rsp new project-setup` to capture project bootstrap facts, boundaries, and initial decisions
- 4. Fill `features/project-setup.md`
- 5. Fill `specs/design.md`
- 6. Run `rsp doctor`
+3. Create `rsp new project-setup` to capture project bootstrap facts, boundaries, and initial decisions
+4. Fill `features/project-setup.md`
+5. Fill `specs/design.md`
+6. Run `rsp doctor`
 
 If the project already has `.rsp/`:
 
