@@ -70,6 +70,7 @@ Every feature file should contain these sections:
 ## Init constraints
 
 - `rsp init` scaffolds project structure only. It must not create a feature file.
+- `rsp init --with-project-setup` may additionally seed `features/project-setup.md` and the matching `active.d` marker for onboarding.
 - `rsp init` should create `features/`, `active.d/`, `archives/`, and `specs/design.md` up front.
 - `rsp init --agents-mode managed|skip|print` controls whether `AGENTS.md` is updated, skipped, or printed.
 - `managed` should update only the managed AGENTS block.

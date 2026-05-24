@@ -243,6 +243,14 @@ describe('generateFeatureContent', () => {
     expect(content).toContain('## Plan')
     expect(content).toContain('## Tests')
   })
+
+  it('uses a bootstrap-oriented template for project-setup', () => {
+    const content = generateFeatureContent('project-setup')
+    expect(content).toContain('# Feature: project-setup')
+    expect(content).toContain('.rsp/specs/design.md')
+    expect(content).toContain('.rsp/rules/project-rules.md')
+    expect(content).toContain('Run rsp doctor')
+  })
 })
 
 describe('featureNameFromPath', () => {

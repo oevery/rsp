@@ -33,6 +33,11 @@ const initCommand = defineCommand({
       description: 'Create .rsp/rules/project-rules.md',
       default: false,
     },
+    'with-project-setup': {
+      type: 'boolean',
+      description: 'Create .rsp/features/project-setup.md and mark it active',
+      default: false,
+    },
   },
   async run({ args }: { args: Record<string, unknown> }) {
     await initProject({
@@ -40,6 +45,7 @@ const initCommand = defineCommand({
         ? args['agents-mode'] as 'skip' | 'print'
         : 'managed',
       withProjectRules: Boolean(args['with-project-rules']),
+      withProjectSetup: Boolean(args['with-project-setup']),
     })
   },
 })

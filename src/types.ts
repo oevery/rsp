@@ -34,6 +34,7 @@ export interface CloseFeatureArgs {
 /** Options for `rsp init`. */
 export interface InitArgs {
   withProjectRules?: boolean
+  withProjectSetup?: boolean
   agentsMode?: 'managed' | 'skip' | 'print'
 }
 

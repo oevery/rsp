@@ -11,6 +11,15 @@ npx -y @oevery/rsp init
 npx -y @oevery/rsp doctor
 ```
 
+推荐启动流程：
+
+```bash
+npx -y @oevery/rsp init --with-project-setup
+# 填写 .rsp/features/project-setup.md
+# 填写 .rsp/specs/design.md
+npx -y @oevery/rsp doctor
+```
+
 ## 核心概念
 
 - `rules/` 存放长期稳定的约束。
@@ -86,7 +95,7 @@ npx skills add oevery/rsp --skill rsp
 新项目：
 
 1. `npx -y @oevery/rsp init`
-2. 创建 `rsp new project-setup`，收集启动事实和初始决策
+2. 优先使用 `npx -y @oevery/rsp init --with-project-setup`，或手动执行 `rsp new project-setup`
 3. 填写 `.rsp/specs/design.md`
 4. 只有在需要长期项目文档时才用 `rsp add spec <name>`
 5. 只有在存在稳定本地规则时才用 `rsp add rules project-rules`
@@ -101,9 +110,9 @@ npx skills add oevery/rsp --skill rsp
 
 AI 协助接入：
 
-1. `npx -y @oevery/rsp init --agents-mode print`
+1. `npx -y @oevery/rsp init --agents-mode print --with-project-setup`
 2. 让 AI 处理 `AGENTS.md` 的受管块
-3. 让 AI 创建 `rsp new project-setup`
+3. 让 AI 审阅并填写 `.rsp/features/project-setup.md`
 4. 让 AI 填写 `.rsp/specs/design.md`
 5. 运行 `rsp doctor`
 
@@ -111,6 +120,7 @@ AI 协助接入：
 
 ```text
 rsp init --agents-mode <mode>   搭建 .rsp/ + AGENTS.md
+rsp init --with-project-setup   同时创建 .rsp/features/project-setup.md
 rsp add rules <name>            创建 .rsp/rules/<name>.md
 rsp add spec <name>             创建 .rsp/specs/<name>.md 并重建 specs 索引
 rsp new <name> [summary]        创建 .rsp/features/<name>.md

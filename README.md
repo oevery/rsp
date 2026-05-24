@@ -11,6 +11,15 @@ npx -y @oevery/rsp init
 npx -y @oevery/rsp doctor
 ```
 
+Recommended bootstrap flow:
+
+```bash
+npx -y @oevery/rsp init --with-project-setup
+# fill .rsp/features/project-setup.md
+# fill .rsp/specs/design.md
+npx -y @oevery/rsp doctor
+```
+
 ## Core idea
 
 - `rules/` stores durable constraints.
@@ -86,7 +95,7 @@ Then load the installed RSP skill only when you are adopting RSP, auditing setup
 New project:
 
 1. `npx -y @oevery/rsp init`
-2. Create `rsp new project-setup` to capture bootstrap facts and initial decisions
+2. Prefer `npx -y @oevery/rsp init --with-project-setup`, or run `rsp new project-setup` manually
 3. Fill `.rsp/specs/design.md`
 4. Use `rsp add spec <name>` only when a new durable project doc is needed
 5. Use `rsp add rules project-rules` only when the project has stable local rules
@@ -101,9 +110,9 @@ Existing project with a rich `AGENTS.md`:
 
 AI-assisted setup:
 
-1. `npx -y @oevery/rsp init --agents-mode print`
+1. `npx -y @oevery/rsp init --agents-mode print --with-project-setup`
 2. Let the AI adapt the managed block in `AGENTS.md`
-3. Have the AI create `rsp new project-setup`
+3. Have the AI review and fill `.rsp/features/project-setup.md`
 4. Have the AI fill `.rsp/specs/design.md`
 5. Run `rsp doctor`
 
@@ -111,6 +120,7 @@ AI-assisted setup:
 
 ```text
 rsp init --agents-mode <mode>   Scaffold .rsp/ + AGENTS.md
+rsp init --with-project-setup   Also create .rsp/features/project-setup.md
 rsp add rules <name>            Create .rsp/rules/<name>.md
 rsp add spec <name>             Create .rsp/specs/<name>.md and rebuild specs index
 rsp new <name> [summary]        Create .rsp/features/<name>.md

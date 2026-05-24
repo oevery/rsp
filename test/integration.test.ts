@@ -867,7 +867,7 @@ describe('init scaffolding', () => {
 
   it('creates init defaults when initialized', async () => {
     const cliPath = join(fileURLToPath(new URL('..', import.meta.url)), 'dist', 'cli.mjs')
-    execSync(`node ${cliPath} init`, { cwd: initDir })
+    const output = execSync(`node ${cliPath} init`, { cwd: initDir, encoding: 'utf-8' })
 
     const gitignorePath = join(initDir, RSP_DIR, '.gitignore')
     expect(existsSync(gitignorePath)).toBe(true)
@@ -893,6 +893,8 @@ describe('init scaffolding', () => {
     expect(designContent).toContain('## Scope')
     expect(designContent).toContain('## Structure')
     expect(designContent).toContain('## Constraints')
+    expect(output).toContain('Next: rsp new project-setup')
+    expect(output).toContain('Then: fill .rsp/specs/design.md')
   })
 
   it('creates optional project-rules when requested', async () => {
@@ -900,6 +902,23 @@ describe('init scaffolding', () => {
     execSync(`node ${cliPath} init --with-project-rules`, { cwd: initDir2 })
 
     expect(existsSync(join(initDir2, RSP_DIR, 'rules', 'project-rules.md'))).toBe(true)
+  })
+
+  it('can create project-setup during init', async () => {
+    const setupDir = join(tmpdir(), 'rsp-init-project-setup-test', randomUUID())
+    await mkdir(setupDir, { recursive: true })
+    const cliPath = join(fileURLToPath(new URL('..', import.meta.url)), 'dist', 'cli.mjs')
+    const output = execSync(`node ${cliPath} init --with-project-setup`, { cwd: setupDir, encoding: 'utf-8' })
+
+    expect(existsSync(join(setupDir, RSP_DIR, 'features', 'project-setup.md'))).toBe(true)
+    expect(existsSync(join(setupDir, RSP_DIR, 'active.d', 'project-setup'))).toBe(true)
+
+    const content = await readFile(join(setupDir, RSP_DIR, 'features', 'project-setup.md'), 'utf-8')
+    expect(content).toContain('# Feature: project-setup')
+    expect(content).toContain('.rsp/specs/design.md')
+    expect(content).toContain('.rsp/rules/project-rules.md')
+    expect(output).toContain('Next: fill .rsp/features/project-setup.md')
+    expect(output).toContain('Then: fill .rsp/specs/design.md')
   })
 
   it('can skip AGENTS.md updates', async () => {

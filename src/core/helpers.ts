@@ -133,6 +133,40 @@ export function featureNameFromPath(featuresDir: string, filePath: string): stri
  * Generate a feature file content from the built-in template.
  */
 export function generateFeatureContent(name: string, summary = ''): string {
+  if (name === 'project-setup') {
+    return `---
+status: draft
+priority: medium
+tags:
+---
+
+# Feature: project-setup
+
+## Spec
+- Summary: ${summary || 'Capture the project model, boundaries, and stable local constraints'}
+- Requirements:
+  - Project purpose, scope, and structure are reflected in .rsp/specs/design.md
+  - Stable validation or workflow constraints are reflected in .rsp/rules/project-rules.md when needed
+- Constraints:
+  - Avoid duplicating durable project facts across feature notes, specs, and rules
+
+## Plan
+- [ ] Review the repository structure, entrypoints, and primary outputs
+- [ ] Fill .rsp/specs/design.md with durable architecture facts
+- [ ] Add .rsp/rules/project-rules.md if stable local rules or validation steps exist
+
+## Tests
+- [ ] Run rsp doctor
+- [ ] Run project-native validation if available
+
+## Notes (optional)
+- <facts discovered during project setup>
+
+## Blockers
+-
+`
+  }
+
   return `---
 status: draft
 priority: medium
@@ -236,7 +270,7 @@ description: Project-specific rules for ${projectName}
 - <stable local rules, workflow constraints, or validation expectations>
 
 ## Validation
-- <preferred validation commands>
+- <preferred stable validation commands, not temporary troubleshooting steps>
 
 ## Conventions
 - <project-specific conventions>

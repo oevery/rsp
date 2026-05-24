@@ -4,7 +4,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 
 import { basename, join } from 'node:path'
 import { pc, PKG_ROOT, RSP_DIR } from '../core/config.js'
-import { generateDesignContent, generateProjectRulesContent, renderRspAgentsBlock, upsertRspAgentsBlock } from '../core/helpers.js'
+import { generateDesignContent, generateFeatureContent, generateProjectRulesContent, renderRspAgentsBlock, upsertRspAgentsBlock } from '../core/helpers.js'
 import { withRspLock } from '../core/lock.js'
 import { buildArchiveIndex } from './archive-index.js'
 import { buildSpecsIndex } from './specs-index.js'
@@ -93,6 +93,13 @@ export async function initProject(args: InitArgs = {}) {
     if (args.withProjectRules)
       created = (await ensureFile(join(RSP_DIR, 'rules', 'project-rules.md'), generateProjectRulesContent(projectName))) || created
 
+    if (args.withProjectSetup) {
+      const featurePath = join(RSP_DIR, 'features', 'project-setup.md')
+      const activeMarker = join(RSP_DIR, 'active.d', 'project-setup')
+      created = (await ensureFile(featurePath, generateFeatureContent('project-setup'))) || created
+      created = (await ensureFile(activeMarker, '')) || created
+    }
+
     if (createdSpecsIndex || createdDesign)
       await buildSpecsIndex({ acquireLock: false })
     if (createdArchivesIndex)
@@ -125,10 +132,12 @@ export async function initProject(args: InitArgs = {}) {
     }
 
     if (isNew) {
+      const createdProjectSetup = args.withProjectSetup ? '\n           .rsp/features/project-setup.md\n           .rsp/active.d/project-setup' : ''
+      const next = args.withProjectSetup ? 'fill .rsp/features/project-setup.md' : 'rsp new project-setup'
       console.log(`
   ${pc.green('RSP scaffolded.')}\n`)
-      console.log(`  Created: .rsp/rules/\n           .rsp/specs/\n           .rsp/features/\n           .rsp/active.d/\n           .rsp/archives/\n           .rsp/.gitignore\n           .rsp/config.yaml\n           .rsp/specs/design.md\n           AGENTS.md\n`)
-      console.log(`  ${pc.cyan('Next:')} rsp new <name>\n  ${pc.dim('Also:')} rsp status  rsp deps\n`)
+      console.log(`  Created: .rsp/rules/\n           .rsp/specs/\n           .rsp/features/\n           .rsp/active.d/\n           .rsp/archives/\n           .rsp/.gitignore\n           .rsp/config.yaml\n           .rsp/specs/design.md${createdProjectSetup}\n           AGENTS.md\n`)
+      console.log(`  ${pc.cyan('Next:')} ${next}\n  ${pc.dim('Then:')} fill .rsp/specs/design.md\n  ${pc.dim('Also:')} rsp status  rsp deps\n`)
     }
     else if (created) {
       console.log(`
