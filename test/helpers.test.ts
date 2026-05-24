@@ -221,6 +221,11 @@ describe('generateFeatureContent', () => {
     expect(content).toContain('# Feature: my-feature')
   })
 
+  it('separates frontmatter from the title with a blank line', () => {
+    const content = generateFeatureContent('my-feature')
+    expect(content).toContain('---\n\n# Feature: my-feature')
+  })
+
   it('includes summary when provided', () => {
     const content = generateFeatureContent('my-feature', 'A cool feature')
     expect(content).toContain('- Summary: A cool feature')
