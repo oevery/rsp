@@ -18,7 +18,8 @@ const SKILL_REFRESH_HINT = '  Note: if you use the published RSP skill, refresh 
  */
 export async function updateProject() {
   if (!existsSync(RSP_DIR)) {
-    console.log(`  ${pc.red('Error:')} RSP is not initialized. Run: rsp init`)
+    console.error(`  ${pc.red('Error:')} RSP is not initialized in this project`)
+    console.error(`  ${pc.dim('Run: rsp init')}`)
     process.exit(1)
   }
 
