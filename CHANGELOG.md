@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.2 (2026-05-25)
+
+- Add a post-`rsp update` reminder that the published RSP skill should be refreshed separately.
+- Simplify the suggested skill refresh command to `npx skills add oevery/rsp` in CLI output and documentation.
+- Add regression coverage for the new update hint in both changed and already-up-to-date flows.
+
 ## 2.0.1 (2026-05-25)
 
 - Keep `.rsp/specs/INDEX.md` focused on additional spec files by excluding the default `design.md` entry.

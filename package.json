@@ -1,7 +1,7 @@
 {
   "name": "@oevery/rsp",
   "type": "module",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "RSP (Rules, Specs, Plans) workflow for lightweight AI-assisted change management",
   "author": "oevery",
   "license": "MIT",
