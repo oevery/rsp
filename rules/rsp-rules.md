@@ -5,95 +5,92 @@ description: Core RSP rules for Rules, Specs, and Plans driven development.
 
 # RSP
 
-RSP = Rules, Specs, Plans.
+This file is the canonical RSP rules source.
 
-## Core structure
+## Read order
 
-```text
-.rsp/
-├── rules/
-├── specs/
-├── features/
-├── active.d/
-├── archives/
-└── config.yaml
-```
+1. Read `AGENTS.md`.
+2. Read `.rsp/rules/rsp-rules.md` in full.
+3. Read `focus.d/`.
+4. If `focus.d/` is empty, ask the user what to work on or suggest `npx -y @oevery/rsp create <name>`.
+5. Read each `changes/<name>.md` file marked in `focus.d/`.
+6. Read `specs/design.md` and `specs/INDEX.md`.
+7. Read only the relevant additional `rules/` and `specs/` files.
 
-## Managed boundaries
+## Core rules
 
-- `AGENTS.md` is partially managed. RSP owns only the `<!-- rsp:begin --> ... <!-- rsp:end -->` block.
-- `specs/INDEX.md` is auto-generated. Rebuild it with `rsp specs-index` instead of editing it manually.
-- `archives/INDEX.md` is auto-generated. Rebuild it with `rsp archive-index` instead of editing it manually.
-- `design.md` is created by `rsp init` and then owned by the project.
-- `project-rules.md` is optional.
-- Keep durable architecture, boundaries, and cross-cutting technical constraints in `specs/design.md`.
-- Keep stable workflow rules, validation expectations, and local operating constraints in `rules/project-rules.md`.
+- Treat `rules/` as the canonical rules source.
+- Treat `focus.d/` as the only current-focus source.
+- Treat `changes/` as open work.
+- Treat `archives/` as completed history.
+- Treat each change as a single `.md` file under `changes/`. Do not create multi-file change bundles or supplementary files alongside a change.
+- RSP uses only two lifecycle states: `open` (in `changes/`) and `archived` (in `archives/`). Do not introduce intermediate states such as "in review" or "verified".
+- Keep every change file in the fixed six-section structure.
+- Use an RSP command first when an RSP command already covers the action.
+- Do not infer current work from `changes/` alone.
+- Do not treat `AGENTS.md` as the long-term rules or design store.
+- Do not redefine the core change structure through project config.
 
-## Reading order
+## File ownership
 
-1. Read `AGENTS.md` for entrypoint guidance.
-2. Read `active.d/` to find active features.
-3. If `active.d/` is empty, ask the user what to work on or suggest `npx -y @oevery/rsp new <name>`.
-4. Read the referenced `features/<name>.md`.
-5. Read `rules/` for technical constraints.
-6. Read `specs/design.md` and other project-level specs only when relevant to the current task.
+- Manage only the `<!-- rsp:begin --> ... <!-- rsp:end -->` block in `AGENTS.md`.
+- Do not modify content outside the managed AGENTS block unless the user explicitly asks for it.
+- Do not edit `specs/INDEX.md` or `archives/INDEX.md` manually; use `npx -y @oevery/rsp update`.
+- Treat `specs/design.md` as the durable design file. Prefer sections: `Purpose`, `Stable Facts`, `Boundaries`, `Constraints`.
+- Treat all `specs/<name>.md` as durable-truth documents. Use the same section structure as `specs/design.md`.
+- Treat `rules/project-rules.md` as the durable local-rules file.
+- Create `rules/project-rules.md` only when the project has stable local rules worth keeping.
+- Create or update `specs/` only for durable project-level facts that are stable, reusable, and worth rereading in later sessions.
+- Prefer updating `specs/design.md` or an existing durable file before creating a new spec file.
+- Create a new `specs/<name>.md` only when the knowledge forms a distinct durable project topic that does not fit `specs/design.md` or an existing durable file.
+- Write stable facts to the smallest correct durable file. Do not duplicate the same fact across multiple durable files without a clear long-term reason.
 
-## File creation rules
+## Command rules
 
-- `specs/design.md`: create by default with `rsp init`.
-- `rules/project-rules.md`: create only when the project has durable local rules worth preserving.
-- `rules/<name>.md`: create only for other durable rule sets.
-- `specs/<name>.md`: create only when the new document has durable project-level value and does not duplicate `design.md`.
-- `features/<name>.md`: create only for active work that should be tracked as a feature.
-- Do not create files merely for completeness.
+- Use `npx -y @oevery/rsp init` to scaffold the base RSP structure.
+- Use `npx -y @oevery/rsp add rules <name>` to create a durable rules file.
+- Use `npx -y @oevery/rsp add spec <name>` to create a durable spec file.
+- Use `npx -y @oevery/rsp create <name>` to create an open change.
+- Use `npx -y @oevery/rsp focus <name>` to foreground an existing open change.
+- Use `npx -y @oevery/rsp unfocus <name>` to remove an open change from the current focus set.
+- Use `npx -y @oevery/rsp archive <name>` to archive a completed change.
+- Use `npx -y @oevery/rsp update` to refresh bundled rules, repair the managed `AGENTS.md` block, and rebuild generated indices.
+- Use `npx -y @oevery/rsp doctor` for diagnostics only.
+- If RTK is available, you may prefix RSP commands with `rtk`.
+- Do not use `npx -y @oevery/rsp create <name>` to re-focus an existing change.
+- Do not create RSP-managed files directly when an RSP command already exists for that file type.
 
-## Command-first creation
+## Change rules
 
-- Prefer RSP commands over direct file creation when creating new RSP-managed files.
-- Use `rsp init` to scaffold the base RSP structure.
-- Use `rsp add rules <name>` to create new durable rules files under `rules/`.
-- Use `rsp add spec <name>` to create new durable project-level spec files under `specs/`.
-- Use `rsp new <name>` to create new feature files under `features/`.
-- Use `rsp close <name>` to move completed work into `archives/`.
-- Direct file creation is acceptable only when no RSP command covers the target file.
-- After a file is created by command, edit its contents in place as needed.
+Every change file must contain:
 
-## Feature requirements
-
-Every feature file should contain these sections:
-
+- an explicit `kind` field in frontmatter
+- `## Proposal`
 - `## Spec`
-- `## Plan`
-- `## Tests`
+- `## Design`
+- `## Tasks`
+- `## Verify`
 - `## Blockers`
 
-## Init constraints
+Do not leave `kind` unresolved.
 
-- `rsp init` scaffolds project structure only. It must not create a feature file.
-- `rsp init --with-project-setup` may additionally seed `features/project-setup.md` and the matching `active.d` marker for onboarding.
-- `rsp init` should create `features/`, `active.d/`, `archives/`, and `specs/design.md` up front.
-- `rsp init --agents-mode managed|skip|print` controls whether `AGENTS.md` is updated, skipped, or printed.
-- `managed` should update only the managed AGENTS block.
-- `skip` should leave `AGENTS.md` untouched.
-- `print` should scaffold `.rsp/` and print the managed AGENTS block without writing it.
+If a section does not apply, keep it and write `- none` or `- not needed: <reason>`.
 
-## Agent behavior
+## Archive gate
 
-- Read `active.d/` first.
-- Treat `AGENTS.md` as a navigation layer, not the long-term knowledge base.
-- Preserve content outside the managed AGENTS block unless explicitly asked to change it.
-- Keep project-wide design and durable context in `specs/design.md`.
-- Keep stable local rules in `rules/project-rules.md` or another durable rules file only when needed.
-- Use `rsp add rules project-rules` for the canonical optional project rules file.
-- Do not push long-lived project knowledge back into `AGENTS.md`.
-- `rsp doctor` is diagnostic only and must not mutate project files.
+- `rsp archive <name>` never blocks. It warns but always completes the move.
+- Make a durable-update decision before `npx -y @oevery/rsp archive <name>`.
+- If `Blockers` still contains a real blocker, set `Archive ready: no`.
+- If the change produced durable knowledge that has not been written to `specs/` or `rules/`, set `Archive ready: no`.
+- If `Verify` is incomplete but there is no active blocker and no missing durable update, treat archive readiness as a judgment call.
+- A durable update should contain stable facts only, not task history, debugging notes, or one-off implementation context.
+- Default to no spec writeback unless the change produced project-level durable knowledge that future work must reread.
 
 ## Prohibitions
 
-- Do not manually maintain `specs/INDEX.md` or `archives/INDEX.md`.
-- Do not create `project-rules.md` by default when the project has no durable local rules.
-- Do not use `AGENTS.md` as the long-term storage location for project design or rules.
-- Do not create `specs` files that duplicate information already stored in `design.md` or durable rules files.
 - Do not create placeholder or empty-shell files merely for completeness.
-- Do not create new files under `.rsp/rules/`, `.rsp/specs/`, or `.rsp/features/` directly when an RSP command already exists for that file type.
-- Do not create archive entries directly under `.rsp/archives/`; use `rsp close <name>`.
+- Do not create archive entries directly under `.rsp/archives/`; use `npx -y @oevery/rsp archive <name>`.
+- Do not create spec files that duplicate `specs/design.md` or another durable file.
+- Do not create a catch-all summary file like `specs/changes.md`.
+- Do not create supplementary files alongside a single change file.
+- Do not promote archive history, temporary troubleshooting notes, or task-by-task execution logs into `specs/` or `rules/`.

@@ -2,7 +2,7 @@
 
 [English](./README.md) | 简体中文
 
-RSP = **Rules（规则）、Specs（规格）、Plans（计划）**。这是一个面向项目规则、项目级文档和特性计划的轻量级 AI 协作工作流。
+RSP = **Rules、Specs、Plans**。这是一个面向长期项目知识与单文件 change 跟踪的轻量级 AI 协作工作流。
 
 ## 快速开始
 
@@ -15,17 +15,17 @@ npx -y @oevery/rsp doctor
 
 ```bash
 npx -y @oevery/rsp init --with-project-setup
-# 填写 .rsp/features/project-setup.md
+# 填写 .rsp/changes/project-setup.md
 # 填写 .rsp/specs/design.md
 npx -y @oevery/rsp doctor
 ```
 
-## 核心概念
+## 核心思路
 
 - `rules/` 存放长期稳定的约束。
-- `specs/` 存放项目级设计文档。
-- `features/` 存放进行中的工作。
-- `active.d/` 用空标记文件镜像活跃特性。
+- `specs/` 存放项目级 source-of-truth 文档。
+- `changes/` 以单文件格式存放 open work。
+- `focus.d/` 用空标记文件镜像当前聚焦的 changes。
 - `archives/` 存放已完成工作。
 
 ```text
@@ -36,19 +36,27 @@ npx -y @oevery/rsp doctor
 ├── specs/
 │   ├── INDEX.md              # 自动生成
 │   └── design.md
-├── features/
+├── changes/
 │   └── <name>.md
-├── active.d/
+├── focus.d/
 │   └── <name>
 └── archives/
     └── INDEX.md              # 自动生成
 ```
 
+## 概念
+
+- `specs/` 描述长期稳定的项目事实和当前认可的设计。
+- `changes/` 描述 open work，包括 feature、fix、refactor、docs、ops 和 research。
+- 每个 change 始终是单个 Markdown 文件，并包含 proposal、spec、design、tasks、verification 与 blockers 等明确 section。
+- 完成后的 change 会移动到 `archives/`；若变更产出了长期知识，应在归档前同步写入 `specs/` 或 `rules/`。
+- 所谓长期知识，只应包含稳定事实；不要把任务历史、排障笔记或一次性实现上下文提升到 `specs/` 或 `rules/`。
+
 ## 文件所有权
 
 - `AGENTS.md`：只有 `<!-- rsp:begin --> ... <!-- rsp:end -->` 受管块由 RSP 维护。
-- `.rsp/specs/INDEX.md`：自动生成，使用 `rsp specs-index` 重建。
-- `.rsp/archives/INDEX.md`：自动生成，使用 `rsp archive-index` 重建。
+- `.rsp/specs/INDEX.md`：自动生成，使用 `rsp update` 重建。
+- `.rsp/archives/INDEX.md`：自动生成，使用 `rsp update` 重建。
 - `.rsp/specs/design.md`：由 `rsp init` 创建，之后由项目维护。
 - `.rsp/rules/project-rules.md`：可选，仅在项目确有长期本地规则时创建。
 - 将长期架构、边界和跨模块技术约束放在 `.rsp/specs/design.md`。
@@ -63,22 +71,36 @@ npx -y @oevery/rsp doctor
 ## RSP Entry
 
 Read in order:
-1. .rsp/rules/*.md
-2. .rsp/specs/INDEX.md
-3. .rsp/specs/design.md
-4. .rsp/active.d/ and matching .rsp/features/*.md
+1. .rsp/rules/rsp-rules.md
+2. .rsp/focus.d/
+3. matching .rsp/changes/*.md for the focused entries
+4. .rsp/specs/design.md
+5. .rsp/specs/INDEX.md
+6. only the relevant additional .rsp/rules/*.md and .rsp/specs/*.md files
 <!-- rsp:end -->
 ```
 
 `rsp init --agents-mode <mode>`：
 
-- `managed`：插入/更新 `AGENTS.md` 中的受管块。
-- `skip`：只搭建 `.rsp/`。
-- `print`：搭建 `.rsp/` 并打印受管块。
+- `managed`：在需要时创建 `AGENTS.md`，并插入或更新受管块。
+- `print`：正常初始化，并额外打印最终的 `AGENTS.md` 内容。
 
 ## Skill
 
-更完整的接入步骤、工作流说明和审计说明见 `skills/rsp/SKILL.md`。它适合按需加载，不应替代常驻核心规则。
+使用 `skills/rsp/SKILL.md` 获取逐步的 setup、workflow 和审查指导。它适合按需加载，而不是默认常驻。
+
+文档分层矩阵：
+
+| Surface | 主要受众 | 职责 |
+|---|---|---|
+| `README.md` | 人类 | 概览、入门、示例 |
+| `.rsp/rules/rsp-rules.md` | agent | 规范性的规则真相源 |
+| `skills/rsp/SKILL.md` | agent | 应用这些规则的操作指南 |
+| `AGENTS.md` | 人类与 agent | 帮助找到正确文件的导航入口 |
+
+通常应由人先读 `README.md`，而 agent 应把 `.rsp/rules/rsp-rules.md` 当作规范真相源。
+
+如果文档中写的是 `rsp <command>`，默认前提是你的环境里已经能直接运行 `rsp`；否则请使用 `npx -y @oevery/rsp <command>`。
 
 可选安装示例：
 
@@ -86,63 +108,84 @@ Read in order:
 npx skills add oevery/rsp --skill rsp
 ```
 
-这个仓库发布的 skill 名称是 `rsp`，位于 `skills/rsp/`。
+本仓库发布了一个名为 `rsp` 的 skill，位于 `skills/rsp/`。
 
-然后只在接入 RSP、审计设置或整理项目级 rules/specs 时加载这个 skill。
+## 工作模型
+
+```text
+open → archived
+```
+
+各目录职责应保持单一且明确：
+
+- `changes/`：open changes
+- `focus.d/`：当前聚焦的 changes
+- `archives/`：完成后的历史
+
+在 `open` 阶段，常见活动包括：
+
+- `create`：创建并界定一个 change。
+- `focus` / `unfocus`：调整当前聚焦的 open change。
+- 直接编辑 change 文件，填写 section、勾选 tasks、记录设计决策。
+- 在归档前判断是否需要 durable updates。
+
+`archive` 会把已完成的工作归档到历史。`archive` 不会阻塞，只会给出 warning，最终判断留给 agent 或人工。
+
+agent 应只把 `focus.d/` 中列出的 change 视为当前工作。`changes/` 中未聚焦的文件仍然是 open，但除非用户明确要求或重新 `focus`，否则不应被当作当前目标。
+
+关于 durable update 的决定，也就是某次变更是否产出了应该写入 `.rsp/specs/` 或 `.rsp/rules/` 的知识，本质上是语义判断，应由 RSP skill 或人工 reviewer 完成。
 
 ## 推荐工作流
 
 新项目：
 
 1. `npx -y @oevery/rsp init`
-2. 优先使用 `npx -y @oevery/rsp init --with-project-setup`，或手动执行 `rsp new project-setup`
+2. 优先使用 `npx -y @oevery/rsp init --with-project-setup`，或手动执行 `rsp create project-setup`
 3. 填写 `.rsp/specs/design.md`
-4. 只有在需要长期项目文档时才用 `rsp add spec <name>`
-5. 只有在存在稳定本地规则时才用 `rsp add rules project-rules`
-6. 使用 `rsp new <name>` 开始工作
+4. 仅在需要新的长期项目文档时使用 `rsp add spec <name>`
+5. 仅在项目存在稳定本地规则时使用 `rsp add rules project-rules`
+6. 使用 `rsp create <name>` 开始工作
+7. 如果要让某个已有 open change 成为当前工作，使用 `rsp focus <name>`
+8. 如果要将某个 change 移出当前焦点集合，使用 `rsp unfocus <name>`
+9. 直接编辑 change 文件并完成实现、勾选 tasks
+10. 使用 RSP skill 或人工 review 判断是否需要 durable updates
+11. 使用 `rsp archive <name>` 收尾
 
 已有复杂 `AGENTS.md` 的项目：
 
-1. `npx -y @oevery/rsp init --agents-mode managed`
+1. `npx -y @oevery/rsp init`
 2. 保持受管块尽量薄
 3. 将长期设计收敛到 `.rsp/specs/design.md`
-4. 需要时再用 `rsp add spec <name>` 或 `rsp add rules <name>`
+4. 需要时再使用 `rsp add spec <name>` 或 `rsp add rules <name>`
 
 AI 协助接入：
 
 1. `npx -y @oevery/rsp init --agents-mode print --with-project-setup`
-2. 让 AI 处理 `AGENTS.md` 的受管块
-3. 让 AI 审阅并填写 `.rsp/features/project-setup.md`
+2. 保持受管块原样，只在需要时调整周围由人维护的内容
+3. 让 AI 审阅并填写 `.rsp/changes/project-setup.md`
 4. 让 AI 填写 `.rsp/specs/design.md`
 5. 运行 `rsp doctor`
 
 ## CLI
 
 ```text
-rsp init --agents-mode <mode>   搭建 .rsp/ + AGENTS.md
-rsp init --with-project-setup   同时创建 .rsp/features/project-setup.md
+rsp init --agents-mode <mode>   搭建 .rsp/，并确保 AGENTS.md 含有 RSP 入口块
+rsp init --with-project-setup   同时创建 .rsp/changes/project-setup.md
+rsp update                      升级后刷新 rules、修复 AGENTS 受管块并重建各类索引
 rsp add rules <name>            创建 .rsp/rules/<name>.md
 rsp add spec <name>             创建 .rsp/specs/<name>.md 并重建 specs 索引
-rsp new <name> [summary]        创建 .rsp/features/<name>.md
-rsp close <name>                归档到 .rsp/archives/ + 更新归档索引
-rsp status [--active|--blocked|--stale <days>]
-                                 查看项目状态摘要，并支持轻量筛选
-rsp check                       校验 feature 文件结构与依赖一致性
-rsp deps [--mermaid|--focus <name>|--reverse <name>]
-                                 查看依赖摘要、Mermaid 图或局部依赖视图
-rsp doctor                      检查接入健康和常见问题
-rsp specs-index                 重新生成 specs 索引
-rsp archive-index               重新生成 archives 索引
+rsp create <name> [summary]     创建 .rsp/changes/<name>.md
+rsp focus <name>                将一个 open change 标记为当前聚焦
+rsp unfocus <name>              将一个 open change 移出当前聚焦集合
+rsp archive <name>              归档到 .rsp/archives/ 并更新 archive index
+rsp status [--focused|--blocked|--stale <days>] [--json] [--verbose]
+                                   查看带有当前聚焦信息的项目状态摘要，并支持轻量筛选
+rsp check [--json] [--verbose] 校验 change 文件，并对 scenario 结构做轻量 lint
+rsp doctor [--json] [--verbose]
+                                   检查接入健康和常见问题
 ```
 
-## Doctor
-
-`rsp doctor` 是只读命令。
-
-- 检查 `.rsp/`、`rules/rsp-rules.md`、`specs/design.md`、`specs/INDEX.md`、`archives/INDEX.md` 以及 `AGENTS.md` 受管块。
-- 检查自动索引签名。
-- 检查 `active.d` 标记与 `features/` 是否一致。
-- 发现问题会以非零退出码结束。
+精确规则以 `.rsp/rules/rsp-rules.md` 为准；durable decision 的操作指导以 `skills/rsp/SKILL.md` 为准。
 
 ## 工具无关
 

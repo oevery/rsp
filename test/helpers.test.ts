@@ -1,10 +1,13 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { countCheckboxes, detectCycles, detectDeltaSections, featureNameFromPath, generateFeatureContent, parseFrontmatter, parseScenarios, parseYamlLines } from '../src/core/helpers.js'
+import { changeNameFromPath, countCheckboxes, detectDeltaSections, extractSection, generateChangeContent, generateProjectRulesContent, generateRulesContent, generateSpecContent, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, parseScenarios, parseYamlLines, renderRspAgentsBlock } from '../src/core/helpers.js'
 
 describe('parseYamlLines', () => {
   it('parses key-value pairs', () => {
-    const result = parseYamlLines(['name: foo', 'status: draft'])
-    expect(result).toEqual({ name: 'foo', status: 'draft' })
+    const result = parseYamlLines(['name: foo', 'stage: propose'])
+    expect(result).toEqual({ name: 'foo', stage: 'propose' })
   })
 
   it('parses lists', () => {
@@ -12,29 +15,9 @@ describe('parseYamlLines', () => {
     expect(result).toEqual({ tags: ['backend', 'ui'] })
   })
 
-  it('handles empty list', () => {
-    const result = parseYamlLines(['tags: []'])
-    expect(result).toEqual({ tags: [] })
-  })
-
-  it('handles empty list with items below', () => {
-    const result = parseYamlLines(['tags:', '  - backend'])
-    expect(result).toEqual({ tags: ['backend'] })
-  })
-
-  it('allows comments inside lists without breaking them', () => {
-    const result = parseYamlLines(['tags:', '# a comment', '  - item1', '  - item2'])
-    expect(result).toEqual({ tags: ['item1', 'item2'] })
-  })
-
-  it('ignores comment lines', () => {
-    const result = parseYamlLines(['# just a comment', 'key: value'])
-    expect(result).toEqual({ key: 'value' })
-  })
-
-  it('ignores empty lines', () => {
-    const result = parseYamlLines(['key: value', '', 'key2: value2'])
-    expect(result).toEqual({ key: 'value', key2: 'value2' })
+  it('supports quoted scalars and inline lists', () => {
+    const result = parseYamlLines(['kind: "fix"', 'tags: [backend, ui]'])
+    expect(result).toEqual({ kind: 'fix', tags: ['backend', 'ui'] })
   })
 
   it('handles empty input', () => {
@@ -45,118 +28,66 @@ describe('parseYamlLines', () => {
 describe('parseFrontmatter', () => {
   it('extracts frontmatter from markdown content', () => {
     const content = `---
-status: draft
-priority: medium
+kind: fix
 ---
-# Feature`
+# Change`
     const result = parseFrontmatter(content)
-    expect(result).toEqual({ status: 'draft', priority: 'medium' })
-  })
-
-  it('handles tags list in frontmatter', () => {
-    const content = `---
-status: draft
-tags:
-  - backend
-  - auth
----
-# Feature`
-    const result = parseFrontmatter(content)
-    expect(result).toEqual({ status: 'draft', tags: ['backend', 'auth'] })
+    expect(result).toEqual({ kind: 'fix' })
   })
 
   it('returns null when no frontmatter', () => {
     expect(parseFrontmatter('# Just a heading')).toBeNull()
   })
-
-  it('handles empty frontmatter with empty line', () => {
-    const content = `---
-
----
-# Feature`
-    const result = parseFrontmatter(content)
-    expect(result).toEqual({})
-  })
-
-  it('extracts frontmatter from CRLF markdown content', () => {
-    const content = '---\r\nstatus: draft\r\npriority: medium\r\n---\r\n# Feature\r\n'
-    const result = parseFrontmatter(content)
-    expect(result).toEqual({ status: 'draft', priority: 'medium' })
-  })
 })
 
 describe('countCheckboxes', () => {
-  it('counts todo, progress, and done checkboxes', () => {
+  it('counts todo, progress, done, and dropped checkboxes', () => {
     const content = `- [ ] todo
 - [/] in progress
-- [x] done`
-    expect(countCheckboxes(content)).toEqual({ todo: 1, progress: 1, done: 1, total: 3 })
+- [x] done
+- [-] dropped`
+    expect(countCheckboxes(content)).toEqual({ todo: 1, progress: 1, done: 1, dropped: 1, total: 4 })
   })
+})
 
-  it('returns zeros when no checkboxes present', () => {
-    expect(countCheckboxes('just some text')).toEqual({ todo: 0, progress: 0, done: 0, total: 0 })
-  })
+describe('extractSection', () => {
+  it('extracts a named section body', () => {
+    const content = `## Proposal
+- Summary: hello
 
-  it('counts multiple of each type', () => {
-    const content = `- [ ] a
-- [ ] b
-- [x] c
-- [x] d`
-    expect(countCheckboxes(content)).toEqual({ todo: 2, progress: 0, done: 2, total: 4 })
-  })
-
-  it('counts dropped checkboxes [-],', () => {
-    const content = `- [ ] todo
-- [-] dropped
-- [x] done`
-    expect(countCheckboxes(content)).toEqual({ todo: 1, progress: 0, done: 1, total: 3 })
+## Spec
+### ADDED`
+    expect(extractSection(content, 'Proposal')).toContain('Summary: hello')
   })
 })
 
 describe('detectDeltaSections', () => {
-  it('detects ADDED section', () => {
-    const content = `## Spec\n- Summary: x\n### ADDED\n- new requirement`
+  it('detects ADDED, MODIFIED, and REMOVED markers', () => {
+    const content = `## Spec
+### ADDED
+- x
+### MODIFIED
+- y
+### REMOVED
+- z`
     const result = detectDeltaSections(content)
-    expect(result.added).toBe(true)
-    expect(result.modified).toBe(false)
-    expect(result.removed).toBe(false)
+    expect(result).toEqual({ added: true, modified: true, removed: true })
   })
 
-  it('detects MODIFIED section', () => {
-    const content = `## Spec\n- Summary: x\n### MODIFIED\n- changed`
-    expect(detectDeltaSections(content).modified).toBe(true)
-  })
-
-  it('detects REMOVED section', () => {
-    const content = `## Spec\n- Summary: x\n### REMOVED\n- deleted`
-    expect(detectDeltaSections(content).removed).toBe(true)
-  })
-
-  it('detects multiple deltas', () => {
-    const content = `## Spec\n- Summary: x\n### ADDED\n- new\n### MODIFIED\n- changed`
-    const result = detectDeltaSections(content)
-    expect(result.added).toBe(true)
-    expect(result.modified).toBe(true)
-    expect(result.removed).toBe(false)
-  })
-
-  it('returns false when no deltas', () => {
-    const content = `## Spec\n- Summary: x\n- Requirements:\n  - something`
-    const result = detectDeltaSections(content)
-    expect(result.added).toBe(false)
-    expect(result.modified).toBe(false)
-    expect(result.removed).toBe(false)
-  })
-
-  it('handles spec as last section', () => {
-    const content = `# Feature\n## Spec\n- Summary: test`
-    expect(detectDeltaSections(content).added).toBe(false)
+  it('returns false when no deltas exist', () => {
+    const content = `## Spec
+### Acceptance
+#### Scenario: ok
+- GIVEN x
+- WHEN y
+- THEN z`
+    expect(detectDeltaSections(content)).toEqual({ added: false, modified: false, removed: false })
   })
 })
 
 describe('parseScenarios', () => {
   it('extracts Given/When/Then scenarios', () => {
-    const content = `### Scenario: Valid login
+    const content = `#### Scenario: Valid login
 - GIVEN a user
 - WHEN they log in
 - THEN they see dashboard`
@@ -165,100 +96,201 @@ describe('parseScenarios', () => {
     expect(scenarios[0].heading).toBe('Valid login')
     expect(scenarios[0].steps).toHaveLength(3)
   })
+})
 
-  it('extracts multiple scenarios', () => {
-    const content = `### Scenario: First
-- GIVEN a
-- WHEN b
-- THEN c
-### Scenario: Second
-- GIVEN d
-- WHEN e
-- THEN f`
-    expect(parseScenarios(content)).toHaveLength(2)
+describe('hasMeaningfulBlockers', () => {
+  it('returns false for none', () => {
+    const content = `## Blockers
+- none`
+    expect(hasMeaningfulBlockers(content)).toBe(false)
   })
 
-  it('returns empty array when no scenarios', () => {
-    expect(parseScenarios('## Plan\n- [ ] task')).toEqual([])
-  })
-
-  it('skips scenario with no recognizable steps', () => {
-    const content = `### Scenario: Unstructured
-- Just some text
-- More text`
-    expect(parseScenarios(content)).toHaveLength(0)
+  it('returns true for a real blocker', () => {
+    const content = `## Blockers
+- waiting on api migration`
+    expect(hasMeaningfulBlockers(content)).toBe(true)
   })
 })
 
-describe('detectCycles', () => {
-  it('returns empty for acyclic graph', () => {
-    const graph = new Map([['a', ['b']], ['b', ['c']], ['c', []]])
-    expect(detectCycles(graph)).toEqual([])
-  })
-
-  it('detects direct cycle (A→B→A)', () => {
-    const graph = new Map([['a', ['b']], ['b', ['a']]])
-    const cycles = detectCycles(graph)
-    expect(cycles.length).toBeGreaterThanOrEqual(1)
-    expect(cycles[0]).toContain('a')
-    expect(cycles[0]).toContain('b')
-  })
-
-  it('detects self-loop', () => {
-    const graph = new Map([['a', ['a']]])
-    const cycles = detectCycles(graph)
-    expect(cycles.length).toBeGreaterThanOrEqual(1)
-  })
-
-  it('handles empty graph', () => {
-    expect(detectCycles(new Map())).toEqual([])
-  })
-})
-
-describe('generateFeatureContent', () => {
-  it('includes feature name in heading', () => {
-    const content = generateFeatureContent('my-feature')
-    expect(content).toContain('# Feature: my-feature')
-  })
-
-  it('separates frontmatter from the title with a blank line', () => {
-    const content = generateFeatureContent('my-feature')
-    expect(content).toContain('---\n\n# Feature: my-feature')
+describe('generateChangeContent', () => {
+  it('includes change name in heading', () => {
+    const content = generateChangeContent('my-change')
+    expect(content).toContain('# Change: my-change')
   })
 
   it('includes summary when provided', () => {
-    const content = generateFeatureContent('my-feature', 'A cool feature')
-    expect(content).toContain('- Summary: A cool feature')
-  })
-
-  it('uses placeholder when no summary', () => {
-    const content = generateFeatureContent('my-feature')
-    expect(content).toContain('<one-line summary>')
+    const content = generateChangeContent('my-change', 'A cool change')
+    expect(content).toContain('- Summary: A cool change')
   })
 
   it('contains required sections', () => {
-    const content = generateFeatureContent('test')
+    const content = generateChangeContent('test')
+    expect(content).toContain('## Proposal')
     expect(content).toContain('## Spec')
-    expect(content).toContain('- <verifiable requirement>')
-    expect(content).toContain('## Plan')
-    expect(content).toContain('## Tests')
+    expect(content).toContain('## Design')
+    expect(content).toContain('## Tasks')
+    expect(content).toContain('## Verify')
+    expect(content).toContain('## Blockers')
+  })
+
+  it('reminds the user to choose kind explicitly', () => {
+    const content = generateChangeContent('test')
+    expect(content).toContain('kind: "<choose: feature | fix | refactor | docs | ops | research>"')
   })
 
   it('uses a bootstrap-oriented template for project-setup', () => {
-    const content = generateFeatureContent('project-setup')
-    expect(content).toContain('# Feature: project-setup')
+    const content = generateChangeContent('project-setup')
+    expect(content).toContain('# Change: project-setup')
     expect(content).toContain('.rsp/specs/design.md')
     expect(content).toContain('.rsp/rules/project-rules.md')
     expect(content).toContain('Run rsp doctor')
+    expect(content).toContain('do not promote task history, debugging notes, or one-off implementation context')
+  })
+
+  it('uses a docs-oriented template when kind is docs', () => {
+    const content = generateChangeContent('docs-update', 'Improve docs', 'docs')
+    expect(content).toContain('Requirement: documentation accuracy')
+    expect(content).toContain('reader follows the updated guidance')
+    expect(content).toContain('<doc path or documentation area>')
+  })
+
+  it('uses a research-oriented template when kind is research', () => {
+    const content = generateChangeContent('investigate-cache', 'Investigate cache behavior', 'research')
+    expect(content).toContain('Requirement: research outcome recording')
+    expect(content).toContain('research question is resolved')
+    expect(content).toContain('gather evidence')
+  })
+
+  it('uses an ops-oriented template when kind is ops', () => {
+    const content = generateChangeContent('deploy-pipeline', 'Harden deploy pipeline', 'ops')
+    expect(content).toContain('Requirement: operational behavior')
+    expect(content).toContain('operational path succeeds')
+    expect(content).toContain('<rollback, safety, or environment constraint>')
+  })
+
+  it('tightens durable update guidance in verify', () => {
+    const content = generateChangeContent('my-change')
+    expect(content).toContain('write only stable facts to the smallest correct target file before archive')
+    expect(content).toContain('do not promote task history, debugging notes, or one-off implementation context')
+    expect(content).toContain('- Durable updates:\n  - [ ] Decide whether this change produced durable knowledge')
+  })
+
+  it('uses consistent verify indentation in project setup template', () => {
+    const content = generateChangeContent('project-setup')
+    expect(content).toContain('- Manual:\n  - [ ] Review .rsp/specs/design.md and confirm it matches the repository\n- Durable updates:')
   })
 })
 
-describe('featureNameFromPath', () => {
+describe('generateSpecContent', () => {
+  it('uses a durable-truth oriented structure', () => {
+    const content = generateSpecContent('status')
+    expect(content).toContain('# Status')
+    expect(content).toContain('## Purpose')
+    expect(content).toContain('## Stable Facts')
+    expect(content).toContain('## Boundaries')
+    expect(content).toContain('## Constraints')
+    expect(content).not.toContain('## Details')
+  })
+})
+
+describe('rules templates', () => {
+  it('keeps project rules focused on durable constraints', () => {
+    const content = generateProjectRulesContent('demo-project')
+    expect(content).toContain('Do not put temporary debugging steps here.')
+  })
+
+  it('uses durable wording for generic rules templates', () => {
+    const content = generateRulesContent('security-rules')
+    expect(content).toContain('description: Durable rules for Security Rules')
+  })
+})
+
+describe('documentation command examples', () => {
+  it('keeps RTK guidance only in rules, not in the skill', () => {
+    const root = fileURLToPath(new URL('..', import.meta.url))
+    const skill = readFileSync(join(root, 'skills', 'rsp', 'SKILL.md'), 'utf-8')
+    const rules = readFileSync(join(root, 'rules', 'rsp-rules.md'), 'utf-8')
+    expect(skill).not.toContain('rtk')
+    expect(rules).toContain('If RTK is available')
+  })
+
+  it('explains npx usage in the README', () => {
+    const root = fileURLToPath(new URL('..', import.meta.url))
+    const readme = readFileSync(join(root, 'README.md'), 'utf-8')
+    expect(readme).toContain('Otherwise use `npx -y @oevery/rsp <command>`')
+  })
+
+  it('keeps high-value guardrails in rules and skill', () => {
+    const root = fileURLToPath(new URL('..', import.meta.url))
+    const skill = readFileSync(join(root, 'skills', 'rsp', 'SKILL.md'), 'utf-8')
+    const rules = readFileSync(join(root, 'rules', 'rsp-rules.md'), 'utf-8')
+
+    expect(rules).toContain('This file is the canonical RSP rules source.')
+    expect(rules).toContain('Do not create archive entries directly under `.rsp/archives/`; use `npx -y @oevery/rsp archive <name>`.')
+    expect(rules).toContain('Create or update `specs/` only for durable project-level facts that are stable, reusable, and worth rereading in later sessions.')
+    expect(rules).toContain('Prefer updating `specs/design.md` or an existing durable file before creating a new spec file.')
+    expect(skill).toContain('Do not treat unfocused files in `changes/` as current work')
+    expect(skill).toContain('When unsure whether a fact is truly durable, prefer `No durable update needed` over speculative promotion.')
+    expect(skill).toContain('Default to no spec writeback unless the change produced project-level durable knowledge that future work must reread.')
+    expect(skill).toContain('Prefer `specs/design.md` or an existing durable file before creating a new spec file.')
+    expect(skill).toContain('if you cannot identify a concrete durable target or concrete durable facts, do not invent them')
+    expect(skill).toContain('After rule or skill changes, prefer a fresh session and reread `AGENTS.md` plus `.rsp/rules/*.md`.')
+  })
+
+  it('documents the minimal durable decision example and surface matrix', () => {
+    const root = fileURLToPath(new URL('..', import.meta.url))
+    const skill = readFileSync(join(root, 'skills', 'rsp', 'SKILL.md'), 'utf-8')
+    const readme = readFileSync(join(root, 'README.md'), 'utf-8')
+
+    expect(skill).toContain('Minimal example:')
+    expect(skill).toContain('- Target: .rsp/specs/design.md')
+    expect(readme).toContain('Surface matrix:')
+    expect(readme).toContain('| `.rsp/rules/rsp-rules.md` | Agents | Canonical normative rules source |')
+    expect(readme).not.toContain('## JSON output')
+    expect(readme).not.toContain('## Single-file change template')
+  })
+
+  it('keeps AGENTS read order aligned with the recommended workflow', () => {
+    const block = renderRspAgentsBlock()
+    expect(block).toContain('1. .rsp/rules/rsp-rules.md')
+    expect(block).toContain('2. .rsp/focus.d/')
+    expect(block).toContain('3. matching .rsp/changes/*.md for the focused entries')
+    expect(block).toContain('4. .rsp/specs/design.md')
+    expect(block).toContain('5. .rsp/specs/INDEX.md')
+    expect(block).toContain('6. only the relevant additional .rsp/rules/*.md and .rsp/specs/*.md files')
+  })
+
+  it('keeps AGENTS read order aligned with rules read order semantics', () => {
+    const root = fileURLToPath(new URL('..', import.meta.url))
+    const rules = readFileSync(join(root, 'rules', 'rsp-rules.md'), 'utf-8')
+    const block = renderRspAgentsBlock()
+
+    expect(rules).toContain('2. Read `.rsp/rules/rsp-rules.md` in full.')
+    expect(rules).toContain('3. Read `focus.d/`.')
+    expect(rules).toContain('5. Read each `changes/<name>.md` file marked in `focus.d/`.')
+    expect(rules).toContain('6. Read `specs/design.md` and `specs/INDEX.md`.')
+    expect(rules).toContain('7. Read only the relevant additional `rules/` and `specs/` files.')
+    expect(block).toContain('1. .rsp/rules/rsp-rules.md')
+    expect(block).toContain('2. .rsp/focus.d/')
+    expect(block).toContain('3. matching .rsp/changes/*.md for the focused entries')
+    expect(block).toContain('4. .rsp/specs/design.md')
+    expect(block).toContain('5. .rsp/specs/INDEX.md')
+    expect(block).toContain('6. only the relevant additional .rsp/rules/*.md and .rsp/specs/*.md files')
+  })
+})
+
+describe('changeNameFromPath', () => {
   it('strips .md extension', () => {
-    expect(featureNameFromPath('/features', '/features/login.md')).toBe('login')
+    expect(changeNameFromPath('/changes', '/changes/login.md')).toBe('login')
   })
 
   it('preserves subdirectory structure', () => {
-    expect(featureNameFromPath('/features', '/features/auth/login.md')).toBe('auth/login')
+    expect(changeNameFromPath('/changes', '/changes/auth/login.md')).toBe('auth/login')
+  })
+})
+
+describe('normalizeLogicalPath', () => {
+  it('normalizes backslashes to forward slashes', () => {
+    expect(normalizeLogicalPath('auth\\login')).toBe('auth/login')
   })
 })

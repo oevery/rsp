@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs'
 import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { LOCK_PATH, RSP_DIR } from '../src/core/config.js'
 import { withRspLock } from '../src/core/lock.js'
 
@@ -83,6 +83,27 @@ describe('withRspLock', () => {
     await expect(
       withRspLock('test', async () => 'should not run'),
     ).rejects.toThrow(/locked/)
+  })
+
+  it('does not remove an active lock when process probing fails with EPERM', async () => {
+    const lockPath = join(testDir, LOCK_PATH)
+    await mkdir(join(testDir, RSP_DIR), { recursive: true })
+    await writeFile(lockPath, `12345\ntest\n${new Date().toISOString()}`)
+
+    const error = Object.assign(new Error('permission denied'), { code: 'EPERM' })
+    const killSpy = vi.spyOn(process, 'kill').mockImplementation(() => {
+      throw error
+    })
+
+    try {
+      await expect(
+        withRspLock('test', async () => 'should not run'),
+      ).rejects.toThrow(/locked/)
+      expect(existsSync(lockPath)).toBe(true)
+    }
+    finally {
+      killSpy.mockRestore()
+    }
   })
 
   it('cleans up malformed lock file', async () => {

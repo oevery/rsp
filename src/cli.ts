@@ -1,31 +1,30 @@
-import type { CloseFeatureArgs, NewFeatureArgs } from './types.js'
+import type { ArchiveChangeArgs, CreateChangeArgs } from './types.js'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { defineCommand, runMain } from 'citty'
 import { addRules } from './commands/add-rules.js'
 import { addSpec } from './commands/add-spec.js'
-import { buildArchiveIndex } from './commands/archive-index.js'
+import { archiveChange } from './commands/archive.js'
 import { runCheck } from './commands/check.js'
-import { closeFeature } from './commands/close-feature.js'
-import { showDependencies } from './commands/deps.js'
+import { createChange } from './commands/create.js'
 import { runDoctor } from './commands/doctor.js'
+import { focusChange, unfocusChange } from './commands/focus.js'
 import { initProject } from './commands/init.js'
-import { newFeature } from './commands/new-feature.js'
-import { buildSpecsIndex } from './commands/specs-index.js'
 import { showStatus } from './commands/status.js'
+import { updateProject } from './commands/update.js'
 import { getVersion } from './core/config.js'
+import { emitStatusJsonError } from './core/output.js'
 
-/** CLI command: scaffold .rsp/ directory and AGENTS.md */
 const initCommand = defineCommand({
   meta: {
     name: 'init',
-    description: 'Scaffold .rsp/ + AGENTS.md in current project',
+    description: 'Scaffold .rsp/ and ensure AGENTS.md contains the RSP entry block',
   },
   args: {
     'agents-mode': {
       type: 'string',
-      description: 'How to update AGENTS.md: managed, skip, or print',
+      description: 'How to handle AGENTS.md output: managed or print',
       default: 'managed',
     },
     'with-project-rules': {
@@ -35,14 +34,14 @@ const initCommand = defineCommand({
     },
     'with-project-setup': {
       type: 'boolean',
-      description: 'Create .rsp/features/project-setup.md and mark it active',
+      description: 'Create .rsp/changes/project-setup.md and focus it',
       default: false,
     },
   },
   async run({ args }: { args: Record<string, unknown> }) {
     await initProject({
-      agentsMode: args['agents-mode'] === 'skip' || args['agents-mode'] === 'print'
-        ? args['agents-mode'] as 'skip' | 'print'
+      agentsMode: args['agents-mode'] === 'print'
+        ? 'print'
         : 'managed',
       withProjectRules: Boolean(args['with-project-rules']),
       withProjectSetup: Boolean(args['with-project-setup']),
@@ -50,26 +49,28 @@ const initCommand = defineCommand({
   },
 })
 
-/** CLI command: create a new feature file */
-const newFeatureCommand = defineCommand({
+const createCommand = defineCommand({
   meta: {
-    name: 'new',
-    description: 'Create .rsp/features/<name>.md [summary]',
+    name: 'create',
+    description: 'Create .rsp/changes/<name>.md [summary]',
   },
   args: {
     name: {
       type: 'positional',
-      description: 'Feature name',
+      description: 'Change name',
       required: true,
     },
+    kind: {
+      type: 'string',
+      description: 'Optional kind for a kind-aware template (feature, fix, refactor, docs, ops, research)',
+    },
   },
-  async run({ args }: { args: NewFeatureArgs }) {
+  async run({ args }: { args: CreateChangeArgs }) {
     const summary = Array.isArray(args._) && args._.length > 1 ? args._.slice(1).join(' ') : ''
-    await newFeature(args.name, summary)
+    await createChange(args.name, summary, args.kind)
   },
 })
 
-/** CLI command: add a rules file */
 const addRulesCommand = defineCommand({
   meta: {
     name: 'rules',
@@ -87,7 +88,6 @@ const addRulesCommand = defineCommand({
   },
 })
 
-/** CLI command: add a spec file */
 const addSpecCommand = defineCommand({
   meta: {
     name: 'spec',
@@ -105,7 +105,6 @@ const addSpecCommand = defineCommand({
   },
 })
 
-/** CLI command group: add supporting project files */
 const addCommand = defineCommand({
   meta: {
     name: 'add',
@@ -117,144 +116,175 @@ const addCommand = defineCommand({
   },
 })
 
-/** CLI command: archive a completed feature */
-const closeFeatureCommand = defineCommand({
+const archiveCommand = defineCommand({
   meta: {
-    name: 'close',
-    description: 'Archive to .rsp/archives/',
+    name: 'archive',
+    description: 'Archive an open change into .rsp/archives/',
   },
   args: {
     name: {
       type: 'positional',
-      description: 'Feature name',
+      description: 'Change name',
       required: true,
     },
   },
-  async run({ args }: { args: CloseFeatureArgs }) {
-    await closeFeature(args.name)
+  async run({ args }: { args: ArchiveChangeArgs }) {
+    await archiveChange(args.name)
   },
 })
 
-/** CLI command: show project status dashboard */
+const focusCommand = defineCommand({
+  meta: {
+    name: 'focus',
+    description: 'Mark an existing change as currently focused in .rsp/focus.d/',
+  },
+  args: {
+    name: {
+      type: 'positional',
+      description: 'Change name',
+      required: true,
+    },
+  },
+  async run({ args }: { args: { name: string } }) {
+    await focusChange(args.name)
+  },
+})
+
+const unfocusCommand = defineCommand({
+  meta: {
+    name: 'unfocus',
+    description: 'Remove a change from the current focus set in .rsp/focus.d/',
+  },
+  args: {
+    name: {
+      type: 'positional',
+      description: 'Change name',
+      required: true,
+    },
+  },
+  async run({ args }: { args: { name: string } }) {
+    await unfocusChange(args.name)
+  },
+})
+
 const statusCommand = defineCommand({
   meta: {
     name: 'status',
-    description: 'Show project status summary',
+    description: 'Show project status summary with current focus information',
   },
   args: {
-    active: {
+    focused: {
       type: 'boolean',
-      description: 'Show only active features',
+      description: 'Show only currently focused changes',
       default: false,
     },
     blocked: {
       type: 'boolean',
-      description: 'Show only blocked features',
+      description: 'Show only blocked changes',
       default: false,
     },
     stale: {
       type: 'string',
-      description: 'Show only features with age >= days',
+      description: 'Show only changes with age >= days',
+    },
+    json: {
+      type: 'boolean',
+      description: 'Print machine-readable JSON output',
+      default: false,
+    },
+    verbose: {
+      type: 'boolean',
+      description: 'Print runtime diagnostics for suppressed I/O issues',
+      default: false,
     },
   },
   async run({ args }) {
     const stale = args.stale === undefined ? undefined : Number(args.stale)
     if (args.stale !== undefined && (Number.isFinite(stale) === false || Number.isInteger(stale) === false || stale < 0)) {
-      console.error(`  Error: --stale must be a non-negative integer number of days`)
+      if (args.json) {
+        emitStatusJsonError({
+          code: 'invalid_stale_filter',
+          message: '--stale must be a non-negative integer number of days',
+        }, {
+          focused: Boolean(args.focused),
+          blocked: Boolean(args.blocked),
+        })
+      }
+      else {
+        console.error(`  Error: --stale must be a non-negative integer number of days`)
+      }
       process.exit(1)
     }
 
     await showStatus({
-      active: Boolean(args.active),
+      focused: Boolean(args.focused),
       blocked: Boolean(args.blocked),
       stale,
+    }, {
+      json: Boolean(args.json),
+      verbose: Boolean(args.verbose),
     })
   },
 })
 
-/** CLI command: validate all feature files */
 const checkCommand = defineCommand({
   meta: {
     name: 'check',
-    description: 'Validate features (frontmatter, sections, deps, deltas, scenarios)',
+    description: 'Validate changes (frontmatter, sections, deltas, scenarios)',
   },
-  async run() {
-    const errors = await runCheck()
-    if (errors > 0)
+  args: {
+    json: {
+      type: 'boolean',
+      description: 'Print machine-readable JSON output',
+      default: false,
+    },
+    verbose: {
+      type: 'boolean',
+      description: 'Print runtime diagnostics for suppressed I/O issues',
+      default: false,
+    },
+  },
+  async run({ args }) {
+    const result = await runCheck({ json: Boolean(args.json), verbose: Boolean(args.verbose) })
+    if (!result.ok)
       process.exit(1)
   },
 })
 
-/** CLI command: show feature dependency graph */
-const depsCommand = defineCommand({
+const updateCommand = defineCommand({
   meta: {
-    name: 'deps',
-    description: 'Show dependency summary (--mermaid for graph)',
-  },
-  args: {
-    mermaid: {
-      type: 'boolean',
-      description: 'Output as Mermaid.js graph',
-      default: false,
-    },
-    focus: {
-      type: 'string',
-      description: 'Show only a feature and its direct dependency neighborhood',
-    },
-    reverse: {
-      type: 'string',
-      description: 'Show only features that depend on the given feature',
-    },
-  },
-  async run({ args }) {
-    await showDependencies({
-      mermaid: Boolean(args.mermaid),
-      focus: typeof args.focus === 'string' ? args.focus : undefined,
-      reverse: typeof args.reverse === 'string' ? args.reverse : undefined,
-    })
-  },
-})
-
-/** CLI command: regenerate archive INDEX.md */
-const archiveIndexCommand = defineCommand({
-  meta: {
-    name: 'archive-index',
-    description: 'Regenerate archives INDEX.md',
+    name: 'update',
+    description: 'Refresh RSP project structure after upgrade (rules, AGENTS, indices)',
   },
   async run() {
-    await buildArchiveIndex()
+    await updateProject()
   },
 })
 
-/** CLI command: regenerate specs INDEX.md */
-const specsIndexCommand = defineCommand({
-  meta: {
-    name: 'specs-index',
-    description: 'Regenerate specs INDEX.md',
-  },
-  async run() {
-    await buildSpecsIndex()
-  },
-})
-
-/** CLI command: inspect RSP setup health */
 const doctorCommand = defineCommand({
   meta: {
     name: 'doctor',
     description: 'Check RSP setup health and common integration issues',
   },
-  async run() {
-    const issues = await runDoctor()
-    if (issues > 0)
+  args: {
+    json: {
+      type: 'boolean',
+      description: 'Print machine-readable JSON output',
+      default: false,
+    },
+    verbose: {
+      type: 'boolean',
+      description: 'Print runtime diagnostics for suppressed I/O issues',
+      default: false,
+    },
+  },
+  async run({ args }) {
+    const result = await runDoctor({ json: Boolean(args.json), verbose: Boolean(args.verbose) })
+    if (!result.ok)
       process.exit(1)
   },
 })
 
-/**
- * Build and run the RSP CLI.
- * Called automatically when this module is the entry point (dist/cli.mjs),
- * or can be imported and invoked manually for testing.
- */
 export async function runCli(rawArgs = process.argv.slice(2)) {
   const version = await getVersion()
 
@@ -262,26 +292,25 @@ export async function runCli(rawArgs = process.argv.slice(2)) {
     meta: {
       name: 'rsp',
       version,
-      description: 'RSP (Rules, Specs, Plans) workflow for AI-assisted development',
+      description: 'RSP (Rules, Specs, Plans) workflow for lightweight AI-assisted change management',
     },
     subCommands: {
-      'init': initCommand,
-      'add': addCommand,
-      'new': newFeatureCommand,
-      'close': closeFeatureCommand,
-      'status': statusCommand,
-      'check': checkCommand,
-      'deps': depsCommand,
-      'archive-index': archiveIndexCommand,
-      'specs-index': specsIndexCommand,
-      'doctor': doctorCommand,
+      init: initCommand,
+      add: addCommand,
+      create: createCommand,
+      focus: focusCommand,
+      unfocus: unfocusCommand,
+      archive: archiveCommand,
+      status: statusCommand,
+      check: checkCommand,
+      update: updateCommand,
+      doctor: doctorCommand,
     },
   })
 
   await runMain(main, { rawArgs })
 }
 
-/** Auto-execute when run as the entry point (dist/cli.mjs), not when imported */
 const isMain = process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])
 if (isMain) {
   runCli().catch((err: unknown) => {

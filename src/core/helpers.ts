@@ -1,109 +1,65 @@
-import type { CheckboxCount, DeltaSections, FeatureInfo, Frontmatter, ScenarioBlock } from '../types.js'
+import type { ChangeInfo, CheckboxCount, DeltaSections, Frontmatter, RuntimeDiagnostic, ScenarioBlock } from '../types.js'
 import { existsSync } from 'node:fs'
-import { readdir, stat } from 'node:fs/promises'
+import { readdir, readFile, rmdir, stat } from 'node:fs/promises'
 
-import { join, relative } from 'node:path'
-import { RSP_DIR } from './config.js'
+import { basename, dirname, join, relative, sep } from 'node:path'
+import { parse } from 'yaml'
+import { pc, RSP_DIR } from './config.js'
+import { toErrorMessage } from './output.js'
 
 const RSP_AGENTS_BEGIN = '<!-- rsp:begin -->'
 const RSP_AGENTS_END = '<!-- rsp:end -->'
 
-/**
- * Parse a simple YAML-like key-value + list structure from lines.
- * Used by both frontmatter and config.yaml parsers.
- * Supports: `key: value`, `key:` + indent `- item`, and `#` comments.
- */
-export function parseYamlLines(lines: string[]): Record<string, unknown> {
-  const result: Record<string, unknown> = {}
-  let currentKey: string | null = null
-  let currentList: string[] | null = null
-
-  function flushList() {
-    if (currentList !== null && currentKey !== null) {
-      result[currentKey] = currentList
-      currentList = null
-      currentKey = null
-    }
-  }
-
-  for (const line of lines) {
-    const trimmed = line.trim()
-    if (trimmed === '' || trimmed.startsWith('#')) {
-      // comment lines inside a list are part of the list context — don't flush
-      continue
-    }
-
-    // eslint-disable-next-line regexp/no-super-linear-backtracking
-    const li = line.match(/^[ \t]+-[ \t]+([^\n]+)$/)
-    if (li && currentList !== null) {
-      currentList.push(li[1].trim())
-      continue
-    }
-
-    flushList()
-
-    // eslint-disable-next-line regexp/no-super-linear-backtracking
-    const kv = line.match(/^([\w-]+):[ \t]*([^\n]*)$/)
-    if (kv) {
-      currentKey = kv[1]
-      const val = kv[2].trim()
-      if (!val || val === '[]') {
-        currentList = []
-      }
-      else {
-        result[currentKey] = val
-        currentKey = null
-      }
-    }
-  }
-
-  flushList()
-  return result
+/** Parse a YAML document into a plain object. */
+export function parseYamlText(text: string): Record<string, unknown> {
+  const parsed = parse(text)
+  if (parsed === null || parsed === undefined)
+    return {}
+  if (typeof parsed !== 'object' || Array.isArray(parsed))
+    throw new Error('YAML document must be a mapping/object')
+  return parsed as Record<string, unknown>
 }
 
 /**
- * Parse YAML frontmatter (between `---` delimiters) from feature file content.
+ * Parse YAML from a list of lines.
+ * Kept as a thin wrapper because tests and callers already use this helper.
+ */
+export function parseYamlLines(lines: string[]): Record<string, unknown> {
+  return parseYamlText(lines.join('\n'))
+}
+
+/**
+ * Parse YAML frontmatter (between `---` delimiters) from change file content.
  * Returns null if no frontmatter block is found.
  */
 export function parseFrontmatter(content: string): Frontmatter | null {
   const m = content.match(/^---\r?\n([\s\S]*?)\r?\n(?:---|\.\.\.)\r?\n/)
   if (!m)
     return null
-  return parseYamlLines(m[1].split('\n')) as Frontmatter
+  return parseYamlText(m[1]) as Frontmatter
 }
 
-/** Count semantic checkboxes ([ ], [/], [x]) in content. */
+/** Count semantic checkboxes ([ ], [/], [x], [-]) in content. */
 export function countCheckboxes(content: string): CheckboxCount {
   const todo = (content.match(/\[ \]/g) || []).length
   const progress = (content.match(/\[\/\]/g) || []).length
   const done = (content.match(/\[x\]/g) || []).length
   const dropped = (content.match(/\[-\]/g) || []).length
-  return { todo, progress, done, total: todo + progress + done + dropped }
+  return { todo, progress, done, dropped, total: todo + progress + done + dropped }
+}
+
+interface WalkOptions {
+  onError?: (diagnostic: RuntimeDiagnostic) => void
 }
 
 /** Recursively walk a directory, returning paths to all .md files. */
-export async function walkMarkdownFiles(dir: string): Promise<string[]> {
-  const files: string[] = []
-  try {
-    const items = await readdir(dir, { withFileTypes: true })
-    for (const item of items) {
-      if (item.name.startsWith('.'))
-        continue
-      const filePath = join(dir, item.name)
-      if (item.isDirectory())
-        files.push(...await walkMarkdownFiles(filePath))
-      else if (item.name.endsWith('.md'))
-        files.push(filePath)
-    }
-  }
-  catch {
-    // ignore missing dirs
-  }
-  return files
+export async function walkMarkdownFiles(dir: string, options: WalkOptions = {}): Promise<string[]> {
+  const all = await walkFiles(dir, options)
+  return all.filter(f => f.endsWith('.md'))
 }
 
 /** Recursively walk a directory, returning all entry paths (no file type filter). */
-export async function walkFiles(dir: string): Promise<string[]> {
+export async function walkFiles(dir: string, options: WalkOptions = {}): Promise<string[]> {
   const files: string[] = []
   try {
     const items = await readdir(dir, { withFileTypes: true })
@@ -112,89 +68,211 @@ export async function walkFiles(dir: string): Promise<string[]> {
         continue
       const filePath = join(dir, item.name)
       if (item.isDirectory())
-        files.push(...await walkFiles(filePath))
+        files.push(...await walkFiles(filePath, options))
       else
         files.push(filePath)
     }
   }
-  catch {
-    // ignore missing dirs
+  catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+      options.onError?.({
+        code: 'walk_failed',
+        operation: 'readdir',
+        path: dir,
+        message: toErrorMessage(error),
+      })
+    }
   }
   return files
 }
 
-/** Convert a feature file path to its logical feature name (relative to features dir, no .md). */
-export function featureNameFromPath(featuresDir: string, filePath: string): string {
-  const rel = relative(featuresDir, filePath)
+/** Convert a change file path to its logical change name (relative to changes dir, no .md). */
+export function changeNameFromPath(changesDir: string, filePath: string): string {
+  const rel = normalizeLogicalPath(relative(changesDir, filePath))
   return rel.replace(/\.md$/, '')
 }
 
-/**
- * Generate a feature file content from the built-in template.
- */
-export function generateFeatureContent(name: string, summary = ''): string {
+/** Normalize a relative path into the logical RSP name format using `/`. */
+export function normalizeLogicalPath(pathValue: string): string {
+  return pathValue.split(sep).join('/').replace(/\\/g, '/')
+}
+
+/** Generate a change file content from the built-in single-file template. */
+export function generateChangeContent(name: string, summary = '', kind?: string): string {
+  const proposalSummary = summary || (name === 'project-setup'
+    ? 'Capture the project model, boundaries, and stable local constraints'
+    : '<one-line summary>')
+
   if (name === 'project-setup') {
     return `---
-status: draft
-priority: medium
-tags:
+kind: ops
 ---
 
-# Feature: project-setup
+# Change: project-setup
+
+## Proposal
+- Summary: ${proposalSummary}
+- Why:
+  - Establish a durable project model before normal implementation work starts
+- Scope:
+  - Review the repository structure, entrypoints, and primary outputs
+  - Fill .rsp/specs/design.md with durable architecture facts
+  - Add .rsp/rules/project-rules.md when stable local rules or validation steps exist
+- Non-goals:
+  - Do not duplicate durable project facts across this change, specs, and rules
 
 ## Spec
-- Summary: ${summary || 'Capture the project model, boundaries, and stable local constraints'}
-- Requirements:
-  - Project purpose, scope, and structure are reflected in .rsp/specs/design.md
-  - Stable validation or workflow constraints are reflected in .rsp/rules/project-rules.md when needed
-- Constraints:
-  - Avoid duplicating durable project facts across feature notes, specs, and rules
+### ADDED
+- Requirement: project bootstrap capture
+  - The repository's purpose, scope, and structure are reflected in .rsp/specs/design.md
 
-## Plan
+### MODIFIED
+- Requirement: stable local operating constraints
+  - Stable validation or workflow constraints are reflected in .rsp/rules/project-rules.md when needed
+
+### Acceptance
+#### Scenario: project model captured
+- GIVEN an initialized RSP project
+- WHEN project setup is completed
+- THEN .rsp/specs/design.md reflects durable project facts
+- AND .rsp/rules/project-rules.md exists only when stable local rules are present
+
+## Design
+- Approach:
+  - Keep bootstrap knowledge in this single change while moving durable facts into specs and rules
+- Affected areas:
+  - .rsp/specs/design.md
+  - .rsp/rules/project-rules.md
+- Constraints:
+  - Keep the setup lightweight and avoid duplicating durable project facts
+
+## Tasks
 - [ ] Review the repository structure, entrypoints, and primary outputs
 - [ ] Fill .rsp/specs/design.md with durable architecture facts
 - [ ] Add .rsp/rules/project-rules.md if stable local rules or validation steps exist
 
-## Tests
-- [ ] Run rsp doctor
-- [ ] Run project-native validation if available
-
-## Notes (optional)
-- <facts discovered during project setup>
+## Verify
+- Automated:
+  - [ ] Run rsp doctor
+- Manual:
+  - [ ] Review .rsp/specs/design.md and confirm it matches the repository
+- Durable updates:
+  - [ ] Decide whether this change produced durable knowledge that belongs in \`.rsp/specs/\` or \`.rsp/rules/\`
+  - [ ] If yes, write only stable facts to the smallest correct target file before archive; do not promote task history, debugging notes, or one-off implementation context
 
 ## Blockers
--
+- none
 `
   }
 
+  const frontmatterKind = kind ?? '<choose: feature | fix | refactor | docs | ops | research>'
+  const template = getChangeTemplateByKind(kind)
+
   return `---
-status: draft
-priority: medium
-tags:
+kind: "${frontmatterKind}"
 ---
 
-# Feature: ${name}
+# Change: ${name}
+
+## Proposal
+- Summary: ${proposalSummary}
+- Why:
+  - ${template.why}
+- Scope:
+  - ${template.scope}
+- Non-goals:
+  - ${template.nonGoals}
 
 ## Spec
-- Summary: ${summary || '<one-line summary>'}
-- Requirements:
-  - <verifiable requirement>
+${template.specSection}
+
+### Acceptance
+${template.acceptanceSection}
+
+## Design
+- Approach:
+  - ${template.approach}
+- Affected areas:
+  - ${template.affectedAreas}
 - Constraints:
-  -
+  - ${template.constraints}
 
-## Plan
-- [ ] Phase 1:
-  - [ ] <task>
+## Tasks
+- [ ] ${template.task}
 
-## Tests
-- [ ] <test file or scenario>
-
-## Notes (optional)
-- <design decisions discovered during implementation>
+## Verify
+- Automated:
+  - [ ] ${template.automatedVerify}
+- Manual:
+  - [ ] ${template.manualVerify}
+- Durable updates:
+  - [ ] Decide whether this change produced durable knowledge that belongs in \`.rsp/specs/\` or \`.rsp/rules/\`
+  - [ ] If yes, write only stable facts to the smallest correct target file before archive; do not promote task history, debugging notes, or one-off implementation context
 
 ## Blockers
--
+- none
 `
+}
+
+function getChangeTemplateByKind(kind?: string) {
+  switch (kind) {
+    case 'docs':
+      return {
+        why: '<why the documentation change matters>',
+        scope: '<which docs, readers, or workflows will be updated>',
+        nonGoals: '<what documentation behavior or audience is out of scope>',
+        specSection: '### MODIFIED\n- Requirement: documentation accuracy\n  - <what durable reader-facing behavior or explanation changes>',
+        acceptanceSection: '#### Scenario: reader follows the updated guidance\n- GIVEN the updated documentation\n- WHEN a reader follows the documented workflow\n- THEN the steps are accurate and sufficient',
+        approach: '<how the documentation will be updated and organized>',
+        affectedAreas: '<doc path or documentation area>',
+        constraints: '<durable wording, consistency, or scope constraint>',
+        task: '<update the target documentation and supporting references>',
+        automatedVerify: '<run markdown, docs, or link checks if applicable>',
+        manualVerify: '<review the updated doc as a reader and confirm it is accurate>',
+      }
+    case 'research':
+      return {
+        why: '<what question or uncertainty this research resolves>',
+        scope: '<what system area, option set, or hypothesis is being examined>',
+        nonGoals: '<what implementation work is explicitly out of scope>',
+        specSection: '### ADDED\n- Requirement: research outcome recording\n  - <what finding, option, or decision must be captured clearly>',
+        acceptanceSection: '#### Scenario: research question is resolved\n- GIVEN the current uncertainty or open question\n- WHEN the investigation is completed\n- THEN the result is recorded clearly enough to guide follow-up work',
+        approach: '<how the investigation will be performed and what evidence will be gathered>',
+        affectedAreas: '<code path, subsystem, or source being investigated>',
+        constraints: '<time, evidence, or scope constraint for the investigation>',
+        task: '<gather evidence and record the resulting recommendation or finding>',
+        automatedVerify: '<run any command needed to confirm the observed behavior>',
+        manualVerify: '<review the findings and confirm they answer the original question>',
+      }
+    case 'ops':
+      return {
+        why: '<why this operational or environment change matters>',
+        scope: '<what environment, workflow, or operational path changes>',
+        nonGoals: '<what product or feature behavior will not change>',
+        specSection: '### MODIFIED\n- Requirement: operational behavior\n  - <what reliable operational outcome should change or stay true>',
+        acceptanceSection: '#### Scenario: operational path succeeds\n- GIVEN the target environment or workflow\n- WHEN the operational change is applied\n- THEN the expected operational outcome is reliable',
+        approach: '<how the operational change will be applied safely>',
+        affectedAreas: '<script, config, workflow, or environment path>',
+        constraints: '<rollback, safety, or environment constraint>',
+        task: '<apply and verify the operational change>',
+        automatedVerify: '<run the relevant operational validation command>',
+        manualVerify: '<exercise the target workflow and confirm the operational result>',
+      }
+    default:
+      return {
+        why: '<why this change matters>',
+        scope: '<what this change will do>',
+        nonGoals: '<what this change will not do>',
+        specSection: '### ADDED\n- Requirement: <new or updated behavior>\n  - <verifiable requirement>',
+        acceptanceSection: '#### Scenario: <name>\n- GIVEN <context>\n- WHEN <action>\n- THEN <expected outcome>',
+        approach: '<how the change will be implemented>',
+        affectedAreas: '<path or subsystem>',
+        constraints: '<binding technical or product constraint>',
+        task: '<implementation task>',
+        automatedVerify: '<test command or automated check>',
+        manualVerify: '<manual scenario to validate>',
+      }
+  }
 }
 
 /** Render the managed RSP block for AGENTS.md. */
@@ -203,16 +281,12 @@ export function renderRspAgentsBlock(): string {
 ## RSP Entry
 
 Read in order:
-1. .rsp/rules/*.md
-2. .rsp/specs/INDEX.md
-3. .rsp/specs/design.md
-4. .rsp/active.d/ and matching .rsp/features/*.md
-
-Guidelines:
-- .rsp/rules/rsp-rules.md is required
-- .rsp/rules/project-rules.md is optional
-- Keep project design in .rsp/specs/
-- Add extra spec files only when they have durable value
+1. .rsp/rules/rsp-rules.md
+2. .rsp/focus.d/
+3. matching .rsp/changes/*.md for the focused entries
+4. .rsp/specs/design.md
+5. .rsp/specs/INDEX.md
+6. only the relevant additional .rsp/rules/*.md and .rsp/specs/*.md files
 ${RSP_AGENTS_END}`
 }
 
@@ -235,6 +309,65 @@ export function hasRspAgentsBlock(content: string): boolean {
   return content.includes(RSP_AGENTS_BEGIN) && content.includes(RSP_AGENTS_END)
 }
 
+/** Valid change/rule/spec name pattern (kebab-case with optional subdirectory). */
+export const CHANGE_NAME_RE = /^[a-z0-9-]+(?:\/[a-z0-9-]+)*$/
+
+/** Validate a change/rule/spec name against the kebab-case pattern. */
+export function isValidChangeName(name: string): boolean {
+  return CHANGE_NAME_RE.test(name)
+}
+
+/** Guard: ensure RSP is initialized. Exits with error if not. */
+export function guardRspInitialized(): void {
+  const rspRulesPath = join(RSP_DIR, 'rules', 'rsp-rules.md')
+  const designPath = join(RSP_DIR, 'specs', 'design.md')
+  if (!existsSync(rspRulesPath) || !existsSync(designPath)) {
+    console.error(`  ${pc.red('Error:')} RSP is not initialized in this project`)
+    console.error(`  ${pc.dim('Run: rsp init')}`)
+    process.exit(1)
+  }
+}
+
+/** Filter checkbox todo lines from a section body. */
+export function getOpenCheckboxes(sectionText: string): string[] {
+  return sectionText
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => /^- \[[ /]\]/.test(line))
+}
+
+/** Remove empty parent directories up to (but not including) stopDir. */
+export async function cleanupEmptyParentDirs(path: string, stopDir: string) {
+  let parent = dirname(path)
+  while (parent !== stopDir) {
+    try {
+      const remaining = await readdir(parent)
+      if (remaining.length === 0)
+        await rmdir(parent)
+      else
+        break
+    }
+    catch {
+      break
+    }
+    parent = dirname(parent)
+  }
+}
+
+/** Detect project name from package.json or fall back to directory name. */
+export async function detectProjectName(): Promise<string> {
+  try {
+    if (existsSync('package.json')) {
+      const raw = await readFile('package.json', 'utf-8')
+      const pkg = JSON.parse(raw)
+      if (pkg.name && pkg.name !== '')
+        return pkg.name
+    }
+  }
+  catch { /* fall through */ }
+  return basename(process.cwd())
+}
+
 /** Generate the default project design spec template. */
 export function generateDesignContent(projectName: string): string {
   return `# Project Design: ${projectName}
@@ -243,7 +376,11 @@ export function generateDesignContent(projectName: string): string {
 - <what this project is responsible for>
 - <who or what it serves>
 
-## Scope
+## Stable Facts
+- <durable fact that future agents or developers must know>
+- <key architectural invariant>
+
+## Boundaries
 - In scope:
   - <major capability or boundary>
 - Out of scope:
@@ -268,6 +405,7 @@ description: Project-specific rules for ${projectName}
 
 ## Scope
 - <stable local rules, workflow constraints, or validation expectations>
+- Do not put temporary debugging steps here.
 
 ## Validation
 - <preferred stable validation commands, not temporary troubleshooting steps>
@@ -282,7 +420,7 @@ export function generateRulesContent(name: string): string {
   const title = toTitleCase(name)
   return `---
 name: ${name}
-description: Project-specific rules for ${title}
+description: Durable rules for ${title}
 ---
 
 # ${title}
@@ -306,8 +444,17 @@ export function generateSpecContent(name: string): string {
 ## Purpose
 - <why this project-level spec exists>
 
-## Details
-- <important project-level detail>
+## Stable Facts
+- <durable fact that future work must know>
+
+## Boundaries
+- In scope:
+  - <what this spec covers>
+- Out of scope:
+  - <what this spec does not cover>
+
+## Constraints
+- <stable constraint, if any>
 `
 }
 
@@ -319,25 +466,47 @@ function toTitleCase(value: string): string {
     .join(' ')
 }
 
+/** Extract the raw body of a `## <heading>` section. */
+export function extractSection(content: string, heading: string): string {
+  const lines = content.split('\n')
+  const start = lines.findIndex(line => line.trim() === `## ${heading}`)
+  if (start === -1)
+    return ''
+
+  const body: string[] = []
+  for (let index = start + 1; index < lines.length; index++) {
+    const line = lines[index]
+    if (line.startsWith('## '))
+      break
+    body.push(line)
+  }
+
+  return body.join('\n').trim()
+}
+
+/** Return true when the Blockers section contains a real blocker entry. */
+export function hasMeaningfulBlockers(content: string): boolean {
+  const blockers = extractSection(content, 'Blockers')
+  if (!blockers)
+    return false
+
+  const lines = blockers
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean)
+
+  if (lines.length === 0)
+    return false
+
+  return lines.some(line => !/^[-*]\s*(?:none)?$/i.test(line) && !/^none$/i.test(line))
+}
+
 /**
  * Detect if the Spec section contains lightweight delta markers (ADDED/MODIFIED/REMOVED).
- * Matches `### ADDED`, `### MODIFIED`, `### REMOVED` sub-headings under ## Spec.
+ * Matches `### ADDED`, `### MODIFIED`, `### REMOVED` sub-headings under `## Spec`.
  */
 export function detectDeltaSections(content: string): DeltaSections {
-  const match = content.match(/^## Spec\n([\s\S]*?)(?=\n## |\n---|\n\.\.\.)/m)
-  if (!match) {
-    const m2 = content.match(/^## Spec\n([\s\S]*)$/m)
-    if (!m2)
-      return { added: false, modified: false, removed: false }
-    // no trailing section separator — Spec is the last block
-    const body = m2[1]
-    return {
-      added: /^###\s*ADDED/im.test(body),
-      modified: /^###\s*MODIFIED/im.test(body),
-      removed: /^###\s*REMOVED/im.test(body),
-    }
-  }
-  const body = match[1]
+  const body = extractSection(content, 'Spec')
   return {
     added: /^###\s*ADDED/im.test(body),
     modified: /^###\s*MODIFIED/im.test(body),
@@ -346,13 +515,13 @@ export function detectDeltaSections(content: string): DeltaSections {
 }
 
 /**
- * Parse structured Given/When/Then scenario blocks from feature content.
- * Matches `### Scenario: Name` followed by indented `- GIVEN/WHEN/THEN` lines.
+ * Parse structured Given/When/Then scenario blocks from change content.
+ * Matches `### Scenario: Name` or `#### Scenario: Name` followed by bullet steps.
  */
 export function parseScenarios(content: string): ScenarioBlock[] {
   const scenarios: ScenarioBlock[] = []
   // eslint-disable-next-line regexp/no-super-linear-backtracking
-  const regex = /^###\s*Scenario:\s*(.+)$/gim
+  const regex = /^#{3,4}\s*Scenario:\s*(.+)$/gim
   let match
 
   // eslint-disable-next-line no-cond-assign
@@ -360,13 +529,13 @@ export function parseScenarios(content: string): ScenarioBlock[] {
     const heading = match[1].trim()
     const startPos = match.index + match[0].length
     const restContent = content.slice(startPos)
-    const nextSection = restContent.match(/^###/m)
+    const nextSection = restContent.match(/^#{3,4}\s/m)
     const block = nextSection ? restContent.slice(0, nextSection.index) : restContent
     const steps = block
       .split('\n')
       .map(s => s.trim())
       .filter(s => s.startsWith('-') && /GIVEN|WHEN|THEN|AND|BUT/i.test(s))
-      .map(s => s.replace(/^-\s*/, ''))
+      .map(s => s.replace(/^[-*]\s*/, ''))
     if (steps.length > 0)
       scenarios.push({ heading, steps })
   }
@@ -375,14 +544,13 @@ export function parseScenarios(content: string): ScenarioBlock[] {
 }
 
 /**
- * Get a feature file's age in days (based on birthtime if available, else mtime).
+ * Get a change file's age in days based on last modification time.
  * Returns null if the file does not exist or stat fails.
  */
-export async function getFeatureAge(filePath: string): Promise<number | null> {
+export async function getChangeAge(filePath: string): Promise<number | null> {
   try {
     const s = await stat(filePath)
-    const created = s.birthtime || s.mtime
-    const diffMs = Date.now() - created.getTime()
+    const diffMs = Date.now() - s.mtime.getTime()
     return Math.floor(diffMs / (1000 * 60 * 60 * 24))
   }
   catch {
@@ -390,55 +558,17 @@ export async function getFeatureAge(filePath: string): Promise<number | null> {
   }
 }
 
-/**
- * Collect FeatureInfo for all feature files under .rsp/features/.
- */
-export async function collectFeatureInfos(): Promise<FeatureInfo[]> {
-  const featuresDir = join(RSP_DIR, 'features')
-  const files = existsSync(featuresDir) ? await walkMarkdownFiles(featuresDir) : []
-  const infos: FeatureInfo[] = []
+/** Collect ChangeInfo for all change files under .rsp/changes/. */
+export async function collectChangeInfos(): Promise<ChangeInfo[]> {
+  const changesDir = join(RSP_DIR, 'changes')
+  const files = existsSync(changesDir) ? await walkMarkdownFiles(changesDir) : []
+  const infos: ChangeInfo[] = []
 
   for (const fp of files) {
-    const name = featureNameFromPath(featuresDir, fp)
-    const ageDays = await getFeatureAge(fp)
+    const name = changeNameFromPath(changesDir, fp)
+    const ageDays = await getChangeAge(fp)
     infos.push({ path: fp, name, ageDays })
   }
 
   return infos
-}
-
-/** Detect cycles in a directed dependency graph. Returns each cycle as an array of node names. */
-export function detectCycles(graph: Map<string, string[]>): string[][] {
-  const cycles: string[][] = []
-  const visited = new Set<string>()
-  const inStack = new Set<string>()
-
-  function dfs(node: string, path: string[]) {
-    if (inStack.has(node)) {
-      const cycleStart = path.indexOf(node)
-      if (cycleStart !== -1)
-        cycles.push(path.slice(cycleStart).concat(node))
-      return
-    }
-    if (visited.has(node))
-      return
-
-    visited.add(node)
-    inStack.add(node)
-    path.push(node)
-
-    const neighbors = graph.get(node) || []
-    for (const next of neighbors) {
-      if (graph.has(next))
-        dfs(next, path)
-    }
-
-    path.pop()
-    inStack.delete(node)
-  }
-
-  for (const node of graph.keys())
-    dfs(node, [])
-
-  return cycles
 }

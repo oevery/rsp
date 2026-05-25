@@ -5,164 +5,133 @@ description: Use this skill when adopting, operating, auditing, or repairing an 
 
 # RSP Skill
 
-Use this skill when you are actively operating on an RSP project: initializing RSP, deciding how to update `AGENTS.md`, adding durable rules/specs, starting or closing features, or auditing the setup.
+Load this skill when you need to initialize RSP, operate an existing RSP project, audit or repair `.rsp/`, or decide whether a change needs durable updates before archive.
 
-## Load this skill when
+This skill operationalizes the rules in `.rsp/rules/rsp-rules.md`. Always load and follow those rules first.
 
-- the user wants to adopt RSP in an existing project
-- the user wants to organize project-level design or rules under `.rsp/`
-- the user wants to audit or repair RSP structure
-- the user wants to start, close, or review an RSP-managed feature
+Prefer exact file paths, exact commands, and exact durable facts over vague summaries.
 
-## Decision guide
+## Workflow
 
-If the project has no `.rsp/` yet:
+### Adopt or initialize
 
-1. Run `npx -y @oevery/rsp init --with-project-setup`
-2. Choose `--agents-mode`:
-   - `managed`: the project already uses `AGENTS.md` and should gain a thin managed RSP block
-   - `skip`: do not modify `AGENTS.md`
-   - `print`: print the managed block for manual or AI-assisted insertion
-3. If you did not use `--with-project-setup`, create `rsp new project-setup` to capture project bootstrap facts, boundaries, and initial decisions
-4. Fill `features/project-setup.md`
-5. Fill `specs/design.md`
-6. Run `rsp doctor`
+1. Use one of these commands:
+   - `npx -y @oevery/rsp init --agents-mode managed`
+   - `npx -y @oevery/rsp init --agents-mode print`
+   - `npx -y @oevery/rsp init --with-project-setup --agents-mode managed`
+   - `npx -y @oevery/rsp init --with-project-setup --agents-mode print`
+2. If the repository still needs an explicit bootstrap change and you did not use `--with-project-setup`, run `npx -y @oevery/rsp create project-setup`.
+3. Fill `changes/project-setup.md`.
+4. Set an explicit `kind` in the change frontmatter.
+5. Write durable architecture, boundaries, defaults, and constraints into `specs/design.md`.
+6. Write stable local workflow or validation rules into `rules/project-rules.md` only when they are long-lived.
+7. Run `npx -y @oevery/rsp doctor`.
 
-If the project already has `.rsp/`:
+### Operate an existing project
 
-1. Check `AGENTS.md`
-2. Check `active.d/`
-3. Check `specs/design.md`
-4. If the project still lacks a durable bootstrap feature, create `rsp new project-setup`
-5. Run `rsp doctor` before making structural changes when the setup looks inconsistent
+1. Follow the read order in `.rsp/rules/rsp-rules.md`.
+2. If a focused change is missing an explicit `kind`, repair the frontmatter before continuing.
+3. If an existing open change should become current work, use `npx -y @oevery/rsp focus <name>`.
+4. Do not treat unfocused files in `changes/` as current work unless the user explicitly asks for them or you first run `npx -y @oevery/rsp focus <name>`.
 
-## Command-first workflow
+### Audit or repair
 
-Prefer RSP commands over direct file creation when they already cover the target file type:
+1. Check that `.rsp/` exists.
+2. Check that `AGENTS.md` contains the managed RSP block.
+3. Check that `specs/design.md` exists.
+4. Check that `specs/INDEX.md` and `archives/INDEX.md` are still generated files.
+5. Check that `focus.d/` markers and `changes/` files are in sync.
+6. If generated indices or the managed AGENTS block drift, run `npx -y @oevery/rsp update`.
 
-- `rsp init`
-- `rsp add rules <name>`
-- `rsp add spec <name>`
-- `rsp new <name>`
-- `rsp close <name>`
-- `rsp specs-index`
-- `rsp archive-index`
-- `rsp doctor`
+## Durable decision
 
-Direct file creation is acceptable only when no RSP command covers the target file.
+Before `npx -y @oevery/rsp archive <name>`:
 
-## AGENTS handling
+1. Read the current change.
+2. Read only the relevant `specs/` and `rules/` files.
+3. Inspect code only if needed.
+4. Return exactly one decision:
 
-Managed block example:
+- `No durable update needed`
+- `Update existing spec or rule`
+- `Create a new durable spec` only when the knowledge is truly project-level, reusable, and does not fit `specs/design.md`, an existing spec, or a rule file
+
+Write a durable update only when one of these is true:
+
+- the change altered stable system behavior
+- the change changed a project boundary, default, or constraint
+- future agents or developers would likely make mistakes without the fact
+- the fact is worth rereading in later sessions as durable project knowledge
+
+When unsure whether a fact is truly durable, prefer `No durable update needed` over speculative promotion.
+
+Default to no spec writeback unless the change produced project-level durable knowledge that future work must reread.
+
+Do not write these into `specs/` or `rules/`:
+
+- temporary debugging history
+- task-by-task execution notes
+- one-off implementation context
+- archive-only historical detail
+- a catch-all summary file like `specs/changes.md`
+
+Choose the smallest correct target:
+
+- project-wide design, boundaries, defaults, and durable context -> `specs/design.md`
+- stable local workflow or validation rules -> `rules/project-rules.md`
+- another durable rule set -> `rules/<name>.md`
+- an additional reusable project-level spec -> `specs/<name>.md`
+
+Prefer `specs/design.md` or an existing durable file before creating a new spec file.
+
+When writing the durable update:
+
+- write stable facts, not narrative history
+- prefer concrete facts and boundaries over summaries like "implemented X" or "investigated Y"
+- if you cannot identify a concrete durable target or concrete durable facts, do not invent them
+
+Set archive readiness like this:
+
+- If `Blockers` still contains a real blocker, set `Archive ready: no`.
+- If a durable update is required but not yet written, set `Archive ready: no`.
+- If no durable update is missing and the remaining `Verify` risk is consciously accepted, set `Archive ready: yes`.
+- Do not use CLI warning text as a substitute for semantic durable-update judgment.
+
+## Output template
+
+Use this exact format:
 
 ```md
-<!-- rsp:begin -->
-## RSP Entry
-
-Read in order:
-1. .rsp/rules/*.md
-2. .rsp/specs/INDEX.md
-3. .rsp/specs/design.md
-4. .rsp/active.d/ and matching .rsp/features/*.md
-<!-- rsp:end -->
+## Durable Decision
+- Decision: <No durable update needed | Update existing spec or rule | Create a new durable spec>
+- Target: <path or N/A>
+- Why:
+  - <reason>
+- Facts to write:
+  - <durable fact>
+- Archive ready: <yes | no>
 ```
 
-Rules:
+Minimal example:
 
-- preserve content outside the managed block unless explicitly asked to change it
-- do not move long-lived project design or rules back into `AGENTS.md`
-- keep the managed block thin; use `.rsp/` for durable content
-
-## File placement guide
-
-- `specs/design.md`: project-wide design, boundaries, and durable context
-- `rules/project-rules.md`: canonical optional file for stable local validation steps, workflow restrictions, and other long-lived local operating constraints
-- `rules/<name>.md`: other durable rule sets
-- `specs/<name>.md`: additional durable project-level documents only when they do not duplicate `design.md`
-- `features/<name>.md`: active work only
-- `archives/`: completed work only, via `rsp close <name>`
-
-## Feature expectations
-
-Every feature file should contain:
-
-- `## Spec`
-- `## Plan`
-- `## Tests`
-- `## Blockers`
-
-Minimal template:
-
-```markdown
----
-status: draft
-priority: medium
-depends-on:
-  - <other-feature-name>
-tags:
-  - backend
----
-# Feature: <name>
-
-## Spec
-- Summary: <one-line>
-- Requirements:
-  - <verifiable item>
-- Constraints:
-  - <binding constraint>
-
-## Plan
-- [ ] Phase 1: <name>
-  - [ ] <task>
-
-## Tests
-- [ ] <test file or scenario>
-
-## Blockers
--
+```md
+## Durable Decision
+- Decision: Update existing spec or rule
+- Target: .rsp/specs/design.md
+- Why:
+  - The change introduced a stable default and boundary that future work must follow.
+- Facts to write:
+  - Default API retries are capped at 3 attempts.
+  - Background sync stops retrying after a permanent authentication failure.
+- Archive ready: no
 ```
 
-## Project setup workflow
+Rules for the output:
 
-Use this when adopting RSP into a repository or when the project lacks a durable bootstrap feature:
-
-1. Prefer `rsp init --with-project-setup`, or create `rsp new project-setup` if RSP is already initialized
-2. Capture the project's purpose, boundaries, inputs, outputs, and platform constraints in the feature spec
-3. Move durable architecture facts and cross-cutting technical constraints into `.rsp/specs/design.md`
-4. Move stable validation rules, workflow constraints, and local operating constraints into `.rsp/rules/project-rules.md` when they are long-lived
-5. Keep `project-setup` open until the initial project model is settled, then start normal feature work
-
-Suggested `project-setup` checkpoints:
-
-- Purpose, scope, and structure are reflected in `.rsp/specs/design.md`
-- Stable local rules are reflected in `.rsp/rules/project-rules.md` when needed
-- `rsp doctor` passes before the feature is closed
-
-## Audit workflow
-
-When auditing an RSP project:
-
-1. Check whether `.rsp/` exists
-2. Check whether `AGENTS.md` contains the managed block
-3. Check whether `specs/design.md` exists
-4. Check whether `specs/INDEX.md` and `archives/INDEX.md` still contain generated signatures
-5. Check whether `active.d/` markers and `features/` files are in sync
-6. Prefer repairing structure with RSP commands instead of editing generated files manually
+- `Target` must be a concrete file path when the decision is not `No durable update needed`.
+- `Facts to write` must contain durable facts, not task history or debugging notes.
+- If the decision requires a durable update that is not yet written, `Archive ready` must be `no`.
 
 ## Refresh guidance
 
-- If rules or skill content changed, a new session or explicit reload is the safest way to ensure they are applied.
-- `AGENTS.md` can act as an entrypoint, but it does not guarantee live hot-reload in every agent tool.
-- If strict adherence matters after changing rules, prefer a fresh session and reread `AGENTS.md` plus `.rsp/rules/*.md`.
-
-## Environment-specific optimization
-
-If RTK is available, prefix RSP commands with `rtk`.
-
-Examples:
-
-- `rtk rsp status`
-- `rtk rsp new auth/login`
-- `rtk rsp check`
-- `rtk rsp archive-index`
-- `rtk rsp specs-index`
+- After rule or skill changes, prefer a fresh session and reread `AGENTS.md` plus `.rsp/rules/*.md`.

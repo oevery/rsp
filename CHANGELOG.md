@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.0 (2026-05-25)
+
+- Replace the legacy feature-centric workflow with the new change/focus/archive model, including `rsp create`, `rsp focus`, `rsp unfocus`, `rsp archive`, and `rsp update`.
+- Remove deprecated commands and terminology tied to `new`, `close`, `deps`, and older lifecycle naming.
+- Add machine-readable `--json` output and `--verbose` runtime diagnostics for `rsp status`, `rsp check`, and `rsp doctor`.
+- Tighten durable knowledge guidance, AGENTS managed-block behavior, read order, and the boundary between README, rules, skill, and design philosophy surfaces.
+- Improve recovery and consistency for archive/index/update flows, lock handling, and validation diagnostics across the CLI.
+- Expand integration and regression coverage for templates, JSON contracts, update repair paths, archive behavior, and locking edge cases.
+
 ## 1.2.0 (2026-05-24)
 
 - Add `rsp init --with-project-setup` to seed a project bootstrap feature during initialization.

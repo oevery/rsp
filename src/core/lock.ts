@@ -4,7 +4,7 @@ import { LOCK_PATH, RSP_DIR } from './config.js'
 
 /**
  * Acquire an exclusive file lock for the duration of an RSP operation.
- * Prevents concurrent rsp commands from corrupting active.d/ and other state.
+ * Prevents concurrent rsp commands from corrupting focus.d/ and other state.
  * The lock is automatically released in a finally block.
  * If a stale lock is detected (PID no longer alive), it is cleaned up and retried.
  */
@@ -51,10 +51,15 @@ async function handleStaleLock(operation: string): Promise<void> {
       catch (e) {
         if (e instanceof Error && e.message.startsWith('RSP locked'))
           throw e
-        // PID not found — stale lock, clean up
-        await unlink(LOCK_PATH)
-        // retry: write the lock file again
-        await writeFile(LOCK_PATH, `${process.pid}\n${operation}\n${new Date().toISOString()}`, { flag: 'wx' })
+        const code = (e as NodeJS.ErrnoException).code
+        if (code === 'ESRCH') {
+          // PID not found — stale lock, clean up
+          await unlink(LOCK_PATH)
+          // retry: write the lock file again
+          await writeFile(LOCK_PATH, `${process.pid}\n${operation}\n${new Date().toISOString()}`, { flag: 'wx' })
+          return
+        }
+        throw e
       }
     }
     else {

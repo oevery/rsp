@@ -1,8 +1,8 @@
 {
   "name": "@oevery/rsp",
   "type": "module",
-  "version": "1.2.0",
-  "description": "RSP (Rules, Specs, Plans) workflow for AI-assisted development",
+  "version": "2.0.0",
+  "description": "RSP (Rules, Specs, Plans) workflow for lightweight AI-assisted change management",
   "author": "oevery",
   "license": "MIT",
   "homepage": "https://github.com/oevery/rsp#readme",
@@ -26,14 +26,16 @@
   "files": [
     "bin/",
     "dist/",
-    "rules/"
+    "rules/",
+    "skills/"
   ],
   "engines": {
     "node": ">=18"
   },
   "scripts": {
     "prepare": "pnpm run build",
-    "prepublishOnly": "pnpm run test",
+    "release:check": "pnpm run build && pnpm run lint && pnpm run test && npm pack --dry-run --ignore-scripts",
+    "prepublishOnly": "pnpm run release:check",
     "build": "tsup",
     "dev": "tsup --watch",
     "lint": "eslint .",
@@ -43,7 +45,8 @@
   },
   "dependencies": {
     "citty": "^0.2.2",
-    "picocolors": "^1.1.1"
+    "picocolors": "^1.1.1",
+    "yaml": "^2.9.0"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^9.0.0",

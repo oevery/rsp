@@ -1,119 +1,242 @@
+import type { CommandDiagnostic, CommandRunOptions, RuntimeDiagnostic } from '../types.js'
 import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { join, relative } from 'node:path'
 
-import { ACTIVE_DIR, loadRspConfig, pc, resolvePriorities, resolveRequiredSections, resolveStatuses, RSP_DIR } from '../core/config.js'
-import { detectCycles, detectDeltaSections, featureNameFromPath, parseFrontmatter, parseScenarios, walkFiles, walkMarkdownFiles } from '../core/helpers.js'
+import { CHANGES_DIR, FOCUS_DIR, loadRspConfig, pc, resolveKinds, resolveRequiredSections } from '../core/config.js'
+import { changeNameFromPath, detectDeltaSections, normalizeLogicalPath, parseFrontmatter, parseScenarios, walkFiles, walkMarkdownFiles } from '../core/helpers.js'
+import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
+
+interface CheckResult {
+  command: 'check'
+  ok: boolean
+  diagnostics: CommandDiagnostic[]
+  runtime: RuntimeDiagnostic[]
+  summary: {
+    changeFiles: number
+    errors: number
+    warnings: number
+  }
+}
 
 /**
- * Validate all feature files: active references, frontmatter fields,
- * required sections, heading consistency, dependencies, delta markers,
- * and scenario structure. Uses .rsp/config.yaml for customizable rules.
+ * Validate all change files: focus markers, frontmatter fields,
+ * required sections, heading consistency, delta markers, and lightweight scenario linting.
+ * Uses .rsp/config.yaml for customizable kind values.
  */
-export async function runCheck() {
-  const featuresDir = join(RSP_DIR, 'features')
+export async function runCheck(options: CommandRunOptions = {}): Promise<CheckResult> {
   const config = await loadRspConfig()
-  const validStatuses = resolveStatuses(config)
-  const validPriorities = resolvePriorities(config)
+  const validKinds = resolveKinds(config)
   const requiredSections = resolveRequiredSections(config)
+  const choosePlaceholderRe = /^<choose:/i
 
-  let errors = 0
-  let warnings = 0
+  const diagnostics: CommandDiagnostic[] = []
+  const runtime: RuntimeDiagnostic[] = []
+  const reportRuntime = (diagnostic: RuntimeDiagnostic) => recordRuntimeDiagnostic(runtime, diagnostic, Boolean(options.verbose) && !options.json)
+  const addDiagnostic = (diagnostic: CommandDiagnostic) => diagnostics.push(diagnostic)
 
-  console.log()
-  console.log(`  ${pc.bold('RSP check')}`)
-  console.log()
-
-  // Check active.d/ references
-  if (existsSync(ACTIVE_DIR)) {
-    const entries = await walkFiles(ACTIVE_DIR)
+  if (existsSync(FOCUS_DIR)) {
+    const entries = await walkFiles(FOCUS_DIR, { onError: reportRuntime })
     for (const entryPath of entries) {
-      const entryContent = relative(ACTIVE_DIR, entryPath)
-      const markerContent = (await readFile(entryPath, 'utf-8')).trim()
-      if (markerContent) {
-        console.log(`  ${pc.yellow('⚠')} active.d/${entryContent} should be an empty marker file; path is the source of truth`)
-        warnings++
+      const entryContent = normalizeLogicalPath(relative(FOCUS_DIR, entryPath))
+      let markerContent = ''
+      try {
+        markerContent = (await readFile(entryPath, 'utf-8')).trim()
       }
-      const fp = join(featuresDir, `${entryContent}.md`)
+      catch (error) {
+        addDiagnostic({
+          severity: 'error',
+          code: 'focus_marker_read_failed',
+          path: `focus.d/${entryContent}`,
+          change: entryContent,
+          message: 'unable to read focus marker file',
+          hint: toErrorMessage(error),
+        })
+        reportRuntime({
+          code: 'focus_marker_read_failed',
+          operation: 'readFile',
+          path: entryPath,
+          message: toErrorMessage(error),
+        })
+        continue
+      }
+      if (markerContent) {
+        addDiagnostic({
+          severity: 'warning',
+          code: 'focus_marker_not_empty',
+          path: `focus.d/${entryContent}`,
+          message: 'should be an empty marker file; path is the source of truth',
+        })
+      }
+      const fp = join(CHANGES_DIR, `${entryContent}.md`)
       if (!existsSync(fp)) {
-        console.log(`  ${pc.red('✗')} active.d/${entryContent} points to "${entryContent}" but features/${entryContent}.md not found`)
-        errors++
+        addDiagnostic({
+          severity: 'error',
+          code: 'focused_change_missing',
+          path: `focus.d/${entryContent}`,
+          change: entryContent,
+          message: `focuses "${entryContent}" but changes/${entryContent}.md not found`,
+        })
       }
     }
   }
 
-  const featureFiles = existsSync(featuresDir) ? await walkMarkdownFiles(featuresDir) : []
-  if (featureFiles.length === 0) {
-    console.log(`  ${pc.dim('No feature files to check.')}\n`)
-    return 0
+  const changeFiles = existsSync(CHANGES_DIR) ? await walkMarkdownFiles(CHANGES_DIR, { onError: reportRuntime }) : []
+  if (changeFiles.length === 0) {
+    const result: CheckResult = {
+      command: 'check',
+      ok: diagnostics.every(d => d.severity !== 'error'),
+      diagnostics,
+      runtime,
+      summary: {
+        changeFiles: 0,
+        errors: diagnostics.filter(d => d.severity === 'error').length,
+        warnings: diagnostics.filter(d => d.severity === 'warning').length,
+      },
+    }
+    if (options.json) {
+      emitJson(result)
+      return result
+    }
+    console.log()
+    console.log(`  ${pc.bold('RSP check')}`)
+    console.log()
+    if (diagnostics.length === 0) {
+      console.log(`  ${pc.dim('No change files to check.')}\n`)
+      return result
+    }
+
+    for (const diagnostic of diagnostics) {
+      const icon = diagnostic.severity === 'error'
+        ? pc.red('✗')
+        : diagnostic.severity === 'warning'
+          ? pc.yellow('⚠')
+          : pc.dim('ℹ')
+      const label = diagnostic.change ?? diagnostic.path
+      const headline = label ? `${label} — ${diagnostic.message}` : diagnostic.message
+      console.log(`  ${icon} ${headline}`)
+      for (const detail of diagnostic.details || [])
+        console.log(`      ${pc.dim(detail)}`)
+      if (diagnostic.hint)
+        console.log(`      ${pc.dim(diagnostic.hint)}`)
+    }
+    console.log()
+    console.log(`  ${pc.red(String(result.summary.errors))} error(s), ${pc.yellow(String(result.summary.warnings))} warning(s) in 0 change file(s).\n`)
+    return result
   }
 
-  const allDeps = new Map<string, string[]>()
-
-  for (const fp of featureFiles) {
-    const name = featureNameFromPath(featuresDir, fp)
+  for (const fp of changeFiles) {
+    const name = changeNameFromPath(CHANGES_DIR, fp)
     let content: string
     try {
       content = await readFile(fp, 'utf-8')
     }
-    catch {
-      console.log(`  ${pc.red('✗')} ${name} — unable to read file`)
-      errors++
+    catch (error) {
+      addDiagnostic({
+        severity: 'error',
+        code: 'change_read_failed',
+        change: name,
+        path: fp,
+        message: 'unable to read file',
+        hint: toErrorMessage(error),
+      })
       continue
     }
-    const fm = parseFrontmatter(content)
 
-    // Frontmatter presence
-    if (!fm) {
-      console.log(`  ${pc.red('✗')} ${name} — missing YAML frontmatter`)
-      errors++
+    let fm = null
+    try {
+      fm = parseFrontmatter(content)
+    }
+    catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      addDiagnostic({
+        severity: 'error',
+        code: 'invalid_frontmatter',
+        change: name,
+        path: fp,
+        message: `invalid YAML frontmatter (${message})`,
+      })
+      continue
     }
 
-    // Required sections (from config or defaults)
+    if (!fm) {
+      addDiagnostic({
+        severity: 'error',
+        code: 'missing_frontmatter',
+        change: name,
+        path: fp,
+        message: 'missing YAML frontmatter',
+      })
+    }
+
     for (const section of requiredSections) {
       if (!(new RegExp(`^## ${section}$`, 'm').test(content))) {
-        console.log(`  ${pc.red('✗')} ${name} — missing "## ${section}" section`)
-        errors++
+        addDiagnostic({
+          severity: 'error',
+          code: 'missing_section',
+          change: name,
+          path: fp,
+          message: `missing "## ${section}" section`,
+        })
       }
     }
 
-    // Frontmatter field validation
     if (fm) {
-      if (!('status' in fm)) {
-        console.log(`  ${pc.red('✗')} ${name} — missing frontmatter field: status`)
-        errors++
+      if (!('kind' in fm)) {
+        addDiagnostic({
+          severity: 'error',
+          code: 'missing_kind',
+          change: name,
+          path: fp,
+          message: 'missing frontmatter field: kind',
+        })
       }
-      else if (!validStatuses.includes(String(fm.status))) {
-        console.log(`  ${pc.red('✗')} ${name} — invalid status "${fm.status}" (valid: ${validStatuses.join(', ')})`)
-        errors++
+      else if (choosePlaceholderRe.test(String(fm.kind))) {
+        addDiagnostic({
+          severity: 'error',
+          code: 'placeholder_kind',
+          change: name,
+          path: fp,
+          message: `kind still uses the template placeholder; choose one of: ${validKinds.join(', ')}`,
+        })
       }
-
-      if (!('priority' in fm)) {
-        console.log(`  ${pc.red('✗')} ${name} — missing frontmatter field: priority`)
-        errors++
-      }
-      else if (!validPriorities.includes(String(fm.priority))) {
-        console.log(`  ${pc.red('✗')} ${name} — invalid priority "${fm.priority}" (valid: ${validPriorities.join(', ')})`)
-        errors++
+      else if (!validKinds.includes(String(fm.kind))) {
+        addDiagnostic({
+          severity: 'error',
+          code: 'invalid_kind',
+          change: name,
+          path: fp,
+          message: `invalid kind "${fm.kind}" (valid: ${validKinds.join(', ')})`,
+        })
       }
     }
 
-    // Heading consistency
-    // eslint-disable-next-line regexp/no-super-linear-backtracking
-    const headingMatch = content.match(/^# Feature:[ \t]*([^\n]+)$/m)
-    if (headingMatch) {
-      const heading = headingMatch[1].trim()
+    const headingLine = content
+      .split('\n')
+      .map(line => line.trim())
+      .find(line => line.startsWith('# Change:'))
+    if (headingLine) {
+      const heading = headingLine.slice('# Change:'.length).trim()
       if (heading !== name) {
-        console.log(`  ${pc.red('✗')} ${name} — # Feature: heading "${heading}" differs from feature name`)
-        errors++
+        addDiagnostic({
+          severity: 'error',
+          code: 'heading_mismatch',
+          change: name,
+          path: fp,
+          message: `# Change: heading "${heading}" differs from change name`,
+        })
       }
     }
     else {
-      console.log(`  ${pc.red('✗')} ${name} — missing "# Feature:" heading`)
-      errors++
+      addDiagnostic({
+        severity: 'error',
+        code: 'missing_heading',
+        change: name,
+        path: fp,
+        message: 'missing "# Change:" heading',
+      })
     }
 
-    // Delta section detection (informational warning if mixed)
     const deltas = detectDeltaSections(content)
     if (deltas.added || deltas.modified || deltas.removed) {
       const parts: string[] = []
@@ -123,10 +246,15 @@ export async function runCheck() {
         parts.push('MODIFIED')
       if (deltas.removed)
         parts.push('REMOVED')
-      console.log(`  ${pc.dim('ℹ')} ${name} — delta markers found: ${parts.join(', ')}`)
+      addDiagnostic({
+        severity: 'info',
+        code: 'delta_markers_found',
+        change: name,
+        path: fp,
+        message: `delta markers found: ${parts.join(', ')}`,
+      })
     }
 
-    // Scenario validation (check format quality)
     const scenarios = parseScenarios(content)
     if (scenarios.length > 0) {
       const scenarioIssues: string[] = []
@@ -145,51 +273,59 @@ export async function runCheck() {
           scenarioIssues.push(`"${s.heading}" missing ${missing.join('/')}`)
       }
       if (scenarioIssues.length > 0) {
-        console.log(`  ${pc.yellow('⚠')} ${name} — scenario format issues:`)
-        for (const issue of scenarioIssues)
-          console.log(`      ${pc.dim(issue)}`)
-        warnings++
-      }
-    }
-
-    // Dependency validation
-    if (fm && fm['depends-on']) {
-      const deps = Array.isArray(fm['depends-on']) ? fm['depends-on'] : [fm['depends-on']]
-      const seen = new Set<string>()
-      for (const dep of deps) {
-        if (dep === name) {
-          console.log(`  ${pc.red('✗')} ${name} — depends on itself`)
-          errors++
-          continue
-        }
-        if (seen.has(dep)) {
-          console.log(`  ${pc.red('✗')} ${name} — duplicate dependency "${dep}"`)
-          errors++
-          continue
-        }
-        seen.add(dep)
-        allDeps.set(name, [...(allDeps.get(name) || []), dep])
-        const depFp = join(featuresDir, `${dep}.md`)
-        if (!existsSync(depFp)) {
-          console.log(`  ${pc.red('✗')} ${name} — depends on "${dep}" but features/${dep}.md not found`)
-          errors++
-        }
+        addDiagnostic({
+          severity: 'warning',
+          code: 'scenario_format_issues',
+          change: name,
+          path: fp,
+          message: 'scenario format issues',
+          details: scenarioIssues,
+        })
       }
     }
   }
 
-  // Cycle detection (DFS on dependency graph)
-  const cycles = detectCycles(allDeps)
-  for (const cycle of cycles) {
-    console.log(`  ${pc.red('✗')} circular dependency: ${cycle.join(' → ')}`)
-    errors++
+  const result: CheckResult = {
+    command: 'check',
+    ok: diagnostics.every(d => d.severity !== 'error'),
+    diagnostics,
+    runtime,
+    summary: {
+      changeFiles: changeFiles.length,
+      errors: diagnostics.filter(d => d.severity === 'error').length,
+      warnings: diagnostics.filter(d => d.severity === 'warning').length,
+    },
+  }
+
+  if (options.json) {
+    emitJson(result)
+    return result
   }
 
   console.log()
-  if (errors === 0 && warnings === 0)
-    console.log(`  ${pc.green('✓')} All ${featureFiles.length} feature file(s) valid.\n`)
-  else
-    console.log(`  ${pc.red(String(errors))} error(s), ${pc.yellow(String(warnings))} warning(s) in ${featureFiles.length} feature file(s).\n`)
+  console.log(`  ${pc.bold('RSP check')}`)
+  console.log()
 
-  return errors
+  for (const diagnostic of diagnostics) {
+    const icon = diagnostic.severity === 'error'
+      ? pc.red('✗')
+      : diagnostic.severity === 'warning'
+        ? pc.yellow('⚠')
+        : pc.dim('ℹ')
+    const label = diagnostic.change ?? diagnostic.path
+    const headline = label ? `${label} — ${diagnostic.message}` : diagnostic.message
+    console.log(`  ${icon} ${headline}`)
+    for (const detail of diagnostic.details || [])
+      console.log(`      ${pc.dim(detail)}`)
+    if (diagnostic.hint)
+      console.log(`      ${pc.dim(diagnostic.hint)}`)
+  }
+
+  console.log()
+  if (result.summary.errors === 0 && result.summary.warnings === 0)
+    console.log(`  ${pc.green('✓')} All ${changeFiles.length} change file(s) valid.\n`)
+  else
+    console.log(`  ${pc.red(String(result.summary.errors))} error(s), ${pc.yellow(String(result.summary.warnings))} warning(s) in ${changeFiles.length} change file(s).\n`)
+
+  return result
 }
