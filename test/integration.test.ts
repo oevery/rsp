@@ -177,9 +177,13 @@ describe('change lifecycle integration', () => {
   it('archive warns when verify checklist or durable updates are still incomplete', () => {
     const archiveWarnDir = join(tmpdir(), 'rsp-archive-warn-test', randomUUID())
     return (async () => {
+      await mkdir(join(archiveWarnDir, '.rsp', 'rules'), { recursive: true })
+      await mkdir(join(archiveWarnDir, '.rsp', 'specs'), { recursive: true })
       await mkdir(join(archiveWarnDir, '.rsp', 'changes'), { recursive: true })
       await mkdir(join(archiveWarnDir, '.rsp', 'archives'), { recursive: true })
       await mkdir(join(archiveWarnDir, '.rsp', 'focus.d'), { recursive: true })
+      await writeFile(join(archiveWarnDir, '.rsp', 'rules', 'rsp-rules.md'), '# RSP')
+      await writeFile(join(archiveWarnDir, '.rsp', 'specs', 'design.md'), '# Design')
       await writeFile(join(archiveWarnDir, '.rsp', 'changes', 'warn-me.md'), renderChange('warn-me'))
       await writeFile(join(archiveWarnDir, '.rsp', 'focus.d', 'warn-me'), '')
 
@@ -198,9 +202,13 @@ describe('change lifecycle integration', () => {
   it('treats archive follow-up failures as warnings after the archive move succeeds', () => {
     const archiveWarnDir = join(tmpdir(), 'rsp-archive-followup-warning-test', randomUUID())
     return (async () => {
+      await mkdir(join(archiveWarnDir, '.rsp', 'rules'), { recursive: true })
+      await mkdir(join(archiveWarnDir, '.rsp', 'specs'), { recursive: true })
       await mkdir(join(archiveWarnDir, '.rsp', 'changes'), { recursive: true })
       await mkdir(join(archiveWarnDir, '.rsp', 'focus.d'), { recursive: true })
       await mkdir(join(archiveWarnDir, '.rsp', 'archives'), { recursive: true })
+      await writeFile(join(archiveWarnDir, '.rsp', 'rules', 'rsp-rules.md'), '# RSP')
+      await writeFile(join(archiveWarnDir, '.rsp', 'specs', 'design.md'), '# Design')
       await writeFile(join(archiveWarnDir, '.rsp', 'changes', 'warn-followup.md'), renderChange('warn-followup'))
       await writeFile(join(archiveWarnDir, '.rsp', 'focus.d', 'warn-followup'), '')
       await writeFile(join(archiveWarnDir, '.rsp', 'archives', 'INDEX.md'), '# Archive Index\n')

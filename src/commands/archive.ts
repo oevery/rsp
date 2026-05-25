@@ -3,7 +3,7 @@ import { mkdir, readFile, rename, unlink } from 'node:fs/promises'
 import { basename, dirname, join } from 'node:path'
 
 import { ARCHIVES_DIR, CHANGES_DIR, FOCUS_DIR, pc } from '../core/config.js'
-import { cleanupEmptyParentDirs, extractSection, getOpenCheckboxes, hasMeaningfulBlockers, isValidChangeName, parseScenarios } from '../core/helpers.js'
+import { cleanupEmptyParentDirs, extractSection, getOpenCheckboxes, guardRspInitialized, hasMeaningfulBlockers, isValidChangeName, parseScenarios } from '../core/helpers.js'
 import { withRspLock } from '../core/lock.js'
 import { toErrorMessage } from '../core/output.js'
 import { buildArchiveIndex } from './archive-index.js'
@@ -18,6 +18,7 @@ export async function archiveChange(name: string) {
     console.error(`  ${pc.red('Error:')} change name must be kebab-case with optional subdirectory (lowercase, digits, hyphens, slashes)`)
     process.exit(1)
   }
+  guardRspInitialized()
 
   const srcPath = join(CHANGES_DIR, `${name}.md`)
   if (!existsSync(srcPath)) {
