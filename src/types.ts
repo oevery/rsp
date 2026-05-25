@@ -79,11 +79,3 @@ export interface ScenarioBlock {
   heading: string
   steps: string[]
 }
-
-/** Summary info for one change file. */
-export interface ChangeInfo {
-  path: string
-  name: string
-  /** Days since the change file was last updated (null if unknown). */
-  ageDays: number | null
-}

@@ -1,6 +1,6 @@
-import type { ChangeInfo, CheckboxCount, DeltaSections, Frontmatter, RuntimeDiagnostic, ScenarioBlock } from '../types.js'
+import type { CheckboxCount, DeltaSections, Frontmatter, RuntimeDiagnostic, ScenarioBlock } from '../types.js'
 import { existsSync } from 'node:fs'
-import { readdir, readFile, rmdir, stat } from 'node:fs/promises'
+import { readdir, readFile, rmdir } from 'node:fs/promises'
 
 import { basename, dirname, join, relative, sep } from 'node:path'
 import { parse } from 'yaml'
@@ -541,34 +541,4 @@ export function parseScenarios(content: string): ScenarioBlock[] {
   }
 
   return scenarios
-}
-
-/**
- * Get a change file's age in days based on last modification time.
- * Returns null if the file does not exist or stat fails.
- */
-export async function getChangeAge(filePath: string): Promise<number | null> {
-  try {
-    const s = await stat(filePath)
-    const diffMs = Date.now() - s.mtime.getTime()
-    return Math.floor(diffMs / (1000 * 60 * 60 * 24))
-  }
-  catch {
-    return null
-  }
-}
-
-/** Collect ChangeInfo for all change files under .rsp/changes/. */
-export async function collectChangeInfos(): Promise<ChangeInfo[]> {
-  const changesDir = join(RSP_DIR, 'changes')
-  const files = existsSync(changesDir) ? await walkMarkdownFiles(changesDir) : []
-  const infos: ChangeInfo[] = []
-
-  for (const fp of files) {
-    const name = changeNameFromPath(changesDir, fp)
-    const ageDays = await getChangeAge(fp)
-    infos.push({ path: fp, name, ageDays })
-  }
-
-  return infos
 }
