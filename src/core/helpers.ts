@@ -148,6 +148,7 @@ kind: ops
 
 ## Tasks
 - [ ] Review the repository structure, entrypoints, and primary outputs
+- [ ] Review AGENTS.md and confirm the RSP entry points to the right project files
 - [ ] Fill .rsp/specs/design.md with durable architecture facts
 - [ ] Add .rsp/rules/project-rules.md if stable local rules or validation steps exist
 
@@ -193,12 +194,15 @@ ${template.acceptanceSection}
 - Approach:
   - ${template.approach}
 - Affected areas:
-  - ${template.affectedAreas}
+  - ${template.affectedArea1}
+  - ${template.affectedArea2}
 - Constraints:
   - ${template.constraints}
 
 ## Tasks
+- [ ] Finalize the proposal, spec, and design details for this change
 - [ ] ${template.task}
+- [ ] Verify the result and update any required durable docs or rules
 
 ## Verify
 - Automated:
@@ -224,11 +228,12 @@ function getChangeTemplateByKind(kind?: string) {
         specSection: '### ADDED\n- Requirement: <new user-facing behavior>\n  - <verifiable requirement for the new capability>',
         acceptanceSection: '#### Scenario: user exercises the new capability\n- GIVEN <context>\n- WHEN <user action>\n- THEN <expected new behavior>',
         approach: '<how the new capability will be implemented>',
-        affectedAreas: '<new or modified code paths>',
-        constraints: '<UX, performance, or compatibility constraint>',
-        task: '<implement the new behavior and its acceptance scenario>',
-        automatedVerify: '<relevant unit or integration test command>',
-        manualVerify: '<walk through the new capability end to end>',
+        affectedArea1: '<concrete file path, directory, module, or subsystem 1>',
+        affectedArea2: '<concrete file path, directory, module, or subsystem 2 if needed>',
+        constraints: '<behavior, compatibility, performance, safety, or scope constraint that must hold>',
+        task: '<implement the new behavior and its acceptance scenario in the affected areas>',
+        automatedVerify: '<exact test, lint, build, or check command for the new behavior>',
+        manualVerify: '<exact end-to-end user scenario to validate the new capability>',
       }
     case 'fix':
       return {
@@ -238,11 +243,12 @@ function getChangeTemplateByKind(kind?: string) {
         specSection: '### MODIFIED\n- Requirement: correct behavior\n  - <expected correct behavior after the fix>',
         acceptanceSection: '#### Scenario: defect is resolved\n- GIVEN <conditions that trigger the defect>\n- WHEN <action that previously failed>\n- THEN <expected correct outcome>\n- AND the original broken outcome no longer occurs',
         approach: '<root cause analysis and fix strategy>',
-        affectedAreas: '<code path containing the defect>',
-        constraints: '<regression risk, backward compatibility, or safety constraint>',
+        affectedArea1: '<concrete file path, directory, module, or subsystem containing the defect>',
+        affectedArea2: '<secondary path, dependency, or test file if needed>',
+        constraints: '<regression, backward-compatibility, safety, or scope constraint that must hold>',
         task: '<identify the root cause and apply the minimal fix>',
-        automatedVerify: '<regression test that fails before the fix and passes after>',
-        manualVerify: '<reproduce the original issue and confirm it is gone>',
+        automatedVerify: '<exact regression test, lint, build, or check command that proves the fix>',
+        manualVerify: '<exact steps to reproduce the original issue and confirm it no longer occurs>',
       }
     case 'refactor':
       return {
@@ -252,11 +258,12 @@ function getChangeTemplateByKind(kind?: string) {
         specSection: '### MODIFIED\n- Requirement: internal structure improvement\n  - <desired structural outcome without observable behavior change>',
         acceptanceSection: '#### Scenario: behavior is preserved after restructuring\n- GIVEN the existing codebase before the refactor\n- WHEN the refactored code runs against existing tests\n- THEN all existing tests pass unchanged',
         approach: '<how the code will be restructured (rename, extract, move, etc.)>',
-        affectedAreas: '<code paths being refactored>',
-        constraints: '<must not change observable behavior; existing test suite must pass>',
+        affectedArea1: '<concrete file path, directory, module, or subsystem being refactored>',
+        affectedArea2: '<secondary path, dependency, or test file if needed>',
+        constraints: '<observable behavior must remain unchanged; compatibility, performance, and safety constraints must still hold>',
         task: '<restructure the code while keeping behavior identical>',
-        automatedVerify: '<run the existing test suite>',
-        manualVerify: '<spot-check the key affected code paths for correctness>',
+        automatedVerify: '<exact existing test, lint, build, or check command that must continue to pass>',
+        manualVerify: '<exact scenario to spot-check that behavior is unchanged after the refactor>',
       }
     case 'docs':
       return {
@@ -266,11 +273,12 @@ function getChangeTemplateByKind(kind?: string) {
         specSection: '### MODIFIED\n- Requirement: documentation accuracy\n  - <what durable reader-facing behavior or explanation changes>',
         acceptanceSection: '#### Scenario: reader follows the updated guidance\n- GIVEN the updated documentation\n- WHEN a reader follows the documented workflow\n- THEN the steps are accurate and sufficient',
         approach: '<how the documentation will be updated and organized>',
-        affectedAreas: '<doc path or documentation area>',
-        constraints: '<durable wording, consistency, or scope constraint>',
+        affectedArea1: '<concrete doc path, directory, module doc, or documentation surface 1>',
+        affectedArea2: '<secondary doc path or reference file if needed>',
+        constraints: '<durable wording, consistency, scope, or audience constraint that must hold>',
         task: '<update the target documentation and supporting references>',
-        automatedVerify: '<run markdown, docs, or link checks if applicable>',
-        manualVerify: '<review the updated doc as a reader and confirm it is accurate>',
+        automatedVerify: '<exact markdown, docs, link, lint, build, or check command if applicable>',
+        manualVerify: '<exact reader or operator scenario to confirm the updated guidance is accurate>',
       }
     case 'research':
       return {
@@ -280,11 +288,12 @@ function getChangeTemplateByKind(kind?: string) {
         specSection: '### ADDED\n- Requirement: research outcome recording\n  - <what finding, option, or decision must be captured clearly>',
         acceptanceSection: '#### Scenario: research question is resolved\n- GIVEN the current uncertainty or open question\n- WHEN the investigation is completed\n- THEN the result is recorded clearly enough to guide follow-up work',
         approach: '<how the investigation will be performed and what evidence will be gathered>',
-        affectedAreas: '<code path, subsystem, or source being investigated>',
-        constraints: '<time, evidence, or scope constraint for the investigation>',
-        task: '<gather evidence and record the resulting recommendation or finding>',
-        automatedVerify: '<run any command needed to confirm the observed behavior>',
-        manualVerify: '<review the findings and confirm they answer the original question>',
+        affectedArea1: '<concrete file path, directory, module, subsystem, or source under investigation>',
+        affectedArea2: '<secondary path, dependency, environment, or evidence source if needed>',
+        constraints: '<time, evidence, safety, or scope constraint for the investigation>',
+        task: '<gather evidence, record the recommendation or finding, and note any follow-up implementation work if needed>',
+        automatedVerify: '<exact command, script, query, or check used to confirm the observed behavior>',
+        manualVerify: '<exact review of the findings to confirm they answer the original question and identify follow-up work if needed>',
       }
     case 'ops':
       return {
@@ -294,11 +303,12 @@ function getChangeTemplateByKind(kind?: string) {
         specSection: '### MODIFIED\n- Requirement: operational behavior\n  - <what reliable operational outcome should change or stay true>',
         acceptanceSection: '#### Scenario: operational path succeeds\n- GIVEN the target environment or workflow\n- WHEN the operational change is applied\n- THEN the expected operational outcome is reliable',
         approach: '<how the operational change will be applied safely>',
-        affectedAreas: '<script, config, workflow, or environment path>',
-        constraints: '<rollback, safety, or environment constraint>',
+        affectedArea1: '<concrete script, config path, workflow, environment path, or operational surface 1>',
+        affectedArea2: '<secondary script, config path, dependency, or environment surface if needed>',
+        constraints: '<rollback, safety, reliability, environment, or scope constraint that must hold>',
         task: '<apply and verify the operational change>',
-        automatedVerify: '<run the relevant operational validation command>',
-        manualVerify: '<exercise the target workflow and confirm the operational result>',
+        automatedVerify: '<exact operational validation, lint, build, deploy, or check command>',
+        manualVerify: '<exact operator workflow or environment scenario to confirm the operational result>',
       }
     default:
       return {
@@ -308,11 +318,12 @@ function getChangeTemplateByKind(kind?: string) {
         specSection: '### ADDED\n- Requirement: <new or updated behavior>\n  - <verifiable requirement>',
         acceptanceSection: '#### Scenario: <name>\n- GIVEN <context>\n- WHEN <action>\n- THEN <expected outcome>',
         approach: '<how the change will be implemented>',
-        affectedAreas: '<path or subsystem>',
-        constraints: '<binding technical or product constraint>',
-        task: '<implementation task>',
-        automatedVerify: '<test command or automated check>',
-        manualVerify: '<manual scenario to validate>',
+        affectedArea1: '<concrete file path, directory, module, or subsystem 1>',
+        affectedArea2: '<concrete file path, directory, module, or subsystem 2 if needed>',
+        constraints: '<behavior, compatibility, performance, safety, or scope constraint that must hold>',
+        task: '<implement the core change in the affected areas>',
+        automatedVerify: '<exact test, lint, build, or check command>',
+        manualVerify: '<exact end-to-end scenario to validate>',
       }
   }
 }

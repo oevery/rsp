@@ -131,6 +131,8 @@ describe('generateChangeContent', () => {
     expect(content).toContain('## Tasks')
     expect(content).toContain('## Verify')
     expect(content).toContain('## Blockers')
+    expect(content).toContain('- [ ] Finalize the proposal, spec, and design details for this change')
+    expect(content).toContain('- [ ] Verify the result and update any required durable docs or rules')
   })
 
   it('reminds the user to choose kind explicitly', () => {
@@ -143,6 +145,7 @@ describe('generateChangeContent', () => {
     expect(content).toContain('# Change: project-setup')
     expect(content).toContain('.rsp/specs/design.md')
     expect(content).toContain('.rsp/rules/project-rules.md')
+    expect(content).toContain('Review AGENTS.md and confirm the RSP entry points to the right project files')
     expect(content).toContain('Run rsp doctor')
     expect(content).toContain('do not promote task history, debugging notes, or one-off implementation context')
   })
@@ -151,7 +154,8 @@ describe('generateChangeContent', () => {
     const content = generateChangeContent('docs-update', 'Improve docs', 'docs')
     expect(content).toContain('Requirement: documentation accuracy')
     expect(content).toContain('reader follows the updated guidance')
-    expect(content).toContain('<doc path or documentation area>')
+    expect(content).toContain('<concrete doc path, directory, module doc, or documentation surface 1>')
+    expect(content).toContain('<exact markdown, docs, link, lint, build, or check command if applicable>')
   })
 
   it('uses a research-oriented template when kind is research', () => {
@@ -159,13 +163,23 @@ describe('generateChangeContent', () => {
     expect(content).toContain('Requirement: research outcome recording')
     expect(content).toContain('research question is resolved')
     expect(content).toContain('gather evidence')
+    expect(content).toContain('note any follow-up implementation work if needed')
   })
 
   it('uses an ops-oriented template when kind is ops', () => {
     const content = generateChangeContent('deploy-pipeline', 'Harden deploy pipeline', 'ops')
     expect(content).toContain('Requirement: operational behavior')
     expect(content).toContain('operational path succeeds')
-    expect(content).toContain('<rollback, safety, or environment constraint>')
+    expect(content).toContain('<rollback, safety, reliability, environment, or scope constraint that must hold>')
+  })
+
+  it('uses more concrete affected area and verification placeholders', () => {
+    const content = generateChangeContent('my-change')
+    expect(content).toContain('<concrete file path, directory, module, or subsystem 1>')
+    expect(content).toContain('<concrete file path, directory, module, or subsystem 2 if needed>')
+    expect(content).toContain('<exact test, lint, build, or check command>')
+    expect(content).toContain('<exact end-to-end scenario to validate>')
+    expect(content).toContain('<behavior, compatibility, performance, safety, or scope constraint that must hold>')
   })
 
   it('tightens durable update guidance in verify', () => {

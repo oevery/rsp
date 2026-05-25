@@ -130,6 +130,17 @@ describe('change lifecycle integration', () => {
     expect(existsSync(focusDPath('test-change'))).toBe(true)
   })
 
+  it('prints next-step guidance aligned with the richer change template', () => {
+    const createDir = join(tmpdir(), 'rsp-create-next-steps-test', randomUUID())
+    return (async () => {
+      await mkdir(createDir, { recursive: true })
+      execSync(`node ${cliPath()} init`, { cwd: createDir })
+
+      const output = execSync(`node ${cliPath()} create guided-change "Improve guidance"`, { cwd: createDir, encoding: 'utf-8' })
+      expect(output).toContain('Next: fill proposal/spec/design first, then implement and complete the tasks')
+    })()
+  })
+
   it('supports subdirectory changes', async () => {
     const { createChange } = await import('../src/commands/create.js')
     await createChange('auth/login', 'Login change')

@@ -38,6 +38,6 @@ export async function createChange(name: string, summary = '', kind?: string) {
       console.log(`  ${pc.dim('Unchanged focus.')} Run: rsp focus ${name}`)
     else
       console.log(`  ${pc.dim('focused via focus.d')} → ${name}`)
-    console.log(`  ${pc.cyan('Next:')} edit the change file and complete the tasks\n`)
+    console.log(`  ${pc.cyan('Next:')} fill proposal/spec/design first, then implement and complete the tasks\n`)
   })
 }
