@@ -216,6 +216,48 @@ ${template.acceptanceSection}
 
 function getChangeTemplateByKind(kind?: string) {
   switch (kind) {
+    case 'feature':
+      return {
+        why: '<what user need or capability gap this addresses>',
+        scope: '<what new behavior or capability will be delivered>',
+        nonGoals: '<what related capabilities are explicitly out of scope>',
+        specSection: '### ADDED\n- Requirement: <new user-facing behavior>\n  - <verifiable requirement for the new capability>',
+        acceptanceSection: '#### Scenario: user exercises the new capability\n- GIVEN <context>\n- WHEN <user action>\n- THEN <expected new behavior>',
+        approach: '<how the new capability will be implemented>',
+        affectedAreas: '<new or modified code paths>',
+        constraints: '<UX, performance, or compatibility constraint>',
+        task: '<implement the new behavior and its acceptance scenario>',
+        automatedVerify: '<relevant unit or integration test command>',
+        manualVerify: '<walk through the new capability end to end>',
+      }
+    case 'fix':
+      return {
+        why: '<what current behavior is wrong or broken>',
+        scope: '<what specific defect is being corrected>',
+        nonGoals: '<what related but separate issues are out of scope>',
+        specSection: '### MODIFIED\n- Requirement: correct behavior\n  - <expected correct behavior after the fix>',
+        acceptanceSection: '#### Scenario: defect is resolved\n- GIVEN <conditions that trigger the defect>\n- WHEN <action that previously failed>\n- THEN <expected correct outcome>\n- AND the original broken outcome no longer occurs',
+        approach: '<root cause analysis and fix strategy>',
+        affectedAreas: '<code path containing the defect>',
+        constraints: '<regression risk, backward compatibility, or safety constraint>',
+        task: '<identify the root cause and apply the minimal fix>',
+        automatedVerify: '<regression test that fails before the fix and passes after>',
+        manualVerify: '<reproduce the original issue and confirm it is gone>',
+      }
+    case 'refactor':
+      return {
+        why: '<what maintainability, readability, or structural issue motivates this>',
+        scope: '<what code areas are being restructured>',
+        nonGoals: '<no behavior change is expected or intended>',
+        specSection: '### MODIFIED\n- Requirement: internal structure improvement\n  - <desired structural outcome without observable behavior change>',
+        acceptanceSection: '#### Scenario: behavior is preserved after restructuring\n- GIVEN the existing codebase before the refactor\n- WHEN the refactored code runs against existing tests\n- THEN all existing tests pass unchanged',
+        approach: '<how the code will be restructured (rename, extract, move, etc.)>',
+        affectedAreas: '<code paths being refactored>',
+        constraints: '<must not change observable behavior; existing test suite must pass>',
+        task: '<restructure the code while keeping behavior identical>',
+        automatedVerify: '<run the existing test suite>',
+        manualVerify: '<spot-check the key affected code paths for correctness>',
+      }
     case 'docs':
       return {
         why: '<why the documentation change matters>',
