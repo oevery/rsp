@@ -12,7 +12,7 @@ compatibility:
     - network access for first-run `npx` installation or skill refresh
 metadata:
   author: oevery
-  version: 2.0.2
+  version: 2.0.3
 ---
 
 # RSP Skill

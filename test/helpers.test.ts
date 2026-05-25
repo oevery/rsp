@@ -248,7 +248,7 @@ describe('documentation command examples', () => {
     expect(skill).toContain('Do not treat unfocused files in `changes/` as current work')
     expect(skill).toContain('metadata:')
     expect(skill).toContain('author: oevery')
-    expect(skill).toContain('version: 2.0.2')
+    expect(skill).toContain('version: 2.0.3')
     expect(skill).toContain('## When not to use')
     expect(skill).toContain('## Expected outputs')
     expect(skill).toContain('When unsure whether a fact is truly durable, prefer `No durable update needed` over speculative promotion.')

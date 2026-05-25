@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.3 (2026-05-26)
+
+- Clarify the managed `AGENTS.md` entry block with RSP positioning, empty-focus fallback guidance, and optional Agent Skills loading hints.
+- Add a cross-platform `Scope` section to `rsp-rules.md` and expand the published RSP skill metadata and usage guidance.
+- Enrich change templates with stronger task scaffolding, more concrete affected-area and verification prompts, and better research and project-setup guidance.
+- Update `rsp create` output so the next-step hint matches the richer change template workflow.
+- Expand regression coverage for the new AGENTS guidance, skill metadata, change template prompts, and create-command messaging.
+
 ## 2.0.2 (2026-05-25)
 
 - Add a post-`rsp update` reminder that the published RSP skill should be refreshed separately.
