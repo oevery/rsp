@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.1 (2026-05-25)
+
+- Keep `.rsp/specs/INDEX.md` focused on additional spec files by excluding the default `design.md` entry.
+- Clarify README, rules, and skill guidance so `design.md` remains the primary durable design file and `specs/INDEX.md` acts as an additional-spec directory.
+- Add regression coverage for the updated specs index behavior during `init` and `add spec` flows.
+
 ## 2.0.0 (2026-05-25)
 
 - Replace the legacy feature-centric workflow with the new change/focus/archive model, including `rsp create`, `rsp focus`, `rsp unfocus`, `rsp archive`, and `rsp update`.
