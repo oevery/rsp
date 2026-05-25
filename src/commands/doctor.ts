@@ -3,8 +3,8 @@ import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { basename, join, relative } from 'node:path'
 
-import { CHANGES_DIR, CONFIG_PATH, FOCUS_DIR, pc, RSP_DIR } from '../core/config.js'
-import { changeNameFromPath, hasRspAgentsBlock, normalizeLogicalPath, parseYamlText, walkFiles, walkMarkdownFiles } from '../core/helpers.js'
+import { CHANGES_DIR, CONFIG_PATH, pc, RSP_DIR } from '../core/config.js'
+import { changeNameFromPath, getFocusedChangeNames, hasRspAgentsBlock, normalizeLogicalPath, parseYamlText, walkMarkdownFiles } from '../core/helpers.js'
 import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
 
 interface DoctorCheck {
@@ -255,8 +255,7 @@ async function checkActiveChangeConsistency(checks: DoctorCheck[], reportRuntime
   const changeFiles = existsSync(CHANGES_DIR) ? await walkMarkdownFiles(CHANGES_DIR, { onError: reportRuntime }) : []
   const changeNames = new Set(changeFiles.map(fp => changeNameFromPath(CHANGES_DIR, fp)))
 
-  const focusEntries = existsSync(FOCUS_DIR) ? await walkFiles(FOCUS_DIR, { onError: reportRuntime }) : []
-  const focusNames = new Set(focusEntries.map(fp => normalizeLogicalPath(relative(FOCUS_DIR, fp))))
+  const focusNames = await getFocusedChangeNames({ onError: reportRuntime })
 
   const missingChangeFiles = [...focusNames].filter(name => !changeNames.has(name))
   const unfocusedChangeFiles = [...changeNames].filter(name => !focusNames.has(name))

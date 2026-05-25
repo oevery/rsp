@@ -1,10 +1,10 @@
 import type { CommandRunOptions, RuntimeDiagnostic } from '../types.js'
 import { existsSync } from 'node:fs'
 import { readFile, stat } from 'node:fs/promises'
-import { join, relative } from 'node:path'
+import { join } from 'node:path'
 
-import { ARCHIVES_DIR, CHANGES_DIR, FOCUS_DIR, pc } from '../core/config.js'
-import { changeNameFromPath, countCheckboxes, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, walkFiles, walkMarkdownFiles } from '../core/helpers.js'
+import { ARCHIVES_DIR, CHANGES_DIR, pc } from '../core/config.js'
+import { changeNameFromPath, countCheckboxes, getFocusedChangeNames, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, walkMarkdownFiles } from '../core/helpers.js'
 import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
 
 const COL_CHANGE = 32
@@ -61,15 +61,10 @@ interface StatusResult {
 
 /** Display project status: focused changes, progress, blockers, age, and archive trends. */
 export async function showStatus(options: StatusOptions = {}, runOptions: CommandRunOptions = {}): Promise<StatusResult> {
-  const focusedSet = new Set<string>()
   const runtime: RuntimeDiagnostic[] = []
   const reportRuntime = (diagnostic: RuntimeDiagnostic) => recordRuntimeDiagnostic(runtime, diagnostic, Boolean(runOptions.verbose) && !runOptions.json)
 
-  if (existsSync(FOCUS_DIR)) {
-    const entries = await walkFiles(FOCUS_DIR, { onError: reportRuntime })
-    for (const entryPath of entries)
-      focusedSet.add(normalizeLogicalPath(relative(FOCUS_DIR, entryPath)))
-  }
+  const focusedSet = await getFocusedChangeNames({ onError: reportRuntime })
 
   const changeFiles = existsSync(CHANGES_DIR) ? await walkMarkdownFiles(CHANGES_DIR, { onError: reportRuntime }) : []
   const changeMap: Record<string, string> = {}

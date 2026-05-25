@@ -90,6 +90,7 @@ export async function archiveChange(name: string) {
   })
 }
 
+/** Resolve a unique archive filename. First collision gets a "-2" suffix to keep "-1" unambiguous. */
 function resolveArchiveName(archiveSubdir: string, date: string, base: string): string {
   const initialName = `${date}_${base}.md`
   if (!existsSync(join(archiveSubdir, initialName)))

@@ -328,6 +328,18 @@ export function guardRspInitialized(): void {
   }
 }
 
+/** Read .rsp/focus.d/ and return the set of focused change names. */
+export async function getFocusedChangeNames(options: WalkOptions = {}): Promise<Set<string>> {
+  const names = new Set<string>()
+  const focusDir = join(RSP_DIR, 'focus.d')
+  if (!existsSync(focusDir))
+    return names
+  const entries = await walkFiles(focusDir, options)
+  for (const entryPath of entries)
+    names.add(normalizeLogicalPath(relative(focusDir, entryPath)))
+  return names
+}
+
 /** Filter checkbox todo lines from a section body. */
 export function getOpenCheckboxes(sectionText: string): string[] {
   return sectionText
