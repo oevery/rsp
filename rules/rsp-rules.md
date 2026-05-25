@@ -7,6 +7,12 @@ description: Core RSP rules for Rules, Specs, and Plans driven development.
 
 This file is the canonical RSP rules source.
 
+## Scope
+
+- Paths in this file are relative to the project root unless stated otherwise.
+- These rules are tool-agnostic and apply even when the agent does not support skills.
+- If the agent supports Agent Skills, load the `rsp` skill for initialization, audit or repair, and durable-decision tasks.
+
 ## Read order
 
 1. Read `AGENTS.md`.

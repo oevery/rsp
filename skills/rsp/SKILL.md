@@ -1,6 +1,18 @@
 ---
 name: rsp
-description: Use this skill when adopting, operating, auditing, or repairing an RSP project and its .rsp structure.
+description: Use this skill when initializing RSP in a repository, operating an existing .rsp project, auditing or repairing .rsp state, or deciding whether a change needs durable updates before archive.
+compatibility:
+  agents:
+    - any agent that supports the Agent Skills format
+  requirements:
+    - Node.js 18+
+    - local filesystem read/write access
+    - shell access for `rsp` or `npx -y @oevery/rsp`
+  optional_requirements:
+    - network access for first-run `npx` installation or skill refresh
+metadata:
+  author: oevery
+  version: 2.0.2
 ---
 
 # RSP Skill
@@ -10,6 +22,19 @@ Load this skill when you need to initialize RSP, operate an existing RSP project
 This skill operationalizes the rules in `.rsp/rules/rsp-rules.md`. Always load and follow those rules first.
 
 Prefer exact file paths, exact commands, and exact durable facts over vague summaries.
+
+## When to use
+
+- Use this skill when a repository already contains `.rsp/` and the task is to operate within that workflow.
+- Use this skill when adopting RSP in a repository that does not yet have `.rsp/`.
+- Use this skill when the task is to audit or repair `.rsp/`, `AGENTS.md`, generated indices, or focus markers.
+- Use this skill when deciding whether a completed change needs durable updates before archive.
+
+## When not to use
+
+- Do not load this skill for general coding tasks unrelated to `.rsp/`.
+- Do not use this skill as a substitute for reading `.rsp/rules/rsp-rules.md` during a focused RSP task.
+- Do not use this skill when the repository does not use RSP and the user did not ask to adopt it.
 
 ## Workflow
 
@@ -43,6 +68,19 @@ Prefer exact file paths, exact commands, and exact durable facts over vague summ
    `specs/INDEX.md` should list only additional spec files beyond `specs/design.md`.
 5. Check that `focus.d/` markers and `changes/` files are in sync.
 6. If generated indices or the managed AGENTS block drift, run `npx -y @oevery/rsp update`.
+
+## Expected outputs
+
+- exact file paths to read or update
+- exact RSP commands to run
+- a single durable-decision result in the required template when evaluating archive readiness
+
+## Trigger examples
+
+- "Set up RSP in this repository."
+- "Repair the broken .rsp state in this project."
+- "Check whether this change needs spec or rule writeback before archive."
+- "Audit the RSP setup and tell me what is missing."
 
 ## Durable decision
 

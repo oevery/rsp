@@ -663,12 +663,16 @@ describe('init and doctor', () => {
     const agents = await readFile(join(initDir, 'AGENTS.md'), 'utf-8')
 
     expect(agents).toContain('<!-- rsp:begin -->')
+    expect(agents).toContain('RSP keeps durable rules, specs, and current work under `.rsp/`.')
+    expect(agents).toContain('Treat AGENTS.md as navigation only; keep durable rules and design in `.rsp/`.')
     expect(agents).toContain('1. .rsp/rules/rsp-rules.md')
     expect(agents).toContain('2. .rsp/focus.d/')
     expect(agents).toContain('3. matching .rsp/changes/*.md for the focused entries')
     expect(agents).toContain('4. .rsp/specs/design.md')
     expect(agents).toContain('5. .rsp/specs/INDEX.md')
     expect(agents).toContain('6. only the relevant additional .rsp/rules/*.md and .rsp/specs/*.md files')
+    expect(agents).toContain('If `.rsp/focus.d/` is empty, ask what to work on or suggest `npx -y @oevery/rsp create <name>`.')
+    expect(agents).toContain('If your agent supports Agent Skills, load `rsp` for setup, repair, and durable-decision tasks.')
     expect(output).toContain('## RSP Entry')
   })
 

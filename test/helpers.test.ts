@@ -226,10 +226,17 @@ describe('documentation command examples', () => {
     const rules = readFileSync(join(root, 'rules', 'rsp-rules.md'), 'utf-8')
 
     expect(rules).toContain('This file is the canonical RSP rules source.')
+    expect(rules).toContain('These rules are tool-agnostic and apply even when the agent does not support skills.')
+    expect(rules).toContain('If the agent supports Agent Skills, load the `rsp` skill for initialization, audit or repair, and durable-decision tasks.')
     expect(rules).toContain('Do not create archive entries directly under `.rsp/archives/`; use `npx -y @oevery/rsp archive <name>`.')
     expect(rules).toContain('Create or update `specs/` only for durable project-level facts that are stable, reusable, and worth rereading in later sessions.')
     expect(rules).toContain('Prefer updating `specs/design.md` or an existing durable file before creating a new spec file.')
     expect(skill).toContain('Do not treat unfocused files in `changes/` as current work')
+    expect(skill).toContain('metadata:')
+    expect(skill).toContain('author: oevery')
+    expect(skill).toContain('version: 2.0.2')
+    expect(skill).toContain('## When not to use')
+    expect(skill).toContain('## Expected outputs')
     expect(skill).toContain('When unsure whether a fact is truly durable, prefer `No durable update needed` over speculative promotion.')
     expect(skill).toContain('Default to no spec writeback unless the change produced project-level durable knowledge that future work must reread.')
     expect(skill).toContain('Prefer `specs/design.md` or an existing durable file before creating a new spec file.')
@@ -252,12 +259,16 @@ describe('documentation command examples', () => {
 
   it('keeps AGENTS read order aligned with the recommended workflow', () => {
     const block = renderRspAgentsBlock()
+    expect(block).toContain('RSP keeps durable rules, specs, and current work under `.rsp/`.')
+    expect(block).toContain('Treat AGENTS.md as navigation only; keep durable rules and design in `.rsp/`.')
     expect(block).toContain('1. .rsp/rules/rsp-rules.md')
     expect(block).toContain('2. .rsp/focus.d/')
     expect(block).toContain('3. matching .rsp/changes/*.md for the focused entries')
     expect(block).toContain('4. .rsp/specs/design.md')
     expect(block).toContain('5. .rsp/specs/INDEX.md')
     expect(block).toContain('6. only the relevant additional .rsp/rules/*.md and .rsp/specs/*.md files')
+    expect(block).toContain('If `.rsp/focus.d/` is empty, ask what to work on or suggest `npx -y @oevery/rsp create <name>`.')
+    expect(block).toContain('If your agent supports Agent Skills, load `rsp` for setup, repair, and durable-decision tasks.')
   })
 
   it('keeps AGENTS read order aligned with rules read order semantics', () => {
