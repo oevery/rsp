@@ -106,10 +106,16 @@ Read in order:
 可选安装示例：
 
 ```bash
-npx skills add oevery/rsp --skill rsp
+npx skills add oevery/rsp
 ```
 
 本仓库发布了一个名为 `rsp` 的 skill，位于 `skills/rsp/`。
+
+`rsp update` 只会刷新项目内的 RSP 文件。如果你在使用发布出来的 RSP skill，升级后还需要单独刷新一次：
+
+```bash
+npx skills add oevery/rsp
+```
 
 ## 工作模型
 

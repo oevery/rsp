@@ -8,6 +8,8 @@ import { withRspLock } from '../core/lock.js'
 import { buildArchiveIndex } from './archive-index.js'
 import { buildSpecsIndex } from './specs-index.js'
 
+const SKILL_REFRESH_HINT = '  Note: if you use the published RSP skill, refresh it too:\n    npx skills add oevery/rsp\n'
+
 /**
  * Refresh RSP project structure after upgrade:
  * - Update bundled rsp-rules.md
@@ -50,9 +52,13 @@ export async function updateProject() {
     await buildSpecsIndex({ acquireLock: false })
     await buildArchiveIndex({ acquireLock: false })
 
-    if (!updated)
+    if (!updated) {
       console.log(`  ${pc.dim('Already up to date.')}\n`)
-    else
+      console.log(SKILL_REFRESH_HINT)
+    }
+    else {
       console.log(`  ${pc.green('Update complete.')}\n`)
+      console.log(SKILL_REFRESH_HINT)
+    }
   })
 }

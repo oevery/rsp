@@ -112,10 +112,16 @@ When this README shows `rsp <command>`, it assumes the command is already availa
 Example optional installation flow:
 
 ```bash
-npx skills add oevery/rsp --skill rsp
+npx skills add oevery/rsp
 ```
 
 This repository publishes a skill named `rsp` under `skills/rsp/`.
+
+`rsp update` refreshes project-local RSP files only. If you use the published RSP skill, refresh it separately after upgrading:
+
+```bash
+npx skills add oevery/rsp
+```
 
 ## Work Model
 

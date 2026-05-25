@@ -802,9 +802,10 @@ describe('init and doctor', () => {
     execSync(`node ${cliPath()} init`, { cwd: updateDir })
     await writeFile(join(updateDir, 'AGENTS.md'), '# Custom Agents\n\nmanual content\n')
 
-    execSync(`node ${cliPath()} update`, { cwd: updateDir })
+    const output = execSync(`node ${cliPath()} update`, { cwd: updateDir, encoding: 'utf-8' })
     const agents = await readFile(join(updateDir, 'AGENTS.md'), 'utf-8')
     expect(agents).toContain('<!-- rsp:begin -->')
+    expect(output).toContain('npx skills add oevery/rsp')
   })
 
   it('recreates AGENTS.md during update without writing [object Promise]', async () => {
@@ -842,6 +843,17 @@ describe('init and doctor', () => {
     execSync(`node ${cliPath()} update`, { cwd: updateDir })
     const rules = await readFile(join(updateDir, '.rsp', 'rules', 'rsp-rules.md'), 'utf-8')
     expect(rules).toContain('This file is the canonical RSP rules source.')
+  })
+
+  it('prints the skill refresh hint even when update is already up to date', async () => {
+    const updateDir = join(tmpdir(), 'rsp-update-skill-hint-test', randomUUID())
+    await mkdir(updateDir, { recursive: true })
+
+    execSync(`node ${cliPath()} init`, { cwd: updateDir })
+    const output = execSync(`node ${cliPath()} update`, { cwd: updateDir, encoding: 'utf-8' })
+
+    expect(output).toContain('Already up to date.')
+    expect(output).toContain('npx skills add oevery/rsp')
   })
 
   it('reports invalid archive naming conventions using change wording', async () => {
