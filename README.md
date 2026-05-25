@@ -55,11 +55,12 @@ npx -y @oevery/rsp doctor
 ## File ownership
 
 - `AGENTS.md`: only the `<!-- rsp:begin --> ... <!-- rsp:end -->` block is managed by RSP.
-- `.rsp/specs/INDEX.md`: auto-generated. Rebuild with `rsp update`.
+- `.rsp/specs/INDEX.md`: auto-generated index of additional spec files beyond `design.md`. Rebuild with `rsp update`.
 - `.rsp/archives/INDEX.md`: auto-generated. Rebuild with `rsp update`.
 - `.rsp/specs/design.md`: created by `rsp init`, then owned by the project.
 - `.rsp/rules/project-rules.md`: optional; create only when the project has durable local rules.
 - Keep durable architecture, boundaries, and cross-cutting technical constraints in `.rsp/specs/design.md`.
+- Treat `.rsp/specs/INDEX.md` as a directory for additional spec files; it does not list `design.md`.
 - Keep stable workflow rules, validation expectations, and local operating constraints in `.rsp/rules/project-rules.md`.
 
 ## AGENTS integration

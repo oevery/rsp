@@ -269,6 +269,7 @@ describe('documentation command examples', () => {
     expect(rules).toContain('3. Read `focus.d/`.')
     expect(rules).toContain('5. Read each `changes/<name>.md` file marked in `focus.d/`.')
     expect(rules).toContain('6. Read `specs/design.md` and `specs/INDEX.md`.')
+    expect(rules).toContain('`specs/INDEX.md` lists only additional spec files beyond `specs/design.md`.')
     expect(rules).toContain('7. Read only the relevant additional `rules/` and `specs/` files.')
     expect(block).toContain('1. .rsp/rules/rsp-rules.md')
     expect(block).toContain('2. .rsp/focus.d/')

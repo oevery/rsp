@@ -40,6 +40,7 @@ Prefer exact file paths, exact commands, and exact durable facts over vague summ
 2. Check that `AGENTS.md` contains the managed RSP block.
 3. Check that `specs/design.md` exists.
 4. Check that `specs/INDEX.md` and `archives/INDEX.md` are still generated files.
+   `specs/INDEX.md` should list only additional spec files beyond `specs/design.md`.
 5. Check that `focus.d/` markers and `changes/` files are in sync.
 6. If generated indices or the managed AGENTS block drift, run `npx -y @oevery/rsp update`.
 

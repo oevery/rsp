@@ -15,6 +15,7 @@ This file is the canonical RSP rules source.
 4. If `focus.d/` is empty, ask the user what to work on or suggest `npx -y @oevery/rsp create <name>`.
 5. Read each `changes/<name>.md` file marked in `focus.d/`.
 6. Read `specs/design.md` and `specs/INDEX.md`.
+   `specs/INDEX.md` lists only additional spec files beyond `specs/design.md`.
 7. Read only the relevant additional `rules/` and `specs/` files.
 
 ## Core rules

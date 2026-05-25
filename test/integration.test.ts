@@ -233,6 +233,32 @@ describe('change lifecycle integration', () => {
   })
 })
 
+describe('specs index behavior', () => {
+  it('keeps design.md out of the generated specs index on init', async () => {
+    const initDir = join(tmpdir(), 'rsp-specs-index-init-test', randomUUID())
+    await mkdir(initDir, { recursive: true })
+
+    execSync(`node ${cliPath()} init`, { cwd: initDir })
+
+    const index = await readFile(join(initDir, '.rsp', 'specs', 'INDEX.md'), 'utf-8')
+    expect(index).toContain('_Additional project-level specs beyond `design.md`._')
+    expect(index).toContain('_No additional project-level specs yet._')
+    expect(index).not.toContain('| design.md |')
+  })
+
+  it('lists only additional spec files after add spec', async () => {
+    const specDir = join(tmpdir(), 'rsp-specs-index-add-spec-test', randomUUID())
+    await mkdir(specDir, { recursive: true })
+
+    execSync(`node ${cliPath()} init`, { cwd: specDir })
+    execSync(`node ${cliPath()} add spec shell-layout`, { cwd: specDir })
+
+    const index = await readFile(join(specDir, '.rsp', 'specs', 'INDEX.md'), 'utf-8')
+    expect(index).toContain('| shell-layout.md |')
+    expect(index).not.toContain('| design.md |')
+  })
+})
+
 describe('check command', () => {
   it('passes on valid changes', async () => {
     const changePath = changesPath('auth', 'login.md')

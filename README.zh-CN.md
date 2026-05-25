@@ -55,11 +55,12 @@ npx -y @oevery/rsp doctor
 ## 文件所有权
 
 - `AGENTS.md`：只有 `<!-- rsp:begin --> ... <!-- rsp:end -->` 受管块由 RSP 维护。
-- `.rsp/specs/INDEX.md`：自动生成，使用 `rsp update` 重建。
+- `.rsp/specs/INDEX.md`：自动生成，用于索引 `design.md` 之外的附加 spec 文件；使用 `rsp update` 重建。
 - `.rsp/archives/INDEX.md`：自动生成，使用 `rsp update` 重建。
 - `.rsp/specs/design.md`：由 `rsp init` 创建，之后由项目维护。
 - `.rsp/rules/project-rules.md`：可选，仅在项目确有长期本地规则时创建。
 - 将长期架构、边界和跨模块技术约束放在 `.rsp/specs/design.md`。
+- 将 `.rsp/specs/INDEX.md` 视为附加 spec 的目录；它不列出 `design.md`。
 - 将稳定的工作流规则、验证要求和本地运行约束放在 `.rsp/rules/project-rules.md`。
 
 ## AGENTS 接入

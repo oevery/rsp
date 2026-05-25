@@ -6,7 +6,7 @@ import { pc, RSP_DIR } from '../core/config.js'
 import { normalizeLogicalPath, parseFrontmatter, walkMarkdownFiles } from '../core/helpers.js'
 import { withRspLock } from '../core/lock.js'
 
-/** Regenerate the .rsp/specs/INDEX.md file as a lightweight project spec directory. */
+/** Regenerate the .rsp/specs/INDEX.md file as an index of additional project specs. */
 export async function buildSpecsIndex({ acquireLock = true } = {}) {
   if (acquireLock)
     return withRspLock('specs-index', async () => buildSpecsIndex({ acquireLock: false }))
@@ -19,17 +19,20 @@ export async function buildSpecsIndex({ acquireLock = true } = {}) {
   }
 
   const specFiles = (await walkMarkdownFiles(specsDir))
-    .filter(fp => basename(fp) !== 'INDEX.md')
+    .filter((fp) => {
+      const name = basename(fp)
+      return name !== 'INDEX.md' && name !== 'design.md'
+    })
     .sort()
 
   const lines: string[] = []
   lines.push('# Specs Index')
   lines.push('')
-  lines.push('_Project-level specs and design notes._')
+  lines.push('_Additional project-level specs beyond `design.md`._')
   lines.push('')
 
   if (specFiles.length === 0) {
-    lines.push('_No project-level specs yet._')
+    lines.push('_No additional project-level specs yet._')
   }
   else {
     lines.push('| File | Title | Summary |')

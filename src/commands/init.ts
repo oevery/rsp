@@ -60,7 +60,7 @@ export async function initProject(args: InitArgs = {}) {
 
     created = (await ensureFile(join(RSP_DIR, 'rules', 'rsp-rules.md'), bundledRules)) || created
     created = (await ensureFile(join(RSP_DIR, 'config.yaml'), generateConfigTemplate())) || created
-    const createdSpecsIndex = await ensureFile(join(RSP_DIR, 'specs', 'INDEX.md'), '# Specs Index\n\n_Project-level specs and design notes._\n')
+    const createdSpecsIndex = await ensureFile(join(RSP_DIR, 'specs', 'INDEX.md'), '# Specs Index\n\n_Additional project-level specs beyond `design.md`._\n')
     created = createdSpecsIndex || created
     const createdDesign = await ensureFile(join(RSP_DIR, 'specs', 'design.md'), generateDesignContent(projectName))
     created = createdDesign || created
