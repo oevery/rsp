@@ -98,7 +98,7 @@ export function normalizeLogicalPath(pathValue: string): string {
 }
 
 /** Generate a change file content from the built-in single-file template. */
-export function generateChangeContent(name: string, summary = '', kind?: string): string {
+export function generateChangeContent(name: string, summary = '', kind?: string, options: { lite?: boolean } = {}): string {
   const proposalSummary = summary || (name === 'project-setup'
     ? 'Capture the project model, boundaries, and stable local constraints'
     : '<one-line summary>')
@@ -167,6 +167,9 @@ kind: ops
   }
 
   const frontmatterKind = kind ?? '<choose: feature | fix | refactor | docs | ops | research>'
+  if (options.lite)
+    return generateLiteChangeContent(name, proposalSummary, frontmatterKind)
+
   const template = getChangeTemplateByKind(kind)
 
   return `---
@@ -212,6 +215,59 @@ ${template.acceptanceSection}
 - Durable updates:
   - [ ] Decide whether this change produced durable knowledge that belongs in \`.rsp/specs/\` or \`.rsp/rules/\`
   - [ ] If yes, write only stable facts to the smallest correct target file before archive; do not promote task history, debugging notes, or one-off implementation context
+
+## Blockers
+- none
+`
+}
+
+function generateLiteChangeContent(name: string, proposalSummary: string, frontmatterKind: string): string {
+  return `---
+kind: "${frontmatterKind}"
+---
+
+# Change: ${name}
+
+## Proposal
+- Summary: ${proposalSummary}
+- Why:
+  - <why this small change matters>
+- Scope:
+  - <what will change>
+- Non-goals:
+  - none
+
+## Spec
+### MODIFIED
+- Requirement: <observable outcome>
+  - <what should be true after this change>
+
+### Acceptance
+#### Scenario: change is complete
+- GIVEN <current context>
+- WHEN <the change is applied>
+- THEN <expected outcome>
+
+## Design
+- Approach:
+  - <minimal implementation approach>
+- Affected areas:
+  - <primary file, directory, or doc path>
+- Constraints:
+  - <important constraint, or none>
+
+## Tasks
+- [ ] Implement the small change
+- [ ] Verify the result
+
+## Verify
+- Automated:
+  - [ ] <exact command, or not needed: reason>
+- Manual:
+  - [ ] <exact scenario, or not needed: reason>
+- Durable updates:
+  - [ ] Decide whether this change produced durable knowledge that belongs in ".rsp/specs/" or ".rsp/rules/"
+  - [ ] If yes, write only stable facts to the smallest correct target file before archive
 
 ## Blockers
 - none

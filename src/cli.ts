@@ -66,10 +66,15 @@ const createCommand = defineCommand({
       type: 'string',
       description: 'Optional kind for a kind-aware template (feature, fix, refactor, docs, ops, research)',
     },
+    lite: {
+      type: 'boolean',
+      description: 'Use a shorter change template while keeping the required RSP sections',
+      default: false,
+    },
   },
   async run({ args }: { args: CreateChangeArgs }) {
     const summary = Array.isArray(args._) && args._.length > 1 ? args._.slice(1).join(' ') : ''
-    await createChange(args.name, summary, args.kind)
+    await createChange(args.name, summary, args.kind, { lite: Boolean(args.lite) })
   },
 })
 

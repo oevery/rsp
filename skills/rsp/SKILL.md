@@ -60,6 +60,8 @@ Prefer exact file paths, exact commands, and exact durable facts over vague summ
 4. If an existing open change should become current work, use `npx -y @oevery/rsp focus <name>`.
 5. Do not treat unfocused files in `changes/` as current work unless the user explicitly asks for them or you first run `npx -y @oevery/rsp focus <name>`.
 
+Use `npx -y @oevery/rsp create <name> --lite` for small, straightforward work where the full template would add noise. The lite template keeps the same six required sections and still requires a durable-update decision before archive.
+
 ### Audit or repair
 
 1. Check that `.rsp/` exists.

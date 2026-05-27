@@ -58,6 +58,7 @@ This file is the canonical RSP rules source.
 - Use `npx -y @oevery/rsp add rules <name>` to create a durable rules file.
 - Use `npx -y @oevery/rsp add spec <name>` to create a durable spec file.
 - Use `npx -y @oevery/rsp create <name>` to create an open change.
+- Use `npx -y @oevery/rsp create <name> --lite` only for small, straightforward changes; the six required sections still apply.
 - Use `npx -y @oevery/rsp focus <name>` to foreground an existing open change.
 - Use `npx -y @oevery/rsp unfocus <name>` to remove an open change from the current focus set.
 - Use `npx -y @oevery/rsp archive <name>` to archive a completed change.

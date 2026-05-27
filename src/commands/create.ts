@@ -7,7 +7,7 @@ import { generateChangeContent, guardRspInitialized, isValidChangeName } from '.
 import { withRspLock } from '../core/lock.js'
 
 /** Create a new single-file change under .rsp/changes/<name>.md and focus it when newly created. */
-export async function createChange(name: string, summary = '', kind?: string) {
+export async function createChange(name: string, summary = '', kind?: string, options: { lite?: boolean } = {}) {
   if (!name) {
     console.error(`  ${pc.red('Usage:')} rsp create <name> [summary]`)
     process.exit(1)
@@ -24,7 +24,7 @@ export async function createChange(name: string, summary = '', kind?: string) {
 
     const existed = existsSync(changePath)
     if (!existed) {
-      const content = generateChangeContent(name, summary, kind)
+      const content = generateChangeContent(name, summary, kind, { lite: Boolean(options.lite) })
       await writeFile(changePath, content)
       await mkdir(FOCUS_DIR, { recursive: true })
       const focusEntry = join(FOCUS_DIR, name)
@@ -38,6 +38,6 @@ export async function createChange(name: string, summary = '', kind?: string) {
       console.log(`  ${pc.dim('Unchanged focus.')} Run: rsp focus ${name}`)
     else
       console.log(`  ${pc.dim('focused via focus.d')} → ${name}`)
-    console.log(`  ${pc.cyan('Next:')} fill proposal/spec/design first, then implement and complete the tasks\n`)
+    console.log(`  ${pc.cyan('Next:')} ${options.lite ? 'fill the lite change details, then implement and verify' : 'fill proposal/spec/design first, then implement and complete the tasks'}\n`)
   })
 }

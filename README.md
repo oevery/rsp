@@ -199,7 +199,7 @@ rsp init --with-project-setup   Also create .rsp/changes/project-setup.md
 rsp update                      Refresh rules, repair the AGENTS block, and rebuild indices after upgrade
 rsp add rules <name>            Create .rsp/rules/<name>.md
 rsp add spec <name>             Create .rsp/specs/<name>.md and rebuild specs index
-rsp create <name> [summary]     Create .rsp/changes/<name>.md
+rsp create <name> [summary]     Create .rsp/changes/<name>.md; add --lite for a shorter template
 rsp focus <name>                Mark an open change as currently focused
 rsp unfocus <name>              Remove an open change from the current focus set
 rsp archive <name>              Archive to .rsp/archives/ + update archive index

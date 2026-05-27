@@ -181,6 +181,22 @@ describe('change lifecycle integration', () => {
     })()
   })
 
+  it('creates a lite change template when requested', () => {
+    const createDir = join(tmpdir(), 'rsp-create-lite-test', randomUUID())
+    return (async () => {
+      await mkdir(createDir, { recursive: true })
+      execSync(`node ${cliPath()} init`, { cwd: createDir })
+      const output = execSync(`node ${cliPath()} create tiny-fix --kind fix --lite "Fix tiny issue"`, { cwd: createDir, encoding: 'utf-8' })
+
+      const content = await readFile(join(createDir, '.rsp', 'changes', 'tiny-fix.md'), 'utf-8')
+      expect(output).toContain('fill the lite change details')
+      expect(content).toContain('kind: "fix"')
+      expect(content).toContain('- Summary: Fix tiny issue')
+      expect(content).toContain('- [ ] Implement the small change')
+      expect(content).not.toContain('Finalize the proposal, spec, and design details')
+    })()
+  })
+
   it('does not change focus when reusing an existing change', async () => {
     const { createChange } = await import('../src/commands/create.js')
     const { unfocusChange } = await import('../src/commands/focus.js')

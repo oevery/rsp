@@ -193,7 +193,7 @@ rsp init --with-project-setup   同时创建 .rsp/changes/project-setup.md
 rsp update                      升级后刷新 rules、修复 AGENTS 受管块并重建各类索引
 rsp add rules <name>            创建 .rsp/rules/<name>.md
 rsp add spec <name>             创建 .rsp/specs/<name>.md 并重建 specs 索引
-rsp create <name> [summary]     创建 .rsp/changes/<name>.md
+rsp create <name> [summary]     创建 .rsp/changes/<name>.md；可加 --lite 使用更短模板
 rsp focus <name>                将一个 open change 标记为当前聚焦
 rsp unfocus <name>              将一个 open change 移出当前聚焦集合
 rsp archive <name>              归档到 .rsp/archives/ 并更新 archive index

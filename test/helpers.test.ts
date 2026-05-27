@@ -135,6 +135,20 @@ describe('generateChangeContent', () => {
     expect(content).toContain('- [ ] Verify the result and update any required durable docs or rules')
   })
 
+  it('renders a shorter lite template with required sections', () => {
+    const content = generateChangeContent('small-fix', 'Fix small issue', 'fix', { lite: true })
+    expect(content).toContain('kind: "fix"')
+    expect(content).toContain('- Summary: Fix small issue')
+    expect(content).toContain('## Proposal')
+    expect(content).toContain('## Spec')
+    expect(content).toContain('## Design')
+    expect(content).toContain('## Tasks')
+    expect(content).toContain('## Verify')
+    expect(content).toContain('## Blockers')
+    expect(content).toContain('- [ ] Implement the small change')
+    expect(content).not.toContain('Finalize the proposal, spec, and design details')
+  })
+
   it('reminds the user to choose kind explicitly', () => {
     const content = generateChangeContent('test')
     expect(content).toContain('kind: "<choose: feature | fix | refactor | docs | ops | research>"')
