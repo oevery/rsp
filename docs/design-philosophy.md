@@ -129,6 +129,7 @@ CLI 应负责 deterministic 工作。
 
 - 结构校验
 - 必需 section 检查
+- 未完成模板占位符和未解决 clarification 标记这类 deterministic hygiene 检查
 - 一致性检查
 - focus/archive 一致性检查
 - archive 时机的清单式提示
@@ -142,6 +143,7 @@ CLI 应负责 deterministic 工作。
 - 某个 bug fix 是否改变了稳定行为
 - 某个事实应该写入 `design.md` 还是其他 spec
 - 某次 change 是否真的产生了 durable knowledge
+- 某个 unresolved clarification 是否已经被足够解决到可以归档
 
 ### 6. 低扩展性是有意设计，不是缺陷
 

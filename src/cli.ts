@@ -237,7 +237,7 @@ const statusCommand = defineCommand({
 const checkCommand = defineCommand({
   meta: {
     name: 'check',
-    description: 'Validate changes (frontmatter, sections, deltas, scenarios)',
+    description: 'Validate changes (frontmatter, sections, template text, deltas, scenarios)',
   },
   args: {
     focused: {

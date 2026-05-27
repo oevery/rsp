@@ -63,6 +63,7 @@ This file is the canonical RSP rules source.
 - Use `npx -y @oevery/rsp archive <name>` to archive a completed change.
 - Use `npx -y @oevery/rsp archive --dry-run <name>` or `rsp ready <name>` to preview archive readiness without moving files.
 - Use `npx -y @oevery/rsp show <name|--focused> --json` for machine-readable change context and readiness signals.
+- Use `npx -y @oevery/rsp check [--focused]` to validate change structure and surface deterministic hygiene warnings such as unfinished template placeholders or unresolved clarification markers.
 - Use `npx -y @oevery/rsp update` to refresh bundled rules, repair the managed `AGENTS.md` block, and rebuild generated indices.
 - Use `npx -y @oevery/rsp doctor` for diagnostics only.
 - If RTK is available, you may prefix RSP commands with `rtk`.
@@ -82,6 +83,8 @@ Every change file must contain:
 - `## Blockers`
 
 Do not leave `kind` unresolved.
+
+Do not leave built-in template placeholders or unresolved clarification markers in a change once the details are known. `rsp check` reports these as warnings because they are deterministic hygiene signals, not semantic archive decisions.
 
 If a section does not apply, keep it and write `- none` or `- not needed: <reason>`.
 

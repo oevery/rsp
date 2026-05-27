@@ -56,8 +56,9 @@ Prefer exact file paths, exact commands, and exact durable facts over vague summ
 
 1. Follow the read order in `.rsp/rules/rsp-rules.md`.
 2. If a focused change is missing an explicit `kind`, repair the frontmatter before continuing.
-3. If an existing open change should become current work, use `npx -y @oevery/rsp focus <name>`.
-4. Do not treat unfocused files in `changes/` as current work unless the user explicitly asks for them or you first run `npx -y @oevery/rsp focus <name>`.
+3. Run `npx -y @oevery/rsp check --focused` before treating a focused change as ready; resolve unfinished template placeholder and clarification-marker warnings when they indicate real unfinished content.
+4. If an existing open change should become current work, use `npx -y @oevery/rsp focus <name>`.
+5. Do not treat unfocused files in `changes/` as current work unless the user explicitly asks for them or you first run `npx -y @oevery/rsp focus <name>`.
 
 ### Audit or repair
 
@@ -78,6 +79,8 @@ Prefer exact file paths, exact commands, and exact durable facts over vague summ
 **Delta markers are planning aids, not merge triggers.** Change `Spec` sections use `### ADDED`, `### MODIFIED`, and `### REMOVED` markers as lightweight planning scaffolds. `rsp archive` does **not** automatically merge those sections into `.rsp/specs/` or `.rsp/rules/`. Durable writeback remains an explicit semantic decision — never implied by delta marker presence.
 
 **Pre-archive inspection.** Use `rsp ready <name>` or `rsp archive --dry-run <name>` to preview deterministic archive readiness (incomplete tasks, verify items, blockers, missing scenarios) without moving the change or clearing focus. Use `rsp show <name|--focused> --json` for machine-readable change context including path, kind, progress, blockers, scenario count, readiness signals, and recommended context paths.
+
+**Change hygiene inspection.** Use `rsp check [--focused]` to validate change structure and surface deterministic hygiene warnings. Placeholder and clarification warnings mean the change may still contain unfinished template text or unresolved questions; they are not a substitute for the semantic durable-update decision.
 
 ## Trigger examples
 

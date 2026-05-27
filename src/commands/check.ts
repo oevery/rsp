@@ -26,7 +26,8 @@ interface CheckResult {
 
 /**
  * Validate all change files: focus markers, frontmatter fields,
- * required sections, heading consistency, delta markers, and lightweight scenario linting.
+ * required sections, heading consistency, unfinished template text, delta markers,
+ * and lightweight scenario linting.
  * Uses .rsp/config.yaml for customizable kind values.
  * When focused is true, only currently focused changes are validated.
  */
@@ -274,6 +275,32 @@ export async function runCheck(options: CheckOptions = {}): Promise<CheckResult>
       })
     }
 
+    const placeholderLines = findUnfinishedTemplateLines(content)
+    if (placeholderLines.length > 0) {
+      addDiagnostic({
+        severity: 'warning',
+        code: 'unfinished_template_placeholders',
+        change: name,
+        path: fp,
+        message: 'unfinished template placeholders found',
+        details: placeholderLines,
+        hint: 'Replace angle-bracket template text with concrete change details before archiving.',
+      })
+    }
+
+    const clarificationLines = findUnresolvedClarificationLines(content)
+    if (clarificationLines.length > 0) {
+      addDiagnostic({
+        severity: 'warning',
+        code: 'unresolved_clarifications',
+        change: name,
+        path: fp,
+        message: 'unresolved clarification markers found',
+        details: clarificationLines,
+        hint: 'Resolve or remove clarification markers once the open question is answered.',
+      })
+    }
+
     const scenarios = parseScenarios(content)
     if (scenarios.length > 0) {
       const scenarioIssues: string[] = []
@@ -350,4 +377,31 @@ export async function runCheck(options: CheckOptions = {}): Promise<CheckResult>
     console.log(`  ${pc.red(String(result.summary.errors))} error(s), ${pc.yellow(String(result.summary.warnings))} warning(s) in ${changeFiles.length} change file(s).\n`)
 
   return result
+}
+
+function findUnfinishedTemplateLines(content: string): string[] {
+  const placeholderRe = /<[^>\n]*(?:choose:|one-line|what |why |which |who |how |new |updated |expected |actual |specific |concrete |exact |verifiable |user |capability |behavior |context |action |path|directory|module|subsystem|command|scenario|constraint|requirement|question|uncertainty|implementation)[^>\n]*>/i
+  return collectMatchingLines(content, (line) => {
+    const trimmed = stripInlineCodeSpans(line).trim()
+    return trimmed.startsWith('<!--') === false && placeholderRe.test(trimmed)
+  })
+}
+
+function findUnresolvedClarificationLines(content: string): string[] {
+  return collectMatchingLines(content, line => /\[(?:NEEDS|TODO|TBD)\s+CLARIFICATION(?::[^\]]*)?\]/i.test(stripInlineCodeSpans(line)))
+}
+
+function stripInlineCodeSpans(line: string): string {
+  return line.replace(/`[^`]*`/g, '')
+}
+
+function collectMatchingLines(content: string, predicate: (line: string) => boolean): string[] {
+  const matches: string[] = []
+  const lines = content.split('\n')
+  for (let index = 0; index < lines.length; index++) {
+    const line = lines[index]
+    if (predicate(line))
+      matches.push(`line ${index + 1}: ${line.trim()}`)
+  }
+  return matches.slice(0, 10)
 }

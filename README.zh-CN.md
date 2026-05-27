@@ -52,6 +52,7 @@ npx -y @oevery/rsp doctor
 - 完成后的 change 会移动到 `archives/`；若变更产出了长期知识，应在归档前同步写入 `specs/` 或 `rules/`。
 - 所谓长期知识，只应包含稳定事实；不要把任务历史、排障笔记或一次性实现上下文提升到 `specs/` 或 `rules/`。
 - Change `Spec` 中的 delta 标记（`### ADDED`、`### MODIFIED`、`### REMOVED`）仅为规划辅助标记。`rsp archive` 不会自动将它们合并到 `specs/` 或 `rules/` 中。长期知识的写入始终是高显式语义决策。
+- `rsp check` 会执行 deterministic 的卫生检查。它会对未完成的模板占位符和未解决的 clarification 标记发出 warning，但这些 warning 不会替代 durable update 的语义判断。
 
 ## 文件所有权
 
@@ -200,7 +201,7 @@ rsp show <name|--focused> [--json] [--verbose]
 rsp status [--focused|--blocked|--stale <days>] [--json] [--verbose]
                                    查看带有当前聚焦信息的项目状态摘要，并支持轻量筛选
 rsp check [--focused] [--json] [--verbose]
-                                   校验 change 文件，并对 scenario 结构做轻量 lint
+                                   校验 change 文件，并对 template/scenario 结构做轻量 lint
 rsp doctor [--json] [--verbose]
                                    检查接入健康和常见问题
 ```

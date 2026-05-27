@@ -52,6 +52,7 @@ npx -y @oevery/rsp doctor
 - Completed changes move to `archives/`, while durable outcomes should be reflected in `specs/` or `rules/` before archiving.
 - Durable outcomes mean stable facts only. Do not promote task history, debugging notes, or one-off implementation context into `specs/` or `rules/`.
 - Change `Spec` delta markers (`### ADDED`, `### MODIFIED`, `### REMOVED`) are planning aids only. `rsp archive` does not automatically merge them into durable specs or rules. Durable writeback remains an explicit semantic decision.
+- `rsp check` performs deterministic hygiene checks. It warns about unfinished template placeholders and unresolved clarification markers, but those warnings do not replace the semantic durable-update decision.
 
 ## File ownership
 
@@ -206,7 +207,7 @@ rsp show <name|--focused> [--json] [--verbose]
 rsp status [--focused|--blocked|--stale <days>] [--json] [--verbose]
                                   Show project status summary with focus-aware filters
 rsp check [--focused] [--json] [--verbose]
-                                  Validate change files and lightly lint scenario structure
+                                  Validate change files and lightly lint template/scenario structure
 rsp doctor [--json] [--verbose]
                                   Check setup health and common issues
 ```

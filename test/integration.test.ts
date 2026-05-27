@@ -460,6 +460,90 @@ kind: "<choose: feature | fix | refactor | docs | ops | research>"
     })()
   })
 
+  it('warns when change content still contains template placeholders', () => {
+    const placeholderDir = join(tmpdir(), 'rsp-check-template-placeholder-test', randomUUID())
+    return (async () => {
+      await mkdir(join(placeholderDir, '.rsp', 'changes'), { recursive: true })
+      await writeFile(join(placeholderDir, '.rsp', 'changes', 'placeholder-body.md'), `---
+kind: feature
+---
+
+# Change: placeholder-body
+
+## Proposal
+- Summary: placeholder body
+- Why:
+  - <what user need or capability gap this addresses>
+- Scope:
+  - ship placeholder lint
+- Non-goals:
+  - none
+
+## Spec
+### ADDED
+- Requirement: placeholder lint
+  - warn on unfinished placeholders
+
+### Acceptance
+#### Scenario: placeholder is detected
+- GIVEN <context>
+- WHEN rsp check runs
+- THEN a warning is reported
+
+## Design
+- Approach:
+  - check text lines deterministically
+- Affected areas:
+  - src/commands/check.ts
+- Constraints:
+  - warnings only
+
+## Tasks
+- [ ] implement placeholder lint
+
+## Verify
+- Automated:
+  - [ ] run tests
+- Manual:
+  - [ ] review output
+- Durable updates:
+  - [ ] update docs if needed
+
+## Blockers
+- none
+`)
+
+      const output = execSync(`node ${cliPath()} check --json`, { cwd: placeholderDir, encoding: 'utf-8' })
+      const result = JSON.parse(output)
+
+      expect(result.ok).toBe(true)
+      expect(result.summary.warnings).toBeGreaterThan(0)
+      expect(result.diagnostics).toEqual(expect.arrayContaining([
+        expect.objectContaining({ severity: 'warning', code: 'unfinished_template_placeholders' }),
+      ]))
+    })()
+  })
+
+  it('warns when change content contains unresolved clarification markers', () => {
+    const clarificationDir = join(tmpdir(), 'rsp-check-clarification-test', randomUUID())
+    return (async () => {
+      await mkdir(join(clarificationDir, '.rsp', 'changes'), { recursive: true })
+      await writeFile(join(clarificationDir, '.rsp', 'changes', 'clarify-me.md'), renderChange('clarify-me').replace(
+        '- clarify-me behavior',
+        '- [NEEDS CLARIFICATION: confirm exact behavior before implementation]',
+      ))
+
+      const output = execSync(`node ${cliPath()} check --json`, { cwd: clarificationDir, encoding: 'utf-8' })
+      const result = JSON.parse(output)
+
+      expect(result.ok).toBe(true)
+      expect(result.summary.warnings).toBeGreaterThan(0)
+      expect(result.diagnostics).toEqual(expect.arrayContaining([
+        expect.objectContaining({ severity: 'warning', code: 'unresolved_clarifications' }),
+      ]))
+    })()
+  })
+
   it('ignores legacy required_sections config overrides', () => {
     const configDir = join(tmpdir(), 'rsp-check-required-sections-test', randomUUID())
     return (async () => {
