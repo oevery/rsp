@@ -43,6 +43,9 @@ export interface ShowOptions extends CommandRunOptions {
 }
 
 function exitShowError(error: { code: string, message: string }, options: ShowOptions): never {
+  const nextActions = error.code === 'no_focused_change'
+    ? ['Run: rsp status', 'Run: rsp focus <name>', 'Or run: rsp create <name>']
+    : []
   if (options.json) {
     emitJson({
       command: 'show',
@@ -50,11 +53,14 @@ function exitShowError(error: { code: string, message: string }, options: ShowOp
       change: null,
       contextPaths: [],
       runtime: [],
+      nextActions,
       error,
     })
   }
   else {
     console.error(`  ${pc.red('Error:')} ${error.message}`)
+    for (const action of nextActions)
+      console.error(`  ${pc.dim(action)}`)
   }
   process.exit(1)
 }

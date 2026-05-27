@@ -35,6 +35,7 @@ This file is the canonical RSP rules source.
 - Keep every change file in the fixed six-section structure.
 - Use an RSP command first when an RSP command already covers the action.
 - Do not infer current work from `changes/` alone.
+- When no focus exists, status and show commands may suggest next actions, but they must not infer current work from open changes.
 - Do not treat `AGENTS.md` as the long-term rules or design store.
 - Do not redefine the core change structure through project config.
 

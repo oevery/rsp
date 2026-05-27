@@ -220,6 +220,8 @@ rsp doctor [--fix] [--json] [--verbose]
 
 For exact rules, use `.rsp/rules/rsp-rules.md`. For operational durable-decision guidance, use `skills/rsp/SKILL.md`.
 
+When there is no focused change, `rsp status` and `rsp show --focused --json` print `nextActions` instead of guessing which open change is current.
+
 ## Platform-agnostic
 
 `.rsp/` is a plain file convention. It works with Kilo Code, Cursor, Claude Code, Cline, GitHub Copilot, or any assistant that reads project files. Requires Node.js 18+.

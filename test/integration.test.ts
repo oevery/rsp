@@ -629,6 +629,24 @@ describe('status commands', () => {
     })()
   })
 
+  it('prints next actions when status has open changes but no focus', () => {
+    const statusDir = join(tmpdir(), 'rsp-status-no-focus-test', randomUUID())
+    return (async () => {
+      await mkdir(join(statusDir, '.rsp', 'rules'), { recursive: true })
+      await mkdir(join(statusDir, '.rsp', 'specs'), { recursive: true })
+      await mkdir(join(statusDir, '.rsp', 'changes'), { recursive: true })
+      await mkdir(join(statusDir, '.rsp', 'focus.d'), { recursive: true })
+      await writeFile(join(statusDir, '.rsp', 'rules', 'rsp-rules.md'), '# rules\n')
+      await writeFile(join(statusDir, '.rsp', 'specs', 'design.md'), '# design\n')
+      await writeFile(join(statusDir, '.rsp', 'changes', 'unfocused-one.md'), renderChange('unfocused-one'))
+
+      const output = execSync(`node ${cliPath()} status`, { cwd: statusDir, encoding: 'utf-8' })
+      expect(output).toContain('No focused change.')
+      expect(output).toContain('Open changes: unfocused-one')
+      expect(output).toContain('Run: rsp focus unfocused-one')
+    })()
+  })
+
   it('filters blocked changes by blockers section', () => {
     const statusDir = join(tmpdir(), 'rsp-status-blocked-test', randomUUID())
     return (async () => {
@@ -721,6 +739,23 @@ describe('status commands', () => {
       expect(result.records[0].path).not.toContain('\\')
       expect(result.records[0].progress.total).toBeGreaterThan(0)
       expect(Array.isArray(result.runtime)).toBe(true)
+    })()
+  })
+
+  it('prints status JSON next actions when no focus exists', () => {
+    const statusDir = join(tmpdir(), 'rsp-status-json-no-focus-test', randomUUID())
+    return (async () => {
+      await mkdir(join(statusDir, '.rsp', 'rules'), { recursive: true })
+      await mkdir(join(statusDir, '.rsp', 'specs'), { recursive: true })
+      await mkdir(join(statusDir, '.rsp', 'changes'), { recursive: true })
+      await writeFile(join(statusDir, '.rsp', 'rules', 'rsp-rules.md'), '# rules\n')
+      await writeFile(join(statusDir, '.rsp', 'specs', 'design.md'), '# design\n')
+      await writeFile(join(statusDir, '.rsp', 'changes', 'unfocused-json.md'), renderChange('unfocused-json'))
+
+      const output = execSync(`node ${cliPath()} status --json`, { cwd: statusDir, encoding: 'utf-8' })
+      const result = JSON.parse(output)
+      expect(result.focused).toEqual([])
+      expect(result.nextActions).toContain('Run: rsp focus unfocused-json')
     })()
   })
 
@@ -1322,6 +1357,8 @@ describe('show command', () => {
     expect(result.command).toBe('show')
     expect(result.ok).toBe(false)
     expect(result.error.code).toBe('no_focused_change')
+    expect(result.nextActions).toContain('Run: rsp status')
+    expect(result.nextActions).toContain('Run: rsp focus <name>')
   })
 })
 

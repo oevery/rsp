@@ -55,6 +55,7 @@ interface StatusResult {
     focused: number
     blocked: number
   }
+  nextActions: string[]
   archiveTrend: Array<{ month: string, count: number }>
   runtime: RuntimeDiagnostic[]
 }
@@ -179,6 +180,7 @@ export async function showStatus(options: StatusOptions = {}, runOptions: Comman
   })
 
   const blockedCount = filteredOutputRecords.filter(r => r.isBlocked).length
+  const nextActions = buildStatusNextActions(focusedSet.size, Object.keys(changeMap).sort(), Boolean(options.focused || options.blocked || typeof options.stale === 'number'))
   const statusResult: StatusResult = {
     command: 'status',
     ok: true,
@@ -194,6 +196,7 @@ export async function showStatus(options: StatusOptions = {}, runOptions: Comman
       focused: filteredOutputRecords.filter(r => r.isFocused).length,
       blocked: blockedCount,
     },
+    nextActions,
     archiveTrend: await readArchiveTrend(runtime, runOptions),
     runtime,
   }
@@ -212,7 +215,9 @@ export async function showStatus(options: StatusOptions = {}, runOptions: Comman
     console.log()
   }
   else {
-    console.log(`  ${pc.dim('No focused change.')} Run: rsp create <name> or rsp focus <name>`)
+    console.log(`  ${pc.dim('No focused change.')}`)
+    for (const action of nextActions)
+      console.log(`    ${pc.dim(action)}`)
     console.log()
   }
 
@@ -257,6 +262,27 @@ export async function showStatus(options: StatusOptions = {}, runOptions: Comman
   }
 
   return statusResult
+}
+
+function buildStatusNextActions(focusedCount: number, openChanges: string[], filtered: boolean): string[] {
+  if (focusedCount > 0)
+    return []
+  if (openChanges.length === 0)
+    return ['Run: rsp create <name>']
+  if (filtered) {
+    return [
+      'Run: rsp status',
+      'Run: rsp focus <name>',
+      'Or run: rsp create <name>',
+    ]
+  }
+  const firstChanges = openChanges.slice(0, 3).join(', ')
+  const extra = openChanges.length > 3 ? ` (+${openChanges.length - 3} more)` : ''
+  return [
+    `Open changes: ${firstChanges}${extra}`,
+    `Run: rsp focus ${openChanges[0]}`,
+    'Or run: rsp create <name>',
+  ]
 }
 
 /** Display archive trend: count per month from archive INDEX.md. */

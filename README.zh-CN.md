@@ -214,6 +214,8 @@ rsp doctor [--fix] [--json] [--verbose]
 
 精确规则以 `.rsp/rules/rsp-rules.md` 为准；durable decision 的操作指导以 `skills/rsp/SKILL.md` 为准。
 
+当没有 focused change 时，`rsp status` 和 `rsp show --focused --json` 会输出 `nextActions`，但不会自动猜测哪个 open change 是当前工作。
+
 ## 工具无关
 
 `.rsp/` 是纯文件约定，适用于 Kilo Code、Cursor、Claude Code、Cline、GitHub Copilot 或任何能读取项目文件的 AI 助手。需要 Node.js 18+。
