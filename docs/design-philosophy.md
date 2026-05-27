@@ -170,6 +170,65 @@ RSP 不追求通过高自由度扩展满足所有 workflow。
 
 这意味着 RSP 更适合成为一个稳定协议，而不是一个可自由拼装的 workflow 平台。
 
+## 外部工作流取舍
+
+RSP 与 spec-kit、OpenSpec 都关心 AI 辅助下的规格、计划与实现一致性，但三者心智模型不同。
+
+### 与 spec-kit 的边界
+
+spec-kit 更接近阶段化的 spec-driven development：从 project constitution、specify、plan、tasks 到 implementation，适合需要强阶段门和完整规格纪律的项目。
+
+RSP 借鉴它的部分方向：
+
+- 要求把行为、设计和任务写清楚
+- 强调验收场景和可验证输出
+- 鼓励 implementation 前先明确当前 change 的意图
+
+RSP 不照搬这些能力：
+
+- 不引入阶段锁定的工作流
+- 不把 branch、issue 或 PR 绑定进核心模型
+- 不要求所有工作都经过完整规格阶段
+- 不把 CLI 变成实现编排器
+
+原因是 RSP 的核心目标不是规范化所有工程活动，而是让 agent 在已有代码库中读取足够上下文、保持工作闭环，并把长期事实与临时工作分开。
+
+### 与 OpenSpec 的边界
+
+OpenSpec 更接近 brownfield-first 的 delta spec 工作流：通过 changes、spec deltas、sync/archive 来维护规格真相，适合团队希望围绕 spec merge 管理多并行变更的场景。
+
+RSP 借鉴它的部分方向：
+
+- 明确 open work 与 durable specs 的区别
+- 在 archive 前提示 readiness 和 durable update 判断
+- 支持 delta marker 作为 planning aid
+- 改善 agent 在并行/中断工作中的恢复体验
+
+RSP 不照搬这些能力：
+
+- 不使用多文件 change bundle
+- 不自动把 change `Spec` delta 合并进 durable specs
+- 不引入 schema/profile 驱动的 workflow 平台
+- 不做 bulk archive conflict resolution
+
+原因是 RSP 把单文件 change、显式 focus、低分支 agent 决策视为产品约束。自动 spec merge 会把 semantic judgment 推给 CLI，违背 deterministic checks 与 semantic judgment 分离原则。
+
+### 当前采纳的折中
+
+RSP 应优先采纳“降低误用概率”的轻量能力，而不是扩大框架能力。
+
+已经符合该方向的能力包括：
+
+- `rsp check` 对模板占位符和 unresolved clarification 发出 deterministic warning
+- `rsp ready` 与 `rsp show` 区分 deterministic readiness 与 semantic review
+- `durableReview` 只给候选决策和目标文件，不写入或合并 durable files
+- `rsp create --lite` 为小改动提供更短模板，但仍保留六段结构
+- RSP skill 要求 agent 将 `## Tasks`、实现和 `## Verify` 回写保持同步
+- `rsp doctor --fix` 只执行安全 deterministic repair，不做语义修复
+- 无 focus 时只给 `nextActions`，不从 open changes 推断当前工作
+
+这些折中保留了 spec-kit 和 OpenSpec 的高价值实践，同时避免 RSP 演化成重型规格框架或自动语义合并系统。
+
 ## 核心模型
 
 ### 生命周期

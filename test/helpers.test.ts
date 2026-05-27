@@ -288,6 +288,17 @@ describe('documentation command examples', () => {
     expect(readme).not.toContain('## Single-file change template')
   })
 
+  it('documents external workflow tradeoffs in the design philosophy', () => {
+    const root = fileURLToPath(new URL('..', import.meta.url))
+    const design = readFileSync(join(root, 'docs', 'design-philosophy.md'), 'utf-8')
+
+    expect(design).toContain('## 外部工作流取舍')
+    expect(design).toContain('### 与 spec-kit 的边界')
+    expect(design).toContain('### 与 OpenSpec 的边界')
+    expect(design).toContain('不自动把 change `Spec` delta 合并进 durable specs')
+    expect(design).toContain('RSP skill 要求 agent 将 `## Tasks`、实现和 `## Verify` 回写保持同步')
+  })
+
   it('keeps AGENTS read order aligned with the recommended workflow', () => {
     const block = renderRspAgentsBlock()
     expect(block).toContain('RSP keeps durable rules, specs, and current work under `.rsp/`.')
