@@ -91,6 +91,7 @@ If a section does not apply, keep it and write `- none` or `- not needed: <reaso
 ## Archive gate
 
 - `rsp archive <name>` never blocks. It warns but always completes the move.
+- `rsp ready` and `rsp show` readiness fields separate deterministic signals from semantic review. Deterministic readiness does not replace durable-update judgment.
 - Make a durable-update decision before `npx -y @oevery/rsp archive <name>`.
 - Change `Spec` delta markers (`### ADDED`, `### MODIFIED`, `### REMOVED`) are planning aids only. `rsp archive` does not automatically merge them into `.rsp/specs/` or `.rsp/rules/`.
 - If `Blockers` still contains a real blocker, set `Archive ready: no`.

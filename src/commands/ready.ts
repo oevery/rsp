@@ -17,6 +17,9 @@ interface ReadyResult {
     incompleteVerify: number
     activeBlockers: boolean
     missingScenarios: boolean
+    deterministic: 'pass' | 'warnings'
+    semantic: 'needs-review'
+    archiveReady: 'yes' | 'judgment' | 'no'
   }
   warnings: string[]
   runtime: RuntimeDiagnostic[]
@@ -57,6 +60,9 @@ export async function showReady(name: string, options: CommandRunOptions = {}): 
     incompleteVerify: readinessDetails.verifyTodos.length,
     activeBlockers: readinessDetails.activeBlockers,
     missingScenarios: readinessDetails.missingScenarios,
+    deterministic: readinessDetails.deterministic,
+    semantic: readinessDetails.semantic,
+    archiveReady: readinessDetails.archiveReady,
   }
 
   const result: ReadyResult = {
@@ -89,5 +95,20 @@ export async function showReady(name: string, options: CommandRunOptions = {}): 
     console.log(`  ${pc.dim('Run:')} rsp archive ${name}\n`)
   }
 
+  console.log(`  ${pc.dim('Deterministic readiness:')} ${readiness.deterministic === 'pass' ? pc.green('pass') : pc.yellow('warnings')}`)
+  console.log(`  ${pc.dim('Semantic review:')} ${pc.yellow('needed')}`)
+  console.log(`  ${pc.dim('Archive ready:')} ${formatArchiveReady(readiness.archiveReady)}\n`)
+
   return result
+}
+
+function formatArchiveReady(value: 'yes' | 'judgment' | 'no'): string {
+  switch (value) {
+    case 'yes':
+      return pc.green('yes')
+    case 'no':
+      return pc.yellow('no')
+    case 'judgment':
+      return pc.yellow('judgment')
+  }
 }

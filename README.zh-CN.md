@@ -150,6 +150,8 @@ agent 应只把 `focus.d/` 中列出的 change 视为当前工作。`changes/` �
 
 关于 durable update 的决定，也就是某次变更是否产出了应该写入 `.rsp/specs/` 或 `.rsp/rules/` 的知识，本质上是语义判断，应由 RSP skill 或人工 reviewer 完成。
 
+`rsp ready` 和 `rsp show` 会同时暴露 deterministic readiness 与 semantic-review 信号。deterministic readiness 来自 checkbox、blocker 和 scenario；durable update 仍然需要语义 review。
+
 ## 推荐工作流
 
 新项目：

@@ -156,6 +156,8 @@ Agents should treat only entries in `focus.d/` as current work. Unfocused files 
 
 The durable update decision (whether the change produced knowledge that belongs in `.rsp/specs/` or `.rsp/rules/`) is a semantic choice made by the RSP skill or a human reviewer.
 
+`rsp ready` and `rsp show` expose both deterministic readiness and semantic-review signals. Deterministic readiness comes from checkboxes, blockers, and scenarios; semantic review remains required for durable-update decisions.
+
 ## Recommended workflow
 
 New project:

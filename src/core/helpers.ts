@@ -591,6 +591,9 @@ export interface ArchiveReadiness {
   activeBlockers: boolean
   scenarioCount: number
   missingScenarios: boolean
+  deterministic: 'pass' | 'warnings'
+  semantic: 'needs-review'
+  archiveReady: 'yes' | 'judgment' | 'no'
   warnings: string[]
 }
 
@@ -620,12 +623,21 @@ export function collectArchiveReadiness(content: string): ArchiveReadiness {
   if (missingScenarios)
     warnings.push('no Scenario blocks found (some changes do not need them)')
 
+  const archiveReady = activeBlockers
+    ? 'no'
+    : warnings.length === 0
+      ? 'yes'
+      : 'judgment'
+
   return {
     taskTodos,
     verifyTodos,
     activeBlockers,
     scenarioCount: scenarios.length,
     missingScenarios,
+    deterministic: warnings.length === 0 ? 'pass' : 'warnings',
+    semantic: 'needs-review',
+    archiveReady,
     warnings,
   }
 }

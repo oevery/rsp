@@ -23,6 +23,9 @@ interface ShowResult {
       incompleteVerify: number
       activeBlockers: boolean
       missingScenarios: boolean
+      deterministic: 'pass' | 'warnings'
+      semantic: 'needs-review'
+      archiveReady: 'yes' | 'judgment' | 'no'
     }
   }
   contextPaths: string[]
@@ -125,6 +128,9 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
     incompleteVerify: readinessDetails.verifyTodos.length,
     activeBlockers: readinessDetails.activeBlockers,
     missingScenarios: readinessDetails.missingScenarios,
+    deterministic: readinessDetails.deterministic,
+    semantic: readinessDetails.semantic,
+    archiveReady: readinessDetails.archiveReady,
   }
 
   const contextPaths = [
@@ -171,6 +177,9 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
   console.log(`    ${pc.dim('Incomplete verify:')} ${readiness.incompleteVerify > 0 ? pc.yellow(String(readiness.incompleteVerify)) : pc.green('0')}`)
   console.log(`    ${pc.dim('Active blockers:')} ${readiness.activeBlockers ? pc.yellow('yes') : pc.green('no')}`)
   console.log(`    ${pc.dim('Missing scenarios:')} ${readiness.missingScenarios ? pc.yellow('yes') : pc.green('no')}`)
+  console.log(`    ${pc.dim('Deterministic:')} ${readiness.deterministic === 'pass' ? pc.green('pass') : pc.yellow('warnings')}`)
+  console.log(`    ${pc.dim('Semantic review:')} ${pc.yellow('needed')}`)
+  console.log(`    ${pc.dim('Archive ready:')} ${formatArchiveReady(readiness.archiveReady)}`)
   console.log()
   console.log(`  ${pc.bold('Context paths:')}`)
   for (const cp of contextPaths)
@@ -178,4 +187,15 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
   console.log()
 
   return result
+}
+
+function formatArchiveReady(value: 'yes' | 'judgment' | 'no'): string {
+  switch (value) {
+    case 'yes':
+      return pc.green('yes')
+    case 'no':
+      return pc.yellow('no')
+    case 'judgment':
+      return pc.yellow('judgment')
+  }
 }
