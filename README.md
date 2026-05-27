@@ -158,6 +158,8 @@ The durable update decision (whether the change produced knowledge that belongs 
 
 `rsp ready` and `rsp show` expose both deterministic readiness and semantic-review signals. Deterministic readiness comes from checkboxes, blockers, and scenarios; semantic review remains required for durable-update decisions.
 
+`rsp ready --json` and `rsp show --json` also include `durableReview` guidance with fixed decision options and candidate durable targets. This is review guidance only; RSP does not auto-merge change `Spec` deltas into durable files.
+
 ## Recommended workflow
 
 New project:

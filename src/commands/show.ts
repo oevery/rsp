@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
 import { CHANGES_DIR, pc, RSP_DIR } from '../core/config.js'
-import { collectArchiveReadiness, countCheckboxes, getFocusedChangeNames, guardRspInitialized, hasMeaningfulBlockers, isValidChangeName, normalizeLogicalPath, parseFrontmatter, parseScenarios } from '../core/helpers.js'
+import { buildDurableReviewGuidance, collectArchiveReadiness, countCheckboxes, getFocusedChangeNames, guardRspInitialized, hasMeaningfulBlockers, isValidChangeName, normalizeLogicalPath, parseFrontmatter, parseScenarios } from '../core/helpers.js'
 import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
 
 interface ShowResult {
@@ -29,6 +29,12 @@ interface ShowResult {
     }
   }
   contextPaths: string[]
+  durableReview: {
+    required: true
+    decisions: string[]
+    candidateTargets: string[]
+    note: string
+  }
   runtime: RuntimeDiagnostic[]
 }
 
@@ -140,6 +146,7 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
   if (existsSync(join(RSP_DIR, 'rules', 'project-rules.md')))
     contextPaths.push('.rsp/rules/project-rules.md')
   contextPaths.push('.rsp/rules/rsp-rules.md')
+  const durableReview = buildDurableReviewGuidance(contextPaths)
 
   const result: ShowResult = {
     command: 'show',
@@ -155,6 +162,7 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
       readiness,
     },
     contextPaths,
+    durableReview,
     runtime,
   }
 
@@ -184,6 +192,11 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
   console.log(`  ${pc.bold('Context paths:')}`)
   for (const cp of contextPaths)
     console.log(`    ${pc.dim(cp)}`)
+  console.log()
+  console.log(`  ${pc.bold('Durable review:')}`)
+  console.log(`    ${pc.dim('Decision options:')} ${durableReview.decisions.join(' | ')}`)
+  console.log(`    ${pc.dim('Candidate targets:')} ${durableReview.candidateTargets.join(', ')}`)
+  console.log(`    ${pc.dim(durableReview.note)}`)
   console.log()
 
   return result

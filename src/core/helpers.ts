@@ -597,6 +597,13 @@ export interface ArchiveReadiness {
   warnings: string[]
 }
 
+export interface DurableReviewGuidance {
+  required: true
+  decisions: string[]
+  candidateTargets: string[]
+  note: string
+}
+
 /**
  * Collect deterministic archive readiness details for a change file.
  * Used by both `rsp archive` and `rsp ready`.
@@ -639,6 +646,19 @@ export function collectArchiveReadiness(content: string): ArchiveReadiness {
     semantic: 'needs-review',
     archiveReady,
     warnings,
+  }
+}
+
+export function buildDurableReviewGuidance(candidateTargets: string[]): DurableReviewGuidance {
+  return {
+    required: true,
+    decisions: [
+      'No durable update needed',
+      'Update existing spec or rule',
+      'Create a new durable spec',
+    ],
+    candidateTargets,
+    note: 'Semantic review decides whether stable facts belong in specs or rules; the CLI never merges delta specs automatically.',
   }
 }
 

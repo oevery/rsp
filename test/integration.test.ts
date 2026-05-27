@@ -1152,6 +1152,10 @@ describe('ready command', () => {
     expect(result.readiness.deterministic).toBe('warnings')
     expect(result.readiness.semantic).toBe('needs-review')
     expect(result.readiness.archiveReady).toBe('judgment')
+    expect(result.durableReview.required).toBe(true)
+    expect(result.durableReview.decisions).toContain('No durable update needed')
+    expect(result.durableReview.candidateTargets).toContain('.rsp/specs/design.md')
+    expect(result.durableReview.note).toContain('never merges delta specs automatically')
     expect(Array.isArray(result.warnings)).toBe(true)
   })
 
@@ -1184,6 +1188,8 @@ describe('ready command', () => {
     expect(output).toContain('Deterministic readiness:')
     expect(output).toContain('Semantic review:')
     expect(output).toContain('Archive ready:')
+    expect(output).toContain('Durable review:')
+    expect(output).toContain('Decision options:')
   })
 })
 
@@ -1252,6 +1258,8 @@ describe('show command', () => {
     expect(Array.isArray(result.contextPaths)).toBe(true)
     expect(result.contextPaths).toContain('.rsp/specs/design.md')
     expect(result.contextPaths).toContain('.rsp/rules/rsp-rules.md')
+    expect(result.durableReview.required).toBe(true)
+    expect(result.durableReview.candidateTargets).toEqual(result.contextPaths)
   })
 
   it('emits machine-readable JSON errors when requested', async () => {

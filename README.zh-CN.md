@@ -152,6 +152,8 @@ agent 应只把 `focus.d/` 中列出的 change 视为当前工作。`changes/` �
 
 `rsp ready` 和 `rsp show` 会同时暴露 deterministic readiness 与 semantic-review 信号。deterministic readiness 来自 checkbox、blocker 和 scenario；durable update 仍然需要语义 review。
 
+`rsp ready --json` 和 `rsp show --json` 还会包含 `durableReview` 指导信息，其中包括固定决策选项和候选 durable target。这只是 review 指导；RSP 不会自动把 change `Spec` delta 合并进 durable 文件。
+
 ## 推荐工作流
 
 新项目：

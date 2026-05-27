@@ -3,8 +3,8 @@ import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
-import { CHANGES_DIR, pc } from '../core/config.js'
-import { collectArchiveReadiness, guardRspInitialized, isValidChangeName, normalizeLogicalPath } from '../core/helpers.js'
+import { CHANGES_DIR, pc, RSP_DIR } from '../core/config.js'
+import { buildDurableReviewGuidance, collectArchiveReadiness, guardRspInitialized, isValidChangeName, normalizeLogicalPath } from '../core/helpers.js'
 import { emitJson } from '../core/output.js'
 
 interface ReadyResult {
@@ -20,6 +20,12 @@ interface ReadyResult {
     deterministic: 'pass' | 'warnings'
     semantic: 'needs-review'
     archiveReady: 'yes' | 'judgment' | 'no'
+  }
+  durableReview: {
+    required: true
+    decisions: string[]
+    candidateTargets: string[]
+    note: string
   }
   warnings: string[]
   runtime: RuntimeDiagnostic[]
@@ -64,6 +70,7 @@ export async function showReady(name: string, options: CommandRunOptions = {}): 
     semantic: readinessDetails.semantic,
     archiveReady: readinessDetails.archiveReady,
   }
+  const durableReview = buildDurableReviewGuidance(getDurableReviewCandidateTargets())
 
   const result: ReadyResult = {
     command: 'ready',
@@ -71,6 +78,7 @@ export async function showReady(name: string, options: CommandRunOptions = {}): 
     change: name,
     path: normalizeLogicalPath(srcPath),
     readiness,
+    durableReview,
     warnings: checklist,
     runtime,
   }
@@ -98,8 +106,23 @@ export async function showReady(name: string, options: CommandRunOptions = {}): 
   console.log(`  ${pc.dim('Deterministic readiness:')} ${readiness.deterministic === 'pass' ? pc.green('pass') : pc.yellow('warnings')}`)
   console.log(`  ${pc.dim('Semantic review:')} ${pc.yellow('needed')}`)
   console.log(`  ${pc.dim('Archive ready:')} ${formatArchiveReady(readiness.archiveReady)}\n`)
+  console.log(`  ${pc.bold('Durable review:')}`)
+  console.log(`    ${pc.dim('Decision options:')} ${durableReview.decisions.join(' | ')}`)
+  console.log(`    ${pc.dim('Candidate targets:')} ${durableReview.candidateTargets.join(', ')}`)
+  console.log(`    ${pc.dim(durableReview.note)}\n`)
 
   return result
+}
+
+function getDurableReviewCandidateTargets(): string[] {
+  const targets = [
+    '.rsp/specs/design.md',
+    '.rsp/specs/INDEX.md',
+  ]
+  if (existsSync(join(RSP_DIR, 'rules', 'project-rules.md')))
+    targets.push('.rsp/rules/project-rules.md')
+  targets.push('.rsp/rules/rsp-rules.md')
+  return targets
 }
 
 function formatArchiveReady(value: 'yes' | 'judgment' | 'no'): string {

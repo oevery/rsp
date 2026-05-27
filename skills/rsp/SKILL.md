@@ -80,6 +80,8 @@ Prefer exact file paths, exact commands, and exact durable facts over vague summ
 
 **Pre-archive inspection.** Use `rsp ready <name>` or `rsp archive --dry-run <name>` to preview deterministic archive readiness (incomplete tasks, verify items, blockers, missing scenarios) without moving the change or clearing focus. Use `rsp show <name|--focused> --json` for machine-readable change context including path, kind, progress, blockers, scenario count, readiness signals, and recommended context paths. Treat `deterministic`, `semantic`, and `archiveReady` as guidance fields: deterministic signals come from the file structure, while semantic durable-update review still belongs to the skill or a human reviewer.
 
+**Durable review guidance.** When `rsp ready --json` or `rsp show --json` includes `durableReview`, use its decision options and candidate targets to produce the durable decision output. Treat the guidance as advisory context only: do not auto-merge delta specs, and do not write durable files unless the semantic review identifies stable facts.
+
 **Change hygiene inspection.** Use `rsp check [--focused]` to validate change structure and surface deterministic hygiene warnings. Placeholder and clarification warnings mean the change may still contain unfinished template text or unresolved questions; they are not a substitute for the semantic durable-update decision.
 
 ## Trigger examples

@@ -253,6 +253,7 @@ describe('documentation command examples', () => {
     expect(skill).toContain('## Expected outputs')
     expect(skill).toContain('When unsure whether a fact is truly durable, prefer `No durable update needed` over speculative promotion.')
     expect(skill).toContain('Default to no spec writeback unless the change produced project-level durable knowledge that future work must reread.')
+    expect(skill).toContain('When `rsp ready --json` or `rsp show --json` includes `durableReview`')
     expect(skill).toContain('Prefer `specs/design.md` or an existing durable file before creating a new spec file.')
     expect(skill).toContain('if you cannot identify a concrete durable target or concrete durable facts, do not invent them')
     expect(skill).toContain('After rule or skill changes, prefer a fresh session and reread `AGENTS.md` plus `.rsp/rules/*.md`.')
