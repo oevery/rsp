@@ -150,6 +150,8 @@ Inside `open`, typical work includes:
 - Edit the change file directly — fill sections, mark tasks, write design decisions.
 - Review whether durable updates are needed before archive.
 
+During implementation, keep the change file and the actual work in sync: complete `## Tasks` checkboxes as code lands, update `## Verify` with the checks actually run, and revise `## Design` if implementation discoveries change the plan.
+
 `archive` moves completed work into history. Archive never blocks — it warns but leaves the final decision to the agent or human.
 
 Agents should treat only entries in `focus.d/` as current work. Unfocused files in `changes/` are still open, but should not be treated as the current target unless the user explicitly asks for them or they are re-focused.

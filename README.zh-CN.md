@@ -144,6 +144,8 @@ open → archived
 - 直接编辑 change 文件，填写 section、勾选 tasks、记录设计决策。
 - 在归档前判断是否需要 durable updates。
 
+实现过程中，应保持 change 文件与实际工作同步：代码完成后勾选对应的 `## Tasks`，在 `## Verify` 中记录实际运行的检查；如果实现发现设计不成立，应先更新 `## Design` 再继续。
+
 `archive` 会把已完成的工作归档到历史。`archive` 不会阻塞，只会给出 warning，最终判断留给 agent 或人工。
 
 agent 应只把 `focus.d/` 中列出的 change 视为当前工作。`changes/` 中未聚焦的文件仍然是 open，但除非用户明确要求或重新 `focus`，否则不应被当作当前目标。

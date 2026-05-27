@@ -62,6 +62,16 @@ Prefer exact file paths, exact commands, and exact durable facts over vague summ
 
 Use `npx -y @oevery/rsp create <name> --lite` for small, straightforward work where the full template would add noise. The lite template keeps the same six required sections and still requires a durable-update decision before archive.
 
+### Implement a focused change
+
+1. Read the focused change before editing code.
+2. Convert each actionable `## Tasks` checkbox into your agent-local task tracker when one is available.
+3. Keep at most one implementation task actively in progress unless the user explicitly asks for parallel work.
+4. When a task is completed in code, update the corresponding checkbox in the change file in the same working session.
+5. If implementation findings invalidate the proposal, spec, or design, update the relevant section before continuing rather than leaving chat-only context.
+6. After validation, update `## Verify` checkboxes with the exact commands or manual checks actually completed.
+7. Do not write temporary debugging notes, task history, or command transcripts into `specs/` or `rules/`; keep them in the change file only when they are needed for the open work.
+
 ### Audit or repair
 
 1. Check that `.rsp/` exists.
