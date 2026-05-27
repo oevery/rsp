@@ -14,7 +14,7 @@ Read in order:
 5. .rsp/specs/INDEX.md
 6. only the relevant additional .rsp/rules/*.md and .rsp/specs/*.md files
 
-If `.rsp/focus.d/` is empty, ask what to work on or suggest `npx -y @oevery/rsp create <name>`.
+If `.rsp/focus.d/` is empty and the user has not provided a concrete task, ask what to work on or suggest `npx -y @oevery/rsp create <name>` for tracked work.
 If your agent supports Agent Skills, load `rsp` for setup, repair, and durable-decision tasks.
 <!-- rsp:end -->
 

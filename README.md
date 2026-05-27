@@ -84,7 +84,7 @@ Read in order:
 5. .rsp/specs/INDEX.md
 6. only the relevant additional .rsp/rules/*.md and .rsp/specs/*.md files
 
-If `.rsp/focus.d/` is empty, ask what to work on or suggest `npx -y @oevery/rsp create <name>`.
+If `.rsp/focus.d/` is empty and the user has not provided a concrete task, ask what to work on or suggest `npx -y @oevery/rsp create <name>` for tracked work.
 If your agent supports Agent Skills, load `rsp` for setup, repair, and durable-decision tasks.
 <!-- rsp:end -->
 ```
@@ -171,7 +171,7 @@ New project:
 3. Fill `.rsp/specs/design.md`
 4. Use `rsp add spec <name>` only when a new durable project doc is needed
 5. Use `rsp add rules project-rules` only when the project has stable local rules
-6. Start work with `rsp create <name>`
+6. For tracked open work, start with `rsp create <name>`
 7. If you want an existing open change to become current work, use `rsp focus <name>`
 8. Use `rsp unfocus <name>` when you want to remove a change from the current focus set
 9. Edit the change file directly to implement the work and mark tasks complete
@@ -221,6 +221,10 @@ rsp doctor [--fix] [--json] [--verbose]
 For exact rules, use `.rsp/rules/rsp-rules.md`. For operational durable-decision guidance, use `skills/rsp/SKILL.md`.
 
 When there is no focused change, `rsp status` and `rsp show --focused --json` print `nextActions` instead of guessing which open change is current.
+
+`rsp create --lite` is a shorter template for explicitly tracked small changes; simple current-session tasks should not create RSP changes unless tracking is intentionally needed.
+
+`rsp doctor --fix` runs only safe deterministic repairs. Its `fixed` JSON entries report actual filesystem changes; a healthy project returns `fixed: []` and the human output says no safe fixes are needed.
 
 ## Platform-agnostic
 

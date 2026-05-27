@@ -84,7 +84,7 @@ Read in order:
 5. .rsp/specs/INDEX.md
 6. only the relevant additional .rsp/rules/*.md and .rsp/specs/*.md files
 
-If `.rsp/focus.d/` is empty, ask what to work on or suggest `npx -y @oevery/rsp create <name>`.
+If `.rsp/focus.d/` is empty and the user has not provided a concrete task, ask what to work on or suggest `npx -y @oevery/rsp create <name>` for tracked work.
 If your agent supports Agent Skills, load `rsp` for setup, repair, and durable-decision tasks.
 <!-- rsp:end -->
 ```
@@ -165,7 +165,7 @@ agent 应只把 `focus.d/` 中列出的 change 视为当前工作。`changes/` �
 3. 填写 `.rsp/specs/design.md`
 4. 仅在需要新的长期项目文档时使用 `rsp add spec <name>`
 5. 仅在项目存在稳定本地规则时使用 `rsp add rules project-rules`
-6. 使用 `rsp create <name>` 开始工作
+6. 对需要跟踪的 open work，使用 `rsp create <name>` 开始
 7. 如果要让某个已有 open change 成为当前工作，使用 `rsp focus <name>`
 8. 如果要将某个 change 移出当前焦点集合，使用 `rsp unfocus <name>`
 9. 直接编辑 change 文件并完成实现、勾选 tasks
@@ -215,6 +215,10 @@ rsp doctor [--fix] [--json] [--verbose]
 精确规则以 `.rsp/rules/rsp-rules.md` 为准；durable decision 的操作指导以 `skills/rsp/SKILL.md` 为准。
 
 当没有 focused change 时，`rsp status` 和 `rsp show --focused --json` 会输出 `nextActions`，但不会自动猜测哪个 open change 是当前工作。
+
+`rsp create --lite` 是用于显式跟踪小 change 的短模板；简单的当前会话任务默认不应创建 RSP change，除非确实需要跟踪。
+
+`rsp doctor --fix` 只执行安全 deterministic 修复。它的 JSON `fixed` 条目表示实际写入的文件系统变化；健康项目会返回 `fixed: []`，human 输出会说明无需安全修复。
 
 ## 工具无关
 

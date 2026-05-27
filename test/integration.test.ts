@@ -864,6 +864,32 @@ describe('init and doctor', () => {
     expect(specsIndex).toContain('kind: generated-index')
   })
 
+  it('does not report fixed actions for healthy doctor --fix', async () => {
+    const doctorDir = join(tmpdir(), 'rsp-doctor-fix-idempotent-test', randomUUID())
+    await mkdir(doctorDir, { recursive: true })
+
+    execSync(`node ${cliPath()} init`, { cwd: doctorDir })
+    execSync(`node ${cliPath()} doctor --fix`, { cwd: doctorDir })
+
+    const output = execSync(`node ${cliPath()} doctor --fix --json`, { cwd: doctorDir, encoding: 'utf-8' })
+    const result = JSON.parse(output)
+
+    expect(result.ok).toBe(true)
+    expect(result.fixed).toEqual([])
+  })
+
+  it('prints no safe fixes needed for healthy doctor --fix', async () => {
+    const doctorDir = join(tmpdir(), 'rsp-doctor-fix-human-idempotent-test', randomUUID())
+    await mkdir(doctorDir, { recursive: true })
+
+    execSync(`node ${cliPath()} init`, { cwd: doctorDir })
+    execSync(`node ${cliPath()} doctor --fix`, { cwd: doctorDir })
+
+    const output = execSync(`node ${cliPath()} doctor --fix`, { cwd: doctorDir, encoding: 'utf-8' })
+    expect(output).toContain('No safe fixes needed.')
+    expect(output).not.toContain('Fixed:')
+  })
+
   it('flags generated indexes with missing or mismatched metadata', async () => {
     const doctorDir = join(tmpdir(), 'rsp-doctor-generated-index-metadata-test', randomUUID())
     await mkdir(doctorDir, { recursive: true })
@@ -904,7 +930,7 @@ describe('init and doctor', () => {
     expect(agents).toContain('4. .rsp/specs/design.md')
     expect(agents).toContain('5. .rsp/specs/INDEX.md')
     expect(agents).toContain('6. only the relevant additional .rsp/rules/*.md and .rsp/specs/*.md files')
-    expect(agents).toContain('If `.rsp/focus.d/` is empty, ask what to work on or suggest `npx -y @oevery/rsp create <name>`.')
+    expect(agents).toContain('If `.rsp/focus.d/` is empty and the user has not provided a concrete task, ask what to work on or suggest `npx -y @oevery/rsp create <name>` for tracked work.')
     expect(agents).toContain('If your agent supports Agent Skills, load `rsp` for setup, repair, and durable-decision tasks.')
     expect(output).toContain('## RSP Entry')
   })
@@ -1227,6 +1253,8 @@ describe('ready command', () => {
     expect(result.durableReview.required).toBe(true)
     expect(result.durableReview.decisions).toContain('No durable update needed')
     expect(result.durableReview.candidateTargets).toContain('.rsp/specs/design.md')
+    expect(result.durableReview.candidateTargets).not.toContain('.rsp/specs/INDEX.md')
+    expect(result.durableReview.candidateTargets).not.toContain('.rsp/rules/rsp-rules.md')
     expect(result.durableReview.note).toContain('never merges delta specs automatically')
     expect(Array.isArray(result.warnings)).toBe(true)
   })
@@ -1329,7 +1357,8 @@ describe('show command', () => {
     expect(result.change.readiness.archiveReady).toBe('judgment')
     expect(Array.isArray(result.contextPaths)).toBe(true)
     expect(result.contextPaths).toContain('.rsp/specs/design.md')
-    expect(result.contextPaths).toContain('.rsp/rules/rsp-rules.md')
+    expect(result.contextPaths).not.toContain('.rsp/specs/INDEX.md')
+    expect(result.contextPaths).not.toContain('.rsp/rules/rsp-rules.md')
     expect(result.durableReview.required).toBe(true)
     expect(result.durableReview.candidateTargets).toEqual(result.contextPaths)
   })

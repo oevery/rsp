@@ -400,7 +400,7 @@ Read in order:
 5. .rsp/specs/INDEX.md
 6. only the relevant additional .rsp/rules/*.md and .rsp/specs/*.md files
 
-If \`.rsp/focus.d/\` is empty, ask what to work on or suggest \`npx -y @oevery/rsp create <name>\`.
+If \`.rsp/focus.d/\` is empty and the user has not provided a concrete task, ask what to work on or suggest \`npx -y @oevery/rsp create <name>\` for tracked work.
 If your agent supports Agent Skills, load \`rsp\` for setup, repair, and durable-decision tasks.
 ${RSP_AGENTS_END}`
 }
@@ -716,6 +716,13 @@ export function buildDurableReviewGuidance(candidateTargets: string[]): DurableR
     candidateTargets,
     note: 'Semantic review decides whether stable facts belong in specs or rules; the CLI never merges delta specs automatically.',
   }
+}
+
+export function getDurableReviewCandidateTargets(options: { projectRulesExists?: boolean } = {}): string[] {
+  const targets = ['.rsp/specs/design.md']
+  if (options.projectRulesExists)
+    targets.push('.rsp/rules/project-rules.md')
+  return targets
 }
 
 /** Collect deterministic archive checklist item strings for a change file. */

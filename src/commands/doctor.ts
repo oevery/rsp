@@ -82,6 +82,10 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
     console.log(`  ${pc.green('Fixed:')} ${fixed.join(', ')}`)
     console.log()
   }
+  else if (options.fix) {
+    console.log(`  ${pc.dim('No safe fixes needed.')}`)
+    console.log()
+  }
   for (const check of checks)
     printDoctorCheck(check)
 

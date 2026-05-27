@@ -59,9 +59,12 @@ export async function updateProject(options: UpdateOptions = {}): Promise<string
       updated = true
     }
 
-    await buildSpecsIndex({ acquireLock: false, quiet: options.quiet })
-    await buildArchiveIndex({ acquireLock: false, quiet: options.quiet })
-    actions.push('generated indexes rebuilt')
+    const specsIndexChanged = await buildSpecsIndex({ acquireLock: false, quiet: options.quiet })
+    const archiveIndexChanged = await buildArchiveIndex({ acquireLock: false, quiet: options.quiet })
+    if (specsIndexChanged || archiveIndexChanged) {
+      actions.push('generated indexes rebuilt')
+      updated = true
+    }
 
     if (!options.quiet && !updated) {
       console.log(`  ${pc.dim('Already up to date.')}\n`)

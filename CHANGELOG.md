@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.0.4 (2026-05-28)
+
+- Add safe `doctor --fix` behavior that reports only real filesystem changes and stays quiet when no repairs are needed.
+- Improve `rsp status`, `rsp show`, and generated AGENTS guidance for no-focus projects without implying that simple current-session tasks should create RSP changes.
+- Add durable-review guidance to `rsp ready` and `rsp show`, with writable candidate targets limited to ordinary durable files instead of generated indexes or bundled core rules.
+- Add `rsp create --lite` as a shorter template for explicitly tracked small changes while preserving the fixed six-section structure.
+- Improve `rsp check` hygiene warnings for unfinished template placeholders and clarification markers.
+- Make generated spec and archive indexes idempotent so update/doctor flows do not rewrite unchanged files or report false repairs.
+- Refine bundled RSP rules, skill guidance, README content, and design philosophy around the boundary between canonical rules, operational skills, durable specs, archives, and generated files.
+- Expand regression coverage for no-focus guidance, doctor repair idempotency, durable-review targets, check hygiene, rules/skill documentation, and generated index behavior.
+
 ## 2.0.3 (2026-05-26)
 
 - Clarify the managed `AGENTS.md` entry block with RSP positioning, empty-focus fallback guidance, and optional Agent Skills loading hints.

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { changeNameFromPath, collectArchiveChecklist, collectArchiveReadiness, countCheckboxes, detectDeltaSections, extractSection, generateChangeContent, generateProjectRulesContent, generateRulesContent, generateSpecContent, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, parseScenarios, parseYamlLines, renderRspAgentsBlock } from '../src/core/helpers.js'
+import { changeNameFromPath, collectArchiveChecklist, collectArchiveReadiness, countCheckboxes, detectDeltaSections, extractSection, generateChangeContent, generateProjectRulesContent, generateRulesContent, generateSpecContent, getDurableReviewCandidateTargets, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, parseScenarios, parseYamlLines, renderRspAgentsBlock } from '../src/core/helpers.js'
 
 describe('parseYamlLines', () => {
   it('parses key-value pairs', () => {
@@ -255,37 +255,78 @@ describe('documentation command examples', () => {
 
     expect(rules).toContain('This file is the canonical RSP rules source.')
     expect(rules).toContain('These rules are tool-agnostic and apply even when the agent does not support skills.')
+    expect(rules).toContain('Keep this file compact because it is the always-read canonical truth source')
     expect(rules).toContain('If the agent supports Agent Skills, load the `rsp` skill for initialization, audit or repair, and durable-decision tasks.')
     expect(rules).toContain('Do not create archive entries directly under `.rsp/archives/`; use `npx -y @oevery/rsp archive <name>`.')
     expect(rules).toContain('Create or update `specs/` only for durable project-level facts that are stable, reusable, and worth rereading in later sessions.')
     expect(rules).toContain('Prefer updating `specs/design.md` or an existing durable file before creating a new spec file.')
-    expect(skill).toContain('Do not treat unfocused files in `changes/` as current work')
+    expect(rules).toContain('use `rsp create --lite` only when that tracked work is small and straightforward')
+    expect(rules).toContain('Durable updates should contain stable facts only')
+    expect(skill).toContain('do not treat unfocused files in `changes/` as current work')
+    expect(skill).toContain('Do not create an RSP change for a simple current-session task')
+    expect(skill).toContain('only when the user explicitly wants RSP tracking for a small, straightforward change')
     expect(skill).toContain('metadata:')
     expect(skill).toContain('author: oevery')
     expect(skill).toContain('version: 2.0.3')
     expect(skill).toContain('## When not to use')
-    expect(skill).toContain('## Expected outputs')
-    expect(skill).toContain('When unsure whether a fact is truly durable, prefer `No durable update needed` over speculative promotion.')
-    expect(skill).toContain('Default to no spec writeback unless the change produced project-level durable knowledge that future work must reread.')
-    expect(skill).toContain('When `rsp ready --json` or `rsp show --json` includes `durableReview`')
-    expect(skill).toContain('Convert each actionable `## Tasks` checkbox into your agent-local task tracker')
-    expect(skill).toContain('update the corresponding checkbox in the change file in the same working session')
-    expect(skill).toContain('Prefer `specs/design.md` or an existing durable file before creating a new spec file.')
-    expect(skill).toContain('if you cannot identify a concrete durable target or concrete durable facts, do not invent them')
-    expect(skill).toContain('After rule or skill changes, prefer a fresh session and reread `AGENTS.md` plus `.rsp/rules/*.md`.')
+    expect(skill).toContain('### Pre-archive durable decision')
+    expect(skill).toContain('Prefer `No durable update needed` when no concrete stable fact is worth rereading in future sessions.')
+    expect(skill).toContain('Run `npx -y @oevery/rsp show --focused --json` or `npx -y @oevery/rsp ready <name> --json`')
+    expect(skill).toContain('Treat `durableReview.candidateTargets` as advisory context')
+    expect(skill).toContain('Treat `Spec` delta markers (`### ADDED`, `### MODIFIED`, `### REMOVED`) as planning aids only')
+    expect(skill).toContain('Treat `rsp check` warnings as deterministic hygiene signals, not as the durable-update decision.')
+    expect(skill).toContain('Convert actionable `## Tasks` checkboxes into your agent-local task tracker')
+    expect(skill).toContain('Keep implementation sequential by default')
+    expect(skill).toContain('Update `## Tasks`, `## Verify`, and any invalidated `## Proposal`, `## Spec`, or `## Design`')
+    expect(skill).toContain('the change changed a project boundary, default, or constraint')
+    expect(skill).toContain('project-wide design, boundaries, defaults, and durable context -> `.rsp/specs/design.md`')
+    expect(skill).toContain('Prefer `.rsp/specs/design.md` or an existing durable file before creating a new spec file.')
+    expect(skill).toContain('Do not choose generated indexes or bundled `rules/rsp-rules.md` as ordinary durable writeback targets')
+    expect(skill).toContain('If you cannot identify concrete durable facts, do not invent them.')
+    expect(skill).toContain('CLI `archiveReady: judgment` means the skill or a human must decide')
+    expect(skill).not.toContain('Minimal example:')
   })
 
   it('documents the minimal durable decision example and surface matrix', () => {
     const root = fileURLToPath(new URL('..', import.meta.url))
     const skill = readFileSync(join(root, 'skills', 'rsp', 'SKILL.md'), 'utf-8')
     const readme = readFileSync(join(root, 'README.md'), 'utf-8')
+    const zhReadme = readFileSync(join(root, 'README.zh-CN.md'), 'utf-8')
+    const rules = readFileSync(join(root, 'rules', 'rsp-rules.md'), 'utf-8')
+    const projectDesign = readFileSync(join(root, '.rsp', 'specs', 'design.md'), 'utf-8')
 
-    expect(skill).toContain('Minimal example:')
+    expect(skill).toContain('Use this exact format:')
+    expect(skill).toContain('- Target: <path or N/A>')
+    expect(skill).toContain('Short example:')
     expect(skill).toContain('- Target: .rsp/specs/design.md')
+    expect(skill).toContain('Default API retries are capped at 3 attempts.')
+    expect(skill).toContain('Treat `doctor --fix` `fixed` entries as actual filesystem changes')
+    expect(skill).toContain('An empty `fixed` array or `No safe fixes needed.` means the repair pass changed nothing.')
+    expect(rules).toContain('Treat `fixed` output entries as actual filesystem changes, not attempted checks.')
     expect(readme).toContain('Surface matrix:')
+    expect(readme).toContain('a healthy project returns `fixed: []`')
+    expect(readme).toContain('simple current-session tasks should not create RSP changes unless tracking is intentionally needed')
+    expect(zhReadme).toContain('健康项目会返回 `fixed: []`')
+    expect(zhReadme).toContain('简单的当前会话任务默认不应创建 RSP change')
+    expect(projectDesign).toContain('Generated index builders avoid rewriting unchanged `INDEX.md` files.')
+    expect(projectDesign).toContain('`rsp doctor --fix` reports only actual filesystem changes in its `fixed` output')
+    expect(projectDesign).toContain('`rsp create --lite` is a short template for explicitly tracked small changes')
+    expect(projectDesign).toContain('`rules/` stores durable operating rules and is the compact, always-read canonical behavioral source')
+    expect(projectDesign).toContain('keep `skills/` as the more detailed operational layer when detail prevents agent hallucination or mistakes')
+    expect(projectDesign).toContain('Skill compactness must not remove guidance about change creation, durable writeback, archive readiness')
     expect(readme).toContain('| `.rsp/rules/rsp-rules.md` | Agents | Canonical normative rules source |')
     expect(readme).not.toContain('## JSON output')
     expect(readme).not.toContain('## Single-file change template')
+  })
+
+  it('builds durable review candidate targets consistently', () => {
+    expect(getDurableReviewCandidateTargets()).toEqual([
+      '.rsp/specs/design.md',
+    ])
+    expect(getDurableReviewCandidateTargets({ projectRulesExists: true })).toEqual([
+      '.rsp/specs/design.md',
+      '.rsp/rules/project-rules.md',
+    ])
   })
 
   it('documents external workflow tradeoffs in the design philosophy', () => {
@@ -296,6 +337,12 @@ describe('documentation command examples', () => {
     expect(design).toContain('### 与 spec-kit 的边界')
     expect(design).toContain('### 与 OpenSpec 的边界')
     expect(design).toContain('不自动把 change `Spec` delta 合并进 durable specs')
+    expect(design).toContain('不把简单当前会话任务自动提升为 RSP change')
+    expect(design).toContain('`rules/` 是 agent 常驻上下文中的唯一规范真相源')
+    expect(design).toContain('`skills/` 是按需加载的 agent 操作手册')
+    expect(design).toContain('`rules/` 保持为短小规范层，`skills/` 保持为短小操作层')
+    expect(design).toContain('体积预算不能优先于准确性')
+    expect(design).toContain('具体性只服务于减少操作误判')
     expect(design).toContain('RSP skill 要求 agent 将 `## Tasks`、实现和 `## Verify` 回写保持同步')
   })
 
@@ -309,7 +356,7 @@ describe('documentation command examples', () => {
     expect(block).toContain('4. .rsp/specs/design.md')
     expect(block).toContain('5. .rsp/specs/INDEX.md')
     expect(block).toContain('6. only the relevant additional .rsp/rules/*.md and .rsp/specs/*.md files')
-    expect(block).toContain('If `.rsp/focus.d/` is empty, ask what to work on or suggest `npx -y @oevery/rsp create <name>`.')
+    expect(block).toContain('If `.rsp/focus.d/` is empty and the user has not provided a concrete task, ask what to work on or suggest `npx -y @oevery/rsp create <name>` for tracked work.')
     expect(block).toContain('If your agent supports Agent Skills, load `rsp` for setup, repair, and durable-decision tasks.')
   })
 
@@ -320,6 +367,7 @@ describe('documentation command examples', () => {
 
     expect(rules).toContain('2. Read `.rsp/rules/rsp-rules.md` in full.')
     expect(rules).toContain('3. Read `focus.d/`.')
+    expect(rules).toContain('If `focus.d/` is empty and the user has not provided a concrete task')
     expect(rules).toContain('5. Read each `changes/<name>.md` file marked in `focus.d/`.')
     expect(rules).toContain('6. Read `specs/design.md` and `specs/INDEX.md`.')
     expect(rules).toContain('`specs/INDEX.md` lists only additional spec files beyond `specs/design.md`.')

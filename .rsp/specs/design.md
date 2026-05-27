@@ -9,7 +9,7 @@
 - The npm package name is `@oevery/rsp`; it publishes a CLI binary named `rsp`.
 - RSP stands for Rules, Specs, Plans.
 - RSP uses `.rsp/` as the project-local workflow root.
-- `rules/` stores durable operating rules and is the canonical behavioral source.
+- `rules/` stores durable operating rules and is the compact, always-read canonical behavioral source.
 - `specs/` stores durable project-level facts, boundaries, and constraints.
 - `changes/` stores open work.
 - `focus.d/` is the only current-focus truth source.
@@ -21,7 +21,11 @@
 - Every change file must declare an explicit `kind` in frontmatter.
 - CLI commands handle deterministic filesystem operations, structure checks, generated indexes, and warnings.
 - Generated `INDEX.md` files use lightweight YAML frontmatter with `kind: generated-index` and an `index_type` value for machine-readable classification.
+- Generated index builders avoid rewriting unchanged `INDEX.md` files.
 - `rsp doctor` identifies generated indexes by frontmatter metadata instead of body footer text.
+- `rsp doctor --fix` reports only actual filesystem changes in its `fixed` output; an empty `fixed` array means no safe repair changed files.
+- `durableReview.candidateTargets` lists likely writable durable files and excludes generated indexes and bundled core rules from ordinary project writeback targets.
+- `rsp create --lite` is a short template for explicitly tracked small changes; simple current-session tasks should not create RSP changes unless tracking is intentionally needed.
 - Semantic judgment, including durable writeback decisions, belongs to an RSP skill or a human reviewer.
 - `AGENTS.md` is a navigation entrypoint and must not become a durable rules or design store.
 
@@ -58,4 +62,7 @@
 - Do not create catch-all durable summary files when a fact belongs in `design.md`, a specific spec, a rule file, or nowhere.
 - Keep cross-repository consistency higher priority than per-repository workflow freedom.
 - Keep agent-distributed normative surfaces in English for cross-agent stability.
+- Keep `rules/` as the compact normative layer; keep `skills/` as the more detailed operational layer when detail prevents agent hallucination or mistakes.
+- Prefer README, design docs, durable specs, or CLI output for explanatory detail that does not prevent agent misoperation.
+- Skill compactness must not remove guidance about change creation, durable writeback, archive readiness, generated/core files, or deterministic-vs-semantic boundaries.
 - Prefer machine-readable output and diagnostics that reduce guessing without expanding workflow complexity.

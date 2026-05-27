@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
 import { CHANGES_DIR, pc, RSP_DIR } from '../core/config.js'
-import { buildDurableReviewGuidance, collectArchiveReadiness, countCheckboxes, getFocusedChangeNames, guardRspInitialized, hasMeaningfulBlockers, isValidChangeName, normalizeLogicalPath, parseFrontmatter, parseScenarios } from '../core/helpers.js'
+import { buildDurableReviewGuidance, collectArchiveReadiness, countCheckboxes, getDurableReviewCandidateTargets, getFocusedChangeNames, guardRspInitialized, hasMeaningfulBlockers, isValidChangeName, normalizeLogicalPath, parseFrontmatter, parseScenarios } from '../core/helpers.js'
 import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
 
 interface ShowResult {
@@ -145,13 +145,9 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
     archiveReady: readinessDetails.archiveReady,
   }
 
-  const contextPaths = [
-    `.rsp/specs/design.md`,
-    `.rsp/specs/INDEX.md`,
-  ]
-  if (existsSync(join(RSP_DIR, 'rules', 'project-rules.md')))
-    contextPaths.push('.rsp/rules/project-rules.md')
-  contextPaths.push('.rsp/rules/rsp-rules.md')
+  const contextPaths = getDurableReviewCandidateTargets({
+    projectRulesExists: existsSync(join(RSP_DIR, 'rules', 'project-rules.md')),
+  })
   const durableReview = buildDurableReviewGuidance(contextPaths)
 
   const result: ShowResult = {
