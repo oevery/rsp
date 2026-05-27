@@ -67,6 +67,7 @@ This file is the canonical RSP rules source.
 - Use `npx -y @oevery/rsp check [--focused]` to validate change structure and surface deterministic hygiene warnings such as unfinished template placeholders or unresolved clarification markers.
 - Use `npx -y @oevery/rsp update` to refresh bundled rules, repair the managed `AGENTS.md` block, and rebuild generated indices.
 - Use `npx -y @oevery/rsp doctor` for diagnostics only.
+- Use `npx -y @oevery/rsp doctor --fix` only for safe deterministic repairs such as refreshing bundled rules, repairing the managed AGENTS block, and rebuilding generated indices.
 - If RTK is available, you may prefix RSP commands with `rtk`.
 - Do not use `npx -y @oevery/rsp create <name>` to re-focus an existing change.
 - Do not create RSP-managed files directly when an RSP command already exists for that file type.

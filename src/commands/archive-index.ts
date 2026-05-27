@@ -7,12 +7,13 @@ import { extractSection, normalizeLogicalPath, parseFrontmatter, walkMarkdownFil
 import { withRspLock } from '../core/lock.js'
 
 /** Regenerate the .rsp/archives/INDEX.md file by scanning archived change files. */
-export async function buildArchiveIndex({ acquireLock = true } = {}) {
+export async function buildArchiveIndex({ acquireLock = true, quiet = false } = {}) {
   if (acquireLock)
-    return withRspLock('archive-index', async () => buildArchiveIndex({ acquireLock: false }))
+    return withRspLock('archive-index', async () => buildArchiveIndex({ acquireLock: false, quiet }))
 
   if (!existsSync(ARCHIVES_DIR)) {
-    console.log(`  ${pc.dim('No archives directory.')}\n`)
+    if (!quiet)
+      console.log(`  ${pc.dim('No archives directory.')}\n`)
     return
   }
 
@@ -75,7 +76,8 @@ export async function buildArchiveIndex({ acquireLock = true } = {}) {
   const indexPath = join(ARCHIVES_DIR, 'INDEX.md')
   await writeFile(indexPath, lines.join('\n'))
 
-  console.log(`  ${pc.green('INDEX.md updated:')} ${archiveFiles.length} archived change(s).\n`)
+  if (!quiet)
+    console.log(`  ${pc.green('INDEX.md updated:')} ${archiveFiles.length} archived change(s).\n`)
 }
 
 function escapeCell(value: string): string {

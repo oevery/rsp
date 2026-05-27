@@ -808,6 +808,27 @@ describe('init and doctor', () => {
     expect(result.checks.some((check: { label: string }) => check.label === '.rsp exists')).toBe(true)
   })
 
+  it('repairs safe deterministic drift with doctor --fix', async () => {
+    const doctorDir = join(tmpdir(), 'rsp-doctor-fix-test', randomUUID())
+    await mkdir(doctorDir, { recursive: true })
+
+    execSync(`node ${cliPath()} init`, { cwd: doctorDir })
+    await writeFile(join(doctorDir, 'AGENTS.md'), '# Custom Agents\n\nmanual content\n')
+    await writeFile(join(doctorDir, '.rsp', 'specs', 'INDEX.md'), '# broken index\n')
+
+    const output = execSync(`node ${cliPath()} doctor --fix --json`, { cwd: doctorDir, encoding: 'utf-8' })
+    const result = JSON.parse(output)
+    const agents = await readFile(join(doctorDir, 'AGENTS.md'), 'utf-8')
+    const specsIndex = await readFile(join(doctorDir, '.rsp', 'specs', 'INDEX.md'), 'utf-8')
+
+    expect(result.command).toBe('doctor')
+    expect(result.ok).toBe(true)
+    expect(result.fixed).toContain('AGENTS.md managed block refreshed')
+    expect(result.fixed).toContain('generated indexes rebuilt')
+    expect(agents).toContain('<!-- rsp:begin -->')
+    expect(specsIndex).toContain('kind: generated-index')
+  })
+
   it('flags generated indexes with missing or mismatched metadata', async () => {
     const doctorDir = join(tmpdir(), 'rsp-doctor-generated-index-metadata-test', randomUUID())
     await mkdir(doctorDir, { recursive: true })

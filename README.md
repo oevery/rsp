@@ -214,7 +214,7 @@ rsp status [--focused|--blocked|--stale <days>] [--json] [--verbose]
                                   Show project status summary with focus-aware filters
 rsp check [--focused] [--json] [--verbose]
                                   Validate change files and lightly lint template/scenario structure
-rsp doctor [--json] [--verbose]
+rsp doctor [--fix] [--json] [--verbose]
                                   Check setup health and common issues
 ```
 

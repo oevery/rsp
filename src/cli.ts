@@ -298,9 +298,14 @@ const doctorCommand = defineCommand({
       description: 'Print runtime diagnostics for suppressed I/O issues',
       default: false,
     },
+    fix: {
+      type: 'boolean',
+      description: 'Run safe deterministic repairs before reporting diagnostics',
+      default: false,
+    },
   },
   async run({ args }) {
-    const result = await runDoctor({ json: Boolean(args.json), verbose: Boolean(args.verbose) })
+    const result = await runDoctor({ json: Boolean(args.json), verbose: Boolean(args.verbose), fix: Boolean(args.fix) })
     if (!result.ok)
       process.exit(1)
   },

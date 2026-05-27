@@ -80,7 +80,8 @@ Use `npx -y @oevery/rsp create <name> --lite` for small, straightforward work wh
 4. Check that `specs/INDEX.md` and `archives/INDEX.md` are still generated files.
    `specs/INDEX.md` should list only additional spec files beyond `specs/design.md`.
 5. Check that `focus.d/` markers and `changes/` files are in sync.
-6. If generated indices or the managed AGENTS block drift, run `npx -y @oevery/rsp update`.
+6. If generated indices, bundled rules, or the managed AGENTS block drift, run `npx -y @oevery/rsp doctor --fix` or `npx -y @oevery/rsp update`.
+7. Do not use `doctor --fix` as a semantic repair tool; it does not remove stale focus markers, edit config semantics, rename archive files, or decide durable updates.
 
 ## Expected outputs
 

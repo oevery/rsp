@@ -10,13 +10,17 @@ import { buildSpecsIndex } from './specs-index.js'
 
 const SKILL_REFRESH_HINT = '  Note: if you use the published RSP skill, refresh it too:\n    npx skills add oevery/rsp\n'
 
+export interface UpdateOptions {
+  quiet?: boolean
+}
+
 /**
  * Refresh RSP project structure after upgrade:
  * - Update bundled rsp-rules.md
  * - Refresh AGENTS.md managed block
  * - Regenerate INDEX files
  */
-export async function updateProject() {
+export async function updateProject(options: UpdateOptions = {}): Promise<string[]> {
   if (!existsSync(RSP_DIR)) {
     console.error(`  ${pc.red('Error:')} RSP is not initialized in this project`)
     console.error(`  ${pc.dim('Run: rsp init')}`)
@@ -25,6 +29,7 @@ export async function updateProject() {
 
   return withRspLock('update', async () => {
     let updated = false
+    const actions: string[] = []
 
     const bundledRules = await readFile(join(PKG_ROOT, 'rules', 'rsp-rules.md'), 'utf-8')
     const rulesPath = join(RSP_DIR, 'rules', 'rsp-rules.md')
@@ -32,7 +37,9 @@ export async function updateProject() {
     const existingRules = existsSync(rulesPath) ? await readFile(rulesPath, 'utf-8') : null
     if (existingRules !== bundledRules) {
       await writeFile(rulesPath, bundledRules)
-      console.log(`  ${pc.green('✓')} rules/rsp-rules.md updated`)
+      actions.push('rules/rsp-rules.md updated')
+      if (!options.quiet)
+        console.log(`  ${pc.green('✓')} rules/rsp-rules.md updated`)
       updated = true
     }
 
@@ -46,20 +53,25 @@ export async function updateProject() {
     const nextAgents = upsertRspAgentsBlock(baseAgents)
     if (!existsSync(agentsPath) || nextAgents.changed) {
       await writeFile(agentsPath, nextAgents.content)
-      console.log(`  ${pc.green('✓')} AGENTS.md managed block refreshed`)
+      actions.push('AGENTS.md managed block refreshed')
+      if (!options.quiet)
+        console.log(`  ${pc.green('✓')} AGENTS.md managed block refreshed`)
       updated = true
     }
 
-    await buildSpecsIndex({ acquireLock: false })
-    await buildArchiveIndex({ acquireLock: false })
+    await buildSpecsIndex({ acquireLock: false, quiet: options.quiet })
+    await buildArchiveIndex({ acquireLock: false, quiet: options.quiet })
+    actions.push('generated indexes rebuilt')
 
-    if (!updated) {
+    if (!options.quiet && !updated) {
       console.log(`  ${pc.dim('Already up to date.')}\n`)
       console.log(SKILL_REFRESH_HINT)
     }
-    else {
+    else if (!options.quiet) {
       console.log(`  ${pc.green('Update complete.')}\n`)
       console.log(SKILL_REFRESH_HINT)
     }
+
+    return actions
   })
 }

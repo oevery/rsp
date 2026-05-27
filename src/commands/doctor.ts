@@ -6,6 +6,7 @@ import { basename, join, relative } from 'node:path'
 import { CHANGES_DIR, CONFIG_PATH, pc, RSP_DIR } from '../core/config.js'
 import { changeNameFromPath, getFocusedChangeNames, hasRspAgentsBlock, normalizeLogicalPath, parseFrontmatter, parseYamlText, walkMarkdownFiles } from '../core/helpers.js'
 import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
+import { updateProject } from './update.js'
 
 interface DoctorCheck {
   status: 'ok' | 'issue' | 'info'
@@ -17,6 +18,7 @@ interface DoctorCheck {
 interface DoctorResult {
   command: 'doctor'
   ok: boolean
+  fixed: string[]
   checks: DoctorCheck[]
   runtime: RuntimeDiagnostic[]
   summary: {
@@ -24,7 +26,17 @@ interface DoctorResult {
   }
 }
 
-export async function runDoctor(options: CommandRunOptions = {}): Promise<DoctorResult> {
+export interface DoctorOptions extends CommandRunOptions {
+  fix?: boolean
+}
+
+export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResult> {
+  const fixed: string[] = []
+
+  if (options.fix && existsSync(RSP_DIR)) {
+    fixed.push(...await updateProject({ quiet: Boolean(options.json) }))
+  }
+
   const checks: DoctorCheck[] = []
   const runtime: RuntimeDiagnostic[] = []
   const reportRuntime = (diagnostic: RuntimeDiagnostic) => recordRuntimeDiagnostic(runtime, diagnostic, Boolean(options.verbose) && !options.json)
@@ -50,6 +62,7 @@ export async function runDoctor(options: CommandRunOptions = {}): Promise<Doctor
   const result: DoctorResult = {
     command: 'doctor',
     ok: checks.every(check => check.status !== 'issue'),
+    fixed,
     checks,
     runtime,
     summary: {
@@ -65,6 +78,10 @@ export async function runDoctor(options: CommandRunOptions = {}): Promise<Doctor
   console.log()
   console.log(`  ${pc.bold('RSP doctor')}`)
   console.log()
+  if (fixed.length > 0) {
+    console.log(`  ${pc.green('Fixed:')} ${fixed.join(', ')}`)
+    console.log()
+  }
   for (const check of checks)
     printDoctorCheck(check)
 

@@ -7,14 +7,15 @@ import { normalizeLogicalPath, parseFrontmatter, walkMarkdownFiles } from '../co
 import { withRspLock } from '../core/lock.js'
 
 /** Regenerate the .rsp/specs/INDEX.md file as an index of additional project specs. */
-export async function buildSpecsIndex({ acquireLock = true } = {}) {
+export async function buildSpecsIndex({ acquireLock = true, quiet = false } = {}) {
   if (acquireLock)
-    return withRspLock('specs-index', async () => buildSpecsIndex({ acquireLock: false }))
+    return withRspLock('specs-index', async () => buildSpecsIndex({ acquireLock: false, quiet }))
 
   const specsDir = join(RSP_DIR, 'specs')
 
   if (!existsSync(specsDir)) {
-    console.log(`  ${pc.dim('No specs directory.')}\n`)
+    if (!quiet)
+      console.log(`  ${pc.dim('No specs directory.')}\n`)
     return
   }
 
@@ -58,7 +59,8 @@ export async function buildSpecsIndex({ acquireLock = true } = {}) {
     }
   }
   await writeFile(join(specsDir, 'INDEX.md'), lines.join('\n'))
-  console.log(`  ${pc.green('INDEX.md updated:')} ${specFiles.length} spec file(s).\n`)
+  if (!quiet)
+    console.log(`  ${pc.green('INDEX.md updated:')} ${specFiles.length} spec file(s).\n`)
 }
 
 function extractTitle(content: string): string {

@@ -208,7 +208,7 @@ rsp status [--focused|--blocked|--stale <days>] [--json] [--verbose]
                                    查看带有当前聚焦信息的项目状态摘要，并支持轻量筛选
 rsp check [--focused] [--json] [--verbose]
                                    校验 change 文件，并对 template/scenario 结构做轻量 lint
-rsp doctor [--json] [--verbose]
+rsp doctor [--fix] [--json] [--verbose]
                                    检查接入健康和常见问题
 ```
 
