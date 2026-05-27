@@ -3,7 +3,7 @@ export type ChangeKind = 'feature' | 'fix' | 'refactor' | 'docs' | 'ops' | 'rese
 
 /** Parsed YAML frontmatter from a change file. */
 export interface Frontmatter {
-  kind?: ChangeKind
+  kind?: string
   [key: string]: unknown
 }
 

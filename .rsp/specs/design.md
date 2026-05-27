@@ -20,6 +20,8 @@
 - Every change file uses the fixed sections `Proposal`, `Spec`, `Design`, `Tasks`, `Verify`, and `Blockers`.
 - Every change file must declare an explicit `kind` in frontmatter.
 - CLI commands handle deterministic filesystem operations, structure checks, generated indexes, and warnings.
+- Generated `INDEX.md` files use lightweight YAML frontmatter with `kind: generated-index` and an `index_type` value for machine-readable classification.
+- `rsp doctor` identifies generated indexes by frontmatter metadata instead of body footer text.
 - Semantic judgment, including durable writeback decisions, belongs to an RSP skill or a human reviewer.
 - `AGENTS.md` is a navigation entrypoint and must not become a durable rules or design store.
 
