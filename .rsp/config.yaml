@@ -1,0 +1,13 @@
+# RSP project configuration
+# Uncomment any section below to customize classification values.
+#
+# Built-in defaults:
+#   kinds:               feature, fix, refactor, docs, ops, research
+#
+# kinds:
+  # - feature
+  # - fix
+  # - refactor
+  # - docs
+  # - ops
+  # - research

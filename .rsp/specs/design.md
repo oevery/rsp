@@ -1,0 +1,59 @@
+# Project Design: @oevery/rsp
+
+## Purpose
+- RSP is a lightweight workflow for AI-assisted software work.
+- It separates durable project knowledge from open implementation work.
+- It provides a platform-agnostic file convention that humans and different coding agents can read consistently.
+
+## Stable Facts
+- The npm package name is `@oevery/rsp`; it publishes a CLI binary named `rsp`.
+- RSP stands for Rules, Specs, Plans.
+- RSP uses `.rsp/` as the project-local workflow root.
+- `rules/` stores durable operating rules and is the canonical behavioral source.
+- `specs/` stores durable project-level facts, boundaries, and constraints.
+- `changes/` stores open work.
+- `focus.d/` is the only current-focus truth source.
+- `archives/` stores completed change history.
+- RSP has only two lifecycle states: `open` and `archived`.
+- A change is `open` when it exists under `.rsp/changes/` and `archived` after it is moved under `.rsp/archives/`.
+- Each open change is a single Markdown file; multi-file change bundles are outside the core model.
+- Every change file uses the fixed sections `Proposal`, `Spec`, `Design`, `Tasks`, `Verify`, and `Blockers`.
+- Every change file must declare an explicit `kind` in frontmatter.
+- CLI commands handle deterministic filesystem operations, structure checks, generated indexes, and warnings.
+- Semantic judgment, including durable writeback decisions, belongs to an RSP skill or a human reviewer.
+- `AGENTS.md` is a navigation entrypoint and must not become a durable rules or design store.
+
+## Boundaries
+- In scope: initializing and repairing `.rsp/` structure for repositories.
+- In scope: creating, focusing, unfocusing, checking, and archiving single-file changes.
+- In scope: maintaining generated spec and archive indexes.
+- In scope: distributing reusable RSP rules and skill guidance with the package.
+- In scope: keeping RSP readable by humans, agents, CI, and simple scripts.
+- Out of scope: replacing git history or project management systems.
+- Out of scope: adding OpenSpec-style multi-file change artifacts.
+- Out of scope: automatically merging change `Spec` deltas into durable specs during archive.
+- Out of scope: introducing workflow states that do not map to deterministic filesystem truth.
+- Out of scope: becoming a plugin platform or schema-heavy workflow framework.
+- Out of scope: binding the workflow to a single IDE, agent, or hosting platform.
+
+## Structure
+- `src/cli.ts` defines the CLI surface and command registration.
+- `src/commands/` contains command implementations for RSP operations.
+- `src/core/` contains shared filesystem, config, output, helper, and locking logic.
+- `bin/rsp.mjs` is the executable entrypoint that loads the built CLI.
+- `rules/` contains bundled rules copied into project `.rsp/rules/` during initialization or update.
+- `skills/rsp/` contains operational skill guidance for agents that support skills.
+- `docs/design-philosophy.md` records explanatory product and design rationale for maintainers.
+- `test/` contains Vitest coverage for command behavior and core helpers.
+
+## Constraints
+- Runtime support requires Node.js 18 or newer.
+- Prefer the smallest model that correctly solves the workflow problem.
+- Preserve the single-file change model and fixed six-section change structure.
+- Preserve `.rsp/focus.d/` as the only current-focus source.
+- Preserve `open -> archived` as the complete lifecycle model.
+- Do not promote task history, debugging notes, or one-off implementation context into `specs/` or `rules/`.
+- Do not create catch-all durable summary files when a fact belongs in `design.md`, a specific spec, a rule file, or nowhere.
+- Keep cross-repository consistency higher priority than per-repository workflow freedom.
+- Keep agent-distributed normative surfaces in English for cross-agent stability.
+- Prefer machine-readable output and diagnostics that reduce guessing without expanding workflow complexity.
