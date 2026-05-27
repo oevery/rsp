@@ -11,6 +11,8 @@ import { createChange } from './commands/create.js'
 import { runDoctor } from './commands/doctor.js'
 import { focusChange, unfocusChange } from './commands/focus.js'
 import { initProject } from './commands/init.js'
+import { showReady } from './commands/ready.js'
+import { showChange } from './commands/show.js'
 import { showStatus } from './commands/status.js'
 import { updateProject } from './commands/update.js'
 import { getVersion } from './core/config.js'
@@ -122,14 +124,19 @@ const archiveCommand = defineCommand({
     description: 'Archive an open change into .rsp/archives/',
   },
   args: {
-    name: {
+    'name': {
       type: 'positional',
       description: 'Change name',
       required: true,
     },
+    'dry-run': {
+      type: 'boolean',
+      description: 'Preview archive readiness without moving the change',
+      default: false,
+    },
   },
-  async run({ args }: { args: ArchiveChangeArgs }) {
-    await archiveChange(args.name)
+  async run({ args }: { args: ArchiveChangeArgs & { 'dry-run': boolean } }) {
+    await archiveChange(args.name, { dryRun: Boolean(args['dry-run']) })
   },
 })
 
@@ -233,6 +240,11 @@ const checkCommand = defineCommand({
     description: 'Validate changes (frontmatter, sections, deltas, scenarios)',
   },
   args: {
+    focused: {
+      type: 'boolean',
+      description: 'Only validate currently focused changes',
+      default: false,
+    },
     json: {
       type: 'boolean',
       description: 'Print machine-readable JSON output',
@@ -245,7 +257,11 @@ const checkCommand = defineCommand({
     },
   },
   async run({ args }) {
-    const result = await runCheck({ json: Boolean(args.json), verbose: Boolean(args.verbose) })
+    const result = await runCheck({
+      focused: Boolean(args.focused),
+      json: Boolean(args.json),
+      verbose: Boolean(args.verbose),
+    })
     if (!result.ok)
       process.exit(1)
   },
@@ -285,6 +301,69 @@ const doctorCommand = defineCommand({
   },
 })
 
+const readyCommand = defineCommand({
+  meta: {
+    name: 'ready',
+    description: 'Preview archive readiness for a change without moving it',
+  },
+  args: {
+    name: {
+      type: 'positional',
+      description: 'Change name',
+      required: true,
+    },
+    json: {
+      type: 'boolean',
+      description: 'Print machine-readable JSON output',
+      default: false,
+    },
+    verbose: {
+      type: 'boolean',
+      description: 'Print runtime diagnostics for suppressed I/O issues',
+      default: false,
+    },
+  },
+  async run({ args }: { args: { name: string, json: boolean, verbose: boolean } }) {
+    await showReady(args.name, { json: Boolean(args.json), verbose: Boolean(args.verbose) })
+  },
+})
+
+const showCommand = defineCommand({
+  meta: {
+    name: 'show',
+    description: 'Show change context with readiness signals and relevant paths',
+  },
+  args: {
+    name: {
+      type: 'positional',
+      description: 'Change name (use --focused instead to show the currently focused change)',
+      required: false,
+    },
+    focused: {
+      type: 'boolean',
+      description: 'Show the currently focused change',
+      default: false,
+    },
+    json: {
+      type: 'boolean',
+      description: 'Print machine-readable JSON output',
+      default: false,
+    },
+    verbose: {
+      type: 'boolean',
+      description: 'Print runtime diagnostics for suppressed I/O issues',
+      default: false,
+    },
+  },
+  async run({ args }: { args: { name?: string, focused: boolean, json: boolean, verbose: boolean } }) {
+    await showChange(args.name, {
+      focused: Boolean(args.focused),
+      json: Boolean(args.json),
+      verbose: Boolean(args.verbose),
+    })
+  },
+})
+
 export async function runCli(rawArgs = process.argv.slice(2)) {
   const version = await getVersion()
 
@@ -301,6 +380,8 @@ export async function runCli(rawArgs = process.argv.slice(2)) {
       focus: focusCommand,
       unfocus: unfocusCommand,
       archive: archiveCommand,
+      ready: readyCommand,
+      show: showCommand,
       status: statusCommand,
       check: checkCommand,
       update: updateCommand,

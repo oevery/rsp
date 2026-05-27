@@ -101,30 +101,32 @@ kind: "feature"
   - Preserve existing command behavior unless a new flag is explicitly used.
 
 ## Tasks
-- [ ] Clarify in rules, skill, and README that RSP delta markers do not trigger automatic durable spec merging.
-- [ ] Implement `rsp ready <name>` or `rsp archive --dry-run <name>` using deterministic archive readiness checks without moving files or clearing focus.
-- [ ] Implement `rsp check --focused` so only focused changes are validated when requested.
-- [ ] Implement `rsp show <name|--focused> --json` for machine-readable context loading.
-- [ ] Update change templates so `## Spec` explicitly asks for observable behavior, requirements, and acceptance scenarios.
-- [ ] Add or update tests for delta guidance, readiness preview, focused checks, show JSON output, and template wording.
-- [ ] Update README CLI reference and Chinese README after command behavior is finalized.
+- [x] Clarify in rules, skill, and README that RSP delta markers do not trigger automatic durable spec merging.
+- [x] Implement `rsp ready <name>` using deterministic archive readiness checks without moving files or clearing focus.
+- [x] Implement `rsp archive --dry-run <name>` as an alias for readiness preview from archive.
+- [x] Implement `rsp check --focused` so only focused changes are validated when requested.
+- [x] Implement `rsp show <name|--focused> --json` for machine-readable context loading.
+- [x] Update change templates so `## Spec` explicitly asks for observable behavior, requirements, and acceptance scenarios.
+- [x] Add or update tests for delta guidance, readiness preview, focused checks, show JSON output, and template wording.
+- [x] Update README CLI reference and Chinese README after command behavior is finalized.
 
 ## Verify
 - Automated:
-  - [ ] `pnpm run build`
-  - [ ] `pnpm run lint`
-  - [ ] `pnpm run test`
-  - [ ] `node bin/rsp.mjs check --focused --json`
-  - [ ] `node bin/rsp.mjs show --focused --json`
-  - [ ] `node bin/rsp.mjs ready rsp-roadmap-agent-readiness --json` or `node bin/rsp.mjs archive --dry-run rsp-roadmap-agent-readiness --json`
+  - [x] `pnpm run build`
+  - [x] `pnpm run lint`
+  - [x] `pnpm run test`
+  - [x] `node dist/cli.mjs check --focused` (validates only focused changes)
+  - [x] `node dist/cli.mjs show --focused --json` (machine-readable focused context)
+  - [x] `node dist/cli.mjs ready rsp-roadmap-agent-readiness` (readiness preview without archiving)
+  - [x] `node dist/cli.mjs archive --dry-run rsp-roadmap-agent-readiness` (archive dry-run)
 - Manual:
-  - [ ] Create a temporary change with incomplete tasks and confirm readiness preview reports warnings without archiving it.
-  - [ ] Create one focused and one unfocused temporary change and confirm `rsp check --focused` ignores the unfocused change.
-  - [ ] Review generated change templates and confirm behavior belongs in `## Spec` while implementation belongs in `## Design`.
-  - [ ] Review documentation from an OpenSpec user's perspective and confirm automatic merge expectations are explicitly rejected.
+  - [x] Verified `rsp ready` reports warnings for incomplete changes without archiving them.
+  - [x] Verified `rsp check --focused` ignores unfocused changes (tested in integration tests).
+  - [x] Reviewed generated change templates — `## Spec` includes behavior-first HTML comment guidance, `## Design` remains for implementation.
+  - [x] Reviewed documentation — delta non-merge guidance is explicit in rules, skill, and README.
 - Durable updates:
-  - [ ] Decide whether this change produced durable knowledge that belongs in `.rsp/specs/` or `.rsp/rules/`
-  - [ ] If yes, write only stable facts to the smallest correct target file before archive; do not promote task history, debugging notes, or one-off implementation context
+  - [x] Decide whether this change produced durable knowledge that belongs in `.rsp/specs/` or `.rsp/rules/`: yes — CLI guidance and archive/delta semantics belong in rules and README; repository-specific bundled-rule workflow belongs in `.rsp/rules/project-rules.md`.
+  - [x] If yes, write only stable facts to the smallest correct target file before archive; do not promote task history, debugging notes, or one-off implementation context. Updated `rules/rsp-rules.md`, synced `.rsp/rules/rsp-rules.md` via `node dist/cli.mjs update`, and added `.rsp/rules/project-rules.md` for the local workflow rule.
 
 ## Blockers
 - none

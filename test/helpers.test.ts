@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { changeNameFromPath, countCheckboxes, detectDeltaSections, extractSection, generateChangeContent, generateProjectRulesContent, generateRulesContent, generateSpecContent, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, parseScenarios, parseYamlLines, renderRspAgentsBlock } from '../src/core/helpers.js'
+import { changeNameFromPath, collectArchiveChecklist, collectArchiveReadiness, countCheckboxes, detectDeltaSections, extractSection, generateChangeContent, generateProjectRulesContent, generateRulesContent, generateSpecContent, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, parseScenarios, parseYamlLines, renderRspAgentsBlock } from '../src/core/helpers.js'
 
 describe('parseYamlLines', () => {
   it('parses key-value pairs', () => {
@@ -318,5 +318,153 @@ describe('changeNameFromPath', () => {
 describe('normalizeLogicalPath', () => {
   it('normalizes backslashes to forward slashes', () => {
     expect(normalizeLogicalPath('auth\\login')).toBe('auth/login')
+  })
+})
+
+describe('collectArchiveChecklist', () => {
+  it('reports incomplete tasks and verify items', () => {
+    const content = `---
+kind: feature
+---
+
+# Change: test
+## Tasks
+- [ ] unimplemented task
+
+## Verify
+- Automated:
+  - [ ] not run
+- Manual:
+  - [ ] not checked
+`
+    const warnings = collectArchiveChecklist(content)
+    expect(warnings.some(w => w.includes('task item(s) still incomplete'))).toBe(true)
+    expect(warnings.some(w => w.includes('Verify checklist item(s) are still incomplete'))).toBe(true)
+  })
+
+  it('reports active blockers', () => {
+    const content = `## Blockers
+- waiting on api migration`
+    const warnings = collectArchiveChecklist(content)
+    expect(warnings).toContain('active blockers are present in the change file')
+  })
+
+  it('reports missing scenarios', () => {
+    const content = `## Spec
+### ADDED
+- Requirement: test`
+    const warnings = collectArchiveChecklist(content)
+    expect(warnings).toContain('no Scenario blocks found (some changes do not need them)')
+  })
+
+  it('returns empty when all checks pass', () => {
+    const content = `---
+kind: feature
+---
+
+# Change: test
+## Tasks
+- [x] done
+
+## Verify
+- Automated:
+  - [x] done
+- Manual:
+  - [x] done
+
+## Spec
+### ADDED
+- Requirement: test
+
+### Acceptance
+#### Scenario: test works
+- GIVEN x
+- WHEN y
+- THEN z
+
+## Blockers
+- none
+`
+    const warnings = collectArchiveChecklist(content)
+    expect(warnings).toEqual([])
+  })
+})
+
+describe('collectArchiveReadiness', () => {
+  it('returns exact incomplete task and verify counts', () => {
+    const content = `---
+kind: feature
+---
+
+# Change: test
+## Tasks
+- [ ] task one
+- [ ] task two
+- [x] task three
+
+## Verify
+- Automated:
+  - [ ] run tests
+- Manual:
+  - [ ] smoke test
+- Durable updates:
+  - [ ] decide writeback
+
+## Spec
+### ADDED
+- Requirement: test
+
+### Acceptance
+#### Scenario: test works
+- GIVEN x
+- WHEN y
+- THEN z
+
+## Blockers
+- none
+`
+    const readiness = collectArchiveReadiness(content)
+    expect(readiness.taskTodos).toHaveLength(2)
+    expect(readiness.verifyTodos).toHaveLength(3)
+    expect(readiness.activeBlockers).toBe(false)
+    expect(readiness.missingScenarios).toBe(false)
+    expect(readiness.scenarioCount).toBe(1)
+  })
+})
+
+describe('behavior-first spec templates', () => {
+  it('includes guidance comment in default template Spec section', () => {
+    const content = generateChangeContent('test')
+    expect(content).toContain('<!-- Describe observable behavior and requirements. Implementation notes belong in ## Design. -->')
+  })
+
+  it('includes guidance comment in feature template Spec section', () => {
+    const content = generateChangeContent('test', 'summary', 'feature')
+    expect(content).toContain('<!-- Describe observable behavior and requirements. Implementation notes belong in ## Design. -->')
+  })
+
+  it('includes guidance comment in fix template Spec section', () => {
+    const content = generateChangeContent('test', 'summary', 'fix')
+    expect(content).toContain('<!-- Describe expected correct behavior. Implementation notes belong in ## Design. -->')
+  })
+
+  it('includes guidance comment in refactor template Spec section', () => {
+    const content = generateChangeContent('test', 'summary', 'refactor')
+    expect(content).toContain('<!-- Describe the desired structural outcome. Implementation notes belong in ## Design. -->')
+  })
+
+  it('includes guidance comment in docs template Spec section', () => {
+    const content = generateChangeContent('test', 'summary', 'docs')
+    expect(content).toContain('<!-- Describe what the reader should see or experience. Implementation notes belong in ## Design. -->')
+  })
+
+  it('includes guidance comment in research template Spec section', () => {
+    const content = generateChangeContent('test', 'summary', 'research')
+    expect(content).toContain('<!-- Describe what finding or decision must be captured. Implementation notes belong in ## Design. -->')
+  })
+
+  it('includes guidance comment in ops template Spec section', () => {
+    const content = generateChangeContent('test', 'summary', 'ops')
+    expect(content).toContain('<!-- Describe the reliable operational outcome. Implementation notes belong in ## Design. -->')
   })
 })

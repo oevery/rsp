@@ -51,6 +51,7 @@ npx -y @oevery/rsp doctor
 - A change is always a single Markdown file with explicit sections for proposal, spec, design, tasks, verification, and blockers.
 - Completed changes move to `archives/`, while durable outcomes should be reflected in `specs/` or `rules/` before archiving.
 - Durable outcomes mean stable facts only. Do not promote task history, debugging notes, or one-off implementation context into `specs/` or `rules/`.
+- Change `Spec` delta markers (`### ADDED`, `### MODIFIED`, `### REMOVED`) are planning aids only. `rsp archive` does not automatically merge them into durable specs or rules. Durable writeback remains an explicit semantic decision.
 
 ## File ownership
 
@@ -197,9 +198,15 @@ rsp create <name> [summary]     Create .rsp/changes/<name>.md
 rsp focus <name>                Mark an open change as currently focused
 rsp unfocus <name>              Remove an open change from the current focus set
 rsp archive <name>              Archive to .rsp/archives/ + update archive index
+rsp archive --dry-run <name>    Preview archive readiness without moving the change
+rsp ready <name> [--json] [--verbose]
+                                  Preview archive readiness (same as archive --dry-run)
+rsp show <name|--focused> [--json] [--verbose]
+                                  Show change context with readiness signals and context paths
 rsp status [--focused|--blocked|--stale <days>] [--json] [--verbose]
                                   Show project status summary with focus-aware filters
-rsp check [--json] [--verbose] Validate change files and lightly lint scenario structure
+rsp check [--focused] [--json] [--verbose]
+                                  Validate change files and lightly lint scenario structure
 rsp doctor [--json] [--verbose]
                                   Check setup health and common issues
 ```

@@ -3,13 +3,17 @@ import { mkdir, readFile, rename, unlink } from 'node:fs/promises'
 import { basename, dirname, join } from 'node:path'
 
 import { ARCHIVES_DIR, CHANGES_DIR, FOCUS_DIR, pc } from '../core/config.js'
-import { cleanupEmptyParentDirs, extractSection, getOpenCheckboxes, guardRspInitialized, hasMeaningfulBlockers, isValidChangeName, parseScenarios } from '../core/helpers.js'
+import { cleanupEmptyParentDirs, collectArchiveChecklist, guardRspInitialized, isValidChangeName } from '../core/helpers.js'
 import { withRspLock } from '../core/lock.js'
 import { toErrorMessage } from '../core/output.js'
 import { buildArchiveIndex } from './archive-index.js'
 
+export interface ArchiveOptions {
+  dryRun?: boolean
+}
+
 /** Archive a change and clear its focus marker. Never blocks — all checks are warnings. */
-export async function archiveChange(name: string) {
+export async function archiveChange(name: string, options: ArchiveOptions = {}) {
   if (!name) {
     console.error(`  ${pc.red('Usage:')} rsp archive <name>`)
     process.exit(1)
@@ -26,9 +30,29 @@ export async function archiveChange(name: string) {
     process.exit(1)
   }
 
+  if (options.dryRun) {
+    const content = await readFile(srcPath, 'utf-8')
+    const checklist = collectArchiveChecklist(content)
+
+    console.log()
+    console.log(`  ${pc.bold('Archive dry-run for')} ${pc.cyan(name)}`)
+    console.log()
+    if (checklist.length === 0) {
+      console.log(`  ${pc.green('✓')} Ready to archive. No deterministic warnings found.\n`)
+    }
+    else {
+      for (const line of checklist)
+        console.log(`  ${pc.yellow('⚠')} ${line}`)
+      console.log()
+      console.log(`  ${pc.dim('Review the warnings above before treating this work as fully closed.')}\n`)
+    }
+    return
+  }
+
   return withRspLock('archive-change', async () => {
     const content = await readFile(srcPath, 'utf-8')
     const checklist = collectArchiveChecklist(content)
+
     for (const line of checklist)
       console.log(`  ${pc.yellow('⚠')} ${line}`)
     if (checklist.length > 0)
@@ -105,27 +129,4 @@ function resolveArchiveName(archiveSubdir: string, date: string, base: string): 
 
   console.error(`  ${pc.red('Error:')} archive name collision exceeded ${MAX_SUFFIX} attempts for ${base}`)
   process.exit(1)
-}
-
-function collectArchiveChecklist(content: string): string[] {
-  const warnings: string[] = []
-  const tasksSection = extractSection(content, 'Tasks')
-  const verifySection = extractSection(content, 'Verify')
-
-  const taskTodos = getOpenCheckboxes(tasksSection)
-  if (taskTodos.length > 0)
-    warnings.push(`${taskTodos.length} task item(s) still incomplete`)
-
-  const verifyTodos = getOpenCheckboxes(verifySection)
-  if (verifyTodos.length > 0)
-    warnings.push(`${verifyTodos.length} Verify checklist item(s) are still incomplete`)
-
-  if (hasMeaningfulBlockers(content))
-    warnings.push('active blockers are present in the change file')
-
-  const scenarios = parseScenarios(content)
-  if (scenarios.length === 0)
-    warnings.push('no Scenario blocks found (some changes do not need them)')
-
-  return warnings
 }

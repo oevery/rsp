@@ -4,12 +4,17 @@ import { readFile } from 'node:fs/promises'
 import { join, relative } from 'node:path'
 
 import { CHANGES_DIR, FOCUS_DIR, loadRspConfig, pc, resolveKinds, resolveRequiredSections } from '../core/config.js'
-import { changeNameFromPath, detectDeltaSections, normalizeLogicalPath, parseFrontmatter, parseScenarios, walkFiles, walkMarkdownFiles } from '../core/helpers.js'
+import { changeNameFromPath, detectDeltaSections, getFocusedChangeNames, normalizeLogicalPath, parseFrontmatter, parseScenarios, walkFiles, walkMarkdownFiles } from '../core/helpers.js'
 import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
+
+export interface CheckOptions extends CommandRunOptions {
+  focused?: boolean
+}
 
 interface CheckResult {
   command: 'check'
   ok: boolean
+  focused: boolean
   diagnostics: CommandDiagnostic[]
   runtime: RuntimeDiagnostic[]
   summary: {
@@ -23,8 +28,9 @@ interface CheckResult {
  * Validate all change files: focus markers, frontmatter fields,
  * required sections, heading consistency, delta markers, and lightweight scenario linting.
  * Uses .rsp/config.yaml for customizable kind values.
+ * When focused is true, only currently focused changes are validated.
  */
-export async function runCheck(options: CommandRunOptions = {}): Promise<CheckResult> {
+export async function runCheck(options: CheckOptions = {}): Promise<CheckResult> {
   const config = await loadRspConfig()
   const validKinds = resolveKinds(config)
   const requiredSections = resolveRequiredSections(config)
@@ -34,6 +40,11 @@ export async function runCheck(options: CommandRunOptions = {}): Promise<CheckRe
   const runtime: RuntimeDiagnostic[] = []
   const reportRuntime = (diagnostic: RuntimeDiagnostic) => recordRuntimeDiagnostic(runtime, diagnostic, Boolean(options.verbose) && !options.json)
   const addDiagnostic = (diagnostic: CommandDiagnostic) => diagnostics.push(diagnostic)
+
+  let focusedSet: Set<string> = new Set()
+  if (options.focused) {
+    focusedSet = await getFocusedChangeNames({ onError: reportRuntime })
+  }
 
   if (existsSync(FOCUS_DIR)) {
     const entries = await walkFiles(FOCUS_DIR, { onError: reportRuntime })
@@ -81,11 +92,17 @@ export async function runCheck(options: CommandRunOptions = {}): Promise<CheckRe
     }
   }
 
-  const changeFiles = existsSync(CHANGES_DIR) ? await walkMarkdownFiles(CHANGES_DIR, { onError: reportRuntime }) : []
+  const allChangeFiles = existsSync(CHANGES_DIR) ? await walkMarkdownFiles(CHANGES_DIR, { onError: reportRuntime }) : []
+
+  const changeFiles = options.focused
+    ? allChangeFiles.filter(fp => focusedSet.has(changeNameFromPath(CHANGES_DIR, fp)))
+    : allChangeFiles
+
   if (changeFiles.length === 0) {
     const result: CheckResult = {
       command: 'check',
       ok: diagnostics.every(d => d.severity !== 'error'),
+      focused: Boolean(options.focused),
       diagnostics,
       runtime,
       summary: {
@@ -100,6 +117,8 @@ export async function runCheck(options: CommandRunOptions = {}): Promise<CheckRe
     }
     console.log()
     console.log(`  ${pc.bold('RSP check')}`)
+    if (options.focused)
+      console.log(`  ${pc.dim('(focused only)')}`)
     console.log()
     if (diagnostics.length === 0) {
       console.log(`  ${pc.dim('No change files to check.')}\n`)
@@ -288,6 +307,7 @@ export async function runCheck(options: CommandRunOptions = {}): Promise<CheckRe
   const result: CheckResult = {
     command: 'check',
     ok: diagnostics.every(d => d.severity !== 'error'),
+    focused: Boolean(options.focused),
     diagnostics,
     runtime,
     summary: {
@@ -304,6 +324,8 @@ export async function runCheck(options: CommandRunOptions = {}): Promise<CheckRe
 
   console.log()
   console.log(`  ${pc.bold('RSP check')}`)
+  if (options.focused)
+    console.log(`  ${pc.dim('(focused only)')}`)
   console.log()
 
   for (const diagnostic of diagnostics) {

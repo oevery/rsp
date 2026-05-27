@@ -51,6 +51,7 @@ npx -y @oevery/rsp doctor
 - 每个 change 始终是单个 Markdown 文件，并包含 proposal、spec、design、tasks、verification 与 blockers 等明确 section。
 - 完成后的 change 会移动到 `archives/`；若变更产出了长期知识，应在归档前同步写入 `specs/` 或 `rules/`。
 - 所谓长期知识，只应包含稳定事实；不要把任务历史、排障笔记或一次性实现上下文提升到 `specs/` 或 `rules/`。
+- Change `Spec` 中的 delta 标记（`### ADDED`、`### MODIFIED`、`### REMOVED`）仅为规划辅助标记。`rsp archive` 不会自动将它们合并到 `specs/` 或 `rules/` 中。长期知识的写入始终是高显式语义决策。
 
 ## 文件所有权
 
@@ -191,9 +192,15 @@ rsp create <name> [summary]     创建 .rsp/changes/<name>.md
 rsp focus <name>                将一个 open change 标记为当前聚焦
 rsp unfocus <name>              将一个 open change 移出当前聚焦集合
 rsp archive <name>              归档到 .rsp/archives/ 并更新 archive index
+rsp archive --dry-run <name>    预览归档就绪状态，不移动 change
+rsp ready <name> [--json] [--verbose]
+                                   预览归档就绪状态（与 archive --dry-run 相同）
+rsp show <name|--focused> [--json] [--verbose]
+                                   显示 change 上下文，带就绪信号和上下文路径
 rsp status [--focused|--blocked|--stale <days>] [--json] [--verbose]
                                    查看带有当前聚焦信息的项目状态摘要，并支持轻量筛选
-rsp check [--json] [--verbose] 校验 change 文件，并对 scenario 结构做轻量 lint
+rsp check [--focused] [--json] [--verbose]
+                                   校验 change 文件，并对 scenario 结构做轻量 lint
 rsp doctor [--json] [--verbose]
                                    检查接入健康和常见问题
 ```

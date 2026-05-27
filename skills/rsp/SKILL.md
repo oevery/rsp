@@ -75,6 +75,10 @@ Prefer exact file paths, exact commands, and exact durable facts over vague summ
 - exact RSP commands to run
 - a single durable-decision result in the required template when evaluating archive readiness
 
+**Delta markers are planning aids, not merge triggers.** Change `Spec` sections use `### ADDED`, `### MODIFIED`, and `### REMOVED` markers as lightweight planning scaffolds. `rsp archive` does **not** automatically merge those sections into `.rsp/specs/` or `.rsp/rules/`. Durable writeback remains an explicit semantic decision — never implied by delta marker presence.
+
+**Pre-archive inspection.** Use `rsp ready <name>` or `rsp archive --dry-run <name>` to preview deterministic archive readiness (incomplete tasks, verify items, blockers, missing scenarios) without moving the change or clearing focus. Use `rsp show <name|--focused> --json` for machine-readable change context including path, kind, progress, blockers, scenario count, readiness signals, and recommended context paths.
+
 ## Trigger examples
 
 - "Set up RSP in this repository."

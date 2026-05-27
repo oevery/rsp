@@ -61,6 +61,8 @@ This file is the canonical RSP rules source.
 - Use `npx -y @oevery/rsp focus <name>` to foreground an existing open change.
 - Use `npx -y @oevery/rsp unfocus <name>` to remove an open change from the current focus set.
 - Use `npx -y @oevery/rsp archive <name>` to archive a completed change.
+- Use `npx -y @oevery/rsp archive --dry-run <name>` or `rsp ready <name>` to preview archive readiness without moving files.
+- Use `npx -y @oevery/rsp show <name|--focused> --json` for machine-readable change context and readiness signals.
 - Use `npx -y @oevery/rsp update` to refresh bundled rules, repair the managed `AGENTS.md` block, and rebuild generated indices.
 - Use `npx -y @oevery/rsp doctor` for diagnostics only.
 - If RTK is available, you may prefix RSP commands with `rtk`.
@@ -87,6 +89,7 @@ If a section does not apply, keep it and write `- none` or `- not needed: <reaso
 
 - `rsp archive <name>` never blocks. It warns but always completes the move.
 - Make a durable-update decision before `npx -y @oevery/rsp archive <name>`.
+- Change `Spec` delta markers (`### ADDED`, `### MODIFIED`, `### REMOVED`) are planning aids only. `rsp archive` does not automatically merge them into `.rsp/specs/` or `.rsp/rules/`.
 - If `Blockers` still contains a real blocker, set `Archive ready: no`.
 - If the change produced durable knowledge that has not been written to `specs/` or `rules/`, set `Archive ready: no`.
 - If `Verify` is incomplete but there is no active blocker and no missing durable update, treat archive readiness as a judgment call.

@@ -225,7 +225,7 @@ function getChangeTemplateByKind(kind?: string) {
         why: '<what user need or capability gap this addresses>',
         scope: '<what new behavior or capability will be delivered>',
         nonGoals: '<what related capabilities are explicitly out of scope>',
-        specSection: '### ADDED\n- Requirement: <new user-facing behavior>\n  - <verifiable requirement for the new capability>',
+        specSection: '<!-- Describe observable behavior and requirements. Implementation notes belong in ## Design. -->\n### ADDED\n- Requirement: <new user-facing behavior>\n  - <verifiable requirement for the new capability>',
         acceptanceSection: '#### Scenario: user exercises the new capability\n- GIVEN <context>\n- WHEN <user action>\n- THEN <expected new behavior>',
         approach: '<how the new capability will be implemented>',
         affectedArea1: '<concrete file path, directory, module, or subsystem 1>',
@@ -240,7 +240,7 @@ function getChangeTemplateByKind(kind?: string) {
         why: '<what current behavior is wrong or broken>',
         scope: '<what specific defect is being corrected>',
         nonGoals: '<what related but separate issues are out of scope>',
-        specSection: '### MODIFIED\n- Requirement: correct behavior\n  - <expected correct behavior after the fix>',
+        specSection: '<!-- Describe expected correct behavior. Implementation notes belong in ## Design. -->\n### MODIFIED\n- Requirement: correct behavior\n  - <expected correct behavior after the fix>',
         acceptanceSection: '#### Scenario: defect is resolved\n- GIVEN <conditions that trigger the defect>\n- WHEN <action that previously failed>\n- THEN <expected correct outcome>\n- AND the original broken outcome no longer occurs',
         approach: '<root cause analysis and fix strategy>',
         affectedArea1: '<concrete file path, directory, module, or subsystem containing the defect>',
@@ -255,7 +255,7 @@ function getChangeTemplateByKind(kind?: string) {
         why: '<what maintainability, readability, or structural issue motivates this>',
         scope: '<what code areas are being restructured>',
         nonGoals: '<no behavior change is expected or intended>',
-        specSection: '### MODIFIED\n- Requirement: internal structure improvement\n  - <desired structural outcome without observable behavior change>',
+        specSection: '<!-- Describe the desired structural outcome. Implementation notes belong in ## Design. -->\n### MODIFIED\n- Requirement: internal structure improvement\n  - <desired structural outcome without observable behavior change>',
         acceptanceSection: '#### Scenario: behavior is preserved after restructuring\n- GIVEN the existing codebase before the refactor\n- WHEN the refactored code runs against existing tests\n- THEN all existing tests pass unchanged',
         approach: '<how the code will be restructured (rename, extract, move, etc.)>',
         affectedArea1: '<concrete file path, directory, module, or subsystem being refactored>',
@@ -270,7 +270,7 @@ function getChangeTemplateByKind(kind?: string) {
         why: '<why the documentation change matters>',
         scope: '<which docs, readers, or workflows will be updated>',
         nonGoals: '<what documentation behavior or audience is out of scope>',
-        specSection: '### MODIFIED\n- Requirement: documentation accuracy\n  - <what durable reader-facing behavior or explanation changes>',
+        specSection: '<!-- Describe what the reader should see or experience. Implementation notes belong in ## Design. -->\n### MODIFIED\n- Requirement: documentation accuracy\n  - <what durable reader-facing behavior or explanation changes>',
         acceptanceSection: '#### Scenario: reader follows the updated guidance\n- GIVEN the updated documentation\n- WHEN a reader follows the documented workflow\n- THEN the steps are accurate and sufficient',
         approach: '<how the documentation will be updated and organized>',
         affectedArea1: '<concrete doc path, directory, module doc, or documentation surface 1>',
@@ -285,7 +285,7 @@ function getChangeTemplateByKind(kind?: string) {
         why: '<what question or uncertainty this research resolves>',
         scope: '<what system area, option set, or hypothesis is being examined>',
         nonGoals: '<what implementation work is explicitly out of scope>',
-        specSection: '### ADDED\n- Requirement: research outcome recording\n  - <what finding, option, or decision must be captured clearly>',
+        specSection: '<!-- Describe what finding or decision must be captured. Implementation notes belong in ## Design. -->\n### ADDED\n- Requirement: research outcome recording\n  - <what finding, option, or decision must be captured clearly>',
         acceptanceSection: '#### Scenario: research question is resolved\n- GIVEN the current uncertainty or open question\n- WHEN the investigation is completed\n- THEN the result is recorded clearly enough to guide follow-up work',
         approach: '<how the investigation will be performed and what evidence will be gathered>',
         affectedArea1: '<concrete file path, directory, module, subsystem, or source under investigation>',
@@ -300,7 +300,7 @@ function getChangeTemplateByKind(kind?: string) {
         why: '<why this operational or environment change matters>',
         scope: '<what environment, workflow, or operational path changes>',
         nonGoals: '<what product or feature behavior will not change>',
-        specSection: '### MODIFIED\n- Requirement: operational behavior\n  - <what reliable operational outcome should change or stay true>',
+        specSection: '<!-- Describe the reliable operational outcome. Implementation notes belong in ## Design. -->\n### MODIFIED\n- Requirement: operational behavior\n  - <what reliable operational outcome should change or stay true>',
         acceptanceSection: '#### Scenario: operational path succeeds\n- GIVEN the target environment or workflow\n- WHEN the operational change is applied\n- THEN the expected operational outcome is reliable',
         approach: '<how the operational change will be applied safely>',
         affectedArea1: '<concrete script, config path, workflow, environment path, or operational surface 1>',
@@ -315,7 +315,7 @@ function getChangeTemplateByKind(kind?: string) {
         why: '<why this change matters>',
         scope: '<what this change will do>',
         nonGoals: '<what this change will not do>',
-        specSection: '### ADDED\n- Requirement: <new or updated behavior>\n  - <verifiable requirement>',
+        specSection: '<!-- Describe observable behavior and requirements. Implementation notes belong in ## Design. -->\n### ADDED\n- Requirement: <new or updated behavior>\n  - <verifiable requirement>',
         acceptanceSection: '#### Scenario: <name>\n- GIVEN <context>\n- WHEN <action>\n- THEN <expected outcome>',
         approach: '<how the change will be implemented>',
         affectedArea1: '<concrete file path, directory, module, or subsystem 1>',
@@ -583,6 +583,56 @@ export function detectDeltaSections(content: string): DeltaSections {
     modified: /^###\s*MODIFIED/im.test(body),
     removed: /^###\s*REMOVED/im.test(body),
   }
+}
+
+export interface ArchiveReadiness {
+  taskTodos: string[]
+  verifyTodos: string[]
+  activeBlockers: boolean
+  scenarioCount: number
+  missingScenarios: boolean
+  warnings: string[]
+}
+
+/**
+ * Collect deterministic archive readiness details for a change file.
+ * Used by both `rsp archive` and `rsp ready`.
+ */
+export function collectArchiveReadiness(content: string): ArchiveReadiness {
+  const warnings: string[] = []
+  const tasksSection = extractSection(content, 'Tasks')
+  const verifySection = extractSection(content, 'Verify')
+
+  const taskTodos = getOpenCheckboxes(tasksSection)
+  if (taskTodos.length > 0)
+    warnings.push(`${taskTodos.length} task item(s) still incomplete`)
+
+  const verifyTodos = getOpenCheckboxes(verifySection)
+  if (verifyTodos.length > 0)
+    warnings.push(`${verifyTodos.length} Verify checklist item(s) are still incomplete`)
+
+  const activeBlockers = hasMeaningfulBlockers(content)
+  if (activeBlockers)
+    warnings.push('active blockers are present in the change file')
+
+  const scenarios = parseScenarios(content)
+  const missingScenarios = scenarios.length === 0
+  if (missingScenarios)
+    warnings.push('no Scenario blocks found (some changes do not need them)')
+
+  return {
+    taskTodos,
+    verifyTodos,
+    activeBlockers,
+    scenarioCount: scenarios.length,
+    missingScenarios,
+    warnings,
+  }
+}
+
+/** Collect deterministic archive checklist item strings for a change file. */
+export function collectArchiveChecklist(content: string): string[] {
+  return collectArchiveReadiness(content).warnings
 }
 
 /**

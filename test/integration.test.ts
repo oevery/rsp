@@ -934,3 +934,279 @@ describe('archive name collisions', () => {
     expect(matches).toHaveLength(2)
   })
 })
+
+describe('ready command', () => {
+  it('reports archive readiness without moving the change', async () => {
+    const readyDir = join(tmpdir(), 'rsp-ready-test', randomUUID())
+    await mkdir(join(readyDir, '.rsp', 'rules'), { recursive: true })
+    await mkdir(join(readyDir, '.rsp', 'specs'), { recursive: true })
+    await mkdir(join(readyDir, '.rsp', 'changes'), { recursive: true })
+    await writeFile(join(readyDir, '.rsp', 'rules', 'rsp-rules.md'), '# RSP')
+    await writeFile(join(readyDir, '.rsp', 'specs', 'design.md'), '# Design')
+    await writeFile(join(readyDir, '.rsp', 'changes', 'incomplete.md'), renderChange('incomplete'))
+
+    const output = execSync(`node ${cliPath()} ready incomplete`, { cwd: readyDir, encoding: 'utf-8' })
+    expect(output).toContain('task item(s) still incomplete')
+    expect(output).toContain('Verify checklist item(s) are still incomplete')
+
+    // change should still be there (not archived)
+    expect(existsSync(join(readyDir, '.rsp', 'changes', 'incomplete.md'))).toBe(true)
+  })
+
+  it('reports ready when all checks pass', async () => {
+    const readyDir = join(tmpdir(), 'rsp-ready-clean-test', randomUUID())
+    await mkdir(join(readyDir, '.rsp', 'rules'), { recursive: true })
+    await mkdir(join(readyDir, '.rsp', 'specs'), { recursive: true })
+    await mkdir(join(readyDir, '.rsp', 'changes'), { recursive: true })
+    await writeFile(join(readyDir, '.rsp', 'rules', 'rsp-rules.md'), '# RSP')
+    await writeFile(join(readyDir, '.rsp', 'specs', 'design.md'), '# Design')
+    await writeFile(join(readyDir, '.rsp', 'changes', 'complete.md'), renderChange('complete').replace(
+      '- [ ] implement complete',
+      '- [x] implement complete',
+    ).replace(
+      '- [ ] run tests',
+      '- [x] run tests',
+    ).replace(
+      '- [ ] smoke test complete',
+      '- [x] smoke test complete',
+    ).replace(
+      '- [ ] decide whether this change produced durable knowledge',
+      '- [x] decide whether this change produced durable knowledge',
+    ).replace(
+      '- [ ] if yes, update the target spec or rule file before archive',
+      '- [x] if yes, update the target spec or rule file before archive',
+    ))
+
+    const output = execSync(`node ${cliPath()} ready complete`, { cwd: readyDir, encoding: 'utf-8' })
+    expect(output).toContain('Ready to archive.')
+  })
+
+  it('emits machine-readable JSON', async () => {
+    const readyDir = join(tmpdir(), 'rsp-ready-json-test', randomUUID())
+    await mkdir(join(readyDir, '.rsp', 'rules'), { recursive: true })
+    await mkdir(join(readyDir, '.rsp', 'specs'), { recursive: true })
+    await mkdir(join(readyDir, '.rsp', 'changes'), { recursive: true })
+    await writeFile(join(readyDir, '.rsp', 'rules', 'rsp-rules.md'), '# RSP')
+    await writeFile(join(readyDir, '.rsp', 'specs', 'design.md'), '# Design')
+    await writeFile(join(readyDir, '.rsp', 'changes', 'incomplete.md'), renderChange('incomplete'))
+
+    const output = execSync(`node ${cliPath()} ready incomplete --json`, { cwd: readyDir, encoding: 'utf-8' })
+    const result = JSON.parse(output)
+    expect(result.command).toBe('ready')
+    expect(result.ok).toBe(true)
+    expect(result.change).toBe('incomplete')
+    expect(result.readiness.incompleteTasks).toBe(1)
+    expect(result.readiness.incompleteVerify).toBe(4)
+    expect(result.readiness.activeBlockers).toBe(false)
+    expect(result.readiness.missingScenarios).toBe(false)
+    expect(Array.isArray(result.warnings)).toBe(true)
+  })
+})
+
+describe('show command', () => {
+  it('shows change context for a named change', async () => {
+    const showDir = join(tmpdir(), 'rsp-show-test', randomUUID())
+    await mkdir(join(showDir, '.rsp', 'rules'), { recursive: true })
+    await mkdir(join(showDir, '.rsp', 'specs'), { recursive: true })
+    await mkdir(join(showDir, '.rsp', 'changes'), { recursive: true })
+    await writeFile(join(showDir, '.rsp', 'rules', 'rsp-rules.md'), '# RSP')
+    await writeFile(join(showDir, '.rsp', 'specs', 'design.md'), '# Design')
+    await writeFile(join(showDir, '.rsp', 'changes', 'display-me.md'), renderChange('display-me'))
+
+    const output = execSync(`node ${cliPath()} show display-me`, { cwd: showDir, encoding: 'utf-8' })
+    expect(output).toContain('display-me')
+    expect(output).toContain('Kind:')
+    expect(output).toContain('Progress:')
+    expect(output).toContain('Blockers:')
+    expect(output).toContain('Scenarios:')
+    expect(output).toContain('Readiness:')
+    expect(output).toContain('Context paths')
+  })
+
+  it('shows focused change with --focused flag', async () => {
+    const showDir = join(tmpdir(), 'rsp-show-focused-test', randomUUID())
+    await mkdir(join(showDir, '.rsp', 'rules'), { recursive: true })
+    await mkdir(join(showDir, '.rsp', 'specs'), { recursive: true })
+    await mkdir(join(showDir, '.rsp', 'changes'), { recursive: true })
+    await mkdir(join(showDir, '.rsp', 'focus.d'), { recursive: true })
+    await writeFile(join(showDir, '.rsp', 'rules', 'rsp-rules.md'), '# RSP')
+    await writeFile(join(showDir, '.rsp', 'specs', 'design.md'), '# Design')
+    await writeFile(join(showDir, '.rsp', 'changes', 'focused-show.md'), renderChange('focused-show'))
+    await writeFile(join(showDir, '.rsp', 'focus.d', 'focused-show'), '')
+
+    const output = execSync(`node ${cliPath()} show --focused`, { cwd: showDir, encoding: 'utf-8' })
+    expect(output).toContain('focused-show')
+    expect(output).toContain('Focused:')
+  })
+
+  it('emits machine-readable JSON with readiness and context paths', async () => {
+    const showDir = join(tmpdir(), 'rsp-show-json-test', randomUUID())
+    await mkdir(join(showDir, '.rsp', 'rules'), { recursive: true })
+    await mkdir(join(showDir, '.rsp', 'specs'), { recursive: true })
+    await mkdir(join(showDir, '.rsp', 'changes'), { recursive: true })
+    await writeFile(join(showDir, '.rsp', 'rules', 'rsp-rules.md'), '# RSP')
+    await writeFile(join(showDir, '.rsp', 'specs', 'design.md'), '# Design')
+    await writeFile(join(showDir, '.rsp', 'changes', 'json-test.md'), renderChange('json-test'))
+
+    const output = execSync(`node ${cliPath()} show json-test --json`, { cwd: showDir, encoding: 'utf-8' })
+    const result = JSON.parse(output)
+    expect(result.command).toBe('show')
+    expect(result.ok).toBe(true)
+    expect(result.change.name).toBe('json-test')
+    expect(result.change.kind).toBe('feature')
+    expect(result.change.progress).toHaveProperty('done')
+    expect(result.change.progress).toHaveProperty('total')
+    expect(result.change.blockers).toBe(false)
+    expect(result.change.scenarioCount).toBe(1)
+    expect(result.change.readiness.incompleteTasks).toBe(1)
+    expect(result.change.readiness.incompleteVerify).toBe(4)
+    expect(result.change.readiness).toHaveProperty('activeBlockers')
+    expect(result.change.readiness).toHaveProperty('missingScenarios')
+    expect(Array.isArray(result.contextPaths)).toBe(true)
+    expect(result.contextPaths).toContain('.rsp/specs/design.md')
+    expect(result.contextPaths).toContain('.rsp/rules/rsp-rules.md')
+  })
+
+  it('emits machine-readable JSON errors when requested', async () => {
+    const showDir = join(tmpdir(), 'rsp-show-json-error-test', randomUUID())
+    await mkdir(join(showDir, '.rsp', 'rules'), { recursive: true })
+    await mkdir(join(showDir, '.rsp', 'specs'), { recursive: true })
+    await mkdir(join(showDir, '.rsp', 'changes'), { recursive: true })
+    await writeFile(join(showDir, '.rsp', 'rules', 'rsp-rules.md'), '# RSP')
+    await writeFile(join(showDir, '.rsp', 'specs', 'design.md'), '# Design')
+
+    let output = ''
+    let failed = false
+    try {
+      output = execSync(`node ${cliPath()} show --focused --json`, { cwd: showDir, encoding: 'utf-8' })
+    }
+    catch (error) {
+      failed = true
+      output = String((error as { stdout?: string }).stdout || '')
+    }
+
+    const result = JSON.parse(output)
+    expect(failed).toBe(true)
+    expect(result.command).toBe('show')
+    expect(result.ok).toBe(false)
+    expect(result.error.code).toBe('no_focused_change')
+  })
+})
+
+describe('archive --dry-run', () => {
+  it('previews archive readiness without moving the change', async () => {
+    const dryRunDir = join(tmpdir(), 'rsp-archive-dryrun-test', randomUUID())
+    await mkdir(join(dryRunDir, '.rsp', 'rules'), { recursive: true })
+    await mkdir(join(dryRunDir, '.rsp', 'specs'), { recursive: true })
+    await mkdir(join(dryRunDir, '.rsp', 'changes'), { recursive: true })
+    await writeFile(join(dryRunDir, '.rsp', 'rules', 'rsp-rules.md'), '# RSP')
+    await writeFile(join(dryRunDir, '.rsp', 'specs', 'design.md'), '# Design')
+    await writeFile(join(dryRunDir, '.rsp', 'changes', 'dry-run-test.md'), renderChange('dry-run-test'))
+
+    const output = execSync(`node ${cliPath()} archive dry-run-test --dry-run`, { cwd: dryRunDir, encoding: 'utf-8' })
+    expect(output).toContain('Archive dry-run')
+    expect(output).toContain('task item(s) still incomplete')
+
+    // change should still be there
+    expect(existsSync(join(dryRunDir, '.rsp', 'changes', 'dry-run-test.md'))).toBe(true)
+  })
+})
+
+describe('check --focused', () => {
+  it('only validates focused changes', async () => {
+    const focusedCheckDir = join(tmpdir(), 'rsp-check-focused-test', randomUUID())
+    await mkdir(join(focusedCheckDir, '.rsp', 'rules'), { recursive: true })
+    await mkdir(join(focusedCheckDir, '.rsp', 'specs'), { recursive: true })
+    await mkdir(join(focusedCheckDir, '.rsp', 'changes'), { recursive: true })
+    await mkdir(join(focusedCheckDir, '.rsp', 'focus.d'), { recursive: true })
+    await writeFile(join(focusedCheckDir, '.rsp', 'rules', 'rsp-rules.md'), '# RSP')
+    await writeFile(join(focusedCheckDir, '.rsp', 'specs', 'design.md'), '# Design')
+
+    // Focused change is valid
+    await writeFile(join(focusedCheckDir, '.rsp', 'changes', 'focused-valid.md'), renderChange('focused-valid'))
+    await writeFile(join(focusedCheckDir, '.rsp', 'focus.d', 'focused-valid'), '')
+
+    // Unfocused change has missing Spec section
+    await writeFile(join(focusedCheckDir, '.rsp', 'changes', 'unfocused-broken.md'), `---
+kind: fix
+---
+
+# Change: unfocused-broken
+
+## Proposal
+- none
+
+## Design
+- not needed: trivial
+
+## Tasks
+- [ ] fix
+
+## Verify
+- none
+
+## Blockers
+- none
+`)
+
+    const output = execSync(`node ${cliPath()} check --focused`, { cwd: focusedCheckDir, encoding: 'utf-8' })
+    // focused check should pass because only the focused change is validated
+    expect(output).toContain('All 1 change file(s) valid')
+  })
+
+  it('fails when focused change has errors', async () => {
+    const focusedCheckDir = join(tmpdir(), 'rsp-check-focused-fail-test', randomUUID())
+    await mkdir(join(focusedCheckDir, '.rsp', 'rules'), { recursive: true })
+    await mkdir(join(focusedCheckDir, '.rsp', 'specs'), { recursive: true })
+    await mkdir(join(focusedCheckDir, '.rsp', 'changes'), { recursive: true })
+    await mkdir(join(focusedCheckDir, '.rsp', 'focus.d'), { recursive: true })
+    await writeFile(join(focusedCheckDir, '.rsp', 'rules', 'rsp-rules.md'), '# RSP')
+    await writeFile(join(focusedCheckDir, '.rsp', 'specs', 'design.md'), '# Design')
+
+    // Focused change has errors (placeholder kind)
+    await writeFile(join(focusedCheckDir, '.rsp', 'changes', 'focused-broken.md'), `---
+kind: "<choose: feature | fix | refactor | docs | ops | research>"
+---
+
+# Change: focused-broken
+
+## Proposal
+- none
+
+## Spec
+### ADDED
+- Requirement: x
+
+### Acceptance
+#### Scenario: x
+- GIVEN x
+- WHEN y
+- THEN z
+
+## Design
+- none
+
+## Tasks
+- [ ] task
+
+## Verify
+- none
+
+## Blockers
+- none
+`)
+    await writeFile(join(focusedCheckDir, '.rsp', 'focus.d', 'focused-broken'), '')
+
+    let output = ''
+    let failed = false
+    try {
+      output = execSync(`node ${cliPath()} check --focused`, { cwd: focusedCheckDir, encoding: 'utf-8' })
+    }
+    catch (error) {
+      failed = true
+      output = String((error as { stdout?: string }).stdout || '')
+    }
+    expect(failed).toBe(true)
+    expect(output).toContain('kind still uses the template placeholder')
+  })
+})
