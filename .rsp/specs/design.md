@@ -47,6 +47,7 @@
 - `src/commands/` contains command implementations for RSP operations.
 - `src/core/` contains shared filesystem, config, output, helper, and locking logic.
 - `bin/rsp.mjs` is the executable entrypoint that loads the built CLI.
+- `commands/` contains optional workflow-oriented slash command prompts for tools that support compatible command files; it is an enhancement surface, not part of the core RSP filesystem protocol.
 - `rules/` contains bundled rules copied into project `.rsp/rules/` during initialization or update.
 - `skills/rsp/` contains operational skill guidance for agents that support skills.
 - `docs/design-philosophy.md` records explanatory product and design rationale for maintainers.
