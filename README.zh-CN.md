@@ -125,6 +125,8 @@ npx skills add oevery/rsp
 npx skills add oevery/rsp
 ```
 
+仓库维护者可以把外部 skill 和 workflow 来源作为离线评审输入进行跟踪。该工具有意不进入发布包；具体用法见[源码仓库维护指南](https://github.com/oevery/rsp/blob/main/docs/upstreams.md)。
+
 ## 工作模型
 
 ```text

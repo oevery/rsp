@@ -1,0 +1,138 @@
+version: 1
+
+sources:
+  agent-skills-spec:
+    repository: https://github.com/agentskills/agentskills.git
+    ref: main
+    tier: core
+    strategy: conform
+    paths:
+      - README.md
+      - LICENSE*
+      - skills-ref/**
+      - docs/**/*.md
+      - docs/**/*.mdx
+
+  antfu-skills:
+    repository: https://github.com/antfu/skills.git
+    ref: main
+    tier: core
+    strategy: tooling
+    paths:
+      - README.md
+      - LICENSE*
+      - meta.ts
+      - instructions/**
+      - skills/**/*.md
+      - scripts/**
+
+  matt-skills:
+    repository: https://github.com/mattpocock/skills.git
+    ref: main
+    tier: core
+    strategy: adapt
+    paths:
+      - README.md
+      - LICENSE*
+      - skills/engineering/**
+      - skills/productivity/**
+
+  openspec:
+    repository: https://github.com/Fission-AI/OpenSpec.git
+    ref: main
+    tier: core
+    strategy: model
+    paths:
+      - README.md
+      - LICENSE*
+      - src/**
+      - docs/**/*.md
+      - schemas/**
+      - openspec/**
+
+  ponytail:
+    repository: https://github.com/DietrichGebert/ponytail.git
+    ref: main
+    tier: core
+    strategy: adapt
+    paths:
+      - README.md
+      - LICENSE*
+      - skills/**
+      - benchmarks/**
+      - hooks/**
+
+  spec-kit:
+    repository: https://github.com/github/spec-kit.git
+    ref: main
+    tier: core
+    strategy: model
+    paths:
+      - README.md
+      - LICENSE*
+      - src/**
+      - templates/**
+      - extensions/**
+      - docs/**/*.md
+      - .specify/**
+      - presets/**
+      - workflows/**
+
+  compound-engineering:
+    repository: https://github.com/EveryInc/compound-engineering-plugin.git
+    ref: main
+    tier: reference
+    strategy: adapt
+    paths:
+      - README.md
+      - LICENSE*
+      - skills/**
+      - docs/skills/**
+      - docs/solutions/skill-design/**
+      - tests/**
+
+  gsd-core:
+    repository: https://github.com/open-gsd/gsd-core.git
+    ref: main
+    tier: reference
+    strategy: model
+    paths:
+      - README.md
+      - LICENSE*
+      - src/**
+      - agents/**
+      - commands/**
+      - docs/**/*.md
+
+  openai-plugins:
+    repository: https://github.com/openai/plugins.git
+    ref: main
+    tier: reference
+    strategy: tooling
+    paths:
+      - README.md
+      - .agents/plugins/**
+      - plugins/**/*.md
+      - plugins/**/*.json
+      - plugins/**/*.yaml
+
+  skills-cli:
+    repository: https://github.com/vercel-labs/skills.git
+    ref: main
+    tier: reference
+    strategy: tooling
+    paths:
+      - README.md
+      - package.json
+      - src/**
+
+  superpowers:
+    repository: https://github.com/obra/superpowers.git
+    ref: main
+    tier: reference
+    strategy: adapt
+    paths:
+      - README.md
+      - LICENSE*
+      - skills/**
+      - tests/**

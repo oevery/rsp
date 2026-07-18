@@ -18,3 +18,6 @@ If `.rsp/focus.d/` is empty and the user has not provided a concrete task, ask w
 If your agent supports Agent Skills, load `rsp` for setup, repair, and durable-decision tasks.
 <!-- rsp:end -->
 
+## Maintainer Research
+
+For upstream preparation, source distillation, or cross-source model synthesis, load the repo-local `distill-upstream` skill. Keep research under `research/`; promote selected recommendations through a normal RSP change.

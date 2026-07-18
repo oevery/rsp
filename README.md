@@ -131,6 +131,8 @@ This repository publishes a skill named `rsp` under `skills/rsp/`.
 npx skills add oevery/rsp
 ```
 
+Repository maintainers can track external skill and workflow sources as offline review inputs. This tooling is intentionally excluded from the published package; see the [source-checkout maintainer guide](https://github.com/oevery/rsp/blob/main/docs/upstreams.md).
+
 ## Work Model
 
 ```text

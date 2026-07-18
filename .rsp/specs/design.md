@@ -28,6 +28,11 @@
 - `rsp create --lite` is a short template for explicitly tracked small changes; simple current-session tasks should not create RSP changes unless tracking is intentionally needed.
 - Semantic judgment, including durable writeback decisions, belongs to an RSP skill or a human reviewer.
 - `AGENTS.md` is a navigation entrypoint and must not become a durable rules or design store.
+- External skill and workflow repositories can be declared by repository, ref, tier, treatment strategy, and relevant paths in `upstreams.yaml`, cached under ignored `.cache/upstreams/`, and pinned explicitly in a flat, timestamp-free `source: revision` lock mapping.
+- Upstream synchronization records fetched commits in dedicated Git candidate refs; checkout `HEAD` is not candidate authority. Only the maintainer script's explicit `accept` action updates accepted revisions, and distillation into RSP-native skills remains a separate reviewed change.
+- Upstream preparation writes regenerable mechanical evidence to ignored cache; tracked single-source distillation and cross-source synthesis live under `research/`, outside published and runtime RSP artifacts.
+- Accepting any revision, including an initial baseline, means its matching source distillation is complete. Status derives research state, required-path coverage, and the next action from existing artifacts without adding lifecycle state.
+- Mechanical patch evidence is streamed and byte-hashed. Direct adaptation records license and reuse constraints; research recommendations affect final RSP artifacts only through a normal RSP change with report, recommendation, and adoption provenance.
 
 ## Boundaries
 - In scope: initializing and repairing `.rsp/` structure for repositories.
@@ -46,6 +51,9 @@
 - `src/cli.ts` defines the CLI surface and command registration.
 - `src/commands/` contains command implementations for RSP operations.
 - `src/core/` contains shared filesystem, config, output, helper, and locking logic.
+- `scripts/upstreams.mjs` is repository-maintainer tooling for upstream manifest validation, Git cache lifecycle, candidate comparison, and atomic lock serialization; it is not part of the published RSP CLI.
+- `.agents/skills/distill-upstream/` is a repository-maintainer skill for semantic upstream research; it is not a published RSP product skill.
+- `research/` contains tracked intermediate upstream distillations and models; it is not a product truth or runtime context source.
 - `bin/rsp.mjs` is the executable entrypoint that loads the built CLI.
 - `commands/` contains optional workflow-oriented slash command prompts for tools that support compatible command files; it is an enhancement surface, not part of the core RSP filesystem protocol.
 - `rules/` contains bundled rules copied into project `.rsp/rules/` during initialization or update.
@@ -67,3 +75,8 @@
 - Prefer README, design docs, durable specs, or CLI output for explanatory detail that does not prevent agent misoperation.
 - Skill compactness must not remove guidance about change creation, durable writeback, archive readiness, generated/core files, or deterministic-vs-semantic boundaries.
 - Prefer machine-readable output and diagnostics that reduce guessing without expanding workflow complexity.
+- Never run code from cached upstream repositories during synchronization, and never overwrite a dirty managed cache.
+- Treat `.cache/upstreams/` as disposable implementation state and `upstreams.yaml` plus `upstreams.lock` as the reproducible tracked state.
+- Keep upstream registry fields operational: `core` is the default review tier, `reference` is optional comparison material, and `conform/model/adapt/tooling` route preparation and semantic review. Speculative adoption or policy metadata belongs in research until tooling consumes it.
+- Treat every declared upstream path as required and reject preparation when a glob matches no candidate files; correct the registry instead of silently broadening the review scope.
+- Never promote research into final files automatically; final `src/`, `rules/`, `skills/`, docs, or `.rsp/specs/` changes use the normal RSP change and verification path.
