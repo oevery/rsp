@@ -30,6 +30,7 @@
 - `rsp create --lite` is a short template for explicitly tracked small changes; simple current-session tasks should not create RSP changes unless tracking is intentionally needed.
 - Semantic judgment, including durable writeback decisions, belongs to an RSP skill or a human reviewer.
 - The published `skills/rsp` artifact uses the portable intersection of Agent Skills and active target-client validation: it omits optional `compatibility`, carries `license: MIT`, `metadata.author`, and an independent quoted content CalVer that changes only for meaningful skill-content releases rather than every CLI release.
+- Product distribution includes the fallback protocol and portable RSP skill; host-specific slash-command prompts are outside the core package.
 - The RSP-managed `AGENTS.md` block is a navigation entrypoint and must not become a durable rules or design store; project-owned sections outside it may hold stable scoped instructions.
 - `.rsp/rsp-rules.md` is the only runtime fallback path; `rsp update` migrates the obsolete generated path and removes it.
 - `.rsp/rules/` is not a durable authority. Any residual contents require explicit semantic migration to the nearest project-owned `AGENTS.md` before removal; empty directory trees may be pruned deterministically.
@@ -62,7 +63,6 @@
 - `.agents/skills/distill-upstream/` is a repository-maintainer skill for semantic upstream research; it is not a published RSP product skill.
 - `research/` contains tracked intermediate upstream distillations and models; it is not a product truth or runtime context source.
 - `bin/rsp.mjs` is the executable entrypoint that loads the built CLI.
-- `commands/` contains optional workflow-oriented slash command prompts for tools that support compatible command files; it is published in the npm package as an enhancement surface, not part of the core RSP filesystem protocol.
 - `rules/rsp-rules.md` is the package-authored fallback source copied to consumer `.rsp/rsp-rules.md` during initialization or update.
 - `skills/rsp/` contains operational skill guidance for agents that support skills.
 - `docs/design-philosophy.md` records explanatory product and design rationale for maintainers.
@@ -73,7 +73,7 @@
 | Layer | Directories | Ownership |
 | --- | --- | --- |
 | Product runtime | `src/`, `bin/` | CLI, deterministic command behavior, domain interpretation, filesystem and diagnostic support |
-| Product distribution | `rules/`, `skills/`, `commands/` | Bundled fallback protocol source, published Agent Skills, and optional compatible command prompts |
+| Product distribution | `rules/`, `skills/` | Bundled fallback protocol source and published Agent Skill |
 | Maintainer tooling | `scripts/`, `.agents/skills/` | Repository-wide deterministic maintenance and maintainer-only judgment workflows |
 | Maintainer knowledge | `docs/`, `research/` | Explanatory design material, pinned source distillations, cross-source models, and recommendations |
 | Verification | `test/` | Observable behavior checks for product and maintainer tooling |
@@ -84,7 +84,7 @@ Dependency direction is constrained:
 
 - `bin/` loads the built product runtime; CLI registration delegates to commands, which use domain interpretation and core filesystem/output support.
 - Product runtime must not import `research/`, `.cache/`, `.agents/skills/`, `.rsp/`, or repository-maintainer scripts.
-- Published `rules/`, `skills/`, and `commands/` must operate without a source checkout, research corpus, or upstream cache.
+- Published `rules/` and `skills/` must operate without a source checkout, research corpus, or upstream cache.
 - Maintainer tooling may inspect product source and maintainer knowledge, but it enters product surfaces only through a selected normal RSP change.
 - Research may cite product and prepared evidence, but it cannot promote recommendations or mutate product artifacts automatically.
 - Self-hosting `.rsp/` files govern development of this repository and are not runtime configuration for consumer projects.

@@ -25,7 +25,6 @@
   },
   "files": [
     "bin/",
-    "commands/",
     "dist/",
     "rules/",
     "skills/"

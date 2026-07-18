@@ -262,13 +262,6 @@ describe('documentation command examples', () => {
     expect(readme).toContain('Otherwise use `npx -y @oevery/rsp <command>`')
   })
 
-  it('packages optional command prompts', () => {
-    const root = fileURLToPath(new URL('..', import.meta.url))
-    const packageJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf-8')) as { files: string[] }
-
-    expect(packageJson.files).toContain('commands/')
-  })
-
   it('keeps high-value guardrails in rules and skill', () => {
     const root = fileURLToPath(new URL('..', import.meta.url))
     const skill = readFileSync(join(root, 'skills', 'rsp', 'SKILL.md'), 'utf-8')
