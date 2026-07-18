@@ -1,18 +1,10 @@
 ---
 name: rsp
 description: Use this skill when initializing RSP, operating an existing .rsp project, auditing or repairing .rsp state, or deciding whether a change needs durable updates before archive.
-compatibility:
-  agents:
-    - any agent that supports the Agent Skills format
-  requirements:
-    - Node.js 18+
-    - local filesystem read/write access
-    - shell access for `rsp` or `npx -y @oevery/rsp`
-  optional_requirements:
-    - network access for first-run `npx` installation or skill refresh
+license: MIT
 metadata:
   author: oevery
-  version: 2.0.3
+  version: "2026.07.18"
 ---
 
 # RSP Skill

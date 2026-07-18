@@ -27,6 +27,7 @@
 - `durableReview.candidateTargets` lists likely writable durable files and excludes generated indexes and bundled core rules from ordinary project writeback targets.
 - `rsp create --lite` is a short template for explicitly tracked small changes; simple current-session tasks should not create RSP changes unless tracking is intentionally needed.
 - Semantic judgment, including durable writeback decisions, belongs to an RSP skill or a human reviewer.
+- The published `skills/rsp` artifact uses the portable intersection of Agent Skills and active target-client validation: it omits optional `compatibility`, carries `license: MIT`, `metadata.author`, and an independent quoted content CalVer that changes only for meaningful skill-content releases rather than every CLI release.
 - `AGENTS.md` is a navigation entrypoint and must not become a durable rules or design store.
 - External skill and workflow repositories can be declared by repository, ref, tier, treatment strategy, and relevant paths in `upstreams.yaml`, cached under ignored `.cache/upstreams/`, and pinned explicitly in a flat, timestamp-free `source: revision` lock mapping.
 - Upstream synchronization records fetched commits in dedicated Git candidate refs; checkout `HEAD` is not candidate authority. Only the maintainer script's explicit `accept` action updates accepted revisions, and distillation into RSP-native skills remains a separate reviewed change.

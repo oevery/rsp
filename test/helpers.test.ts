@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import { parse as parseYaml } from 'yaml'
 import { changeNameFromPath, collectArchiveChecklist, collectArchiveReadiness, countCheckboxes, detectDeltaSections, extractSection, generateChangeContent, generateProjectRulesContent, generateRulesContent, generateSpecContent, getDurableReviewCandidateTargets, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, parseScenarios, parseYamlLines, renderRspAgentsBlock } from '../src/core/helpers.js'
 
 describe('parseYamlLines', () => {
@@ -234,6 +235,31 @@ describe('rules templates', () => {
 })
 
 describe('documentation command examples', () => {
+  it('keeps the published RSP skill conformant and independently versioned', () => {
+    const root = fileURLToPath(new URL('..', import.meta.url))
+    const skill = readFileSync(join(root, 'skills', 'rsp', 'SKILL.md'), 'utf-8')
+    const frontmatter = skill.match(/^---\n([\s\S]*?)\n---/)
+    expect(frontmatter).not.toBeNull()
+
+    const metadata = parseYaml(frontmatter![1]!) as Record<string, unknown>
+    expect(Object.keys(metadata).sort()).toEqual([
+      'description',
+      'license',
+      'metadata',
+      'name',
+    ])
+    expect(metadata.name).toBe('rsp')
+    expect(typeof metadata.description).toBe('string')
+    expect((metadata.description as string).length).toBeLessThanOrEqual(1024)
+    expect(metadata.license).toBe('MIT')
+
+    const custom = metadata.metadata as Record<string, unknown>
+    expect(custom.author).toBe('oevery')
+    expect(custom.version).toBe('2026.07.18')
+    expect(Object.values(custom).every(value => typeof value === 'string')).toBe(true)
+    expect(custom.version).toMatch(/^\d{4}\.\d{2}\.\d{2}(?:\.\d+)?$/)
+  })
+
   it('keeps RTK guidance only in rules, not in the skill', () => {
     const root = fileURLToPath(new URL('..', import.meta.url))
     const skill = readFileSync(join(root, 'skills', 'rsp', 'SKILL.md'), 'utf-8')
@@ -267,7 +293,7 @@ describe('documentation command examples', () => {
     expect(skill).toContain('only when the user explicitly wants RSP tracking for a small, straightforward change')
     expect(skill).toContain('metadata:')
     expect(skill).toContain('author: oevery')
-    expect(skill).toContain('version: 2.0.3')
+    expect(skill).toContain('version: "2026.07.18"')
     expect(skill).toContain('## When not to use')
     expect(skill).toContain('### Pre-archive durable decision')
     expect(skill).toContain('Prefer `No durable update needed` when no concrete stable fact is worth rereading in future sessions.')
