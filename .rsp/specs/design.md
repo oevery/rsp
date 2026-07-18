@@ -34,6 +34,8 @@
 - Upstream preparation writes regenerable mechanical evidence to ignored cache; tracked single-source distillation and cross-source synthesis live under `research/`, outside published and runtime RSP artifacts.
 - Accepting any revision, including an initial baseline, means its matching source distillation is complete. Status derives research state, required-path coverage, and the next action from existing artifacts without adding lifecycle state.
 - Mechanical patch evidence is streamed and byte-hashed. Direct adaptation records license and reuse constraints; research recommendations affect final RSP artifacts only through a normal RSP change with report, recommendation, and adoption provenance.
+- The repository separates product runtime, product distribution, maintainer tooling, maintainer knowledge, verification, self-hosting protocol state, and transient/generated artifacts by directory ownership.
+- Product runtime and published distribution artifacts do not depend on maintainer research, upstream caches, self-hosting `.rsp/` state, or repository-maintainer-only skills.
 
 ## Boundaries
 - In scope: initializing and repairing `.rsp/` structure for repositories.
@@ -61,6 +63,29 @@
 - `skills/rsp/` contains operational skill guidance for agents that support skills.
 - `docs/design-philosophy.md` records explanatory product and design rationale for maintainers.
 - `test/` contains Vitest coverage for command behavior and core helpers.
+
+## Repository Architecture
+
+| Layer | Directories | Ownership |
+| --- | --- | --- |
+| Product runtime | `src/`, `bin/` | CLI, deterministic command behavior, domain interpretation, filesystem and diagnostic support |
+| Product distribution | `rules/`, `skills/`, `commands/` | Bundled normative rules, published Agent Skills, and optional compatible command prompts |
+| Maintainer tooling | `scripts/`, `.agents/skills/` | Repository-wide deterministic maintenance and maintainer-only judgment workflows |
+| Maintainer knowledge | `docs/`, `research/` | Explanatory design material, pinned source distillations, cross-source models, and recommendations |
+| Verification | `test/` | Observable behavior checks for product and maintainer tooling |
+| Self-hosting protocol | `.rsp/` | Durable facts/rules, open work, focus, and archive history for developing this repository |
+| Transient and generated | `.cache/`, `dist/`, dependency directories | Disposable upstream checkouts and evidence, build output, and installed dependencies |
+
+Dependency direction is constrained:
+
+- `bin/` loads the built product runtime; CLI registration delegates to commands, which use domain interpretation and core filesystem/output support.
+- Product runtime must not import `research/`, `.cache/`, `.agents/skills/`, `.rsp/`, or repository-maintainer scripts.
+- Published `rules/`, `skills/`, and `commands/` must operate without a source checkout, research corpus, or upstream cache.
+- Maintainer tooling may inspect product source and maintainer knowledge, but it enters product surfaces only through a selected normal RSP change.
+- Research may cite product and prepared evidence, but it cannot promote recommendations or mutate product artifacts automatically.
+- Self-hosting `.rsp/` files govern development of this repository and are not runtime configuration for consumer projects.
+- Future controller plans, ledgers, summaries, and checkpoints must use ignored controller-owned storage outside `.rsp/`.
+- New directories are created only for a selected capability with a distinct owner; upstream symmetry or speculative future use is insufficient.
 
 ## Constraints
 - Runtime support requires Node.js 18 or newer.

@@ -34,6 +34,16 @@ sources:
     paths:
       - README.md
       - LICENSE*
+      - AGENTS.md
+      - CONTEXT.md
+      - package.json
+      - .agents/**
+      - .claude-plugin/**
+      - .changeset/**
+      - .out-of-scope/**
+      - docs/engineering/**
+      - docs/productivity/**
+      - scripts/**
       - skills/engineering/**
       - skills/productivity/**
 
@@ -115,6 +125,23 @@ sources:
       - plugins/**/*.md
       - plugins/**/*.json
       - plugins/**/*.yaml
+
+  planning-with-files:
+    repository: https://github.com/OthmanAdi/planning-with-files.git
+    ref: master
+    tier: reference
+    strategy: model
+    paths:
+      - README.md
+      - LICENSE
+      - .agents/skills/planning-with-files/**
+      - docs/workflow.md
+      - docs/evals.md
+      - docs/codex.md
+      - docs/attestation-locking.md
+      - templates/**
+      - scripts/**
+      - tests/**
 
   skills-cli:
     repository: https://github.com/vercel-labs/skills.git

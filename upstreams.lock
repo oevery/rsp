@@ -1,2 +1,6 @@
 version: 1
-revisions: {}
+revisions:
+  matt-skills: 9603c1cc8118d08bc1b3bf34cf714f62178dea3b
+  openspec: 46a4d782229ebb104268130a16e85cb7662a2281
+  planning-with-files: 7c6c6cbb76ebee7c7a7e28a38a08d3ad7d1e0427
+  spec-kit: 57cc518d63d6f10da3dd93df1ebcadda87c59374
