@@ -3,8 +3,8 @@ import { existsSync } from 'node:fs'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 
 import { join } from 'node:path'
-import { CHANGES_DIR, FOCUS_DIR, pc, PKG_ROOT, RSP_DIR, VALID_KINDS } from '../core/config.js'
-import { detectProjectName, generateChangeContent, generateDesignContent, generateProjectRulesContent, upsertRspAgentsBlock } from '../core/helpers.js'
+import { CHANGES_DIR, FOCUS_DIR, pc, PKG_ROOT, RSP_DIR, RSP_RULES_PATH, VALID_KINDS } from '../core/config.js'
+import { detectProjectName, generateChangeContent, generateDesignContent, upsertRspAgentsBlock } from '../core/helpers.js'
 import { withRspLock } from '../core/lock.js'
 import { buildArchiveIndex } from './archive-index.js'
 import { buildSpecsIndex } from './specs-index.js'
@@ -45,7 +45,6 @@ export async function initProject(args: InitArgs = {}) {
 
   return withRspLock('init', async () => {
     const dirs = [
-      join(RSP_DIR, 'rules'),
       join(RSP_DIR, 'specs'),
       CHANGES_DIR,
       FOCUS_DIR,
@@ -58,7 +57,7 @@ export async function initProject(args: InitArgs = {}) {
     let created = false
     const bundledRules = await readFile(join(PKG_ROOT, 'rules', 'rsp-rules.md'), 'utf-8')
 
-    created = (await ensureFile(join(RSP_DIR, 'rules', 'rsp-rules.md'), bundledRules)) || created
+    created = (await ensureFile(RSP_RULES_PATH, bundledRules)) || created
     created = (await ensureFile(join(RSP_DIR, 'config.yaml'), generateConfigTemplate())) || created
     const createdSpecsIndex = await ensureFile(join(RSP_DIR, 'specs', 'INDEX.md'), '# Specs Index\n\n_Additional project-level specs beyond `design.md`._\n')
     created = createdSpecsIndex || created
@@ -69,9 +68,6 @@ export async function initProject(args: InitArgs = {}) {
     created = (await ensureFile(join(CHANGES_DIR, '.gitkeep'), '')) || created
     created = (await ensureFile(join(FOCUS_DIR, '.gitkeep'), '')) || created
     created = (await ensureFile(join(RSP_DIR, '.gitignore'), '# Transient files that should not be committed\n.lock\n')) || created
-
-    if (args.withProjectRules)
-      created = (await ensureFile(join(RSP_DIR, 'rules', 'project-rules.md'), generateProjectRulesContent(projectName))) || created
 
     if (args.withProjectSetup) {
       const changePath = join(CHANGES_DIR, 'project-setup.md')
@@ -115,7 +111,7 @@ export async function initProject(args: InitArgs = {}) {
       const next = args.withProjectSetup ? 'fill .rsp/changes/project-setup.md' : 'rsp create project-setup'
       console.log(`
   ${pc.green('RSP scaffolded.')}\n`)
-      console.log(`  Created: .rsp/rules/\n           .rsp/specs/\n           .rsp/changes/\n           .rsp/focus.d/\n           .rsp/archives/\n           .rsp/.gitignore\n           .rsp/config.yaml\n           .rsp/specs/design.md${createdProjectSetup}${createdAgents}\n`)
+      console.log(`  Created: .rsp/rsp-rules.md\n           .rsp/specs/\n           .rsp/changes/\n           .rsp/focus.d/\n           .rsp/archives/\n           .rsp/.gitignore\n           .rsp/config.yaml\n           .rsp/specs/design.md${createdProjectSetup}${createdAgents}\n`)
       console.log(`  ${pc.cyan('Next:')} ${next}\n  ${pc.dim('Then:')} fill .rsp/specs/design.md\n  ${pc.dim('Also:')} rsp status  rsp check\n`)
     }
     else if (created) {

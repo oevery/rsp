@@ -4,7 +4,7 @@ import { readdir, readFile, rmdir } from 'node:fs/promises'
 
 import { basename, dirname, join, relative, sep } from 'node:path'
 import { parse } from 'yaml'
-import { pc, RSP_DIR } from './config.js'
+import { OBSOLETE_RSP_RULES_PATH, pc, RSP_DIR, RSP_RULES_PATH } from './config.js'
 import { toErrorMessage } from './output.js'
 
 const RSP_AGENTS_BEGIN = '<!-- rsp:begin -->'
@@ -56,6 +56,62 @@ interface WalkOptions {
 export async function walkMarkdownFiles(dir: string, options: WalkOptions = {}): Promise<string[]> {
   const all = await walkFiles(dir, options)
   return all.filter(f => f.endsWith('.md'))
+}
+
+export interface UnsupportedRulesEntry {
+  path: string
+  kind: 'file' | 'directory'
+}
+
+export interface UnsupportedRulesInspection {
+  entries: UnsupportedRulesEntry[]
+  diagnostics: RuntimeDiagnostic[]
+  directoryRemaining: boolean
+}
+
+/** Inspect obsolete custom rules that require manual semantic migration. */
+export async function inspectUnsupportedRules(): Promise<UnsupportedRulesInspection> {
+  const rulesDir = join(RSP_DIR, 'rules')
+  const diagnostics: RuntimeDiagnostic[] = []
+  const rawEntries = await walkAllEntries(rulesDir, diagnostics)
+  const entries = rawEntries
+    .filter(entry => entry.path !== OBSOLETE_RSP_RULES_PATH)
+    .map(entry => ({
+      path: normalizeLogicalPath(relative(rulesDir, entry.path)),
+      kind: entry.kind,
+    }))
+  const obsoleteFallbackPresent = existsSync(OBSOLETE_RSP_RULES_PATH)
+
+  return {
+    entries,
+    diagnostics,
+    directoryRemaining: existsSync(rulesDir) && (!obsoleteFallbackPresent || entries.length > 0),
+  }
+}
+
+async function walkAllEntries(dir: string, diagnostics: RuntimeDiagnostic[]): Promise<Array<{ path: string, kind: 'file' | 'directory' }>> {
+  const entries: Array<{ path: string, kind: 'file' | 'directory' }> = []
+  try {
+    const items = await readdir(dir, { withFileTypes: true })
+    for (const item of items) {
+      const path = join(dir, item.name)
+      const kind = item.isDirectory() ? 'directory' : 'file'
+      entries.push({ path, kind })
+      if (kind === 'directory')
+        entries.push(...await walkAllEntries(path, diagnostics))
+    }
+  }
+  catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+      diagnostics.push({
+        code: 'walk_failed',
+        operation: 'readdir',
+        path: dir,
+        message: toErrorMessage(error),
+      })
+    }
+  }
+  return entries
 }
 
 /** Recursively walk a directory, returning all entry paths (no file type filter). */
@@ -117,9 +173,9 @@ kind: ops
 - Scope:
   - Review the repository structure, entrypoints, and primary outputs
   - Fill .rsp/specs/design.md with durable architecture facts
-  - Add .rsp/rules/project-rules.md when stable local rules or validation steps exist
+  - Add stable local instructions or validation steps to the nearest project-owned AGENTS.md when needed
 - Non-goals:
-  - Do not duplicate durable project facts across this change, specs, and rules
+  - Do not duplicate durable project facts across this change, specs, and AGENTS.md
 
 ## Spec
 ### ADDED
@@ -128,21 +184,21 @@ kind: ops
 
 ### MODIFIED
 - Requirement: stable local operating constraints
-  - Stable validation or workflow constraints are reflected in .rsp/rules/project-rules.md when needed
+  - Stable validation or workflow constraints are reflected in the nearest project-owned AGENTS.md when needed
 
 ### Acceptance
 #### Scenario: project model captured
 - GIVEN an initialized RSP project
 - WHEN project setup is completed
 - THEN .rsp/specs/design.md reflects durable project facts
-- AND .rsp/rules/project-rules.md exists only when stable local rules are present
+- AND the nearest project-owned AGENTS.md contains only the stable local instructions that agents must follow
 
 ## Design
 - Approach:
-  - Keep bootstrap knowledge in this single change while moving durable facts into specs and rules
+  - Keep bootstrap knowledge in this single change while moving durable facts into specs and scoped instructions into AGENTS.md
 - Affected areas:
   - .rsp/specs/design.md
-  - .rsp/rules/project-rules.md
+  - AGENTS.md
 - Constraints:
   - Keep the setup lightweight and avoid duplicating durable project facts
 
@@ -150,15 +206,15 @@ kind: ops
 - [ ] Review the repository structure, entrypoints, and primary outputs
 - [ ] Review AGENTS.md and confirm the RSP entry points to the right project files
 - [ ] Fill .rsp/specs/design.md with durable architecture facts
-- [ ] Add .rsp/rules/project-rules.md if stable local rules or validation steps exist
+- [ ] Add stable local rules or validation steps to the nearest project-owned AGENTS.md if needed
 
 ## Verify
 - Automated:
   - [ ] Run rsp doctor
 - Manual:
-  - [ ] Review .rsp/specs/design.md and confirm it matches the repository
+  - [ ] Review .rsp/specs/design.md and the nearest project-owned AGENTS.md and confirm they match the repository
 - Durable updates:
-  - [ ] Decide whether this change produced durable knowledge that belongs in \`.rsp/specs/\` or \`.rsp/rules/\`
+  - [ ] Decide whether this change produced durable knowledge that belongs in \`.rsp/specs/\` or stable instructions that belong in the nearest project-owned \`AGENTS.md\`
   - [ ] If yes, write only stable facts to the smallest correct target file before archive; do not promote task history, debugging notes, or one-off implementation context
 
 ## Blockers
@@ -205,7 +261,7 @@ ${template.acceptanceSection}
 ## Tasks
 - [ ] Finalize the proposal, spec, and design details for this change
 - [ ] ${template.task}
-- [ ] Verify the result and update any required durable docs or rules
+- [ ] Verify the result and update any required durable specs or scoped instructions
 
 ## Verify
 - Automated:
@@ -213,7 +269,7 @@ ${template.acceptanceSection}
 - Manual:
   - [ ] ${template.manualVerify}
 - Durable updates:
-  - [ ] Decide whether this change produced durable knowledge that belongs in \`.rsp/specs/\` or \`.rsp/rules/\`
+  - [ ] Decide whether this change produced durable knowledge that belongs in \`.rsp/specs/\` or stable instructions that belong in the nearest project-owned \`AGENTS.md\`
   - [ ] If yes, write only stable facts to the smallest correct target file before archive; do not promote task history, debugging notes, or one-off implementation context
 
 ## Blockers
@@ -266,7 +322,7 @@ kind: "${frontmatterKind}"
 - Manual:
   - [ ] <exact scenario, or not needed: reason>
 - Durable updates:
-  - [ ] Decide whether this change produced durable knowledge that belongs in ".rsp/specs/" or ".rsp/rules/"
+  - [ ] Decide whether this change produced durable knowledge that belongs in ".rsp/specs/" or stable instructions that belong in the nearest project-owned "AGENTS.md"
   - [ ] If yes, write only stable facts to the smallest correct target file before archive
 
 ## Blockers
@@ -389,19 +445,17 @@ export function renderRspAgentsBlock(): string {
   return `${RSP_AGENTS_BEGIN}
 ## RSP Entry
 
-RSP keeps durable rules, specs, and current work under \`.rsp/\`.
-Treat AGENTS.md as navigation only; keep durable rules and design in \`.rsp/\`.
+RSP tracks current work, stable specs, and archives under \`.rsp/\`.
 
 Read in order:
-1. .rsp/rules/rsp-rules.md
-2. .rsp/focus.d/
-3. matching .rsp/changes/*.md for the focused entries
-4. .rsp/specs/design.md
-5. .rsp/specs/INDEX.md
-6. only the relevant additional .rsp/rules/*.md and .rsp/specs/*.md files
+1. Nearest \`AGENTS.md\` for project or module instructions.
+2. Root \`CONTEXT-MAP.md\` if present, then the relevant nearest \`CONTEXT.md\`.
+3. The \`rsp\` skill; if unavailable, read \`.rsp/rsp-rules.md\` as the fallback protocol.
+4. \`.rsp/focus.d/\` and the explicitly selected focused Change.
+5. Only the relevant \`.rsp/specs/\` files.
 
 If \`.rsp/focus.d/\` is empty and the user has not provided a concrete task, ask what to work on or suggest \`npx -y @oevery/rsp create <name>\` for tracked work.
-If your agent supports Agent Skills, load \`rsp\` for setup, repair, and durable-decision tasks.
+Do not treat \`.rsp/specs/\` or \`.rsp/changes/\` as replacements for nearest \`AGENTS.md\` or \`CONTEXT.md\`.
 ${RSP_AGENTS_END}`
 }
 
@@ -424,21 +478,21 @@ export function hasRspAgentsBlock(content: string): boolean {
   return content.includes(RSP_AGENTS_BEGIN) && content.includes(RSP_AGENTS_END)
 }
 
-/** Valid change/rule/spec name pattern (kebab-case with optional subdirectory). */
+/** Valid change/spec name pattern (kebab-case with optional subdirectory). */
 export const CHANGE_NAME_RE = /^[a-z0-9-]+(?:\/[a-z0-9-]+)*$/
 
-/** Validate a change/rule/spec name against the kebab-case pattern. */
+/** Validate a change/spec name against the kebab-case pattern. */
 export function isValidChangeName(name: string): boolean {
   return CHANGE_NAME_RE.test(name)
 }
 
 /** Guard: ensure RSP is initialized. Exits with error if not. */
 export function guardRspInitialized(): void {
-  const rspRulesPath = join(RSP_DIR, 'rules', 'rsp-rules.md')
   const designPath = join(RSP_DIR, 'specs', 'design.md')
-  if (!existsSync(rspRulesPath) || !existsSync(designPath)) {
-    console.error(`  ${pc.red('Error:')} RSP is not initialized in this project`)
-    console.error(`  ${pc.dim('Run: rsp init')}`)
+  if (!existsSync(RSP_RULES_PATH) || !existsSync(designPath)) {
+    const initialized = existsSync(RSP_DIR)
+    console.error(`  ${pc.red('Error:')} ${initialized ? 'RSP project requires an update' : 'RSP is not initialized in this project'}`)
+    console.error(`  ${pc.dim(initialized ? 'Run: rsp update' : 'Run: rsp init')}`)
     process.exit(1)
   }
 }
@@ -518,48 +572,6 @@ export function generateDesignContent(projectName: string): string {
 
 ## Constraints
 - <cross-cutting technical or operational constraint, when it affects architecture>
-`
-}
-
-/** Generate the optional project rules template. */
-export function generateProjectRulesContent(projectName: string): string {
-  return `---
-name: project-rules
-description: Project-specific rules for ${projectName}
----
-
-# Project Rules
-
-## Scope
-- <stable local rules, workflow constraints, or validation expectations>
-- Do not put temporary debugging steps here.
-
-## Validation
-- <preferred stable validation commands, not temporary troubleshooting steps>
-
-## Conventions
-- <project-specific conventions>
-`
-}
-
-/** Generate a generic rules file template. */
-export function generateRulesContent(name: string): string {
-  const title = toTitleCase(name)
-  return `---
-name: ${name}
-description: Durable rules for ${title}
----
-
-# ${title}
-
-## Scope
-- <what this rules file governs>
-
-## Rules
-- <stable local rule>
-
-## Validation
-- <relevant validation command or check>
 `
 }
 
@@ -710,19 +722,16 @@ export function buildDurableReviewGuidance(candidateTargets: string[]): DurableR
     required: true,
     decisions: [
       'No durable update needed',
-      'Update existing spec or rule',
+      'Update existing spec or scoped instruction',
       'Create a new durable spec',
     ],
     candidateTargets,
-    note: 'Semantic review decides whether stable facts belong in specs or rules; the CLI never merges delta specs automatically.',
+    note: 'Semantic review decides whether stable facts belong in specs or stable scoped instructions belong in the nearest project-owned AGENTS.md; the CLI cannot infer that scoped instruction path and never merges delta specs automatically.',
   }
 }
 
-export function getDurableReviewCandidateTargets(options: { projectRulesExists?: boolean } = {}): string[] {
-  const targets = ['.rsp/specs/design.md']
-  if (options.projectRulesExists)
-    targets.push('.rsp/rules/project-rules.md')
-  return targets
+export function getDurableReviewCandidateTargets(): string[] {
+  return ['.rsp/specs/design.md']
 }
 
 /** Collect deterministic archive checklist item strings for a change file. */

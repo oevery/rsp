@@ -3,7 +3,6 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { defineCommand, runMain } from 'citty'
-import { addRules } from './commands/add-rules.js'
 import { addSpec } from './commands/add-spec.js'
 import { archiveChange } from './commands/archive.js'
 import { runCheck } from './commands/check.js'
@@ -29,11 +28,6 @@ const initCommand = defineCommand({
       description: 'How to handle AGENTS.md output: managed or print',
       default: 'managed',
     },
-    'with-project-rules': {
-      type: 'boolean',
-      description: 'Create .rsp/rules/project-rules.md',
-      default: false,
-    },
     'with-project-setup': {
       type: 'boolean',
       description: 'Create .rsp/changes/project-setup.md and focus it',
@@ -45,7 +39,6 @@ const initCommand = defineCommand({
       agentsMode: args['agents-mode'] === 'print'
         ? 'print'
         : 'managed',
-      withProjectRules: Boolean(args['with-project-rules']),
       withProjectSetup: Boolean(args['with-project-setup']),
     })
   },
@@ -78,23 +71,6 @@ const createCommand = defineCommand({
   },
 })
 
-const addRulesCommand = defineCommand({
-  meta: {
-    name: 'rules',
-    description: 'Create .rsp/rules/<name>.md',
-  },
-  args: {
-    name: {
-      type: 'positional',
-      description: 'Rules file name',
-      required: true,
-    },
-  },
-  async run({ args }: { args: { name: string } }) {
-    await addRules(args.name)
-  },
-})
-
 const addSpecCommand = defineCommand({
   meta: {
     name: 'spec',
@@ -115,10 +91,9 @@ const addSpecCommand = defineCommand({
 const addCommand = defineCommand({
   meta: {
     name: 'add',
-    description: 'Add optional rules or spec files',
+    description: 'Add an optional durable spec file',
   },
   subCommands: {
-    rules: addRulesCommand,
     spec: addSpecCommand,
   },
 })
@@ -275,10 +250,12 @@ const checkCommand = defineCommand({
 const updateCommand = defineCommand({
   meta: {
     name: 'update',
-    description: 'Refresh RSP project structure after upgrade (rules, AGENTS, indices)',
+    description: 'Refresh RSP project structure after upgrade (fallback protocol, AGENTS, indices)',
   },
   async run() {
-    await updateProject()
+    const result = await updateProject()
+    if (!result.migration.inspectionComplete)
+      process.exit(1)
   },
 })
 

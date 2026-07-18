@@ -15,9 +15,9 @@
 
 它不是 agent 的规范源。
 
-执行规则以 `rules/` 为准。
+项目级稳定指令以最近的项目自有 `AGENTS.md` 为准。
 
-操作流程以 `skills/` 为准。
+操作流程优先以 `rsp` skill 为准；skill 不可用时才使用 `.rsp/rsp-rules.md` 最小 fallback protocol。
 
 ## 产品定位
 
@@ -42,7 +42,7 @@ RSP 是面向 AI 辅助软件工作的轻量工作流。
 
 RSP 分离三类信息：
 
-- `rules/` 和 `specs/`：durable truth。
+- 最近的项目自有 `AGENTS.md` 与 `specs/`：分别承载稳定 scoped instructions 和 durable facts。
 - `changes/`：open work。
 - `archives/`：completed history。
 
@@ -104,7 +104,7 @@ RSP 使用 `change`，不使用 `feature` 作为顶层工作模型。
 
 ### 4. Durable truth 与 history 分离
 
-`specs/` 和 `rules/` 只存未来会反复使用的长期事实。
+`specs/` 只存未来会反复使用的长期事实；最近的项目自有 `AGENTS.md` 只存 agent 必须遵循的稳定 scoped instructions。
 
 适合 durable layer 的内容：
 
@@ -231,13 +231,15 @@ RSP 不采纳：
 
 ## 目录角色
 
-### `.rsp/rules/`
+### `.rsp/rsp-rules.md`
 
-Canonical behavioral source。
+不支持 Agent Skills 时的最小 fallback protocol。
 
-它存 rules，不存设计解释。
+它不是项目指令或设计存储；RSP 不使用 `.rsp/rules/` 作为运行时或 durable authority。
 
-它应短、稳定、低歧义。
+它应短、稳定、tool-agnostic，只保留无 skill 时安全操作 `.rsp/` 所需的核心约束。
+
+旧 `.rsp/rules/rsp-rules.md` 只由 `rsp update` 识别并迁移，普通命令不读取它；任意旧自定义 rules 必须经过人工语义判断后迁入最近的项目自有 `AGENTS.md`。
 
 ### `.rsp/specs/`
 
@@ -301,7 +303,7 @@ Spec 不是 archive summary。
 
 ## Durable update 哲学
 
-不是每个 change 都更新 `specs/` 或 `rules/`。
+不是每个 change 都更新 `specs/` 或项目自有 `AGENTS.md` 指令。
 
 只有长期事实才值得提升。
 
@@ -364,20 +366,20 @@ RSP 有多个表面。
 每个表面只承担自己的职责。
 
 - `README.md`：人类概览、入门、示例。
-- `rules/`：常驻规范真相源。
-- `skills/`：按需操作手册。
+- `.rsp/rsp-rules.md`：skill 不可用时的最小 fallback protocol。
+- `skills/`：优先使用的按需操作手册。
 - `docs/design-philosophy.md`：设计理由。
-- `AGENTS.md`：入口导航层。
+- `AGENTS.md`：RSP 受管 block 是入口导航层，项目自有 section 可承载稳定 scoped instructions。
 
 这些表面应互相强化。
 
 它们不应互相复制完整内容。
 
-`rules/` 是 agent 常驻上下文中的唯一规范真相源，因此必须短、稳定、少歧义。
+`.rsp/rsp-rules.md` 不是完整规范副本，而是 skill 不可用时仍能安全运行的最小协议，因此必须短、稳定、少歧义。
 
-`rules/` 应表达跨工具也必须成立的约束。
+fallback protocol 应表达跨工具也必须成立的核心约束。
 
-`rules/` 不应成为完整操作手册。
+fallback protocol 不应成为完整操作手册或项目规则仓库。
 
 `skills/` 是按需加载的 agent 操作手册，因此可以比 rules 更详尽。
 
@@ -385,7 +387,7 @@ RSP 有多个表面。
 
 `skills/` 的详细度服务于减少 agent 幻觉和误操作。
 
-`rules/` 保持为短小规范层，`skills/` 保持为短小操作层。
+fallback protocol 保持为最小兼容层，`skills/` 保持为详细操作层。
 
 体积预算不能优先于准确性。
 
@@ -433,23 +435,23 @@ Agent-distributed normative surfaces should stay in English。
 
 - `README.md` / `README.zh-CN.md` 可以本地化。
 - `docs/` 可使用中文记录维护者设计理由。
-- `rules/` 和 `skills/` 应保持英文。
+- fallback protocol 和 `skills/` 应保持英文。
 
 ## AGENTS 哲学
 
-`AGENTS.md` 是导航层。
+RSP 管理的 `AGENTS.md` block 是导航层；block 外的项目自有 section 是 scoped instruction 层。
 
 它帮助 agent 以正确顺序找到正确文件。
 
-它不是：
+RSP 受管 block 不是：
 
 - 长期设计记录。
 - 长期规则存储。
-- `specs/` 或 `rules/` 的重复副本。
+- `specs/`、skill 或 fallback protocol 的重复副本。
 
 只有 `<!-- rsp:begin --> ... <!-- rsp:end -->` 受管 block 由工具拥有。
 
-精确 read order 以 generated block 和 `rules/rsp-rules.md` 为准。
+精确 read order 以 generated block 为准：nearest `AGENTS.md`，可选 context map/context，`rsp` skill 或 `.rsp/rsp-rules.md` fallback，focus 与选中的 Change，最后才是相关 Specs。
 
 ## RSP 应避免什么
 
@@ -489,8 +491,8 @@ RSP 应避免：
 ## 简短版
 
 - RSP 是面向 AI 辅助工程的轻量知识与 change workflow。
-- `rules/` 和 `specs/` 存 durable truth。
-- `rules/` 是 canonical behavioral source。
+- `specs/` 存 durable project facts；最近的项目自有 `AGENTS.md` 存稳定 scoped instructions。
+- `rsp` skill 是首选操作指南，`.rsp/rsp-rules.md` 是最小 fallback protocol。
 - `changes/` 存 open work。
 - `focus.d/` 是唯一 current-focus source。
 - `archives/` 存 completed history。

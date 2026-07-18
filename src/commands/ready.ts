@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
-import { CHANGES_DIR, pc, RSP_DIR } from '../core/config.js'
+import { CHANGES_DIR, pc } from '../core/config.js'
 import { buildDurableReviewGuidance, collectArchiveReadiness, getDurableReviewCandidateTargets, guardRspInitialized, isValidChangeName, normalizeLogicalPath } from '../core/helpers.js'
 import { emitJson } from '../core/output.js'
 
@@ -70,7 +70,7 @@ export async function showReady(name: string, options: CommandRunOptions = {}): 
     semantic: readinessDetails.semantic,
     archiveReady: readinessDetails.archiveReady,
   }
-  const durableReview = buildDurableReviewGuidance(getReadyDurableReviewCandidateTargets())
+  const durableReview = buildDurableReviewGuidance(getDurableReviewCandidateTargets())
 
   const result: ReadyResult = {
     command: 'ready',
@@ -112,12 +112,6 @@ export async function showReady(name: string, options: CommandRunOptions = {}): 
   console.log(`    ${pc.dim(durableReview.note)}\n`)
 
   return result
-}
-
-function getReadyDurableReviewCandidateTargets(): string[] {
-  return getDurableReviewCandidateTargets({
-    projectRulesExists: existsSync(join(RSP_DIR, 'rules', 'project-rules.md')),
-  })
 }
 
 function formatArchiveReady(value: 'yes' | 'judgment' | 'no'): string {

@@ -2,7 +2,7 @@
 
 English | [简体中文](./README.zh-CN.md)
 
-RSP = **Rules, Specs, Plans**. A lightweight AI-assisted workflow for durable project knowledge and single-file change tracking.
+RSP = **Rules, Specs, Plans**. A lightweight project protocol for AI-assisted development, durable knowledge, and single-file change tracking.
 
 ## Quick start
 
@@ -22,7 +22,8 @@ npx -y @oevery/rsp doctor
 
 ## Core idea
 
-- `rules/` stores durable constraints.
+- nearest `AGENTS.md` stores scoped project or module instructions.
+- `rsp-rules.md` is the minimal tool-agnostic fallback protocol.
 - `specs/` stores project-level source-of-truth docs.
 - `changes/` stores open work in a single-file format.
 - `focus.d/` mirrors current focused changes with empty marker files.
@@ -30,9 +31,7 @@ npx -y @oevery/rsp doctor
 
 ```text
 .rsp/
-├── rules/
-│   ├── rsp-rules.md
-│   └── project-rules.md      # optional
+├── rsp-rules.md              # minimal fallback protocol
 ├── specs/
 │   ├── INDEX.md              # auto-generated
 │   └── design.md
@@ -49,9 +48,9 @@ npx -y @oevery/rsp doctor
 - `specs/` describes durable project facts and current agreed design.
 - `changes/` captures open work, including features, fixes, refactors, docs, ops, and research.
 - A change is always a single Markdown file with explicit sections for proposal, spec, design, tasks, verification, and blockers.
-- Completed changes move to `archives/`, while durable outcomes should be reflected in `specs/` or `rules/` before archiving.
-- Durable outcomes mean stable facts only. Do not promote task history, debugging notes, or one-off implementation context into `specs/` or `rules/`.
-- Change `Spec` delta markers (`### ADDED`, `### MODIFIED`, `### REMOVED`) are planning aids only. `rsp archive` does not automatically merge them into durable specs or rules. Durable writeback remains an explicit semantic decision.
+- Completed changes move to `archives/`. Stable current facts belong in `specs/`; stable scoped operating instructions belong in nearest project-owned `AGENTS.md`.
+- Do not promote task history, debugging notes, or one-off implementation context into Specs or project instructions.
+- Change `Spec` delta markers (`### ADDED`, `### MODIFIED`, `### REMOVED`) are planning aids only. `rsp archive` does not automatically merge them into durable Specs. Durable writeback remains an explicit semantic decision.
 - `rsp check` performs deterministic hygiene checks. It warns about unfinished template placeholders and unresolved clarification markers, but those warnings do not replace the semantic durable-update decision.
 
 ## File ownership
@@ -60,10 +59,10 @@ npx -y @oevery/rsp doctor
 - `.rsp/specs/INDEX.md`: auto-generated index of additional spec files beyond `design.md`. Rebuild with `rsp update`.
 - `.rsp/archives/INDEX.md`: auto-generated. Rebuild with `rsp update`.
 - `.rsp/specs/design.md`: created by `rsp init`, then owned by the project.
-- `.rsp/rules/project-rules.md`: optional; create only when the project has durable local rules.
+- `.rsp/rsp-rules.md`: generated minimal fallback protocol; use the `rsp` skill when available.
 - Keep durable architecture, boundaries, and cross-cutting technical constraints in `.rsp/specs/design.md`.
 - Treat `.rsp/specs/INDEX.md` as a directory for additional spec files; it does not list `design.md`.
-- Keep stable workflow rules, validation expectations, and local operating constraints in `.rsp/rules/project-rules.md`.
+- Keep stable scoped workflow and validation instructions in the nearest project-owned `AGENTS.md`, outside the managed RSP block.
 
 ## AGENTS integration
 
@@ -73,19 +72,17 @@ Managed block example:
 <!-- rsp:begin -->
 ## RSP Entry
 
-RSP keeps durable rules, specs, and current work under `.rsp/`.
-Treat AGENTS.md as navigation only; keep durable rules and design in `.rsp/`.
+RSP tracks current work, stable specs, and archives under `.rsp/`.
 
 Read in order:
-1. .rsp/rules/rsp-rules.md
-2. .rsp/focus.d/
-3. matching .rsp/changes/*.md for the focused entries
-4. .rsp/specs/design.md
-5. .rsp/specs/INDEX.md
-6. only the relevant additional .rsp/rules/*.md and .rsp/specs/*.md files
+1. Nearest `AGENTS.md` for project or module instructions.
+2. Root `CONTEXT-MAP.md` if present, then the relevant nearest `CONTEXT.md`.
+3. The `rsp` skill; if unavailable, read `.rsp/rsp-rules.md` as the fallback protocol.
+4. `.rsp/focus.d/` and the explicitly selected focused Change.
+5. Only the relevant `.rsp/specs/` files.
 
 If `.rsp/focus.d/` is empty and the user has not provided a concrete task, ask what to work on or suggest `npx -y @oevery/rsp create <name>` for tracked work.
-If your agent supports Agent Skills, load `rsp` for setup, repair, and durable-decision tasks.
+Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENTS.md` or `CONTEXT.md`.
 <!-- rsp:end -->
 ```
 
@@ -101,19 +98,19 @@ Use `skills/rsp/SKILL.md` for step-by-step setup, workflow, and auditing guidanc
 Reading guidance:
 
 - `README.md`: human-oriented overview and examples
-- `.rsp/rules/rsp-rules.md`: canonical rules source
-- `skills/rsp/SKILL.md`: operational guide for applying those rules with an agent
+- `.rsp/rsp-rules.md`: minimal fallback protocol when the skill is unavailable
+- `skills/rsp/SKILL.md`: preferred operational guide for agents
 
 Surface matrix:
 
 | Surface | Primary audience | Role |
 |---|---|---|
 | `README.md` | Humans | Overview, onboarding, examples |
-| `.rsp/rules/rsp-rules.md` | Agents | Canonical normative rules source |
-| `skills/rsp/SKILL.md` | Agents | Operational guide for applying the rules |
-| `AGENTS.md` | Humans and agents | Navigation entrypoint into the right files |
+| `.rsp/rsp-rules.md` | Agents without the skill | Minimal tool-agnostic fallback protocol |
+| `skills/rsp/SKILL.md` | Agents | Preferred operational guide |
+| `AGENTS.md` | Humans and agents | Scoped project instructions and RSP navigation |
 
-Humans should usually start with `README.md`; agents should treat `.rsp/rules/rsp-rules.md` as normative.
+Humans should usually start with `README.md`; agents should follow nearest `AGENTS.md`, load the `rsp` skill when available, and use `.rsp/rsp-rules.md` only as fallback.
 
 When this README shows `rsp <command>`, it assumes the command is already available in your environment. Otherwise use `npx -y @oevery/rsp <command>`.
 
@@ -130,6 +127,15 @@ This repository publishes a skill named `rsp` under `skills/rsp/`.
 ```bash
 npx skills add oevery/rsp
 ```
+
+## Migrating from 2.x
+
+Version 3 uses `.rsp/rsp-rules.md` as the only runtime fallback path and removes project rules from the RSP model:
+
+1. Upgrade the RSP CLI.
+2. Run `rsp update` to create the canonical fallback and remove the obsolete generated `.rsp/rules/rsp-rules.md`.
+3. If `.rsp/rules/` remains, move only stable scoped instructions from its residual entries into the nearest project-owned `AGENTS.md`, then remove the obsolete entries.
+4. Run `rsp doctor` and resolve every remaining migration issue.
 
 Repository maintainers can track external skill and workflow sources as offline review inputs. This tooling is intentionally excluded from the published package; see the [source-checkout maintainer guide](https://github.com/oevery/rsp/blob/main/docs/upstreams.md).
 
@@ -158,7 +164,7 @@ During implementation, keep the change file and the actual work in sync: complet
 
 Agents should treat only entries in `focus.d/` as current work. Unfocused files in `changes/` are still open, but should not be treated as the current target unless the user explicitly asks for them or they are re-focused.
 
-The durable update decision (whether the change produced knowledge that belongs in `.rsp/specs/` or `.rsp/rules/`) is a semantic choice made by the RSP skill or a human reviewer.
+The durable update decision (whether the change produced stable facts for `.rsp/specs/`, scoped instructions for nearest `AGENTS.md`, or no durable update) is a semantic choice made by the RSP skill or a human reviewer.
 
 `rsp ready` and `rsp show` expose both deterministic readiness and semantic-review signals. Deterministic readiness comes from checkboxes, blockers, and scenarios; semantic review remains required for durable-update decisions.
 
@@ -172,7 +178,7 @@ New project:
 2. Prefer `npx -y @oevery/rsp init --with-project-setup`, or run `rsp create project-setup` manually
 3. Fill `.rsp/specs/design.md`
 4. Use `rsp add spec <name>` only when a new durable project doc is needed
-5. Use `rsp add rules project-rules` only when the project has stable local rules
+5. Keep stable scoped operating instructions in the nearest project-owned `AGENTS.md`
 6. For tracked open work, start with `rsp create <name>`
 7. If you want an existing open change to become current work, use `rsp focus <name>`
 8. Use `rsp unfocus <name>` when you want to remove a change from the current focus set
@@ -185,7 +191,7 @@ Existing project with a rich `AGENTS.md`:
 1. `npx -y @oevery/rsp init`
 2. Keep the managed block thin
 3. Move durable design into `.rsp/specs/design.md`
-4. Use `rsp add spec <name>` or `rsp add rules <name>` only when needed
+4. Use `rsp add spec <name>` only when another durable current-fact document is needed
 
 AI-assisted setup:
 
@@ -200,8 +206,7 @@ AI-assisted setup:
 ```text
 rsp init --agents-mode <mode>   Scaffold .rsp/ and ensure AGENTS.md contains the RSP entry block
 rsp init --with-project-setup   Also create .rsp/changes/project-setup.md
-rsp update                      Refresh rules, repair the AGENTS block, and rebuild indices after upgrade
-rsp add rules <name>            Create .rsp/rules/<name>.md
+rsp update                      Refresh the fallback protocol, repair the AGENTS block, and rebuild indices
 rsp add spec <name>             Create .rsp/specs/<name>.md and rebuild specs index
 rsp create <name> [summary]     Create .rsp/changes/<name>.md; add --lite for a shorter template
 rsp focus <name>                Mark an open change as currently focused
@@ -220,7 +225,7 @@ rsp doctor [--fix] [--json] [--verbose]
                                   Check setup health and common issues
 ```
 
-For exact rules, use `.rsp/rules/rsp-rules.md`. For operational durable-decision guidance, use `skills/rsp/SKILL.md`.
+Use `skills/rsp/SKILL.md` for operations. When the skill is unavailable, use `.rsp/rsp-rules.md` as the minimal fallback protocol.
 
 When there is no focused change, `rsp status` and `rsp show --focused --json` print `nextActions` instead of guessing which open change is current.
 

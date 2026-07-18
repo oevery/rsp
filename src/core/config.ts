@@ -12,6 +12,10 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 export const PKG_ROOT = join(__dirname, '..')
 /** Project-local RSP state directory. */
 export const RSP_DIR = '.rsp'
+/** Canonical consumer path for the minimal tool-agnostic fallback protocol. */
+export const RSP_RULES_PATH = join(RSP_DIR, 'rsp-rules.md')
+/** Obsolete generated fallback path recognized only by migration diagnostics. */
+export const OBSOLETE_RSP_RULES_PATH = join(RSP_DIR, 'rules', 'rsp-rules.md')
 /** Open change storage directory. */
 export const CHANGES_DIR = join(RSP_DIR, 'changes')
 /** Current focus marker directory (empty marker files, path = change name). */

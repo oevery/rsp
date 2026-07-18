@@ -4,14 +4,14 @@ description: Use this skill when initializing RSP, operating an existing .rsp pr
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.18"
+  version: "2026.07.18.1"
 ---
 
 # RSP Skill
 
 Load this skill when you need to initialize RSP, operate `.rsp/`, audit or repair RSP state, or make a durable-update decision before archive.
 
-This skill operationalizes `.rsp/rules/rsp-rules.md`; it does not replace that canonical rules source.
+This skill is the preferred operational guide. `.rsp/rsp-rules.md` is the only runtime fallback protocol when this skill is unavailable; old projects migrate to it with `rsp update`.
 
 Prefer exact file paths, exact commands, and exact durable facts over vague summaries.
 
@@ -25,7 +25,7 @@ Prefer exact file paths, exact commands, and exact durable facts over vague summ
 - Do not load for general coding tasks unrelated to `.rsp/`.
 - Do not load when the repository does not use RSP and the user did not ask to adopt it.
 - Do not create an RSP change for a simple current-session task unless the user explicitly wants RSP tracking.
-- Do not use this skill as a substitute for reading `.rsp/rules/rsp-rules.md` during focused RSP work.
+- Do not treat this skill or the fallback protocol as a replacement for nearest project `AGENTS.md` instructions or relevant module `CONTEXT.md`.
 
 ## Workflows
 
@@ -33,7 +33,7 @@ Prefer exact file paths, exact commands, and exact durable facts over vague summ
 
 1. Initialize with `npx -y @oevery/rsp init [--agents-mode managed|print] [--with-project-setup]`.
 2. `--with-project-setup` creates and focuses `changes/project-setup.md`; otherwise create it with `npx -y @oevery/rsp create project-setup` only when explicit bootstrap tracking is still needed.
-3. Fill the bootstrap change if it exists, then write durable architecture facts to `.rsp/specs/design.md` and stable local workflow rules to `.rsp/rules/project-rules.md` only when they are long-lived.
+3. Fill the bootstrap change if it exists, write durable architecture facts to `.rsp/specs/design.md`, and keep stable scoped operating instructions in the nearest project-owned `AGENTS.md`.
 4. For diagnostics, run `npx -y @oevery/rsp doctor`.
 5. For safe deterministic repairs, run `npx -y @oevery/rsp doctor --fix` or `npx -y @oevery/rsp update`.
 6. When auditing manually, verify `.rsp/` exists, `AGENTS.md` has the managed block, `specs/design.md` exists, generated indexes are intact, and `focus.d/` markers match `changes/` files.
@@ -42,7 +42,7 @@ Prefer exact file paths, exact commands, and exact durable facts over vague summ
 
 ### Focused work
 
-1. Follow the read order in `.rsp/rules/rsp-rules.md`.
+1. Follow the managed `AGENTS.md` read order: nearest instructions, relevant context, this skill or fallback protocol, focus, selected Change, then relevant Specs.
 2. Treat only `focus.d/` markers as current RSP work; do not treat unfocused files in `changes/` as current work unless the user explicitly asks or you run `npx -y @oevery/rsp focus <name>`.
 3. Read the focused change before editing code.
 4. If a focused change is missing an explicit `kind`, repair the frontmatter before continuing.
@@ -52,7 +52,7 @@ Prefer exact file paths, exact commands, and exact durable facts over vague summ
 8. Convert actionable `## Tasks` checkboxes into your agent-local task tracker when one is available.
 9. Keep implementation sequential by default; parallelize only independent read-only discovery or mechanical checks.
 10. Update `## Tasks`, `## Verify`, and any invalidated `## Proposal`, `## Spec`, or `## Design` content in the same working session as implementation facts change.
-11. Keep temporary debugging notes, task history, and command transcripts out of `specs/` and `rules/`.
+11. Keep temporary debugging notes, task history, and command transcripts out of `specs/` and project-owned `AGENTS.md` instructions.
 
 ### Pre-archive durable decision
 
@@ -60,7 +60,7 @@ Prefer exact file paths, exact commands, and exact durable facts over vague summ
 2. Run `npx -y @oevery/rsp show --focused --json` or `npx -y @oevery/rsp ready <name> --json` to collect readiness, warnings, context paths, and `durableReview` guidance.
 3. Treat `durableReview.candidateTargets` as advisory context for likely writable durable files, not as permission to edit generated indexes or bundled core rules.
 4. Treat `Spec` delta markers (`### ADDED`, `### MODIFIED`, `### REMOVED`) as planning aids only; do not merge them automatically.
-5. Read only the current change plus relevant `specs/`, `rules/`, and code files needed for the semantic decision.
+5. Read only the current change plus relevant `specs/`, nearest project-owned `AGENTS.md`, and code files needed for the semantic decision.
 6. Produce the durable decision output before archiving.
 
 ## Durable decision
@@ -68,8 +68,8 @@ Prefer exact file paths, exact commands, and exact durable facts over vague summ
 Return exactly one decision:
 
 - `No durable update needed`
-- `Update existing spec or rule`
-- `Create a new durable spec` only when the knowledge is project-level, reusable, and does not fit `specs/design.md`, an existing spec, or a rule file
+- `Update existing spec or scoped instruction`
+- `Create a new durable spec` only when the knowledge is project-level, reusable, and does not fit `specs/design.md`, an existing spec, or a scoped project instruction
 
 Prefer `No durable update needed` when no concrete stable fact is worth rereading in future sessions.
 
@@ -83,11 +83,10 @@ Write a durable update only when one of these is true:
 Choose the smallest correct target:
 
 - project-wide design, boundaries, defaults, and durable context -> `.rsp/specs/design.md`
-- stable local workflow or validation rules -> `.rsp/rules/project-rules.md`
-- another durable rule set -> `.rsp/rules/<name>.md`
+- stable project or module operating instructions -> nearest project-owned `AGENTS.md`, only with authority to edit its non-managed content
 - an additional reusable project-level spec -> `.rsp/specs/<name>.md`
 
-Do not choose generated indexes or bundled `rules/rsp-rules.md` as ordinary durable writeback targets unless the task explicitly changes RSP itself.
+Do not choose generated indexes, `.rsp/rsp-rules.md`, or the managed RSP block in `AGENTS.md` as ordinary durable writeback targets.
 
 Prefer `.rsp/specs/design.md` or an existing durable file before creating a new spec file.
 
@@ -99,7 +98,7 @@ Use this exact format:
 
 ```md
 ## Durable Decision
-- Decision: <No durable update needed | Update existing spec or rule | Create a new durable spec>
+- Decision: <No durable update needed | Update existing spec or scoped instruction | Create a new durable spec>
 - Target: <path or N/A>
 - Why:
   - <reason>
@@ -112,7 +111,7 @@ Short example:
 
 ```md
 ## Durable Decision
-- Decision: Update existing spec or rule
+- Decision: Update existing spec or scoped instruction
 - Target: .rsp/specs/design.md
 - Why:
   - The change introduced a stable default that future agents must follow.

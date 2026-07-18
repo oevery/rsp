@@ -21,12 +21,12 @@ Then:
 3. If `.rsp/changes/project-setup.md` exists, read and complete it
 4. Read `.rsp/specs/design.md`
 5. Fill in durable design facts based on the actual repository state
-6. If the project has stable local workflow rules, update `.rsp/rules/project-rules.md`
+6. If the project has stable scoped workflow instructions, update the nearest project-owned `AGENTS.md` outside the managed RSP block only when authorized
 7. Run the final health check when the review is complete:
 
 `npx -y @oevery/rsp doctor`
 
 Constraints:
 - Keep the `AGENTS.md` managed block thin
-- Write only durable facts into `.rsp/specs/design.md` or `.rsp/rules/project-rules.md`
+- Write durable current facts into `.rsp/specs/design.md`; keep scoped operating instructions in nearest project-owned `AGENTS.md`
 - Do not write one-off debugging notes, task history, or temporary implementation context into durable files

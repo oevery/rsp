@@ -3,8 +3,8 @@ import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { basename, join, relative } from 'node:path'
 
-import { CHANGES_DIR, CONFIG_PATH, pc, RSP_DIR } from '../core/config.js'
-import { changeNameFromPath, getFocusedChangeNames, hasRspAgentsBlock, normalizeLogicalPath, parseFrontmatter, parseYamlText, walkMarkdownFiles } from '../core/helpers.js'
+import { CHANGES_DIR, CONFIG_PATH, OBSOLETE_RSP_RULES_PATH, pc, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
+import { changeNameFromPath, getFocusedChangeNames, hasRspAgentsBlock, inspectUnsupportedRules, normalizeLogicalPath, parseFrontmatter, parseYamlText, walkMarkdownFiles } from '../core/helpers.js'
 import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
 import { updateProject } from './update.js'
 
@@ -34,20 +34,21 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
   const fixed: string[] = []
 
   if (options.fix && existsSync(RSP_DIR)) {
-    fixed.push(...await updateProject({ quiet: Boolean(options.json) }))
+    const update = await updateProject({ quiet: Boolean(options.json) })
+    fixed.push(...update.actions)
   }
 
   const checks: DoctorCheck[] = []
   const runtime: RuntimeDiagnostic[] = []
   const reportRuntime = (diagnostic: RuntimeDiagnostic) => recordRuntimeDiagnostic(runtime, diagnostic, Boolean(options.verbose) && !options.json)
 
-  const rspRulesPath = join(RSP_DIR, 'rules', 'rsp-rules.md')
   const designPath = join(RSP_DIR, 'specs', 'design.md')
   const specsIndexPath = join(RSP_DIR, 'specs', 'INDEX.md')
   const archivesIndexPath = join(RSP_DIR, 'archives', 'INDEX.md')
 
   reportCheck(checks, '.rsp exists', existsSync(RSP_DIR), 'Run: rsp init')
-  reportCheck(checks, 'rules/rsp-rules.md exists', existsSync(rspRulesPath), 'Run: rsp init')
+  reportFallbackProtocol(checks)
+  await reportUnsupportedRules(checks, reportRuntime)
   reportCheck(checks, 'specs/design.md exists', existsSync(designPath), 'Run: rsp init')
   reportCheck(checks, 'specs/INDEX.md exists', existsSync(specsIndexPath), 'Run: rsp update')
   reportCheck(checks, 'archives/INDEX.md exists', existsSync(archivesIndexPath), 'Run: rsp update')
@@ -95,6 +96,60 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
     console.log(`\n  ${pc.yellow(String(result.summary.issues))} issue(s) detected.\n`)
 
   return result
+}
+
+function reportFallbackProtocol(checks: DoctorCheck[]): void {
+  const canonicalExists = existsSync(RSP_RULES_PATH)
+  const obsoleteExists = existsSync(OBSOLETE_RSP_RULES_PATH)
+
+  if (canonicalExists) {
+    checks.push({ status: 'ok', label: 'rsp-rules.md exists' })
+  }
+  else if (!obsoleteExists) {
+    checks.push({
+      status: 'issue',
+      label: 'rsp-rules.md exists',
+      hint: existsSync(RSP_DIR) ? 'Run: rsp update' : 'Run: rsp init',
+    })
+  }
+
+  if (obsoleteExists) {
+    checks.push({
+      status: 'issue',
+      label: 'obsolete fallback protocol path detected',
+      message: 'obsolete fallback protocol path detected',
+      hint: 'Run: rsp update',
+    })
+  }
+}
+
+async function reportUnsupportedRules(checks: DoctorCheck[], reportRuntime: (diagnostic: RuntimeDiagnostic) => void): Promise<void> {
+  const inspection = await inspectUnsupportedRules()
+  for (const diagnostic of inspection.diagnostics)
+    reportRuntime(diagnostic)
+
+  if (inspection.diagnostics.length > 0) {
+    checks.push({
+      status: 'issue',
+      label: 'unable to inspect .rsp/rules/',
+      message: 'unable to inspect .rsp/rules/; migration status is unknown',
+      hint: 'Fix directory access, then run: rsp doctor',
+    })
+    return
+  }
+
+  if (!inspection.directoryRemaining)
+    return
+
+  const entries = inspection.entries.map(entry => entry.path)
+  checks.push({
+    status: 'issue',
+    label: 'unsupported .rsp/rules/ entries',
+    message: entries.length > 0
+      ? `unsupported .rsp/rules/ entries: ${entries.join(', ')}`
+      : 'unsupported empty .rsp/rules/ directory remains',
+    hint: 'Move stable scoped instructions to the nearest project-owned AGENTS.md, remove obsolete entries, then run rsp update',
+  })
 }
 
 function reportCheck(checks: DoctorCheck[], label: string, ok: boolean, fixHint?: string): void {

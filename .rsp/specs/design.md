@@ -9,7 +9,9 @@
 - The npm package name is `@oevery/rsp`; it publishes a CLI binary named `rsp`.
 - RSP stands for Rules, Specs, Plans.
 - RSP uses `.rsp/` as the project-local workflow root.
-- `rules/` stores durable operating rules and is the compact, always-read canonical behavioral source.
+- `.rsp/rsp-rules.md` is the minimal tool-agnostic fallback protocol for agents that cannot load the `rsp` skill.
+- The `rsp` skill is the preferred detailed operational guide; the fallback protocol is deliberately not a second full manual.
+- The nearest project-owned `AGENTS.md` owns stable scoped agent instructions; the RSP-managed block is navigation only.
 - `specs/` stores durable project-level facts, boundaries, and constraints.
 - `changes/` stores open work.
 - `focus.d/` is the only current-focus truth source.
@@ -28,7 +30,9 @@
 - `rsp create --lite` is a short template for explicitly tracked small changes; simple current-session tasks should not create RSP changes unless tracking is intentionally needed.
 - Semantic judgment, including durable writeback decisions, belongs to an RSP skill or a human reviewer.
 - The published `skills/rsp` artifact uses the portable intersection of Agent Skills and active target-client validation: it omits optional `compatibility`, carries `license: MIT`, `metadata.author`, and an independent quoted content CalVer that changes only for meaningful skill-content releases rather than every CLI release.
-- `AGENTS.md` is a navigation entrypoint and must not become a durable rules or design store.
+- The RSP-managed `AGENTS.md` block is a navigation entrypoint and must not become a durable rules or design store; project-owned sections outside it may hold stable scoped instructions.
+- `.rsp/rsp-rules.md` is the only runtime fallback path; `rsp update` migrates the obsolete generated path and removes it.
+- `.rsp/rules/` is not a durable authority. Any residual contents require explicit semantic migration to the nearest project-owned `AGENTS.md` before removal; empty directory trees may be pruned deterministically.
 - External skill and workflow repositories can be declared by repository, ref, tier, treatment strategy, and relevant paths in `upstreams.yaml`, cached under ignored `.cache/upstreams/`, and pinned explicitly in a flat, timestamp-free `source: revision` lock mapping.
 - Upstream synchronization records fetched commits in dedicated Git candidate refs; checkout `HEAD` is not candidate authority. Only the maintainer script's explicit `accept` action updates accepted revisions, and distillation into RSP-native skills remains a separate reviewed change.
 - Upstream preparation writes regenerable mechanical evidence to ignored cache; tracked single-source distillation and cross-source synthesis live under `research/`, outside published and runtime RSP artifacts.
@@ -58,8 +62,8 @@
 - `.agents/skills/distill-upstream/` is a repository-maintainer skill for semantic upstream research; it is not a published RSP product skill.
 - `research/` contains tracked intermediate upstream distillations and models; it is not a product truth or runtime context source.
 - `bin/rsp.mjs` is the executable entrypoint that loads the built CLI.
-- `commands/` contains optional workflow-oriented slash command prompts for tools that support compatible command files; it is an enhancement surface, not part of the core RSP filesystem protocol.
-- `rules/` contains bundled rules copied into project `.rsp/rules/` during initialization or update.
+- `commands/` contains optional workflow-oriented slash command prompts for tools that support compatible command files; it is published in the npm package as an enhancement surface, not part of the core RSP filesystem protocol.
+- `rules/rsp-rules.md` is the package-authored fallback source copied to consumer `.rsp/rsp-rules.md` during initialization or update.
 - `skills/rsp/` contains operational skill guidance for agents that support skills.
 - `docs/design-philosophy.md` records explanatory product and design rationale for maintainers.
 - `test/` contains Vitest coverage for command behavior and core helpers.
@@ -69,7 +73,7 @@
 | Layer | Directories | Ownership |
 | --- | --- | --- |
 | Product runtime | `src/`, `bin/` | CLI, deterministic command behavior, domain interpretation, filesystem and diagnostic support |
-| Product distribution | `rules/`, `skills/`, `commands/` | Bundled normative rules, published Agent Skills, and optional compatible command prompts |
+| Product distribution | `rules/`, `skills/`, `commands/` | Bundled fallback protocol source, published Agent Skills, and optional compatible command prompts |
 | Maintainer tooling | `scripts/`, `.agents/skills/` | Repository-wide deterministic maintenance and maintainer-only judgment workflows |
 | Maintainer knowledge | `docs/`, `research/` | Explanatory design material, pinned source distillations, cross-source models, and recommendations |
 | Verification | `test/` | Observable behavior checks for product and maintainer tooling |
@@ -93,11 +97,11 @@ Dependency direction is constrained:
 - Preserve the single-file change model and fixed six-section change structure.
 - Preserve `.rsp/focus.d/` as the only current-focus source.
 - Preserve `open -> archived` as the complete lifecycle model.
-- Do not promote task history, debugging notes, or one-off implementation context into `specs/` or `rules/`.
-- Do not create catch-all durable summary files when a fact belongs in `design.md`, a specific spec, a rule file, or nowhere.
+- Do not promote task history, debugging notes, or one-off implementation context into `specs/` or project-owned `AGENTS.md` instructions.
+- Do not create catch-all durable summary files when a fact belongs in `design.md`, a specific spec, a scoped project instruction, or nowhere.
 - Keep cross-repository consistency higher priority than per-repository workflow freedom.
 - Keep agent-distributed normative surfaces in English for cross-agent stability.
-- Keep `rules/` as the compact normative layer; keep `skills/` as the more detailed operational layer when detail prevents agent hallucination or mistakes.
+- Keep `.rsp/rsp-rules.md` as a minimal fallback protocol; keep the `rsp` skill as the preferred detailed operational layer when detail prevents agent hallucination or mistakes.
 - Prefer README, design docs, durable specs, or CLI output for explanatory detail that does not prevent agent misoperation.
 - Skill compactness must not remove guidance about change creation, durable writeback, archive readiness, generated/core files, or deterministic-vs-semantic boundaries.
 - Prefer machine-readable output and diagnostics that reduce guessing without expanding workflow complexity.

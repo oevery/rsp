@@ -14,7 +14,7 @@ Then continue with the following rules:
 
 Before implementation:
 1. Read the target change
-2. Read the required context in the order defined by `.rsp/rules/rsp-rules.md`
+2. Read nearest `AGENTS.md`, relevant `CONTEXT.md`, the `rsp` skill or `.rsp/rsp-rules.md` fallback, focused work, and only relevant Specs
 3. Summarize the current phase, blockers, and next actions
 4. If implementation is needed, keep code changes and change-file updates in sync
 
