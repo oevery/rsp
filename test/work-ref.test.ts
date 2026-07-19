@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { mkdirSync } from 'node:fs'
+import { mkdirSync, writeFileSync } from 'node:fs'
 import { mkdir, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -16,6 +16,7 @@ afterEach(async () => {
 describe('work ref resolution', () => {
   it('classifies each supported work identity explicitly', () => {
     const changesDir = createChangesDirPath()
+    createGroupBrief(changesDir, 'release')
 
     expect(resolveWorkRef('login', { changesDir })).toEqual({
       kind: 'change',
@@ -39,6 +40,7 @@ describe('work ref resolution', () => {
 
   it('resolves a supported Markdown path through the same model', () => {
     const changesDir = createChangesDirPath()
+    createGroupBrief(changesDir, 'release')
 
     expect(resolveWorkRefPath(join(changesDir, 'release', 'api.md'), { changesDir })).toMatchObject({
       kind: 'group-change',
@@ -133,6 +135,7 @@ describe('work ref resolution', () => {
 
   it('rejects managed focus and archive symlink prefixes', async () => {
     const changesDir = createChangesDirPath()
+    createGroupBrief(changesDir, 'release')
     const root = join(changesDir, '..', '..')
     const focusDir = join(root, '.rsp', 'focus.d')
     const archivesDir = join(root, '.rsp', 'archives')
@@ -198,6 +201,12 @@ function createChangesDirPath(): string {
   const changesDir = join(root, '.rsp', 'changes')
   mkdirSync(changesDir, { recursive: true })
   return changesDir
+}
+
+function createGroupBrief(changesDir: string, group: string): void {
+  const groupDir = join(changesDir, group)
+  mkdirSync(groupDir, { recursive: true })
+  writeFileSync(join(groupDir, 'brief.md'), `---\nkind: group\n---\n\n# Change Group: ${group}\n`)
 }
 
 function expectWorkRefError(action: () => unknown, code: string): void {

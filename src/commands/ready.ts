@@ -1,11 +1,12 @@
 import type { CommandRunOptions, RuntimeDiagnostic } from '../types.js'
 import { readFile } from 'node:fs/promises'
 
+import { resolveExecutableChange } from '../core/change-group.js'
 import { inspectRspConfig, pc } from '../core/config.js'
 import { resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { buildDurableReviewGuidance, collectArchiveReadiness, getDurableReviewCandidateTargets, guardRspInitialized, normalizeLogicalPath } from '../core/helpers.js'
 import { emitJson, toErrorMessage } from '../core/output.js'
-import { resolveWorkRef, WorkRefError } from '../core/work-ref.js'
+import { WorkRefError } from '../core/work-ref.js'
 
 interface ReadyResult {
   command: 'ready'
@@ -60,7 +61,7 @@ export async function showReady(name: string, options: CommandRunOptions = {}): 
 
   let workRef
   try {
-    workRef = resolveWorkRef(name, { executable: true, mustExist: true })
+    workRef = await resolveExecutableChange(name, { mustExist: true })
   }
   catch (error) {
     if (error instanceof WorkRefError)

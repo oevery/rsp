@@ -1,6 +1,7 @@
 import type { CommandDiagnostic, CommandRunOptions, RuntimeDiagnostic } from '../types.js'
 import { readFile } from 'node:fs/promises'
 
+import { inspectChangeGroups } from '../core/change-group.js'
 import { loadRspConfig, pc, resolveKinds, resolveRequiredSections } from '../core/config.js'
 import { detectDeltaSections, parseFrontmatter, parseScenarios } from '../core/helpers.js'
 import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
@@ -122,6 +123,12 @@ export async function runCheck(options: CheckOptions = {}): Promise<CheckResult>
   const changeRefs = options.focused
     ? workTree.changes.filter(ref => focusedSet.has(ref.name))
     : workTree.changes
+  const groupInspection = await inspectChangeGroups({ workTree, focusTree })
+  const focusedGroups = new Set(changeRefs.flatMap(ref => ref.group ? [ref.group] : []))
+  for (const diagnostic of groupInspection.diagnostics) {
+    if (!options.focused || !diagnostic.change || focusedGroups.has(diagnostic.change))
+      addDiagnostic(diagnostic)
+  }
 
   if (changeRefs.length === 0) {
     const result: CheckResult = {

@@ -102,6 +102,8 @@ RSP 使用 `change`，不使用 `feature` 作为顶层工作模型。
 
 `kind` 是 change 内部分类字段。
 
+Change Group 是唯一例外且仍保持浅层：只有两个或更多可独立执行的 Change 共享目标或整体完成条件时，才使用一个 `brief.md` 作为父级语义所有者。brief 不执行、不 focus、不复制子项进度；子 Change 仍各自保持单文件契约并独立归档。递归 group、多文件 child bundle 和额外状态不进入核心。
+
 ### 4. Durable truth 与 history 分离
 
 `specs/` 只存未来会反复使用的当前事实；配置的唯一 Decision Record 路径只存难以逆转选择的长期理由、备选方案、取舍和后果；最近的项目自有 `AGENTS.md` 只存 agent 必须遵循的稳定 scoped instructions。
@@ -257,6 +259,8 @@ Durable project facts。
 Open work。
 
 每个 change 是一个 Markdown 文件。
+
+可选 Change Group 只允许一个 `brief.md` 和直接子 Change；`Slices` 声明成员边界，实际 open、archived、blocked 和 ready 状态全部派生。
 
 不要创建多文件 change bundle。
 

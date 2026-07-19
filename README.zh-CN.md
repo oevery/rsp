@@ -39,6 +39,7 @@ npx -y @oevery/rsp doctor
 ├── changes/
 │   ├── <name>.md
 │   └── <group>/
+│       ├── brief.md
 │       └── <change>.md
 ├── focus.d/
 │   └── <name>
@@ -53,7 +54,8 @@ npx -y @oevery/rsp doctor
 - `changes/` 描述 open work，包括 feature、fix、refactor、docs、ops 和 research。
 - 每个 change 始终是单个 Markdown 文件，并包含 proposal、spec、design、tasks、verification 与 blockers 等明确 section。
 - Change 名称只能是扁平的 `<change>` 或一层直接子项 `<group>/<change>`；递归 work 目录会被拒绝。
-- `<group>/brief` 是保留的 typed、non-executable Group Brief 身份。当前版本只识别它并防止命令误当成 Change；其创建与生命周期将在后续单独实现。
+- Change Group 是可选且唯一的复合 work 形态。其不可执行、不可 focus 的 `<group>/brief` 为至少两个直接子 Change 统一拥有目标、共享约束、slice 声明、整体完成条件、durable outcomes 和 blockers。
+- 必须先创建 Group 再创建子 Change。每个 grouped Change 都必须由 brief 声明，独立 focus、独立归档，并将 brief 纳入上下文。`status`、`check` 和 `doctor` 从文件事实推导 Group 健康度和完成度，不持久化额外状态；`rsp group close` 只归档已完成的 brief。已归档的 Group 身份不能重新打开。
 - 同一个 work 身份不能同时由 Markdown 文件和目录占用。
 - `rsp status`、`rsp check` 和 `rsp doctor` 使用同一套完整 work-tree 检查。`changes/` 根目录必须存在且是真实目录，已有的 focus/archive 根目录和 group 前缀也必须是真实目录；非法目录、非 Markdown 条目、符号链接、缺失或不可读的当前 work、不完整读取和身份冲突都会成为可见错误。`status` 会返回非零状态，而不是隐藏非法 work。
 - `rsp init`、`rsp update`、`rsp add spec` 和生成索引使用相同的 no-follow managed-path 检查。archive discovery 只接受扁平 archive 文件或一层真实 group 目录；递归组织的 Specs 只接受真实目录和普通文件。
@@ -100,7 +102,7 @@ Read in order:
 1. Nearest `AGENTS.md` for project or module instructions.
 2. Root `CONTEXT-MAP.md` if present, then the relevant nearest `CONTEXT.md`.
 3. The `rsp` skill; if unavailable, read `.rsp/rsp-rules.md` as the fallback protocol.
-4. `.rsp/focus.d/` and the explicitly selected focused Change.
+4. `.rsp/focus.d/`; for grouped work read the sibling Group Brief, then the explicitly selected focused Change.
 5. Only the relevant Specs and Decision Records under the configured authoritative path.
 
 If `.rsp/focus.d/` is empty and the user has not provided a concrete task, ask what to work on or suggest `npx -y @oevery/rsp create <name>` for tracked work.
@@ -226,6 +228,8 @@ rsp init --with-project-setup   同时创建 .rsp/changes/project-setup.md
 rsp update                      刷新 fallback protocol、修复 AGENTS 受管块并重建索引
 rsp add spec <name>             创建 .rsp/specs/<name>.md 并重建 specs 索引
 rsp create <name> [summary]     创建 .rsp/changes/<name>.md；可加 --lite 使用更短模板
+rsp group create <name> [goal] 创建不进入 focus 的 .rsp/changes/<name>/brief.md
+rsp group close <name>         所有子 Change 归档后关闭并归档 Group Brief
 rsp focus <name>                将一个 open change 标记为当前聚焦
 rsp unfocus <name>              将一个 open change 移出当前聚焦集合
 rsp archive <name>              归档到 .rsp/archives/ 并更新 archive index

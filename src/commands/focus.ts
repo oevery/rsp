@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs'
 import { mkdir, unlink } from 'node:fs/promises'
 import { dirname } from 'node:path'
 
+import { resolveExecutableChange } from '../core/change-group.js'
 import { FOCUS_DIR, pc } from '../core/config.js'
 import { cleanupEmptyParentDirs, guardRspInitialized } from '../core/helpers.js'
 import { withRspLock } from '../core/lock.js'
@@ -17,7 +18,7 @@ export async function focusChange(name: string) {
 
   try {
     return await withRspLock('focus-change', async () => {
-      const workRef = resolveWorkRef(name, { executable: true, mustExist: true })
+      const workRef = await resolveExecutableChange(name, { mustExist: true })
       const focusEntry = resolveFocusMarkerPath(workRef)
       await mkdir(FOCUS_DIR, { recursive: true })
       await mkdir(dirname(focusEntry), { recursive: true })

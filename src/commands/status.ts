@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs'
 import { readFile, stat } from 'node:fs/promises'
 import { join } from 'node:path'
 
+import { inspectChangeGroups } from '../core/change-group.js'
 import { ARCHIVES_DIR, pc } from '../core/config.js'
 import { countCheckboxes, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter } from '../core/helpers.js'
 import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
@@ -74,6 +75,8 @@ export async function showStatus(options: StatusOptions = {}, runOptions: Comman
     path: diagnostic.path,
     message: diagnostic.message,
   })))
+  const groupInspection = await inspectChangeGroups({ workTree, focusTree })
+  diagnostics.push(...groupInspection.diagnostics)
 
   const changeMap: Record<string, string> = {}
   for (const ref of workTree.changes)
@@ -212,7 +215,7 @@ export async function showStatus(options: StatusOptions = {}, runOptions: Comman
   const blockedCount = filteredOutputRecords.filter(r => r.isBlocked).length
   const ok = diagnostics.every(diagnostic => diagnostic.severity !== 'error')
   const nextActions = ok
-    ? buildStatusNextActions(focusedSet.size, Object.keys(changeMap).sort(), Boolean(options.focused || options.blocked || typeof options.stale === 'number'))
+    ? buildStatusNextActions(focusedSet.size, Object.keys(changeMap).sort(), groupInspection.groups, Boolean(options.focused || options.blocked || typeof options.stale === 'number'))
     : ['Run: rsp doctor']
   const statusResult: StatusJsonShape = {
     command: 'status',
@@ -224,6 +227,7 @@ export async function showStatus(options: StatusOptions = {}, runOptions: Comman
     },
     focused: [...focusedSet].sort(),
     records: filteredOutputRecords,
+    groups: groupInspection.groups,
     summary: {
       total: filteredOutputRecords.length,
       focused: filteredOutputRecords.filter(r => r.isFocused).length,
@@ -262,9 +266,11 @@ export async function showStatus(options: StatusOptions = {}, runOptions: Comman
     console.log()
   }
 
+  printChangeGroups(statusResult.groups)
+
   if (allNames.length === 0) {
     if (ok)
-      console.log(`  ${pc.dim('No changes found.')} Run: rsp create <name>\n`)
+      console.log(`  ${pc.dim('No executable changes found.')} ${statusResult.groups.length === 0 ? 'Run: rsp create <name>' : 'Review the Change Group guidance above.'}\n`)
     else
       console.log(`  ${pc.dim('No executable changes can be shown until the work-tree issues are resolved.')}\n`)
     return statusResult
@@ -308,9 +314,14 @@ export async function showStatus(options: StatusOptions = {}, runOptions: Comman
   return statusResult
 }
 
-function buildStatusNextActions(focusedCount: number, openChanges: string[], filtered: boolean): string[] {
+function buildStatusNextActions(focusedCount: number, openChanges: string[], groups: StatusJsonShape['groups'], filtered: boolean): string[] {
   if (focusedCount > 0)
     return []
+  const readyGroup = groups.find(group => group.readyToClose)
+  if (readyGroup)
+    return [`Run: rsp group close ${readyGroup.name}`]
+  if (openChanges.length === 0 && groups.length > 0)
+    return [`Review Group Brief: ${groups[0].path}`]
   if (openChanges.length === 0)
     return ['Run: rsp create <name>']
   if (filtered) {
@@ -327,6 +338,19 @@ function buildStatusNextActions(focusedCount: number, openChanges: string[], fil
     `Run: rsp focus ${openChanges[0]}`,
     'Or run: rsp create <name>',
   ]
+}
+
+function printChangeGroups(groups: StatusJsonShape['groups']): void {
+  if (groups.length === 0)
+    return
+  console.log(`  ${pc.bold('Change Groups')}`)
+  for (const group of groups) {
+    const archived = group.slices.filter(slice => slice.state === 'archived').length
+    const readiness = group.readyToClose ? pc.green('ready to close') : pc.dim('not ready')
+    const blocked = group.blockers ? ` ${pc.yellow('blocked')}` : ''
+    console.log(`  ${group.name}: ${archived}/${group.slices.length} archived, completion ${group.completion.done}/${group.completion.total}, ${readiness}${blocked}`)
+  }
+  console.log()
 }
 
 /** Display archive trend: count per month from archive INDEX.md. */

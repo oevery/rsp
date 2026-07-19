@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs'
 import { readdir, readFile, stat } from 'node:fs/promises'
 import { basename, join, relative } from 'node:path'
 
+import { inspectChangeGroups } from '../core/change-group.js'
 import { CONFIG_PATH, loadRspConfig, OBSOLETE_RSP_RULES_PATH, pc, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
 import { DEFAULT_DECISION_RECORDS_PATH, getDecisionRecordsConfigIssue, resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { hasRspAgentsBlock, inspectUnsupportedRules, normalizeLogicalPath, parseFrontmatter, parseYamlText, walkMarkdownFiles } from '../core/helpers.js'
@@ -489,9 +490,10 @@ function reportConfigListField(checks: DoctorCheck[], parsed: Record<string, unk
 
 async function checkActiveChangeConsistency(checks: DoctorCheck[]): Promise<void> {
   const workTree = await inspectWorkTree()
+  const focusTree = await inspectFocusTree()
+  const groupInspection = await inspectChangeGroups({ workTree, focusTree })
   const changeNames = new Set(workTree.changes.map(ref => ref.name))
   const structureIssues = workTree.diagnostics.map(diagnostic => diagnostic.message)
-  const focusTree = await inspectFocusTree()
   structureIssues.push(...focusTree.diagnostics.map(diagnostic => diagnostic.message))
   const rawFocusNames = new Set(focusTree.markers.map(marker => marker.name))
   const focusNames = new Set<string>()
@@ -516,6 +518,33 @@ async function checkActiveChangeConsistency(checks: DoctorCheck[]): Promise<void
       label: 'open work uses supported WorkRef shapes',
       message: uniqueStructureIssues.join('; '),
       hint: 'Keep work flat or use one group directory with direct Change files. Use rsp unfocus <group>/brief to clear an accidental Group Brief marker.',
+    })
+  }
+
+  const groupStructureIssues = workTree.diagnostics
+    .filter(diagnostic => diagnostic.code === 'group_brief_missing' || diagnostic.path.endsWith('/brief.md'))
+    .map(diagnostic => diagnostic.message)
+  const groupIssues = [
+    ...groupInspection.diagnostics.filter(diagnostic => diagnostic.severity === 'error').map(diagnostic => diagnostic.message),
+    ...groupStructureIssues,
+  ]
+  const groupWarnings = groupInspection.diagnostics.filter(diagnostic => diagnostic.severity === 'warning')
+  if (groupIssues.length === 0) {
+    checks.push({ status: 'ok', label: 'Change Group contracts are valid' })
+  }
+  else {
+    checks.push({
+      status: 'issue',
+      label: 'Change Group contracts are valid',
+      message: [...new Set(groupIssues)].join('; '),
+      hint: 'Keep one brief.md per group and make its Slices list match direct open or archived child Changes.',
+    })
+  }
+  if (groupWarnings.length > 0) {
+    checks.push({
+      status: 'info',
+      label: 'Change Group completion guidance',
+      message: [...new Set(groupWarnings.map(diagnostic => diagnostic.message))].join('; '),
     })
   }
 

@@ -23,7 +23,10 @@
 - Each open change is a single Markdown file; multi-file change bundles are outside the core model.
 - WorkRef is the authoritative typed interpretation of open-work identity and path. It distinguishes a flat Change, a direct grouped Change, and the reserved Group Brief identity.
 - Executable Change paths are exactly `.rsp/changes/<change>.md` and `.rsp/changes/<group>/<change>.md`; deeper work paths are rejected deterministically.
-- `.rsp/changes/<group>/brief.md` resolves as a non-executable Group Brief. The current implementation reserves and classifies it but does not implement the Change Group lifecycle.
+- A Change Group is the only composite work shape and is used only when at least two independently executable direct child Changes share one goal, shared constraints, or completion contract.
+- `.rsp/changes/<group>/brief.md` is the non-executable, non-focusable semantic owner for Goal, Scope, Shared Constraints, Slices, Completion Conditions, Durable Outcomes, and Blockers. Every direct child must be declared with an identity and boundary; every declaration resolves to an open child or an archive entry whose Change heading preserves that identity.
+- `rsp group create <group> [goal]` creates only the unfocused brief. Grouped child creation requires the sibling brief and a matching Slices declaration. Reading a grouped child places the brief first in its context paths.
+- Group status, membership, blockers, completion, and close readiness are derived from the brief, open Changes, archive contents, and focus markers. Children archive independently; `rsp group close <group>` moves only a completed brief to `.rsp/archives/<group>/YYYY-MM-DD_brief.md`. A closed Group identity cannot be reopened because archived child association would otherwise be ambiguous.
 - A work identity cannot be claimed by both a Markdown file and a directory.
 - One WorkRef tree inspection owns open-work discovery for `check`, `status`, and `doctor`; it reports unsupported directories, non-Markdown entries, symlinks, collisions, and incomplete reads consistently.
 - `.rsp/changes/` must exist as a real directory rather than a file or symlink. Resolution and inspection fail closed before reading or mutating work through an invalid root or grouped path prefix; `rsp update` and `rsp doctor --fix` restore a missing root.
@@ -58,14 +61,14 @@
 ## Boundaries
 - In scope: initializing and repairing `.rsp/` structure for repositories.
 - In scope: creating, focusing, unfocusing, checking, and archiving single-file changes.
-- In scope: flat Changes and one direct grouped Change level resolved through WorkRef.
+- In scope: flat Changes and one shallow Change Group containing one Group Brief plus direct child Changes.
 - In scope: maintaining generated spec and archive indexes.
 - In scope: validating and routing one authoritative Decision Record directory without owning Decision Record filenames or content creation.
 - In scope: distributing reusable RSP rules and skill guidance with the package.
 - In scope: keeping RSP readable by humans, agents, CI, and simple scripts.
 - Out of scope: replacing git history or project management systems.
 - Out of scope: adding OpenSpec-style multi-file change artifacts.
-- Out of scope: Group Brief templates, group completion, group close/archive, recursive groups, and arbitrary nested work directories.
+- Out of scope: recursive groups, arbitrary nested work directories, cross-repository children, attachments, dependency graphs, and persisted group readiness state.
 - Out of scope: automatically merging change `Spec` deltas into durable specs during archive.
 - Out of scope: automatically creating Decision Records, discovering multiple ADR roots, assigning numbering policy, or synchronizing rationale across paths.
 - Out of scope: introducing workflow states that do not map to deterministic filesystem truth.
@@ -77,6 +80,7 @@
 - `src/commands/` contains command implementations for RSP operations.
 - `src/core/` contains shared filesystem, config, output, helper, and locking logic.
 - `src/core/work-ref.ts` owns open-work classification, full-tree inspection, bounded path derivation, executable filtering, regular-file checks, and identity-collision checks.
+- `src/core/change-group.ts` owns the Group Brief contract, declared membership, open/archive/focus projections, and derived close readiness; `src/commands/group.ts` owns explicit create and close mutations.
 - `scripts/upstreams.mjs` is repository-maintainer tooling for upstream manifest validation, Git cache lifecycle, candidate comparison, and atomic lock serialization; it is not part of the published RSP CLI.
 - `.agents/skills/distill-upstream/` is a repository-maintainer skill for semantic upstream research; it is not a published RSP product skill.
 - `research/` contains tracked intermediate upstream distillations and models; it is not a product truth or runtime context source.
@@ -114,7 +118,7 @@ Dependency direction is constrained:
 - Prefer the smallest model that correctly solves the workflow problem.
 - Preserve the single-file change model and fixed six-section change structure.
 - Keep open work flat or at one direct group level; never interpret recursive directories as Change identity.
-- Keep Group Brief recognition separate from executable Change behavior until the Change Group lifecycle is implemented explicitly.
+- Keep Group Briefs non-executable and non-focusable; group lifecycle commands operate on the aggregate while normal Change commands operate only on children.
 - Preserve `.rsp/focus.d/` as the only current-focus source.
 - Preserve `open -> archived` as the complete lifecycle model.
 - Do not promote task history, debugging notes, or one-off implementation context into `specs/` or project-owned `AGENTS.md` instructions.

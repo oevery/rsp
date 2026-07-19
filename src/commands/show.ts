@@ -1,6 +1,7 @@
 import type { CommandRunOptions, RuntimeDiagnostic } from '../types.js'
 import { readFile } from 'node:fs/promises'
 
+import { resolveExecutableChange } from '../core/change-group.js'
 import { inspectRspConfig, pc } from '../core/config.js'
 import { resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { buildDurableReviewGuidance, collectArchiveReadiness, countCheckboxes, getDurableReviewCandidateTargets, guardRspInitialized, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, parseScenarios } from '../core/helpers.js'
@@ -102,7 +103,7 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
 
   let workRef
   try {
-    workRef = resolveWorkRef(name, { executable: true, mustExist: true })
+    workRef = await resolveExecutableChange(name, { mustExist: true })
   }
   catch (error) {
     if (error instanceof WorkRefError)
@@ -165,7 +166,10 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
   catch (error) {
     exitShowError({ code: 'invalid_config', message: `.rsp/config.yaml could not be parsed: ${toErrorMessage(error)}` }, options)
   }
-  const contextPaths = [...factCandidateTargets, decisionRecordsPath]
+  const groupContextPaths = workRef.group
+    ? [normalizeLogicalPath(resolveWorkRef(`${workRef.group}/brief`, { mustExist: true }).path)]
+    : []
+  const contextPaths = [...groupContextPaths, ...factCandidateTargets, decisionRecordsPath]
   const durableReview = buildDurableReviewGuidance(factCandidateTargets, decisionRecordsPath)
 
   const result: ShowResult = {

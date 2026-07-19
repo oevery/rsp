@@ -20,6 +20,7 @@ export function emitStatusJsonError(error: { code: string, message: string }, op
     },
     focused: [],
     records: [],
+    groups: [],
     summary: {
       total: 0,
       focused: 0,

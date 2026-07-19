@@ -2,11 +2,12 @@ import { existsSync } from 'node:fs'
 import { mkdir, readFile, rename, unlink } from 'node:fs/promises'
 import { basename, join } from 'node:path'
 
+import { resolveExecutableChange } from '../core/change-group.js'
 import { CHANGES_DIR, FOCUS_DIR, pc } from '../core/config.js'
 import { cleanupEmptyParentDirs, collectArchiveChecklist, guardRspInitialized } from '../core/helpers.js'
 import { withRspLock } from '../core/lock.js'
 import { toErrorMessage } from '../core/output.js'
-import { resolveArchiveDirectory, resolveFocusMarkerPath, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
+import { resolveArchiveDirectory, resolveFocusMarkerPath, WorkRefError } from '../core/work-ref.js'
 import { buildArchiveIndex } from './archive-index.js'
 
 export interface ArchiveOptions {
@@ -22,7 +23,7 @@ export async function archiveChange(name: string, options: ArchiveOptions = {}) 
   guardRspInitialized()
 
   if (options.dryRun) {
-    const workRef = resolveArchiveWorkRefOrExit(name)
+    const workRef = await resolveArchiveWorkRefOrExit(name)
     const content = await readFile(workRef.path, 'utf-8')
     const checklist = collectArchiveChecklist(content)
 
@@ -43,7 +44,7 @@ export async function archiveChange(name: string, options: ArchiveOptions = {}) 
 
   try {
     return await withRspLock('archive-change', async () => {
-      const workRef = resolveWorkRef(name, { executable: true, mustExist: true })
+      const workRef = await resolveExecutableChange(name, { mustExist: true })
       const srcPath = workRef.path
       const archiveSubdir = resolveArchiveDirectory(workRef)
       const focusEntry = resolveFocusMarkerPath(workRef)
@@ -115,9 +116,9 @@ export async function archiveChange(name: string, options: ArchiveOptions = {}) 
   }
 }
 
-function resolveArchiveWorkRefOrExit(name: string) {
+async function resolveArchiveWorkRefOrExit(name: string) {
   try {
-    const workRef = resolveWorkRef(name, { executable: true, mustExist: true })
+    const workRef = await resolveExecutableChange(name, { mustExist: true })
     resolveArchiveDirectory(workRef)
     resolveFocusMarkerPath(workRef)
     return workRef
@@ -132,7 +133,7 @@ function resolveArchiveWorkRefOrExit(name: string) {
 }
 
 /** Resolve a unique archive filename. First collision gets a "-2" suffix to keep "-1" unambiguous. */
-function resolveArchiveName(archiveSubdir: string, date: string, base: string): string {
+export function resolveArchiveName(archiveSubdir: string, date: string, base: string): string {
   const initialName = `${date}_${base}.md`
   if (!existsSync(join(archiveSubdir, initialName)))
     return initialName

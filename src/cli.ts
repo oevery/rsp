@@ -9,6 +9,7 @@ import { runCheck } from './commands/check.js'
 import { createChange } from './commands/create.js'
 import { runDoctor } from './commands/doctor.js'
 import { focusChange, unfocusChange } from './commands/focus.js'
+import { closeChangeGroup, createChangeGroup } from './commands/group.js'
 import { initProject } from './commands/init.js'
 import { showReady } from './commands/ready.js'
 import { showChange } from './commands/show.js'
@@ -68,6 +69,50 @@ const createCommand = defineCommand({
   async run({ args }: { args: CreateChangeArgs }) {
     const summary = Array.isArray(args._) && args._.length > 1 ? args._.slice(1).join(' ') : ''
     await createChange(args.name, summary, args.kind, { lite: Boolean(args.lite) })
+  },
+})
+
+const groupCreateCommand = defineCommand({
+  meta: {
+    name: 'create',
+    description: 'Create an unfocused .rsp/changes/<group>/brief.md',
+  },
+  args: {
+    name: {
+      type: 'positional',
+      description: 'Change Group name',
+      required: true,
+    },
+  },
+  async run({ args }: { args: { name: string, _: string[] } }) {
+    const goal = Array.isArray(args._) && args._.length > 1 ? args._.slice(1).join(' ') : ''
+    await createChangeGroup(args.name, goal)
+  },
+})
+
+const groupCommand = defineCommand({
+  meta: {
+    name: 'group',
+    description: 'Create and close shallow Change Groups',
+  },
+  subCommands: {
+    create: groupCreateCommand,
+    close: defineCommand({
+      meta: {
+        name: 'close',
+        description: 'Archive a completed Group Brief after all child Changes are archived',
+      },
+      args: {
+        name: {
+          type: 'positional',
+          description: 'Change Group name',
+          required: true,
+        },
+      },
+      async run({ args }: { args: { name: string } }) {
+        await closeChangeGroup(args.name)
+      },
+    }),
   },
 })
 
@@ -366,6 +411,7 @@ export async function runCli(rawArgs = process.argv.slice(2)) {
       init: initCommand,
       add: addCommand,
       create: createCommand,
+      group: groupCommand,
       focus: focusCommand,
       unfocus: unfocusCommand,
       archive: archiveCommand,

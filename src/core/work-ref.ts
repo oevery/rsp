@@ -21,6 +21,9 @@ export type WorkRefErrorCode
     | 'archive_name_exhausted'
     | 'unsupported_work_depth'
     | 'non_executable_work_ref'
+    | 'group_brief_missing'
+    | 'invalid_group_brief'
+    | 'group_child_undeclared'
     | 'work_ref_collision'
     | 'work_ref_not_found'
     | 'work_ref_not_file'
@@ -128,6 +131,9 @@ export function resolveWorkRef(name: string, options: ResolveWorkRefOptions = {}
       ? { kind: 'group-brief', name, path, group: segments[0]! }
       : { kind: 'group-change', name, path, group: segments[0]! }
 
+  if (ref.kind === 'group-change' && options.executable !== false)
+    assertGroupBrief(changesDir, ref)
+
   if (options.executable && ref.kind === 'group-brief') {
     throw new WorkRefError(
       'non_executable_work_ref',
@@ -138,6 +144,25 @@ export function resolveWorkRef(name: string, options: ResolveWorkRefOptions = {}
   assertRegularWorkFile(ref, Boolean(options.mustExist))
 
   return ref
+}
+
+function assertGroupBrief(changesDir: string, ref: GroupedChangeRef): void {
+  const briefPath = join(changesDir, ref.group, 'brief.md')
+  const kind = getPathKind(briefPath, ref.name)
+  if (kind === 'missing') {
+    throw new WorkRefError(
+      'group_brief_missing',
+      `Change Group "${ref.group}" requires a Group Brief; run: rsp group create ${ref.group}`,
+      ref.name,
+    )
+  }
+  if (kind !== 'file') {
+    throw new WorkRefError(
+      'work_ref_not_file',
+      `Group Brief must be a regular file: ${briefPath}`,
+      ref.name,
+    )
+  }
 }
 
 function assertRegularWorkFile(ref: WorkRef, mustExist: boolean): void {
@@ -219,7 +244,7 @@ export function resolveFocusMarkerPath(ref: WorkRef, options: { focusDir?: strin
 }
 
 /** Resolve an archive directory only through a real archive root and group prefix. */
-export function resolveArchiveDirectory(ref: ExecutableWorkRef, options: { archivesDir?: string } = {}): string {
+export function resolveArchiveDirectory(ref: WorkRef, options: { archivesDir?: string } = {}): string {
   const archivesDir = options.archivesDir ?? ARCHIVES_DIR
   assertManagedRoot(archivesDir, ref.name, 'invalid_archive_root', 'archive root', true)
   if (!ref.group)
@@ -390,9 +415,27 @@ async function inspectGroupDirectory(group: string, groupPath: string, changesDi
   if (!entries)
     return
 
+  const briefEntry = entries.find(entry => entry.name === 'brief.md')
+  if (!briefEntry) {
+    addDiagnostic(result, new WorkRefError(
+      'group_brief_missing',
+      `Change Group "${group}" requires a Group Brief; run: rsp group create ${group}`,
+      group,
+    ), join(groupPath, 'brief.md'))
+  }
+  else if (!briefEntry.isFile()) {
+    addDiagnostic(result, new WorkRefError(
+      'work_ref_not_file',
+      `Group Brief must be a regular file: ${join(groupPath, 'brief.md')}`,
+      group,
+    ), join(groupPath, 'brief.md'))
+  }
+
   for (const entry of entries) {
     const input = `${group}/${entry.name}`
     const path = join(groupPath, entry.name)
+    if (entry.name === 'brief.md' && !entry.isFile())
+      continue
     if (entry.isDirectory()) {
       addDiagnostic(result, new WorkRefError(
         'unsupported_work_depth',

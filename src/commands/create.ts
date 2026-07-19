@@ -2,11 +2,12 @@ import { existsSync } from 'node:fs'
 import { mkdir, unlink, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 
+import { resolveExecutableChange } from '../core/change-group.js'
 import { CHANGES_DIR, FOCUS_DIR, pc } from '../core/config.js'
 import { cleanupEmptyParentDirs, generateChangeContent, guardRspInitialized } from '../core/helpers.js'
 import { withRspLock } from '../core/lock.js'
 import { writeManagedFile } from '../core/managed-path.js'
-import { resolveFocusMarkerPath, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
+import { resolveFocusMarkerPath, WorkRefError } from '../core/work-ref.js'
 
 /** Create a new single-file change under .rsp/changes/<name>.md and focus it when newly created. */
 export async function createChange(name: string, summary = '', kind?: string, options: { lite?: boolean } = {}) {
@@ -18,7 +19,7 @@ export async function createChange(name: string, summary = '', kind?: string, op
 
   try {
     return await withRspLock('create-change', async () => {
-      const workRef = resolveWorkRef(name, { executable: true })
+      const workRef = await resolveExecutableChange(name)
       const changePath = workRef.path
       const existed = existsSync(changePath)
       if (!existed) {

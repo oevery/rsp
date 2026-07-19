@@ -84,6 +84,25 @@ export interface StatusRecordOutput {
   path: string | null
 }
 
+export interface ChangeGroupSliceOutput {
+  name: string
+  boundary: string
+  state: 'open' | 'archived' | 'missing'
+}
+
+export interface ChangeGroupStatusOutput {
+  name: string
+  path: string
+  slices: ChangeGroupSliceOutput[]
+  completion: {
+    done: number
+    total: number
+  }
+  blockers: boolean
+  readyToClose: boolean
+  warnings: string[]
+}
+
 /** Stable JSON envelope shared by successful and command-boundary status output. */
 export interface StatusJsonShape {
   command: 'status'
@@ -95,6 +114,7 @@ export interface StatusJsonShape {
   }
   focused: string[]
   records: StatusRecordOutput[]
+  groups: ChangeGroupStatusOutput[]
   summary: {
     total: number
     focused: number

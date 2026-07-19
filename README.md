@@ -39,6 +39,7 @@ npx -y @oevery/rsp doctor
 ├── changes/
 │   ├── <name>.md
 │   └── <group>/
+│       ├── brief.md
 │       └── <change>.md
 ├── focus.d/
 │   └── <name>
@@ -53,7 +54,8 @@ npx -y @oevery/rsp doctor
 - `changes/` captures open work, including features, fixes, refactors, docs, ops, and research.
 - A change is always a single Markdown file with explicit sections for proposal, spec, design, tasks, verification, and blockers.
 - Change names are either flat (`<change>`) or one direct grouped child (`<group>/<change>`). Recursive work directories are rejected.
-- `<group>/brief` is reserved as a typed, non-executable Group Brief identity. The current release recognizes it so commands cannot mistake it for a Change; Group Brief creation and lifecycle arrive separately.
+- A Change Group is optional and is the only composite work shape. Its non-executable, non-focusable `<group>/brief` owns the shared goal, constraints, declared slices, completion conditions, durable outcomes, and blockers for at least two direct child Changes.
+- Create a group before its children. Every grouped Change must be declared by the brief, is focused and archived independently, and includes the brief in its context. `status`, `check`, and `doctor` derive group health and completion without persisting another state; `rsp group close` archives only a completed brief. Archived Group identities cannot be reopened.
 - A Markdown file and directory cannot claim the same work identity.
 - `rsp status`, `rsp check`, and `rsp doctor` inspect the same complete work tree. The `changes/` root must exist as a real directory, and existing focus/archive roots and group prefixes must also be real directories. Unsupported directories, non-Markdown entries, symlinks, missing or unreadable current work, incomplete reads, and identity collisions are visible errors. `status` exits non-zero instead of hiding invalid work.
 - `rsp init`, `rsp update`, `rsp add spec`, and generated index builders apply the same no-follow managed-path checks. Archive discovery accepts only flat archive files or one real group directory; recursively organized Specs accept only real directories and regular files.
@@ -100,7 +102,7 @@ Read in order:
 1. Nearest `AGENTS.md` for project or module instructions.
 2. Root `CONTEXT-MAP.md` if present, then the relevant nearest `CONTEXT.md`.
 3. The `rsp` skill; if unavailable, read `.rsp/rsp-rules.md` as the fallback protocol.
-4. `.rsp/focus.d/` and the explicitly selected focused Change.
+4. `.rsp/focus.d/`; for grouped work read the sibling Group Brief, then the explicitly selected focused Change.
 5. Only the relevant Specs and Decision Records under the configured authoritative path.
 
 If `.rsp/focus.d/` is empty and the user has not provided a concrete task, ask what to work on or suggest `npx -y @oevery/rsp create <name>` for tracked work.
@@ -232,6 +234,8 @@ rsp init --with-project-setup   Also create .rsp/changes/project-setup.md
 rsp update                      Refresh the fallback protocol, repair the AGENTS block, and rebuild indices
 rsp add spec <name>             Create .rsp/specs/<name>.md and rebuild specs index
 rsp create <name> [summary]     Create .rsp/changes/<name>.md; add --lite for a shorter template
+rsp group create <name> [goal] Create an unfocused .rsp/changes/<name>/brief.md
+rsp group close <name>         Archive a completed Group Brief after every child is archived
 rsp focus <name>                Mark an open change as currently focused
 rsp unfocus <name>              Remove an open change from the current focus set
 rsp archive <name>              Archive to .rsp/archives/ + update archive index
