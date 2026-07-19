@@ -57,6 +57,7 @@
 - Mechanical patch evidence is streamed and byte-hashed. Direct adaptation records license and reuse constraints; research recommendations affect final RSP artifacts only through a normal RSP change with report, recommendation, and adoption provenance.
 - The repository separates product runtime, product distribution, maintainer tooling, maintainer knowledge, verification, self-hosting protocol state, and transient/generated artifacts by directory ownership.
 - Product runtime and published distribution artifacts do not depend on maintainer research, upstream caches, self-hosting `.rsp/` state, or repository-maintainer-only skills.
+- RSP models coordination within one local Workspace; its largest work shape is a non-recursive Change Group containing direct child Changes. External repository or tracker references are ordinary Markdown and carry no protocol semantics.
 
 ## Boundaries
 - In scope: initializing and repairing `.rsp/` structure for repositories.
@@ -68,7 +69,7 @@
 - In scope: keeping RSP readable by humans, agents, CI, and simple scripts.
 - Out of scope: replacing git history or project management systems.
 - Out of scope: adding OpenSpec-style multi-file change artifacts.
-- Out of scope: recursive groups, arbitrary nested work directories, cross-repository children, attachments, dependency graphs, and persisted group readiness state.
+- Out of scope: arbitrary nested work directories, attachments, dependency graphs, and persisted group readiness state.
 - Out of scope: automatically merging change `Spec` deltas into durable specs during archive.
 - Out of scope: automatically creating Decision Records, discovering multiple ADR roots, assigning numbering policy, or synchronizing rationale across paths.
 - Out of scope: introducing workflow states that do not map to deterministic filesystem truth.
@@ -119,6 +120,7 @@ Dependency direction is constrained:
 - Preserve the single-file change model and fixed six-section change structure.
 - Keep open work flat or at one direct group level; never interpret recursive directories as Change identity.
 - Keep Group Briefs non-executable and non-focusable; group lifecycle commands operate on the aggregate while normal Change commands operate only on children.
+- Do not reserve protocol entities, fields, resolvers, synchronization state, extension points, or lifecycle for recursive coordination, cross-repository dependencies, tracker integration, backlinks, or multi-workspace orchestration.
 - Preserve `.rsp/focus.d/` as the only current-focus source.
 - Preserve `open -> archived` as the complete lifecycle model.
 - Do not promote task history, debugging notes, or one-off implementation context into `specs/` or project-owned `AGENTS.md` instructions.

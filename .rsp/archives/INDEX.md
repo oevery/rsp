@@ -4,7 +4,7 @@ summary: Completed RSP changes.
 kind: generated-index
 index_type: archives
 source_dir: .rsp/archives
-entry_count: 12
+entry_count: 13
 ---
 
 # Archive Index
@@ -22,4 +22,5 @@ entry_count: 12
 | 2026-07-18 | upstream-source-registry | feature | Add reproducible upstream source caching and review workflow |
 | 2026-07-19 | change-groups | feature | Add shallow Change Groups as the only composite work shape |
 | 2026-07-19 | decision-record-ownership | feature | Add one authoritative Decision Record path and separate lasting rationale from durable current facts |
+| 2026-07-19 | external-coordination-boundary | docs | Keep external coordination outside the RSP product |
 | 2026-07-19 | typed-work-ref | refactor | Introduce a typed WorkRef before Change Groups |
