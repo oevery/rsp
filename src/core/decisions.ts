@@ -1,7 +1,8 @@
 import type { RspConfig } from '../types.js'
 import { existsSync } from 'node:fs'
-import { mkdir, readdir, realpath, stat, writeFile } from 'node:fs/promises'
+import { mkdir, readdir, realpath, stat } from 'node:fs/promises'
 import { dirname, isAbsolute, join, posix, relative, resolve, sep } from 'node:path'
+import { ensureManagedFile, requireManagedFile } from './managed-path.js'
 
 export const DEFAULT_DECISION_RECORDS_PATH = '.rsp/specs/decisions'
 
@@ -60,9 +61,11 @@ export async function ensureDecisionRecordsDirectory(pathValue: string): Promise
 
   const entries = await readdir(pathValue)
   if (entries.length === 0) {
-    await writeFile(join(pathValue, '.gitkeep'), '')
+    await ensureManagedFile(join(pathValue, '.gitkeep'), '', 'Decision Record placeholder')
     return true
   }
+  if (entries.includes('.gitkeep'))
+    requireManagedFile(join(pathValue, '.gitkeep'), 'Decision Record placeholder')
 
   return !existed
 }

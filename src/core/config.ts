@@ -1,11 +1,11 @@
 import type { ChangeKind, RspConfig } from '../types.js'
-import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import pc from 'picocolors'
 import { getDecisionRecordsConfigIssue, normalizeDecisionRecordsPath, validateDecisionRecordsPath } from './decisions.js'
 import { parseYamlText } from './helpers.js'
+import { inspectManagedFile } from './managed-path.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -58,7 +58,10 @@ export async function inspectRspConfig(): Promise<RspConfigInspection> {
   if (_configCache?.cwd === cwd)
     return _configCache.inspection
 
-  if (!existsSync(CONFIG_PATH)) {
+  const configFile = inspectManagedFile(CONFIG_PATH, 'config file', { allowMissing: true })
+  if (configFile.issue)
+    throw configFile.issue
+  if (!configFile.exists) {
     const inspection = { config: {}, decisionRecordsIssue: null }
     _configCache = { cwd, inspection }
     return inspection

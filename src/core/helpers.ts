@@ -5,6 +5,7 @@ import { readdir, readFile, rmdir } from 'node:fs/promises'
 import { basename, dirname, join, relative, sep } from 'node:path'
 import { parse } from 'yaml'
 import { OBSOLETE_RSP_RULES_PATH, pc, RSP_DIR, RSP_RULES_PATH } from './config.js'
+import { inspectManagedFile } from './managed-path.js'
 import { toErrorMessage } from './output.js'
 
 const RSP_AGENTS_BEGIN = '<!-- rsp:begin -->'
@@ -140,12 +141,6 @@ export async function walkFiles(dir: string, options: WalkOptions = {}): Promise
     }
   }
   return files
-}
-
-/** Convert a change file path to its logical change name (relative to changes dir, no .md). */
-export function changeNameFromPath(changesDir: string, filePath: string): string {
-  const rel = normalizeLogicalPath(relative(changesDir, filePath))
-  return rel.replace(/\.md$/, '')
 }
 
 /** Normalize a relative path into the logical RSP name format using `/`. */
@@ -478,35 +473,25 @@ export function hasRspAgentsBlock(content: string): boolean {
   return content.includes(RSP_AGENTS_BEGIN) && content.includes(RSP_AGENTS_END)
 }
 
-/** Valid change/spec name pattern (kebab-case with optional subdirectory). */
-export const CHANGE_NAME_RE = /^[a-z0-9-]+(?:\/[a-z0-9-]+)*$/
+/** Valid additional Spec name pattern (kebab-case with optional subdirectories). */
+export const SPEC_NAME_RE = /^[a-z0-9-]+(?:\/[a-z0-9-]+)*$/
 
-/** Validate a change/spec name against the kebab-case pattern. */
-export function isValidChangeName(name: string): boolean {
-  return CHANGE_NAME_RE.test(name)
+/** Validate an additional Spec name against the kebab-case pattern. */
+export function isValidSpecName(name: string): boolean {
+  return SPEC_NAME_RE.test(name)
 }
 
 /** Guard: ensure RSP is initialized. Exits with error if not. */
 export function guardRspInitialized(): void {
   const designPath = join(RSP_DIR, 'specs', 'design.md')
-  if (!existsSync(RSP_RULES_PATH) || !existsSync(designPath)) {
+  const rules = inspectManagedFile(RSP_RULES_PATH, 'fallback protocol', { allowMissing: true })
+  const design = inspectManagedFile(designPath, 'design Spec', { allowMissing: true })
+  if (rules.issue || design.issue || !rules.exists || !design.exists) {
     const initialized = existsSync(RSP_DIR)
     console.error(`  ${pc.red('Error:')} ${initialized ? 'RSP project requires an update' : 'RSP is not initialized in this project'}`)
     console.error(`  ${pc.dim(initialized ? 'Run: rsp update' : 'Run: rsp init')}`)
     process.exit(1)
   }
-}
-
-/** Read .rsp/focus.d/ and return the set of focused change names. */
-export async function getFocusedChangeNames(options: WalkOptions = {}): Promise<Set<string>> {
-  const names = new Set<string>()
-  const focusDir = join(RSP_DIR, 'focus.d')
-  if (!existsSync(focusDir))
-    return names
-  const entries = await walkFiles(focusDir, options)
-  for (const entryPath of entries)
-    names.add(normalizeLogicalPath(relative(focusDir, entryPath)))
-  return names
 }
 
 /** Filter checkbox todo lines from a section body. */

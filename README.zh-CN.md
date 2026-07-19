@@ -37,7 +37,9 @@ npx -y @oevery/rsp doctor
 │   ├── design.md
 │   └── decisions/            # 默认的权威 Decision Records
 ├── changes/
-│   └── <name>.md
+│   ├── <name>.md
+│   └── <group>/
+│       └── <change>.md
 ├── focus.d/
 │   └── <name>
 └── archives/
@@ -50,6 +52,12 @@ npx -y @oevery/rsp doctor
 - Decision Records 描述难以逆转选择的长期理由、备选方案、取舍和后果；默认位于 `.rsp/specs/decisions/`，也可以配置唯一的外部权威路径。
 - `changes/` 描述 open work，包括 feature、fix、refactor、docs、ops 和 research。
 - 每个 change 始终是单个 Markdown 文件，并包含 proposal、spec、design、tasks、verification 与 blockers 等明确 section。
+- Change 名称只能是扁平的 `<change>` 或一层直接子项 `<group>/<change>`；递归 work 目录会被拒绝。
+- `<group>/brief` 是保留的 typed、non-executable Group Brief 身份。当前版本只识别它并防止命令误当成 Change；其创建与生命周期将在后续单独实现。
+- 同一个 work 身份不能同时由 Markdown 文件和目录占用。
+- `rsp status`、`rsp check` 和 `rsp doctor` 使用同一套完整 work-tree 检查。`changes/` 根目录必须存在且是真实目录，已有的 focus/archive 根目录和 group 前缀也必须是真实目录；非法目录、非 Markdown 条目、符号链接、缺失或不可读的当前 work、不完整读取和身份冲突都会成为可见错误。`status` 会返回非零状态，而不是隐藏非法 work。
+- `rsp init`、`rsp update`、`rsp add spec` 和生成索引使用相同的 no-follow managed-path 检查。archive discovery 只接受扁平 archive 文件或一层真实 group 目录；递归组织的 Specs 只接受真实目录和普通文件。
+- 项目 `AGENTS.md`、focus marker、fallback/config、生成索引和 placeholder 等最终 managed file 也必须是普通文件；RSP 会在读写前拒绝静态 symlink 目标。
 - 完成后的 change 会移动到 `archives/`。稳定当前事实写入 Specs；长期理由写入 Decision Records；稳定的作用域操作指令写入 nearest project-owned `AGENTS.md`。
 - 不要把任务历史、排障笔记或一次性实现上下文提升到 Specs、Decision Records 或项目指令。
 - Change `Spec` 中的 delta 标记仅为规划辅助。`rsp archive` 不会自动将它们提升到 Specs 或 Decision Records。
@@ -143,7 +151,8 @@ npx skills add oevery/rsp
 1. 升级 RSP CLI。
 2. 运行 `rsp update`，生成 canonical fallback 并删除旧的 `.rsp/rules/rsp-rules.md` 生成文件。
 3. 如果 `.rsp/rules/` 仍然存在，只把残留内容中稳定且有作用域的指令迁入 nearest project-owned `AGENTS.md`，然后删除旧条目。
-4. 运行 `rsp doctor`，处理所有剩余迁移问题。
+4. 将深于 `.rsp/changes/<group>/<change>.md` 的 work path 扁平化，并手动解决 `.rsp/changes/<name>.md` 与 `.rsp/changes/<name>/` 的身份冲突。
+5. 运行 `rsp doctor`，处理所有剩余迁移问题。
 
 仓库维护者可以把外部 skill 和 workflow 来源作为离线评审输入进行跟踪。该工具有意不进入发布包；具体用法见[源码仓库维护指南](https://github.com/oevery/rsp/blob/main/docs/upstreams.md)。
 

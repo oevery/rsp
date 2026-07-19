@@ -1,12 +1,14 @@
 import type { InitArgs } from '../types.js'
 import { existsSync } from 'node:fs'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile } from 'node:fs/promises'
 
 import { join } from 'node:path'
 import { CHANGES_DIR, clearConfigCache, CONFIG_PATH, FOCUS_DIR, inspectRspConfig, pc, PKG_ROOT, RSP_DIR, RSP_RULES_PATH, VALID_KINDS } from '../core/config.js'
 import { ensureDecisionRecordsDirectory, resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { detectProjectName, generateChangeContent, generateDesignContent, upsertRspAgentsBlock } from '../core/helpers.js'
 import { withRspLock } from '../core/lock.js'
+import { ensureManagedFile, inspectManagedFile, requireManagedDirectory, writeManagedFile } from '../core/managed-path.js'
+import { resolveFocusMarkerPath, resolveWorkRef } from '../core/work-ref.js'
 import { buildArchiveIndex } from './archive-index.js'
 import { buildSpecsIndex } from './specs-index.js'
 
@@ -29,10 +31,7 @@ ${fmtList(VALID_KINDS, 2)}
 }
 
 async function ensureFile(path: string, content: string): Promise<boolean> {
-  if (existsSync(path))
-    return false
-  await writeFile(path, content)
-  return true
+  return ensureManagedFile(path, content, 'managed file')
 }
 
 function toTitle(projectName: string): string {
@@ -49,7 +48,16 @@ export async function initProject(args: InitArgs = {}) {
     process.exit(1)
   }
 
+  const agentsPath = 'AGENTS.md'
+  const initialAgentsInspection = inspectManagedFile(agentsPath, 'AGENTS.md', { allowMissing: true })
+  if (initialAgentsInspection.issue)
+    throw initialAgentsInspection.issue
+
   return withRspLock('init', async () => {
+    const agentsInspection = inspectManagedFile(agentsPath, 'AGENTS.md', { allowMissing: true })
+    if (agentsInspection.issue)
+      throw agentsInspection.issue
+
     if (existsSync(CONFIG_PATH)) {
       clearConfigCache()
       const existingConfig = await inspectRspConfig()
@@ -62,14 +70,16 @@ export async function initProject(args: InitArgs = {}) {
     }
 
     const dirs = [
-      join(RSP_DIR, 'specs'),
-      CHANGES_DIR,
-      FOCUS_DIR,
-      join(RSP_DIR, 'archives'),
+      { path: join(RSP_DIR, 'specs'), label: 'specs root' },
+      { path: CHANGES_DIR, label: 'open work root' },
+      { path: FOCUS_DIR, label: 'focus root' },
+      { path: join(RSP_DIR, 'archives'), label: 'archive root' },
     ]
 
-    for (const d of dirs)
-      await mkdir(d, { recursive: true })
+    for (const directory of dirs)
+      requireManagedDirectory(directory.path, directory.label, { allowMissing: true })
+    for (const directory of dirs)
+      await mkdir(directory.path, { recursive: true })
 
     let created = false
     const bundledRules = await readFile(join(PKG_ROOT, 'rules', 'rsp-rules.md'), 'utf-8')
@@ -93,8 +103,9 @@ export async function initProject(args: InitArgs = {}) {
     created = (await ensureFile(join(RSP_DIR, '.gitignore'), '# Transient files that should not be committed\n.lock\n')) || created
 
     if (args.withProjectSetup) {
-      const changePath = join(CHANGES_DIR, 'project-setup.md')
-      const focusMarker = join(FOCUS_DIR, 'project-setup')
+      const projectSetupRef = resolveWorkRef('project-setup', { executable: true })
+      const changePath = projectSetupRef.path
+      const focusMarker = resolveFocusMarkerPath(projectSetupRef)
       created = (await ensureFile(changePath, generateChangeContent('project-setup'))) || created
       created = (await ensureFile(focusMarker, '')) || created
     }
@@ -104,12 +115,11 @@ export async function initProject(args: InitArgs = {}) {
     if (createdArchivesIndex)
       await buildArchiveIndex({ acquireLock: false })
 
-    const agentsPath = 'AGENTS.md'
     const title = toTitle(projectName)
     let agentsUpdated = false
 
-    if (!existsSync(agentsPath)) {
-      await writeFile(agentsPath, `# ${title}\n\n${upsertRspAgentsBlock('').content}\n`)
+    if (!agentsInspection.exists) {
+      await writeManagedFile(agentsPath, `# ${title}\n\n${upsertRspAgentsBlock('').content}\n`, 'AGENTS.md')
       created = true
       agentsUpdated = true
     }
@@ -117,7 +127,7 @@ export async function initProject(args: InitArgs = {}) {
       const existing = await readFile(agentsPath, 'utf-8')
       const next = upsertRspAgentsBlock(existing)
       if (next.changed) {
-        await writeFile(agentsPath, next.content)
+        await writeManagedFile(agentsPath, next.content, 'AGENTS.md')
         created = true
         agentsUpdated = true
       }

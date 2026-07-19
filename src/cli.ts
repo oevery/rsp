@@ -203,7 +203,7 @@ const statusCommand = defineCommand({
       process.exit(1)
     }
 
-    await showStatus({
+    const result = await showStatus({
       focused: Boolean(args.focused),
       blocked: Boolean(args.blocked),
       stale,
@@ -211,6 +211,8 @@ const statusCommand = defineCommand({
       json: Boolean(args.json),
       verbose: Boolean(args.verbose),
     })
+    if (!result.ok)
+      process.exit(1)
   },
 })
 

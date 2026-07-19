@@ -1,11 +1,10 @@
 import type { CommandDiagnostic, CommandRunOptions, RuntimeDiagnostic } from '../types.js'
-import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
-import { join, relative } from 'node:path'
 
-import { CHANGES_DIR, FOCUS_DIR, loadRspConfig, pc, resolveKinds, resolveRequiredSections } from '../core/config.js'
-import { changeNameFromPath, detectDeltaSections, getFocusedChangeNames, normalizeLogicalPath, parseFrontmatter, parseScenarios, walkFiles, walkMarkdownFiles } from '../core/helpers.js'
+import { loadRspConfig, pc, resolveKinds, resolveRequiredSections } from '../core/config.js'
+import { detectDeltaSections, parseFrontmatter, parseScenarios } from '../core/helpers.js'
 import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
+import { inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 
 export interface CheckOptions extends CommandRunOptions {
   focused?: boolean
@@ -41,65 +40,90 @@ export async function runCheck(options: CheckOptions = {}): Promise<CheckResult>
   const runtime: RuntimeDiagnostic[] = []
   const reportRuntime = (diagnostic: RuntimeDiagnostic) => recordRuntimeDiagnostic(runtime, diagnostic, Boolean(options.verbose) && !options.json)
   const addDiagnostic = (diagnostic: CommandDiagnostic) => diagnostics.push(diagnostic)
-
-  let focusedSet: Set<string> = new Set()
-  if (options.focused) {
-    focusedSet = await getFocusedChangeNames({ onError: reportRuntime })
+  const focusTree = await inspectFocusTree()
+  for (const diagnostic of focusTree.diagnostics) {
+    addDiagnostic({
+      severity: 'error',
+      code: diagnostic.code,
+      change: diagnostic.input,
+      path: diagnostic.path,
+      message: diagnostic.message,
+    })
   }
 
-  if (existsSync(FOCUS_DIR)) {
-    const entries = await walkFiles(FOCUS_DIR, { onError: reportRuntime })
-    for (const entryPath of entries) {
-      const entryContent = normalizeLogicalPath(relative(FOCUS_DIR, entryPath))
-      let markerContent = ''
-      try {
-        markerContent = (await readFile(entryPath, 'utf-8')).trim()
-      }
-      catch (error) {
-        addDiagnostic({
-          severity: 'error',
-          code: 'focus_marker_read_failed',
-          path: `focus.d/${entryContent}`,
-          change: entryContent,
-          message: 'unable to read focus marker file',
-          hint: toErrorMessage(error),
-        })
-        reportRuntime({
-          code: 'focus_marker_read_failed',
-          operation: 'readFile',
-          path: entryPath,
-          message: toErrorMessage(error),
-        })
-        continue
-      }
-      if (markerContent) {
-        addDiagnostic({
-          severity: 'warning',
-          code: 'focus_marker_not_empty',
-          path: `focus.d/${entryContent}`,
-          message: 'should be an empty marker file; path is the source of truth',
-        })
-      }
-      const fp = join(CHANGES_DIR, `${entryContent}.md`)
-      if (!existsSync(fp)) {
-        addDiagnostic({
-          severity: 'error',
-          code: 'focused_change_missing',
-          path: `focus.d/${entryContent}`,
-          change: entryContent,
-          message: `focuses "${entryContent}" but changes/${entryContent}.md not found`,
-        })
-      }
+  const focusedSet = options.focused
+    ? new Set(focusTree.markers.map(marker => marker.name))
+    : new Set<string>()
+
+  for (const marker of focusTree.markers) {
+    const entryPath = marker.path
+    const entryContent = marker.name
+    let markerContent = ''
+    try {
+      markerContent = (await readFile(entryPath, 'utf-8')).trim()
+    }
+    catch (error) {
+      addDiagnostic({
+        severity: 'error',
+        code: 'focus_marker_read_failed',
+        path: `focus.d/${entryContent}`,
+        change: entryContent,
+        message: 'unable to read focus marker file',
+        hint: toErrorMessage(error),
+      })
+      reportRuntime({
+        code: 'focus_marker_read_failed',
+        operation: 'readFile',
+        path: entryPath,
+        message: toErrorMessage(error),
+      })
+      continue
+    }
+    if (markerContent) {
+      addDiagnostic({
+        severity: 'warning',
+        code: 'focus_marker_not_empty',
+        path: `focus.d/${entryContent}`,
+        message: 'should be an empty marker file; path is the source of truth',
+      })
+    }
+    try {
+      resolveWorkRef(entryContent, { executable: true, mustExist: true })
+    }
+    catch (error) {
+      if (!(error instanceof WorkRefError))
+        throw error
+      addDiagnostic({
+        severity: 'error',
+        code: error.code === 'work_ref_not_found' ? 'focused_change_missing' : error.code,
+        path: `focus.d/${entryContent}`,
+        change: entryContent,
+        message: error.code === 'work_ref_not_found'
+          ? `focuses "${entryContent}" but changes/${entryContent}.md not found`
+          : error.message,
+      })
     }
   }
 
-  const allChangeFiles = existsSync(CHANGES_DIR) ? await walkMarkdownFiles(CHANGES_DIR, { onError: reportRuntime }) : []
+  const workTree = await inspectWorkTree()
+  for (const diagnostic of workTree.diagnostics) {
+    const inspectionIncomplete = diagnostic.code === 'invalid_work_root' || diagnostic.code === 'work_tree_read_failed'
+    if (inspectionIncomplete || !options.focused || focusedSet.has(diagnostic.input)) {
+      addDiagnostic({
+        severity: 'error',
+        code: diagnostic.code,
+        change: diagnostic.input,
+        path: diagnostic.path,
+        message: diagnostic.message,
+      })
+    }
+  }
 
-  const changeFiles = options.focused
-    ? allChangeFiles.filter(fp => focusedSet.has(changeNameFromPath(CHANGES_DIR, fp)))
-    : allChangeFiles
+  const changeRefs = options.focused
+    ? workTree.changes.filter(ref => focusedSet.has(ref.name))
+    : workTree.changes
 
-  if (changeFiles.length === 0) {
+  if (changeRefs.length === 0) {
     const result: CheckResult = {
       command: 'check',
       ok: diagnostics.every(d => d.severity !== 'error'),
@@ -145,8 +169,8 @@ export async function runCheck(options: CheckOptions = {}): Promise<CheckResult>
     return result
   }
 
-  for (const fp of changeFiles) {
-    const name = changeNameFromPath(CHANGES_DIR, fp)
+  for (const ref of changeRefs) {
+    const { name, path: fp } = ref
     let content: string
     try {
       content = await readFile(fp, 'utf-8')
@@ -338,7 +362,7 @@ export async function runCheck(options: CheckOptions = {}): Promise<CheckResult>
     diagnostics,
     runtime,
     summary: {
-      changeFiles: changeFiles.length,
+      changeFiles: changeRefs.length,
       errors: diagnostics.filter(d => d.severity === 'error').length,
       warnings: diagnostics.filter(d => d.severity === 'warning').length,
     },
@@ -372,9 +396,9 @@ export async function runCheck(options: CheckOptions = {}): Promise<CheckResult>
 
   console.log()
   if (result.summary.errors === 0 && result.summary.warnings === 0)
-    console.log(`  ${pc.green('✓')} All ${changeFiles.length} change file(s) valid.\n`)
+    console.log(`  ${pc.green('✓')} All ${changeRefs.length} change file(s) valid.\n`)
   else
-    console.log(`  ${pc.red(String(result.summary.errors))} error(s), ${pc.yellow(String(result.summary.warnings))} warning(s) in ${changeFiles.length} change file(s).\n`)
+    console.log(`  ${pc.red(String(result.summary.errors))} error(s), ${pc.yellow(String(result.summary.warnings))} warning(s) in ${changeRefs.length} change file(s).\n`)
 
   return result
 }

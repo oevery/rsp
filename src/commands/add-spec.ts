@@ -1,15 +1,15 @@
-import { existsSync } from 'node:fs'
-import { mkdir, writeFile } from 'node:fs/promises'
-import { dirname, join } from 'node:path'
+import { mkdir, unlink, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
 
 import { inspectRspConfig, pc, RSP_DIR } from '../core/config.js'
-import { detectProjectName, generateDesignContent, generateSpecContent, guardRspInitialized, isValidChangeName } from '../core/helpers.js'
+import { cleanupEmptyParentDirs, detectProjectName, generateDesignContent, generateSpecContent, guardRspInitialized, isValidSpecName } from '../core/helpers.js'
 import { withRspLock } from '../core/lock.js'
+import { inspectManagedFileTree, resolveManagedDirectoryChain } from '../core/managed-path.js'
 import { toErrorMessage } from '../core/output.js'
 import { buildSpecsIndex } from './specs-index.js'
 
 export async function addSpec(name: string, projectName = 'project') {
-  if (!name || !isValidChangeName(name)) {
+  if (!name || !isValidSpecName(name)) {
     console.error(`  ${pc.red('Error:')} spec name must be kebab-case with optional subdirectory`)
     process.exit(1)
   }
@@ -31,18 +31,38 @@ export async function addSpec(name: string, projectName = 'project') {
     process.exit(1)
   }
 
-  const path = join(RSP_DIR, 'specs', `${name}.md`)
-  if (existsSync(path)) {
-    console.error(`  ${pc.red('Error:')} spec file already exists: .rsp/specs/${name}.md`)
-    process.exit(1)
-  }
-
   return withRspLock('add-spec', async () => {
-    await mkdir(dirname(path), { recursive: true })
+    const specsDir = join(RSP_DIR, 'specs')
+    const segments = name.split('/')
+    const parent = resolveManagedDirectoryChain(specsDir, segments.slice(0, -1), 'spec path')
+    const path = join(parent, `${segments.at(-1)}.md`)
+    const inspection = await inspectManagedFileTree(specsDir, 'Specs')
+    if (inspection.issues.length > 0)
+      throw inspection.issues[0]
+
+    await mkdir(parent, { recursive: true })
     const resolvedProjectName = projectName === 'project' ? await detectProjectName() : projectName
     const content = name === 'design' ? generateDesignContent(resolvedProjectName) : generateSpecContent(name)
-    await writeFile(path, content)
-    await buildSpecsIndex({ acquireLock: false })
+    let created = false
+    try {
+      await writeFile(path, content, { flag: 'wx' })
+      created = true
+      await buildSpecsIndex({ acquireLock: false })
+    }
+    catch (error) {
+      if (created) {
+        try {
+          await unlink(path)
+          await cleanupEmptyParentDirs(path, specsDir)
+        }
+        catch {
+          // Preserve the original failure; doctor will report any residual path.
+        }
+      }
+      if ((error as NodeJS.ErrnoException).code === 'EEXIST')
+        throw new Error(`spec file already exists: .rsp/specs/${name}.md`)
+      throw error
+    }
     console.log(`  ${pc.green('Created:')} .rsp/specs/${name}.md\n`)
   })
 }

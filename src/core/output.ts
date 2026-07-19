@@ -1,24 +1,5 @@
-import type { RuntimeDiagnostic } from '../types.js'
+import type { RuntimeDiagnostic, StatusJsonShape } from '../types.js'
 import { pc } from './config.js'
-
-interface SharedStatusJsonShape {
-  command: 'status'
-  ok: boolean
-  filters: {
-    focused: boolean
-    blocked: boolean
-    stale: number | null
-  }
-  focused: string[]
-  records: unknown[]
-  summary: {
-    total: number
-    focused: number
-    blocked: number
-  }
-  archiveTrend: unknown[]
-  runtime: RuntimeDiagnostic[]
-}
 
 export function toErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
@@ -29,7 +10,7 @@ export function emitJson(data: unknown): void {
 }
 
 export function emitStatusJsonError(error: { code: string, message: string }, options: { focused: boolean, blocked: boolean }) {
-  const payload: SharedStatusJsonShape & { error: { code: string, message: string } } = {
+  const payload: StatusJsonShape & { error: { code: string, message: string } } = {
     command: 'status',
     ok: false,
     filters: {
@@ -45,6 +26,8 @@ export function emitStatusJsonError(error: { code: string, message: string }, op
       blocked: 0,
     },
     archiveTrend: [],
+    nextActions: [],
+    diagnostics: [],
     runtime: [],
     error,
   }

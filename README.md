@@ -37,7 +37,9 @@ npx -y @oevery/rsp doctor
 │   ├── design.md
 │   └── decisions/            # authoritative Decision Records by default
 ├── changes/
-│   └── <name>.md
+│   ├── <name>.md
+│   └── <group>/
+│       └── <change>.md
 ├── focus.d/
 │   └── <name>
 └── archives/
@@ -50,6 +52,12 @@ npx -y @oevery/rsp doctor
 - Decision Records describe lasting rationale, alternatives, tradeoffs, and consequences for hard-to-reverse choices. They default to `.rsp/specs/decisions/` or use one configured external path.
 - `changes/` captures open work, including features, fixes, refactors, docs, ops, and research.
 - A change is always a single Markdown file with explicit sections for proposal, spec, design, tasks, verification, and blockers.
+- Change names are either flat (`<change>`) or one direct grouped child (`<group>/<change>`). Recursive work directories are rejected.
+- `<group>/brief` is reserved as a typed, non-executable Group Brief identity. The current release recognizes it so commands cannot mistake it for a Change; Group Brief creation and lifecycle arrive separately.
+- A Markdown file and directory cannot claim the same work identity.
+- `rsp status`, `rsp check`, and `rsp doctor` inspect the same complete work tree. The `changes/` root must exist as a real directory, and existing focus/archive roots and group prefixes must also be real directories. Unsupported directories, non-Markdown entries, symlinks, missing or unreadable current work, incomplete reads, and identity collisions are visible errors. `status` exits non-zero instead of hiding invalid work.
+- `rsp init`, `rsp update`, `rsp add spec`, and generated index builders apply the same no-follow managed-path checks. Archive discovery accepts only flat archive files or one real group directory; recursively organized Specs accept only real directories and regular files.
+- Final managed files—such as the project `AGENTS.md`, focus markers, fallback/config files, generated indexes, and placeholders—must also be regular files; RSP rejects static symlink targets before reading or writing them.
 - Completed changes move to `archives/`. Stable current facts belong in Specs; lasting rationale belongs in Decision Records; stable scoped operating instructions belong in nearest project-owned `AGENTS.md`.
 - Do not promote task history, debugging notes, or one-off implementation context into Specs, Decision Records, or project instructions.
 - Change `Spec` delta markers (`### ADDED`, `### MODIFIED`, `### REMOVED`) are planning aids only. `rsp archive` does not automatically promote them into Specs or Decision Records. Durable writeback remains an explicit semantic decision.
@@ -149,7 +157,8 @@ Version 3 uses `.rsp/rsp-rules.md` as the only runtime fallback path and removes
 1. Upgrade the RSP CLI.
 2. Run `rsp update` to create the canonical fallback and remove the obsolete generated `.rsp/rules/rsp-rules.md`.
 3. If `.rsp/rules/` remains, move only stable scoped instructions from its residual entries into the nearest project-owned `AGENTS.md`, then remove the obsolete entries.
-4. Run `rsp doctor` and resolve every remaining migration issue.
+4. Flatten any work path deeper than `.rsp/changes/<group>/<change>.md`, and resolve any `.rsp/changes/<name>.md` versus `.rsp/changes/<name>/` collision manually.
+5. Run `rsp doctor` and resolve every remaining migration issue.
 
 Repository maintainers can track external skill and workflow sources as offline review inputs. This tooling is intentionally excluded from the published package; see the [source-checkout maintainer guide](https://github.com/oevery/rsp/blob/main/docs/upstreams.md).
 

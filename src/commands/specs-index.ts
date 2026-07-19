@@ -1,11 +1,12 @@
 import { existsSync } from 'node:fs'
-import { readFile, writeFile } from 'node:fs/promises'
+import { readFile } from 'node:fs/promises'
 import { basename, isAbsolute, join, relative, sep } from 'node:path'
 
 import { inspectRspConfig, pc, RSP_DIR } from '../core/config.js'
 import { DEFAULT_DECISION_RECORDS_PATH, resolveDecisionRecordsPath } from '../core/decisions.js'
-import { normalizeLogicalPath, parseFrontmatter, walkMarkdownFiles } from '../core/helpers.js'
+import { normalizeLogicalPath, parseFrontmatter } from '../core/helpers.js'
 import { withRspLock } from '../core/lock.js'
+import { inspectManagedFileTree, writeManagedFile } from '../core/managed-path.js'
 
 /** Regenerate the .rsp/specs/INDEX.md file as an index of additional project specs. */
 export async function buildSpecsIndex({ acquireLock = true, quiet = false } = {}): Promise<boolean | undefined> {
@@ -18,13 +19,17 @@ export async function buildSpecsIndex({ acquireLock = true, quiet = false } = {}
     throw new Error(configInspection.decisionRecordsIssue)
   const decisionRecordsPath = resolveDecisionRecordsPath(configInspection.config)
 
-  if (!existsSync(specsDir)) {
+  const inspection = await inspectManagedFileTree(specsDir, 'Specs', { allowMissing: true })
+  if (inspection.issues.length > 0)
+    throw inspection.issues[0]
+  if (!inspection.rootExists) {
     if (!quiet)
       console.log(`  ${pc.dim('No specs directory.')}\n`)
     return false
   }
 
-  const specFiles = (await walkMarkdownFiles(specsDir))
+  const specFiles = inspection.files
+    .filter(fp => fp.endsWith('.md'))
     .filter((fp) => {
       const name = basename(fp)
       return name !== 'INDEX.md'
@@ -71,7 +76,7 @@ export async function buildSpecsIndex({ acquireLock = true, quiet = false } = {}
   const existingContent = existsSync(indexPath) ? await readFile(indexPath, 'utf-8') : null
   const changed = existingContent !== nextContent
   if (changed)
-    await writeFile(indexPath, nextContent)
+    await writeManagedFile(indexPath, nextContent, 'Specs index')
   if (!quiet)
     console.log(`  ${pc.green('INDEX.md updated:')} ${specFiles.length} spec file(s).\n`)
   return changed

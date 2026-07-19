@@ -1,12 +1,11 @@
 import type { CommandRunOptions, RuntimeDiagnostic } from '../types.js'
-import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
-import { join } from 'node:path'
 
-import { CHANGES_DIR, inspectRspConfig, pc } from '../core/config.js'
+import { inspectRspConfig, pc } from '../core/config.js'
 import { resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
-import { buildDurableReviewGuidance, collectArchiveReadiness, countCheckboxes, getDurableReviewCandidateTargets, getFocusedChangeNames, guardRspInitialized, hasMeaningfulBlockers, isValidChangeName, normalizeLogicalPath, parseFrontmatter, parseScenarios } from '../core/helpers.js'
+import { buildDurableReviewGuidance, collectArchiveReadiness, countCheckboxes, getDurableReviewCandidateTargets, guardRspInitialized, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, parseScenarios } from '../core/helpers.js'
 import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
+import { inspectFocusTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 
 interface ShowResult {
   command: 'show'
@@ -73,11 +72,16 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
   const reportRuntime = (diagnostic: RuntimeDiagnostic) => recordRuntimeDiagnostic(runtime, diagnostic, Boolean(options.verbose) && !options.json)
 
   guardRspInitialized()
+  const focusTree = await inspectFocusTree()
+  if (focusTree.diagnostics.length > 0) {
+    const diagnostic = focusTree.diagnostics[0]
+    exitShowError({ code: diagnostic.code, message: diagnostic.message }, options)
+  }
+  const focused = new Set(focusTree.markers.map(marker => marker.name))
 
   let name: string
 
   if (options.focused) {
-    const focused = await getFocusedChangeNames({ onError: reportRuntime })
     if (focused.size === 0) {
       exitShowError({ code: 'no_focused_change', message: 'no focused change exists' }, options)
     }
@@ -90,22 +94,22 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
     name = [...focused][0]
   }
   else if (nameOrFocused) {
-    if (!isValidChangeName(nameOrFocused)) {
-      exitShowError({
-        code: 'invalid_change_name',
-        message: 'change name must be kebab-case with optional subdirectory (lowercase, digits, hyphens, slashes)',
-      }, options)
-    }
     name = nameOrFocused
   }
   else {
     exitShowError({ code: 'missing_change_name', message: 'Usage: rsp show <name|--focused> [--json] [--verbose]' }, options)
   }
 
-  const srcPath = join(CHANGES_DIR, `${name}.md`)
-  if (!existsSync(srcPath)) {
-    exitShowError({ code: 'change_not_found', message: `.rsp/changes/${name}.md not found` }, options)
+  let workRef
+  try {
+    workRef = resolveWorkRef(name, { executable: true, mustExist: true })
   }
+  catch (error) {
+    if (error instanceof WorkRefError)
+      exitShowError({ code: error.code, message: error.message }, options)
+    throw error
+  }
+  const srcPath = workRef.path
 
   let content: string
   try {
@@ -130,8 +134,7 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
     })
   }
 
-  const focusedSet = await getFocusedChangeNames({ onError: reportRuntime })
-  const isFocused = focusedSet.has(name)
+  const isFocused = focused.has(name)
 
   const cb = countCheckboxes(content)
   const blockers = hasMeaningfulBlockers(content)

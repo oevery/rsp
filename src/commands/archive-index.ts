@@ -1,25 +1,30 @@
 import { existsSync } from 'node:fs'
-import { readFile, writeFile } from 'node:fs/promises'
+import { readFile } from 'node:fs/promises'
 import { basename, dirname, join, relative } from 'node:path'
 
 import { ARCHIVES_DIR, pc } from '../core/config.js'
-import { extractSection, normalizeLogicalPath, parseFrontmatter, walkMarkdownFiles } from '../core/helpers.js'
+import { extractSection, normalizeLogicalPath, parseFrontmatter } from '../core/helpers.js'
 import { withRspLock } from '../core/lock.js'
+import { writeManagedFile } from '../core/managed-path.js'
+import { inspectArchiveTree, WorkRefError } from '../core/work-ref.js'
 
 /** Regenerate the .rsp/archives/INDEX.md file by scanning archived change files. */
 export async function buildArchiveIndex({ acquireLock = true, quiet = false } = {}): Promise<boolean | undefined> {
   if (acquireLock)
     return withRspLock('archive-index', async () => buildArchiveIndex({ acquireLock: false, quiet }))
 
-  if (!existsSync(ARCHIVES_DIR)) {
+  const inspection = await inspectArchiveTree()
+  if (inspection.diagnostics.length > 0) {
+    const diagnostic = inspection.diagnostics[0]
+    throw new WorkRefError(diagnostic.code, diagnostic.message, diagnostic.input)
+  }
+  if (!inspection.rootExists) {
     if (!quiet)
       console.log(`  ${pc.dim('No archives directory.')}\n`)
     return false
   }
 
-  const archiveFiles = (await walkMarkdownFiles(ARCHIVES_DIR))
-    .filter(fp => basename(fp) !== 'INDEX.md')
-    .sort()
+  const archiveFiles = inspection.files
 
   const lines: string[] = []
   lines.push('---')
@@ -78,7 +83,7 @@ export async function buildArchiveIndex({ acquireLock = true, quiet = false } = 
   const existingContent = existsSync(indexPath) ? await readFile(indexPath, 'utf-8') : null
   const changed = existingContent !== nextContent
   if (changed)
-    await writeFile(indexPath, nextContent)
+    await writeManagedFile(indexPath, nextContent, 'archive index')
 
   if (!quiet)
     console.log(`  ${pc.green('INDEX.md updated:')} ${archiveFiles.length} archived change(s).\n`)

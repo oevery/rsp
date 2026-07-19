@@ -71,6 +71,41 @@ export interface RuntimeDiagnostic {
   message: string
 }
 
+export interface StatusRecordOutput {
+  name: string
+  kind: string
+  progress: {
+    done: number
+    total: number
+  }
+  ageDays: number | null
+  isFocused: boolean
+  isBlocked: boolean
+  path: string | null
+}
+
+/** Stable JSON envelope shared by successful and command-boundary status output. */
+export interface StatusJsonShape {
+  command: 'status'
+  ok: boolean
+  filters: {
+    focused: boolean
+    blocked: boolean
+    stale: number | null
+  }
+  focused: string[]
+  records: StatusRecordOutput[]
+  summary: {
+    total: number
+    focused: number
+    blocked: number
+  }
+  nextActions: string[]
+  archiveTrend: Array<{ month: string, count: number }>
+  diagnostics: CommandDiagnostic[]
+  runtime: RuntimeDiagnostic[]
+}
+
 /** Parsed ADDED/MODIFIED/REMOVED delta markers from a change's Spec section. */
 export interface DeltaSections {
   added: boolean

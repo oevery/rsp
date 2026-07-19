@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
-import { changeNameFromPath, collectArchiveChecklist, collectArchiveReadiness, countCheckboxes, detectDeltaSections, extractSection, generateChangeContent, generateSpecContent, getDurableReviewCandidateTargets, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, parseScenarios, parseYamlLines, renderRspAgentsBlock } from '../src/core/helpers.js'
+import { collectArchiveChecklist, collectArchiveReadiness, countCheckboxes, detectDeltaSections, extractSection, generateChangeContent, generateSpecContent, getDurableReviewCandidateTargets, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, parseScenarios, parseYamlLines, renderRspAgentsBlock } from '../src/core/helpers.js'
 
 describe('parseYamlLines', () => {
   it('parses key-value pairs', () => {
@@ -243,7 +243,7 @@ describe('documentation command examples', () => {
 
     const custom = metadata.metadata as Record<string, unknown>
     expect(custom.author).toBe('oevery')
-    expect(custom.version).toBe('2026.07.19')
+    expect(custom.version).toBe('2026.07.19.2')
     expect(Object.values(custom).every(value => typeof value === 'string')).toBe(true)
     expect(custom.version).toMatch(/^\d{4}\.\d{2}\.\d{2}(?:\.\d+)?$/)
   })
@@ -260,6 +260,15 @@ describe('documentation command examples', () => {
     const root = fileURLToPath(new URL('..', import.meta.url))
     const readme = readFileSync(join(root, 'README.md'), 'utf-8')
     expect(readme).toContain('Otherwise use `npx -y @oevery/rsp <command>`')
+  })
+
+  it('marks the canonical-only protocol release as a breaking version', () => {
+    const root = fileURLToPath(new URL('..', import.meta.url))
+    const packageJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf-8')) as { version: string }
+    const changelog = readFileSync(join(root, 'CHANGELOG.md'), 'utf-8')
+
+    expect(packageJson.version).toBe('3.0.0')
+    expect(changelog).toContain('## 3.0.0 (Unreleased)')
   })
 
   it('keeps high-value guardrails in rules and skill', () => {
@@ -280,7 +289,9 @@ describe('documentation command examples', () => {
     expect(skill).toContain('only when the user explicitly wants RSP tracking for a small, straightforward change')
     expect(skill).toContain('metadata:')
     expect(skill).toContain('author: oevery')
-    expect(skill).toContain('version: "2026.07.19"')
+    expect(skill).toContain('version: "2026.07.19.2"')
+    expect(skill).toContain('Resolve executable Change names as either `<change>` or one direct `<group>/<change>` child.')
+    expect(skill).toContain('Treat `<group>/brief` as a reserved, non-executable Group Brief identity.')
     expect(skill).toContain('## When not to use')
     expect(skill).toContain('### Pre-archive durable decision')
     expect(skill).toContain('Prefer no update on either axis when there is no concrete stable fact or lasting rationale worth rereading.')
@@ -379,16 +390,6 @@ describe('documentation command examples', () => {
     expect(rules).toContain('Read focused Changes, only the relevant Specs, and only relevant Decision Records under the configured authoritative path.')
     expect(block).toContain('3. The `rsp` skill; if unavailable, read `.rsp/rsp-rules.md` as the fallback protocol.')
     expect(block).toContain('4. `.rsp/focus.d/` and the explicitly selected focused Change.')
-  })
-})
-
-describe('changeNameFromPath', () => {
-  it('strips .md extension', () => {
-    expect(changeNameFromPath('/changes', '/changes/login.md')).toBe('login')
-  })
-
-  it('preserves subdirectory structure', () => {
-    expect(changeNameFromPath('/changes', '/changes/auth/login.md')).toBe('auth/login')
   })
 })
 

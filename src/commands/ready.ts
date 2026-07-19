@@ -1,12 +1,11 @@
 import type { CommandRunOptions, RuntimeDiagnostic } from '../types.js'
-import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
-import { join } from 'node:path'
 
-import { CHANGES_DIR, inspectRspConfig, pc } from '../core/config.js'
+import { inspectRspConfig, pc } from '../core/config.js'
 import { resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
-import { buildDurableReviewGuidance, collectArchiveReadiness, getDurableReviewCandidateTargets, guardRspInitialized, isValidChangeName, normalizeLogicalPath } from '../core/helpers.js'
+import { buildDurableReviewGuidance, collectArchiveReadiness, getDurableReviewCandidateTargets, guardRspInitialized, normalizeLogicalPath } from '../core/helpers.js'
 import { emitJson, toErrorMessage } from '../core/output.js'
+import { resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 
 interface ReadyResult {
   command: 'ready'
@@ -57,17 +56,18 @@ export async function showReady(name: string, options: CommandRunOptions = {}): 
     console.error(`  ${pc.red('Usage:')} rsp ready <name>`)
     process.exit(1)
   }
-  if (!isValidChangeName(name)) {
-    console.error(`  ${pc.red('Error:')} change name must be kebab-case with optional subdirectory (lowercase, digits, hyphens, slashes)`)
-    process.exit(1)
-  }
   guardRspInitialized()
 
-  const srcPath = join(CHANGES_DIR, `${name}.md`)
-  if (!existsSync(srcPath)) {
-    console.error(`  ${pc.red('Change not found:')} .rsp/changes/${name}.md`)
-    process.exit(1)
+  let workRef
+  try {
+    workRef = resolveWorkRef(name, { executable: true, mustExist: true })
   }
+  catch (error) {
+    if (error instanceof WorkRefError)
+      exitReadyError(name, { code: error.code, message: error.message }, options)
+    throw error
+  }
+  const srcPath = workRef.path
 
   const runtime: RuntimeDiagnostic[] = []
 

@@ -20,6 +20,13 @@ This file is the minimal fallback protocol for agents that cannot load the `rsp`
 
 - `changes/` stores open work; `archives/` stores completed history; `specs/` stores stable current facts; the configured Decision Record path stores lasting rationale.
 - Every Change is one Markdown file with explicit `kind` and the fixed `Proposal`, `Spec`, `Design`, `Tasks`, `Verify`, and `Blockers` sections.
+- Executable Change identities are either `<change>` or `<group>/<change>`. Recursive work paths are unsupported.
+- `<group>/brief` is a reserved Group Brief identity, not an executable Change; do not focus, show, ready, or archive it. `unfocus` may clear an accidental marker.
+- A file and directory cannot claim the same work identity.
+- `changes/` must exist as a real directory. Existing `focus.d/`, `archives/`, and direct group prefixes must also be real directories; symlinks, missing open-work roots, and incomplete inspection fail closed.
+- Initialization, repair, status inspection, Spec creation, and index generation use the same no-follow managed-path rules; recursive Specs may use only real directories and regular files.
+- Final managed files, including the project `AGENTS.md`, focus markers, fallback/config files, indexes, and placeholders, must be regular files rather than symlinks or special entries.
+- `status`, `check`, and `doctor` share one full-tree inspection and fail visibly on unsupported work-tree structure.
 - Persist only `open` and `archived`; readiness, blockers, verification, and next actions are derived.
 - Do not infer current work from open Changes or filenames.
 - Prefer RSP commands for deterministic setup, status, validation, repair, focus, index, and archive operations.

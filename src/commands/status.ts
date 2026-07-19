@@ -1,11 +1,12 @@
-import type { CommandRunOptions, RuntimeDiagnostic } from '../types.js'
+import type { CommandDiagnostic, CommandRunOptions, RuntimeDiagnostic, StatusJsonShape, StatusRecordOutput } from '../types.js'
 import { existsSync } from 'node:fs'
 import { readFile, stat } from 'node:fs/promises'
 import { join } from 'node:path'
 
-import { ARCHIVES_DIR, CHANGES_DIR, pc } from '../core/config.js'
-import { changeNameFromPath, countCheckboxes, getFocusedChangeNames, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, walkMarkdownFiles } from '../core/helpers.js'
+import { ARCHIVES_DIR, pc } from '../core/config.js'
+import { countCheckboxes, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter } from '../core/helpers.js'
 import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
+import { inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 
 const COL_CHANGE = 32
 const COL_KIND = 10
@@ -27,50 +28,56 @@ interface StatusOptions {
   stale?: number
 }
 
-interface StatusRecordOutput {
-  name: string
-  kind: string
-  progress: {
-    done: number
-    total: number
-  }
-  ageDays: number | null
-  isFocused: boolean
-  isBlocked: boolean
-  path: string | null
-}
-
-interface StatusResult {
-  command: 'status'
-  ok: true
-  filters: {
-    focused: boolean
-    blocked: boolean
-    stale: number | null
-  }
-  focused: string[]
-  records: StatusRecordOutput[]
-  summary: {
-    total: number
-    focused: number
-    blocked: number
-  }
-  nextActions: string[]
-  archiveTrend: Array<{ month: string, count: number }>
-  runtime: RuntimeDiagnostic[]
-}
-
 /** Display project status: focused changes, progress, blockers, age, and archive trends. */
-export async function showStatus(options: StatusOptions = {}, runOptions: CommandRunOptions = {}): Promise<StatusResult> {
+export async function showStatus(options: StatusOptions = {}, runOptions: CommandRunOptions = {}): Promise<StatusJsonShape> {
   const runtime: RuntimeDiagnostic[] = []
+  const diagnostics: CommandDiagnostic[] = []
   const reportRuntime = (diagnostic: RuntimeDiagnostic) => recordRuntimeDiagnostic(runtime, diagnostic, Boolean(runOptions.verbose) && !runOptions.json)
 
-  const focusedSet = await getFocusedChangeNames({ onError: reportRuntime })
+  const focusTree = await inspectFocusTree()
+  for (const diagnostic of focusTree.diagnostics) {
+    diagnostics.push({
+      severity: 'error',
+      code: diagnostic.code,
+      change: diagnostic.input,
+      path: diagnostic.path,
+      message: diagnostic.message,
+    })
+  }
+  const rawFocusedSet = new Set(focusTree.markers.map(marker => marker.name))
+  const focusedSet = new Set<string>()
+  const focusedPaths = new Map<string, string>()
+  for (const name of rawFocusedSet) {
+    try {
+      const ref = resolveWorkRef(name, { executable: true })
+      focusedSet.add(ref.name)
+      focusedPaths.set(ref.name, ref.path)
+    }
+    catch (error) {
+      if (!(error instanceof WorkRefError))
+        throw error
+      diagnostics.push({
+        severity: 'error',
+        code: error.code,
+        path: `.rsp/focus.d/${name}`,
+        change: name,
+        message: error.message,
+      })
+    }
+  }
 
-  const changeFiles = existsSync(CHANGES_DIR) ? await walkMarkdownFiles(CHANGES_DIR, { onError: reportRuntime }) : []
+  const workTree = await inspectWorkTree()
+  diagnostics.push(...workTree.diagnostics.map(diagnostic => ({
+    severity: 'error' as const,
+    code: diagnostic.code,
+    change: diagnostic.input,
+    path: diagnostic.path,
+    message: diagnostic.message,
+  })))
+
   const changeMap: Record<string, string> = {}
-  for (const fp of changeFiles)
-    changeMap[changeNameFromPath(CHANGES_DIR, fp)] = fp
+  for (const ref of workTree.changes)
+    changeMap[ref.name] = ref.path
 
   const allNames = [...new Set([...Object.keys(changeMap), ...focusedSet])].sort()
 
@@ -110,6 +117,14 @@ export async function showStatus(options: StatusOptions = {}, runOptions: Comman
         progress = `${done}/${total}`
       }
       catch (error) {
+        diagnostics.push({
+          severity: 'error',
+          code: 'change_read_failed',
+          change: name,
+          path: fp,
+          message: 'unable to read open Change',
+          hint: toErrorMessage(error),
+        })
         reportRuntime({
           code: 'change_read_failed',
           operation: 'readFile',
@@ -123,6 +138,14 @@ export async function showStatus(options: StatusOptions = {}, runOptions: Comman
         ageDays = Math.floor((Date.now() - s.mtime.getTime()) / (1000 * 60 * 60 * 24))
       }
       catch (error) {
+        diagnostics.push({
+          severity: 'error',
+          code: 'change_stat_failed',
+          change: name,
+          path: fp,
+          message: 'unable to inspect open Change metadata',
+          hint: toErrorMessage(error),
+        })
         reportRuntime({
           code: 'change_stat_failed',
           operation: 'stat',
@@ -133,10 +156,17 @@ export async function showStatus(options: StatusOptions = {}, runOptions: Comman
     }
     else {
       kind = '(missing)'
+      diagnostics.push({
+        severity: 'error',
+        code: 'focused_change_missing',
+        change: name,
+        path: focusedPaths.get(name)!,
+        message: 'focus marker points to a missing Change file',
+      })
       reportRuntime({
         code: 'focused_change_missing',
         operation: 'resolveChange',
-        path: join(CHANGES_DIR, `${name}.md`),
+        path: focusedPaths.get(name)!,
         message: 'focus marker points to a missing change file',
       })
     }
@@ -180,10 +210,13 @@ export async function showStatus(options: StatusOptions = {}, runOptions: Comman
   })
 
   const blockedCount = filteredOutputRecords.filter(r => r.isBlocked).length
-  const nextActions = buildStatusNextActions(focusedSet.size, Object.keys(changeMap).sort(), Boolean(options.focused || options.blocked || typeof options.stale === 'number'))
-  const statusResult: StatusResult = {
+  const ok = diagnostics.every(diagnostic => diagnostic.severity !== 'error')
+  const nextActions = ok
+    ? buildStatusNextActions(focusedSet.size, Object.keys(changeMap).sort(), Boolean(options.focused || options.blocked || typeof options.stale === 'number'))
+    : ['Run: rsp doctor']
+  const statusResult: StatusJsonShape = {
     command: 'status',
-    ok: true,
+    ok,
     filters: {
       focused: Boolean(options.focused),
       blocked: Boolean(options.blocked),
@@ -198,6 +231,7 @@ export async function showStatus(options: StatusOptions = {}, runOptions: Comman
     },
     nextActions,
     archiveTrend: await readArchiveTrend(runtime, runOptions),
+    diagnostics,
     runtime,
   }
 
@@ -209,6 +243,13 @@ export async function showStatus(options: StatusOptions = {}, runOptions: Comman
   console.log()
   console.log(`  ${pc.bold('RSP status')}`)
   console.log()
+
+  for (const diagnostic of diagnostics) {
+    const label = diagnostic.change ?? diagnostic.path
+    console.log(`  ${pc.red('✗')} ${label ? `${label} — ` : ''}${diagnostic.message}`)
+  }
+  if (diagnostics.length > 0)
+    console.log()
 
   if (focusedSet.size > 0) {
     console.log(`  ${pc.cyan('Focused:')} ${[...focusedSet].join(', ')}`)
@@ -222,7 +263,10 @@ export async function showStatus(options: StatusOptions = {}, runOptions: Comman
   }
 
   if (allNames.length === 0) {
-    console.log(`  ${pc.dim('No changes found.')} Run: rsp create <name>\n`)
+    if (ok)
+      console.log(`  ${pc.dim('No changes found.')} Run: rsp create <name>\n`)
+    else
+      console.log(`  ${pc.dim('No executable changes can be shown until the work-tree issues are resolved.')}\n`)
     return statusResult
   }
 

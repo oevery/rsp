@@ -21,6 +21,16 @@
 - RSP has only two lifecycle states: `open` and `archived`.
 - A change is `open` when it exists under `.rsp/changes/` and `archived` after it is moved under `.rsp/archives/`.
 - Each open change is a single Markdown file; multi-file change bundles are outside the core model.
+- WorkRef is the authoritative typed interpretation of open-work identity and path. It distinguishes a flat Change, a direct grouped Change, and the reserved Group Brief identity.
+- Executable Change paths are exactly `.rsp/changes/<change>.md` and `.rsp/changes/<group>/<change>.md`; deeper work paths are rejected deterministically.
+- `.rsp/changes/<group>/brief.md` resolves as a non-executable Group Brief. The current implementation reserves and classifies it but does not implement the Change Group lifecycle.
+- A work identity cannot be claimed by both a Markdown file and a directory.
+- One WorkRef tree inspection owns open-work discovery for `check`, `status`, and `doctor`; it reports unsupported directories, non-Markdown entries, symlinks, collisions, and incomplete reads consistently.
+- `.rsp/changes/` must exist as a real directory rather than a file or symlink. Resolution and inspection fail closed before reading or mutating work through an invalid root or grouped path prefix; `rsp update` and `rsp doctor --fix` restore a missing root.
+- Focus markers and archive destinations are derived from WorkRef and preflighted before mutation. Existing `focus.d/`, `archives/`, and direct group prefixes must be real directories rather than symlinks or other entry types.
+- One managed-path module performs no-follow directory and file inspection, safe parent-chain resolution, and regular-file tree discovery for the RSP root and managed paths used by WorkRef, initialization, repair, Spec creation, and generated indexes. Archive discovery is bounded to flat files or one real group directory and is shared by doctor and archive-index generation; Specs remain recursively organized but symlinked entries are rejected.
+- The same module validates final managed files before reads or writes. The project `AGENTS.md`, focus markers, fallback/config files, generated indexes, placeholders, and generated project files must be missing or regular files; static symlink targets fail before mutation. Initialization and update preflight `AGENTS.md` before other managed mutations.
+- `rsp status` fails with visible structured diagnostics when the work tree is invalid, a focused Change is missing, or an open Change cannot be read or inspected.
 - Every change file uses the fixed sections `Proposal`, `Spec`, `Design`, `Tasks`, `Verify`, and `Blockers`.
 - Every change file must declare an explicit `kind` in frontmatter.
 - CLI commands handle deterministic filesystem operations, structure checks, generated indexes, and warnings.
@@ -48,12 +58,14 @@
 ## Boundaries
 - In scope: initializing and repairing `.rsp/` structure for repositories.
 - In scope: creating, focusing, unfocusing, checking, and archiving single-file changes.
+- In scope: flat Changes and one direct grouped Change level resolved through WorkRef.
 - In scope: maintaining generated spec and archive indexes.
 - In scope: validating and routing one authoritative Decision Record directory without owning Decision Record filenames or content creation.
 - In scope: distributing reusable RSP rules and skill guidance with the package.
 - In scope: keeping RSP readable by humans, agents, CI, and simple scripts.
 - Out of scope: replacing git history or project management systems.
 - Out of scope: adding OpenSpec-style multi-file change artifacts.
+- Out of scope: Group Brief templates, group completion, group close/archive, recursive groups, and arbitrary nested work directories.
 - Out of scope: automatically merging change `Spec` deltas into durable specs during archive.
 - Out of scope: automatically creating Decision Records, discovering multiple ADR roots, assigning numbering policy, or synchronizing rationale across paths.
 - Out of scope: introducing workflow states that do not map to deterministic filesystem truth.
@@ -64,6 +76,7 @@
 - `src/cli.ts` defines the CLI surface and command registration.
 - `src/commands/` contains command implementations for RSP operations.
 - `src/core/` contains shared filesystem, config, output, helper, and locking logic.
+- `src/core/work-ref.ts` owns open-work classification, full-tree inspection, bounded path derivation, executable filtering, regular-file checks, and identity-collision checks.
 - `scripts/upstreams.mjs` is repository-maintainer tooling for upstream manifest validation, Git cache lifecycle, candidate comparison, and atomic lock serialization; it is not part of the published RSP CLI.
 - `.agents/skills/distill-upstream/` is a repository-maintainer skill for semantic upstream research; it is not a published RSP product skill.
 - `research/` contains tracked intermediate upstream distillations and models; it is not a product truth or runtime context source.
@@ -100,6 +113,8 @@ Dependency direction is constrained:
 - Runtime support requires Node.js 18 or newer.
 - Prefer the smallest model that correctly solves the workflow problem.
 - Preserve the single-file change model and fixed six-section change structure.
+- Keep open work flat or at one direct group level; never interpret recursive directories as Change identity.
+- Keep Group Brief recognition separate from executable Change behavior until the Change Group lifecycle is implemented explicitly.
 - Preserve `.rsp/focus.d/` as the only current-focus source.
 - Preserve `open -> archived` as the complete lifecycle model.
 - Do not promote task history, debugging notes, or one-off implementation context into `specs/` or project-owned `AGENTS.md` instructions.

@@ -1,12 +1,13 @@
 import type { RuntimeDiagnostic } from '../types.js'
 import { existsSync } from 'node:fs'
-import { readFile, rm, rmdir, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, rm, rmdir } from 'node:fs/promises'
 import { join } from 'node:path'
 
-import { clearConfigCache, inspectRspConfig, OBSOLETE_RSP_RULES_PATH, pc, PKG_ROOT, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
+import { CHANGES_DIR, clearConfigCache, inspectRspConfig, OBSOLETE_RSP_RULES_PATH, pc, PKG_ROOT, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
 import { ensureDecisionRecordsDirectory, resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { detectProjectName, inspectUnsupportedRules, upsertRspAgentsBlock } from '../core/helpers.js'
 import { withRspLock } from '../core/lock.js'
+import { ensureManagedFile, inspectManagedDirectory, inspectManagedFile, writeManagedFile } from '../core/managed-path.js'
 import { buildArchiveIndex } from './archive-index.js'
 import { buildSpecsIndex } from './specs-index.js'
 
@@ -40,6 +41,11 @@ export async function updateProject(options: UpdateOptions = {}): Promise<Update
   }
 
   return withRspLock('update', async () => {
+    const agentsPath = 'AGENTS.md'
+    const agentsInspection = inspectManagedFile(agentsPath, 'AGENTS.md', { allowMissing: true })
+    if (agentsInspection.issue)
+      throw agentsInspection.issue
+
     let updated = false
     const actions: string[] = []
 
@@ -52,10 +58,25 @@ export async function updateProject(options: UpdateOptions = {}): Promise<Update
     if (decisionRecordsFilesystemIssue)
       throw new Error(decisionRecordsFilesystemIssue)
 
+    const changesInspection = inspectManagedDirectory(CHANGES_DIR, 'open work root', { allowMissing: true })
+    if (changesInspection.issue)
+      throw changesInspection.issue
+    if (!changesInspection.exists) {
+      await mkdir(CHANGES_DIR, { recursive: true })
+      await ensureManagedFile(join(CHANGES_DIR, '.gitkeep'), '', 'changes placeholder')
+      actions.push('changes/ directory restored')
+      if (!options.quiet)
+        console.log(`  ${pc.green('✓')} changes/ directory restored`)
+      updated = true
+    }
+
     const bundledRules = await readFile(join(PKG_ROOT, 'rules', 'rsp-rules.md'), 'utf-8')
-    const existingRules = existsSync(RSP_RULES_PATH) ? await readFile(RSP_RULES_PATH, 'utf-8') : null
+    const rulesInspection = inspectManagedFile(RSP_RULES_PATH, 'fallback protocol', { allowMissing: true })
+    if (rulesInspection.issue)
+      throw rulesInspection.issue
+    const existingRules = rulesInspection.exists ? await readFile(RSP_RULES_PATH, 'utf-8') : null
     if (existingRules !== bundledRules) {
-      await writeFile(RSP_RULES_PATH, bundledRules)
+      await writeManagedFile(RSP_RULES_PATH, bundledRules, 'fallback protocol')
       actions.push('rsp-rules.md updated')
       if (!options.quiet)
         console.log(`  ${pc.green('✓')} rsp-rules.md updated`)
@@ -112,16 +133,15 @@ export async function updateProject(options: UpdateOptions = {}): Promise<Update
       console.log()
     }
 
-    const agentsPath = 'AGENTS.md'
     const projectName = await detectProjectName()
-    const baseAgents = existsSync(agentsPath)
+    const baseAgents = agentsInspection.exists
       ? await readFile(agentsPath, 'utf-8')
       : `# ${projectName}
 
 `
     const nextAgents = upsertRspAgentsBlock(baseAgents)
-    if (!existsSync(agentsPath) || nextAgents.changed) {
-      await writeFile(agentsPath, nextAgents.content)
+    if (!agentsInspection.exists || nextAgents.changed) {
+      await writeManagedFile(agentsPath, nextAgents.content, 'AGENTS.md')
       actions.push('AGENTS.md managed block refreshed')
       if (!options.quiet)
         console.log(`  ${pc.green('✓')} AGENTS.md managed block refreshed`)

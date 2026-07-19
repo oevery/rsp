@@ -4,7 +4,7 @@ description: Use this skill when initializing RSP, operating an existing .rsp pr
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.19"
+  version: "2026.07.19.2"
 ---
 
 # RSP Skill
@@ -36,7 +36,7 @@ Prefer exact file paths, exact commands, and exact durable facts over vague summ
 3. Fill the bootstrap change if it exists, write durable architecture facts to `.rsp/specs/design.md`, and keep stable scoped operating instructions in the nearest project-owned `AGENTS.md`.
 4. For diagnostics, run `npx -y @oevery/rsp doctor`.
 5. For safe deterministic repairs, run `npx -y @oevery/rsp doctor --fix` or `npx -y @oevery/rsp update`.
-6. When auditing manually, verify `.rsp/` exists, `AGENTS.md` has the managed block, `specs/design.md` exists, the configured Decision Record directory exists, generated indexes are intact, and `focus.d/` markers match `changes/` files.
+6. When auditing manually, verify `.rsp/`, managed roots, and nested Spec parents are real directories; the project `AGENTS.md`, managed markers, fallback/config files, indexes, and placeholders are regular files; `AGENTS.md` has the managed block; `specs/design.md` and the configured Decision Record directory exist; work and archive trees are flat or one group level; and `focus.d/` markers match executable Changes.
 7. Treat `doctor --fix` `fixed` entries as actual filesystem changes. An empty `fixed` array or `No safe fixes needed.` means the repair pass changed nothing.
 8. Do not use repair commands for semantic decisions such as stale focus removal, durable updates, or archive readiness.
 
@@ -44,15 +44,17 @@ Prefer exact file paths, exact commands, and exact durable facts over vague summ
 
 1. Follow the managed `AGENTS.md` read order: nearest instructions, relevant context, this skill or fallback protocol, focus, selected Change, then relevant Specs and Decision Records.
 2. Treat only `focus.d/` markers as current RSP work; do not treat unfocused files in `changes/` as current work unless the user explicitly asks or you run `npx -y @oevery/rsp focus <name>`.
-3. Read the focused change before editing code.
-4. If a focused change is missing an explicit `kind`, repair the frontmatter before continuing.
-5. Run `npx -y @oevery/rsp check --focused` before treating focused work as ready; resolve placeholder or clarification warnings when they represent real unfinished content.
-6. Treat `rsp check` warnings as deterministic hygiene signals, not as the durable-update decision.
-7. Use `npx -y @oevery/rsp create <name> --lite` only when the user explicitly wants RSP tracking for a small, straightforward change.
-8. Convert actionable `## Tasks` checkboxes into your agent-local task tracker when one is available.
-9. Keep implementation sequential by default; parallelize only independent read-only discovery or mechanical checks.
-10. Update `## Tasks`, `## Verify`, and any invalidated `## Proposal`, `## Spec`, or `## Design` content in the same working session as implementation facts change.
-11. Keep temporary debugging notes, task history, and command transcripts out of `specs/` and project-owned `AGENTS.md` instructions.
+3. Resolve executable Change names as either `<change>` or one direct `<group>/<change>` child. Require a real `changes/` root and real existing `focus.d/`, `archives/`, and group prefixes; reject symlinks, incomplete inspection, deeper paths, and file/directory identity collisions.
+4. Treat `<group>/brief` as a reserved, non-executable Group Brief identity. Do not focus, show, ready, or archive it as a Change; full Change Group behavior is not part of this protocol version.
+5. Read the focused change before editing code.
+6. If a focused change is missing an explicit `kind`, repair the frontmatter before continuing.
+7. Run `npx -y @oevery/rsp check --focused` before treating focused work as ready; resolve placeholder or clarification warnings when they represent real unfinished content.
+8. Treat `rsp check` warnings as deterministic hygiene signals, not as the durable-update decision.
+9. Use `npx -y @oevery/rsp create <name> --lite` only when the user explicitly wants RSP tracking for a small, straightforward change.
+10. Convert actionable `## Tasks` checkboxes into your agent-local task tracker when one is available.
+11. Keep implementation sequential by default; parallelize only independent read-only discovery or mechanical checks.
+12. Update `## Tasks`, `## Verify`, and any invalidated `## Proposal`, `## Spec`, or `## Design` content in the same working session as implementation facts change.
+13. Keep temporary debugging notes, task history, and command transcripts out of `specs/` and project-owned `AGENTS.md` instructions.
 
 ### Pre-archive durable decision
 

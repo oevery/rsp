@@ -3,10 +3,12 @@ import { existsSync } from 'node:fs'
 import { readdir, readFile, stat } from 'node:fs/promises'
 import { basename, join, relative } from 'node:path'
 
-import { CHANGES_DIR, CONFIG_PATH, loadRspConfig, OBSOLETE_RSP_RULES_PATH, pc, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
+import { CONFIG_PATH, loadRspConfig, OBSOLETE_RSP_RULES_PATH, pc, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
 import { DEFAULT_DECISION_RECORDS_PATH, getDecisionRecordsConfigIssue, resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
-import { changeNameFromPath, getFocusedChangeNames, hasRspAgentsBlock, inspectUnsupportedRules, normalizeLogicalPath, parseFrontmatter, parseYamlText, walkMarkdownFiles } from '../core/helpers.js'
+import { hasRspAgentsBlock, inspectUnsupportedRules, normalizeLogicalPath, parseFrontmatter, parseYamlText, walkMarkdownFiles } from '../core/helpers.js'
+import { inspectManagedFile } from '../core/managed-path.js'
 import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
+import { inspectArchiveTree, inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 import { updateProject } from './update.js'
 
 interface DoctorCheck {
@@ -71,13 +73,13 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
   await checkAgents(checks, reportRuntime)
   await checkGeneratedIndex(checks, reportRuntime, specsIndexPath, 'specs', 'specs/INDEX.md has generated-index metadata', 'Run: rsp update')
   await checkGeneratedIndex(checks, reportRuntime, archivesIndexPath, 'archives', 'archives/INDEX.md has generated-index metadata', 'Run: rsp update')
-  await checkArchiveNaming(checks, reportRuntime)
+  await checkArchiveNaming(checks)
   const decisionRecordsConfigValid = await checkConfigSemantics(checks, reportRuntime)
   if (decisionRecordsConfigValid) {
     await checkDecisionRecordsDirectory(checks, reportRuntime)
     await checkInactiveDefaultDecisionRecords(checks, reportRuntime)
   }
-  await checkActiveChangeConsistency(checks, reportRuntime)
+  await checkActiveChangeConsistency(checks)
 
   const result: DoctorResult = {
     command: 'doctor',
@@ -118,10 +120,18 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
 }
 
 function reportFallbackProtocol(checks: DoctorCheck[]): void {
-  const canonicalExists = existsSync(RSP_RULES_PATH)
+  const canonical = inspectManagedFile(RSP_RULES_PATH, 'fallback protocol', { allowMissing: true })
   const obsoleteExists = existsSync(OBSOLETE_RSP_RULES_PATH)
 
-  if (canonicalExists) {
+  if (canonical.issue) {
+    checks.push({
+      status: 'issue',
+      label: 'rsp-rules.md is a regular managed file',
+      message: canonical.issue.message,
+      hint: 'Replace the unsupported entry with a project-local regular file, then run: rsp update',
+    })
+  }
+  else if (canonical.exists) {
     checks.push({ status: 'ok', label: 'rsp-rules.md exists' })
   }
   else if (!obsoleteExists) {
@@ -197,7 +207,18 @@ function printDoctorCheck(check: DoctorCheck): void {
 }
 
 async function checkAgents(checks: DoctorCheck[], reportRuntime: (diagnostic: RuntimeDiagnostic) => void): Promise<void> {
-  if (!existsSync('AGENTS.md')) {
+  const inspection = inspectManagedFile('AGENTS.md', 'AGENTS.md', { allowMissing: true })
+  if (inspection.issue) {
+    checks.push({
+      status: 'issue',
+      label: 'AGENTS.md is a regular managed file',
+      message: inspection.issue.message,
+      hint: 'Replace the unsupported entry with a project-local regular file, then run: rsp update',
+    })
+    return
+  }
+
+  if (!inspection.exists) {
     checks.push({ status: 'issue', label: 'AGENTS.md contains managed RSP block', message: 'AGENTS.md missing', hint: 'Run: rsp init' })
     return
   }
@@ -226,7 +247,12 @@ async function checkAgents(checks: DoctorCheck[], reportRuntime: (diagnostic: Ru
 }
 
 async function checkGeneratedIndex(checks: DoctorCheck[], reportRuntime: (diagnostic: RuntimeDiagnostic) => void, path: string, expectedIndexType: 'specs' | 'archives', label: string, fixHint: string): Promise<void> {
-  if (!existsSync(path))
+  const indexFile = inspectManagedFile(path, label, { allowMissing: true })
+  if (indexFile.issue) {
+    checks.push({ status: 'issue', label, message: indexFile.issue.message, hint: fixHint })
+    return
+  }
+  if (!indexFile.exists)
     return
 
   let content: string
@@ -265,13 +291,21 @@ async function checkGeneratedIndex(checks: DoctorCheck[], reportRuntime: (diagno
   checks.push({ status: 'issue', label, hint: fixHint })
 }
 
-async function checkArchiveNaming(checks: DoctorCheck[], reportRuntime: (diagnostic: RuntimeDiagnostic) => void): Promise<void> {
+async function checkArchiveNaming(checks: DoctorCheck[]): Promise<void> {
   const archivesDir = join(RSP_DIR, 'archives')
-  const archiveFiles = existsSync(archivesDir)
-    ? (await walkMarkdownFiles(archivesDir, { onError: reportRuntime })).filter(fp => relative(archivesDir, fp) !== 'INDEX.md')
-    : []
+  const inspection = await inspectArchiveTree({ archivesDir })
+  if (inspection.diagnostics.length > 0) {
+    checks.push({
+      status: 'issue',
+      label: 'archives use supported managed paths',
+      message: inspection.diagnostics.map(diagnostic => diagnostic.message).join('; '),
+      hint: 'Keep archives flat or one real group directory deep; remove symlinks and unsupported entries.',
+    })
+    return
+  }
+  checks.push({ status: 'ok', label: 'archives use supported managed paths' })
 
-  const invalidFiles = archiveFiles
+  const invalidFiles = inspection.files
     .map(fp => normalizeLogicalPath(relative(archivesDir, fp)))
     .filter(fp => /^\d{4}-\d{2}-\d{2}_.+\.md$/.test(basename(fp)) === false)
 
@@ -289,7 +323,12 @@ async function checkArchiveNaming(checks: DoctorCheck[], reportRuntime: (diagnos
 }
 
 async function checkConfigSemantics(checks: DoctorCheck[], reportRuntime: (diagnostic: RuntimeDiagnostic) => void): Promise<boolean> {
-  if (!existsSync(CONFIG_PATH))
+  const configFile = inspectManagedFile(CONFIG_PATH, 'config file', { allowMissing: true })
+  if (configFile.issue) {
+    checks.push({ status: 'issue', label: 'config.yaml semantic checks', message: configFile.issue.message, hint: 'Replace the unsupported entry with a project-local regular file.' })
+    return false
+  }
+  if (!configFile.exists)
     return true
 
   let content: string
@@ -448,11 +487,37 @@ function reportConfigListField(checks: DoctorCheck[], parsed: Record<string, unk
   })
 }
 
-async function checkActiveChangeConsistency(checks: DoctorCheck[], reportRuntime: (diagnostic: RuntimeDiagnostic) => void): Promise<void> {
-  const changeFiles = existsSync(CHANGES_DIR) ? await walkMarkdownFiles(CHANGES_DIR, { onError: reportRuntime }) : []
-  const changeNames = new Set(changeFiles.map(fp => changeNameFromPath(CHANGES_DIR, fp)))
+async function checkActiveChangeConsistency(checks: DoctorCheck[]): Promise<void> {
+  const workTree = await inspectWorkTree()
+  const changeNames = new Set(workTree.changes.map(ref => ref.name))
+  const structureIssues = workTree.diagnostics.map(diagnostic => diagnostic.message)
+  const focusTree = await inspectFocusTree()
+  structureIssues.push(...focusTree.diagnostics.map(diagnostic => diagnostic.message))
+  const rawFocusNames = new Set(focusTree.markers.map(marker => marker.name))
+  const focusNames = new Set<string>()
+  for (const name of rawFocusNames) {
+    try {
+      focusNames.add(resolveWorkRef(name, { executable: true }).name)
+    }
+    catch (error) {
+      if (!(error instanceof WorkRefError))
+        throw error
+      structureIssues.push(`focus.d/${name}: ${error.message}`)
+    }
+  }
 
-  const focusNames = await getFocusedChangeNames({ onError: reportRuntime })
+  const uniqueStructureIssues = [...new Set(structureIssues)]
+  if (uniqueStructureIssues.length === 0) {
+    checks.push({ status: 'ok', label: 'open work uses supported WorkRef shapes' })
+  }
+  else {
+    checks.push({
+      status: 'issue',
+      label: 'open work uses supported WorkRef shapes',
+      message: uniqueStructureIssues.join('; '),
+      hint: 'Keep work flat or use one group directory with direct Change files. Use rsp unfocus <group>/brief to clear an accidental Group Brief marker.',
+    })
+  }
 
   const missingChangeFiles = [...focusNames].filter(name => !changeNames.has(name))
   const unfocusedChangeFiles = [...changeNames].filter(name => !focusNames.has(name))

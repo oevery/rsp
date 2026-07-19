@@ -173,6 +173,118 @@ describe('change lifecycle integration', () => {
     expect(existsSync(focusDPath('auth', 'login'))).toBe(true)
   })
 
+  it('supports one direct grouped Change across the CLI lifecycle', async () => {
+    const groupDir = join(tmpdir(), 'rsp-grouped-change-lifecycle-test', randomUUID())
+    await mkdir(groupDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: groupDir })
+
+    execSync(`node ${cliPath()} create release/api --kind feature "Ship release API"`, { cwd: groupDir })
+    const shown = JSON.parse(execSync(`node ${cliPath()} show release/api --json`, { cwd: groupDir, encoding: 'utf-8' }))
+    const ready = JSON.parse(execSync(`node ${cliPath()} ready release/api --json`, { cwd: groupDir, encoding: 'utf-8' }))
+    execSync(`node ${cliPath()} archive release/api`, { cwd: groupDir })
+
+    expect(shown.change.name).toBe('release/api')
+    expect(ready.change).toBe('release/api')
+    expect(existsSync(join(groupDir, '.rsp', 'archives', 'release'))).toBe(true)
+    expect((await readdir(join(groupDir, '.rsp', 'archives', 'release'))).some(name => name.endsWith('_api.md'))).toBe(true)
+    expect(existsSync(join(groupDir, '.rsp', 'focus.d', 'release', 'api'))).toBe(false)
+  })
+
+  it('releases the mutation lock when an unfocus marker is missing', async () => {
+    const focusDir = join(tmpdir(), 'rsp-unfocus-missing-marker-lock-test', randomUUID())
+    await mkdir(focusDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: focusDir })
+    execSync(`node ${cliPath()} create missing-marker`, { cwd: focusDir })
+    await rm(join(focusDir, '.rsp', 'focus.d', 'missing-marker'))
+
+    const result = spawnSync('node', [cliPath(), 'unfocus', 'missing-marker'], { cwd: focusDir, encoding: 'utf-8' })
+
+    expect(result.status).toBe(1)
+    expect(result.stderr).toContain('Focus marker not found')
+    expect(existsSync(join(focusDir, '.rsp', '.lock'))).toBe(false)
+  })
+
+  it('does not focus through a symlinked marker file', async () => {
+    const focusDir = join(tmpdir(), 'rsp-focus-marker-symlink-test', randomUUID())
+    const externalDir = join(tmpdir(), 'rsp-focus-marker-external-test', randomUUID())
+    await mkdir(focusDir, { recursive: true })
+    await mkdir(externalDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: focusDir })
+    execSync(`node ${cliPath()} create focus-target`, { cwd: focusDir })
+    await rm(join(focusDir, '.rsp', 'focus.d', 'focus-target'))
+    await writeFile(join(externalDir, 'marker'), 'do-not-touch\n')
+    await symlink(join(externalDir, 'marker'), join(focusDir, '.rsp', 'focus.d', 'focus-target'))
+
+    const result = spawnSync('node', [cliPath(), 'focus', 'focus-target'], { cwd: focusDir, encoding: 'utf-8' })
+
+    expect(result.status).toBe(1)
+    expect(result.stderr).toContain('focus marker must be a regular file')
+    expect(await readFile(join(externalDir, 'marker'), 'utf-8')).toBe('do-not-touch\n')
+    expect(existsSync(join(focusDir, '.rsp', '.lock'))).toBe(false)
+  })
+
+  it('rejects recursive change identities before mutating the workspace', () => {
+    const createDir = join(tmpdir(), 'rsp-create-depth-test', randomUUID())
+    return (async () => {
+      await mkdir(createDir, { recursive: true })
+      execSync(`node ${cliPath()} init`, { cwd: createDir })
+
+      const result = spawnSync('node', [cliPath(), 'create', 'release/backend/api'], { cwd: createDir, encoding: 'utf-8' })
+
+      expect(result.status).toBe(1)
+      expect(result.stderr).toContain('exceeds the supported one-level Change Group depth')
+      expect(existsSync(join(createDir, '.rsp', 'changes', 'release'))).toBe(false)
+    })()
+  })
+
+  it('rejects file and directory work identity collisions before mutation', () => {
+    const createDir = join(tmpdir(), 'rsp-create-collision-test', randomUUID())
+    return (async () => {
+      await mkdir(createDir, { recursive: true })
+      execSync(`node ${cliPath()} init`, { cwd: createDir })
+      await writeFile(join(createDir, '.rsp', 'changes', 'release.md'), renderChange('release'))
+
+      const result = spawnSync('node', [cliPath(), 'create', 'release/api'], { cwd: createDir, encoding: 'utf-8' })
+
+      expect(result.status).toBe(1)
+      expect(result.stderr).toContain('claimed by both a file and a directory')
+      expect(existsSync(join(createDir, '.rsp', 'changes', 'release'))).toBe(false)
+      expect(existsSync(join(createDir, '.rsp', '.lock'))).toBe(false)
+    })()
+  })
+
+  it('rejects a non-directory grouped prefix without leaking a raw filesystem error', async () => {
+    const createDir = join(tmpdir(), 'rsp-create-prefix-type-test', randomUUID())
+    await mkdir(createDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: createDir })
+    await writeFile(join(createDir, '.rsp', 'changes', 'release'), 'not a directory')
+
+    const result = spawnSync('node', [cliPath(), 'create', 'release/api'], { cwd: createDir, encoding: 'utf-8' })
+
+    expect(result.status).toBe(1)
+    expect(result.stderr).toContain('open work path must be a real directory')
+    expect(result.stderr).not.toContain('EEXIST')
+    expect(existsSync(join(createDir, '.rsp', '.lock'))).toBe(false)
+  })
+
+  it('does not create a Change or external marker through a symlinked focus root', async () => {
+    const createDir = join(tmpdir(), 'rsp-create-focus-root-symlink-test', randomUUID())
+    const externalDir = join(tmpdir(), 'rsp-create-focus-root-external-test', randomUUID())
+    await mkdir(createDir, { recursive: true })
+    await mkdir(externalDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: createDir })
+    await rm(join(createDir, '.rsp', 'focus.d'), { recursive: true })
+    await symlink(externalDir, join(createDir, '.rsp', 'focus.d'))
+
+    const result = spawnSync('node', [cliPath(), 'create', 'escaped'], { cwd: createDir, encoding: 'utf-8' })
+
+    expect(result.status).toBe(1)
+    expect(result.stderr).toContain('focus root must be a real directory')
+    expect(existsSync(join(createDir, '.rsp', 'changes', 'escaped.md'))).toBe(false)
+    expect(existsSync(join(externalDir, 'escaped'))).toBe(false)
+    expect(existsSync(join(createDir, '.rsp', '.lock'))).toBe(false)
+  })
+
   it('creates a kind-aware docs template when requested', () => {
     const createDir = join(tmpdir(), 'rsp-create-kind-test', randomUUID())
     return (async () => {
@@ -316,6 +428,40 @@ describe('specs index behavior', () => {
     expect(index).toContain('| shell-layout.md |')
     expect(index).not.toContain('| design.md |')
   })
+
+  it('does not add a Spec through a symlinked parent directory', async () => {
+    const specDir = join(tmpdir(), 'rsp-add-spec-parent-symlink-test', randomUUID())
+    const externalDir = join(tmpdir(), 'rsp-add-spec-parent-external-test', randomUUID())
+    await mkdir(specDir, { recursive: true })
+    await mkdir(externalDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: specDir })
+    await symlink(externalDir, join(specDir, '.rsp', 'specs', 'group'))
+
+    const result = spawnSync('node', [cliPath(), 'add', 'spec', 'group/escaped'], { cwd: specDir, encoding: 'utf-8' })
+
+    expect(result.status).toBe(1)
+    expect(`${result.stdout}${result.stderr}`).toContain('spec path must be a real directory')
+    expect(existsSync(join(externalDir, 'escaped.md'))).toBe(false)
+    expect(existsSync(join(specDir, '.rsp', '.lock'))).toBe(false)
+  })
+
+  it('does not index a symlinked Markdown Spec', async () => {
+    const specDir = join(tmpdir(), 'rsp-specs-index-file-symlink-test', randomUUID())
+    const externalDir = join(tmpdir(), 'rsp-specs-index-file-external-test', randomUUID())
+    await mkdir(specDir, { recursive: true })
+    await mkdir(externalDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: specDir })
+    await writeFile(join(externalDir, 'secret.md'), '---\ntitle: External Secret Title\n---\n')
+    await symlink(join(externalDir, 'secret.md'), join(specDir, '.rsp', 'specs', 'leak.md'))
+
+    const result = spawnSync('node', [cliPath(), 'update'], { cwd: specDir, encoding: 'utf-8' })
+    const index = await readFile(join(specDir, '.rsp', 'specs', 'INDEX.md'), 'utf-8')
+
+    expect(result.status).toBe(1)
+    expect(`${result.stdout}${result.stderr}`).toContain('unsupported entry in the Specs tree')
+    expect(index).not.toContain('External Secret Title')
+    expect(existsSync(join(specDir, '.rsp', '.lock'))).toBe(false)
+  })
 })
 
 describe('check command', () => {
@@ -379,6 +525,7 @@ kind: fix
     const brokenDir = join(tmpdir(), 'rsp-check-dangling-focus-test', randomUUID())
     return (async () => {
       await mkdir(join(brokenDir, '.rsp', 'focus.d'), { recursive: true })
+      await mkdir(join(brokenDir, '.rsp', 'changes'), { recursive: true })
       await writeFile(join(brokenDir, '.rsp', 'focus.d', 'dangling'), '')
 
       let output = ''
@@ -695,6 +842,98 @@ describe('status commands', () => {
     expect(result.nextActions).toContain('Run: rsp focus unfocused-json')
   })
 
+  it('fails closed instead of following a symlinked changes root', async () => {
+    const statusDir = await createRspFixture('rsp-status-symlinked-changes-test', ['specs', 'changes', 'focus.d'])
+    const externalDir = join(tmpdir(), 'rsp-status-external-changes-test', randomUUID())
+    await mkdir(externalDir, { recursive: true })
+    await writeFile(join(externalDir, 'external.md'), renderChange('external'))
+    await rm(join(statusDir, '.rsp', 'changes'), { recursive: true })
+    await symlink(externalDir, join(statusDir, '.rsp', 'changes'))
+
+    const result = spawnSync('node', [cliPath(), 'status', '--json'], { cwd: statusDir, encoding: 'utf-8' })
+    const output = JSON.parse(result.stdout)
+
+    expect(result.status).toBe(1)
+    expect(output.ok).toBe(false)
+    expect(output.records).toEqual([])
+    expect(output.diagnostics).toContainEqual(expect.objectContaining({ code: 'invalid_work_root' }))
+  })
+
+  it('fails closed when the changes root is missing', async () => {
+    const statusDir = join(tmpdir(), 'rsp-status-missing-changes-root-test', randomUUID())
+    await mkdir(statusDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: statusDir })
+    await rm(join(statusDir, '.rsp', 'changes'), { recursive: true })
+
+    const statusResult = spawnSync('node', [cliPath(), 'status', '--json'], { cwd: statusDir, encoding: 'utf-8' })
+    const doctorResult = spawnSync('node', [cliPath(), 'doctor', '--json'], { cwd: statusDir, encoding: 'utf-8' })
+    const status = JSON.parse(statusResult.stdout)
+    const doctor = JSON.parse(doctorResult.stdout)
+
+    expect(statusResult.status).toBe(1)
+    expect(status.ok).toBe(false)
+    expect(status.diagnostics).toContainEqual(expect.objectContaining({ code: 'invalid_work_root' }))
+    expect(doctorResult.status).toBe(1)
+    expect(doctor.checks).toContainEqual(expect.objectContaining({
+      status: 'issue',
+      label: 'open work uses supported WorkRef shapes',
+    }))
+
+    const repairedOutput = execSync(`node ${cliPath()} doctor --fix --json`, { cwd: statusDir, encoding: 'utf-8' })
+    const repaired = JSON.parse(repairedOutput)
+    expect(repaired.ok).toBe(true)
+    expect(repaired.fixed).toContain('changes/ directory restored')
+    expect(existsSync(join(statusDir, '.rsp', 'changes', '.gitkeep'))).toBe(true)
+  })
+
+  it('fails status when a focus marker points to a missing Change', async () => {
+    const statusDir = await createRspFixture('rsp-status-missing-focused-change-test', ['specs', 'changes', 'focus.d'])
+    await writeFile(join(statusDir, '.rsp', 'focus.d', 'ghost'), '')
+
+    const result = spawnSync('node', [cliPath(), 'status', '--json'], { cwd: statusDir, encoding: 'utf-8' })
+    const output = JSON.parse(result.stdout)
+
+    expect(result.status).toBe(1)
+    expect(output.ok).toBe(false)
+    expect(output.diagnostics).toContainEqual(expect.objectContaining({ code: 'focused_change_missing', change: 'ghost' }))
+    expect(output.nextActions).toEqual(['Run: rsp doctor'])
+  })
+
+  it('does not interpret a symlinked focus group as a marker', async () => {
+    const statusDir = await createRspFixture('rsp-status-symlinked-focus-group-test', ['specs', 'changes', 'focus.d'])
+    const externalDir = join(tmpdir(), 'rsp-status-symlinked-focus-group-external-test', randomUUID())
+    await mkdir(externalDir, { recursive: true })
+    await writeFile(join(statusDir, '.rsp', 'changes', 'release.md'), renderChange('release'))
+    await symlink(externalDir, join(statusDir, '.rsp', 'focus.d', 'release'))
+
+    const result = spawnSync('node', [cliPath(), 'status', '--json'], { cwd: statusDir, encoding: 'utf-8' })
+    const output = JSON.parse(result.stdout)
+
+    expect(result.status).toBe(1)
+    expect(output.ok).toBe(false)
+    expect(output.focused).toEqual([])
+    expect(output.diagnostics).toContainEqual(expect.objectContaining({ code: 'invalid_focus_path', change: 'release' }))
+  })
+
+  it('fails status when an open Change cannot be read', async () => {
+    const statusDir = await createRspFixture('rsp-status-unreadable-change-test', ['specs', 'changes', 'focus.d'])
+    const changePath = join(statusDir, '.rsp', 'changes', 'unreadable.md')
+    await writeFile(changePath, renderChange('unreadable'))
+    await chmod(changePath, 0o000)
+
+    try {
+      const result = spawnSync('node', [cliPath(), 'status', '--json'], { cwd: statusDir, encoding: 'utf-8' })
+      const output = JSON.parse(result.stdout)
+
+      expect(result.status).toBe(1)
+      expect(output.ok).toBe(false)
+      expect(output.diagnostics).toContainEqual(expect.objectContaining({ code: 'change_read_failed', change: 'unreadable' }))
+    }
+    finally {
+      await chmod(changePath, 0o600)
+    }
+  })
+
   it('keeps status JSON error shape compatible on invalid stale filter', () => {
     const statusDir = join(tmpdir(), 'rsp-status-json-error-test', randomUUID())
     return (async () => {
@@ -716,6 +955,8 @@ describe('status commands', () => {
       expect(result.ok).toBe(false)
       expect(result).toHaveProperty('runtime')
       expect(result).toHaveProperty('summary')
+      expect(result.diagnostics).toEqual([])
+      expect(result.nextActions).toEqual([])
       expect(result.error.code).toBe('invalid_stale_filter')
     })()
   })
@@ -731,6 +972,90 @@ describe('status commands', () => {
 })
 
 describe('init and doctor', () => {
+  it('does not initialize through a symlinked AGENTS.md file', async () => {
+    const initDir = join(tmpdir(), 'rsp-init-agents-symlink-test', randomUUID())
+    const externalDir = join(tmpdir(), 'rsp-init-agents-symlink-external-test', randomUUID())
+    await mkdir(initDir, { recursive: true })
+    await mkdir(externalDir, { recursive: true })
+    await writeFile(join(externalDir, 'AGENTS.md'), 'external sentinel\n')
+    await symlink(join(externalDir, 'AGENTS.md'), join(initDir, 'AGENTS.md'))
+
+    const result = spawnSync('node', [cliPath(), 'init'], { cwd: initDir, encoding: 'utf-8' })
+
+    expect(result.status).toBe(1)
+    expect(`${result.stdout}${result.stderr}`).toContain('AGENTS.md must be a regular file')
+    expect(await readFile(join(externalDir, 'AGENTS.md'), 'utf-8')).toBe('external sentinel\n')
+    expect(existsSync(join(initDir, '.rsp'))).toBe(false)
+  })
+
+  it('reports and preserves a symlinked AGENTS.md file', async () => {
+    const updateDir = join(tmpdir(), 'rsp-update-agents-symlink-test', randomUUID())
+    const externalDir = join(tmpdir(), 'rsp-update-agents-symlink-external-test', randomUUID())
+    await mkdir(updateDir, { recursive: true })
+    await mkdir(externalDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: updateDir })
+    await writeFile(join(updateDir, '.rsp', 'rsp-rules.md'), 'stale local rules\n')
+    await rm(join(updateDir, 'AGENTS.md'))
+    await writeFile(join(externalDir, 'AGENTS.md'), 'external sentinel\n')
+    await symlink(join(externalDir, 'AGENTS.md'), join(updateDir, 'AGENTS.md'))
+
+    const doctorResult = spawnSync('node', [cliPath(), 'doctor', '--json'], { cwd: updateDir, encoding: 'utf-8' })
+    const updateResult = spawnSync('node', [cliPath(), 'update'], { cwd: updateDir, encoding: 'utf-8' })
+    const doctor = JSON.parse(doctorResult.stdout)
+
+    expect(doctorResult.status).toBe(1)
+    expect(doctor.checks).toContainEqual(expect.objectContaining({
+      status: 'issue',
+      label: 'AGENTS.md is a regular managed file',
+    }))
+    expect(updateResult.status).toBe(1)
+    expect(`${updateResult.stdout}${updateResult.stderr}`).toContain('AGENTS.md must be a regular file')
+    expect(await readFile(join(externalDir, 'AGENTS.md'), 'utf-8')).toBe('external sentinel\n')
+    expect(await readFile(join(updateDir, '.rsp', 'rsp-rules.md'), 'utf-8')).toBe('stale local rules\n')
+  })
+
+  it('reports and preserves a symlinked fallback protocol file', async () => {
+    const updateDir = join(tmpdir(), 'rsp-update-fallback-file-symlink-test', randomUUID())
+    const externalDir = join(tmpdir(), 'rsp-update-fallback-file-external-test', randomUUID())
+    await mkdir(updateDir, { recursive: true })
+    await mkdir(externalDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: updateDir })
+    await rm(join(updateDir, '.rsp', 'rsp-rules.md'))
+    await writeFile(join(externalDir, 'rules.md'), 'external sentinel\n')
+    await symlink(join(externalDir, 'rules.md'), join(updateDir, '.rsp', 'rsp-rules.md'))
+
+    const doctorResult = spawnSync('node', [cliPath(), 'doctor', '--json'], { cwd: updateDir, encoding: 'utf-8' })
+    const updateResult = spawnSync('node', [cliPath(), 'update'], { cwd: updateDir, encoding: 'utf-8' })
+    const doctor = JSON.parse(doctorResult.stdout)
+
+    expect(doctorResult.status).toBe(1)
+    expect(doctor.checks).toContainEqual(expect.objectContaining({
+      status: 'issue',
+      label: 'rsp-rules.md is a regular managed file',
+    }))
+    expect(updateResult.status).toBe(1)
+    expect(`${updateResult.stdout}${updateResult.stderr}`).toContain('fallback protocol must be a regular file')
+    expect(await readFile(join(externalDir, 'rules.md'), 'utf-8')).toBe('external sentinel\n')
+    expect(existsSync(join(updateDir, '.rsp', '.lock'))).toBe(false)
+  })
+
+  it('does not reinitialize through a symlinked managed directory', async () => {
+    const initDir = join(tmpdir(), 'rsp-init-managed-root-symlink-test', randomUUID())
+    const externalDir = join(tmpdir(), 'rsp-init-managed-root-external-test', randomUUID())
+    await mkdir(initDir, { recursive: true })
+    await mkdir(externalDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: initDir })
+    await rm(join(initDir, '.rsp', 'focus.d'), { recursive: true })
+    await symlink(externalDir, join(initDir, '.rsp', 'focus.d'))
+
+    const result = spawnSync('node', [cliPath(), 'init'], { cwd: initDir, encoding: 'utf-8' })
+
+    expect(result.status).toBe(1)
+    expect(`${result.stdout}${result.stderr}`).toContain('focus root must be a real directory')
+    expect(existsSync(join(externalDir, '.gitkeep'))).toBe(false)
+    expect(existsSync(join(initDir, '.rsp', '.lock'))).toBe(false)
+  })
+
   it('does not expose removed project-rules CLI surfaces', () => {
     const initHelp = execSync(`node ${cliPath()} init --help`, { encoding: 'utf-8' })
     const removedCommand = spawnSync('node', [cliPath(), 'add', 'rules', 'project-rules'], { encoding: 'utf-8' })
@@ -935,6 +1260,94 @@ describe('init and doctor', () => {
 
     const output = execSync(`node ${cliPath()} doctor`, { cwd: doctorDir, encoding: 'utf-8' })
     expect(output).toContain('Info: unfocused open changes: unfocused-one')
+  })
+
+  it('reports unsupported open-work structure as a doctor issue', async () => {
+    const doctorDir = join(tmpdir(), 'rsp-doctor-work-ref-test', randomUUID())
+    await mkdir(doctorDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: doctorDir })
+    const nestedDir = join(doctorDir, '.rsp', 'changes', 'release', 'backend')
+    await mkdir(nestedDir, { recursive: true })
+    await writeFile(join(nestedDir, 'api.md'), renderChange('release/backend/api'))
+
+    const result = spawnSync('node', [cliPath(), 'doctor', '--json'], { cwd: doctorDir, encoding: 'utf-8' })
+    const output = JSON.parse(result.stdout)
+
+    expect(result.status).toBe(1)
+    expect(output.checks).toContainEqual(expect.objectContaining({
+      status: 'issue',
+      label: 'open work uses supported WorkRef shapes',
+    }))
+  })
+
+  it('reports a symlinked archive group as a doctor issue', async () => {
+    const doctorDir = join(tmpdir(), 'rsp-doctor-archive-group-symlink-test', randomUUID())
+    const externalDir = join(tmpdir(), 'rsp-doctor-archive-group-external-test', randomUUID())
+    await mkdir(doctorDir, { recursive: true })
+    await mkdir(externalDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: doctorDir })
+    await symlink(externalDir, join(doctorDir, '.rsp', 'archives', 'release'))
+
+    const result = spawnSync('node', [cliPath(), 'doctor', '--json'], { cwd: doctorDir, encoding: 'utf-8' })
+    const output = JSON.parse(result.stdout)
+
+    expect(result.status).toBe(1)
+    expect(output.ok).toBe(false)
+    expect(output.checks).toContainEqual(expect.objectContaining({
+      status: 'issue',
+      label: 'archives use supported managed paths',
+      message: expect.stringContaining('release'),
+    }))
+  })
+
+  it('does not rebuild an archive index through a symlinked root', async () => {
+    const updateDir = join(tmpdir(), 'rsp-update-archive-root-symlink-test', randomUUID())
+    const externalDir = join(tmpdir(), 'rsp-update-archive-root-external-test', randomUUID())
+    await mkdir(updateDir, { recursive: true })
+    await mkdir(externalDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: updateDir })
+    await rm(join(updateDir, '.rsp', 'archives'), { recursive: true })
+    await symlink(externalDir, join(updateDir, '.rsp', 'archives'))
+
+    const result = spawnSync('node', [cliPath(), 'update'], { cwd: updateDir, encoding: 'utf-8' })
+
+    expect(result.status).toBe(1)
+    expect(`${result.stdout}${result.stderr}`).toContain('archive root must be a real directory')
+    expect(existsSync(join(externalDir, 'INDEX.md'))).toBe(false)
+    expect(existsSync(join(updateDir, '.rsp', '.lock'))).toBe(false)
+  })
+
+  it('reports a non-directory changes root as a doctor issue', async () => {
+    const doctorDir = await createRspFixture('rsp-doctor-invalid-changes-root-test', ['specs'])
+    await writeFile(join(doctorDir, '.rsp', 'changes'), 'not a directory')
+
+    const result = spawnSync('node', [cliPath(), 'doctor', '--json'], { cwd: doctorDir, encoding: 'utf-8' })
+    const output = JSON.parse(result.stdout)
+
+    expect(result.status).toBe(1)
+    expect(output.ok).toBe(false)
+    expect(output.checks).toContainEqual(expect.objectContaining({
+      status: 'issue',
+      label: 'open work uses supported WorkRef shapes',
+      message: expect.stringContaining('must be a real directory'),
+    }))
+  })
+
+  it('reports an empty recursive work directory as a doctor issue', async () => {
+    const doctorDir = join(tmpdir(), 'rsp-doctor-empty-work-depth-test', randomUUID())
+    await mkdir(doctorDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: doctorDir })
+    await mkdir(join(doctorDir, '.rsp', 'changes', 'release', 'backend'), { recursive: true })
+
+    const result = spawnSync('node', [cliPath(), 'doctor', '--json'], { cwd: doctorDir, encoding: 'utf-8' })
+    const output = JSON.parse(result.stdout)
+
+    expect(result.status).toBe(1)
+    expect(output.checks).toContainEqual(expect.objectContaining({
+      status: 'issue',
+      label: 'open work uses supported WorkRef shapes',
+      message: expect.stringContaining('release/backend'),
+    }))
   })
 
   it('flags legacy required_sections config as an issue', async () => {
@@ -1328,6 +1741,27 @@ describe('pseudo-real fixture workflow', () => {
 })
 
 describe('archive name collisions', () => {
+  it('does not archive through a symlinked group destination', async () => {
+    const archiveDir = join(tmpdir(), 'rsp-archive-group-symlink-test', randomUUID())
+    const externalDir = join(tmpdir(), 'rsp-archive-group-external-test', randomUUID())
+    await mkdir(archiveDir, { recursive: true })
+    await mkdir(externalDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: archiveDir })
+    execSync(`node ${cliPath()} create release/api`, { cwd: archiveDir })
+    await symlink(externalDir, join(archiveDir, '.rsp', 'archives', 'release'))
+
+    const dryRun = spawnSync('node', [cliPath(), 'archive', 'release/api', '--dry-run'], { cwd: archiveDir, encoding: 'utf-8' })
+    const result = spawnSync('node', [cliPath(), 'archive', 'release/api'], { cwd: archiveDir, encoding: 'utf-8' })
+
+    expect(dryRun.status).toBe(1)
+    expect(dryRun.stderr).toContain('archive path must be a real directory')
+    expect(result.status).toBe(1)
+    expect(result.stderr).toContain('archive path must be a real directory')
+    expect(existsSync(join(archiveDir, '.rsp', 'changes', 'release', 'api.md'))).toBe(true)
+    expect((await readdir(externalDir))).toEqual([])
+    expect(existsSync(join(archiveDir, '.rsp', '.lock'))).toBe(false)
+  })
+
   it('keeps both archives when the same change is archived twice on the same day', async () => {
     const { createChange } = await import('../src/commands/create.js')
     const { archiveChange } = await import('../src/commands/archive.js')
@@ -1430,6 +1864,17 @@ describe('ready command', () => {
     expect(output).toContain('Rationale options:')
     expect(output).toContain('Decision Record path:')
   })
+
+  it('keeps ready errors machine-readable when the target is not a file', async () => {
+    const readyDir = await createRspFixture('rsp-ready-not-file-test')
+    await mkdir(join(readyDir, '.rsp', 'changes', 'not-a-file.md'), { recursive: true })
+
+    const result = spawnSync('node', [cliPath(), 'ready', 'not-a-file', '--json'], { cwd: readyDir, encoding: 'utf-8' })
+    const output = JSON.parse(result.stdout)
+
+    expect(result.status).toBe(1)
+    expect(output.error.code).toBe('work_ref_not_file')
+  })
 })
 
 describe('show command', () => {
@@ -1508,6 +1953,70 @@ describe('show command', () => {
     expect(result.nextActions).toContain('Run: rsp status')
     expect(result.nextActions).toContain('Run: rsp focus <name>')
   })
+
+  it('rejects Group Briefs as executable Changes with a machine-readable error', async () => {
+    const showDir = await createRspFixture('rsp-show-group-brief-test')
+    await mkdir(join(showDir, '.rsp', 'changes', 'release'), { recursive: true })
+    await writeFile(join(showDir, '.rsp', 'changes', 'release', 'brief.md'), '# Group Brief: release\n')
+
+    const result = spawnSync('node', [cliPath(), 'show', 'release/brief', '--json'], { cwd: showDir, encoding: 'utf-8' })
+
+    expect(result.status).toBe(1)
+    const output = JSON.parse(result.stdout)
+    expect(output.error.code).toBe('non_executable_work_ref')
+  })
+})
+
+describe('typed work references', () => {
+  it('keeps Group Briefs out of executable status records', async () => {
+    const statusDir = await createRspFixture('rsp-status-work-ref-test')
+    const groupDir = join(statusDir, '.rsp', 'changes', 'release')
+    await mkdir(groupDir, { recursive: true })
+    await writeFile(join(groupDir, 'brief.md'), '# Group Brief: release\n')
+    await writeFile(join(groupDir, 'api.md'), renderChange('release/api'))
+
+    const output = execSync(`node ${cliPath()} status --json`, { cwd: statusDir, encoding: 'utf-8' })
+    const result = JSON.parse(output)
+
+    expect(result.records.map((record: { name: string }) => record.name)).toEqual(['release/api'])
+  })
+
+  it('never focuses a Group Brief', async () => {
+    const focusDir = await createRspFixture('rsp-focus-group-brief-test', ['specs', 'changes', 'focus.d'])
+    const groupDir = join(focusDir, '.rsp', 'changes', 'release')
+    await mkdir(groupDir, { recursive: true })
+    await writeFile(join(groupDir, 'brief.md'), '# Group Brief: release\n')
+
+    const result = spawnSync('node', [cliPath(), 'focus', 'release/brief'], { cwd: focusDir, encoding: 'utf-8' })
+
+    expect(result.status).toBe(1)
+    expect(result.stderr).toContain('is a Group Brief and cannot be used as an executable Change')
+    expect(existsSync(join(focusDir, '.rsp', 'focus.d', 'release', 'brief'))).toBe(false)
+
+    const marker = join(focusDir, '.rsp', 'focus.d', 'release', 'brief')
+    await mkdir(join(focusDir, '.rsp', 'focus.d', 'release'), { recursive: true })
+    await writeFile(marker, '')
+    const cleanup = spawnSync('node', [cliPath(), 'unfocus', 'release/brief'], { cwd: focusDir, encoding: 'utf-8' })
+
+    expect(cleanup.status).toBe(0)
+    expect(existsSync(marker)).toBe(false)
+  })
+
+  it('fails status visibly when the work tree is structurally invalid', async () => {
+    const statusDir = await createRspFixture('rsp-status-invalid-work-ref-test')
+    const nestedDir = join(statusDir, '.rsp', 'changes', 'release', 'backend')
+    await mkdir(nestedDir, { recursive: true })
+    await writeFile(join(nestedDir, 'api.md'), renderChange('release/backend/api'))
+
+    const result = spawnSync('node', [cliPath(), 'status', '--json'], { cwd: statusDir, encoding: 'utf-8' })
+    const output = JSON.parse(result.stdout)
+
+    expect(result.status).toBe(1)
+    expect(output.ok).toBe(false)
+    expect(output.diagnostics).toContainEqual(expect.objectContaining({ code: 'unsupported_work_depth' }))
+    expect(output.nextActions).toContain('Run: rsp doctor')
+    expect(output.nextActions).not.toContain('Run: rsp create <name>')
+  })
 })
 
 describe('archive --dry-run', () => {
@@ -1525,6 +2034,18 @@ describe('archive --dry-run', () => {
 })
 
 describe('check --focused', () => {
+  it('fails closed when the work root cannot be inspected', async () => {
+    const focusedCheckDir = await createRspFixture('rsp-check-focused-invalid-root-test', ['specs', 'focus.d'])
+    await writeFile(join(focusedCheckDir, '.rsp', 'changes'), 'not a directory')
+
+    const result = spawnSync('node', [cliPath(), 'check', '--focused', '--json'], { cwd: focusedCheckDir, encoding: 'utf-8' })
+    const output = JSON.parse(result.stdout)
+
+    expect(result.status).toBe(1)
+    expect(output.ok).toBe(false)
+    expect(output.diagnostics).toContainEqual(expect.objectContaining({ code: 'invalid_work_root' }))
+  })
+
   it('only validates focused changes', async () => {
     const focusedCheckDir = await createRspFixture('rsp-check-focused-test', ['specs', 'changes', 'focus.d'])
 
@@ -1554,6 +2075,9 @@ kind: fix
 ## Blockers
 - none
 `)
+    const unsupportedDir = join(focusedCheckDir, '.rsp', 'changes', 'unfocused', 'nested')
+    await mkdir(unsupportedDir, { recursive: true })
+    await writeFile(join(unsupportedDir, 'ignored.md'), renderChange('unfocused/nested/ignored'))
 
     const output = execSync(`node ${cliPath()} check --focused`, { cwd: focusedCheckDir, encoding: 'utf-8' })
     // focused check should pass because only the focused change is validated
@@ -1608,6 +2132,23 @@ kind: "<choose: feature | fix | refactor | docs | ops | research>"
     }
     expect(failed).toBe(true)
     expect(output).toContain('kind still uses the template placeholder')
+  })
+
+  it('reports unsupported recursive work paths as structured diagnostics', async () => {
+    const checkDir = await createRspFixture('rsp-check-work-depth-test')
+    const nestedDir = join(checkDir, '.rsp', 'changes', 'release', 'backend')
+    await mkdir(nestedDir, { recursive: true })
+    await writeFile(join(nestedDir, 'api.md'), renderChange('release/backend/api'))
+
+    const result = spawnSync('node', [cliPath(), 'check', '--json'], { cwd: checkDir, encoding: 'utf-8' })
+
+    expect(result.status).toBe(1)
+    const output = JSON.parse(result.stdout)
+    expect(output.diagnostics).toContainEqual(expect.objectContaining({
+      severity: 'error',
+      code: 'unsupported_work_depth',
+      change: 'release/backend',
+    }))
   })
 })
 

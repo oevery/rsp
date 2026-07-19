@@ -4,7 +4,7 @@ summary: Completed RSP changes.
 kind: generated-index
 index_type: archives
 source_dir: .rsp/archives
-entry_count: 10
+entry_count: 11
 ---
 
 # Archive Index
@@ -21,3 +21,4 @@ entry_count: 10
 | 2026-07-18 | upstream-distillation-hardening | fix | Close integrity and usability gaps in the upstream distillation workflow |
 | 2026-07-18 | upstream-source-registry | feature | Add reproducible upstream source caching and review workflow |
 | 2026-07-19 | decision-record-ownership | feature | Add one authoritative Decision Record path and separate lasting rationale from durable current facts |
+| 2026-07-19 | typed-work-ref | refactor | Introduce a typed WorkRef before Change Groups |

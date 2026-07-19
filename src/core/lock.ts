@@ -1,6 +1,7 @@
 import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises'
 
 import { LOCK_PATH, RSP_DIR } from './config.js'
+import { requireManagedDirectory } from './managed-path.js'
 
 /**
  * Acquire an exclusive file lock for the duration of an RSP operation.
@@ -9,6 +10,7 @@ import { LOCK_PATH, RSP_DIR } from './config.js'
  * If a stale lock is detected (PID no longer alive), it is cleaned up and retried.
  */
 export async function withRspLock<T = void>(operation: string, fn: () => Promise<T>): Promise<T> {
+  requireManagedDirectory(RSP_DIR, 'RSP root', { allowMissing: true })
   await mkdir(RSP_DIR, { recursive: true })
 
   try {
