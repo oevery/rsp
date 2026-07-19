@@ -3,7 +3,8 @@ import { existsSync } from 'node:fs'
 import { readFile, rm, rmdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
-import { OBSOLETE_RSP_RULES_PATH, pc, PKG_ROOT, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
+import { clearConfigCache, inspectRspConfig, OBSOLETE_RSP_RULES_PATH, pc, PKG_ROOT, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
+import { ensureDecisionRecordsDirectory, resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { detectProjectName, inspectUnsupportedRules, upsertRspAgentsBlock } from '../core/helpers.js'
 import { withRspLock } from '../core/lock.js'
 import { buildArchiveIndex } from './archive-index.js'
@@ -41,6 +42,15 @@ export async function updateProject(options: UpdateOptions = {}): Promise<Update
   return withRspLock('update', async () => {
     let updated = false
     const actions: string[] = []
+
+    clearConfigCache()
+    const configInspection = await inspectRspConfig()
+    if (configInspection.decisionRecordsIssue)
+      throw new Error(configInspection.decisionRecordsIssue)
+    const decisionRecordsPath = resolveDecisionRecordsPath(configInspection.config)
+    const decisionRecordsFilesystemIssue = await validateDecisionRecordsFilesystemPath(decisionRecordsPath)
+    if (decisionRecordsFilesystemIssue)
+      throw new Error(decisionRecordsFilesystemIssue)
 
     const bundledRules = await readFile(join(PKG_ROOT, 'rules', 'rsp-rules.md'), 'utf-8')
     const existingRules = existsSync(RSP_RULES_PATH) ? await readFile(RSP_RULES_PATH, 'utf-8') : null
@@ -115,6 +125,13 @@ export async function updateProject(options: UpdateOptions = {}): Promise<Update
       actions.push('AGENTS.md managed block refreshed')
       if (!options.quiet)
         console.log(`  ${pc.green('✓')} AGENTS.md managed block refreshed`)
+      updated = true
+    }
+
+    if (await ensureDecisionRecordsDirectory(decisionRecordsPath)) {
+      actions.push(`Decision Record directory ensured: ${decisionRecordsPath}`)
+      if (!options.quiet)
+        console.log(`  ${pc.green('✓')} Decision Record directory ensured: ${decisionRecordsPath}`)
       updated = true
     }
 

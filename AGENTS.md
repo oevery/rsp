@@ -10,7 +10,7 @@ Read in order:
 2. Root `CONTEXT-MAP.md` if present, then the relevant nearest `CONTEXT.md`.
 3. The `rsp` skill; if unavailable, read `.rsp/rsp-rules.md` as the fallback protocol.
 4. `.rsp/focus.d/` and the explicitly selected focused Change.
-5. Only the relevant `.rsp/specs/` files.
+5. Only the relevant Specs and Decision Records under the configured authoritative path.
 
 If `.rsp/focus.d/` is empty and the user has not provided a concrete task, ask what to work on or suggest `npx -y @oevery/rsp create <name>` for tracked work.
 Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENTS.md` or `CONTEXT.md`.

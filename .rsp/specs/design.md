@@ -13,6 +13,8 @@
 - The `rsp` skill is the preferred detailed operational guide; the fallback protocol is deliberately not a second full manual.
 - The nearest project-owned `AGENTS.md` owns stable scoped agent instructions; the RSP-managed block is navigation only.
 - `specs/` stores durable project-level facts, boundaries, and constraints.
+- Decision Records store lasting rationale, alternatives, tradeoffs, and consequences for hard-to-reverse choices; they do not duplicate current facts from Specs.
+- `.rsp/specs/decisions/` is the default authoritative Decision Record directory. `decisions.path` may select exactly one project-relative external directory outside `.rsp/`.
 - `changes/` stores open work.
 - `focus.d/` is the only current-focus truth source.
 - `archives/` stores completed change history.
@@ -26,9 +28,10 @@
 - Generated index builders avoid rewriting unchanged `INDEX.md` files.
 - `rsp doctor` identifies generated indexes by frontmatter metadata instead of body footer text.
 - `rsp doctor --fix` reports only actual filesystem changes in its `fixed` output; an empty `fixed` array means no safe repair changed files.
-- `durableReview.candidateTargets` lists likely writable durable files and excludes generated indexes and bundled core rules from ordinary project writeback targets.
+- `durableReview.factCandidateTargets` lists likely writable current-fact files, while `durableReview.decisionRecordsPath` reports the one authoritative rationale directory; generated indexes and bundled core rules remain excluded from ordinary project writeback targets.
 - `rsp create --lite` is a short template for explicitly tracked small changes; simple current-session tasks should not create RSP changes unless tracking is intentionally needed.
 - Semantic judgment, including durable writeback decisions, belongs to an RSP skill or a human reviewer.
+- Durable review decides current-fact updates and Decision Record updates independently; archive never promotes Change content automatically.
 - The published `skills/rsp` artifact uses the portable intersection of Agent Skills and active target-client validation: it omits optional `compatibility`, carries `license: MIT`, `metadata.author`, and an independent quoted content CalVer that changes only for meaningful skill-content releases rather than every CLI release.
 - Product distribution includes the fallback protocol and portable RSP skill; host-specific slash-command prompts are outside the core package.
 - The RSP-managed `AGENTS.md` block is a navigation entrypoint and must not become a durable rules or design store; project-owned sections outside it may hold stable scoped instructions.
@@ -46,11 +49,13 @@
 - In scope: initializing and repairing `.rsp/` structure for repositories.
 - In scope: creating, focusing, unfocusing, checking, and archiving single-file changes.
 - In scope: maintaining generated spec and archive indexes.
+- In scope: validating and routing one authoritative Decision Record directory without owning Decision Record filenames or content creation.
 - In scope: distributing reusable RSP rules and skill guidance with the package.
 - In scope: keeping RSP readable by humans, agents, CI, and simple scripts.
 - Out of scope: replacing git history or project management systems.
 - Out of scope: adding OpenSpec-style multi-file change artifacts.
 - Out of scope: automatically merging change `Spec` deltas into durable specs during archive.
+- Out of scope: automatically creating Decision Records, discovering multiple ADR roots, assigning numbering policy, or synchronizing rationale across paths.
 - Out of scope: introducing workflow states that do not map to deterministic filesystem truth.
 - Out of scope: becoming a plugin platform or schema-heavy workflow framework.
 - Out of scope: binding the workflow to a single IDE, agent, or hosting platform.
@@ -101,6 +106,10 @@ Dependency direction is constrained:
 - Do not create catch-all durable summary files when a fact belongs in `design.md`, a specific spec, a scoped project instruction, or nowhere.
 - Keep cross-repository consistency higher priority than per-repository workflow freedom.
 - Keep agent-distributed normative surfaces in English for cross-agent stability.
+- Decision Record configuration accepts only the default `.rsp/specs/decisions` path or one project-relative path outside `.rsp/`; absolute paths, project traversal, other `.rsp/` core locations, and filesystem resolution outside the Host Project through symlinks are invalid.
+- `rsp init` and `rsp update` ensure the authoritative Decision Record directory exists without creating a record; `rsp doctor` validates configuration and directory health.
+- Decision Record routing and filesystem targets are preflighted before managed mutations and before `rsp show` or `rsp ready` emits routing guidance. When an external path becomes authoritative, `rsp doctor` reports unreadable or remaining Markdown records under the inactive default directory instead of migrating or deleting them automatically.
+- Generated Specs indexes exclude the authoritative Decision Record subtree.
 - Keep `.rsp/rsp-rules.md` as a minimal fallback protocol; keep the `rsp` skill as the preferred detailed operational layer when detail prevents agent hallucination or mistakes.
 - Prefer README, design docs, durable specs, or CLI output for explanatory detail that does not prevent agent misoperation.
 - Skill compactness must not remove guidance about change creation, durable writeback, archive readiness, generated/core files, or deterministic-vs-semantic boundaries.

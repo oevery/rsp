@@ -1,8 +1,9 @@
 import { existsSync } from 'node:fs'
 import { readFile, writeFile } from 'node:fs/promises'
-import { basename, join, relative } from 'node:path'
+import { basename, isAbsolute, join, relative, sep } from 'node:path'
 
-import { pc, RSP_DIR } from '../core/config.js'
+import { inspectRspConfig, pc, RSP_DIR } from '../core/config.js'
+import { DEFAULT_DECISION_RECORDS_PATH, resolveDecisionRecordsPath } from '../core/decisions.js'
 import { normalizeLogicalPath, parseFrontmatter, walkMarkdownFiles } from '../core/helpers.js'
 import { withRspLock } from '../core/lock.js'
 
@@ -12,6 +13,10 @@ export async function buildSpecsIndex({ acquireLock = true, quiet = false } = {}
     return withRspLock('specs-index', async () => buildSpecsIndex({ acquireLock: false, quiet }))
 
   const specsDir = join(RSP_DIR, 'specs')
+  const configInspection = await inspectRspConfig()
+  if (configInspection.decisionRecordsIssue)
+    throw new Error(configInspection.decisionRecordsIssue)
+  const decisionRecordsPath = resolveDecisionRecordsPath(configInspection.config)
 
   if (!existsSync(specsDir)) {
     if (!quiet)
@@ -22,7 +27,10 @@ export async function buildSpecsIndex({ acquireLock = true, quiet = false } = {}
   const specFiles = (await walkMarkdownFiles(specsDir))
     .filter((fp) => {
       const name = basename(fp)
-      return name !== 'INDEX.md' && name !== 'design.md'
+      return name !== 'INDEX.md'
+        && name !== 'design.md'
+        && !isInside(DEFAULT_DECISION_RECORDS_PATH, fp)
+        && !isInside(decisionRecordsPath, fp)
     })
     .sort()
 
@@ -67,6 +75,11 @@ export async function buildSpecsIndex({ acquireLock = true, quiet = false } = {}
   if (!quiet)
     console.log(`  ${pc.green('INDEX.md updated:')} ${specFiles.length} spec file(s).\n`)
   return changed
+}
+
+function isInside(directory: string, filePath: string): boolean {
+  const rel = relative(directory, filePath)
+  return rel === '' || (!isAbsolute(rel) && rel !== '..' && !rel.startsWith(`..${sep}`))
 }
 
 function extractTitle(content: string): string {

@@ -3,7 +3,8 @@ import { existsSync } from 'node:fs'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 
 import { join } from 'node:path'
-import { CHANGES_DIR, FOCUS_DIR, pc, PKG_ROOT, RSP_DIR, RSP_RULES_PATH, VALID_KINDS } from '../core/config.js'
+import { CHANGES_DIR, clearConfigCache, CONFIG_PATH, FOCUS_DIR, inspectRspConfig, pc, PKG_ROOT, RSP_DIR, RSP_RULES_PATH, VALID_KINDS } from '../core/config.js'
+import { ensureDecisionRecordsDirectory, resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { detectProjectName, generateChangeContent, generateDesignContent, upsertRspAgentsBlock } from '../core/helpers.js'
 import { withRspLock } from '../core/lock.js'
 import { buildArchiveIndex } from './archive-index.js'
@@ -19,6 +20,11 @@ function generateConfigTemplate(): string {
 #
 # kinds:
 ${fmtList(VALID_KINDS, 2)}
+
+# Decision Records default to .rsp/specs/decisions.
+# Set one project-relative external authoritative directory when the Host Project already owns ADRs.
+# decisions:
+#   path: docs/adr
 `
 }
 
@@ -44,6 +50,17 @@ export async function initProject(args: InitArgs = {}) {
   }
 
   return withRspLock('init', async () => {
+    if (existsSync(CONFIG_PATH)) {
+      clearConfigCache()
+      const existingConfig = await inspectRspConfig()
+      if (existingConfig.decisionRecordsIssue)
+        throw new Error(existingConfig.decisionRecordsIssue)
+      const existingDecisionRecordsPath = resolveDecisionRecordsPath(existingConfig.config)
+      const filesystemIssue = await validateDecisionRecordsFilesystemPath(existingDecisionRecordsPath)
+      if (filesystemIssue)
+        throw new Error(filesystemIssue)
+    }
+
     const dirs = [
       join(RSP_DIR, 'specs'),
       CHANGES_DIR,
@@ -59,6 +76,12 @@ export async function initProject(args: InitArgs = {}) {
 
     created = (await ensureFile(RSP_RULES_PATH, bundledRules)) || created
     created = (await ensureFile(join(RSP_DIR, 'config.yaml'), generateConfigTemplate())) || created
+    clearConfigCache()
+    const configInspection = await inspectRspConfig()
+    if (configInspection.decisionRecordsIssue)
+      throw new Error(configInspection.decisionRecordsIssue)
+    const decisionRecordsPath = resolveDecisionRecordsPath(configInspection.config)
+    created = (await ensureDecisionRecordsDirectory(decisionRecordsPath)) || created
     const createdSpecsIndex = await ensureFile(join(RSP_DIR, 'specs', 'INDEX.md'), '# Specs Index\n\n_Additional project-level specs beyond `design.md`._\n')
     created = createdSpecsIndex || created
     const createdDesign = await ensureFile(join(RSP_DIR, 'specs', 'design.md'), generateDesignContent(projectName))
@@ -111,7 +134,7 @@ export async function initProject(args: InitArgs = {}) {
       const next = args.withProjectSetup ? 'fill .rsp/changes/project-setup.md' : 'rsp create project-setup'
       console.log(`
   ${pc.green('RSP scaffolded.')}\n`)
-      console.log(`  Created: .rsp/rsp-rules.md\n           .rsp/specs/\n           .rsp/changes/\n           .rsp/focus.d/\n           .rsp/archives/\n           .rsp/.gitignore\n           .rsp/config.yaml\n           .rsp/specs/design.md${createdProjectSetup}${createdAgents}\n`)
+      console.log(`  Created: .rsp/rsp-rules.md\n           .rsp/specs/\n           ${decisionRecordsPath}/\n           .rsp/changes/\n           .rsp/focus.d/\n           .rsp/archives/\n           .rsp/.gitignore\n           .rsp/config.yaml\n           .rsp/specs/design.md${createdProjectSetup}${createdAgents}\n`)
       console.log(`  ${pc.cyan('Next:')} ${next}\n  ${pc.dim('Then:')} fill .rsp/specs/design.md\n  ${pc.dim('Also:')} rsp status  rsp check\n`)
     }
     else if (created) {

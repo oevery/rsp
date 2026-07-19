@@ -11,3 +11,8 @@
   # - docs
   # - ops
   # - research
+
+# Decision Records default to .rsp/specs/decisions.
+# Set one project-relative external authoritative directory when the Host Project already owns ADRs.
+# decisions:
+#   path: docs/adr

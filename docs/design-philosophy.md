@@ -104,7 +104,7 @@ RSP 使用 `change`，不使用 `feature` 作为顶层工作模型。
 
 ### 4. Durable truth 与 history 分离
 
-`specs/` 只存未来会反复使用的长期事实；最近的项目自有 `AGENTS.md` 只存 agent 必须遵循的稳定 scoped instructions。
+`specs/` 只存未来会反复使用的当前事实；配置的唯一 Decision Record 路径只存难以逆转选择的长期理由、备选方案、取舍和后果；最近的项目自有 `AGENTS.md` 只存 agent 必须遵循的稳定 scoped instructions。
 
 适合 durable layer 的内容：
 
@@ -113,6 +113,8 @@ RSP 使用 `change`，不使用 `feature` 作为顶层工作模型。
 - 长期架构事实。
 - 长期约束。
 - 稳定运行规则。
+
+只有同时满足“难以逆转”“缺少上下文会令人意外”“存在真实取舍”时，才创建或更新 Decision Record。Spec 回答“当前是什么”，Decision Record 回答“为什么这样选择”；两者不互相复制。
 
 不适合 durable layer 的内容：
 
@@ -145,6 +147,7 @@ Skill 或人工 reviewer 负责 semantic judgment。
 
 - 是否产生 durable knowledge。
 - durable fact 应写到哪里。
+- 是否存在值得长期保留的 rationale，以及它应写入哪个 Decision Record。
 - warning 是否代表真实语义风险。
 - archive 是否语义上 ready。
 
@@ -325,13 +328,14 @@ Spec 不是 archive summary。
 
 - `.rsp/specs/design.md`。
 - 现有领域 spec。
-- 更具体的 rules 文件。
+- nearest project-owned `AGENTS.md` 中有作用域的稳定指令。
+- 配置的唯一 Decision Record 路径下的精确文件。
 
 避免创建兜底式 `.rsp/specs/changes.md`。
 
 把 durable fact 写入最小正确目标文件。
 
-不要把同一 fact 无理由复制到多个 durable 文件。
+不要把同一 fact 无理由复制到多个 durable 文件，也不要用 Decision Record 重复当前事实。
 
 ## 输出与可观测性
 
@@ -395,6 +399,7 @@ fallback protocol 保持为最小兼容层，`skills/` 保持为详细操作层�
 
 - 是否创建 change。
 - 是否写 durable spec。
+- 是否写 Decision Record。
 - 是否判断 archive ready。
 - 是否误改 generated/core files。
 - 是否把 deterministic CLI warning 当成 semantic decision。

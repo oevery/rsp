@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import pc from 'picocolors'
+import { getDecisionRecordsConfigIssue, normalizeDecisionRecordsPath, validateDecisionRecordsPath } from './decisions.js'
 import { parseYamlText } from './helpers.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -35,30 +36,54 @@ export const VALID_KINDS: ChangeKind[] = ['feature', 'fix', 'refactor', 'docs', 
 /** Built-in required sections in change files. */
 export const DEFAULT_REQUIRED_SECTIONS = ['Proposal', 'Spec', 'Design', 'Tasks', 'Verify', 'Blockers']
 
-/** Cached parsed config to avoid repeated file reads. */
-let _configCache: RspConfig | null = null
+export interface RspConfigInspection {
+  config: RspConfig
+  decisionRecordsIssue: string | null
+}
+
+/** Cached parsed config inspection to avoid repeated file reads. */
+let _configCache: { cwd: string, inspection: RspConfigInspection } | null = null
 
 /**
  * Load and parse .rsp/config.yaml (cached).
  * Returns defaults when no config file exists.
  */
 export async function loadRspConfig(): Promise<RspConfig> {
-  if (_configCache)
-    return _configCache
+  return (await inspectRspConfig()).config
+}
+
+/** Load typed config plus semantic issues needed by routing commands. */
+export async function inspectRspConfig(): Promise<RspConfigInspection> {
+  const cwd = process.cwd()
+  if (_configCache?.cwd === cwd)
+    return _configCache.inspection
 
   if (!existsSync(CONFIG_PATH)) {
-    _configCache = {}
-    return _configCache
+    const inspection = { config: {}, decisionRecordsIssue: null }
+    _configCache = { cwd, inspection }
+    return inspection
   }
 
   const raw = await readFile(CONFIG_PATH, 'utf-8')
   const parsed = parseYamlText(raw)
+  const decisions = parsed.decisions && typeof parsed.decisions === 'object' && !Array.isArray(parsed.decisions)
+    ? parsed.decisions as Record<string, unknown>
+    : undefined
+  const decisionPath = decisions?.path
+  const decisionRecordsIssue = getDecisionRecordsConfigIssue(parsed)
 
-  _configCache = {
-    kinds: Array.isArray(parsed.kinds) ? parsed.kinds.map(String) : undefined,
+  const inspection: RspConfigInspection = {
+    config: {
+      kinds: Array.isArray(parsed.kinds) ? parsed.kinds.map(String) : undefined,
+      decisions: decisionRecordsIssue === null && validateDecisionRecordsPath(decisionPath) === null
+        ? { path: normalizeDecisionRecordsPath(String(decisionPath)) }
+        : undefined,
+    },
+    decisionRecordsIssue,
   }
+  _configCache = { cwd, inspection }
 
-  return _configCache
+  return inspection
 }
 
 /** Clear the config cache (for testing). */

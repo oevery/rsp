@@ -41,6 +41,8 @@ describe('loadRspConfig', () => {
     await writeFile(join(configDir, '.rsp', 'config.yaml'), `kinds:
   - fix
   - docs
+decisions:
+  path: docs/adr/
 `)
 
     const cwd = process.cwd()
@@ -50,6 +52,7 @@ describe('loadRspConfig', () => {
       const config = await loadRspConfig()
       expect(config).toEqual({
         kinds: ['fix', 'docs'],
+        decisions: { path: 'docs/adr' },
       })
     }
     finally {
@@ -102,6 +105,27 @@ describe('loadRspConfig', () => {
       clearConfigCache()
       const refreshed = await loadRspConfig()
       expect(refreshed).toEqual({ kinds: ['docs'] })
+    }
+    finally {
+      process.chdir(cwd)
+    }
+  })
+
+  it('does not reuse cached Decision Record routing after the process changes projects', async () => {
+    const firstDir = join(tmpdir(), 'rsp-config-cwd-first-test', randomUUID())
+    const secondDir = join(tmpdir(), 'rsp-config-cwd-second-test', randomUUID())
+    await mkdir(join(firstDir, '.rsp'), { recursive: true })
+    await mkdir(join(secondDir, '.rsp'), { recursive: true })
+    await writeFile(join(firstDir, '.rsp', 'config.yaml'), 'decisions:\n  path: docs/first-adr\n')
+    await writeFile(join(secondDir, '.rsp', 'config.yaml'), 'decisions:\n  path: docs/second-adr\n')
+
+    const cwd = process.cwd()
+    try {
+      process.chdir(firstDir)
+      expect(await loadRspConfig()).toEqual({ kinds: undefined, decisions: { path: 'docs/first-adr' } })
+
+      process.chdir(secondDir)
+      expect(await loadRspConfig()).toEqual({ kinds: undefined, decisions: { path: 'docs/second-adr' } })
     }
     finally {
       process.chdir(cwd)

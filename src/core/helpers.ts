@@ -452,7 +452,7 @@ Read in order:
 2. Root \`CONTEXT-MAP.md\` if present, then the relevant nearest \`CONTEXT.md\`.
 3. The \`rsp\` skill; if unavailable, read \`.rsp/rsp-rules.md\` as the fallback protocol.
 4. \`.rsp/focus.d/\` and the explicitly selected focused Change.
-5. Only the relevant \`.rsp/specs/\` files.
+5. Only the relevant Specs and Decision Records under the configured authoritative path.
 
 If \`.rsp/focus.d/\` is empty and the user has not provided a concrete task, ask what to work on or suggest \`npx -y @oevery/rsp create <name>\` for tracked work.
 Do not treat \`.rsp/specs/\` or \`.rsp/changes/\` as replacements for nearest \`AGENTS.md\` or \`CONTEXT.md\`.
@@ -667,8 +667,10 @@ export interface ArchiveReadiness {
 
 export interface DurableReviewGuidance {
   required: true
-  decisions: string[]
-  candidateTargets: string[]
+  factDecisions: string[]
+  rationaleDecisions: string[]
+  factCandidateTargets: string[]
+  decisionRecordsPath: string
   note: string
 }
 
@@ -717,16 +719,21 @@ export function collectArchiveReadiness(content: string): ArchiveReadiness {
   }
 }
 
-export function buildDurableReviewGuidance(candidateTargets: string[]): DurableReviewGuidance {
+export function buildDurableReviewGuidance(factCandidateTargets: string[], decisionRecordsPath: string): DurableReviewGuidance {
   return {
     required: true,
-    decisions: [
-      'No durable update needed',
+    factDecisions: [
+      'No current-fact update needed',
       'Update existing spec or scoped instruction',
       'Create a new durable spec',
     ],
-    candidateTargets,
-    note: 'Semantic review decides whether stable facts belong in specs or stable scoped instructions belong in the nearest project-owned AGENTS.md; the CLI cannot infer that scoped instruction path and never merges delta specs automatically.',
+    rationaleDecisions: [
+      'No Decision Record needed',
+      'Create or update a Decision Record',
+    ],
+    factCandidateTargets,
+    decisionRecordsPath,
+    note: 'Semantic review decides current-fact and lasting-rationale updates independently. The CLI never infers scoped instruction or Decision Record filenames and never promotes Change content automatically.',
   }
 }
 

@@ -34,7 +34,8 @@ npx -y @oevery/rsp doctor
 ├── rsp-rules.md              # minimal fallback protocol
 ├── specs/
 │   ├── INDEX.md              # auto-generated
-│   └── design.md
+│   ├── design.md
+│   └── decisions/            # authoritative Decision Records by default
 ├── changes/
 │   └── <name>.md
 ├── focus.d/
@@ -46,11 +47,12 @@ npx -y @oevery/rsp doctor
 ## Concepts
 
 - `specs/` describes durable project facts and current agreed design.
+- Decision Records describe lasting rationale, alternatives, tradeoffs, and consequences for hard-to-reverse choices. They default to `.rsp/specs/decisions/` or use one configured external path.
 - `changes/` captures open work, including features, fixes, refactors, docs, ops, and research.
 - A change is always a single Markdown file with explicit sections for proposal, spec, design, tasks, verification, and blockers.
-- Completed changes move to `archives/`. Stable current facts belong in `specs/`; stable scoped operating instructions belong in nearest project-owned `AGENTS.md`.
-- Do not promote task history, debugging notes, or one-off implementation context into Specs or project instructions.
-- Change `Spec` delta markers (`### ADDED`, `### MODIFIED`, `### REMOVED`) are planning aids only. `rsp archive` does not automatically merge them into durable Specs. Durable writeback remains an explicit semantic decision.
+- Completed changes move to `archives/`. Stable current facts belong in Specs; lasting rationale belongs in Decision Records; stable scoped operating instructions belong in nearest project-owned `AGENTS.md`.
+- Do not promote task history, debugging notes, or one-off implementation context into Specs, Decision Records, or project instructions.
+- Change `Spec` delta markers (`### ADDED`, `### MODIFIED`, `### REMOVED`) are planning aids only. `rsp archive` does not automatically promote them into Specs or Decision Records. Durable writeback remains an explicit semantic decision.
 - `rsp check` performs deterministic hygiene checks. It warns about unfinished template placeholders and unresolved clarification markers, but those warnings do not replace the semantic durable-update decision.
 
 ## File ownership
@@ -59,10 +61,22 @@ npx -y @oevery/rsp doctor
 - `.rsp/specs/INDEX.md`: auto-generated index of additional spec files beyond `design.md`. Rebuild with `rsp update`.
 - `.rsp/archives/INDEX.md`: auto-generated. Rebuild with `rsp update`.
 - `.rsp/specs/design.md`: created by `rsp init`, then owned by the project.
+- `.rsp/specs/decisions/`: the default authoritative Decision Record directory; configure `decisions.path` only when the Host Project already owns one external ADR directory.
 - `.rsp/rsp-rules.md`: generated minimal fallback protocol; use the `rsp` skill when available.
 - Keep durable architecture, boundaries, and cross-cutting technical constraints in `.rsp/specs/design.md`.
 - Treat `.rsp/specs/INDEX.md` as a directory for additional spec files; it does not list `design.md`.
 - Keep stable scoped workflow and validation instructions in the nearest project-owned `AGENTS.md`, outside the managed RSP block.
+
+## Decision Record path
+
+The default authoritative directory is `.rsp/specs/decisions/`. If the Host Project already owns ADRs elsewhere, configure exactly one project-relative external path:
+
+```yaml
+decisions:
+  path: docs/adr
+```
+
+The path cannot be absolute, escape the Host Project, or point at another `.rsp/` core location. `rsp init` and `rsp update` validate routing before managed writes and ensure the directory exists; `rsp show` and `rsp ready` refuse unsafe routing; `rsp doctor` validates directory readability and migration health. These commands never create a Decision Record. Switching to an external path does not migrate existing default records: `rsp doctor` reports inactive `.rsp/specs/decisions/*.md` files until they are moved or deliberately removed.
 
 ## AGENTS integration
 
@@ -79,7 +93,7 @@ Read in order:
 2. Root `CONTEXT-MAP.md` if present, then the relevant nearest `CONTEXT.md`.
 3. The `rsp` skill; if unavailable, read `.rsp/rsp-rules.md` as the fallback protocol.
 4. `.rsp/focus.d/` and the explicitly selected focused Change.
-5. Only the relevant `.rsp/specs/` files.
+5. Only the relevant Specs and Decision Records under the configured authoritative path.
 
 If `.rsp/focus.d/` is empty and the user has not provided a concrete task, ask what to work on or suggest `npx -y @oevery/rsp create <name>` for tracked work.
 Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENTS.md` or `CONTEXT.md`.
@@ -164,11 +178,11 @@ During implementation, keep the change file and the actual work in sync: complet
 
 Agents should treat only entries in `focus.d/` as current work. Unfocused files in `changes/` are still open, but should not be treated as the current target unless the user explicitly asks for them or they are re-focused.
 
-The durable update decision (whether the change produced stable facts for `.rsp/specs/`, scoped instructions for nearest `AGENTS.md`, or no durable update) is a semantic choice made by the RSP skill or a human reviewer.
+Durable review makes two independent semantic choices: whether current facts or scoped instructions need an update, and whether lasting rationale needs a Decision Record. The RSP skill or a human reviewer owns both judgments.
 
 `rsp ready` and `rsp show` expose both deterministic readiness and semantic-review signals. Deterministic readiness comes from checkboxes, blockers, and scenarios; semantic review remains required for durable-update decisions.
 
-`rsp ready --json` and `rsp show --json` also include `durableReview` guidance with fixed decision options and candidate durable targets. This is review guidance only; RSP does not auto-merge change `Spec` deltas into durable files.
+`rsp ready --json` and `rsp show --json` include `durableReview.factDecisions`, `rationaleDecisions`, `factCandidateTargets`, and the one authoritative `decisionRecordsPath`. This is routing guidance only; RSP does not fabricate filenames or promote Change content automatically.
 
 ## Recommended workflow
 
@@ -178,7 +192,7 @@ New project:
 2. Prefer `npx -y @oevery/rsp init --with-project-setup`, or run `rsp create project-setup` manually
 3. Fill `.rsp/specs/design.md`
 4. Use `rsp add spec <name>` only when a new durable project doc is needed
-5. Keep stable scoped operating instructions in the nearest project-owned `AGENTS.md`
+5. Keep lasting rationale in the configured Decision Record directory and stable scoped operating instructions in the nearest project-owned `AGENTS.md`
 6. For tracked open work, start with `rsp create <name>`
 7. If you want an existing open change to become current work, use `rsp focus <name>`
 8. Use `rsp unfocus <name>` when you want to remove a change from the current focus set

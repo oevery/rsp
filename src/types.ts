@@ -37,6 +37,10 @@ export interface InitArgs {
 export interface RspConfig {
   /** Custom kind values (override built-in defaults when present). */
   kinds?: string[]
+  /** One authoritative Decision Record directory. */
+  decisions?: {
+    path?: string
+  }
 }
 
 /** Shared output-mode options for read-only commands. */

@@ -1,9 +1,10 @@
 import type { CommandRunOptions, RuntimeDiagnostic } from '../types.js'
 import { existsSync } from 'node:fs'
-import { readFile } from 'node:fs/promises'
+import { readdir, readFile, stat } from 'node:fs/promises'
 import { basename, join, relative } from 'node:path'
 
-import { CHANGES_DIR, CONFIG_PATH, OBSOLETE_RSP_RULES_PATH, pc, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
+import { CHANGES_DIR, CONFIG_PATH, loadRspConfig, OBSOLETE_RSP_RULES_PATH, pc, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
+import { DEFAULT_DECISION_RECORDS_PATH, getDecisionRecordsConfigIssue, resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { changeNameFromPath, getFocusedChangeNames, hasRspAgentsBlock, inspectUnsupportedRules, normalizeLogicalPath, parseFrontmatter, parseYamlText, walkMarkdownFiles } from '../core/helpers.js'
 import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
 import { updateProject } from './update.js'
@@ -32,13 +33,27 @@ export interface DoctorOptions extends CommandRunOptions {
 
 export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResult> {
   const fixed: string[] = []
+  let repairIssue: string | null = null
 
   if (options.fix && existsSync(RSP_DIR)) {
-    const update = await updateProject({ quiet: Boolean(options.json) })
-    fixed.push(...update.actions)
+    try {
+      const update = await updateProject({ quiet: Boolean(options.json) })
+      fixed.push(...update.actions)
+    }
+    catch (error) {
+      repairIssue = `safe deterministic repair could not run: ${toErrorMessage(error)}`
+    }
   }
 
   const checks: DoctorCheck[] = []
+  if (repairIssue) {
+    checks.push({
+      status: 'issue',
+      label: 'safe deterministic repairs completed',
+      message: repairIssue,
+      hint: 'Resolve the reported configuration or filesystem issue, then run rsp doctor --fix again.',
+    })
+  }
   const runtime: RuntimeDiagnostic[] = []
   const reportRuntime = (diagnostic: RuntimeDiagnostic) => recordRuntimeDiagnostic(runtime, diagnostic, Boolean(options.verbose) && !options.json)
 
@@ -57,7 +72,11 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
   await checkGeneratedIndex(checks, reportRuntime, specsIndexPath, 'specs', 'specs/INDEX.md has generated-index metadata', 'Run: rsp update')
   await checkGeneratedIndex(checks, reportRuntime, archivesIndexPath, 'archives', 'archives/INDEX.md has generated-index metadata', 'Run: rsp update')
   await checkArchiveNaming(checks, reportRuntime)
-  await checkConfigSemantics(checks, reportRuntime)
+  const decisionRecordsConfigValid = await checkConfigSemantics(checks, reportRuntime)
+  if (decisionRecordsConfigValid) {
+    await checkDecisionRecordsDirectory(checks, reportRuntime)
+    await checkInactiveDefaultDecisionRecords(checks, reportRuntime)
+  }
   await checkActiveChangeConsistency(checks, reportRuntime)
 
   const result: DoctorResult = {
@@ -83,7 +102,7 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
     console.log(`  ${pc.green('Fixed:')} ${fixed.join(', ')}`)
     console.log()
   }
-  else if (options.fix) {
+  else if (options.fix && !repairIssue && existsSync(RSP_DIR)) {
     console.log(`  ${pc.dim('No safe fixes needed.')}`)
     console.log()
   }
@@ -269,9 +288,9 @@ async function checkArchiveNaming(checks: DoctorCheck[], reportRuntime: (diagnos
   })
 }
 
-async function checkConfigSemantics(checks: DoctorCheck[], reportRuntime: (diagnostic: RuntimeDiagnostic) => void): Promise<void> {
+async function checkConfigSemantics(checks: DoctorCheck[], reportRuntime: (diagnostic: RuntimeDiagnostic) => void): Promise<boolean> {
   if (!existsSync(CONFIG_PATH))
-    return
+    return true
 
   let content: string
   try {
@@ -285,7 +304,7 @@ async function checkConfigSemantics(checks: DoctorCheck[], reportRuntime: (diagn
       message: toErrorMessage(error),
     })
     checks.push({ status: 'issue', label: 'config.yaml semantic checks', message: 'config.yaml could not be read', hint: 'Check .rsp/config.yaml permissions or recreate it with rsp init' })
-    return
+    return false
   }
 
   let parsed: Record<string, unknown>
@@ -295,10 +314,20 @@ async function checkConfigSemantics(checks: DoctorCheck[], reportRuntime: (diagn
   catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     checks.push({ status: 'issue', label: 'config.yaml semantic checks', message: 'config.yaml is not valid YAML', hint: message })
-    return
+    return false
   }
 
   reportConfigListField(checks, parsed, 'kinds')
+
+  const decisionRecordsIssue = getDecisionRecordsConfigIssue(parsed)
+  if (decisionRecordsIssue) {
+    checks.push({
+      status: 'issue',
+      label: 'config.yaml semantic checks',
+      message: decisionRecordsIssue,
+      hint: 'Use .rsp/specs/decisions or one project-relative path outside .rsp/.',
+    })
+  }
 
   if ('required_sections' in parsed) {
     checks.push({
@@ -308,6 +337,85 @@ async function checkConfigSemantics(checks: DoctorCheck[], reportRuntime: (diagn
       hint: 'RSP keeps the core change section structure fixed. Remove "required_sections" from .rsp/config.yaml.',
     })
   }
+
+  return decisionRecordsIssue === null
+}
+
+async function checkDecisionRecordsDirectory(checks: DoctorCheck[], reportRuntime: (diagnostic: RuntimeDiagnostic) => void): Promise<void> {
+  const decisionRecordsPath = resolveDecisionRecordsPath(await loadRspConfig())
+  try {
+    const filesystemError = await validateDecisionRecordsFilesystemPath(decisionRecordsPath)
+    if (filesystemError) {
+      checks.push({
+        status: 'issue',
+        label: `${decisionRecordsPath} is the authoritative Decision Record directory`,
+        message: filesystemError,
+        hint: 'Choose a project-relative directory that does not escape through a symlink.',
+      })
+      return
+    }
+    const info = await stat(decisionRecordsPath)
+    if (info.isDirectory())
+      await readdir(decisionRecordsPath)
+    reportCheck(
+      checks,
+      `${decisionRecordsPath} is the authoritative Decision Record directory`,
+      info.isDirectory(),
+      'Run: rsp update',
+    )
+  }
+  catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+      reportRuntime({
+        code: 'decision_records_path_stat_failed',
+        operation: 'stat',
+        path: decisionRecordsPath,
+        message: toErrorMessage(error),
+      })
+    }
+    checks.push({
+      status: 'issue',
+      label: `${decisionRecordsPath} is the authoritative Decision Record directory`,
+      message: `${decisionRecordsPath} Decision Record directory is missing or unreadable`,
+      hint: 'Run: rsp update',
+    })
+  }
+}
+
+async function checkInactiveDefaultDecisionRecords(checks: DoctorCheck[], reportRuntime: (diagnostic: RuntimeDiagnostic) => void): Promise<void> {
+  const decisionRecordsPath = resolveDecisionRecordsPath(await loadRspConfig())
+  if (decisionRecordsPath === DEFAULT_DECISION_RECORDS_PATH || !existsSync(DEFAULT_DECISION_RECORDS_PATH))
+    return
+
+  let inspectionFailed = false
+  const inactiveRecords = (await walkMarkdownFiles(DEFAULT_DECISION_RECORDS_PATH, {
+    onError: (diagnostic) => {
+      inspectionFailed = true
+      reportRuntime(diagnostic)
+    },
+  }))
+    .map(path => normalizeLogicalPath(relative(DEFAULT_DECISION_RECORDS_PATH, path)))
+    .sort()
+
+  if (inspectionFailed) {
+    checks.push({
+      status: 'issue',
+      label: 'inactive default Decision Records are inspectable',
+      message: `unable to inspect inactive default Decision Records under ${DEFAULT_DECISION_RECORDS_PATH}`,
+      hint: 'Restore directory access, then run rsp doctor again.',
+    })
+    return
+  }
+
+  if (inactiveRecords.length === 0)
+    return
+
+  checks.push({
+    status: 'issue',
+    label: 'inactive default Decision Records are migrated',
+    message: `inactive default Decision Records: ${inactiveRecords.join(', ')}`,
+    hint: `Move lasting rationale to ${decisionRecordsPath}, then remove the inactive files from ${DEFAULT_DECISION_RECORDS_PATH}.`,
+  })
 }
 
 function reportConfigListField(checks: DoctorCheck[], parsed: Record<string, unknown>, key: 'kinds'): void {

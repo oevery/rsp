@@ -3,9 +3,10 @@ import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
-import { CHANGES_DIR, pc } from '../core/config.js'
+import { CHANGES_DIR, inspectRspConfig, pc } from '../core/config.js'
+import { resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { buildDurableReviewGuidance, collectArchiveReadiness, getDurableReviewCandidateTargets, guardRspInitialized, isValidChangeName, normalizeLogicalPath } from '../core/helpers.js'
-import { emitJson } from '../core/output.js'
+import { emitJson, toErrorMessage } from '../core/output.js'
 
 interface ReadyResult {
   command: 'ready'
@@ -23,12 +24,32 @@ interface ReadyResult {
   }
   durableReview: {
     required: true
-    decisions: string[]
-    candidateTargets: string[]
+    factDecisions: string[]
+    rationaleDecisions: string[]
+    factCandidateTargets: string[]
+    decisionRecordsPath: string
     note: string
   }
   warnings: string[]
   runtime: RuntimeDiagnostic[]
+}
+
+function exitReadyError(name: string, error: { code: string, message: string }, options: CommandRunOptions): never {
+  if (options.json) {
+    emitJson({
+      command: 'ready',
+      ok: false,
+      change: name || null,
+      path: null,
+      warnings: [],
+      runtime: [],
+      error,
+    })
+  }
+  else {
+    console.error(`  ${pc.red('Error:')} ${error.message}`)
+  }
+  process.exit(1)
 }
 
 export async function showReady(name: string, options: CommandRunOptions = {}): Promise<ReadyResult> {
@@ -70,7 +91,20 @@ export async function showReady(name: string, options: CommandRunOptions = {}): 
     semantic: readinessDetails.semantic,
     archiveReady: readinessDetails.archiveReady,
   }
-  const durableReview = buildDurableReviewGuidance(getDurableReviewCandidateTargets())
+  let decisionRecordsPath: string
+  try {
+    const configInspection = await inspectRspConfig()
+    if (configInspection.decisionRecordsIssue)
+      exitReadyError(name, { code: 'invalid_config', message: configInspection.decisionRecordsIssue }, options)
+    decisionRecordsPath = resolveDecisionRecordsPath(configInspection.config)
+    const filesystemIssue = await validateDecisionRecordsFilesystemPath(decisionRecordsPath)
+    if (filesystemIssue)
+      exitReadyError(name, { code: 'invalid_decision_records_path', message: filesystemIssue }, options)
+  }
+  catch (error) {
+    exitReadyError(name, { code: 'invalid_config', message: `.rsp/config.yaml could not be parsed: ${toErrorMessage(error)}` }, options)
+  }
+  const durableReview = buildDurableReviewGuidance(getDurableReviewCandidateTargets(), decisionRecordsPath)
 
   const result: ReadyResult = {
     command: 'ready',
@@ -107,8 +141,10 @@ export async function showReady(name: string, options: CommandRunOptions = {}): 
   console.log(`  ${pc.dim('Semantic review:')} ${pc.yellow('needed')}`)
   console.log(`  ${pc.dim('Archive ready:')} ${formatArchiveReady(readiness.archiveReady)}\n`)
   console.log(`  ${pc.bold('Durable review:')}`)
-  console.log(`    ${pc.dim('Decision options:')} ${durableReview.decisions.join(' | ')}`)
-  console.log(`    ${pc.dim('Candidate targets:')} ${durableReview.candidateTargets.join(', ')}`)
+  console.log(`    ${pc.dim('Current-fact options:')} ${durableReview.factDecisions.join(' | ')}`)
+  console.log(`    ${pc.dim('Rationale options:')} ${durableReview.rationaleDecisions.join(' | ')}`)
+  console.log(`    ${pc.dim('Current-fact targets:')} ${durableReview.factCandidateTargets.join(', ')}`)
+  console.log(`    ${pc.dim('Decision Record path:')} ${durableReview.decisionRecordsPath}`)
   console.log(`    ${pc.dim(durableReview.note)}\n`)
 
   return result

@@ -34,7 +34,8 @@ npx -y @oevery/rsp doctor
 ├── rsp-rules.md              # 最小 fallback protocol
 ├── specs/
 │   ├── INDEX.md              # 自动生成
-│   └── design.md
+│   ├── design.md
+│   └── decisions/            # 默认的权威 Decision Records
 ├── changes/
 │   └── <name>.md
 ├── focus.d/
@@ -46,11 +47,12 @@ npx -y @oevery/rsp doctor
 ## 概念
 
 - `specs/` 描述长期稳定的项目事实和当前认可的设计。
+- Decision Records 描述难以逆转选择的长期理由、备选方案、取舍和后果；默认位于 `.rsp/specs/decisions/`，也可以配置唯一的外部权威路径。
 - `changes/` 描述 open work，包括 feature、fix、refactor、docs、ops 和 research。
 - 每个 change 始终是单个 Markdown 文件，并包含 proposal、spec、design、tasks、verification 与 blockers 等明确 section。
-- 完成后的 change 会移动到 `archives/`。稳定当前事实写入 `specs/`；稳定的作用域操作指令写入 nearest project-owned `AGENTS.md`。
-- 不要把任务历史、排障笔记或一次性实现上下文提升到 Specs 或项目指令。
-- Change `Spec` 中的 delta 标记仅为规划辅助。`rsp archive` 不会自动将它们合并到 durable Specs 中。
+- 完成后的 change 会移动到 `archives/`。稳定当前事实写入 Specs；长期理由写入 Decision Records；稳定的作用域操作指令写入 nearest project-owned `AGENTS.md`。
+- 不要把任务历史、排障笔记或一次性实现上下文提升到 Specs、Decision Records 或项目指令。
+- Change `Spec` 中的 delta 标记仅为规划辅助。`rsp archive` 不会自动将它们提升到 Specs 或 Decision Records。
 - `rsp check` 会执行 deterministic 的卫生检查。它会对未完成的模板占位符和未解决的 clarification 标记发出 warning，但这些 warning 不会替代 durable update 的语义判断。
 
 ## 文件所有权
@@ -59,10 +61,22 @@ npx -y @oevery/rsp doctor
 - `.rsp/specs/INDEX.md`：自动生成，用于索引 `design.md` 之外的附加 spec 文件；使用 `rsp update` 重建。
 - `.rsp/archives/INDEX.md`：自动生成，使用 `rsp update` 重建。
 - `.rsp/specs/design.md`：由 `rsp init` 创建，之后由项目维护。
+- `.rsp/specs/decisions/`：默认的权威 Decision Record 目录；只有 Host Project 已有外部 ADR 目录时才配置 `decisions.path`。
 - `.rsp/rsp-rules.md`：生成的最小 fallback protocol；可用时优先加载 `rsp` skill。
 - 将长期架构、边界和跨模块技术约束放在 `.rsp/specs/design.md`。
 - 将 `.rsp/specs/INDEX.md` 视为附加 spec 的目录；它不列出 `design.md`。
 - 将稳定且有作用域的工作流、验证和本地运行指令放在 nearest project-owned `AGENTS.md` 的非受管区域。
+
+## Decision Record 路径
+
+默认权威目录是 `.rsp/specs/decisions/`。如果 Host Project 已在其他位置维护 ADR，只配置一个项目相对的外部路径：
+
+```yaml
+decisions:
+  path: docs/adr
+```
+
+该路径不能是绝对路径、不能逃逸 Host Project，也不能指向其他 `.rsp/` 核心位置。`rsp init` 和 `rsp update` 会在写入受管文件前校验路由并确保目录存在，`rsp show` 与 `rsp ready` 会拒绝不安全路由，`rsp doctor` 检查目录可读性和迁移健康；这些命令都不会创建 Decision Record。切换到外部路径不会自动迁移默认目录中的记录；在旧 `.rsp/specs/decisions/*.md` 被迁移或明确删除前，`rsp doctor` 会持续报告问题。
 
 ## AGENTS 接入
 
@@ -79,7 +93,7 @@ Read in order:
 2. Root `CONTEXT-MAP.md` if present, then the relevant nearest `CONTEXT.md`.
 3. The `rsp` skill; if unavailable, read `.rsp/rsp-rules.md` as the fallback protocol.
 4. `.rsp/focus.d/` and the explicitly selected focused Change.
-5. Only the relevant `.rsp/specs/` files.
+5. Only the relevant Specs and Decision Records under the configured authoritative path.
 
 If `.rsp/focus.d/` is empty and the user has not provided a concrete task, ask what to work on or suggest `npx -y @oevery/rsp create <name>` for tracked work.
 Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENTS.md` or `CONTEXT.md`.
@@ -158,11 +172,11 @@ open → archived
 
 agent 应只把 `focus.d/` 中列出的 change 视为当前工作。`changes/` 中未聚焦的文件仍然是 open，但除非用户明确要求或重新 `focus`，否则不应被当作当前目标。
 
-durable update 判断决定稳定事实是否写入 `.rsp/specs/`、作用域指令是否写入 nearest `AGENTS.md`，或者不需要长期写入；它应由 RSP skill 或人工 reviewer 完成。
+durable review 包含两个独立语义判断：是否更新当前事实或作用域指令，以及是否需要记录长期理由的 Decision Record；两者都由 RSP skill 或人工 reviewer 完成。
 
 `rsp ready` 和 `rsp show` 会同时暴露 deterministic readiness 与 semantic-review 信号。deterministic readiness 来自 checkbox、blocker 和 scenario；durable update 仍然需要语义 review。
 
-`rsp ready --json` 和 `rsp show --json` 还会包含 `durableReview` 指导信息，其中包括固定决策选项和候选 durable target。这只是 review 指导；RSP 不会自动把 change `Spec` delta 合并进 durable 文件。
+`rsp ready --json` 和 `rsp show --json` 会提供 `durableReview.factDecisions`、`rationaleDecisions`、`factCandidateTargets` 和唯一的 `decisionRecordsPath`。这只是路由指导；RSP 不会虚构文件名或自动提升 Change 内容。
 
 ## 推荐工作流
 
@@ -172,7 +186,7 @@ durable update 判断决定稳定事实是否写入 `.rsp/specs/`、作用域指
 2. 优先使用 `npx -y @oevery/rsp init --with-project-setup`，或手动执行 `rsp create project-setup`
 3. 填写 `.rsp/specs/design.md`
 4. 仅在需要新的长期项目文档时使用 `rsp add spec <name>`
-5. 将稳定的作用域操作指令写入 nearest project-owned `AGENTS.md`
+5. 将长期理由写入配置的 Decision Record 目录，将稳定的作用域操作指令写入 nearest project-owned `AGENTS.md`
 6. 对需要跟踪的 open work，使用 `rsp create <name>` 开始
 7. 如果要让某个已有 open change 成为当前工作，使用 `rsp focus <name>`
 8. 如果要将某个 change 移出当前焦点集合，使用 `rsp unfocus <name>`

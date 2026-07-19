@@ -1,7 +1,7 @@
 import { execSync, spawnSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import { existsSync, utimesSync } from 'node:fs'
-import { chmod, cp, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { chmod, cp, mkdir, readdir, readFile, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -875,7 +875,7 @@ describe('init and doctor', () => {
     expect(agents).toContain('2. Root `CONTEXT-MAP.md` if present, then the relevant nearest `CONTEXT.md`.')
     expect(agents).toContain('3. The `rsp` skill; if unavailable, read `.rsp/rsp-rules.md` as the fallback protocol.')
     expect(agents).toContain('4. `.rsp/focus.d/` and the explicitly selected focused Change.')
-    expect(agents).toContain('5. Only the relevant `.rsp/specs/` files.')
+    expect(agents).toContain('5. Only the relevant Specs and Decision Records under the configured authoritative path.')
     expect(agents).toContain('If `.rsp/focus.d/` is empty and the user has not provided a concrete task, ask what to work on or suggest `npx -y @oevery/rsp create <name>` for tracked work.')
     expect(agents).toContain('Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENTS.md` or `CONTEXT.md`.')
     expect(output).toContain('## RSP Entry')
@@ -953,6 +953,82 @@ describe('init and doctor', () => {
     }
 
     expect(output).toContain('config.yaml field "required_sections" is no longer supported')
+  })
+
+  it('reports invalid config YAML as structured doctor output', async () => {
+    const doctorDir = join(tmpdir(), 'rsp-doctor-invalid-yaml-test', randomUUID())
+    await mkdir(doctorDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: doctorDir })
+    await writeFile(join(doctorDir, '.rsp', 'config.yaml'), 'decisions: [\n')
+
+    const result = spawnSync('node', [cliPath(), 'doctor', '--json'], { cwd: doctorDir, encoding: 'utf-8' })
+    const output = JSON.parse(result.stdout)
+
+    expect(result.status).not.toBe(0)
+    expect(output.ok).toBe(false)
+    expect(output.checks.some((check: { message?: string }) => check.message === 'config.yaml is not valid YAML')).toBe(true)
+  })
+
+  it('does not partially scaffold when an existing config is invalid', async () => {
+    const initDir = join(tmpdir(), 'rsp-init-invalid-existing-config-test', randomUUID())
+    await mkdir(join(initDir, '.rsp'), { recursive: true })
+    await writeFile(join(initDir, '.rsp', 'config.yaml'), 'decisions:\n  path: .rsp/changes\n')
+
+    const result = spawnSync('node', [cliPath(), 'init'], { cwd: initDir, encoding: 'utf-8' })
+
+    expect(result.status).not.toBe(0)
+    expect(existsSync(join(initDir, '.rsp', 'rsp-rules.md'))).toBe(false)
+    expect(existsSync(join(initDir, '.rsp', 'specs'))).toBe(false)
+  })
+
+  it('keeps doctor --fix JSON structured when invalid config prevents repair', async () => {
+    const doctorDir = join(tmpdir(), 'rsp-doctor-fix-invalid-config-test', randomUUID())
+    await mkdir(doctorDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: doctorDir })
+    await writeFile(join(doctorDir, '.rsp', 'config.yaml'), 'decisions: [\n')
+
+    const result = spawnSync('node', [cliPath(), 'doctor', '--fix', '--json'], { cwd: doctorDir, encoding: 'utf-8' })
+    const output = JSON.parse(result.stdout)
+
+    expect(result.status).not.toBe(0)
+    expect(output.ok).toBe(false)
+    expect(output.fixed).toEqual([])
+    expect(output.checks.some((check: { message?: string }) => check.message?.includes('safe deterministic repair could not run'))).toBe(true)
+
+    const human = spawnSync('node', [cliPath(), 'doctor', '--fix'], { cwd: doctorDir, encoding: 'utf-8' })
+    expect(human.stdout).toContain('safe deterministic repair could not run')
+    expect(human.stdout).not.toContain('No safe fixes needed.')
+  })
+
+  it('does not partially repair managed files when the Decision Record target is not a directory', async () => {
+    const doctorDir = join(tmpdir(), 'rsp-doctor-fix-decision-file-test', randomUUID())
+    await mkdir(doctorDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: doctorDir })
+    await mkdir(join(doctorDir, 'docs'), { recursive: true })
+    await writeFile(join(doctorDir, 'docs', 'adr'), 'not a directory\n')
+    await writeFile(join(doctorDir, '.rsp', 'config.yaml'), 'decisions:\n  path: docs/adr\n')
+    await writeFile(join(doctorDir, '.rsp', 'rsp-rules.md'), '# stale rules\n')
+
+    const result = spawnSync('node', [cliPath(), 'doctor', '--fix', '--json'], { cwd: doctorDir, encoding: 'utf-8' })
+    const output = JSON.parse(result.stdout)
+
+    expect(result.status).not.toBe(0)
+    expect(output.fixed).toEqual([])
+    expect(await readFile(join(doctorDir, '.rsp', 'rsp-rules.md'), 'utf-8')).toBe('# stale rules\n')
+    expect(output.checks.some((check: { message?: string }) => check.message?.includes('must be a directory'))).toBe(true)
+  })
+
+  it('rejects additional Decision Record configuration fields', async () => {
+    const doctorDir = join(tmpdir(), 'rsp-doctor-decision-fields-test', randomUUID())
+    await mkdir(doctorDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: doctorDir })
+    await writeFile(join(doctorDir, '.rsp', 'config.yaml'), 'decisions:\n  path: docs/adr\n  fallback: .rsp/specs/decisions\n')
+
+    const result = spawnSync('node', [cliPath(), 'doctor', '--json'], { cwd: doctorDir, encoding: 'utf-8' })
+    const output = JSON.parse(result.stdout)
+
+    expect(result.status).not.toBe(0)
+    expect(output.checks.some((check: { message?: string }) => check.message?.includes('supports only "path"'))).toBe(true)
   })
 
   it('reports unreadable AGENTS.md as an issue instead of crashing', async () => {
@@ -1320,11 +1396,13 @@ describe('ready command', () => {
     expect(result.readiness.semantic).toBe('needs-review')
     expect(result.readiness.archiveReady).toBe('judgment')
     expect(result.durableReview.required).toBe(true)
-    expect(result.durableReview.decisions).toContain('No durable update needed')
-    expect(result.durableReview.candidateTargets).toContain('.rsp/specs/design.md')
-    expect(result.durableReview.candidateTargets).not.toContain('.rsp/specs/INDEX.md')
-    expect(result.durableReview.candidateTargets).not.toContain('.rsp/rules/rsp-rules.md')
-    expect(result.durableReview.note).toContain('never merges delta specs automatically')
+    expect(result.durableReview.factDecisions).toContain('No current-fact update needed')
+    expect(result.durableReview.rationaleDecisions).toContain('No Decision Record needed')
+    expect(result.durableReview.factCandidateTargets).toContain('.rsp/specs/design.md')
+    expect(result.durableReview.factCandidateTargets).not.toContain('.rsp/specs/INDEX.md')
+    expect(result.durableReview.factCandidateTargets).not.toContain('.rsp/rules/rsp-rules.md')
+    expect(result.durableReview.decisionRecordsPath).toBe('.rsp/specs/decisions')
+    expect(result.durableReview.note).toContain('never promotes Change content automatically')
     expect(Array.isArray(result.warnings)).toBe(true)
   })
 
@@ -1348,7 +1426,9 @@ describe('ready command', () => {
     expect(output).toContain('Semantic review:')
     expect(output).toContain('Archive ready:')
     expect(output).toContain('Durable review:')
-    expect(output).toContain('Decision options:')
+    expect(output).toContain('Current-fact options:')
+    expect(output).toContain('Rationale options:')
+    expect(output).toContain('Decision Record path:')
   })
 })
 
@@ -1403,7 +1483,8 @@ describe('show command', () => {
     expect(result.contextPaths).not.toContain('.rsp/specs/INDEX.md')
     expect(result.contextPaths).not.toContain('.rsp/rules/rsp-rules.md')
     expect(result.durableReview.required).toBe(true)
-    expect(result.durableReview.candidateTargets).toEqual(result.contextPaths)
+    expect(result.durableReview.factCandidateTargets).toEqual(['.rsp/specs/design.md'])
+    expect(result.contextPaths).toContain(result.durableReview.decisionRecordsPath)
   })
 
   it('emits machine-readable JSON errors when requested', async () => {
@@ -1527,5 +1608,206 @@ kind: "<choose: feature | fix | refactor | docs | ops | research>"
     }
     expect(failed).toBe(true)
     expect(output).toContain('kind still uses the template placeholder')
+  })
+})
+
+describe('decision record ownership', () => {
+  it('initializes the default authoritative directory without fabricating a decision record', async () => {
+    const initDir = join(tmpdir(), 'rsp-decisions-init-test', randomUUID())
+    await mkdir(initDir, { recursive: true })
+
+    execSync(`node ${cliPath()} init`, { cwd: initDir })
+
+    const decisionsDir = join(initDir, '.rsp', 'specs', 'decisions')
+    expect(existsSync(decisionsDir)).toBe(true)
+    expect((await readdir(decisionsDir)).filter(name => name.endsWith('.md'))).toEqual([])
+  })
+
+  it('uses one configured external authoritative directory in durable review', async () => {
+    const projectDir = join(tmpdir(), 'rsp-decisions-external-test', randomUUID())
+    await mkdir(projectDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: projectDir })
+    await writeFile(join(projectDir, '.rsp', 'specs', 'decisions', 'old-default.md'), '# Decision: old default\n')
+    await writeFile(join(projectDir, '.rsp', 'config.yaml'), 'decisions:\n  path: docs/adr\n')
+    await writeFile(join(projectDir, '.rsp', 'changes', 'choose-storage.md'), renderChange('choose-storage'))
+
+    execSync(`node ${cliPath()} update`, { cwd: projectDir })
+    const output = execSync(`node ${cliPath()} show choose-storage --json`, { cwd: projectDir, encoding: 'utf-8' })
+    const result = JSON.parse(output)
+
+    expect(existsSync(join(projectDir, 'docs', 'adr'))).toBe(true)
+    expect(result.durableReview.decisionRecordsPath).toBe('docs/adr')
+    expect(result.contextPaths).not.toContain('.rsp/specs/decisions')
+    expect(await readFile(join(projectDir, '.rsp', 'specs', 'INDEX.md'), 'utf-8')).not.toContain('old-default.md')
+
+    const doctor = spawnSync('node', [cliPath(), 'doctor', '--json'], { cwd: projectDir, encoding: 'utf-8' })
+    const doctorResult = JSON.parse(doctor.stdout)
+    expect(doctor.status).not.toBe(0)
+    expect(doctorResult.checks.some((check: { message?: string }) => check.message?.includes('inactive default Decision Records: old-default.md'))).toBe(true)
+  })
+
+  it('reports traversal, absolute, and conflicting core decision paths without creating out-of-project directories', async () => {
+    const escapedName = `escaped-decisions-${randomUUID()}`
+    const absolutePath = join(tmpdir(), `absolute-decisions-${randomUUID()}`)
+    const cases = [
+      { value: `../${escapedName}`, createdPath: join(tmpdir(), 'rsp-decisions-unsafe-test', escapedName) },
+      { value: absolutePath, createdPath: absolutePath },
+      { value: '.rsp/changes' },
+    ]
+
+    for (const unsafe of cases) {
+      const projectDir = join(tmpdir(), 'rsp-decisions-unsafe-test', randomUUID())
+      await mkdir(projectDir, { recursive: true })
+      execSync(`node ${cliPath()} init`, { cwd: projectDir })
+      await writeFile(join(projectDir, '.rsp', 'config.yaml'), `decisions:\n  path: ${unsafe.value}\n`)
+
+      let output = ''
+      try {
+        output = execSync(`node ${cliPath()} doctor --json`, { cwd: projectDir, encoding: 'utf-8' })
+      }
+      catch (error) {
+        output = String((error as { stdout?: string }).stdout || '')
+      }
+      const result = JSON.parse(output)
+
+      expect(result.ok).toBe(false)
+      expect(result.checks.some((check: { message?: string }) => check.message?.includes('decisions.path'))).toBe(true)
+      expect(spawnSync('node', [cliPath(), 'update'], { cwd: projectDir, encoding: 'utf-8' }).status).not.toBe(0)
+      if (unsafe.createdPath)
+        expect(existsSync(unsafe.createdPath)).toBe(false)
+    }
+  })
+
+  it('reports current-fact and rationale decisions independently', async () => {
+    const projectDir = join(tmpdir(), 'rsp-decisions-review-test', randomUUID())
+    await mkdir(projectDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: projectDir })
+    await writeFile(join(projectDir, '.rsp', 'changes', 'review-me.md'), renderChange('review-me'))
+
+    const output = execSync(`node ${cliPath()} ready review-me --json`, { cwd: projectDir, encoding: 'utf-8' })
+    const result = JSON.parse(output)
+
+    expect(result.durableReview.factDecisions).toContain('No current-fact update needed')
+    expect(result.durableReview.rationaleDecisions).toContain('No Decision Record needed')
+    expect(result.durableReview.rationaleDecisions).toContain('Create or update a Decision Record')
+    expect(result.durableReview.decisionRecordsPath).toBe('.rsp/specs/decisions')
+  })
+
+  it('rejects invalid Decision Record routing in show and ready JSON instead of falling back', async () => {
+    const projectDir = join(tmpdir(), 'rsp-decisions-invalid-routing-test', randomUUID())
+    await mkdir(projectDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: projectDir })
+    await writeFile(join(projectDir, '.rsp', 'config.yaml'), 'decisions:\n  path: docs/adr\n  fallback: .rsp/specs/decisions\n')
+    await writeFile(join(projectDir, '.rsp', 'changes', 'review-me.md'), renderChange('review-me'))
+
+    for (const args of [['show', 'review-me', '--json'], ['ready', 'review-me', '--json']]) {
+      const result = spawnSync('node', [cliPath(), ...args], { cwd: projectDir, encoding: 'utf-8' })
+      const output = JSON.parse(result.stdout)
+
+      expect(result.status).not.toBe(0)
+      expect(output.ok).toBe(false)
+      expect(output.error.code).toBe('invalid_config')
+      expect(output.durableReview).toBeUndefined()
+    }
+  })
+
+  it('refuses to create an external Decision Record directory through a symlink that escapes the Host Project', async () => {
+    const projectDir = join(tmpdir(), 'rsp-decisions-symlink-test', randomUUID())
+    const outsideDir = join(tmpdir(), 'rsp-decisions-symlink-outside', randomUUID())
+    await mkdir(projectDir, { recursive: true })
+    await mkdir(outsideDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: projectDir })
+    await symlink(outsideDir, join(projectDir, 'linked-docs'))
+    await writeFile(join(projectDir, '.rsp', 'config.yaml'), 'decisions:\n  path: linked-docs/adr\n')
+    await writeFile(join(projectDir, '.rsp', 'changes', 'review-me.md'), renderChange('review-me'))
+
+    const result = spawnSync('node', [cliPath(), 'update'], { cwd: projectDir, encoding: 'utf-8' })
+
+    expect(result.status).not.toBe(0)
+    expect(existsSync(join(outsideDir, 'adr'))).toBe(false)
+    for (const args of [['show', 'review-me', '--json'], ['ready', 'review-me', '--json']]) {
+      const routing = spawnSync('node', [cliPath(), ...args], { cwd: projectDir, encoding: 'utf-8' })
+      const output = JSON.parse(routing.stdout)
+      expect(routing.status).not.toBe(0)
+      expect(output.error.code).toBe('invalid_decision_records_path')
+    }
+  })
+
+  it('reports an unreadable authoritative Decision Record directory as unhealthy', async () => {
+    const projectDir = join(tmpdir(), 'rsp-decisions-unreadable-active-test', randomUUID())
+    await mkdir(projectDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: projectDir })
+    const decisionsDir = join(projectDir, '.rsp', 'specs', 'decisions')
+    await chmod(decisionsDir, 0o000)
+
+    let result
+    try {
+      result = spawnSync('node', [cliPath(), 'doctor', '--json'], { cwd: projectDir, encoding: 'utf-8' })
+    }
+    finally {
+      await chmod(decisionsDir, 0o755)
+    }
+    const output = JSON.parse(result!.stdout)
+
+    expect(result!.status).not.toBe(0)
+    expect(output.checks.some((check: { message?: string }) => check.message?.includes('Decision Record directory is missing or unreadable'))).toBe(true)
+  })
+
+  it('does not report healthy when inactive default Decision Records cannot be inspected', async () => {
+    const projectDir = join(tmpdir(), 'rsp-decisions-unreadable-inactive-test', randomUUID())
+    await mkdir(projectDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: projectDir })
+    await writeFile(join(projectDir, '.rsp', 'config.yaml'), 'decisions:\n  path: docs/adr\n')
+    execSync(`node ${cliPath()} update`, { cwd: projectDir })
+    const defaultDir = join(projectDir, '.rsp', 'specs', 'decisions')
+    await chmod(defaultDir, 0o000)
+
+    let result
+    try {
+      result = spawnSync('node', [cliPath(), 'doctor', '--json'], { cwd: projectDir, encoding: 'utf-8' })
+    }
+    finally {
+      await chmod(defaultDir, 0o755)
+    }
+    const output = JSON.parse(result!.stdout)
+
+    expect(result!.status).not.toBe(0)
+    expect(output.checks.some((check: { message?: string }) => check.message?.includes('unable to inspect inactive default Decision Records'))).toBe(true)
+  })
+
+  it('keeps default Decision Records out of the generated Specs index', async () => {
+    const projectDir = join(tmpdir(), 'rsp-decisions-index-test', randomUUID())
+    await mkdir(projectDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: projectDir })
+    await writeFile(join(projectDir, '.rsp', 'specs', 'decisions', '0001-storage.md'), '# Decision: storage\n')
+
+    execSync(`node ${cliPath()} update`, { cwd: projectDir })
+    const index = await readFile(join(projectDir, '.rsp', 'specs', 'INDEX.md'), 'utf-8')
+
+    expect(index).not.toContain('0001-storage.md')
+  })
+
+  it('does not create a Spec when invalid Decision Record configuration prevents index maintenance', async () => {
+    const projectDir = join(tmpdir(), 'rsp-decisions-add-spec-preflight-test', randomUUID())
+    await mkdir(projectDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: projectDir })
+    await writeFile(join(projectDir, '.rsp', 'config.yaml'), 'decisions:\n  path: .rsp/changes\n')
+
+    const result = spawnSync('node', [cliPath(), 'add', 'spec', 'should-not-exist'], { cwd: projectDir, encoding: 'utf-8' })
+
+    expect(result.status).not.toBe(0)
+    expect(existsSync(join(projectDir, '.rsp', 'specs', 'should-not-exist.md'))).toBe(false)
+  })
+
+  it('does not create Specs inside the reserved default Decision Record subtree', async () => {
+    const projectDir = join(tmpdir(), 'rsp-decisions-reserved-spec-test', randomUUID())
+    await mkdir(projectDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: projectDir })
+
+    const result = spawnSync('node', [cliPath(), 'add', 'spec', 'decisions/not-a-spec'], { cwd: projectDir, encoding: 'utf-8' })
+
+    expect(result.status).not.toBe(0)
+    expect(result.stderr).toContain('reserved for Decision Records')
+    expect(existsSync(join(projectDir, '.rsp', 'specs', 'decisions', 'not-a-spec.md'))).toBe(false)
   })
 })

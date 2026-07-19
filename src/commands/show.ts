@@ -3,7 +3,8 @@ import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
-import { CHANGES_DIR, pc } from '../core/config.js'
+import { CHANGES_DIR, inspectRspConfig, pc } from '../core/config.js'
+import { resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { buildDurableReviewGuidance, collectArchiveReadiness, countCheckboxes, getDurableReviewCandidateTargets, getFocusedChangeNames, guardRspInitialized, hasMeaningfulBlockers, isValidChangeName, normalizeLogicalPath, parseFrontmatter, parseScenarios } from '../core/helpers.js'
 import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
 
@@ -31,8 +32,10 @@ interface ShowResult {
   contextPaths: string[]
   durableReview: {
     required: true
-    decisions: string[]
-    candidateTargets: string[]
+    factDecisions: string[]
+    rationaleDecisions: string[]
+    factCandidateTargets: string[]
+    decisionRecordsPath: string
     note: string
   }
   runtime: RuntimeDiagnostic[]
@@ -145,8 +148,22 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
     archiveReady: readinessDetails.archiveReady,
   }
 
-  const contextPaths = getDurableReviewCandidateTargets()
-  const durableReview = buildDurableReviewGuidance(contextPaths)
+  const factCandidateTargets = getDurableReviewCandidateTargets()
+  let decisionRecordsPath: string
+  try {
+    const configInspection = await inspectRspConfig()
+    if (configInspection.decisionRecordsIssue)
+      exitShowError({ code: 'invalid_config', message: configInspection.decisionRecordsIssue }, options)
+    decisionRecordsPath = resolveDecisionRecordsPath(configInspection.config)
+    const filesystemIssue = await validateDecisionRecordsFilesystemPath(decisionRecordsPath)
+    if (filesystemIssue)
+      exitShowError({ code: 'invalid_decision_records_path', message: filesystemIssue }, options)
+  }
+  catch (error) {
+    exitShowError({ code: 'invalid_config', message: `.rsp/config.yaml could not be parsed: ${toErrorMessage(error)}` }, options)
+  }
+  const contextPaths = [...factCandidateTargets, decisionRecordsPath]
+  const durableReview = buildDurableReviewGuidance(factCandidateTargets, decisionRecordsPath)
 
   const result: ShowResult = {
     command: 'show',
@@ -194,8 +211,10 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
     console.log(`    ${pc.dim(cp)}`)
   console.log()
   console.log(`  ${pc.bold('Durable review:')}`)
-  console.log(`    ${pc.dim('Decision options:')} ${durableReview.decisions.join(' | ')}`)
-  console.log(`    ${pc.dim('Candidate targets:')} ${durableReview.candidateTargets.join(', ')}`)
+  console.log(`    ${pc.dim('Current-fact options:')} ${durableReview.factDecisions.join(' | ')}`)
+  console.log(`    ${pc.dim('Rationale options:')} ${durableReview.rationaleDecisions.join(' | ')}`)
+  console.log(`    ${pc.dim('Current-fact targets:')} ${durableReview.factCandidateTargets.join(', ')}`)
+  console.log(`    ${pc.dim('Decision Record path:')} ${durableReview.decisionRecordsPath}`)
   console.log(`    ${pc.dim(durableReview.note)}`)
   console.log()
 
