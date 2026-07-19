@@ -6,7 +6,6 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
-// @ts-expect-error -- repository maintainer tooling intentionally ships as plain ESM outside src/.
 import {
   acceptUpstreams,
   diffUpstreams,

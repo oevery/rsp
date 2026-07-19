@@ -34,12 +34,13 @@
   },
   "scripts": {
     "prepare": "pnpm run build",
-    "release:check": "pnpm run build && pnpm run lint && pnpm run test && npm pack --dry-run --ignore-scripts",
+    "release:check": "pnpm run build && pnpm run typecheck && pnpm run lint && pnpm run test && npm pack --dry-run --ignore-scripts",
     "prepublishOnly": "pnpm run release:check",
     "build": "tsup",
     "dev": "tsup --watch",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
   },

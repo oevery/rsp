@@ -18,7 +18,7 @@ export interface CheckboxCount {
 
 export interface CreateChangeArgs {
   name: string
-  kind?: ChangeKind
+  kind?: string
   lite?: boolean
   _: string[]
 }

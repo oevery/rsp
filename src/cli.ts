@@ -187,7 +187,7 @@ const statusCommand = defineCommand({
   },
   async run({ args }) {
     const stale = args.stale === undefined ? undefined : Number(args.stale)
-    if (args.stale !== undefined && (Number.isFinite(stale) === false || Number.isInteger(stale) === false || stale < 0)) {
+    if (stale !== undefined && (Number.isFinite(stale) === false || Number.isInteger(stale) === false || stale < 0)) {
       if (args.json) {
         emitStatusJsonError({
           code: 'invalid_stale_filter',
