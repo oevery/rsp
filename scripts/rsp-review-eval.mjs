@@ -100,6 +100,16 @@ function commandVersion(codexBin) {
   return execFileSync(invocation.command, invocation.args, { encoding: 'utf8' }).trim()
 }
 
+function evaluationConfigArgs({ isolated, provider }) {
+  if (isolated && provider)
+    throw new Error('Evaluation provider and isolated mode are mutually exclusive')
+  if (isolated)
+    return ['--ignore-user-config']
+  if (provider)
+    return ['--config', `model_provider="${provider}"`]
+  return []
+}
+
 function runCommand({ args, command, cwd, env, input }) {
   return new Promise((resolveRun) => {
     const child = spawn(command, args, { cwd, env, stdio: ['pipe', 'pipe', 'pipe'] })
@@ -192,11 +202,12 @@ export function prepareEvaluation({ caseId, outputRoot, root, variant }) {
   return { case: value, promptPath, variant, workspace }
 }
 
-export async function runEvaluation({ caseId, codexBin = 'codex', effort, env = process.env, model, outputRoot, provider, root, variant }) {
+export async function runEvaluation({ caseId, codexBin = 'codex', effort, env = process.env, isolated = false, model, outputRoot, provider, root, variant }) {
   if (!model || !effort)
     throw new Error('Evaluation model and effort are required')
   if (provider && !PROVIDER_ID.test(provider))
     throw new Error(`Invalid evaluation provider: ${provider}`)
+  const configArgs = evaluationConfigArgs({ isolated, provider })
 
   const evaluations = resolve(outputRoot ?? join(root, '.cache', 'rsp-review-eval'))
   const prepared = prepareEvaluation({ caseId, outputRoot: evaluations, root, variant })
@@ -217,7 +228,7 @@ export async function runEvaluation({ caseId, codexBin = 'codex', effort, env = 
   const args = [
     'exec',
     '--ephemeral',
-    ...(provider ? ['--config', `model_provider="${provider}"`] : ['--ignore-user-config']),
+    ...configArgs,
     '--sandbox',
     'read-only',
     '--model',
@@ -267,7 +278,7 @@ export async function runEvaluation({ caseId, codexBin = 'codex', effort, env = 
     result,
     settings: {
       cli_version: cliVersion,
-      config_source: provider ? 'user' : 'isolated',
+      config_source: isolated ? 'isolated' : 'user',
       effort,
       model,
       provider: provider ?? null,
@@ -286,11 +297,12 @@ export async function runEvaluation({ caseId, codexBin = 'codex', effort, env = 
   return metadata
 }
 
-export async function runEvaluationMatrix({ caseIds, codexBin = 'codex', effort, env = process.env, model, outputRoot, provider, root }) {
+export async function runEvaluationMatrix({ caseIds, codexBin = 'codex', effort, env = process.env, isolated = false, model, outputRoot, provider, root }) {
   if (!model || !effort)
     throw new Error('Evaluation model and effort are required')
   if (provider && !PROVIDER_ID.test(provider))
     throw new Error(`Invalid evaluation provider: ${provider}`)
+  evaluationConfigArgs({ isolated, provider })
 
   const evaluations = resolve(outputRoot ?? join(root, '.cache', 'rsp-review-eval'))
   mkdirSync(evaluations, { recursive: true })
@@ -305,7 +317,7 @@ export async function runEvaluationMatrix({ caseIds, codexBin = 'codex', effort,
   const runs = []
   for (const caseId of selected) {
     for (const variant of ['baseline', 'candidate']) {
-      runs.push(await runEvaluation({ caseId, codexBin, effort, env, model, outputRoot: evaluations, provider, root, variant }))
+      runs.push(await runEvaluation({ caseId, codexBin, effort, env, isolated, model, outputRoot: evaluations, provider, root, variant }))
     }
   }
   const ended = new Date()
@@ -324,6 +336,7 @@ export async function runEvaluationMatrix({ caseIds, codexBin = 'codex', effort,
   const matrix = {
     case_ids: selected,
     candidate_hashes: candidateHashes,
+    config_source: isolated ? 'isolated' : 'user',
     ended_at: ended.toISOString(),
     effort,
     fixture_hashes: fixtureHashes,
@@ -345,7 +358,7 @@ function flagValue(flags, name) {
 }
 
 function usage() {
-  console.error('Usage:\n  node scripts/rsp-review-eval.mjs prepare <case> <baseline|candidate> [--json]\n  node scripts/rsp-review-eval.mjs run <case> <baseline|candidate> --model <model> --effort <effort> [--provider <provider>] [--json]\n  node scripts/rsp-review-eval.mjs matrix --model <model> --effort <effort> [--provider <provider>] [--json]')
+  console.error('Usage:\n  node scripts/rsp-review-eval.mjs prepare <case> <baseline|candidate> [--json]\n  node scripts/rsp-review-eval.mjs run <case> <baseline|candidate> --model <model> --effort <effort> [--provider <provider> | --isolated] [--json]\n  node scripts/rsp-review-eval.mjs matrix --model <model> --effort <effort> [--provider <provider> | --isolated] [--json]')
 }
 
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)
@@ -361,6 +374,7 @@ if (isMain) {
       if (command === 'matrix') {
         const matrix = await runEvaluationMatrix({
           effort: flagValue(arguments_, '--effort'),
+          isolated: arguments_.includes('--isolated'),
           model: flagValue(arguments_, '--model'),
           provider: flagValue(arguments_, '--provider'),
           root,
@@ -387,6 +401,7 @@ if (isMain) {
         const run = await runEvaluation({
           caseId,
           effort: flagValue(flags, '--effort'),
+          isolated: flags.includes('--isolated'),
           model: flagValue(flags, '--model'),
           provider: flagValue(flags, '--provider'),
           root,

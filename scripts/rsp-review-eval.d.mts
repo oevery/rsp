@@ -70,6 +70,7 @@ export interface EvaluationRun {
 export interface EvaluationMatrix {
   case_ids: string[]
   candidate_hashes: string[]
+  config_source: 'isolated' | 'user'
   ended_at: string
   effort: string
   fixture_hashes: string[]
@@ -94,6 +95,7 @@ export function runEvaluation(options: {
   codexBin?: string
   effort: string
   env?: NodeJS.ProcessEnv
+  isolated?: boolean
   model: string
   outputRoot?: string
   provider?: string
@@ -105,6 +107,7 @@ export function runEvaluationMatrix(options: {
   codexBin?: string
   effort: string
   env?: NodeJS.ProcessEnv
+  isolated?: boolean
   model: string
   outputRoot?: string
   provider?: string

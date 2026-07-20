@@ -65,13 +65,14 @@ describe('rsp-review behavior fixtures', () => {
     expect(() => prepareEvaluation({ caseId: 'not-a-case', root, variant: 'candidate' })).toThrow(/Unknown evaluation case/)
   })
 
-  it('records a reproducible read-only run with complete normalized metadata', async () => {
+  it('uses user configuration by default and records complete normalized metadata', async () => {
     const outputRoot = join(root, '.cache', 'test-rsp-review-run')
     tempRoots.push(outputRoot)
     const run = await runEvaluation({
       caseId: 'skipped-document',
       codexBin: join(root, 'test', 'skill-behavior', 'fake-codex.mjs'),
       effort: 'low',
+      env: { ...process.env, FAKE_CODEX_CONFIG_MODE: 'user' },
       model: 'test-model',
       outputRoot,
       root,
@@ -81,7 +82,7 @@ describe('rsp-review behavior fixtures', () => {
     expect(run.result).toBe('passed')
     expect(run.settings).toEqual({
       cli_version: 'codex-cli test-1.0.0',
-      config_source: 'isolated',
+      config_source: 'user',
       effort: 'low',
       model: 'test-model',
       provider: null,
@@ -163,6 +164,7 @@ describe('rsp-review behavior fixtures', () => {
       caseId: 'restraint-clean',
       codexBin: join(root, 'test', 'skill-behavior', 'fake-codex.mjs'),
       effort: 'low',
+      env: { ...process.env, FAKE_CODEX_CONFIG_MODE: 'provider:test-provider' },
       model: 'test-model',
       outputRoot,
       provider: 'test-provider',
@@ -171,5 +173,34 @@ describe('rsp-review behavior fixtures', () => {
     })
 
     expect(run.settings).toMatchObject({ config_source: 'user', provider: 'test-provider' })
+  })
+
+  it('keeps user-config isolation explicit and rejects conflicting provider modes', async () => {
+    const outputRoot = join(root, '.cache', 'test-rsp-review-isolated')
+    tempRoots.push(outputRoot)
+    const run = await runEvaluation({
+      caseId: 'restraint-clean',
+      codexBin: join(root, 'test', 'skill-behavior', 'fake-codex.mjs'),
+      effort: 'low',
+      env: { ...process.env, FAKE_CODEX_CONFIG_MODE: 'isolated' },
+      isolated: true,
+      model: 'test-model',
+      outputRoot,
+      root,
+      variant: 'baseline',
+    })
+
+    expect(run.settings).toMatchObject({ config_source: 'isolated', provider: null })
+    await expect(runEvaluation({
+      caseId: 'restraint-clean',
+      codexBin: join(root, 'test', 'skill-behavior', 'fake-codex.mjs'),
+      effort: 'low',
+      isolated: true,
+      model: 'test-model',
+      outputRoot,
+      provider: 'test-provider',
+      root,
+      variant: 'baseline',
+    })).rejects.toThrow(/mutually exclusive/)
   })
 })

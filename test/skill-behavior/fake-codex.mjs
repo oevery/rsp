@@ -13,6 +13,18 @@ const outputPath = outputFlag >= 0 ? process.argv[outputFlag + 1] : undefined
 if (!outputPath)
   throw new Error('missing --output-last-message')
 
+const configExpectation = process.env.FAKE_CODEX_CONFIG_MODE
+const ignoresUserConfig = process.argv.includes('--ignore-user-config')
+if (configExpectation === 'user' && ignoresUserConfig)
+  throw new Error('unexpected --ignore-user-config')
+if (configExpectation === 'isolated' && !ignoresUserConfig)
+  throw new Error('missing --ignore-user-config')
+if (configExpectation?.startsWith('provider:')) {
+  const provider = configExpectation.slice('provider:'.length)
+  if (!process.argv.includes(`model_provider="${provider}"`))
+    throw new Error(`missing provider override: ${provider}`)
+}
+
 if (process.env.FAKE_CODEX_MUTATE === '1')
   writeFileSync('unauthorized.txt', 'mutation\n')
 
