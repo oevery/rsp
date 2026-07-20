@@ -81,8 +81,10 @@ describe('rsp-review behavior fixtures', () => {
     expect(run.result).toBe('passed')
     expect(run.settings).toEqual({
       cli_version: 'codex-cli test-1.0.0',
+      config_source: 'isolated',
       effort: 'low',
       model: 'test-model',
+      provider: null,
       sandbox: 'read-only',
     })
     expect(run.events).toMatchObject({
@@ -133,6 +135,7 @@ describe('rsp-review behavior fixtures', () => {
       effort: 'low',
       model: 'test-model',
       outputRoot,
+      provider: 'test-provider',
       root,
     })
 
@@ -147,7 +150,26 @@ describe('rsp-review behavior fixtures', () => {
     expect(matrix.candidate_hashes).toHaveLength(1)
     expect(matrix.fixture_hashes).toHaveLength(1)
     expect(matrix.harness_hashes).toHaveLength(1)
+    expect(matrix.provider).toBe('test-provider')
     expect(new Set(matrix.runs.map(run => `${run.settings.model}:${run.settings.effort}`))).toEqual(new Set(['test-model:low']))
+    expect(new Set(matrix.runs.map(run => run.settings.provider))).toEqual(new Set(['test-provider']))
     expect(existsSync(matrix.metadata_path)).toBe(true)
+  })
+
+  it('records an explicitly selected user-config provider', async () => {
+    const outputRoot = join(root, '.cache', 'test-rsp-review-provider')
+    tempRoots.push(outputRoot)
+    const run = await runEvaluation({
+      caseId: 'restraint-clean',
+      codexBin: join(root, 'test', 'skill-behavior', 'fake-codex.mjs'),
+      effort: 'low',
+      model: 'test-model',
+      outputRoot,
+      provider: 'test-provider',
+      root,
+      variant: 'baseline',
+    })
+
+    expect(run.settings).toMatchObject({ config_source: 'user', provider: 'test-provider' })
   })
 })

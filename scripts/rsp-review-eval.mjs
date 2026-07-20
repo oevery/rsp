@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url'
 import { parse as parseYaml } from 'yaml'
 
 const CASE_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+const PROVIDER_ID = /^[\w-]+$/
 const PIPELINE_STATES = new Set(['blocked', 'clean', 'issues_found', 'skipped'])
 
 function assertContained(parent, child, label) {
@@ -191,9 +192,11 @@ export function prepareEvaluation({ caseId, outputRoot, root, variant }) {
   return { case: value, promptPath, variant, workspace }
 }
 
-export async function runEvaluation({ caseId, codexBin = 'codex', effort, env = process.env, model, outputRoot, root, variant }) {
+export async function runEvaluation({ caseId, codexBin = 'codex', effort, env = process.env, model, outputRoot, provider, root, variant }) {
   if (!model || !effort)
     throw new Error('Evaluation model and effort are required')
+  if (provider && !PROVIDER_ID.test(provider))
+    throw new Error(`Invalid evaluation provider: ${provider}`)
 
   const evaluations = resolve(outputRoot ?? join(root, '.cache', 'rsp-review-eval'))
   const prepared = prepareEvaluation({ caseId, outputRoot: evaluations, root, variant })
@@ -214,7 +217,7 @@ export async function runEvaluation({ caseId, codexBin = 'codex', effort, env = 
   const args = [
     'exec',
     '--ephemeral',
-    '--ignore-user-config',
+    ...(provider ? ['--config', `model_provider="${provider}"`] : ['--ignore-user-config']),
     '--sandbox',
     'read-only',
     '--model',
@@ -264,8 +267,10 @@ export async function runEvaluation({ caseId, codexBin = 'codex', effort, env = 
     result,
     settings: {
       cli_version: cliVersion,
+      config_source: provider ? 'user' : 'isolated',
       effort,
       model,
+      provider: provider ?? null,
       sandbox: 'read-only',
     },
     started_at: started.toISOString(),
@@ -281,9 +286,11 @@ export async function runEvaluation({ caseId, codexBin = 'codex', effort, env = 
   return metadata
 }
 
-export async function runEvaluationMatrix({ caseIds, codexBin = 'codex', effort, env = process.env, model, outputRoot, root }) {
+export async function runEvaluationMatrix({ caseIds, codexBin = 'codex', effort, env = process.env, model, outputRoot, provider, root }) {
   if (!model || !effort)
     throw new Error('Evaluation model and effort are required')
+  if (provider && !PROVIDER_ID.test(provider))
+    throw new Error(`Invalid evaluation provider: ${provider}`)
 
   const evaluations = resolve(outputRoot ?? join(root, '.cache', 'rsp-review-eval'))
   mkdirSync(evaluations, { recursive: true })
@@ -298,7 +305,7 @@ export async function runEvaluationMatrix({ caseIds, codexBin = 'codex', effort,
   const runs = []
   for (const caseId of selected) {
     for (const variant of ['baseline', 'candidate']) {
-      runs.push(await runEvaluation({ caseId, codexBin, effort, env, model, outputRoot: evaluations, root, variant }))
+      runs.push(await runEvaluation({ caseId, codexBin, effort, env, model, outputRoot: evaluations, provider, root, variant }))
     }
   }
   const ended = new Date()
@@ -323,6 +330,7 @@ export async function runEvaluationMatrix({ caseIds, codexBin = 'codex', effort,
     harness_hashes: harnessHashes,
     metadata_path: matrixPath,
     model,
+    provider: provider ?? null,
     result,
     runs,
     started_at: started.toISOString(),
@@ -337,7 +345,7 @@ function flagValue(flags, name) {
 }
 
 function usage() {
-  console.error('Usage:\n  node scripts/rsp-review-eval.mjs prepare <case> <baseline|candidate> [--json]\n  node scripts/rsp-review-eval.mjs run <case> <baseline|candidate> --model <model> --effort <effort> [--json]\n  node scripts/rsp-review-eval.mjs matrix --model <model> --effort <effort> [--json]')
+  console.error('Usage:\n  node scripts/rsp-review-eval.mjs prepare <case> <baseline|candidate> [--json]\n  node scripts/rsp-review-eval.mjs run <case> <baseline|candidate> --model <model> --effort <effort> [--provider <provider>] [--json]\n  node scripts/rsp-review-eval.mjs matrix --model <model> --effort <effort> [--provider <provider>] [--json]')
 }
 
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)
@@ -354,6 +362,7 @@ if (isMain) {
         const matrix = await runEvaluationMatrix({
           effort: flagValue(arguments_, '--effort'),
           model: flagValue(arguments_, '--model'),
+          provider: flagValue(arguments_, '--provider'),
           root,
         })
         if (arguments_.includes('--json'))
@@ -379,6 +388,7 @@ if (isMain) {
           caseId,
           effort: flagValue(flags, '--effort'),
           model: flagValue(flags, '--model'),
+          provider: flagValue(flags, '--provider'),
           root,
           variant,
         })

@@ -46,8 +46,10 @@ export interface EvaluationRun {
   result: 'failed' | 'passed'
   settings: {
     cli_version: string
+    config_source: 'isolated' | 'user'
     effort: string
     model: string
+    provider: string | null
     sandbox: 'read-only'
   }
   started_at: string
@@ -74,6 +76,7 @@ export interface EvaluationMatrix {
   harness_hashes: string[]
   metadata_path: string
   model: string
+  provider: string | null
   result: 'failed' | 'passed'
   runs: EvaluationRun[]
   started_at: string
@@ -93,6 +96,7 @@ export function runEvaluation(options: {
   env?: NodeJS.ProcessEnv
   model: string
   outputRoot?: string
+  provider?: string
   root: string
   variant: 'baseline' | 'candidate'
 }): Promise<EvaluationRun>
@@ -103,5 +107,6 @@ export function runEvaluationMatrix(options: {
   env?: NodeJS.ProcessEnv
   model: string
   outputRoot?: string
+  provider?: string
   root: string
 }): Promise<EvaluationMatrix>
