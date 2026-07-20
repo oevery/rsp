@@ -5,6 +5,7 @@ import { join } from 'node:path'
 
 import { inspectChangeGroups } from '../core/change-group.js'
 import { ARCHIVES_DIR, pc } from '../core/config.js'
+import { inspectChangeDependencies } from '../core/dependency-plan.js'
 import { countCheckboxes, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter } from '../core/helpers.js'
 import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
 import { inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
@@ -77,6 +78,11 @@ export async function showStatus(options: StatusOptions = {}, runOptions: Comman
   })))
   const groupInspection = await inspectChangeGroups({ workTree, focusTree })
   diagnostics.push(...groupInspection.diagnostics)
+  const dependencyInspection = await inspectChangeDependencies({
+    workTree,
+    preferredOrder: groupInspection.groups.flatMap(group => group.slices.map(slice => slice.name)),
+  })
+  diagnostics.push(...dependencyInspection.diagnostics)
 
   const changeMap: Record<string, string> = {}
   for (const ref of workTree.changes)
@@ -113,7 +119,7 @@ export async function showStatus(options: StatusOptions = {}, runOptions: Comman
             message: toErrorMessage(error),
           })
         }
-        isBlocked = hasMeaningfulBlockers(content)
+        isBlocked = dependencyInspection.activeBlockers.get(name) ?? hasMeaningfulBlockers(content)
         const cb = countCheckboxes(content)
         done = cb.done
         total = cb.total
@@ -215,7 +221,7 @@ export async function showStatus(options: StatusOptions = {}, runOptions: Comman
   const blockedCount = filteredOutputRecords.filter(r => r.isBlocked).length
   const ok = diagnostics.every(diagnostic => diagnostic.severity !== 'error')
   const nextActions = ok
-    ? buildStatusNextActions(focusedSet.size, Object.keys(changeMap).sort(), groupInspection.groups, Boolean(options.focused || options.blocked || typeof options.stale === 'number'))
+    ? buildStatusNextActions(focusedSet.size, outputRecords, groupInspection.groups, Boolean(options.focused || options.blocked || typeof options.stale === 'number'))
     : ['Run: rsp doctor']
   const statusResult: StatusJsonShape = {
     command: 'status',
@@ -228,6 +234,7 @@ export async function showStatus(options: StatusOptions = {}, runOptions: Comman
     focused: [...focusedSet].sort(),
     records: filteredOutputRecords,
     groups: groupInspection.groups,
+    plan: filterDependencyPlan(dependencyInspection.plan, new Set(filteredOutputRecords.map(record => record.name))),
     summary: {
       total: filteredOutputRecords.length,
       focused: filteredOutputRecords.filter(r => r.isFocused).length,
@@ -267,6 +274,7 @@ export async function showStatus(options: StatusOptions = {}, runOptions: Comman
   }
 
   printChangeGroups(statusResult.groups)
+  printDependencyPlan(statusResult.plan)
 
   if (allNames.length === 0) {
     if (ok)
@@ -314,7 +322,8 @@ export async function showStatus(options: StatusOptions = {}, runOptions: Comman
   return statusResult
 }
 
-function buildStatusNextActions(focusedCount: number, openChanges: string[], groups: StatusJsonShape['groups'], filtered: boolean): string[] {
+function buildStatusNextActions(focusedCount: number, records: StatusRecordOutput[], groups: StatusJsonShape['groups'], filtered: boolean): string[] {
+  const openChanges = records.map(record => record.name).sort()
   if (focusedCount > 0)
     return []
   const readyGroup = groups.find(group => group.readyToClose)
@@ -333,11 +342,32 @@ function buildStatusNextActions(focusedCount: number, openChanges: string[], gro
   }
   const firstChanges = openChanges.slice(0, 3).join(', ')
   const extra = openChanges.length > 3 ? ` (+${openChanges.length - 3} more)` : ''
+  const recommendation = recommendOpenChange(records, groups)
   return [
     `Open changes: ${firstChanges}${extra}`,
-    `Run: rsp focus ${openChanges[0]}`,
+    recommendation ? `Run: rsp focus ${recommendation}` : 'Resolve blockers before focusing an open change.',
     'Or run: rsp create <name>',
   ]
+}
+
+function recommendOpenChange(records: StatusRecordOutput[], groups: StatusJsonShape['groups']): string | null {
+  const recordsByName = new Map(records.map(record => [record.name, record]))
+  const candidates: Array<{ name: string, owner: string }> = records
+    .filter(record => !record.name.includes('/') && !record.isBlocked)
+    .map(record => ({ name: record.name, owner: record.name }))
+
+  for (const group of groups) {
+    if (group.blockers)
+      continue
+    const slice = group.slices.find((candidate) => {
+      const record = recordsByName.get(candidate.name)
+      return candidate.state === 'open' && record !== undefined && !record.isBlocked
+    })
+    if (slice)
+      candidates.push({ name: slice.name, owner: group.name })
+  }
+
+  return candidates.sort((left, right) => left.owner.localeCompare(right.owner) || left.name.localeCompare(right.name))[0]?.name ?? null
 }
 
 function printChangeGroups(groups: StatusJsonShape['groups']): void {
@@ -351,6 +381,34 @@ function printChangeGroups(groups: StatusJsonShape['groups']): void {
     console.log(`  ${group.name}: ${archived}/${group.slices.length} archived, completion ${group.completion.done}/${group.completion.total}, ${readiness}${blocked}`)
   }
   console.log()
+}
+
+function printDependencyPlan(plan: StatusJsonShape['plan']): void {
+  console.log(`  ${pc.bold('Execution plan')}`)
+  console.log(`  ${pc.dim('Ready now:')} ${plan.ready.length > 0 ? plan.ready.join(', ') : pc.dim('none')}`)
+  for (let index = 1; index < plan.waves.length; index++)
+    console.log(`  ${pc.dim(`Then ${index + 1}:`)} ${plan.waves[index].join(', ')}`)
+  if (plan.edges.length > 0) {
+    console.log(`  ${pc.dim('Dependencies:')}`)
+    for (const edge of plan.edges)
+      console.log(`    ${edge.change} <- ${edge.requires} (${edge.state}) — ${edge.reason}`)
+  }
+  const external = plan.blocked.filter(blocker => blocker.external).map(blocker => blocker.change)
+  if (external.length > 0)
+    console.log(`  ${pc.dim('External blockers:')} ${external.join(', ')}`)
+  console.log()
+}
+
+function filterDependencyPlan(plan: StatusJsonShape['plan'], names: Set<string>): StatusJsonShape['plan'] {
+  const waves = plan.waves.map(wave => wave.filter(name => names.has(name)))
+  while (waves.at(-1)?.length === 0)
+    waves.pop()
+  return {
+    ready: plan.ready.filter(name => names.has(name)),
+    edges: plan.edges.filter(edge => names.has(edge.change)),
+    blocked: plan.blocked.filter(blocker => names.has(blocker.change)),
+    waves,
+  }
 }
 
 /** Display archive trend: count per month from archive INDEX.md. */

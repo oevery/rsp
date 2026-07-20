@@ -39,7 +39,7 @@ npx -y @oevery/rsp doctor
 ├── changes/
 │   ├── <name>.md
 │   └── <group>/
-│       ├── brief.md
+│       ├── 00-brief.md
 │       └── <change>.md
 ├── focus.d/
 │   └── <name>
@@ -53,11 +53,13 @@ npx -y @oevery/rsp doctor
 - Decision Records 描述难以逆转选择的长期理由、备选方案、取舍和后果；默认位于 `.rsp/specs/decisions/`，也可以配置唯一的外部权威路径。
 - `changes/` 描述 open work，包括 feature、fix、refactor、docs、ops 和 research。
 - 每个 change 始终是单个 Markdown 文件，并包含 proposal、spec、design、tasks、verification 与 blockers 等明确 section。
+- 精确 blocker 行 `- requires \`<change-work-ref>\`: <reason>` 表示依赖另一个可执行 Change。自由文本 blocker 保持为外部阻塞，RSP 不会从 prose 猜测依赖边；前置 Change 归档后依赖会自动解除。
 - Change 名称只能是扁平的 `<change>` 或一层直接子项 `<group>/<change>`；递归 work 目录会被拒绝。
-- Change Group 是可选且唯一的复合 work 形态。其不可执行、不可 focus 的 `<group>/brief` 为至少两个直接子 Change 统一拥有目标、共享约束、slice 声明、整体完成条件、durable outcomes 和 blockers。
-- 必须先创建 Group 再创建子 Change。每个 grouped Change 都必须由 brief 声明，独立 focus、独立归档，并将 brief 纳入上下文。`status`、`check` 和 `doctor` 从文件事实推导 Group 健康度和完成度，不持久化额外状态；`rsp group close` 只归档已完成的 brief。已归档的 Group 身份不能重新打开。
+- Change Group 是可选且唯一的复合 work 形态。其不可执行、不可 focus 的逻辑身份 `<group>/brief` 在磁盘上存储为 `<group>/00-brief.md`，为至少两个直接子 Change 统一拥有目标、共享约束、slice 声明、整体完成条件、durable outcomes 和 blockers。
+- 必须先创建 Group 再创建子 Change。每个 grouped Change 都必须由 brief 声明，独立 focus、独立归档，并将 brief 纳入上下文。没有 focus 时，`status` 按 Brief 声明顺序和当前 blockers 推荐第一个可执行 slice。`status`、`check` 和 `doctor` 从文件事实推导 Group 健康度和完成度，不持久化额外状态；`rsp group close` 只归档已完成的 brief。已归档的 Group 身份不能重新打开。
+- Group Brief blocker 会作为外部 blocker 派生到其直接子 Change，但不会生成猜测的依赖边。
 - 同一个 work 身份不能同时由 Markdown 文件和目录占用。
-- `rsp status`、`rsp check` 和 `rsp doctor` 使用同一套完整 work-tree 检查。`changes/` 根目录必须存在且是真实目录，已有的 focus/archive 根目录和 group 前缀也必须是真实目录；非法目录、非 Markdown 条目、符号链接、缺失或不可读的当前 work、不完整读取和身份冲突都会成为可见错误。`status` 会返回非零状态，而不是隐藏非法 work。
+- `rsp status`、`rsp check` 和 `rsp doctor` 使用同一套完整 work-tree 与依赖事实检查。`status` 无需 graph 文件即可派生带原因的精确依赖边、ready work、blockers 和稳定 waves；`check` 与 `doctor` 会拒绝不完整的 archive inspection、格式错误或缺失的依赖目标、自依赖与循环。`changes/` 根目录必须存在且是真实目录，已有的 focus/archive 根目录和 group 前缀也必须是真实目录；非法目录、非 Markdown 条目、符号链接、缺失或不可读的当前 work、不完整读取和身份冲突都会成为可见错误。`status` 会返回非零状态，而不是隐藏非法 work。
 - `rsp init`、`rsp update`、`rsp add spec` 和生成索引使用相同的 no-follow managed-path 检查。archive discovery 只接受扁平 archive 文件或一层真实 group 目录；递归组织的 Specs 只接受真实目录和普通文件。
 - 项目 `AGENTS.md`、focus marker、fallback/config、生成索引和 placeholder 等最终 managed file 也必须是普通文件；RSP 会在读写前拒绝静态 symlink 目标。
 - 完成后的 change 会移动到 `archives/`。稳定当前事实写入 Specs；长期理由写入 Decision Records；稳定的作用域操作指令写入 nearest project-owned `AGENTS.md`。
@@ -237,7 +239,7 @@ rsp init --with-project-setup   同时创建 .rsp/changes/project-setup.md
 rsp update                      刷新 fallback protocol、修复 AGENTS 受管块并重建索引
 rsp add spec <name>             创建 .rsp/specs/<name>.md 并重建 specs 索引
 rsp create <name> [summary]     创建 .rsp/changes/<name>.md；可加 --lite 使用更短模板
-rsp group create <name> [goal] 创建不进入 focus 的 .rsp/changes/<name>/brief.md
+rsp group create <name> [goal] 创建不进入 focus 的 .rsp/changes/<name>/00-brief.md
 rsp group close <name>         所有子 Change 归档后关闭并归档 Group Brief
 rsp focus <name>                将一个 open change 标记为当前聚焦
 rsp unfocus <name>              将一个 open change 移出当前聚焦集合
@@ -248,7 +250,7 @@ rsp ready <name> [--json] [--verbose]
 rsp show <name|--focused> [--json] [--verbose]
                                    显示 change 上下文，带就绪信号和上下文路径
 rsp status [--focused|--blocked|--stale <days>] [--json] [--verbose]
-                                   查看带有当前聚焦信息的项目状态摘要，并支持轻量筛选
+                                   查看项目状态与派生依赖计划，并支持当前聚焦相关的轻量筛选
 rsp check [--focused] [--json] [--verbose]
                                    校验 change 文件，并对 template/scenario 结构做轻量 lint
 rsp doctor [--fix] [--json] [--verbose]
@@ -258,6 +260,8 @@ rsp doctor [--fix] [--json] [--verbose]
 操作优先使用 `skills/rsp/SKILL.md`；skill 不可用时使用 `.rsp/rsp-rules.md` 作为最小 fallback protocol。
 
 当没有 focused change 时，`rsp status` 和 `rsp show --focused --json` 会输出 `nextActions`，但不会自动猜测哪个 open change 是当前工作。
+
+`rsp status --json` 会在 `plan.ready`、`plan.edges`、`plan.blocked` 和 `plan.waves` 中返回同一份依赖投影。它们是派生的导航事实，不是执行授权或持久化 workflow state。
 
 `rsp create --lite` 是用于显式跟踪小 change 的短模板；简单的当前会话任务默认不应创建 RSP change，除非确实需要跟踪。
 

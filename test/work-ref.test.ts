@@ -33,7 +33,13 @@ describe('work ref resolution', () => {
     expect(resolveWorkRef('release/brief', { changesDir })).toEqual({
       kind: 'group-brief',
       name: 'release/brief',
-      path: join(changesDir, 'release', 'brief.md'),
+      path: join(changesDir, 'release', '00-brief.md'),
+      group: 'release',
+    })
+    expect(resolveWorkRefPath(join(changesDir, 'release', '00-brief.md'), { changesDir })).toEqual({
+      kind: 'group-brief',
+      name: 'release/brief',
+      path: join(changesDir, 'release', '00-brief.md'),
       group: 'release',
     })
   })
@@ -56,6 +62,30 @@ describe('work ref resolution', () => {
       () => resolveWorkRef('release/brief', { changesDir, executable: true }),
       'non_executable_work_ref',
     )
+  })
+
+  it('rejects the physical Group Brief filename as a logical child identity', () => {
+    const changesDir = createChangesDirPath()
+    createGroupBrief(changesDir, 'release')
+
+    expectWorkRefError(
+      () => resolveWorkRef('release/00-brief', { changesDir }),
+      'invalid_work_ref',
+    )
+  })
+
+  it('reports the unreleased legacy physical Brief path instead of aliasing it', async () => {
+    const changesDir = createChangesDirPath()
+    await mkdir(join(changesDir, 'release'), { recursive: true })
+    await writeFile(join(changesDir, 'release', 'brief.md'), '')
+
+    const inspection = await inspectWorkTree({ changesDir })
+
+    expect(inspection.briefs).toEqual([])
+    expect(inspection.diagnostics).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'group_brief_missing', input: 'release' }),
+      expect.objectContaining({ code: 'invalid_work_ref_path', input: 'release/brief.md' }),
+    ]))
   })
 
   it('rejects unsupported recursive work paths deterministically', () => {
@@ -181,7 +211,7 @@ describe('work ref resolution', () => {
     await writeFile(join(changesDir, '.gitkeep'), '')
     await writeFile(join(changesDir, 'flat.md'), '')
     await writeFile(join(changesDir, 'release', 'api.md'), '')
-    await writeFile(join(changesDir, 'release', 'brief.md'), '')
+    await writeFile(join(changesDir, 'release', '00-brief.md'), '')
     await writeFile(join(changesDir, 'release', 'notes.txt'), '')
 
     const inspection = await inspectWorkTree({ changesDir })
@@ -206,7 +236,7 @@ function createChangesDirPath(): string {
 function createGroupBrief(changesDir: string, group: string): void {
   const groupDir = join(changesDir, group)
   mkdirSync(groupDir, { recursive: true })
-  writeFileSync(join(groupDir, 'brief.md'), `---\nkind: group\n---\n\n# Change Group: ${group}\n`)
+  writeFileSync(join(groupDir, '00-brief.md'), `---\nkind: group\n---\n\n# Change Group: ${group}\n`)
 }
 
 function expectWorkRefError(action: () => unknown, code: string): void {

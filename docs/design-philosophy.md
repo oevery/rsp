@@ -102,7 +102,7 @@ RSP 使用 `change`，不使用 `feature` 作为顶层工作模型。
 
 `kind` 是 change 内部分类字段。
 
-Change Group 是唯一例外且仍保持浅层：只有两个或更多可独立执行的 Change 共享目标或整体完成条件时，才使用一个 `brief.md` 作为父级语义所有者。brief 不执行、不 focus、不复制子项进度；子 Change 仍各自保持单文件契约并独立归档。递归 group、多文件 child bundle 和额外状态不进入核心。
+Change Group 是唯一例外且仍保持浅层：只有两个或更多可独立执行的 Change 共享目标或整体完成条件时，才使用逻辑身份 `<group>/brief`、物理文件 `00-brief.md` 作为父级语义所有者。Brief 不执行、不 focus、不复制子项进度；子 Change 仍各自保持单文件契约并独立归档。递归 group、多文件 child bundle 和额外状态不进入核心。
 
 ### 4. Durable truth 与 history 分离
 
@@ -260,7 +260,7 @@ Open work。
 
 每个 change 是一个 Markdown 文件。
 
-可选 Change Group 只允许一个 `brief.md` 和直接子 Change；`Slices` 声明成员边界，实际 open、archived、blocked 和 ready 状态全部派生。
+可选 Change Group 只允许一个 `00-brief.md` 和直接子 Change；`Slices` 声明成员边界与导航顺序，实际 open、archived、blocked 和 ready 状态全部派生。声明顺序本身不创建依赖边；精确依赖只由子 Change `Blockers` 中的 `requires` WorkRef 声明，CLI 负责派生当前依赖计划。
 
 不要创建多文件 change bundle。
 
@@ -287,7 +287,9 @@ Archive 不等于 durable truth。
 - `Design`：实现形态、影响区域、约束。
 - `Tasks`：具体实现工作。
 - `Verify`：验证和 durable decision 清单。
-- `Blockers`：活跃 blocker。
+- `Blockers`：活跃 blocker；可使用 `- requires \`<change-work-ref>\`: <reason>` 声明一个确定性的可执行 Change 依赖，其余 prose 不会被猜测为依赖边。
+
+依赖图不是新的持久化产物。Change 与 archive heading 继续拥有事实，CLI 只集中投影 `ready`、带原因的 `edges`、`blocked` 和 `waves`。这使人类和 AI 获得同一份紧凑视图，同时避免 Brief、YAML 或独立 graph 文件成为第二份状态来源。
 
 `Verify` 是 section，不是 workflow state。
 

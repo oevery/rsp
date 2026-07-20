@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises'
 
 import { inspectChangeGroups } from '../core/change-group.js'
 import { loadRspConfig, pc, resolveKinds, resolveRequiredSections } from '../core/config.js'
+import { inspectChangeDependencies } from '../core/dependency-plan.js'
 import { detectDeltaSections, parseFrontmatter, parseScenarios } from '../core/helpers.js'
 import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
 import { inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
@@ -127,6 +128,11 @@ export async function runCheck(options: CheckOptions = {}): Promise<CheckResult>
   const focusedGroups = new Set(changeRefs.flatMap(ref => ref.group ? [ref.group] : []))
   for (const diagnostic of groupInspection.diagnostics) {
     if (!options.focused || !diagnostic.change || focusedGroups.has(diagnostic.change))
+      addDiagnostic(diagnostic)
+  }
+  const dependencyInspection = await inspectChangeDependencies({ workTree })
+  for (const diagnostic of dependencyInspection.diagnostics) {
+    if (!options.focused || !diagnostic.change || focusedSet.has(diagnostic.change))
       addDiagnostic(diagnostic)
   }
 

@@ -24,9 +24,9 @@
 - WorkRef is the authoritative typed interpretation of open-work identity and path. It distinguishes a flat Change, a direct grouped Change, and the reserved Group Brief identity.
 - Executable Change paths are exactly `.rsp/changes/<change>.md` and `.rsp/changes/<group>/<change>.md`; deeper work paths are rejected deterministically.
 - A Change Group is the only composite work shape and is used only when at least two independently executable direct child Changes share one goal, shared constraints, or completion contract.
-- `.rsp/changes/<group>/brief.md` is the non-executable, non-focusable semantic owner for Goal, Scope, Shared Constraints, Slices, Completion Conditions, Durable Outcomes, and Blockers. Every direct child must be declared with an identity and boundary; every declaration resolves to an open child or an archive entry whose Change heading preserves that identity.
+- Logical `<group>/brief`, physically stored as `.rsp/changes/<group>/00-brief.md`, is the non-executable, non-focusable semantic owner for Goal, Scope, Shared Constraints, Slices, Completion Conditions, Durable Outcomes, and Blockers. The prefixed physical name keeps required parent context first in directory listings without changing WorkRef identity. Every direct child must be declared with an identity and boundary; every declaration resolves to an open child or an archive entry whose Change heading preserves that identity.
 - `rsp group create <group> [goal]` creates only the unfocused brief. Grouped child creation requires the sibling brief and a matching Slices declaration. Reading a grouped child places the brief first in its context paths.
-- Group status, membership, blockers, completion, and close readiness are derived from the brief, open Changes, archive contents, and focus markers. Children archive independently; `rsp group close <group>` moves only a completed brief to `.rsp/archives/<group>/YYYY-MM-DD_brief.md`. A closed Group identity cannot be reopened because archived child association would otherwise be ambiguous.
+- Group status, membership, blockers, completion, and close readiness are derived from the brief, open Changes, archive contents, and focus markers. Brief `Slices` order is navigation order only; with no focus, status recommends the first open unblocked slice from an unblocked Group without persisting dependencies or readiness. Children archive independently; `rsp group close <group>` moves only a completed brief to `.rsp/archives/<group>/YYYY-MM-DD_brief.md`. A closed Group identity cannot be reopened because archived child association would otherwise be ambiguous.
 - A work identity cannot be claimed by both a Markdown file and a directory.
 - One WorkRef tree inspection owns open-work discovery for `check`, `status`, and `doctor`; it reports unsupported directories, non-Markdown entries, symlinks, collisions, and incomplete reads consistently.
 - `.rsp/changes/` must exist as a real directory rather than a file or symlink. Resolution and inspection fail closed before reading or mutating work through an invalid root or grouped path prefix; `rsp update` and `rsp doctor --fix` restore a missing root.
@@ -35,6 +35,10 @@
 - The same module validates final managed files before reads or writes. The project `AGENTS.md`, focus markers, fallback/config files, generated indexes, placeholders, and generated project files must be missing or regular files; static symlink targets fail before mutation. Initialization and update preflight `AGENTS.md` before other managed mutations.
 - `rsp status` fails with visible structured diagnostics when the work tree is invalid, a focused Change is missing, or an open Change cannot be read or inspected.
 - Every change file uses the fixed sections `Proposal`, `Spec`, `Design`, `Tasks`, `Verify`, and `Blockers`.
+- A Change may declare an exact prerequisite only in `Blockers` as `- requires \`<change-work-ref>\`: <reason>`. The target is another executable flat or direct grouped Change; Group Briefs and deeper identities are not dependency targets. Other meaningful blocker prose remains an external blocker and never becomes an inferred edge.
+- Open Change files and archived Change headings own dependency facts and completion evidence. The CLI derives active blockers, exact edges with their reasons, ready Changes, and stable topological waves without persisting a graph or delivery state. Archived prerequisites resolve automatically while incomplete archive inspection and malformed, missing, self-referential, or cyclic edges fail closed in status, check, doctor, and dependency-aware readiness; an invalid graph derives every open Change as actively blocked.
+- Within one Group wave, CLI output preserves the Group Brief `Slices` declaration order; unrelated work uses stable lexical ordering.
+- A meaningful Group Brief blocker is inherited by every direct child as a derived external blocker. It suppresses child readiness without becoming a dependency edge or duplicating blocker text into child files.
 - Every change file must declare an explicit `kind` in frontmatter.
 - CLI commands handle deterministic filesystem operations, structure checks, generated indexes, and warnings.
 - Generated `INDEX.md` files use lightweight YAML frontmatter with `kind: generated-index` and an `index_type` value for machine-readable classification.
@@ -70,7 +74,7 @@
 - In scope: keeping RSP readable by humans, agents, CI, and simple scripts.
 - Out of scope: replacing git history or project management systems.
 - Out of scope: adding OpenSpec-style multi-file change artifacts.
-- Out of scope: arbitrary nested work directories, attachments, dependency graphs, and persisted group readiness state.
+- Out of scope: arbitrary nested work directories, attachments, persisted or general-purpose dependency graphs, dependency targets outside the local executable Change model, automatic scheduling, and persisted group readiness state.
 - Out of scope: automatically merging change `Spec` deltas into durable specs during archive.
 - Out of scope: automatically creating Decision Records, discovering multiple ADR roots, assigning numbering policy, or synchronizing rationale across paths.
 - Out of scope: introducing workflow states that do not map to deterministic filesystem truth.

@@ -5,7 +5,7 @@ import { dirname, join, relative } from 'node:path'
 
 import { ARCHIVES_DIR } from './config.js'
 import { countCheckboxes, extractSection, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter } from './helpers.js'
-import { inspectArchiveTree, inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from './work-ref.js'
+import { GROUP_BRIEF_FILENAME, inspectArchiveTree, inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from './work-ref.js'
 
 export const GROUP_BRIEF_SECTIONS = ['Goal', 'Scope', 'Shared Constraints', 'Slices', 'Completion Conditions', 'Durable Outcomes', 'Blockers'] as const
 
@@ -227,7 +227,7 @@ export async function inspectChangeGroups(options: { workTree?: WorkTreeInspecti
 
 /** Require a grouped Change identity to be declared by its sibling Group Brief. */
 export async function requireDeclaredGroupSlice(ref: GroupedChangeRef): Promise<void> {
-  const briefPath = join(dirname(ref.path), 'brief.md')
+  const briefPath = join(dirname(ref.path), GROUP_BRIEF_FILENAME)
   let content: string
   try {
     content = await readFile(briefPath, 'utf-8')

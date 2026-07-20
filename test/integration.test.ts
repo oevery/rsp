@@ -199,7 +199,7 @@ describe('change lifecycle integration', () => {
   it('supports subdirectory changes', async () => {
     const { createChange } = await import('../src/commands/create.js')
     await mkdir(changesPath('auth'), { recursive: true })
-    await writeFile(changesPath('auth', 'brief.md'), renderGroupBrief('auth', ['auth/login', 'auth/session']))
+    await writeFile(changesPath('auth', '00-brief.md'), renderGroupBrief('auth', ['auth/login', 'auth/session']))
     await createChange('auth/login', 'Login change')
     await writeFile(changesPath('auth', 'session.md'), renderChange('auth/session'))
 
@@ -212,7 +212,7 @@ describe('change lifecycle integration', () => {
     await mkdir(groupDir, { recursive: true })
     execSync(`node ${cliPath()} init`, { cwd: groupDir })
     execSync(`node ${cliPath()} group create release "Ship the release"`, { cwd: groupDir })
-    await writeFile(join(groupDir, '.rsp', 'changes', 'release', 'brief.md'), renderGroupBrief('release', ['release/api', 'release/ui']))
+    await writeFile(join(groupDir, '.rsp', 'changes', 'release', '00-brief.md'), renderGroupBrief('release', ['release/api', 'release/ui']))
 
     execSync(`node ${cliPath()} create release/api --kind feature "Ship release API"`, { cwd: groupDir })
     const shown = JSON.parse(execSync(`node ${cliPath()} show release/api --json`, { cwd: groupDir, encoding: 'utf-8' }))
@@ -802,6 +802,49 @@ describe('status commands', () => {
     expect(output).toContain('Run: rsp focus unfocused-one')
   })
 
+  it('recommends the first declared open unblocked slice from an eligible Group', async () => {
+    const statusDir = await createRspFixture('rsp-status-group-navigation-test', ['specs', 'changes', 'focus.d'])
+    const groupDir = join(statusDir, '.rsp', 'changes', 'delivery')
+    await mkdir(groupDir, { recursive: true })
+    await writeFile(join(groupDir, '00-brief.md'), renderGroupBrief('delivery', [
+      'delivery/blocked-first',
+      'delivery/z-ready-second',
+      'delivery/a-ready-third',
+    ]))
+    await writeFile(join(groupDir, 'blocked-first.md'), renderChange('delivery/blocked-first').replace('## Blockers\n- none', '## Blockers\n- waiting on authority'))
+    await writeFile(join(groupDir, 'z-ready-second.md'), renderChange('delivery/z-ready-second'))
+    await writeFile(join(groupDir, 'a-ready-third.md'), renderChange('delivery/a-ready-third'))
+
+    const output = JSON.parse(execSync(`node ${cliPath()} status --json`, { cwd: statusDir, encoding: 'utf-8' }))
+
+    expect(output.nextActions).toContain('Run: rsp focus delivery/z-ready-second')
+    expect(output.nextActions).not.toContain('Run: rsp focus delivery/blocked-first')
+    expect(output.nextActions).not.toContain('Run: rsp focus delivery/a-ready-third')
+    expect(output.plan.ready).toEqual(['delivery/z-ready-second', 'delivery/a-ready-third'])
+  })
+
+  it('inherits a Group Brief blocker into the derived child execution plan', async () => {
+    const statusDir = await createRspFixture('rsp-status-group-blocker-plan-test', ['specs', 'changes', 'archives', 'focus.d'])
+    const groupDir = join(statusDir, '.rsp', 'changes', 'delivery')
+    await mkdir(groupDir, { recursive: true })
+    await writeFile(join(groupDir, '00-brief.md'), renderGroupBrief('delivery', [
+      'delivery/api',
+      'delivery/ui',
+    ], { blockers: 'waiting for release authority' }))
+    await writeFile(join(groupDir, 'api.md'), renderChange('delivery/api'))
+    await writeFile(join(groupDir, 'ui.md'), renderChange('delivery/ui'))
+
+    const output = JSON.parse(execSync(`node ${cliPath()} status --json`, { cwd: statusDir, encoding: 'utf-8' }))
+
+    expect(output.plan.ready).toEqual([])
+    expect(output.plan.waves).toEqual([])
+    expect(output.plan.blocked).toEqual([
+      { change: 'delivery/api', requires: [], external: true },
+      { change: 'delivery/ui', requires: [], external: true },
+    ])
+    expect(output.records.every((record: { isBlocked: boolean }) => record.isBlocked)).toBe(true)
+  })
+
   it('filters blocked changes by blockers section', async () => {
     const statusDir = await createRspFixture('rsp-status-blocked-test')
     await writeFile(join(statusDir, '.rsp', 'changes', 'blocked-one.md'), renderChange('blocked-one').replace('## Blockers\n- none', '## Blockers\n- waiting on api'))
@@ -868,6 +911,133 @@ describe('status commands', () => {
     expect(Array.isArray(result.runtime)).toBe(true)
   })
 
+  it('derives a deterministic dependency plan from exact Change blockers', async () => {
+    const statusDir = await createRspFixture('rsp-status-dependency-plan-test', ['specs', 'changes', 'archives', 'focus.d'])
+    await writeFile(join(statusDir, '.rsp', 'changes', 'research.md'), renderChange('research'))
+    await writeFile(join(statusDir, '.rsp', 'changes', 'implement.md'), renderChange('implement').replace(
+      '## Blockers\n- none',
+      '## Blockers\n- requires `research`: needs the accepted research model',
+    ))
+    await writeFile(join(statusDir, '.rsp', 'changes', 'release.md'), renderChange('release').replace(
+      '## Blockers\n- none',
+      '## Blockers\n- requires `implement`: needs the promoted implementation',
+    ))
+    await writeFile(join(statusDir, '.rsp', 'changes', 'approval.md'), renderChange('approval').replace(
+      '## Blockers\n- none',
+      '## Blockers\n- waiting for maintainer authority',
+    ))
+    await writeFile(join(statusDir, '.rsp', 'focus.d', 'implement'), '')
+
+    const output = JSON.parse(execSync(`node ${cliPath()} status --json`, { cwd: statusDir, encoding: 'utf-8' }))
+    const focused = JSON.parse(execSync(`node ${cliPath()} status --focused --json`, { cwd: statusDir, encoding: 'utf-8' }))
+
+    expect(output.plan).toEqual({
+      ready: ['research'],
+      edges: [
+        { change: 'implement', requires: 'research', reason: 'needs the accepted research model', state: 'open' },
+        { change: 'release', requires: 'implement', reason: 'needs the promoted implementation', state: 'open' },
+      ],
+      blocked: [
+        { change: 'approval', requires: [], external: true },
+        { change: 'implement', requires: ['research'], external: false },
+        { change: 'release', requires: ['implement'], external: false },
+      ],
+      waves: [['research'], ['implement'], ['release']],
+    })
+    expect(output.records.find((record: { name: string }) => record.name === 'research').isBlocked).toBe(false)
+    expect(output.records.find((record: { name: string }) => record.name === 'implement').isBlocked).toBe(true)
+    expect(focused.records.map((record: { name: string }) => record.name)).toEqual(['implement'])
+    expect(focused.plan.edges).toEqual([
+      { change: 'implement', requires: 'research', reason: 'needs the accepted research model', state: 'open' },
+    ])
+    expect(focused.plan.blocked).toEqual([
+      { change: 'implement', requires: ['research'], external: false },
+    ])
+    expect(focused.plan.ready).toEqual([])
+    expect(focused.plan.waves).toEqual([[], ['implement']])
+  })
+
+  it('resolves an exact dependency when its prerequisite is archived', async () => {
+    const statusDir = await createRspFixture('rsp-status-archived-dependency-test', ['specs', 'changes', 'archives', 'focus.d'])
+    await writeFile(join(statusDir, '.rsp', 'changes', 'implement.md'), renderChange('implement').replace(
+      '## Blockers\n- none',
+      '## Blockers\n- requires `research`: needs the accepted research model',
+    ))
+    await writeFile(join(statusDir, '.rsp', 'archives', '2026-07-20_research.md'), renderChange('research'))
+
+    const status = JSON.parse(execSync(`node ${cliPath()} status --json`, { cwd: statusDir, encoding: 'utf-8' }))
+    const ready = JSON.parse(execSync(`node ${cliPath()} ready implement --json`, { cwd: statusDir, encoding: 'utf-8' }))
+
+    expect(status.plan.edges).toEqual([
+      { change: 'implement', requires: 'research', reason: 'needs the accepted research model', state: 'archived' },
+    ])
+    expect(status.plan.ready).toEqual(['implement'])
+    expect(status.plan.blocked).toEqual([])
+    expect(status.records[0].isBlocked).toBe(false)
+    expect(ready.readiness.activeBlockers).toBe(false)
+  })
+
+  it('fails check and doctor on invalid structured dependency graphs', async () => {
+    const statusDir = await createRspFixture('rsp-invalid-dependency-plan-test', ['specs', 'changes', 'archives', 'focus.d'])
+    const blockerChange = (name: string, blocker: string) => renderChange(name).replace('## Blockers\n- none', `## Blockers\n- ${blocker}`)
+    await writeFile(join(statusDir, '.rsp', 'changes', 'missing.md'), blockerChange('missing', 'requires `ghost`: target does not exist'))
+    await writeFile(join(statusDir, '.rsp', 'changes', 'self.md'), blockerChange('self', 'requires `self`: invalid self dependency'))
+    await writeFile(join(statusDir, '.rsp', 'changes', 'cycle-a.md'), blockerChange('cycle-a', 'requires `cycle-b`: cycle'))
+    await writeFile(join(statusDir, '.rsp', 'changes', 'cycle-b.md'), blockerChange('cycle-b', 'requires `cycle-a`: cycle'))
+    await writeFile(join(statusDir, '.rsp', 'changes', 'malformed.md'), blockerChange('malformed', 'requires ghost: missing exact WorkRef ticks'))
+    await writeFile(join(statusDir, '.rsp', 'changes', 'aggregate.md'), blockerChange('aggregate', 'requires `delivery/brief`: Group Briefs are not executable dependencies'))
+    await writeFile(join(statusDir, '.rsp', 'focus.d', 'cycle-b'), '')
+
+    const checkResult = spawnSync('node', [cliPath(), 'check', '--json'], { cwd: statusDir, encoding: 'utf-8' })
+    const focusedCheckResult = spawnSync('node', [cliPath(), 'check', '--focused', '--json'], { cwd: statusDir, encoding: 'utf-8' })
+    const doctorResult = spawnSync('node', [cliPath(), 'doctor', '--json'], { cwd: statusDir, encoding: 'utf-8' })
+    const statusResult = spawnSync('node', [cliPath(), 'status', '--json'], { cwd: statusDir, encoding: 'utf-8' })
+    const check = JSON.parse(checkResult.stdout)
+    const focusedCheck = JSON.parse(focusedCheckResult.stdout)
+    const doctor = JSON.parse(doctorResult.stdout)
+    const status = JSON.parse(statusResult.stdout)
+
+    expect(checkResult.status).toBe(1)
+    expect(check.diagnostics).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'dependency_syntax_invalid', change: 'malformed' }),
+      expect.objectContaining({ code: 'dependency_target_invalid', change: 'aggregate' }),
+      expect.objectContaining({ code: 'dependency_target_missing', change: 'missing' }),
+      expect.objectContaining({ code: 'dependency_self_reference', change: 'self' }),
+      expect.objectContaining({ code: 'dependency_cycle' }),
+    ]))
+    expect(focusedCheckResult.status).toBe(1)
+    expect(focusedCheck.diagnostics).toContainEqual(expect.objectContaining({ code: 'dependency_cycle', change: 'cycle-b' }))
+    expect(doctorResult.status).toBe(1)
+    expect(doctor.checks).toContainEqual(expect.objectContaining({
+      status: 'issue',
+      label: 'Change dependency graph is valid',
+    }))
+    expect(statusResult.status).toBe(1)
+    expect(status.plan.ready).toEqual([])
+    expect(status.plan.waves).toEqual([])
+    expect(status.nextActions).toEqual(['Run: rsp doctor'])
+  })
+
+  it('renders the dependency plan and shares resolved blocker truth across read commands', async () => {
+    const statusDir = await createRspFixture('rsp-dependency-read-commands-test', ['specs', 'changes', 'archives', 'focus.d'])
+    await writeFile(join(statusDir, '.rsp', 'changes', 'implement.md'), renderChange('implement').replace(
+      '## Blockers\n- none',
+      '## Blockers\n- requires `research`: needs the accepted research model',
+    ))
+    await writeFile(join(statusDir, '.rsp', 'archives', '2026-07-20_research.md'), renderChange('research'))
+
+    const status = execSync(`node ${cliPath()} status`, { cwd: statusDir, encoding: 'utf-8' })
+    const show = JSON.parse(execSync(`node ${cliPath()} show implement --json`, { cwd: statusDir, encoding: 'utf-8' }))
+    const archive = execSync(`node ${cliPath()} archive implement --dry-run`, { cwd: statusDir, encoding: 'utf-8' })
+
+    expect(status).toContain('Execution plan')
+    expect(status).toContain('Ready now: implement')
+    expect(status).toContain('implement <- research (archived) — needs the accepted research model')
+    expect(show.change.blockers).toBe(false)
+    expect(show.change.readiness.activeBlockers).toBe(false)
+    expect(archive).not.toContain('active blockers are present')
+  })
+
   it('prints status JSON next actions when no focus exists', async () => {
     const statusDir = await createRspFixture('rsp-status-json-no-focus-test')
     await writeFile(join(statusDir, '.rsp', 'changes', 'unfocused-json.md'), renderChange('unfocused-json'))
@@ -893,6 +1063,35 @@ describe('status commands', () => {
     expect(output.ok).toBe(false)
     expect(output.records).toEqual([])
     expect(output.diagnostics).toContainEqual(expect.objectContaining({ code: 'invalid_work_root' }))
+  })
+
+  it('fails status and check when dependency archive inspection is incomplete', async () => {
+    const statusDir = await createRspFixture('rsp-status-symlinked-archives-test', ['specs', 'changes', 'archives', 'focus.d'])
+    const externalDir = join(tmpdir(), 'rsp-status-external-archives-test', randomUUID())
+    await mkdir(externalDir, { recursive: true })
+    await writeFile(join(statusDir, '.rsp', 'changes', 'current.md'), renderChange('current'))
+    await rm(join(statusDir, '.rsp', 'archives'), { recursive: true })
+    await symlink(externalDir, join(statusDir, '.rsp', 'archives'))
+
+    const statusResult = spawnSync('node', [cliPath(), 'status', '--json'], { cwd: statusDir, encoding: 'utf-8' })
+    const checkResult = spawnSync('node', [cliPath(), 'check', '--json'], { cwd: statusDir, encoding: 'utf-8' })
+    const ready = JSON.parse(execSync(`node ${cliPath()} ready current --json`, { cwd: statusDir, encoding: 'utf-8' }))
+    const show = JSON.parse(execSync(`node ${cliPath()} show current --json`, { cwd: statusDir, encoding: 'utf-8' }))
+    const archiveResult = spawnSync('node', [cliPath(), 'archive', 'current', '--dry-run'], { cwd: statusDir, encoding: 'utf-8' })
+    const status = JSON.parse(statusResult.stdout)
+    const check = JSON.parse(checkResult.stdout)
+
+    expect(statusResult.status).toBe(1)
+    expect(status.ok).toBe(false)
+    expect(status.diagnostics).toContainEqual(expect.objectContaining({ code: 'invalid_archive_root' }))
+    expect(status.plan.ready).toEqual([])
+    expect(checkResult.status).toBe(1)
+    expect(check.diagnostics).toContainEqual(expect.objectContaining({ code: 'invalid_archive_root' }))
+    expect(ready.readiness.activeBlockers).toBe(true)
+    expect(ready.readiness.archiveReady).toBe('no')
+    expect(show.change.blockers).toBe(true)
+    expect(archiveResult.status).toBe(1)
+    expect(`${archiveResult.stdout}${archiveResult.stderr}`).toContain('archive root must be a real directory')
   })
 
   it('fails closed when the changes root is missing', async () => {
@@ -1784,7 +1983,7 @@ describe('archive name collisions', () => {
     await mkdir(externalDir, { recursive: true })
     execSync(`node ${cliPath()} init`, { cwd: archiveDir })
     execSync(`node ${cliPath()} group create release "Ship release"`, { cwd: archiveDir })
-    await writeFile(join(archiveDir, '.rsp', 'changes', 'release', 'brief.md'), renderGroupBrief('release', ['release/api', 'release/ui']))
+    await writeFile(join(archiveDir, '.rsp', 'changes', 'release', '00-brief.md'), renderGroupBrief('release', ['release/api', 'release/ui']))
     execSync(`node ${cliPath()} create release/api`, { cwd: archiveDir })
     await symlink(externalDir, join(archiveDir, '.rsp', 'archives', 'release'))
 
@@ -1995,7 +2194,7 @@ describe('show command', () => {
   it('rejects Group Briefs as executable Changes with a machine-readable error', async () => {
     const showDir = await createRspFixture('rsp-show-group-brief-test')
     await mkdir(join(showDir, '.rsp', 'changes', 'release'), { recursive: true })
-    await writeFile(join(showDir, '.rsp', 'changes', 'release', 'brief.md'), '# Group Brief: release\n')
+    await writeFile(join(showDir, '.rsp', 'changes', 'release', '00-brief.md'), '# Group Brief: release\n')
 
     const result = spawnSync('node', [cliPath(), 'show', 'release/brief', '--json'], { cwd: showDir, encoding: 'utf-8' })
 
@@ -2010,7 +2209,7 @@ describe('typed work references', () => {
     const statusDir = await createRspFixture('rsp-status-work-ref-test')
     const groupDir = join(statusDir, '.rsp', 'changes', 'release')
     await mkdir(groupDir, { recursive: true })
-    await writeFile(join(groupDir, 'brief.md'), renderGroupBrief('release', ['release/api', 'release/ui']))
+    await writeFile(join(groupDir, '00-brief.md'), renderGroupBrief('release', ['release/api', 'release/ui']))
     await writeFile(join(groupDir, 'api.md'), renderChange('release/api'))
     await writeFile(join(groupDir, 'ui.md'), renderChange('release/ui'))
 
@@ -2024,7 +2223,7 @@ describe('typed work references', () => {
     const focusDir = await createRspFixture('rsp-focus-group-brief-test', ['specs', 'changes', 'focus.d'])
     const groupDir = join(focusDir, '.rsp', 'changes', 'release')
     await mkdir(groupDir, { recursive: true })
-    await writeFile(join(groupDir, 'brief.md'), '# Group Brief: release\n')
+    await writeFile(join(groupDir, '00-brief.md'), '# Group Brief: release\n')
 
     const result = spawnSync('node', [cliPath(), 'focus', 'release/brief'], { cwd: focusDir, encoding: 'utf-8' })
 
@@ -2065,7 +2264,7 @@ describe('change groups', () => {
     execSync(`node ${cliPath()} init`, { cwd: groupDir })
 
     const output = execSync(`node ${cliPath()} group create release "Ship the release"`, { cwd: groupDir, encoding: 'utf-8' })
-    const briefPath = join(groupDir, '.rsp', 'changes', 'release', 'brief.md')
+    const briefPath = join(groupDir, '.rsp', 'changes', 'release', '00-brief.md')
     const brief = await readFile(briefPath, 'utf-8')
 
     expect(output).toContain('Created Change Group: release')
@@ -2096,9 +2295,9 @@ describe('change groups', () => {
     await mkdir(groupDir, { recursive: true })
     execSync(`node ${cliPath()} init`, { cwd: groupDir })
     execSync(`node ${cliPath()} group create release "Ship the release"`, { cwd: groupDir })
-    await writeFile(join(groupDir, '.rsp', 'changes', 'release', 'brief.md'), renderGroupBrief('release', ['release/api', 'release/ui']))
+    await writeFile(join(groupDir, '.rsp', 'changes', 'release', '00-brief.md'), renderGroupBrief('release', ['release/api', 'release/ui']))
     execSync(`node ${cliPath()} create release/api`, { cwd: groupDir })
-    await rm(join(groupDir, '.rsp', 'changes', 'release', 'brief.md'))
+    await rm(join(groupDir, '.rsp', 'changes', 'release', '00-brief.md'))
 
     const result = spawnSync('node', [cliPath(), 'unfocus', 'release/api'], { cwd: groupDir, encoding: 'utf-8' })
 
@@ -2112,7 +2311,7 @@ describe('change groups', () => {
     await mkdir(groupDir, { recursive: true })
     execSync(`node ${cliPath()} init`, { cwd: groupDir })
     execSync(`node ${cliPath()} group create release "Ship the release"`, { cwd: groupDir })
-    await writeFile(join(groupDir, '.rsp', 'changes', 'release', 'brief.md'), renderGroupBrief('release', ['release/api', 'release/ui']))
+    await writeFile(join(groupDir, '.rsp', 'changes', 'release', '00-brief.md'), renderGroupBrief('release', ['release/api', 'release/ui']))
 
     const result = spawnSync('node', [cliPath(), 'create', 'release/docs'], { cwd: groupDir, encoding: 'utf-8' })
 
@@ -2127,7 +2326,7 @@ describe('change groups', () => {
     await mkdir(groupDir, { recursive: true })
     execSync(`node ${cliPath()} init`, { cwd: groupDir })
     execSync(`node ${cliPath()} group create release "Ship the release"`, { cwd: groupDir })
-    await writeFile(join(groupDir, '.rsp', 'changes', 'release', 'brief.md'), renderGroupBrief('release', ['release/api', 'release/ui']))
+    await writeFile(join(groupDir, '.rsp', 'changes', 'release', '00-brief.md'), renderGroupBrief('release', ['release/api', 'release/ui']))
     await writeFile(join(groupDir, '.rsp', 'changes', 'release', 'docs.md'), renderChange('release/docs'))
 
     for (const args of [
@@ -2170,7 +2369,7 @@ describe('change groups', () => {
     await mkdir(groupDir, { recursive: true })
     execSync(`node ${cliPath()} init`, { cwd: groupDir })
     execSync(`node ${cliPath()} group create release "Ship the release"`, { cwd: groupDir })
-    await writeFile(join(groupDir, '.rsp', 'changes', 'release', 'brief.md'), renderGroupBrief('release', ['release/api', 'release/ui']))
+    await writeFile(join(groupDir, '.rsp', 'changes', 'release', '00-brief.md'), renderGroupBrief('release', ['release/api', 'release/ui']))
     execSync(`node ${cliPath()} create release/api`, { cwd: groupDir })
     execSync(`node ${cliPath()} create release/ui`, { cwd: groupDir })
 
@@ -2179,7 +2378,7 @@ describe('change groups', () => {
 
     expect(status.groups).toEqual([expect.objectContaining({
       name: 'release',
-      path: '.rsp/changes/release/brief.md',
+      path: '.rsp/changes/release/00-brief.md',
       completion: { done: 0, total: 1 },
       blockers: false,
       readyToClose: false,
@@ -2202,7 +2401,7 @@ describe('change groups', () => {
     await mkdir(groupDir, { recursive: true })
     execSync(`node ${cliPath()} init`, { cwd: groupDir })
     execSync(`node ${cliPath()} group create release "Ship the release"`, { cwd: groupDir })
-    await writeFile(join(groupDir, '.rsp', 'changes', 'release', 'brief.md'), renderGroupBrief('release', ['release/api', 'release/ui']))
+    await writeFile(join(groupDir, '.rsp', 'changes', 'release', '00-brief.md'), renderGroupBrief('release', ['release/api', 'release/ui']))
     execSync(`node ${cliPath()} create release/api`, { cwd: groupDir })
     execSync(`node ${cliPath()} create release/ui`, { cwd: groupDir })
     await writeFile(join(groupDir, '.rsp', 'changes', 'release', 'docs.md'), renderChange('release/docs'))
@@ -2224,8 +2423,8 @@ describe('change groups', () => {
     execSync(`node ${cliPath()} init`, { cwd: groupDir })
     execSync(`node ${cliPath()} group create release "Ship the release"`, { cwd: groupDir })
     execSync(`node ${cliPath()} group create other "Ship the other effort"`, { cwd: groupDir })
-    await writeFile(join(groupDir, '.rsp', 'changes', 'release', 'brief.md'), renderGroupBrief('release', ['release/api', 'release/ui'], { complete: true }))
-    await writeFile(join(groupDir, '.rsp', 'changes', 'other', 'brief.md'), renderGroupBrief('other', ['other/api', 'other/ui'], { complete: true }))
+    await writeFile(join(groupDir, '.rsp', 'changes', 'release', '00-brief.md'), renderGroupBrief('release', ['release/api', 'release/ui'], { complete: true }))
+    await writeFile(join(groupDir, '.rsp', 'changes', 'other', '00-brief.md'), renderGroupBrief('other', ['other/api', 'other/ui'], { complete: true }))
     const releaseArchiveDir = join(groupDir, '.rsp', 'archives', 'release')
     await mkdir(releaseArchiveDir, { recursive: true })
     await writeFile(join(releaseArchiveDir, '2026-07-19_api.md'), renderChange('other/api'))
@@ -2251,7 +2450,7 @@ describe('change groups', () => {
     await mkdir(groupDir, { recursive: true })
     execSync(`node ${cliPath()} init`, { cwd: groupDir })
     execSync(`node ${cliPath()} group create release "Ship the release"`, { cwd: groupDir })
-    const briefPath = join(groupDir, '.rsp', 'changes', 'release', 'brief.md')
+    const briefPath = join(groupDir, '.rsp', 'changes', 'release', '00-brief.md')
     await writeFile(briefPath, renderGroupBrief('release', ['release/api', 'release/ui', 'release/docs'], { complete: true }))
     execSync(`node ${cliPath()} create release/api`, { cwd: groupDir })
     execSync(`node ${cliPath()} create release/ui`, { cwd: groupDir })
@@ -2291,7 +2490,7 @@ describe('change groups', () => {
     execSync(`node ${cliPath()} init`, { cwd: groupDir })
     execSync(`node ${cliPath()} group create release "Ship the release"`, { cwd: groupDir })
     const mismatched = renderGroupBrief('release', ['release/api', 'release/ui']).replace('# Change Group: release', '# Change Group: other')
-    await writeFile(join(groupDir, '.rsp', 'changes', 'release', 'brief.md'), mismatched)
+    await writeFile(join(groupDir, '.rsp', 'changes', 'release', '00-brief.md'), mismatched)
 
     const result = spawnSync('node', [cliPath(), 'status', '--json'], { cwd: groupDir, encoding: 'utf-8' })
     const status = JSON.parse(result.stdout)
@@ -2305,14 +2504,14 @@ describe('change groups', () => {
     await mkdir(groupDir, { recursive: true })
     execSync(`node ${cliPath()} init`, { cwd: groupDir })
     execSync(`node ${cliPath()} group create release "Ship the release"`, { cwd: groupDir })
-    await writeFile(join(groupDir, '.rsp', 'changes', 'release', 'brief.md'), renderGroupBrief('release', ['release/api', 'release/ui']))
+    await writeFile(join(groupDir, '.rsp', 'changes', 'release', '00-brief.md'), renderGroupBrief('release', ['release/api', 'release/ui']))
     execSync(`node ${cliPath()} create release/api`, { cwd: groupDir })
 
     const output = execSync(`node ${cliPath()} show release/api --json`, { cwd: groupDir, encoding: 'utf-8' })
     const show = JSON.parse(output)
 
     expect(show.change.name).toBe('release/api')
-    expect(show.contextPaths[0]).toBe('.rsp/changes/release/brief.md')
+    expect(show.contextPaths[0]).toBe('.rsp/changes/release/00-brief.md')
   })
 
   it('does not close a Change Group while declared children remain open', async () => {
@@ -2320,7 +2519,7 @@ describe('change groups', () => {
     await mkdir(groupDir, { recursive: true })
     execSync(`node ${cliPath()} init`, { cwd: groupDir })
     execSync(`node ${cliPath()} group create release "Ship the release"`, { cwd: groupDir })
-    await writeFile(join(groupDir, '.rsp', 'changes', 'release', 'brief.md'), renderGroupBrief('release', ['release/api', 'release/ui'], { complete: true }))
+    await writeFile(join(groupDir, '.rsp', 'changes', 'release', '00-brief.md'), renderGroupBrief('release', ['release/api', 'release/ui'], { complete: true }))
     execSync(`node ${cliPath()} create release/api`, { cwd: groupDir })
     execSync(`node ${cliPath()} create release/ui`, { cwd: groupDir })
 
@@ -2329,7 +2528,7 @@ describe('change groups', () => {
     expect(result.status).toBe(1)
     expect(result.stderr).toContain('Change Group "release" is not ready to close')
     expect(result.stderr).toContain('open slices: release/api, release/ui')
-    expect(existsSync(join(groupDir, '.rsp', 'changes', 'release', 'brief.md'))).toBe(true)
+    expect(existsSync(join(groupDir, '.rsp', 'changes', 'release', '00-brief.md'))).toBe(true)
   })
 
   it('closes only the Group Brief after every declared child is archived', async () => {
@@ -2337,7 +2536,7 @@ describe('change groups', () => {
     await mkdir(groupDir, { recursive: true })
     execSync(`node ${cliPath()} init`, { cwd: groupDir })
     execSync(`node ${cliPath()} group create release "Ship the release"`, { cwd: groupDir })
-    await writeFile(join(groupDir, '.rsp', 'changes', 'release', 'brief.md'), renderGroupBrief('release', ['release/api', 'release/ui'], { complete: true }))
+    await writeFile(join(groupDir, '.rsp', 'changes', 'release', '00-brief.md'), renderGroupBrief('release', ['release/api', 'release/ui'], { complete: true }))
     execSync(`node ${cliPath()} create release/api`, { cwd: groupDir })
     execSync(`node ${cliPath()} create release/ui`, { cwd: groupDir })
     execSync(`node ${cliPath()} archive release/api`, { cwd: groupDir })
@@ -2376,7 +2575,7 @@ describe('change groups', () => {
     await mkdir(groupDir, { recursive: true })
     execSync(`node ${cliPath()} init`, { cwd: groupDir })
     execSync(`node ${cliPath()} group create release "Ship the release"`, { cwd: groupDir })
-    await writeFile(join(groupDir, '.rsp', 'changes', 'release', 'brief.md'), renderGroupBrief('release', ['release/api', 'release/ui'], { complete: true }))
+    await writeFile(join(groupDir, '.rsp', 'changes', 'release', '00-brief.md'), renderGroupBrief('release', ['release/api', 'release/ui'], { complete: true }))
     execSync(`node ${cliPath()} create release/api`, { cwd: groupDir })
     execSync(`node ${cliPath()} create release/ui`, { cwd: groupDir })
     execSync(`node ${cliPath()} archive release/api`, { cwd: groupDir })
@@ -2388,7 +2587,7 @@ describe('change groups', () => {
 
     expect(result.status).toBe(1)
     expect(result.stderr).toContain('invalid focus for release/api')
-    expect(existsSync(join(groupDir, '.rsp', 'changes', 'release', 'brief.md'))).toBe(true)
+    expect(existsSync(join(groupDir, '.rsp', 'changes', 'release', '00-brief.md'))).toBe(true)
   })
 
   it('does not reopen an archived Change Group identity', async () => {
@@ -2396,7 +2595,7 @@ describe('change groups', () => {
     await mkdir(groupDir, { recursive: true })
     execSync(`node ${cliPath()} init`, { cwd: groupDir })
     execSync(`node ${cliPath()} group create release "Ship the release"`, { cwd: groupDir })
-    await writeFile(join(groupDir, '.rsp', 'changes', 'release', 'brief.md'), renderGroupBrief('release', ['release/api', 'release/ui'], { complete: true }))
+    await writeFile(join(groupDir, '.rsp', 'changes', 'release', '00-brief.md'), renderGroupBrief('release', ['release/api', 'release/ui'], { complete: true }))
     execSync(`node ${cliPath()} create release/api`, { cwd: groupDir })
     execSync(`node ${cliPath()} create release/ui`, { cwd: groupDir })
     execSync(`node ${cliPath()} archive release/api`, { cwd: groupDir })
@@ -2410,7 +2609,7 @@ describe('change groups', () => {
     expect(existsSync(join(groupDir, '.rsp', 'changes', 'release'))).toBe(false)
 
     await mkdir(join(groupDir, '.rsp', 'changes', 'release'), { recursive: true })
-    await writeFile(join(groupDir, '.rsp', 'changes', 'release', 'brief.md'), renderGroupBrief('release', ['release/api', 'release/ui'], { complete: true }))
+    await writeFile(join(groupDir, '.rsp', 'changes', 'release', '00-brief.md'), renderGroupBrief('release', ['release/api', 'release/ui'], { complete: true }))
     const statusResult = spawnSync('node', [cliPath(), 'status', '--json'], { cwd: groupDir, encoding: 'utf-8' })
     const status = JSON.parse(statusResult.stdout)
     expect(statusResult.status).toBe(1)

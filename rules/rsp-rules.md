@@ -20,15 +20,19 @@ This file is the minimal fallback protocol for agents that cannot load the `rsp`
 
 - `changes/` stores open work; `archives/` stores completed history; `specs/` stores stable current facts; the configured Decision Record path stores lasting rationale.
 - Every Change is one Markdown file with explicit `kind` and the fixed `Proposal`, `Spec`, `Design`, `Tasks`, `Verify`, and `Blockers` sections.
+- In a Change `Blockers` section, `- requires \`<change-work-ref>\`: <reason>` declares an exact dependency on another executable Change. Other meaningful blocker prose remains external and is never inferred as a dependency.
 - Executable Change identities are either `<change>` or `<group>/<change>`. Recursive work paths are unsupported.
 - A Change Group is the only composite work shape. Use it only when at least two independently executable direct child Changes share one goal or completion contract.
-- `<group>/brief` owns Goal, Scope, Shared Constraints, Slices, Completion Conditions, Durable Outcomes, and Blockers. Every direct child must be declared by `Slices`, and every declared slice must be open or archived.
+- `<group>/brief`, physically stored as `<group>/00-brief.md`, owns Goal, Scope, Shared Constraints, Slices, Completion Conditions, Durable Outcomes, and Blockers. Every direct child must be declared by `Slices`, and every declared slice must be open or archived.
 - A Group Brief is not executable or focusable. Read it before a grouped child, archive children independently, and use `rsp group close <group>` only after derived completion passes. Archived Group identities cannot be reopened.
 - A file and directory cannot claim the same work identity.
 - `changes/` must exist as a real directory. Existing `focus.d/`, `archives/`, and direct group prefixes must also be real directories; symlinks, missing open-work roots, and incomplete inspection fail closed.
 - Initialization, repair, status inspection, Spec creation, and index generation use the same no-follow managed-path rules; recursive Specs may use only real directories and regular files.
 - Final managed files, including the project `AGENTS.md`, focus markers, fallback/config files, indexes, and placeholders, must be regular files rather than symlinks or special entries.
-- `status`, `check`, and `doctor` share work-tree and Change Group inspection and fail visibly on unsupported structure or membership mismatches.
+- `status`, `check`, and `doctor` share work-tree, Change Group, and dependency inspection. They fail visibly on unsupported structure, membership mismatches, malformed or missing dependency targets, self-dependencies, and cycles. With no focus, status uses Group Brief declaration order and derived blockers to recommend the first executable slice.
+- `status` derives dependency edges with their reasons, ready Changes, blockers, and stable execution waves from exact blocker references. Archived prerequisites resolve automatically; incomplete dependency or archive inspection fails closed and marks open Changes blocked for readiness; no graph file or delivery state is persisted; and Group Briefs are not dependency targets.
+- Parallel Changes in one Group follow the Brief `Slices` declaration order in plan output; unrelated work uses stable lexical ordering.
+- A Group Brief blocker is inherited by its direct child Changes as an external blocker; it does not create inferred dependency edges.
 - Persist only `open` and `archived`; readiness, blockers, verification, and next actions are derived.
 - Do not infer current work from open Changes or filenames.
 - Prefer RSP commands for deterministic setup, status, validation, repair, focus, index, and archive operations.

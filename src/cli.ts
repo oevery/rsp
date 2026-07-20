@@ -75,7 +75,7 @@ const createCommand = defineCommand({
 const groupCreateCommand = defineCommand({
   meta: {
     name: 'create',
-    description: 'Create an unfocused .rsp/changes/<group>/brief.md',
+    description: 'Create an unfocused .rsp/changes/<group>/00-brief.md',
   },
   args: {
     name: {

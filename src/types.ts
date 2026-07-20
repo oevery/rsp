@@ -84,6 +84,26 @@ export interface StatusRecordOutput {
   path: string | null
 }
 
+export interface ChangeDependencyEdgeOutput {
+  change: string
+  requires: string
+  reason: string
+  state: 'open' | 'archived' | 'missing'
+}
+
+export interface ChangeDependencyBlockerOutput {
+  change: string
+  requires: string[]
+  external: boolean
+}
+
+export interface ChangeDependencyPlanOutput {
+  ready: string[]
+  edges: ChangeDependencyEdgeOutput[]
+  blocked: ChangeDependencyBlockerOutput[]
+  waves: string[][]
+}
+
 export interface ChangeGroupSliceOutput {
   name: string
   boundary: string
@@ -115,6 +135,7 @@ export interface StatusJsonShape {
   focused: string[]
   records: StatusRecordOutput[]
   groups: ChangeGroupStatusOutput[]
+  plan: ChangeDependencyPlanOutput
   summary: {
     total: number
     focused: number

@@ -21,6 +21,12 @@ export function emitStatusJsonError(error: { code: string, message: string }, op
     focused: [],
     records: [],
     groups: [],
+    plan: {
+      ready: [],
+      edges: [],
+      blocked: [],
+      waves: [],
+    },
     summary: {
       total: 0,
       focused: 0,

@@ -663,7 +663,7 @@ export interface DurableReviewGuidance {
  * Collect deterministic archive readiness details for a change file.
  * Used by both `rsp archive` and `rsp ready`.
  */
-export function collectArchiveReadiness(content: string): ArchiveReadiness {
+export function collectArchiveReadiness(content: string, options: { activeBlockers?: boolean } = {}): ArchiveReadiness {
   const warnings: string[] = []
   const tasksSection = extractSection(content, 'Tasks')
   const verifySection = extractSection(content, 'Verify')
@@ -676,7 +676,7 @@ export function collectArchiveReadiness(content: string): ArchiveReadiness {
   if (verifyTodos.length > 0)
     warnings.push(`${verifyTodos.length} Verify checklist item(s) are still incomplete`)
 
-  const activeBlockers = hasMeaningfulBlockers(content)
+  const activeBlockers = options.activeBlockers ?? hasMeaningfulBlockers(content)
   if (activeBlockers)
     warnings.push('active blockers are present in the change file')
 
@@ -727,8 +727,8 @@ export function getDurableReviewCandidateTargets(): string[] {
 }
 
 /** Collect deterministic archive checklist item strings for a change file. */
-export function collectArchiveChecklist(content: string): string[] {
-  return collectArchiveReadiness(content).warnings
+export function collectArchiveChecklist(content: string, options: { activeBlockers?: boolean } = {}): string[] {
+  return collectArchiveReadiness(content, options).warnings
 }
 
 /**

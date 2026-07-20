@@ -6,6 +6,7 @@ import { ARCHIVES_DIR, CHANGES_DIR, FOCUS_DIR } from './config.js'
 import { inspectManagedDirectory, ManagedPathError, requireManagedDirectory, requireManagedFile } from './managed-path.js'
 
 const WORK_SEGMENT_RE = /^[a-z0-9-]+$/
+export const GROUP_BRIEF_FILENAME = '00-brief.md'
 
 export type WorkRef = FlatChangeRef | GroupedChangeRef | GroupBriefRef
 export type ExecutableWorkRef = FlatChangeRef | GroupedChangeRef
@@ -105,6 +106,7 @@ export function resolveWorkRef(name: string, options?: ResolveWorkRefOptions): W
 export function resolveWorkRef(name: string, options: ResolveWorkRefOptions = {}): WorkRef {
   const changesDir = options.changesDir ?? CHANGES_DIR
   const segments = name.split('/')
+  const isGroupBrief = segments.length === 2 && segments[1] === 'brief'
 
   if (segments.length > 2) {
     throw new WorkRefError(
@@ -120,14 +122,21 @@ export function resolveWorkRef(name: string, options: ResolveWorkRefOptions = {}
       name,
     )
   }
+  if (segments.length === 2 && segments[1] === GROUP_BRIEF_FILENAME.slice(0, -3)) {
+    throw new WorkRefError(
+      'invalid_work_ref',
+      `work identity "${name}" uses the reserved Group Brief filename`,
+      name,
+    )
+  }
 
   assertValidWorkRoot(changesDir, name)
-  assertNoIdentityCollision(changesDir, segments, name)
+  assertNoIdentityCollision(changesDir, segments, name, isGroupBrief ? GROUP_BRIEF_FILENAME : undefined)
 
-  const path = join(changesDir, ...segments.slice(0, -1), `${segments.at(-1)}.md`)
+  const path = join(changesDir, ...segments.slice(0, -1), isGroupBrief ? GROUP_BRIEF_FILENAME : `${segments.at(-1)}.md`)
   const ref: WorkRef = segments.length === 1
     ? { kind: 'change', name, path, group: null }
-    : segments[1] === 'brief'
+    : isGroupBrief
       ? { kind: 'group-brief', name, path, group: segments[0]! }
       : { kind: 'group-change', name, path, group: segments[0]! }
 
@@ -147,7 +156,7 @@ export function resolveWorkRef(name: string, options: ResolveWorkRefOptions = {}
 }
 
 function assertGroupBrief(changesDir: string, ref: GroupedChangeRef): void {
-  const briefPath = join(changesDir, ref.group, 'brief.md')
+  const briefPath = join(changesDir, ref.group, GROUP_BRIEF_FILENAME)
   const kind = getPathKind(briefPath, ref.name)
   if (kind === 'missing') {
     throw new WorkRefError(
@@ -211,7 +220,18 @@ export function resolveWorkRefPath(path: string, options: ResolveWorkRefOptions 
     )
   }
 
-  return resolveWorkRef(logicalPath.slice(0, -3), options)
+  const segments = logicalPath.split('/')
+  if (segments.length === 2 && segments[1] === 'brief.md') {
+    throw new WorkRefError(
+      'invalid_work_ref_path',
+      `unsupported legacy Group Brief path: ${path}`,
+      path,
+    )
+  }
+  const name = segments.length === 2 && segments[1] === GROUP_BRIEF_FILENAME
+    ? `${segments[0]}/brief`
+    : logicalPath.slice(0, -3)
+  return resolveWorkRef(name, options)
 }
 
 /** Narrow a WorkRef to the only shapes executable before Change Group lifecycle support. */
@@ -415,27 +435,31 @@ async function inspectGroupDirectory(group: string, groupPath: string, changesDi
   if (!entries)
     return
 
-  const briefEntry = entries.find(entry => entry.name === 'brief.md')
+  const briefEntry = entries.find(entry => entry.name === GROUP_BRIEF_FILENAME)
   if (!briefEntry) {
     addDiagnostic(result, new WorkRefError(
       'group_brief_missing',
       `Change Group "${group}" requires a Group Brief; run: rsp group create ${group}`,
       group,
-    ), join(groupPath, 'brief.md'))
+    ), join(groupPath, GROUP_BRIEF_FILENAME))
   }
   else if (!briefEntry.isFile()) {
     addDiagnostic(result, new WorkRefError(
       'work_ref_not_file',
-      `Group Brief must be a regular file: ${join(groupPath, 'brief.md')}`,
+      `Group Brief must be a regular file: ${join(groupPath, GROUP_BRIEF_FILENAME)}`,
       group,
-    ), join(groupPath, 'brief.md'))
+    ), join(groupPath, GROUP_BRIEF_FILENAME))
   }
 
   for (const entry of entries) {
     const input = `${group}/${entry.name}`
     const path = join(groupPath, entry.name)
-    if (entry.name === 'brief.md' && !entry.isFile())
+    if (entry.name === GROUP_BRIEF_FILENAME && !entry.isFile())
       continue
+    if (entry.name === 'brief.md') {
+      addInvalidEntryDiagnostic(result, input, path)
+      continue
+    }
     if (entry.isDirectory()) {
       addDiagnostic(result, new WorkRefError(
         'unsupported_work_depth',
@@ -554,10 +578,12 @@ function addDiagnostic(result: DiagnosticCollector, error: WorkRefError, path: s
   result.diagnostics.push({ code: error.code, input: error.input, path, message: error.message })
 }
 
-function assertNoIdentityCollision(changesDir: string, segments: string[], input: string): void {
+function assertNoIdentityCollision(changesDir: string, segments: string[], input: string, finalFilename?: string): void {
   for (let depth = 1; depth <= segments.length; depth++) {
     const identityPath = join(changesDir, ...segments.slice(0, depth))
-    const filePath = `${identityPath}.md`
+    const filePath = finalFilename && depth === segments.length
+      ? join(changesDir, ...segments.slice(0, -1), finalFilename)
+      : `${identityPath}.md`
     const fileKind = getPathKind(filePath, input)
     const identityKind = getPathKind(identityPath, input)
     const isPrefix = depth < segments.length

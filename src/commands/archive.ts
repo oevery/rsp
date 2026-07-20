@@ -4,6 +4,7 @@ import { basename, join } from 'node:path'
 
 import { resolveExecutableChange } from '../core/change-group.js'
 import { CHANGES_DIR, FOCUS_DIR, pc } from '../core/config.js'
+import { inspectChangeDependencies } from '../core/dependency-plan.js'
 import { cleanupEmptyParentDirs, collectArchiveChecklist, guardRspInitialized } from '../core/helpers.js'
 import { withRspLock } from '../core/lock.js'
 import { toErrorMessage } from '../core/output.js'
@@ -25,7 +26,10 @@ export async function archiveChange(name: string, options: ArchiveOptions = {}) 
   if (options.dryRun) {
     const workRef = await resolveArchiveWorkRefOrExit(name)
     const content = await readFile(workRef.path, 'utf-8')
-    const checklist = collectArchiveChecklist(content)
+    const dependencyInspection = await inspectChangeDependencies()
+    const checklist = collectArchiveChecklist(content, {
+      activeBlockers: dependencyInspection.activeBlockers.get(name),
+    })
 
     console.log()
     console.log(`  ${pc.bold('Archive dry-run for')} ${pc.cyan(name)}`)
@@ -49,7 +53,10 @@ export async function archiveChange(name: string, options: ArchiveOptions = {}) 
       const archiveSubdir = resolveArchiveDirectory(workRef)
       const focusEntry = resolveFocusMarkerPath(workRef)
       const content = await readFile(srcPath, 'utf-8')
-      const checklist = collectArchiveChecklist(content)
+      const dependencyInspection = await inspectChangeDependencies()
+      const checklist = collectArchiveChecklist(content, {
+        activeBlockers: dependencyInspection.activeBlockers.get(name),
+      })
 
       for (const line of checklist)
         console.log(`  ${pc.yellow('⚠')} ${line}`)

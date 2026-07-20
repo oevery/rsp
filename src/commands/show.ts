@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises'
 import { resolveExecutableChange } from '../core/change-group.js'
 import { inspectRspConfig, pc } from '../core/config.js'
 import { resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
+import { inspectChangeDependencies } from '../core/dependency-plan.js'
 import { buildDurableReviewGuidance, collectArchiveReadiness, countCheckboxes, getDurableReviewCandidateTargets, guardRspInitialized, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, parseScenarios } from '../core/helpers.js'
 import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
 import { inspectFocusTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
@@ -137,10 +138,11 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
 
   const isFocused = focused.has(name)
 
+  const dependencyInspection = await inspectChangeDependencies()
   const cb = countCheckboxes(content)
-  const blockers = hasMeaningfulBlockers(content)
+  const blockers = dependencyInspection.activeBlockers.get(name) ?? hasMeaningfulBlockers(content)
   const scenarios = parseScenarios(content)
-  const readinessDetails = collectArchiveReadiness(content)
+  const readinessDetails = collectArchiveReadiness(content, { activeBlockers: blockers })
 
   const readiness = {
     incompleteTasks: readinessDetails.taskTodos.length,

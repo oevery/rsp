@@ -39,7 +39,7 @@ npx -y @oevery/rsp doctor
 ├── changes/
 │   ├── <name>.md
 │   └── <group>/
-│       ├── brief.md
+│       ├── 00-brief.md
 │       └── <change>.md
 ├── focus.d/
 │   └── <name>
@@ -53,11 +53,13 @@ npx -y @oevery/rsp doctor
 - Decision Records describe lasting rationale, alternatives, tradeoffs, and consequences for hard-to-reverse choices. They default to `.rsp/specs/decisions/` or use one configured external path.
 - `changes/` captures open work, including features, fixes, refactors, docs, ops, and research.
 - A change is always a single Markdown file with explicit sections for proposal, spec, design, tasks, verification, and blockers.
+- An exact blocker line, `- requires \`<change-work-ref>\`: <reason>`, declares a dependency on another executable Change. Free-form blockers stay external; RSP never guesses edges from prose. Archived prerequisites resolve automatically.
 - Change names are either flat (`<change>`) or one direct grouped child (`<group>/<change>`). Recursive work directories are rejected.
-- A Change Group is optional and is the only composite work shape. Its non-executable, non-focusable `<group>/brief` owns the shared goal, constraints, declared slices, completion conditions, durable outcomes, and blockers for at least two direct child Changes.
-- Create a group before its children. Every grouped Change must be declared by the brief, is focused and archived independently, and includes the brief in its context. `status`, `check`, and `doctor` derive group health and completion without persisting another state; `rsp group close` archives only a completed brief. Archived Group identities cannot be reopened.
+- A Change Group is optional and is the only composite work shape. Its non-executable, non-focusable logical identity `<group>/brief`, physically stored as `<group>/00-brief.md`, owns the shared goal, constraints, declared slices, completion conditions, durable outcomes, and blockers for at least two direct child Changes.
+- Create a group before its children. Every grouped Change must be declared by the brief, is focused and archived independently, and includes the brief in its context. With no focus, `status` uses Brief declaration order and current blockers to recommend the first executable slice. `status`, `check`, and `doctor` derive group health and completion without persisting another state; `rsp group close` archives only a completed brief. Archived Group identities cannot be reopened.
+- A Group Brief blocker is inherited by its direct children as an external blocker in the derived execution plan; it does not create guessed dependency edges.
 - A Markdown file and directory cannot claim the same work identity.
-- `rsp status`, `rsp check`, and `rsp doctor` inspect the same complete work tree. The `changes/` root must exist as a real directory, and existing focus/archive roots and group prefixes must also be real directories. Unsupported directories, non-Markdown entries, symlinks, missing or unreadable current work, incomplete reads, and identity collisions are visible errors. `status` exits non-zero instead of hiding invalid work.
+- `rsp status`, `rsp check`, and `rsp doctor` inspect the same complete work tree and dependency facts. `status` derives exact edges with their reasons, ready work, blockers, and stable waves without a graph file; `check` and `doctor` reject incomplete archive inspection, malformed or missing targets, self-dependencies, and cycles. The `changes/` root must exist as a real directory, and existing focus/archive roots and group prefixes must also be real directories. Unsupported directories, non-Markdown entries, symlinks, missing or unreadable current work, incomplete reads, and identity collisions are visible errors. `status` exits non-zero instead of hiding invalid work.
 - `rsp init`, `rsp update`, `rsp add spec`, and generated index builders apply the same no-follow managed-path checks. Archive discovery accepts only flat archive files or one real group directory; recursively organized Specs accept only real directories and regular files.
 - Final managed files—such as the project `AGENTS.md`, focus markers, fallback/config files, generated indexes, and placeholders—must also be regular files; RSP rejects static symlink targets before reading or writing them.
 - Completed changes move to `archives/`. Stable current facts belong in Specs; lasting rationale belongs in Decision Records; stable scoped operating instructions belong in nearest project-owned `AGENTS.md`.
@@ -243,7 +245,7 @@ rsp init --with-project-setup   Also create .rsp/changes/project-setup.md
 rsp update                      Refresh the fallback protocol, repair the AGENTS block, and rebuild indices
 rsp add spec <name>             Create .rsp/specs/<name>.md and rebuild specs index
 rsp create <name> [summary]     Create .rsp/changes/<name>.md; add --lite for a shorter template
-rsp group create <name> [goal] Create an unfocused .rsp/changes/<name>/brief.md
+rsp group create <name> [goal] Create an unfocused .rsp/changes/<name>/00-brief.md
 rsp group close <name>         Archive a completed Group Brief after every child is archived
 rsp focus <name>                Mark an open change as currently focused
 rsp unfocus <name>              Remove an open change from the current focus set
@@ -254,7 +256,7 @@ rsp ready <name> [--json] [--verbose]
 rsp show <name|--focused> [--json] [--verbose]
                                   Show change context with readiness signals and context paths
 rsp status [--focused|--blocked|--stale <days>] [--json] [--verbose]
-                                  Show project status summary with focus-aware filters
+                                  Show project status plus derived dependency plan with focus-aware filters
 rsp check [--focused] [--json] [--verbose]
                                   Validate change files and lightly lint template/scenario structure
 rsp doctor [--fix] [--json] [--verbose]
@@ -264,6 +266,8 @@ rsp doctor [--fix] [--json] [--verbose]
 Use `skills/rsp/SKILL.md` for operations. When the skill is unavailable, use `.rsp/rsp-rules.md` as the minimal fallback protocol.
 
 When there is no focused change, `rsp status` and `rsp show --focused --json` print `nextActions` instead of guessing which open change is current.
+
+`rsp status --json` returns the same dependency projection under `plan.ready`, `plan.edges`, `plan.blocked`, and `plan.waves`. These are derived navigation facts, not execution authority or persisted workflow state.
 
 `rsp create --lite` is a shorter template for explicitly tracked small changes; simple current-session tasks should not create RSP changes unless tracking is intentionally needed.
 
