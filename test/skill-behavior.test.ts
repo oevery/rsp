@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
-import { loadEvaluationCases, prepareEvaluation, runEvaluation, runEvaluationMatrix } from '../scripts/rsp-review-eval.mjs'
+import { loadEvaluationCases, prepareEvaluation, runEvaluation, runEvaluationCalibration, runEvaluationMatrix } from '../scripts/rsp-review-eval.mjs'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const tempRoots: string[] = []
@@ -87,6 +87,7 @@ describe('rsp-review behavior fixtures', () => {
       model: 'test-model',
       provider: null,
       sandbox: 'read-only',
+      timeout_ms: 180_000,
     })
     expect(run.events).toMatchObject({
       by_item_type: { command_execution: 1 },
@@ -202,5 +203,59 @@ describe('rsp-review behavior fixtures', () => {
       root,
       variant: 'baseline',
     })).rejects.toThrow(/mutually exclusive/)
+  })
+
+  it('fails and records a run that exceeds its explicit timeout', async () => {
+    const outputRoot = join(root, '.cache', 'test-rsp-review-timeout')
+    tempRoots.push(outputRoot)
+    const run = await runEvaluation({
+      caseId: 'restraint-clean',
+      codexBin: join(root, 'test', 'skill-behavior', 'fake-codex.mjs'),
+      effort: 'low',
+      env: { ...process.env, FAKE_CODEX_DELAY_MS: '500' },
+      model: 'test-model',
+      outputRoot,
+      root,
+      timeoutMs: 50,
+      variant: 'baseline',
+    })
+
+    expect(run.result).toBe('failed')
+    expect(run.timed_out).toBe(true)
+    expect(run.settings.timeout_ms).toBe(50)
+  })
+
+  it('calibrates cost from exactly three fresh paired matrices', async () => {
+    const outputRoot = join(root, '.cache', 'test-rsp-review-calibration')
+    tempRoots.push(outputRoot)
+    const calibration = await runEvaluationCalibration({
+      caseIds: ['restraint-clean'],
+      codexBin: join(root, 'test', 'skill-behavior', 'fake-codex.mjs'),
+      effort: 'low',
+      model: 'test-model',
+      outputRoot,
+      root,
+    })
+
+    expect(calibration.result).toBe('passed')
+    expect(calibration.matrices).toHaveLength(3)
+    expect(calibration.cases).toEqual([{
+      case_id: 'restraint-clean',
+      median_overhead_pct: 0,
+      samples: [1, 2, 3].map(repetition => ({
+        baseline_input_tokens: 100,
+        candidate_input_tokens: 100,
+        overhead_pct: 0,
+        repetition,
+      })),
+    }])
+    expect(calibration.cost).toEqual({
+      aggregate_median_overhead_pct: 0,
+      passed: true,
+      thresholds: { max_aggregate_median_pct: 30, max_case_median_pct: 50 },
+    })
+    expect(calibration.issues).toEqual([])
+    expect(new Set(calibration.matrices.map(matrix => matrix.hash)).size).toBe(3)
+    expect(existsSync(calibration.metadata_path)).toBe(true)
   })
 })

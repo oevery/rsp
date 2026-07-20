@@ -110,17 +110,34 @@ function evaluationConfigArgs({ isolated, provider }) {
   return []
 }
 
-function runCommand({ args, command, cwd, env, input }) {
+function runCommand({ args, command, cwd, env, input, timeoutMs }) {
   return new Promise((resolveRun) => {
     const child = spawn(command, args, { cwd, env, stdio: ['pipe', 'pipe', 'pipe'] })
+    let settled = false
     let stderr = ''
     let stdout = ''
+    let timedOut = false
+    let forceKill
+    let timeout
+    const finish = (result) => {
+      if (settled)
+        return
+      settled = true
+      clearTimeout(timeout)
+      clearTimeout(forceKill)
+      resolveRun(result)
+    }
+    timeout = setTimeout(() => {
+      timedOut = true
+      child.kill('SIGTERM')
+      forceKill = setTimeout(() => child.kill('SIGKILL'), 5_000)
+    }, timeoutMs)
     child.stdout.setEncoding('utf8')
     child.stderr.setEncoding('utf8')
     child.stdout.on('data', chunk => stdout += chunk)
     child.stderr.on('data', chunk => stderr += chunk)
-    child.on('error', error => resolveRun({ code: null, error, stderr, stdout }))
-    child.on('close', code => resolveRun({ code, error: null, stderr, stdout }))
+    child.on('error', error => finish({ code: null, error, stderr, stdout, timedOut }))
+    child.on('close', code => finish({ code, error: null, stderr, stdout, timedOut }))
     child.stdin.end(input)
   })
 }
@@ -155,6 +172,16 @@ function summarizeEvents(raw) {
   }
 
   return { events: { by_item_type: byItemType, by_type: byType, tool_calls: toolCalls, total }, usage }
+}
+
+function median(values) {
+  const sorted = [...values].sort((left, right) => left - right)
+  const middle = Math.floor(sorted.length / 2)
+  return sorted.length % 2 === 0 ? (sorted[middle - 1] + sorted[middle]) / 2 : sorted[middle]
+}
+
+function rounded(value) {
+  return Math.round(value * 100) / 100
 }
 
 export function prepareEvaluation({ caseId, outputRoot, root, variant }) {
@@ -202,9 +229,11 @@ export function prepareEvaluation({ caseId, outputRoot, root, variant }) {
   return { case: value, promptPath, variant, workspace }
 }
 
-export async function runEvaluation({ caseId, codexBin = 'codex', effort, env = process.env, isolated = false, model, outputRoot, provider, root, variant }) {
+export async function runEvaluation({ caseId, codexBin = 'codex', effort, env = process.env, isolated = false, model, outputRoot, provider, root, timeoutMs = 180_000, variant }) {
   if (!model || !effort)
     throw new Error('Evaluation model and effort are required')
+  if (!Number.isInteger(timeoutMs) || timeoutMs <= 0)
+    throw new Error(`Invalid evaluation timeout: ${timeoutMs}`)
   if (provider && !PROVIDER_ID.test(provider))
     throw new Error(`Invalid evaluation provider: ${provider}`)
   const configArgs = evaluationConfigArgs({ isolated, provider })
@@ -243,7 +272,7 @@ export async function runEvaluation({ caseId, codexBin = 'codex', effort, env = 
     '-',
   ]
   const invocation = executable(codexBin, args)
-  const executed = await runCommand({ ...invocation, cwd: prepared.workspace, env, input: prompt })
+  const executed = await runCommand({ ...invocation, cwd: prepared.workspace, env, input: prompt, timeoutMs })
   const ended = new Date()
   writeFileSync(rawEventsPath, executed.stdout)
   if (executed.stderr)
@@ -283,8 +312,10 @@ export async function runEvaluation({ caseId, codexBin = 'codex', effort, env = 
       model,
       provider: provider ?? null,
       sandbox: 'read-only',
+      timeout_ms: timeoutMs,
     },
     started_at: started.toISOString(),
+    timed_out: executed.timedOut,
     usage: summary.usage,
     variant,
     worktree: {
@@ -297,7 +328,7 @@ export async function runEvaluation({ caseId, codexBin = 'codex', effort, env = 
   return metadata
 }
 
-export async function runEvaluationMatrix({ caseIds, codexBin = 'codex', effort, env = process.env, isolated = false, model, outputRoot, provider, root }) {
+export async function runEvaluationMatrix({ caseIds, codexBin = 'codex', effort, env = process.env, isolated = false, model, outputRoot, provider, root, timeoutMs = 180_000 }) {
   if (!model || !effort)
     throw new Error('Evaluation model and effort are required')
   if (provider && !PROVIDER_ID.test(provider))
@@ -317,7 +348,7 @@ export async function runEvaluationMatrix({ caseIds, codexBin = 'codex', effort,
   const runs = []
   for (const caseId of selected) {
     for (const variant of ['baseline', 'candidate']) {
-      runs.push(await runEvaluation({ caseId, codexBin, effort, env, isolated, model, outputRoot: evaluations, provider, root, variant }))
+      runs.push(await runEvaluation({ caseId, codexBin, effort, env, isolated, model, outputRoot: evaluations, provider, root, timeoutMs, variant }))
     }
   }
   const ended = new Date()
@@ -347,9 +378,119 @@ export async function runEvaluationMatrix({ caseIds, codexBin = 'codex', effort,
     result,
     runs,
     started_at: started.toISOString(),
+    timeout_ms: timeoutMs,
   }
   writeFileSync(matrixPath, `${JSON.stringify(matrix, null, 2)}\n`)
   return matrix
+}
+
+export async function runEvaluationCalibration({ caseIds, codexBin = 'codex', effort, env = process.env, isolated = false, model, outputRoot, provider, repetitions = 3, root, timeoutMs = 180_000 }) {
+  if (repetitions !== 3)
+    throw new Error(`Cost calibration requires exactly 3 repetitions, received: ${repetitions}`)
+
+  const evaluations = resolve(outputRoot ?? join(root, '.cache', 'rsp-review-eval'))
+  const started = new Date()
+  const matrices = []
+  for (let repetition = 1; repetition <= repetitions; repetition += 1) {
+    matrices.push(await runEvaluationMatrix({
+      caseIds,
+      codexBin,
+      effort,
+      env,
+      isolated,
+      model,
+      outputRoot: evaluations,
+      provider,
+      root,
+      timeoutMs,
+    }))
+  }
+  const ended = new Date()
+  const candidateHashes = [...new Set(matrices.flatMap(matrix => matrix.candidate_hashes))]
+  const fixtureHashes = [...new Set(matrices.flatMap(matrix => matrix.fixture_hashes))]
+  const harnessHashes = [...new Set(matrices.flatMap(matrix => matrix.harness_hashes))]
+  const runs = matrices.flatMap(matrix => matrix.runs)
+  const issues = []
+  if (candidateHashes.length !== 1)
+    issues.push('candidate identity drift')
+  if (fixtureHashes.length !== 1)
+    issues.push('fixture identity drift')
+  if (harnessHashes.length !== 1)
+    issues.push('harness identity drift')
+  if (matrices.some(matrix => matrix.result !== 'passed'))
+    issues.push('matrix process failure')
+  if (runs.some(run => !run.usage))
+    issues.push('missing usage')
+  if (runs.some(run => run.timed_out))
+    issues.push('run timeout')
+  if (runs.some(run => run.worktree.mutated))
+    issues.push('workspace mutation')
+
+  const selectedCaseIds = matrices[0]?.case_ids ?? []
+  const cases = selectedCaseIds.map((caseId) => {
+    const rawOverheads = []
+    const samples = matrices.map((matrix, index) => {
+      const baseline = matrix.runs.find(run => run.case.id === caseId && run.variant === 'baseline')
+      const candidate = matrix.runs.find(run => run.case.id === caseId && run.variant === 'candidate')
+      const valid = baseline?.usage && candidate?.usage
+      const overhead = valid ? (candidate.usage.input_tokens / baseline.usage.input_tokens - 1) * 100 : null
+      if (overhead !== null)
+        rawOverheads.push(overhead)
+      return {
+        baseline_input_tokens: baseline?.usage?.input_tokens ?? null,
+        candidate_input_tokens: candidate?.usage?.input_tokens ?? null,
+        overhead_pct: overhead === null ? null : rounded(overhead),
+        repetition: index + 1,
+      }
+    })
+    return {
+      case_id: caseId,
+      median_overhead_pct: rawOverheads.length === repetitions ? rounded(median(rawOverheads)) : null,
+      samples,
+    }
+  })
+  const caseMedians = cases.flatMap(item => item.median_overhead_pct === null ? [] : [item.median_overhead_pct])
+  const aggregateMedian = caseMedians.length === cases.length ? rounded(median(caseMedians)) : null
+  const thresholds = { max_aggregate_median_pct: 30, max_case_median_pct: 50 }
+  const costPassed = issues.length === 0
+    && aggregateMedian !== null
+    && aggregateMedian <= thresholds.max_aggregate_median_pct
+    && cases.every(item => item.median_overhead_pct !== null && item.median_overhead_pct <= thresholds.max_case_median_pct)
+  const calibrationDirectory = join(evaluations, 'calibrations')
+  mkdirSync(calibrationDirectory, { recursive: true })
+  const calibrationPath = join(calibrationDirectory, `${started.toISOString().replaceAll(/[:.]/g, '-')}.json`)
+  const calibration = {
+    candidate_hashes: candidateHashes,
+    cases,
+    config_source: isolated ? 'isolated' : 'user',
+    cost: {
+      aggregate_median_overhead_pct: aggregateMedian,
+      passed: costPassed,
+      thresholds,
+    },
+    effort,
+    ended_at: ended.toISOString(),
+    fixture_hashes: fixtureHashes,
+    harness_hashes: harnessHashes,
+    issues,
+    matrices: matrices.map((matrix, index) => ({
+      ended_at: matrix.ended_at,
+      hash: hashFile(matrix.metadata_path),
+      metadata_path: matrix.metadata_path,
+      repetition: index + 1,
+      result: matrix.result,
+      started_at: matrix.started_at,
+    })),
+    metadata_path: calibrationPath,
+    model,
+    provider: provider ?? null,
+    repetitions,
+    result: costPassed ? 'passed' : 'failed',
+    started_at: started.toISOString(),
+    timeout_ms: timeoutMs,
+  }
+  writeFileSync(calibrationPath, `${JSON.stringify(calibration, null, 2)}\n`)
+  return calibration
 }
 
 function flagValue(flags, name) {
@@ -358,26 +499,41 @@ function flagValue(flags, name) {
 }
 
 function usage() {
-  console.error('Usage:\n  node scripts/rsp-review-eval.mjs prepare <case> <baseline|candidate> [--json]\n  node scripts/rsp-review-eval.mjs run <case> <baseline|candidate> --model <model> --effort <effort> [--provider <provider> | --isolated] [--json]\n  node scripts/rsp-review-eval.mjs matrix --model <model> --effort <effort> [--provider <provider> | --isolated] [--json]')
+  console.error('Usage:\n  node scripts/rsp-review-eval.mjs prepare <case> <baseline|candidate> [--json]\n  node scripts/rsp-review-eval.mjs run <case> <baseline|candidate> --model <model> --effort <effort> [--provider <provider> | --isolated] [--timeout-ms <ms>] [--json]\n  node scripts/rsp-review-eval.mjs matrix --model <model> --effort <effort> [--provider <provider> | --isolated] [--timeout-ms <ms>] [--json]\n  node scripts/rsp-review-eval.mjs calibrate --model <model> --effort <effort> [--provider <provider> | --isolated] [--timeout-ms <ms>] [--json]')
 }
 
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 if (isMain) {
   const [command, ...arguments_] = process.argv.slice(2)
-  if (!['matrix', 'prepare', 'run'].includes(command)) {
+  if (!['calibrate', 'matrix', 'prepare', 'run'].includes(command)) {
     usage()
     process.exitCode = 1
   }
   else {
     try {
       const root = process.cwd()
-      if (command === 'matrix') {
+      if (command === 'calibrate') {
+        const calibration = await runEvaluationCalibration({
+          effort: flagValue(arguments_, '--effort'),
+          isolated: arguments_.includes('--isolated'),
+          model: flagValue(arguments_, '--model'),
+          provider: flagValue(arguments_, '--provider'),
+          root,
+          timeoutMs: flagValue(arguments_, '--timeout-ms') ? Number(flagValue(arguments_, '--timeout-ms')) : undefined,
+        })
+        if (arguments_.includes('--json'))
+          console.log(JSON.stringify(calibration, null, 2))
+        else
+          console.log(`Calibration ${calibration.result}: ${calibration.repetitions} repetitions\nMetadata: ${calibration.metadata_path}`)
+      }
+      else if (command === 'matrix') {
         const matrix = await runEvaluationMatrix({
           effort: flagValue(arguments_, '--effort'),
           isolated: arguments_.includes('--isolated'),
           model: flagValue(arguments_, '--model'),
           provider: flagValue(arguments_, '--provider'),
           root,
+          timeoutMs: flagValue(arguments_, '--timeout-ms') ? Number(flagValue(arguments_, '--timeout-ms')) : undefined,
         })
         if (arguments_.includes('--json'))
           console.log(JSON.stringify(matrix, null, 2))
@@ -405,6 +561,7 @@ if (isMain) {
           model: flagValue(flags, '--model'),
           provider: flagValue(flags, '--provider'),
           root,
+          timeoutMs: flagValue(flags, '--timeout-ms') ? Number(flagValue(flags, '--timeout-ms')) : undefined,
           variant,
         })
         if (flags.includes('--json'))

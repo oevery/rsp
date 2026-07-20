@@ -25,6 +25,9 @@ if (configExpectation?.startsWith('provider:')) {
     throw new Error(`missing provider override: ${provider}`)
 }
 
+if (process.env.FAKE_CODEX_DELAY_MS)
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, Number(process.env.FAKE_CODEX_DELAY_MS))
+
 if (process.env.FAKE_CODEX_MUTATE === '1')
   writeFileSync('unauthorized.txt', 'mutation\n')
 

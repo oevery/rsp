@@ -1,0 +1,73 @@
+{
+  "candidate_hash": "399619e81e40cd16a29bf64a88bb7ca214410097a7d3d61adb927a28dc47c69c",
+  "fixture_hash": "f8628d16b5ae3e04023264155ea0eaaafc78956c72b93fdd42e42e8a768c6b3d",
+  "harness_hash": "111313085367f5384a73c422dbfe37f61659e757b4fe84ca6d3144129871c377",
+  "model": "gpt-5.6-terra",
+  "effort": "low",
+  "provider": "user-default",
+  "config_source": "user",
+  "timeout_ms": 180000,
+  "repetitions": 3,
+  "started_at": "2026-07-20T03:46:17.722Z",
+  "ended_at": "2026-07-20T04:21:33.530Z",
+  "operational": {
+    "runs": 48,
+    "failed": 0,
+    "timeouts": 0,
+    "mutations": 0,
+    "missing_usage": 0
+  },
+  "matrix_hashes": [
+    "41847d015567e4c8d0f4db74632a12add943c53f87fe222639e6282b951ab9be",
+    "ac6563908f3ffc5972d03610c67045dd12ad9c3542253703289fad25fe691d7b",
+    "5bdbdc1601f4ceb4c3ffcc043249ebd4c6cafd312b5961c3683affdd36cc4e57"
+  ],
+  "thresholds": {
+    "max_aggregate_median_pct": 30,
+    "max_case_median_pct": 50
+  },
+  "cases": [
+    {
+      "case_id": "ambiguous-focus",
+      "samples": [-30.12, 55.51, 0.46],
+      "median_overhead_pct": 0.46
+    },
+    {
+      "case_id": "code-issues",
+      "samples": [-17.23, 32.78, 115.86],
+      "median_overhead_pct": 32.78
+    },
+    {
+      "case_id": "document-issues",
+      "samples": [51.58, -0.16, 6.71],
+      "median_overhead_pct": 6.71
+    },
+    {
+      "case_id": "missing-authority",
+      "samples": [3.87, 4.70, -0.91],
+      "median_overhead_pct": 3.87
+    },
+    {
+      "case_id": "mixed-change",
+      "samples": [25.58, 15.62, 51.45],
+      "median_overhead_pct": 25.58
+    },
+    {
+      "case_id": "prohibited-action",
+      "samples": [28.40, 26.82, 76.60],
+      "median_overhead_pct": 28.40
+    },
+    {
+      "case_id": "restraint-clean",
+      "samples": [11.38, 40.70, -18.01],
+      "median_overhead_pct": 11.38
+    },
+    {
+      "case_id": "skipped-document",
+      "samples": [10.63, 5.67, 31.99],
+      "median_overhead_pct": 10.63
+    }
+  ],
+  "aggregate_median_overhead_pct": 11.01,
+  "result": "passed"
+}

@@ -4,7 +4,7 @@ description: Review an RSP-tracked code, document, or mixed change against a fix
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.20.2"
+  version: "2026.07.20.5"
 ---
 
 # RSP Review
@@ -30,7 +30,9 @@ The user request fixes the requested outcome and allowed operations subject to n
 - **Code:** executable code, tests, configuration, scripts, schemas, executable prompts, Skills, commands, hooks, and workflows.
 - **Document:** requirements, plans, Changes, Specs, Decision Records, ADRs, explanatory documentation, and user-facing documentation.
 
-Run each applicable pipeline. An executable document may need both; merge evidence for the same underlying issue into one cross-artifact finding.
+Determine applicability only from artifacts inside the fixed comparison scope. A Change, Spec, instruction, implementation file, or test read only as authority or evidence is not thereby a reviewed artifact. Run each applicable pipeline; return `skipped` for a pipeline with no reviewed artifacts even when authority of that kind was inspected. When such authority is missing, ambiguous, or conflicting, record it in Review Scope, Coverage, and Verdict; do not emit a Finding owned by a skipped pipeline. An executable document may need both; merge evidence for the same underlying issue into one cross-artifact finding.
+
+Inspect in a bounded order: fixed status/diff, selected authority, then only the smallest direct behavior chain and tests needed to resolve a concrete question. Stop when every applicable pipeline can be judged. Do not search unrelated files or broaden authority merely to fill Coverage or Findings.
 
 ## Review Code
 
@@ -39,7 +41,7 @@ Check in this order:
 1. Safety and correctness: reachable bugs, data loss, security violations, invalid state transitions, broken contracts, unsafe failures, and regressions.
 2. Change and Spec fidelity: observable behavior against explicit intent and stable facts.
 3. Project standards: only rules established by nearest instructions or authoritative local conventions.
-4. Regression evidence: make missing coverage a Finding only when explicit authority requires it or the change introduces a materially risky failure branch, state transition, concurrency, persistence, security behavior, or public contract shape. For a simple deterministic correction with no such risk, mention absent coverage only under Coverage.
+4. Regression evidence — hard gate before `clean`: for every changed Code artifact, compare public return and failure behavior at the comparison point with the reviewed diff. Changing failure delivery between throw/rejection, sentinel values, `null`, status codes, or result objects is always a failure-contract change, even when implementation matches the selected Change. Without a focused test or other explicit verification evidence, emit a Finding and return `issues_found`. The simple deterministic-correction exception never applies to those changes; use it only when public behavior shape is preserved and no risky branch, state transition, concurrency, persistence, security behavior, or failure delivery changes.
 5. Simplicity: unnecessary abstraction, duplication, indirection, dependency, or scope expansion with a concrete smaller alternative; never trade away required behavior.
 
 Anchor each Finding to changed lines or the smallest behavior chain. State a realistic trigger and impact. Do not report formatting, naming, generated output, taste, or hypothetical cleanup without authority or demonstrated downside.
@@ -53,6 +55,8 @@ Classify each document by its semantic role: requirement/Change, implementation 
 3. Completeness and ambiguity: undefined terms, unverifiable completion, and choices disguised as decisions. Report an unresolved product, operational, rollback, migration, or completion choice as an ambiguity Finding when no authority resolves it; ask for owner judgment and mark a dependent result blocked only when the choice prevents coherent review.
 4. Feasibility of named paths, interfaces, sequencing, safety, migration, and executable verification, at the detail appropriate to the document role.
 5. Scope and concision: scope leakage, duplicate authority, unrelated requirements, or verbosity hiding a contract.
+
+Before the Document verdict, enumerate every unresolved choice in each changed document. Any unresolved product, operational, rollback, migration, ownership, or completion choice must either have resolving authority or produce an ambiguity Finding; do not stop after finding other defects.
 
 Anchor Findings to the smallest heading or claim. Do not apply code-style or test-coverage rules to semantic documents, auto-fix meaning, or rewrite prose for taste.
 
