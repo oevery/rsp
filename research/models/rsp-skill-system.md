@@ -177,9 +177,9 @@ dist/ or package staging       # generated host/plugin projections, if selected
 
 Maintainer skills under `.agents/skills/` are project-development tools and must not be presented as RSP product capabilities. Candidate product skills must not be placed there merely to evaluate them, because discoverability changes the active agent environment and contaminates tests/conversation context.
 
-The first candidate uses `research/candidates/skills/rsp-review/`. Evaluation copies it into an isolated temporary host environment. Promotion moves the accepted canonical payload to `skills/rsp-review/`; research evidence and scorecards remain under `research/` and are not packaged.
+The first candidate was developed under `research/candidates/skills/rsp-review/`, and evaluation copied it into an isolated temporary host environment. Promotion moved the accepted canonical payload to `skills/rsp-review/`; research evidence and scorecards remain under `research/` and are not packaged.
 
-The candidate keeps its shared entry in `SKILL.md` and progressively loads `references/code-review.md` and `references/document-review.md`. These are internal procedures of one capability, not recursively invoked Skills or a runtime router stack.
+The qualified candidate was compacted into one `SKILL.md`; promotion moved that file unchanged and removed the research candidate copy. A future capability may use progressively loaded references when measured context savings justify them, but those references remain internal procedures rather than recursively invoked Skills or a runtime router stack.
 
 ## Invocation and Composition Contract
 

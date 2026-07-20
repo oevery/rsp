@@ -115,9 +115,12 @@ Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENT
 - `managed`：在需要时创建 `AGENTS.md`，并插入或更新受管块。
 - `print`：正常初始化，并额外打印最终的 `AGENTS.md` 内容。
 
-## Skill
+## Skills
 
-使用 `skills/rsp/SKILL.md` 获取逐步的 setup、workflow 和审查指导。它适合按需加载，而不是默认常驻。
+RSP 发布两个宿主无关、按需加载的 Skills：
+
+- `rsp`：setup、workflow、durable review 和 archive 指导。
+- `rsp-review`：基于固定范围与项目权威，对 Code、Document 或 mixed Change 进行只读审查。
 
 文档分层矩阵：
 
@@ -126,21 +129,27 @@ Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENT
 | `README.md` | 人类 | 概览、入门、示例 |
 | `.rsp/rsp-rules.md` | 未安装 skill 的 agent | 最小 tool-agnostic fallback protocol |
 | `skills/rsp/SKILL.md` | agent | 首选操作指南 |
+| `skills/rsp-review/SKILL.md` | agent | Code 与 Document 只读审查 |
 | `AGENTS.md` | 人类与 agent | 有作用域的项目指令与 RSP 导航入口 |
 
 通常应由人先读 `README.md`；agent 应遵循 nearest `AGENTS.md`，可用时加载 `rsp` skill，仅在 skill 不可用时读取 `.rsp/rsp-rules.md`。
 
 如果文档中写的是 `rsp <command>`，默认前提是你的环境里已经能直接运行 `rsp`；否则请使用 `npx -y @oevery/rsp <command>`。
 
-可选安装示例：
+同时安装两个 Skills 的可选示例：
 
 ```bash
 npx skills add oevery/rsp
 ```
 
-本仓库发布了一个名为 `rsp` 的 skill，位于 `skills/rsp/`。
+也可以只安装一个能力：
 
-`rsp update` 只会刷新项目内的 RSP 文件。如果你在使用发布出来的 RSP skill，升级后还需要单独刷新一次：
+```bash
+npx skills add oevery/rsp --skill rsp
+npx skills add oevery/rsp --skill rsp-review
+```
+
+`rsp update` 只会刷新项目内的 RSP 文件。如果你在使用发布出来的 RSP Skills，升级后还需要单独刷新：
 
 ```bash
 npx skills add oevery/rsp

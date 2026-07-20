@@ -115,9 +115,12 @@ Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENT
 - `managed`: create `AGENTS.md` when needed and insert/update the managed block.
 - `print`: initialize normally and also print the resulting `AGENTS.md` content.
 
-## Skill
+## Skills
 
-Use `skills/rsp/SKILL.md` for step-by-step setup, workflow, and auditing guidance. It is intended for on-demand loading rather than always-on core rules.
+RSP publishes two host-neutral Skills for on-demand loading:
+
+- `rsp`: setup, workflow, durable review, and archive guidance.
+- `rsp-review`: read-only review of code, document, or mixed Changes against fixed scope and project authority.
 
 Reading guidance:
 
@@ -132,21 +135,27 @@ Surface matrix:
 | `README.md` | Humans | Overview, onboarding, examples |
 | `.rsp/rsp-rules.md` | Agents without the skill | Minimal tool-agnostic fallback protocol |
 | `skills/rsp/SKILL.md` | Agents | Preferred operational guide |
+| `skills/rsp-review/SKILL.md` | Agents | Read-only Code and Document review |
 | `AGENTS.md` | Humans and agents | Scoped project instructions and RSP navigation |
 
 Humans should usually start with `README.md`; agents should follow nearest `AGENTS.md`, load the `rsp` skill when available, and use `.rsp/rsp-rules.md` only as fallback.
 
 When this README shows `rsp <command>`, it assumes the command is already available in your environment. Otherwise use `npx -y @oevery/rsp <command>`.
 
-Example optional installation flow:
+Example optional installation flow for both Skills:
 
 ```bash
 npx skills add oevery/rsp
 ```
 
-This repository publishes a skill named `rsp` under `skills/rsp/`.
+Install only one capability when preferred:
 
-`rsp update` refreshes project-local RSP files only. If you use the published RSP skill, refresh it separately after upgrading:
+```bash
+npx skills add oevery/rsp --skill rsp
+npx skills add oevery/rsp --skill rsp-review
+```
+
+`rsp update` refreshes project-local RSP files only. If you use published RSP Skills, refresh them separately after upgrading:
 
 ```bash
 npx skills add oevery/rsp

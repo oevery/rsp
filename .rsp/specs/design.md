@@ -45,8 +45,9 @@
 - `rsp create --lite` is a short template for explicitly tracked small changes; simple current-session tasks should not create RSP changes unless tracking is intentionally needed.
 - Semantic judgment, including durable writeback decisions, belongs to an RSP skill or a human reviewer.
 - Durable review decides current-fact updates and Decision Record updates independently; archive never promotes Change content automatically.
-- The published `skills/rsp` artifact uses the portable intersection of Agent Skills and active target-client validation: it omits optional `compatibility`, carries `license: MIT`, `metadata.author`, and an independent quoted content CalVer that changes only for meaningful skill-content releases rather than every CLI release.
-- Product distribution includes the fallback protocol and portable RSP skill; host-specific slash-command prompts are outside the core package.
+- The published `skills/rsp` and `skills/rsp-review` artifacts use the portable intersection of Agent Skills and active target-client validation: they omit optional `compatibility`, carry `license: MIT`, `metadata.author`, and independent quoted content CalVer values that change only for meaningful Skill-content releases rather than every CLI release.
+- `skills/rsp-review` is the canonical read-only review capability for Code, Document, and mixed scopes. It preserves separate pipeline verdicts, emits one deduplicated report, and cannot implement, commit, publish, or approve.
+- Product distribution includes the fallback protocol and portable RSP Skills; host-specific slash-command prompts and metadata are outside the core package until a concrete host consumer requires a projection.
 - The RSP-managed `AGENTS.md` block is a navigation entrypoint and must not become a durable rules or design store; project-owned sections outside it may hold stable scoped instructions.
 - `.rsp/rsp-rules.md` is the only runtime fallback path; `rsp update` migrates the obsolete generated path and removes it.
 - `.rsp/rules/` is not a durable authority. Any residual contents require explicit semantic migration to the nearest project-owned `AGENTS.md` before removal; empty directory trees may be pruned deterministically.
@@ -87,7 +88,7 @@
 - `research/` contains tracked intermediate upstream distillations and models; it is not a product truth or runtime context source.
 - `bin/rsp.mjs` is the executable entrypoint that loads the built CLI.
 - `rules/rsp-rules.md` is the package-authored fallback source copied to consumer `.rsp/rsp-rules.md` during initialization or update.
-- `skills/rsp/` contains operational skill guidance for agents that support skills.
+- `skills/rsp/` contains operational workflow guidance; `skills/rsp-review/` contains the read-only review capability. Both are canonical published Agent Skills.
 - `docs/design-philosophy.md` records explanatory product and design rationale for maintainers.
 - `test/` contains Vitest coverage for command behavior and core helpers.
 

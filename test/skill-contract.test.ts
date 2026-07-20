@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
-const stableSkill = join(root, 'skills', 'rsp')
-const reviewCandidate = join(root, 'research', 'candidates', 'skills', 'rsp-review')
+const coreSkill = join(root, 'skills', 'rsp')
+const reviewSkill = join(root, 'skills', 'rsp-review')
 const portableKeys = new Set([
   'description',
   'license',
@@ -89,18 +89,20 @@ function expectPortableSkill(skillDir: string): void {
 
 describe('rsp Skill contract', () => {
   it('keeps the stable RSP Skill portable', () => {
-    expectPortableSkill(stableSkill)
+    expectPortableSkill(coreSkill)
   })
 
-  it('keeps the review candidate portable and outside published discovery', () => {
-    expectPortableSkill(reviewCandidate)
-    expect(reviewCandidate.startsWith(join(root, 'skills'))).toBe(false)
-    expect(reviewCandidate.includes(`${sep}.agents${sep}skills${sep}`)).toBe(false)
+  it('publishes a portable canonical review Skill', () => {
+    expectPortableSkill(reviewSkill)
+    expect(reviewSkill.includes(`${sep}.agents${sep}skills${sep}`)).toBe(false)
   })
 
-  it('keeps candidate research outside npm package roots', () => {
+  it('publishes both stable Skills while keeping research outside package roots', () => {
     const packageJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as { files: string[] }
+    const publishedSkills = readdirSync(join(root, 'skills'))
     expect(packageJson.files.some(path => path.startsWith('research'))).toBe(false)
     expect(packageJson.files).toContain('skills/')
+    expect(publishedSkills).toContain('rsp')
+    expect(publishedSkills).toContain('rsp-review')
   })
 })

@@ -184,6 +184,11 @@ function rounded(value) {
   return Math.round(value * 100) / 100
 }
 
+function reviewSkillPath(root) {
+  const candidate = join(root, 'research', 'candidates', 'skills', 'rsp-review')
+  return existsSync(candidate) ? candidate : join(root, 'skills', 'rsp-review')
+}
+
 export function prepareEvaluation({ caseId, outputRoot, root, variant }) {
   if (variant !== 'baseline' && variant !== 'candidate')
     throw new Error(`Unknown evaluation variant: ${variant}`)
@@ -209,7 +214,7 @@ export function prepareEvaluation({ caseId, outputRoot, root, variant }) {
     cpSync(changed, workspace, { recursive: true })
 
   if (variant === 'candidate') {
-    const sourceSkill = join(root, 'research', 'candidates', 'skills', 'rsp-review')
+    const sourceSkill = reviewSkillPath(root)
     const installedSkill = join(workspace, '.agents', 'skills', 'rsp-review')
     mkdirSync(join(workspace, '.agents', 'skills'), { recursive: true })
     cpSync(sourceSkill, installedSkill, { recursive: true })
@@ -247,7 +252,7 @@ export async function runEvaluation({ caseId, codexBin = 'codex', effort, env = 
   const finalOutputPath = join(runDirectory, 'final.md')
   const metadataPath = join(runDirectory, 'metadata.json')
   const prompt = readFileSync(prepared.promptPath, 'utf8')
-  const candidatePath = join(root, 'research', 'candidates', 'skills', 'rsp-review')
+  const candidatePath = reviewSkillPath(root)
   const fixturesPath = fixtureRoot(root)
   const harnessPath = fileURLToPath(import.meta.url)
   const beforeStatus = git(prepared.workspace, ['status', '--porcelain=v1', '--untracked-files=all'])
