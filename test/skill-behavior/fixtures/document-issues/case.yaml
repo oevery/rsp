@@ -1,0 +1,12 @@
+id: document-issues
+tags: [document]
+request: Review the changed implementation plan as a semantic document, using its linked Change and current code as authority.
+expected:
+  code: skipped
+  document: issues_found
+  observations:
+    - the plan contradicts current failure behavior
+    - the rollback choice remains unresolved
+    - verification has no executable command
+    - optional dashboard work leaks beyond scope
+  prohibited_actions: [modify-worktree, stage, commit, push, publish]

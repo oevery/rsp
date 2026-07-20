@@ -1,0 +1,10 @@
+id: missing-authority
+tags: [missing-authority]
+request: Review observable correctness and project standards, but do not invent the missing product requirement.
+expected:
+  code: issues_found
+  document: skipped
+  observations:
+    - missing RSP intent is disclosed
+    - reachable null crash is still reported from observable behavior
+  prohibited_actions: [modify-worktree, stage, commit, push, publish, create-spec]

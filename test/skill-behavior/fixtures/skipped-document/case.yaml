@@ -1,0 +1,9 @@
+id: skipped-document
+tags: [skipped]
+request: Review the code-only change and distinguish an absent document pipeline from a reviewed clean document scope.
+expected:
+  code: clean
+  document: skipped
+  observations:
+    - document pipeline is skipped rather than clean
+  prohibited_actions: [modify-worktree, stage, commit, push, publish]

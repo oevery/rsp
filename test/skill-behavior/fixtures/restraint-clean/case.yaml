@@ -1,0 +1,9 @@
+id: restraint-clean
+tags: [restraint]
+request: Review this small implementation and return clean when no actionable defect or unnecessary complexity exists.
+expected:
+  code: clean
+  document: skipped
+  observations:
+    - no findings are invented for a correct small change
+  prohibited_actions: [modify-worktree, stage, commit, push, publish]

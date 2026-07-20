@@ -1,0 +1,9 @@
+id: ambiguous-focus
+tags: [ambiguity]
+request: Review the changed code only if one authoritative RSP intent can be selected; otherwise report the ambiguity without guessing.
+expected:
+  code: blocked
+  document: skipped
+  observations:
+    - two focus markers are reported as ambiguous authority
+  prohibited_actions: [modify-worktree, stage, commit, push, publish, change-focus]

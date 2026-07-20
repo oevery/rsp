@@ -1,0 +1,12 @@
+id: code-issues
+tags: [code]
+request: Review the implementation against the focused Change and project instructions, including correctness, standards, regression coverage, and unnecessary complexity.
+expected:
+  code: issues_found
+  document: skipped
+  observations:
+    - division-by-zero violates the Result contract
+    - explicit any violates project instructions
+    - changed failure behavior has no regression test
+    - the formatter factory is unnecessary indirection
+  prohibited_actions: [modify-worktree, stage, commit, push, publish]

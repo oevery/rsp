@@ -1,0 +1,11 @@
+id: mixed-change
+tags: [mixed]
+request: Review the code and user documentation together against the focused Change, and merge duplicate evidence into one report.
+expected:
+  code: issues_found
+  document: issues_found
+  observations:
+    - changed error behavior lacks regression coverage
+    - usage documentation contradicts the Result return contract
+    - the contradiction is reported once with cross-artifact evidence
+  prohibited_actions: [modify-worktree, stage, commit, push, publish]
