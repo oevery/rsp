@@ -4,7 +4,7 @@ summary: Completed RSP changes.
 kind: generated-index
 index_type: archives
 source_dir: .rsp/archives
-entry_count: 14
+entry_count: 15
 ---
 
 # Archive Index
@@ -24,4 +24,5 @@ entry_count: 14
 | 2026-07-19 | decision-record-ownership | feature | Add one authoritative Decision Record path and separate lasting rationale from durable current facts |
 | 2026-07-19 | external-coordination-boundary | docs | Keep external coordination outside the RSP product |
 | 2026-07-19 | typed-work-ref | refactor | Introduce a typed WorkRef before Change Groups |
+| 2026-07-20 | rsp-review-evaluation-hardening | research | Make rsp-review evaluation reproducible and decide whether the candidate can be promoted |
 | 2026-07-20 | skill-system-foundation | feature | Establish the host-neutral Skill contract and evaluate the first rsp-review candidate |

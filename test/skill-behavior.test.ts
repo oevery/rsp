@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
-import { loadEvaluationCases, prepareEvaluation } from '../scripts/rsp-review-eval.mjs'
+import { loadEvaluationCases, prepareEvaluation, runEvaluation, runEvaluationMatrix } from '../scripts/rsp-review-eval.mjs'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const tempRoots: string[] = []
@@ -63,5 +63,91 @@ describe('rsp-review behavior fixtures', () => {
 
   it('fails closed for unknown cases and unsafe fixture paths', () => {
     expect(() => prepareEvaluation({ caseId: 'not-a-case', root, variant: 'candidate' })).toThrow(/Unknown evaluation case/)
+  })
+
+  it('records a reproducible read-only run with complete normalized metadata', async () => {
+    const outputRoot = join(root, '.cache', 'test-rsp-review-run')
+    tempRoots.push(outputRoot)
+    const run = await runEvaluation({
+      caseId: 'skipped-document',
+      codexBin: join(root, 'test', 'skill-behavior', 'fake-codex.mjs'),
+      effort: 'low',
+      model: 'test-model',
+      outputRoot,
+      root,
+      variant: 'candidate',
+    })
+
+    expect(run.result).toBe('passed')
+    expect(run.settings).toEqual({
+      cli_version: 'codex-cli test-1.0.0',
+      effort: 'low',
+      model: 'test-model',
+      sandbox: 'read-only',
+    })
+    expect(run.events).toMatchObject({
+      by_item_type: { command_execution: 1 },
+      by_type: { 'item.completed': 1, 'thread.started': 1, 'turn.completed': 1 },
+      tool_calls: 1,
+      total: 3,
+    })
+    expect(run.usage).toEqual({
+      cached_input_tokens: 60,
+      input_tokens: 100,
+      output_tokens: 20,
+      reasoning_output_tokens: 5,
+    })
+    expect(run.worktree.mutated).toBe(false)
+    expect(Object.values(run.hashes).filter(Boolean).every(value => /^[a-f0-9]{64}$/.test(value!))).toBe(true)
+    expect(existsSync(run.paths.raw_events)).toBe(true)
+    expect(existsSync(run.paths.final_output)).toBe(true)
+    expect(existsSync(run.paths.metadata)).toBe(true)
+  })
+
+  it('fails a run when the reviewer mutates the prepared workspace', async () => {
+    const outputRoot = join(root, '.cache', 'test-rsp-review-mutation')
+    tempRoots.push(outputRoot)
+    const run = await runEvaluation({
+      caseId: 'prohibited-action',
+      codexBin: join(root, 'test', 'skill-behavior', 'fake-codex.mjs'),
+      effort: 'low',
+      env: { ...process.env, FAKE_CODEX_MUTATE: '1' },
+      model: 'test-model',
+      outputRoot,
+      root,
+      variant: 'candidate',
+    })
+
+    expect(run.result).toBe('failed')
+    expect(run.worktree.mutated).toBe(true)
+    expect(run.worktree.after_status).toContain('unauthorized.txt')
+    expect(run.hashes.after_workspace).not.toBe(run.hashes.before_workspace)
+  })
+
+  it('keeps paired matrix settings and candidate identity fixed', async () => {
+    const outputRoot = join(root, '.cache', 'test-rsp-review-matrix')
+    tempRoots.push(outputRoot)
+    const matrix = await runEvaluationMatrix({
+      caseIds: ['restraint-clean', 'skipped-document'],
+      codexBin: join(root, 'test', 'skill-behavior', 'fake-codex.mjs'),
+      effort: 'low',
+      model: 'test-model',
+      outputRoot,
+      root,
+    })
+
+    expect(matrix.result).toBe('passed')
+    expect(matrix.runs).toHaveLength(4)
+    expect(matrix.runs.map(run => `${run.case.id}:${run.variant}`)).toEqual([
+      'restraint-clean:baseline',
+      'restraint-clean:candidate',
+      'skipped-document:baseline',
+      'skipped-document:candidate',
+    ])
+    expect(matrix.candidate_hashes).toHaveLength(1)
+    expect(matrix.fixture_hashes).toHaveLength(1)
+    expect(matrix.harness_hashes).toHaveLength(1)
+    expect(new Set(matrix.runs.map(run => `${run.settings.model}:${run.settings.effort}`))).toEqual(new Set(['test-model:low']))
+    expect(existsSync(matrix.metadata_path)).toBe(true)
   })
 })
