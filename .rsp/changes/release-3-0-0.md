@@ -71,5 +71,4 @@ kind: "ops"
 
 ## Blockers
 - requires `minimum-skill-suite/validate-skill-composition`: needs the installed minimum suite to pass composition gates
-- `skill-capability-research` and `minimum-skill-suite` must both be closed.
-- External push, tag, npm publish, and GitHub Release operations require separate explicit authorization.
+- none

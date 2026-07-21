@@ -128,6 +128,8 @@ RSP publishes four host-neutral Skills for on-demand loading:
 
 Each Skill is independently invocable and returns results to existing project or RSP artifact owners. The suite adds no hidden workflow state or recursive Skill orchestration, and no Skill infers commit, push, or publication authority.
 
+For a complete tracked change, compose the suite manually as evidence requires: `rsp-shape` returns an executable Change, `rsp-implement` returns code/tests and fresh verification to that Change, `rsp-review` returns a read-only report, and `rsp` performs the durable decision before archive. Ambiguity, failed gates, and missing authority stop at their existing owner; they do not trigger an automatic retry loop.
+
 Reading guidance:
 
 - `README.md`: human-oriented overview and examples

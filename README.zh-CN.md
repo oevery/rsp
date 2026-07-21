@@ -128,6 +128,8 @@ RSP 发布四个宿主无关、按需加载的 Skills：
 
 每个 Skill 都可以独立调用，并把结果返回现有项目或 RSP artifact owner。套件不引入隐藏 workflow state 或递归 Skill 编排，也不会由任何 Skill 推断 commit、push 或 publication 权限。
 
+完成一个 tracked Change 时，应按证据手动组合套件：`rsp-shape` 返回可执行 Change，`rsp-implement` 把代码、测试与 fresh verification 返回该 Change，`rsp-review` 返回只读报告，最后由 `rsp` 在 archive 前完成 durable decision。遇到歧义、失败门禁或缺失权限时，流程停在现有 owner，不会自动重试。
+
 文档分层矩阵：
 
 | Surface | 主要受众 | 职责 |

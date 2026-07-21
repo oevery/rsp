@@ -100,12 +100,14 @@ describe('rsp Skill contract', () => {
     expect(readSkill(reviewSkill).body).toContain('Absence of a new test is not actionable by itself')
   })
 
-  it('publishes both stable Skills while keeping research outside package roots', () => {
+  it('publishes the complete minimum suite while keeping research outside package roots', () => {
     const packageJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as { files: string[] }
     const publishedSkills = readdirSync(join(root, 'skills'))
     expect(packageJson.files.some(path => path.startsWith('research'))).toBe(false)
     expect(packageJson.files).toContain('skills/')
     expect(publishedSkills).toContain('rsp')
+    expect(publishedSkills).toContain('rsp-shape')
+    expect(publishedSkills).toContain('rsp-implement')
     expect(publishedSkills).toContain('rsp-review')
   })
 })

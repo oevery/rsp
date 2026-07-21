@@ -38,18 +38,18 @@ kind: "feature"
   - Composition tests may drive Skills manually but cannot introduce persistent controller state or recursive invocation semantics.
 
 ## Tasks
-- [ ] Select unseen normal, ambiguity, failure, dirty-worktree, direct-invocation, and prohibited-action tasks.
-- [ ] Run the installed suite once across the holdout with recorded host settings.
-- [ ] Measure correctness, corrections, mutation authority, handoff coherence, total tokens, elapsed time, and tool calls.
-- [ ] Resolve material composition defects in their owning Skill; select a release candidate before any repeated calibration.
+- [x] Select unseen normal, ambiguity, failure, dirty-worktree, direct-invocation, and prohibited-action tasks.
+- [x] Run the installed suite once across the holdout with recorded host settings.
+- [x] Measure correctness, corrections, mutation authority, handoff coherence, total tokens, elapsed time, and tool calls.
+- [x] Resolve material findings through their existing owner and select suite hash `e6fd7076f0e0e58c9091311c8c6639c306516d78142c682260127d6a75f350c5`; no canonical Skill defect required a behavior revision or repeated calibration.
 
 ## Verify
 - Automated:
-  - [ ] Static Skill contracts, full project gates, npm pack, and clean-prefix installation.
+  - [x] Static contracts, all four Agent Skills validators, `release:check` (12 files / 267 tests), final npm pack, and clean-prefix CLI/Skill discovery passed.
 - Manual:
-  - [ ] Inspect the unseen holdout and confirm every artifact mutation and stop decision has exactly one owner.
+  - [x] Inspected the unseen holdout: every artifact mutation and stop decision had exactly one owner; the final normal review was clean and all five negative/direct cases stopped or returned correctly.
 - Durable updates:
-  - [ ] Record only the stable suite boundary and composition contract in `.rsp/specs/design.md` and published README files.
+  - [x] Recorded only the stable manual composition and stop boundary in `.rsp/specs/design.md`, `README.md`, and `README.zh-CN.md`.
 
 ## Blockers
 - requires `fix-rsp-review-production-chain`: needs the known production-seam review miss corrected before composing the final suite
