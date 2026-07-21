@@ -78,4 +78,6 @@ kind: "ops"
 - requires `3-0-skill-readiness/validate-assisted-engineering-loop`: needs the tightened assisted engineering loop to pass the 3.0 readiness gate
 - requires `engineering-disciplines/validate-discipline-composition`: needs standalone TDD and diagnosis Skills to pass the installed-suite discipline gate
 - requires `fix-review-output-and-eval-runner`: needs review follow-up safety and output-language fixes before release preparation
+- requires `matt-first-daily-capability-audit`: needs the maintainer-requested daily capability audit before the 3.0 product boundary is frozen
+- daily workflow depth: select or reject the audit's recommended shaping/controller follow-up before release preparation
 - none
