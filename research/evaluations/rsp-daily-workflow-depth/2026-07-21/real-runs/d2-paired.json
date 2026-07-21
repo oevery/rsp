@@ -1,0 +1,150 @@
+{
+  "cases": [
+    {
+      "baseline": {
+        "path": "research/evaluations/rsp-shape/2026-07-21-depth/outputs/design-baseline.md",
+        "sha256": "f5a84712406cd9c5a6d346da55e6c1c7283e212e65e89842055eca7205f95745",
+        "score": {
+          "fields": [
+            {
+              "id": "unresolved-question",
+              "present": true
+            },
+            {
+              "id": "authoritative-inputs",
+              "present": false
+            },
+            {
+              "id": "expected-artifact",
+              "present": false
+            },
+            {
+              "id": "mutation-boundary",
+              "present": false
+            },
+            {
+              "id": "same-returning-work-ref",
+              "present": false
+            }
+          ],
+          "missing_fields": [
+            "authoritative-inputs",
+            "expected-artifact",
+            "mutation-boundary",
+            "same-returning-work-ref"
+          ],
+          "deterministic_correction_requests": 4
+        }
+      },
+      "candidate": {
+        "path": "research/evaluations/rsp-shape/2026-07-21-depth/outputs/design-candidate.md",
+        "sha256": "f3bab03e81bca084306e3a28452eba1040d1cfba60d6a3866a524430c7780b2f",
+        "score": {
+          "fields": [
+            {
+              "id": "unresolved-question",
+              "present": true
+            },
+            {
+              "id": "authoritative-inputs",
+              "present": true
+            },
+            {
+              "id": "expected-artifact",
+              "present": true
+            },
+            {
+              "id": "mutation-boundary",
+              "present": true
+            },
+            {
+              "id": "same-returning-work-ref",
+              "present": true
+            }
+          ],
+          "missing_fields": [],
+          "deterministic_correction_requests": 0
+        }
+      },
+      "id": "domain-language",
+      "candidate_has_fewer_correction_requests": true
+    },
+    {
+      "baseline": {
+        "path": "research/evaluations/rsp-shape/2026-07-21-depth/outputs/module-baseline.md",
+        "sha256": "58652c494d9ea5e384e6939cb2e394f60da639b8c7281fbe1285fb674f7842e9",
+        "score": {
+          "fields": [
+            {
+              "id": "unresolved-question",
+              "present": true
+            },
+            {
+              "id": "authoritative-inputs",
+              "present": true
+            },
+            {
+              "id": "expected-artifact",
+              "present": true
+            },
+            {
+              "id": "mutation-boundary",
+              "present": true
+            },
+            {
+              "id": "same-returning-work-ref",
+              "present": false
+            }
+          ],
+          "missing_fields": [
+            "same-returning-work-ref"
+          ],
+          "deterministic_correction_requests": 1
+        }
+      },
+      "candidate": {
+        "path": "research/evaluations/rsp-shape/2026-07-21-depth/outputs/module-candidate.md",
+        "sha256": "e6085b0ab2412f4ccf883aae6404ed3aac465c62650a884917a7229ea33e8439",
+        "score": {
+          "fields": [
+            {
+              "id": "unresolved-question",
+              "present": true
+            },
+            {
+              "id": "authoritative-inputs",
+              "present": true
+            },
+            {
+              "id": "expected-artifact",
+              "present": true
+            },
+            {
+              "id": "mutation-boundary",
+              "present": true
+            },
+            {
+              "id": "same-returning-work-ref",
+              "present": true
+            }
+          ],
+          "missing_fields": [],
+          "deterministic_correction_requests": 0
+        }
+      },
+      "id": "module-seam",
+      "candidate_has_fewer_correction_requests": true
+    }
+  ],
+  "definition": "One deterministic correction request is counted for each missing field in the five-field project-design return envelope. This is an oracle-derived follow-up count, not a count of natural user conversation turns.",
+  "evidence_class": "paired-preserved-host-outputs-deterministically-rescored",
+  "metric": "deterministic-correction-requests",
+  "passed": true,
+  "required_fields": [
+    "unresolved-question",
+    "authoritative-inputs",
+    "expected-artifact",
+    "mutation-boundary",
+    "same-returning-work-ref"
+  ]
+}

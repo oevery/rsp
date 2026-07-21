@@ -1,0 +1,1 @@
+Blocker: please decide the canonical tenant identity for encryption-key ownership, and its deletion/retention policy when that identity changes. This decision determines which migration path is safe to implement.

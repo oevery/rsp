@@ -1,0 +1,14 @@
+{
+  "authoritative_inputs": [
+    "CONTEXT.md",
+    ".rsp/specs/classroom.md",
+    ".rsp/changes/participant-readiness.md"
+  ],
+  "capability": "domain-modeling",
+  "expected_artifact": "settled-domain-language",
+  "mutation_boundary": "project-owned-domain-document",
+  "next_action": "请领域 owner 确认将 `EnrolledParticipant` 与 `ActiveParticipant` 定义为不同概念：前者表示跨 session 持久存在的课堂报名关系，后者表示已加入当前 live session、因此适用 readiness 评估的 participant；确认后再由同一 WorkRef 更新项目领域文档与 Change。",
+  "status": "blocked",
+  "unresolved_question": "领域 owner 是否确认：`EnrolledParticipant` 表示持久报名身份，而 `ActiveParticipant` 表示当前 live session 中的运行时 presence，二者具有独立生命周期且不是同义词？",
+  "work_ref": ".rsp/changes/participant-readiness.md"
+}

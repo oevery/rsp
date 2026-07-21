@@ -1,0 +1,48 @@
+{
+  "original_matrix_hash": "a0d4240a26dcf2cb6ec519a1f7deb1ea31e5fd1857074c9175e7d4573e70ce44",
+  "reason": "The original output oracle required literal English while the authoritative human-facing language was Simplified Chinese.",
+  "result": "passed",
+  "runs": [
+    {
+      "case": "multi-slice",
+      "output": {
+        "expected_missing": [],
+        "forbidden_present": []
+      },
+      "retained_hash_matches": true,
+      "result": "passed",
+      "variant": "baseline"
+    },
+    {
+      "case": "multi-slice",
+      "output": {
+        "expected_missing": [],
+        "forbidden_present": []
+      },
+      "retained_hash_matches": true,
+      "result": "passed",
+      "variant": "candidate"
+    },
+    {
+      "case": "interruption-recovery",
+      "output": {
+        "expected_missing": [],
+        "forbidden_present": []
+      },
+      "retained_hash_matches": true,
+      "result": "passed",
+      "variant": "baseline"
+    },
+    {
+      "case": "interruption-recovery",
+      "output": {
+        "expected_missing": [],
+        "forbidden_present": []
+      },
+      "retained_hash_matches": true,
+      "result": "passed",
+      "variant": "candidate"
+    }
+  ],
+  "source_raw_matrix_hash": "a6c527e3c3e96379931513bfeb60931419cddddea027202096ac29a6872fffb9"
+}

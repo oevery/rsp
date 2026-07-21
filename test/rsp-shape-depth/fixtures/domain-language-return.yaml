@@ -1,0 +1,15 @@
+id: domain-language-return
+load_deep_reference: true
+sources:
+  - skills/rsp-shape/SKILL.md
+  - skills/rsp-shape/references/deep-clarification.md
+required_contract:
+  - the unresolved design question
+  - authoritative project inputs by path
+  - expected existing artifact or decision output
+  - permitted mutation boundary
+  - the same returning WorkRef
+prohibited_actions:
+  - implementation
+  - git mutation
+  - invent a project glossary

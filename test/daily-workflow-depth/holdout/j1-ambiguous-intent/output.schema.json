@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "work_ref", "unresolved_decision", "question", "recommended_answer", "evidence", "next_action"],
+  "properties": {
+    "status": { "type": "string", "const": "blocked" },
+    "work_ref": { "type": "string", "const": ".rsp/changes/course-transition.md" },
+    "unresolved_decision": { "type": "string", "const": "transition-owner" },
+    "question": { "type": "string", "minLength": 1 },
+    "recommended_answer": { "type": "string", "minLength": 1 },
+    "evidence": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "next_action": { "type": "string", "minLength": 1 }
+  }
+}

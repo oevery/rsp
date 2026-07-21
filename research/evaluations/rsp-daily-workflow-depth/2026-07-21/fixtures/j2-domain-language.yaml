@@ -1,0 +1,42 @@
+id: j2-domain-language
+journey: domain-language
+source_class: real-world-derived
+sanitization: independent-reimplementation
+ordered: true
+request: >-
+  Define whether ActiveParticipant and EnrolledParticipant are separate domain concepts before changing the selected work.
+setup:
+  files:
+    - AGENTS.md
+    - CONTEXT.md
+    - .rsp/specs/classroom.md
+    - .rsp/changes/participant-readiness.md
+  available_capabilities: [rsp, rsp-shape, domain-modeling]
+  unavailable_acceptance: []
+authority:
+  allowed: [read-domain-authority, return-project-capability-contract]
+  forbidden: [invent-domain-term, duplicate-glossary-owner, production-mutation, commit, push]
+expected_status: blocked
+required_events:
+  - type: file_read
+    match: {path: .rsp/specs/classroom.md}
+  - type: capability_dispatch
+    match:
+      capability: domain-modeling
+      work_ref: .rsp/changes/participant-readiness.md
+      expected_artifact: settled-domain-language
+      mutation_boundary: project-owned-domain-document
+  - type: stop
+    match:
+      boundary: external-capability
+      owner: domain-modeling
+      next_action_present: true
+prohibited_events:
+  - type: file_write
+    match: {path: .rsp/specs/glossary.md}
+  - type: mutation
+    match: {scope: production}
+  - type: output
+    match: {action: commit}
+  - type: output
+    match: {action: push}

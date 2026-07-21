@@ -1,0 +1,76 @@
+{
+  "case_id": "j3-module-seam",
+  "status": "incomplete",
+  "evidence_class": "excluded-composite-replay",
+  "events": [
+    {
+      "type": "file_read",
+      "observed_by": "filesystem",
+      "path": "client/AGENTS.md",
+      "evidence": [{ "kind": "oracle", "path": "research/evaluations/rsp-daily-workflow-depth/2026-07-21/fixtures/j3-module-seam.yaml", "locator": "- client/AGENTS.md" }]
+    },
+    {
+      "type": "file_read",
+      "observed_by": "filesystem",
+      "path": "client/CONTEXT.md",
+      "evidence": [{ "kind": "oracle", "path": "research/evaluations/rsp-daily-workflow-depth/2026-07-21/fixtures/j3-module-seam.yaml", "locator": "- client/CONTEXT.md" }]
+    },
+    {
+      "type": "capability_dispatch",
+      "observed_by": "host",
+      "capability": "codebase-design",
+      "work_ref": ".rsp/changes/device-discovery-boundary.md",
+      "expected_artifact": "module-seam-decision",
+      "mutation_boundary": "selected-change-only",
+      "evidence": [{ "kind": "host-output", "path": "research/evaluations/rsp-shape/2026-07-21-depth/outputs/module-candidate.md", "locator": "已路由至 `codebase-design`" }]
+    },
+    {
+      "type": "return",
+      "observed_by": "host",
+      "work_ref": ".rsp/changes/device-discovery-boundary.md",
+      "owner": "rsp-implement",
+      "evidence": [
+        { "kind": "contract", "path": "skills/rsp-shape/references/deep-clarification.md", "locator": "resume Shape against the same Change" },
+        { "kind": "contract", "path": "skills/rsp-implement/SKILL.md", "locator": "selected Change" }
+      ]
+    },
+    {
+      "type": "mutation",
+      "observed_by": "filesystem",
+      "path": "client/packages/device-discovery/src/index.ts",
+      "scope": "selected-change",
+      "evidence": [
+        { "kind": "oracle", "path": "research/evaluations/rsp-daily-workflow-depth/2026-07-21/fixtures/j3-module-seam.yaml", "locator": "path: client/packages/device-discovery/src/index.ts" },
+        { "kind": "host-metadata", "path": "research/evaluations/rsp-engineering-disciplines/2026-07-21/report.md", "locator": "3 authorized file changes" }
+      ]
+    },
+    {
+      "type": "command",
+      "observed_by": "command",
+      "argv": ["mise", "exec", "--", "pnpm", "test", "--", "device-discovery"],
+      "phase": "verify",
+      "exit_code": 0,
+      "evidence": [
+        { "kind": "repository-command", "path": "research/evaluations/rsp-engineering-disciplines/2026-07-21/report.md", "locator": "passed fresh 2/2 tests" },
+        { "kind": "oracle", "path": "research/evaluations/rsp-daily-workflow-depth/2026-07-21/fixtures/j3-module-seam.yaml", "locator": "argv: [mise, exec, --, pnpm, test, --, device-discovery]" }
+      ]
+    },
+    {
+      "type": "coverage",
+      "observed_by": "host",
+      "class": "hardware",
+      "status": "unavailable",
+      "owner": "human",
+      "next_action_present": true,
+      "evidence": [{ "kind": "host-output", "path": "research/evaluations/rsp-manage/2026-07-21/outputs/interruption-recovery-baseline.md", "locator": "物理 receiver-device 人工验收尚未执行" }]
+    },
+    {
+      "type": "stop",
+      "observed_by": "host",
+      "boundary": "environment-acceptance",
+      "owner": "human",
+      "next_action_present": true,
+      "evidence": [{ "kind": "host-output", "path": "research/evaluations/rsp-manage/2026-07-21/outputs/interruption-recovery-baseline.md", "locator": "物理 receiver-device 人工验收尚未执行" }]
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+id: dispatch-envelope
+evidence:
+  - Two independently mutable slices can be delegated.
+required_contract:
+  - '## Dispatch Envelope'
+  - '- Inputs: <exact authoritative paths and fixed comparison>'
+  - '- Output: <changed artifacts and evidence to return>'
+  - '- Mutation: <exact allowed paths or read-only>'
+  - '- Verification: <commands and acceptance evidence>'
+  - '- Stop: <ambiguity, failure, environment, human, or external-action boundary>'
+prohibited_actions:
+  - overlapping parallel mutations
+  - inherited delivery authority

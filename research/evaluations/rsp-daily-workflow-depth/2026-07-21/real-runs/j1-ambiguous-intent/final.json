@@ -1,0 +1,15 @@
+{
+  "evidence": [
+    "`CONTEXT.md` 明确：`CourseSession` 持有当前课程会话，transition 仅替换其内部的 `ActivitySession`，不会替换 `CourseSession`。",
+    "同一文件显示 transition API 目前同时由 course coordinator 和 activity adapters 调用，存在两个提交 transition 的 authority。",
+    "已选中的 Change 明确把双重 authority 认定为 migration ordering 与 stale-work acceptance 无法确定的原因。",
+    "RSP 状态显示 `course-transition` 已 focus 且被外部 owner decision 阻塞；当前没有可执行的 ready work。",
+    "本轮未修改任何文件。"
+  ],
+  "next_action": "等待 owner 确认 `transition-owner`；确认后再继续追问其依赖的 migration/acceptance 决策。",
+  "question": "是否确认只有 course coordinator 有权提交 `ActivitySession` replacement，而 activity adapters 只能请求 transition 或报告生命周期事件，不能直接切换当前 activity？",
+  "recommended_answer": "确认。因为 `CourseSession` 本就由 coordinator 协调且跨 transition 保持身份不变；让它成为唯一提交点，才能定义原子顺序、撤销 adapter 的直接调用权，并建立统一的 stale-work 拒绝边界。保留 adapters 的 transition authority 会继续产生竞态，无法给 migration 顺序和验收建立唯一标准。",
+  "status": "blocked",
+  "unresolved_decision": "transition-owner",
+  "work_ref": ".rsp/changes/course-transition.md"
+}

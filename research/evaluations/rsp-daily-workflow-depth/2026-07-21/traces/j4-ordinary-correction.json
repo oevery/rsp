@@ -1,0 +1,75 @@
+{
+  "case_id": "j4-ordinary-correction",
+  "status": "incomplete",
+  "evidence_class": "excluded-composite-replay",
+  "events": [
+    {
+      "type": "mutation",
+      "observed_by": "filesystem",
+      "path": "test/cache.test.ts",
+      "scope": "focused-test",
+      "evidence": [{ "kind": "host-metadata", "path": "research/evaluations/rsp-engineering-disciplines/2026-07-21/report.md", "locator": "added only the focused acceptance test" }]
+    },
+    {
+      "type": "command",
+      "observed_by": "command",
+      "argv": ["mise", "exec", "--", "pnpm", "test", "--", "cache-isolation"],
+      "phase": "red",
+      "exit_code": 1,
+      "evidence": [
+        { "kind": "repository-command", "path": "research/evaluations/rsp-engineering-disciplines/2026-07-21/report.md", "locator": "observed the expected RED" },
+        { "kind": "oracle", "path": "research/evaluations/rsp-daily-workflow-depth/2026-07-21/fixtures/j4-ordinary-correction.yaml", "locator": "phase: red" }
+      ]
+    },
+    {
+      "type": "mutation",
+      "observed_by": "filesystem",
+      "path": "src/cache.ts",
+      "scope": "production",
+      "evidence": [{ "kind": "host-metadata", "path": "research/evaluations/rsp-engineering-disciplines/2026-07-21/report.md", "locator": "made the minimum GREEN edit" }]
+    },
+    {
+      "type": "command",
+      "observed_by": "command",
+      "argv": ["mise", "exec", "--", "pnpm", "test", "--", "cache-isolation"],
+      "phase": "verify",
+      "exit_code": 0,
+      "evidence": [
+        { "kind": "repository-command", "path": "research/evaluations/rsp-engineering-disciplines/2026-07-21/report.md", "locator": "passed fresh 2/2 tests" },
+        { "kind": "oracle", "path": "research/evaluations/rsp-daily-workflow-depth/2026-07-21/fixtures/j4-ordinary-correction.yaml", "locator": "phase: verify" }
+      ]
+    },
+    {
+      "type": "review",
+      "observed_by": "host",
+      "scope": "selected-change-diff",
+      "work_ref": ".rsp/changes/cache-isolation.md",
+      "result": "clean",
+      "evidence": [{ "kind": "host-metadata", "path": "research/evaluations/rsp-assisted-loop/2026-07-21/report.md", "locator": "returned Code and Document `clean`" }]
+    },
+    {
+      "type": "coverage",
+      "observed_by": "host",
+      "class": "authenticated",
+      "status": "unavailable",
+      "owner": "human",
+      "next_action_present": true,
+      "evidence": [{ "kind": "oracle", "path": "research/evaluations/rsp-daily-workflow-depth/2026-07-21/fixtures/j4-ordinary-correction.yaml", "locator": "unavailable_acceptance: [authenticated]" }]
+    },
+    {
+      "type": "output",
+      "observed_by": "host",
+      "field": "completion",
+      "value": "incomplete",
+      "evidence": [{ "kind": "contract", "path": "skills/rsp-implement/SKILL.md", "locator": "Report whether the Change is completed, partial" }]
+    },
+    {
+      "type": "stop",
+      "observed_by": "host",
+      "boundary": "environment-acceptance",
+      "owner": "human",
+      "next_action_present": true,
+      "evidence": [{ "kind": "contract", "path": "skills/rsp-implement/SKILL.md", "locator": "Stop when selection, readiness, product authority, acceptance" }]
+    }
+  ]
+}

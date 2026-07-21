@@ -7,6 +7,7 @@ export default defineConfig({
       '**/.cache/**',
       '**/node_modules/**',
       '**/.git/**',
+      'test/daily-workflow-depth/holdout/**',
       'test/skill-behavior/fixtures/**',
     ],
   },

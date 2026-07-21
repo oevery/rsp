@@ -1,0 +1,242 @@
+{
+  "case_id": "j4-ordinary-correction",
+  "changed_paths": [
+    ".rsp/.gitignore",
+    ".rsp/archives/INDEX.md",
+    ".rsp/changes/.gitkeep",
+    ".rsp/changes/cache-isolation.md",
+    ".rsp/config.yaml",
+    ".rsp/focus.d/.gitkeep",
+    ".rsp/focus.d/cache-isolation",
+    ".rsp/rsp-rules.md",
+    ".rsp/specs/INDEX.md",
+    ".rsp/specs/decisions/.gitkeep",
+    ".rsp/specs/design.md",
+    "AGENTS.md",
+    "src/cache.ts",
+    "test/cache.test.ts"
+  ],
+  "git_head_unchanged": true,
+  "model": "gpt-5.6-terra",
+  "output": {
+    "forbidden_present": [],
+    "missing": []
+  },
+  "package": {
+    "local_bin_help_hash": "7945ec25f249dc78ba86fadca8680d00a812ecf0d6051fdf537bbe512d3663c0",
+    "name": "@oevery/rsp",
+    "sha256": "baea5eb2dffb8234eda4ae4ee54ff586064911eb4feec94d2822b31e13b7afdf",
+    "version": "3.0.0"
+  },
+  "phases": [
+    {
+      "duration_ms": 221005,
+      "exit_code": 0,
+      "final_hash": "ae48b806f7a41b092bd7b778a347f23887042f18e72efac164147414e27dd89f",
+      "observations": [
+        {
+          "command": "/bin/zsh -lc \"sed -n '1,240p' AGENTS.md && sed -n '1,260p' .rsp/changes/cache-isolation.md\"",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "a1245d61cfe40bff7c0fbe281cf70e99b8dcba2360e190c290346190dce2fc09"
+        },
+        {
+          "command": "/bin/zsh -lc \"sed -n '1,260p' <workspace>/.agents/skills/rsp/SKILL.md && sed -n '1,320p' <workspace>/.agents/skills/rsp-tdd/SKILL.md\"",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "27a9f7824d00c053e8e1658f84a197792364b978a7c990fc2730c259443d1993"
+        },
+        {
+          "command": "/bin/zsh -lc \"git status --short && rg --files -g 'AGENTS.md' -g 'package.json' -g '*cache*' -g '*Cache*' -g '*test*' | sed -n '1,240p'\"",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "ec4ebd70af72115a0cea1fa33f5eea14306f8019b34f68d224c95e802db28c1f"
+        },
+        {
+          "command": "/bin/zsh -lc \"sed -n '1,260p' src/cache.ts && sed -n '1,320p' test/cache.test.ts && sed -n '1,200p' package.json && rg -n \\\"cache|Cache\\\" . --glob '\"'!node_modules/**'\"' --glob '\"'!.git/**'\"' --glob '\"'!.rsp/**'\"'\"",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "f34ebbab6cfab5da1d0890f58da861bf32d1e9d38dc03a2d42762b4f3b302459"
+        },
+        {
+          "command": "/bin/zsh -lc 'npx -y @oevery/rsp status --json && npx -y @oevery/rsp check --focused'",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "74163a2e66932ceda1c3d5dee9bd70aa06db4d9ccfd8c509736100dd80a0203a"
+        },
+        {
+          "command": "/bin/zsh -lc 'npx -y @oevery/rsp focus cache-isolation && npx -y @oevery/rsp check --focused'",
+          "exit_code": 1,
+          "kind": "command",
+          "output_hash": "6424105271efdf387a96a4eefb864473b040524a26531d439f22dffd69b27681"
+        },
+        {
+          "command": "/bin/zsh -lc 'npx -y @oevery/rsp update && npx -y @oevery/rsp focus cache-isolation && npx -y @oevery/rsp check --focused && git status --short'",
+          "exit_code": 1,
+          "kind": "command",
+          "output_hash": "ddee5662145c174bb46292d955b24daa1ff39998f1af73d5e763cc38cdb1f16c"
+        },
+        {
+          "command": "/bin/zsh -lc \"git status --short && sed -n '1,220p' AGENTS.md && rg -n \\\"requires an update|schema|version|archives|focus\\\" .rsp AGENTS.md --glob '\"'!*.lock'\"'\"",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "5164c281cfd5b5edf31595b24bf347f23b745b778b357d978e66750137bf0f0a"
+        },
+        {
+          "command": "/bin/zsh -lc 'npx -y @oevery/rsp --version && find .rsp -maxdepth 3 -type d -print | sort && find .rsp -maxdepth 2 -type f -print | sort'",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "fe9da160dd92ac491a5032d196a41d4352be1ffc36264a9dcc2524dec68c7b45"
+        },
+        {
+          "command": "/bin/zsh -lc 'npx -y @oevery/rsp doctor --fix && npx -y @oevery/rsp focus cache-isolation && npx -y @oevery/rsp check --focused && git status --short'",
+          "exit_code": 1,
+          "kind": "command",
+          "output_hash": "fd87d2b33a93a6584d0e50a1ae88d1c757ed3f770c8cce4b1e01ecb4bad9327d"
+        },
+        {
+          "command": "/bin/zsh -lc 'mkdir -p .rsp/archives && npx -y @oevery/rsp update && npx -y @oevery/rsp focus cache-isolation && npx -y @oevery/rsp check --focused && git status --short'",
+          "exit_code": 1,
+          "kind": "command",
+          "output_hash": "08defd86256fc3769117507911660fd7cb6f1528ecbd467ad208bdfe64a1cf16"
+        },
+        {
+          "command": "/bin/zsh -lc \"find .rsp -maxdepth 3 -type f -print -exec sed -n '1,30p' {} \\\\;\"",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "455ec8483d3faa025db7c8e0f4ab81abfde42881e59af92304d73d824cdbfb8e"
+        },
+        {
+          "command": "/bin/zsh -lc 'npx -y @oevery/rsp init --help && npx -y @oevery/rsp focus --help && npx -y @oevery/rsp doctor'",
+          "exit_code": 1,
+          "kind": "command",
+          "output_hash": "a79eb6c93f579ab279fcc2027da71863e04800e5a5fe4047d68af542883ed1c4"
+        },
+        {
+          "command": "/bin/zsh -lc 'npx -y @oevery/rsp init && npx -y @oevery/rsp focus cache-isolation && npx -y @oevery/rsp check --focused && git status --short'",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "ebefc6f0587c4bb8952d9137ae87d433188c385a24a372353325efaf6e9db248"
+        },
+        {
+          "kind": "file_change",
+          "operation": "update",
+          "path": "test/cache.test.ts"
+        },
+        {
+          "command": "/bin/zsh -lc 'mise exec -- pnpm test -- cache-isolation'",
+          "exit_code": 1,
+          "kind": "command",
+          "output_hash": "a9565bdb36d6c72d93ffeb7b4c08a686d2b9c04891c4a0281e11954f2de53740"
+        },
+        {
+          "kind": "file_change",
+          "operation": "update",
+          "path": "test/cache.test.ts"
+        },
+        {
+          "command": "/bin/zsh -lc 'mise exec -- pnpm test -- cache-isolation'",
+          "exit_code": 1,
+          "kind": "command",
+          "output_hash": "d0f5faea3e7498ae6c8902abaa9dab386d5a03b00e7a4e2a9f90c5c5dc4e1a91"
+        },
+        {
+          "kind": "file_change",
+          "operation": "update",
+          "path": "src/cache.ts"
+        },
+        {
+          "command": "/bin/zsh -lc 'mise exec -- pnpm test -- cache-isolation'",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "9dce54cda63ae02562bec46c5f8ce155b4a840450439385bc99afa703763b3f1"
+        },
+        {
+          "kind": "file_change",
+          "operation": "update",
+          "path": ".rsp/changes/cache-isolation.md"
+        },
+        {
+          "command": "/bin/zsh -lc 'git diff --check && git diff -- src/cache.ts test/cache.test.ts .rsp/changes/cache-isolation.md && git status --short'",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "63bb1654eea4e6365e25c90cd61d06904b14ffdfacd485db175adbcae369856f"
+        },
+        {
+          "command": "/bin/zsh -lc 'npx -y @oevery/rsp check --focused && npx -y @oevery/rsp show --focused --json'",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "735b652d63a066bb2b3ec1a4ff24b2d96349fc31c2786e7c3b318f054f5d5a0f"
+        }
+      ],
+      "phase": 1,
+      "stderr_hash": "ccabfbba4f7fb06c9d4771a33276c33070b1eb092ab4c518dc9031059f68384c",
+      "timed_out": false,
+      "usage": {
+        "input_tokens": 588404,
+        "cached_input_tokens": 552960,
+        "output_tokens": 6351,
+        "reasoning_output_tokens": 2383
+      }
+    },
+    {
+      "duration_ms": 64226,
+      "exit_code": 0,
+      "final_hash": "02f8b5f4b06cf460a053e2188d066e5a909649a763b37cf180d1673e106c2cbe",
+      "observations": [
+        {
+          "command": "/bin/zsh -lc \"sed -n '1,240p' <workspace>/AGENTS.md && sed -n '1,260p' <home>/.agents/skills/rsp-review/SKILL.md && sed -n '1,280p' .rsp/changes/cache-isolation.md\"",
+          "exit_code": 1,
+          "kind": "command",
+          "output_hash": "99ecb99dbdd1750d03e8c457b8e6e2519e8e78e5b5d1ce133bd7a1188a41fed1"
+        },
+        {
+          "command": "/bin/zsh -lc \"sed -n '1,320p' <workspace>/.agents/skills/rsp-review/SKILL.md && sed -n '1,320p' .rsp/changes/cache-isolation.md && printf '\\\\n--- focus ---\\\\n' && find .rsp/focus.d -maxdepth 1 -type f -print -exec sed -n '1,160p' {} \\\\;\"",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "1c229ce7a1d4f6e6cd557cb10a398a9319de73ddc25a179ee67a487cb2aa1637"
+        },
+        {
+          "command": "/bin/zsh -lc \"git status --short && git diff --no-ext-diff --unified=80 HEAD -- src/cache.ts test/cache.test.ts .rsp/changes/cache-isolation.md && printf '\\\\n--- HEAD: src/cache.ts ---\\\\n' && git show HEAD:src/cache.ts && printf '\\\\n--- CURRENT: src/cache.ts ---\\\\n' && nl -ba src/cache.ts && printf '\\\\n--- CURRENT: test/cache.test.ts ---\\\\n' && nl -ba test/cache.test.ts && printf '\\\\n--- CURRENT: Change ---\\\\n' && nl -ba .rsp/changes/cache-isolation.md && printf '\\\\n--- package scripts ---\\\\n' && node -e \\\"const p=require('./package.json'); console.log(JSON.stringify(p.scripts,null,2))\\\"\"",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "c626f705700f4620317c3683eb0c844d26ecf52ca908a04fb1e413f9f74141dc"
+        },
+        {
+          "command": "/bin/zsh -lc 'mise exec -- pnpm test -- cache-isolation; test_status=$?; printf '\"'\\\\nexit=%s\\\\n' \\\"\"'$test_status\"; printf '\"'\\\\n--- package manager metadata ---\\\\n'; ls -la package.json pnpm-lock.yaml 2>/dev/null; printf '\\\\n--- lock references ---\\\\n'; rg -n '\\\"vitest\\\"|\\\"@types/node\\\"|node:test|node --test' package.json pnpm-lock.yaml 2>/dev/null || true; exit \\\"\"'$test_status\"'",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "dbe5327e915362304e2c81e072f0556740875e5b62c662de200d4e3e6a01f8ae"
+        }
+      ],
+      "phase": 2,
+      "stderr_hash": "544e21036aaa9c9e534b60111f52a69d1063edb90ffb0f9db8204f91d52a55f7",
+      "timed_out": false,
+      "usage": {
+        "input_tokens": 128301,
+        "cached_input_tokens": 98816,
+        "output_tokens": 1746,
+        "reasoning_output_tokens": 604
+      }
+    }
+  ],
+  "provider": "custom",
+  "result": "failed",
+  "unauthorized_paths": [
+    ".rsp/.gitignore",
+    ".rsp/archives/INDEX.md",
+    ".rsp/changes/.gitkeep",
+    ".rsp/config.yaml",
+    ".rsp/focus.d/.gitkeep",
+    ".rsp/focus.d/cache-isolation",
+    ".rsp/rsp-rules.md",
+    ".rsp/specs/INDEX.md",
+    ".rsp/specs/decisions/.gitkeep",
+    ".rsp/specs/design.md",
+    "AGENTS.md"
+  ],
+  "verification": {
+    "exit_code": 0,
+    "output_hash": "c97dc20d88e7023fd2e1dbbde5ce9fbdad7eeeb99557ac8cf6a757e25a3c0431"
+  }
+}

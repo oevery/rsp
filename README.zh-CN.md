@@ -122,7 +122,7 @@ Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENT
 RSP 发布七个宿主无关、按需加载的 Skills：
 
 - `rsp`：setup、workflow、durable review 和 archive 指导。
-- `rsp-shape`：在不实现代码的前提下，将不清晰的非平凡工作塑造成一个 ready Change 或合理的 shallow Group。
+- `rsp-shape`：在不实现代码的前提下，将不清晰的非平凡工作塑造成一个 ready Change 或合理的 shallow Group；当用户明确要求严格质询或高风险决策仍未解决时，渐进加载 deep clarification，并让项目选定的 design capability 通过同一个 WorkRef 返回。
 - `rsp-implement`：在显式 mutation authority 内实现一个 selected、ready Change，并如实回写 Tasks、Blockers 和 fresh verification evidence。
 - `rsp-diagnose`：在生产修复前确认原因，或如实返回 unresolved diagnosis。
 - `rsp-tdd`：让一个清晰行为经过 observed RED、minimal GREEN、可选 safe REFACTOR 与 fresh verification。
@@ -130,6 +130,8 @@ RSP 发布七个宿主无关、按需加载的 Skills：
 - `rsp-address-review`：处置固定 review findings，仅修复已授权且 accepted 的 finding，并要求 fresh verification 与 report-only re-review。
 
 每个 Skill 都可以独立调用，并把结果返回现有项目或 RSP artifact owner。套件不引入隐藏 workflow state 或递归 Skill 编排，也不会由任何 Skill 推断 commit、push 或 publication 权限。
+
+3.0 产品面仍是这七个 Skills。五个 same-case terminal journeys 已验证 Shape progressive depth，同时保留 owner、environment 和 acceptance stop。长时 managed continuation 可以由 host 或 external workflow 显式组合，但必须重新读取当前 RSP artifacts、保留其 ownership，并在 mutation、Git、publication、environment 或 human-decision authority 边界停止。已评估的 `rsp-manage` prototype 保留在 research 中，recommendation 为 `revise`，不会作为 RSP capability 安装或发布。
 
 完成一个 tracked Change 时，应按证据组合套件：`rsp-shape` 返回可执行 Change；Core 把 unexplained failure 路由到 `rsp-diagnose`，把清晰的 test-first 行为路由到 `rsp-tdd`，把已有证据的修改路由到 `rsp-implement`；`rsp-review` 返回只读报告；`rsp-address-review` 处置 finding；最后由 `rsp` 在 archive 前完成 durable decision。每个 discipline 都返回同一个 Change。遇到歧义、失败门禁或缺失权限时，流程停在现有 owner，不会自动重试。
 

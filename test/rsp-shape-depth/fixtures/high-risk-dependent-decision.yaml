@@ -1,0 +1,13 @@
+id: high-risk-dependent-decision
+load_deep_reference: true
+sources:
+  - skills/rsp-shape/SKILL.md
+  - skills/rsp-shape/references/deep-clarification.md
+required_contract:
+  - normal shaping leaves a high-risk decision whose dependent choices remain unresolved
+  - Name the unresolved decision and the implementation consequence that makes it material
+  - every material dependent decision is either owner-confirmed or recorded as one explicit blocker
+prohibited_actions:
+  - implementation
+  - git mutation
+  - invent an owner decision

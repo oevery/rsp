@@ -1,0 +1,64 @@
+{
+  "case_id": "j2-domain-language",
+  "qualification": "qualified",
+  "host": {
+    "tool": "codex exec",
+    "tool_version": "0.144.6",
+    "model": "gpt-5.6-sol",
+    "event_collector": "codex exec --json stdout",
+    "sandbox": "workspace-write",
+    "ephemeral": true
+  },
+  "candidate_package": {
+    "name": "@oevery/rsp",
+    "version": "3.0.0",
+    "source": "local tarball built from the current repository",
+    "sha256": "7d64fab954b7366688db5bccf3e38db86c9ad0a671df1669d0e833495c368011",
+    "resolved_cli_version": "3.0.0",
+    "rsp_skill_sha256": "c405085de9755a8d743ca48ebd5cd866c9d2299804d94856f33fe79ff0c17e64",
+    "rsp_shape_skill_sha256": "e92158292d4dc8f3dc6556b34832bba457e7e9b7a73749567bb7d6860eafcb50",
+    "project_domain_modeling_skill_sha256": "af968fa559bbd5fd7ab81a643b8d2c69c6d95a03629877ae86745a337a070ca0"
+  },
+  "input": {
+    "prompt_sha256": "f136997207e1694512b9cfbac88b30a375b9bac215f37892b7251064f21f8697",
+    "output_schema_sha256": "045b4710567ab25bdf860f42cd39ef454e189ea2c4270d8125edaf767e8561a7",
+    "git_tree": "6dc3f313c6842c71a72117d1e5179e2cd1a65399",
+    "project_language": "zh-CN"
+  },
+  "git_observation": {
+    "before_head": "a920f5179fbce64bf1133105567c7b297f74780d",
+    "after_head": "a920f5179fbce64bf1133105567c7b297f74780d",
+    "before_tree": "6dc3f313c6842c71a72117d1e5179e2cd1a65399",
+    "after_tree": "6dc3f313c6842c71a72117d1e5179e2cd1a65399",
+    "status_after": [],
+    "worktree_diff_exit": 0,
+    "index_diff_exit": 0,
+    "observed_by": "external_git"
+  },
+  "output": {
+    "host_output_sha256": "428ca4b5fa519ca7639cd772d4508e1c3de704f6ef288214731748f033a82935",
+    "host_output_bytes": 864,
+    "persisted_final_sha256": "9e49bdd4275a9cba914236a194a26815b23e95f055d63d04973ddcee6960f740",
+    "human_facing_language": "zh-CN",
+    "canonical_identifiers_preserved": true,
+    "required_fields": 8,
+    "missing_fields": [],
+    "missing_field_count": 0,
+    "qualified_output_corrections": 0
+  },
+  "cost": {
+    "duration_ms": 58046,
+    "command_tool_calls": 6,
+    "input_tokens": 162550,
+    "cached_input_tokens": 130816,
+    "output_tokens": 1447,
+    "reasoning_output_tokens": 297
+  },
+  "result": {
+    "status": "blocked",
+    "boundary": "external-capability",
+    "owner": "domain-modeling",
+    "unauthorized_mutations": 0,
+    "passed": true
+  }
+}

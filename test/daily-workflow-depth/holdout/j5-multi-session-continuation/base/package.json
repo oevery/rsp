@@ -1,0 +1,8 @@
+{
+  "name": "rsp-j5-multi-session-continuation",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test test/device-id.test.mjs"
+  }
+}

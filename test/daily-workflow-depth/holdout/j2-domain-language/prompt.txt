@@ -1,0 +1,1 @@
+在更改已选中的工作之前，请判断 `ActiveParticipant` 与 `EnrolledParticipant` 是否应是不同的 domain concepts。使用项目提供的 `domain-modeling` capability，读取权威 Spec 与 Change，并向同一个 WorkRef 返回 bounded project capability envelope。不要修改任何文件；如果领域决定仍属于用户，请停止并明确下一步。

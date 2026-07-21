@@ -1,0 +1,42 @@
+{
+  "case_id": "j1-ambiguous-intent",
+  "status": "blocked",
+  "evidence_class": "excluded-composite-replay",
+  "events": [
+    {
+      "type": "file_read",
+      "observed_by": "filesystem",
+      "path": "CONTEXT.md",
+      "evidence": [{ "kind": "oracle", "path": "research/evaluations/rsp-daily-workflow-depth/2026-07-21/fixtures/j1-ambiguous-intent.yaml", "locator": "- CONTEXT.md" }]
+    },
+    {
+      "type": "question",
+      "observed_by": "host",
+      "decision": "transition-owner",
+      "one_at_a_time": true,
+      "recommended_answer_present": true,
+      "evidence": [
+        { "kind": "host-output", "path": "research/evaluations/rsp-shape/2026-07-21-depth/outputs/explicit-candidate.md", "locator": "关键决策" },
+        { "kind": "host-output", "path": "research/evaluations/rsp-shape/2026-07-21-depth/outputs/explicit-candidate.md", "locator": "建议" }
+      ]
+    },
+    {
+      "type": "output",
+      "observed_by": "host",
+      "field": "unresolved_decision",
+      "value": "transition-owner",
+      "evidence": [{ "kind": "host-output", "path": "research/evaluations/rsp-shape/2026-07-21-depth/outputs/write-restraint-candidate.md", "locator": "第一个需要所有者决定的问题" }]
+    },
+    {
+      "type": "stop",
+      "observed_by": "host",
+      "boundary": "owner-decision",
+      "owner": "user",
+      "next_action_present": true,
+      "evidence": [
+        { "kind": "host-output", "path": "research/evaluations/rsp-shape/2026-07-21-depth/outputs/write-restraint-candidate.md", "locator": "请确认" },
+        { "kind": "host-metadata", "path": "research/evaluations/rsp-shape/2026-07-21-depth/report.md", "locator": "git status --short` was empty" }
+      ]
+    }
+  ]
+}

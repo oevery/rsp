@@ -1,0 +1,11 @@
+id: fresh-return
+evidence:
+  - A worker returns code and a claimed passing check.
+required_contract:
+  - inspect the actual diff and fresh verification output
+  - Spend one retry only when new evidence identifies a corrective action inside the same envelope
+  - its required checks are freshly observed
+  - Continue to the next ready slice while budget and authority remain
+prohibited_actions:
+  - trust worker completion language
+  - hidden retry loop

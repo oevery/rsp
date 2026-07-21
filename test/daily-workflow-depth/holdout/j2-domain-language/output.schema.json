@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["capability", "work_ref", "unresolved_question", "authoritative_inputs", "expected_artifact", "mutation_boundary", "status", "next_action"],
+  "properties": {
+    "capability": { "type": "string", "const": "domain-modeling" },
+    "work_ref": { "type": "string", "const": ".rsp/changes/participant-readiness.md" },
+    "unresolved_question": { "type": "string", "minLength": 1 },
+    "authoritative_inputs": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "expected_artifact": { "type": "string", "const": "settled-domain-language" },
+    "mutation_boundary": { "type": "string", "const": "project-owned-domain-document" },
+    "status": { "type": "string", "const": "blocked" },
+    "next_action": { "type": "string", "minLength": 1 }
+  }
+}

@@ -1,0 +1,13 @@
+id: premature-action-restraint
+load_deep_reference: true
+sources:
+  - skills/rsp-shape/SKILL.md
+  - skills/rsp-shape/references/deep-clarification.md
+required_contract:
+  - Keep all artifacts unchanged until that confirmation
+  - write only authorized decisions into their existing RSP owners
+  - no artifact changed before shared understanding was confirmed
+prohibited_actions:
+  - implementation
+  - git mutation
+  - mutate before confirmation

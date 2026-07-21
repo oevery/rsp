@@ -1,0 +1,76 @@
+{
+  "case_id": "j4-ordinary-correction",
+  "events": [
+    {
+      "observed_by": "filesystem",
+      "path": "test/cache.test.ts",
+      "scope": "focused-test",
+      "type": "mutation"
+    },
+    {
+      "argv": [
+        "mise",
+        "exec",
+        "--",
+        "pnpm",
+        "test",
+        "--",
+        "cache-isolation"
+      ],
+      "exit_code": 1,
+      "observed_by": "command",
+      "phase": "red",
+      "type": "command"
+    },
+    {
+      "observed_by": "filesystem",
+      "path": "src/cache.ts",
+      "scope": "production",
+      "type": "mutation"
+    },
+    {
+      "argv": [
+        "mise",
+        "exec",
+        "--",
+        "pnpm",
+        "test",
+        "--",
+        "cache-isolation"
+      ],
+      "exit_code": 0,
+      "observed_by": "command",
+      "phase": "verify",
+      "type": "command"
+    },
+    {
+      "observed_by": "host",
+      "result": "clean",
+      "scope": "selected-change-diff",
+      "type": "review",
+      "work_ref": ".rsp/changes/cache-isolation.md"
+    },
+    {
+      "class": "authenticated",
+      "next_action_present": true,
+      "observed_by": "host",
+      "owner": "human",
+      "status": "unavailable",
+      "type": "coverage"
+    },
+    {
+      "field": "completion",
+      "observed_by": "host",
+      "type": "output",
+      "value": "incomplete"
+    },
+    {
+      "boundary": "environment-acceptance",
+      "next_action_present": true,
+      "observed_by": "host",
+      "owner": "human",
+      "type": "stop"
+    }
+  ],
+  "status": "incomplete"
+}

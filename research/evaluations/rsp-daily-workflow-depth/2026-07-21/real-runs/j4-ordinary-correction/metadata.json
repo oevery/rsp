@@ -1,0 +1,143 @@
+{
+  "case_id": "j4-ordinary-correction",
+  "changed_paths": [
+    ".rsp/changes/cache-isolation.md",
+    "src/cache.ts",
+    "test/cache.test.ts"
+  ],
+  "git_head_unchanged": true,
+  "model": "gpt-5.6-terra",
+  "output": {
+    "forbidden_present": [],
+    "missing": []
+  },
+  "package": {
+    "local_bin_help_hash": "7945ec25f249dc78ba86fadca8680d00a812ecf0d6051fdf537bbe512d3663c0",
+    "local_focused_check_hash": "6cfa3272469ff3055c23e5ccc87b52a37e9f3286a067cde3c8e41d22b0821d94",
+    "name": "@oevery/rsp",
+    "sha256": "7d64fab954b7366688db5bccf3e38db86c9ad0a671df1669d0e833495c368011",
+    "installed_skill_hashes": {
+      "rsp": "c405085de9755a8d743ca48ebd5cd866c9d2299804d94856f33fe79ff0c17e64",
+      "rsp-shape": "e92158292d4dc8f3dc6556b34832bba457e7e9b7a73749567bb7d6860eafcb50",
+      "rsp-implement": "5b4742361f55e4643d995b0a53699f8126e9250ee027b58db01813ac261ce7a6",
+      "rsp-tdd": "4898089be55123c71b45349f564cdc9697247467296e79da140af5d137f1ef57",
+      "rsp-review": "b8878f54d7d81fc79c7a24fe2e7b05de2046ddddc3f1f50fdf70611842a021bd"
+    },
+    "version": "3.0.0"
+  },
+  "phases": [
+    {
+      "duration_ms": 101312,
+      "exit_code": 0,
+      "final_hash": "ccee9f434a1b5494480d0fd025058c3dc75e99dd3b6d6273fb03a687e484dc88",
+      "observations": [
+        {
+          "command": "/bin/zsh -lc \"sed -n '1,240p' AGENTS.md && sed -n '1,260p' .agents/skills/rsp/SKILL.md && sed -n '1,320p' .agents/skills/rsp-tdd/SKILL.md && sed -n '1,320p' .rsp/changes/cache-isolation.md\"",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "dbc1cdda2ac7befd66d5727908d81c3e70391fc92ff64493c0eefb502b3570c0"
+        },
+        {
+          "command": "/bin/zsh -lc \"git status --short && if [ -f CONTEXT-MAP.md ]; then sed -n '1,220p' CONTEXT-MAP.md; fi && find .rsp/focus.d -maxdepth 2 -type f -print -exec sed -n '1,120p' {} \\\\; && npx --no-install rsp status --json && npx --no-install rsp check --focused && rg -n \\\"cache|Cache|classId|classId\\\" --glob '\"'!node_modules'\"' .\"",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "6422c6fed67dbf2ee011a9d68fbe13479be5d1b911acf67cca7bd9a683e20560"
+        },
+        {
+          "command": "/bin/zsh -lc \"sed -n '1,220p' src/cache.ts && sed -n '1,260p' test/cache.test.ts && sed -n '1,160p' package.json && find . -path '*/AGENTS.md' -not -path './node_modules/*' -print\"",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "a64010973eaf9117cf99d5dbc6294bcc0a1d2b0f4402bd7e6cc5bd7f7163fbe9"
+        },
+        {
+          "kind": "file_change",
+          "operation": "update",
+          "path": "test/cache.test.ts"
+        },
+        {
+          "command": "/bin/zsh -lc 'mise exec -- pnpm test -- cache-isolation'",
+          "exit_code": 1,
+          "kind": "command",
+          "output_hash": "0fa11080af683d7598b7b1f614f95d22685867bfb4d3eec1a00d005a307175c4"
+        },
+        {
+          "kind": "file_change",
+          "operation": "update",
+          "path": "src/cache.ts"
+        },
+        {
+          "command": "/bin/zsh -lc 'mise exec -- pnpm test -- cache-isolation'",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "00867b79e4a67927be1fd2c6854b329b3931872989992d921f410895406a77e2"
+        },
+        {
+          "kind": "file_change",
+          "operation": "update",
+          "path": ".rsp/changes/cache-isolation.md"
+        },
+        {
+          "command": "/bin/zsh -lc 'git diff --check && git diff -- .rsp/changes/cache-isolation.md src/cache.ts test/cache.test.ts && npx --no-install rsp check --focused'",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "6cfa3272469ff3055c23e5ccc87b52a37e9f3286a067cde3c8e41d22b0821d94"
+        }
+      ],
+      "phase": 1,
+      "stderr_hash": "86b12982f1c77a3aff718bed2e2903329dd8f798ccf21f9260a4a3328165281c",
+      "timed_out": false,
+      "usage": {
+        "input_tokens": 295377,
+        "cached_input_tokens": 269312,
+        "output_tokens": 2611,
+        "reasoning_output_tokens": 585
+      }
+    },
+    {
+      "duration_ms": 41804,
+      "exit_code": 0,
+      "final_hash": "ac101a28567840f758547d727767ab805dab30160b352340800efbd3cc23b061",
+      "observations": [
+        {
+          "command": "/bin/zsh -lc \"sed -n '1,240p' AGENTS.md && sed -n '1,260p' .agents/skills/rsp-review/SKILL.md && sed -n '1,260p' .rsp/changes/cache-isolation.md\"",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "9849ba21ede5207a7877752e8da19ebfd249d56b9cc39b5dced6ddc1fb1e4a64"
+        },
+        {
+          "command": "/bin/zsh -lc \"git status --short -- src/cache.ts test/cache.test.ts .rsp/changes/cache-isolation.md\ngit diff --no-ext-diff --unified=80 HEAD -- src/cache.ts test/cache.test.ts .rsp/changes/cache-isolation.md\ngit diff --no-ext-diff --name-status HEAD -- src/cache.ts test/cache.test.ts .rsp/changes/cache-isolation.md\ngit show HEAD:src/cache.ts\ngit show HEAD:test/cache.test.ts\ngit show HEAD:.rsp/changes/cache-isolation.md 2>/dev/null || true\nsed -n '1,260p' src/cache.ts\nsed -n '1,320p' test/cache.test.ts\"",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "86cb9052b1a7627f36aaef5640f7b73704531a0819be04c7d6f83943654f8f7b"
+        },
+        {
+          "command": "/bin/zsh -lc 'mise exec -- pnpm test -- cache-isolation'",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "6aca38af24b38087315f7803bcb919ed64cad60841af2833598c59a07b3f1952"
+        }
+      ],
+      "phase": 2,
+      "stderr_hash": "b40e7ca4fde803e27e49384cdaadc6e7cd5787b1219368f250c4128ffc89a9fd",
+      "timed_out": false,
+      "usage": {
+        "input_tokens": 104053,
+        "cached_input_tokens": 84480,
+        "output_tokens": 1100,
+        "reasoning_output_tokens": 275
+      }
+    }
+  ],
+  "provider": "custom",
+  "result": "candidate-for-trace-scoring",
+  "runtime_isolation": {
+    "missing_project_skill_reads": [],
+    "passed": true,
+    "violations": []
+  },
+  "unauthorized_paths": [],
+  "verification": {
+    "exit_code": 0,
+    "output_hash": "17d6dcf64b6bc29236ad1d63957a2fd9da0ea66dd82aeae726bb805d6c918674"
+  }
+}

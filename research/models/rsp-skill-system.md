@@ -46,7 +46,7 @@ RSP should be a progressive system with a removable deterministic core:
 1. **Protocol:** `.rsp/` remains readable and operable without any skill.
 2. **Core Skill:** one concise portable skill improves use of that protocol.
 3. **Discipline Skills:** optional focused capabilities improve review, diagnosis, implementation, testing, shaping, and handoff.
-4. **Managed Controller:** a later opt-in mode composes stable capabilities for autonomous delivery.
+4. **Managed continuation:** an optional host or external layer may compose stable capabilities without becoming RSP product truth.
 5. **Distribution:** host projections and an optional plugin package make capabilities installable; they do not redefine behavior or project truth.
 
 This document is intermediate research with a reconciled frozen target design. It does not authorize edits to published `skills/`, `.rsp/`, CLI source, or package metadata. Implementation begins only through a normal RSP Change that selects a bounded slice of this model and its capability-specific recommendations.
@@ -56,14 +56,14 @@ This document is intermediate research with a reconciled frozen target design. I
 The minimum four-Skill suite proved manual composition. The tightened 3.0 release gate now demonstrates seven RSP-specific owners for an engineering suite:
 
 1. `rsp` derives one next action from project and RSP evidence without becoming a catalog or controller.
-2. `rsp-shape` turns unclear non-trivial intent into one executable Change or a justified shallow Group; it implements `rsp-shaping-capability` recommendations S1-S5.
+2. `rsp-shape` turns unclear non-trivial intent into one executable Change or a justified shallow Group; five same-case terminal journeys qualify its progressively disclosed deep branch and project-design return contract, and it implements `rsp-shaping-capability` recommendations S1-S5.
 3. `rsp-implement` executes one selected Change and returns truthful state plus fresh verification evidence; it implements `rsp-implementation-capability` recommendations I1-I6.
 4. `rsp-review` remains the stable report-only code/document reviewer and receives a fixed comparison scope from implementation or direct invocation.
 5. `rsp-address-review` owns evidence-backed Finding disposition, one authorized correction pass, fresh verification, fixed-scope re-review, and an artifact-scoped recovery handoff.
 6. `rsp-diagnose` establishes a confirmed cause or truthful unresolved result before correction without production mutation authority.
 7. `rsp-tdd` owns one observed RED, minimal GREEN, optional safe REFACTOR, and fresh verification cycle for a clear behavior.
 
-Shaping, implementation, diagnosis, and TDD are standalone Discipline Skills, not placeholders owned by a future Controller. Core owns evidence classification and selects at most one available discipline; Implement detects route changes and returns the matching seam instead of reproducing another discipline. A compact manual fallback preserves Core-only operation. Review-resolution handoff is bounded product behavior, while generic session handoff and autonomous coordination remain deferred Controller/host concerns.
+Shaping, implementation, diagnosis, and TDD are standalone Discipline Skills, not placeholders owned by orchestration. Core owns evidence classification and selects at most one available discipline; Implement detects route changes and returns the matching seam instead of reproducing another discipline. A compact manual fallback preserves Core-only operation. Review-resolution handoff is bounded product behavior, while generic session handoff and autonomous coordination remain optional host/external concerns.
 
 The assisted suite composes through existing project files, Change Tasks/Verify/Blockers, FocusSet, Specs/Decisions, and deterministic CLI projections. It adds no suite state, recursive invocation contract, automatic retry loop, or implicit Git/publication authority.
 
@@ -105,7 +105,7 @@ Antfu, RSP's upstream process, and skills-cli all need exact source identity. Th
 
 ### Autonomy needs artifacts, budgets, and stop conditions
 
-GSD, planning-with-files, Superpowers, and Compound agree that autonomous work needs scoped inputs, durable or recoverable handoffs, verification, and bounded delegation. RSP should not adopt their state hierarchies. A future controller consumes one focused Change and returns evidence/results to existing owners.
+GSD, planning-with-files, Superpowers, and Compound agree that autonomous work needs scoped inputs, durable or recoverable handoffs, verification, and bounded delegation. RSP should not adopt their state hierarchies. Any host or external orchestrator consumes one focused Change and returns evidence/results to existing owners.
 
 ## Disagreements and Decisions
 
@@ -115,7 +115,7 @@ GSD, planning-with-files, Superpowers, and Compound agree that autonomous work n
 | Full workflow vs composable skills | GSD/Compound offer broad delivery systems; Matt offers small adaptable skills | Keep broad orchestration optional and later. Stabilize capabilities first. |
 | Copy vs subscribe | Matt offers editable copies or managed plugin; Antfu vendors/generates; skills-cli installs/updates | RSP owns distilled native behavior. No runtime upstream dependency or automatic overwrite. |
 | Minimality | Ponytail/Karpathy emphasize less code; engineering suites emphasize completeness | Safety, correctness, spec, and standards gate first; simplicity is an independent later axis. |
-| State | GSD/planning systems persist controller state; Agent Skills define none | RSP artifacts remain authority. Controller run state stays ignored/transient and recoverable. |
+| State | GSD/planning systems persist controller state; Agent Skills define none | RSP artifacts remain authority. Optional host/external run state stays ignored/transient and recoverable. |
 | Distribution unit | skills-cli distributes skills; OpenAI plugins bundle richer surfaces | Publish plain skills first. Add a plugin only for a concrete integration bundle. |
 | Host coupling | Host ecosystems offer richer tools, hooks, threads, and UI metadata | Canonical Skills remain host-neutral. Host-specific metadata and integrations are optional projections and cannot own or alter behavior. |
 | Review granularity | Compound separates code and document review; GSD exposes many review skills; a single rubric is smaller | Publish one bounded `rsp-review` capability with progressively loaded code/document pipelines. Defer UI, security, and evaluation-specific pipelines until needed. |
@@ -156,9 +156,11 @@ The RSP Review Capability is one report-only Discipline Skill with shared scope 
 
 A mixed file set may place one executable document in the Code Pipeline and also request a focused document-consistency check, but one underlying issue is emitted once. A normalized Finding records `artifact_kind`, `axis`, severity, path/range, authority/evidence, impact, suggested action, and confidence. `clean` means reviewed with no findings; `skipped` means no review was performed for that pipeline.
 
-### Controller
+### Managed continuation
 
-The Managed Controller is optional orchestration outside the core suite. It may select stable skills, dispatch bounded agents, collect verification, retry within a budget, and stop for user authority. It cannot redefine Change state, modify durable Specs automatically, or infer commit/push/publish permission.
+Managed continuation is optional host or external orchestration outside the RSP 3.0 product surface. A host may explicitly select stable Skills, dispatch bounded agents, collect fresh verification, and retry within a finite budget, while RSP Changes, Specs, Decisions, focus, and archives remain the durable owners. Orchestration stops at mutation, Git, publication, environment, and human-decision authority boundaries.
+
+The evaluated `rsp-manage` research candidate remains recommendation `revise`, outside normal discovery and package output. It matched baseline success and corrections on the available journeys but added material token, elapsed-time, and tool-call cost, so it did not pass the promotion gate. A later Change may reconsider the gap only with a less leading long-continuation task, real bounded delegation and failure recovery, portable invocation metadata, and a demonstrated behavioral delta at acceptable cost.
 
 ### Host Projection and Plugin Package
 
@@ -215,7 +217,7 @@ Every stable Skill declares:
 6. **Stop:** ambiguity, missing authority, failed gate, context budget, or external permission boundary.
 7. **Verification:** evidence needed before completion claims.
 
-Skills do not recursively invoke user-facing flows. The Core Skill or optional Controller selects them. Discipline skills may refer to a shared contract/reference only when progressive loading makes it cheaper than duplicating policy.
+Skills do not recursively invoke user-facing flows. The Core Skill or an explicitly selected host/external orchestrator selects them. Discipline skills may refer to a shared contract/reference only when progressive loading makes it cheaper than duplicating policy.
 
 Canonical behavior may depend on the portable Agent Skills contract, ordinary filesystem operations, project-provided commands, and the RSP CLI. It may not require proprietary host tools. Optional adapters can accelerate or enrich execution, but their absence cannot invalidate the Skill's core outcome.
 
@@ -290,7 +292,7 @@ Promotion requires a demonstrated capability delta, selected ownership, complete
 | RSP TDD | Stable | observed RED/GREEN/REFACTOR and fresh checks returned to one Change | Keep one clear behavior per cycle; return unexplained failures to diagnosis |
 | RSP review resolution | Stable | Finding dispositions, authorized correction, verification, re-review request | `rsp-address-review` owns one bounded pass and returns to the Change/reviewer |
 | RSP handoff | Bounded review-resolution behavior | authoritative pointers/evidence/next action | Keep artifact-scoped and non-authoritative; generic session recovery remains deferred |
-| Managed delivery | Later controller, not a skill baseline | run-local state and results returned to Change | Opt-in direct → assisted → managed progression |
+| Managed continuation | External/host; research candidate retained with `revise` | run-local state and results returned to Change | Keep outside 3.0; reconsider only after a demonstrated behavioral delta at acceptable cost |
 | Host adapter | Deferred integration | optional host-specific acceleration | Keep outside canonical behavior; add only for a demonstrated host capability gap |
 | RSP plugin | Deferred packaging | install/UI/tool bundle | Add only when plain host-neutral skills cannot meet a concrete integration need |
 
@@ -310,12 +312,12 @@ Promotion requires a demonstrated capability delta, selected ownership, complete
 
 ## Frozen Delivery Sequence
 
-- **S1 — Adopt this layered domain boundary.** Protocol → Core Skill → Discipline Skills → optional Controller → optional Distribution. This is the prerequisite decision for later implementation.
+- **S1 — Adopt this layered domain boundary.** Protocol → Core Skill → Discipline Skills → optional host/external orchestration → optional Distribution. This is the prerequisite decision for later implementation.
 - **S2 — Define the canonical skill contract and promotion gate through the first vertical slice.** Extract one concise capability delta, validate portable structure and hard boundaries, then forward-test unseen real work. Add repeated provider and cost evidence only for the selected release candidate; do not build a speculative general platform first.
 - **S3 — Refine the existing `rsp` core skill without turning it into a router catalog.** It should derive stage/next action and name at most the selected optional capability.
 - **S4 — Make RSP review the first evaluated discipline candidate.** Publish one Skill with shared scope, authority, read-only policy, and finding schema, then progressively load distinct Code and Document pipelines. Run both for mixed Changes, deduplicate cross-artifact evidence, and defer other review objects.
 - **S5 — Promote shaping, standalone implementation, bounded review resolution, diagnosis, and TDD as Discipline Skills.** Use separate normal Changes and concise canonical contracts. Keep routing and fallback in Core, return route changes from Implement, and keep each discipline's authority and completion evidence independent.
-- **S6 — Design managed delivery only after Shape, Implement, and Review compose successfully through existing RSP artifacts.** Keep controller state external to `.rsp/`, enforce budgets and authority stops, and preserve direct/manual use.
+- **S6 — Evaluate managed delivery only after Shape, Implement, and Review compose successfully through existing RSP artifacts.** The `rsp-manage` prototype did not clear promotion: retain it under research, keep orchestration external to `.rsp/`, and preserve direct/manual use.
 - **S7 — Keep the release host-neutral and treat host integration as optional release work.** The first stable Skill must conform to Agent Skills, avoid required proprietary capabilities, and pass one Codex execution run. Keep metadata authoritative in each `SKILL.md`; permit `agents/openai.yaml` as presentation-only metadata; do not add a suite manifest, general installer, or plugin until a concrete consumer requires one.
 - **S8 — Gate 3.0 on the installed assisted suite, not individual Skill success.** Prove the manual composition path plus deterministic shaping, implementation routing, review resolution, handoff recovery, and authority-restraint scenarios. Require a bounded installed-package host holdout without treating it as cross-host or managed-controller evidence.
 
@@ -325,7 +327,7 @@ Promotion requires a demonstrated capability delta, selected ownership, complete
 2. The first `rsp-review` candidate is one capability package with separate `code-review.md` and `document-review.md` pipelines. Code simplicity follows correctness, Spec, Standards, and test gates; documents use coherence, traceability, completeness, feasibility, scope, and ambiguity instead of the code rubric.
 3. Canonical Skills are host-neutral. Initial promotion requires Agent Skills conformance and unseen real-task evidence from one available host; repeated matrices and other hosts are release-candidate or later compatibility evidence rather than drafting gates.
 4. Canonical metadata lives in each `SKILL.md`. No suite manifest is introduced until multiple real projections demonstrate a duplication or drift problem.
-5. The 3.0 engineering suite is exactly `rsp`, `rsp-shape`, `rsp-implement`, `rsp-diagnose`, `rsp-tdd`, `rsp-review`, and `rsp-address-review`; generic handoff, Controller, host adapter, and plugin remain outside the product surface.
+5. The 3.0 engineering suite publishes `rsp`, `rsp-shape`, `rsp-implement`, `rsp-diagnose`, `rsp-tdd`, `rsp-review`, and `rsp-address-review`. Shape's qualified progressive depth belongs to `rsp-shape`; generic handoff, the unpromoted `rsp-manage` research candidate, host orchestration, host adapters, and plugins remain outside the product surface.
 6. The implementation order is two independent capability slices (`rsp-shape` and `rsp-implement`), then Core routing against promoted capabilities, then installed-suite composition. Dependency edges express this order; list position is not execution state.
 7. `agents/openai.yaml` may remain as presentation-only metadata. Proprietary host behavior belongs in an optional Adapter or Plugin and cannot change canonical outcomes.
 8. Candidates live under `research/candidates/skills/`, outside normal agent discovery and package output. Stable promoted Skills live under `skills/`.

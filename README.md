@@ -122,7 +122,7 @@ Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENT
 RSP publishes seven host-neutral Skills for on-demand loading:
 
 - `rsp`: setup, workflow, durable review, and archive guidance.
-- `rsp-shape`: shape unclear non-trivial work into one ready Change or justified shallow Group without implementing it.
+- `rsp-shape`: shape unclear non-trivial work into one ready Change or justified shallow Group without implementing it; progressively load deep clarification for an explicit rigorous challenge or unresolved high-risk decision, and return project-selected design work through the same WorkRef.
 - `rsp-implement`: implement one selected, ready Change within explicit mutation authority and return truthful Tasks, Blockers, and fresh verification evidence.
 - `rsp-diagnose`: establish a confirmed cause or truthful unresolved diagnosis before production correction.
 - `rsp-tdd`: drive one clear behavior through observed RED, minimal GREEN, optional safe REFACTOR, and fresh verification.
@@ -130,6 +130,8 @@ RSP publishes seven host-neutral Skills for on-demand loading:
 - `rsp-address-review`: dispose fixed review findings, apply only authorized accepted corrections, require fresh verification and report-only re-review, and return a recoverable artifact-scoped handoff when work remains.
 
 Each Skill is independently invocable and returns results to existing project or RSP artifact owners. The suite adds no hidden workflow state or recursive Skill orchestration, and no Skill infers commit, push, or publication authority.
+
+The 3.0 product surface remains these seven Skills. Five same-case terminal journeys qualify Shape's progressive depth while preserving owner, environment, and acceptance stops. Long managed continuation may be composed explicitly by a host or external workflow, but it must reread current RSP artifacts, preserve their ownership, and stop at mutation, Git, publication, environment, or human-decision boundaries. The evaluated `rsp-manage` prototype remains research-only and is not installed or published as an RSP capability.
 
 For a complete tracked change, compose the suite as evidence requires: `rsp-shape` returns an executable Change; Core routes unexplained failures to `rsp-diagnose`, clear test-first behavior to `rsp-tdd`, and evidenced edits to `rsp-implement`; `rsp-review` returns a read-only report; `rsp-address-review` disposes findings and returns accepted corrections through fresh verification and re-review; and `rsp` performs the durable decision before archive. Each discipline returns to the same Change. Ambiguity, failed gates, and missing authority stop at their existing owner; they do not trigger an automatic retry loop.
 

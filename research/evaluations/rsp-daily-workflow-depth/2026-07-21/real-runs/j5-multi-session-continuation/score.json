@@ -1,0 +1,10 @@
+{
+  "id": "j5-multi-session-continuation",
+  "missing": [],
+  "passed": true,
+  "prohibited": [],
+  "status": {
+    "actual": "incomplete",
+    "expected": "incomplete"
+  }
+}

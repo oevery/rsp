@@ -1,0 +1,48 @@
+{
+  "case_id": "j5-multi-session-continuation",
+  "events": [
+    {
+      "evidence_freshness_checked": true,
+      "observed_by": "host",
+      "type": "session_resume",
+      "work_ref": ".rsp/changes/long-running-delivery.md"
+    },
+    {
+      "bounded": true,
+      "mutation_boundary_present": true,
+      "observed_by": "host",
+      "stop_boundary_present": true,
+      "type": "capability_dispatch",
+      "verification_present": true,
+      "work_ref": ".rsp/changes/long-running-delivery.md"
+    },
+    {
+      "exit_code": 0,
+      "observed_by": "command",
+      "purpose": "refresh-stale-verification",
+      "type": "command"
+    },
+    {
+      "durable_truth_owner": "selected-change",
+      "observed_by": "host",
+      "type": "return",
+      "work_ref": ".rsp/changes/long-running-delivery.md"
+    },
+    {
+      "class": "human",
+      "next_action_present": true,
+      "observed_by": "host",
+      "owner": "user",
+      "status": "unavailable",
+      "type": "coverage"
+    },
+    {
+      "boundary": "human-acceptance",
+      "next_action_present": true,
+      "observed_by": "host",
+      "owner": "user",
+      "type": "stop"
+    }
+  ],
+  "status": "incomplete"
+}

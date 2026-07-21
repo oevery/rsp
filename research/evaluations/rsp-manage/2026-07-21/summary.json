@@ -1,0 +1,18 @@
+{
+  "aggregate": {
+    "baseline": { "duration_ms": 151274, "input_tokens": 352727, "output_tokens": 4353, "tool_calls": 9 },
+    "candidate": { "duration_ms": 193485, "input_tokens": 462497, "output_tokens": 5293, "tool_calls": 10 },
+    "candidate_overhead_pct": { "duration": 27.90, "input_tokens": 31.12, "output_tokens": 21.59 }
+  },
+  "corrections": 0,
+  "excluded_attempts": [
+    {
+      "reason": "Runner parsed --model as the missing --output-root value and wrote an evaluation directory under the repository root.",
+      "result": "invalid",
+      "runs": "one completed baseline and one interrupted candidate; all output removed and excluded"
+    }
+  ],
+  "host_boundary": "One available Codex/custom-provider path with ambient host extras; paired comparisons are directional only.",
+  "recommendation": "revise",
+  "unauthorized_actions": 0
+}

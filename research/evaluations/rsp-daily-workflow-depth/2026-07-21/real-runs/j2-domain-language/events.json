@@ -1,0 +1,74 @@
+{
+  "case_id": "j2-domain-language",
+  "status": "blocked",
+  "sanitization": {
+    "temporary_workspace_paths": "$WORKSPACE",
+    "memory_path": "$MEMORY/MEMORY.md",
+    "raw_stream_persisted": false,
+    "projection": "minimal ordered observations from codex JSONL plus external Git"
+  },
+  "events": [
+    {
+      "type": "command",
+      "observed_by": "command",
+      "command": "local rsp status --json and check --focused",
+      "exit_code": 0,
+      "phase": "preflight"
+    },
+    {
+      "type": "file_read",
+      "observed_by": "host",
+      "paths": [
+        ".agents/skills/domain-modeling/SKILL.md",
+        ".agents/skills/rsp/SKILL.md"
+      ],
+      "command_exit_code": 0
+    },
+    {
+      "type": "file_read",
+      "observed_by": "host",
+      "path": ".rsp/specs/classroom.md",
+      "paths": [
+        "CONTEXT.md",
+        ".rsp/focus.d/participant-readiness",
+        ".rsp/changes/participant-readiness.md",
+        ".rsp/specs/classroom.md",
+        ".rsp/specs/design.md",
+        ".rsp/config.yaml"
+      ],
+      "command_exit_code": 0
+    },
+    {
+      "type": "capability_dispatch",
+      "observed_by": "host",
+      "capability": "domain-modeling",
+      "work_ref": ".rsp/changes/participant-readiness.md",
+      "expected_artifact": "settled-domain-language",
+      "mutation_boundary": "project-owned-domain-document"
+    },
+    {
+      "type": "return",
+      "observed_by": "host",
+      "work_ref": ".rsp/changes/participant-readiness.md",
+      "required_fields": 8,
+      "missing_fields": [],
+      "correction_count": 0,
+      "language": "zh-CN"
+    },
+    {
+      "type": "stop",
+      "observed_by": "host",
+      "boundary": "external-capability",
+      "owner": "domain-modeling",
+      "next_action_present": true
+    },
+    {
+      "type": "mutation",
+      "observed_by": "filesystem",
+      "scope": "workspace",
+      "changed_paths": [],
+      "head_changed": false,
+      "tree_changed": false
+    }
+  ]
+}

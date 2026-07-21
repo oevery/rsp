@@ -1,0 +1,34 @@
+{
+  "case_id": "j2-domain-language",
+  "status": "blocked",
+  "evidence_class": "excluded-composite-replay",
+  "events": [
+    {
+      "type": "file_read",
+      "observed_by": "filesystem",
+      "path": ".rsp/specs/classroom.md",
+      "evidence": [{ "kind": "oracle", "path": "research/evaluations/rsp-daily-workflow-depth/2026-07-21/fixtures/j2-domain-language.yaml", "locator": "- .rsp/specs/classroom.md" }]
+    },
+    {
+      "type": "capability_dispatch",
+      "observed_by": "host",
+      "capability": "domain-modeling",
+      "work_ref": ".rsp/changes/participant-readiness.md",
+      "expected_artifact": "settled-domain-language",
+      "mutation_boundary": "project-owned-domain-document",
+      "evidence": [
+        { "kind": "host-output", "path": "research/evaluations/rsp-shape/2026-07-21-depth/outputs/design-candidate.md", "locator": "domain-modeling" },
+        { "kind": "host-output", "path": "research/evaluations/rsp-shape/2026-07-21-depth/outputs/design-candidate.md", "locator": "预期输出" },
+        { "kind": "host-output", "path": "research/evaluations/rsp-shape/2026-07-21-depth/outputs/design-candidate.md", "locator": "允许变更" }
+      ]
+    },
+    {
+      "type": "stop",
+      "observed_by": "host",
+      "boundary": "external-capability",
+      "owner": "domain-modeling",
+      "next_action_present": true,
+      "evidence": [{ "kind": "host-output", "path": "research/evaluations/rsp-shape/2026-07-21-depth/outputs/design-candidate.md", "locator": "由 Shape 继续应用 Ready gate" }]
+    }
+  ]
+}

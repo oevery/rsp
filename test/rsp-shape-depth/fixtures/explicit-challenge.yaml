@@ -1,0 +1,14 @@
+id: explicit-challenge
+load_deep_reference: true
+sources:
+  - skills/rsp-shape/SKILL.md
+  - skills/rsp-shape/references/deep-clarification.md
+required_contract:
+  - explicitly asks for rigorous challenge
+  - Ask exactly one owner decision per turn
+  - Include a recommended answer grounded in inspected facts
+  - continue only along that decision's dependencies
+prohibited_actions:
+  - implementation
+  - git mutation
+  - batch unrelated questions

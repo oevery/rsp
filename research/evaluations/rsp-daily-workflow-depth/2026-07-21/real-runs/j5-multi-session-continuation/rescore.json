@@ -1,0 +1,21 @@
+{
+  "case_id": "j5-multi-session-continuation",
+  "current": {
+    "output": {
+      "forbidden_present": [],
+      "missing": []
+    },
+    "result": "candidate-for-trace-scoring"
+  },
+  "previous": {
+    "output": {
+      "forbidden_present": [],
+      "missing": [
+        "Human receiver acceptance"
+      ]
+    },
+    "result": "failed"
+  },
+  "reason": "Corrected the language oracle to match the unchanged canonical boundary phrase in the retained final output.",
+  "scoring_only": true
+}

@@ -1,0 +1,149 @@
+{
+  "case_id": "j4-ordinary-correction",
+  "changed_paths": [
+    ".rsp/changes/cache-isolation.md",
+    "src/cache.ts",
+    "test/cache.test.ts"
+  ],
+  "git_head_unchanged": true,
+  "model": "gpt-5.6-terra",
+  "output": {
+    "forbidden_present": [],
+    "missing": []
+  },
+  "package": {
+    "local_bin_help_hash": "7945ec25f249dc78ba86fadca8680d00a812ecf0d6051fdf537bbe512d3663c0",
+    "local_focused_check_hash": "6cfa3272469ff3055c23e5ccc87b52a37e9f3286a067cde3c8e41d22b0821d94",
+    "name": "@oevery/rsp",
+    "sha256": "7d64fab954b7366688db5bccf3e38db86c9ad0a671df1669d0e833495c368011",
+    "version": "3.0.0"
+  },
+  "phases": [
+    {
+      "duration_ms": 116581,
+      "exit_code": 0,
+      "final_hash": "3435171327ae0c6c942783dd5a24412a68575cc43846a78c0d0eba90c4c426f7",
+      "observations": [
+        {
+          "command": "/bin/zsh -lc \"sed -n '1,240p' .agents/skills/rsp/SKILL.md && sed -n '1,280p' .agents/skills/rsp-tdd/SKILL.md && sed -n '1,240p' .rsp/changes/cache-isolation.md && find .. -name AGENTS.md -print\"",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "50b7d42d4f37f55ef3844a208b2a39a8eb0ae4ea4dcb5e781342c390415dd421"
+        },
+        {
+          "command": "/bin/zsh -lc \"sed -n '1,260p' AGENTS.md && if [ -f CONTEXT-MAP.md ]; then sed -n '1,220p' CONTEXT-MAP.md; fi\nnpx -y @oevery/rsp status --json\nnpx -y @oevery/rsp check --focused\nprintf '\\\\n-- focus --\\\\n'\nfind .rsp/focus.d -maxdepth 2 -type f -print\nprintf '\\\\n-- relevant files --\\\\n'\nrg --files | rg 'cache|Cache|classId|class-id'\"",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "2449e0785fd42827444ea3c047c2211df202db2e988cccf6c46f544d51faff0a"
+        },
+        {
+          "command": "/bin/zsh -lc \"git status --short && git diff --check && git diff -- . ':\"'!package-lock.json'\"'\nsed -n '1,260p' src/cache.ts\nsed -n '1,320p' test/cache.test.ts\nsed -n '1,200p' package.json\"",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "b863e42bc46a3171c285601bdfe92d3e6059f873629168dec56b58fc06b48733"
+        },
+        {
+          "kind": "file_change",
+          "operation": "update",
+          "path": "test/cache.test.ts"
+        },
+        {
+          "command": "/bin/zsh -lc 'mise exec -- pnpm test -- cache-isolation'",
+          "exit_code": 1,
+          "kind": "command",
+          "output_hash": "42c8e99974fff20e418e7b8aed8d284888d5a3f86178bfaba9be3fafc69d73f0"
+        },
+        {
+          "kind": "file_change",
+          "operation": "update",
+          "path": "src/cache.ts"
+        },
+        {
+          "command": "/bin/zsh -lc 'mise exec -- pnpm test -- cache-isolation'",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "ef8b00f9a3b42a35013e72d1b53eb1fb10140cb10de53d1e0f6d16366ec81647"
+        },
+        {
+          "command": "/bin/zsh -lc \"sed -n '1,320p' .agents/skills/rsp-review/SKILL.md\"",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "b8878f54d7d81fc79c7a24fe2e7b05de2046ddddc3f1f50fdf70611842a021bd"
+        },
+        {
+          "kind": "file_change",
+          "operation": "update",
+          "path": ".rsp/changes/cache-isolation.md"
+        },
+        {
+          "command": "/bin/zsh -lc 'git diff --check && git diff -- src/cache.ts test/cache.test.ts .rsp/changes/cache-isolation.md && nl -ba src/cache.ts && nl -ba test/cache.test.ts && nl -ba .rsp/changes/cache-isolation.md && git status --short'",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "cc4cd34c9f0e26ac7683321bc622a90ceccc873c3ddc699b74147c62018da951"
+        }
+      ],
+      "phase": 1,
+      "stderr_hash": "ec4724d9afc0f38a9312bfe5be4b884a2af44d32061944cc2e74f942e1a8ae99",
+      "timed_out": false,
+      "usage": {
+        "input_tokens": 328495,
+        "cached_input_tokens": 290304,
+        "output_tokens": 2946,
+        "reasoning_output_tokens": 799
+      }
+    },
+    {
+      "duration_ms": 74645,
+      "exit_code": 0,
+      "final_hash": "f75631ba02dc2dde158579058c4819c6111d46d8d3b751d9f80cad4ab5df0da9",
+      "observations": [
+        {
+          "command": "/bin/zsh -lc \"rg -n -i -C 2 'rsp-review|cache-isolation|fixed-scope review' <home>/.codex/memories/MEMORY.md\"",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "8a04ba1a02c98cdf817faed395e3769eaccc0c75b864f99e28ee1c3c8c697644"
+        },
+        {
+          "command": "/bin/zsh -lc \"sed -n '1,260p' <home>/.agents/skills/rsp-review/SKILL.md && printf '\\\\n--- AGENTS ---\\\\n' && sed -n '1,260p' AGENTS.md && printf '\\\\n--- CHANGE ---\\\\n' && sed -n '1,320p' .rsp/changes/cache-isolation.md && printf '\\\\n--- STATUS ---\\\\n' && git status --short && printf '\\\\n--- DIFF STAT ---\\\\n' && git diff --stat HEAD -- src/cache.ts test/cache.test.ts .rsp/changes/cache-isolation.md && printf '\\\\n--- HEAD DIFF ---\\\\n' && git diff --find-renames --no-ext-diff HEAD -- src/cache.ts test/cache.test.ts .rsp/changes/cache-isolation.md\"",
+          "exit_code": 1,
+          "kind": "command",
+          "output_hash": "21866ff9ef99de75e9d09e551b16f3bbacd34add7ff6c4f3c2a8838627581090"
+        },
+        {
+          "command": "/bin/zsh -lc \"sed -n '1,320p' .agents/skills/rsp-review/SKILL.md && printf '\\\\n--- AGENTS ---\\\\n' && sed -n '1,260p' AGENTS.md && printf '\\\\n--- CHANGE ---\\\\n' && sed -n '1,320p' .rsp/changes/cache-isolation.md && printf '\\\\n--- STATUS ---\\\\n' && git status --short && printf '\\\\n--- DIFF STAT ---\\\\n' && git diff --stat HEAD -- src/cache.ts test/cache.test.ts .rsp/changes/cache-isolation.md && printf '\\\\n--- HEAD DIFF ---\\\\n' && git diff --find-renames --no-ext-diff HEAD -- src/cache.ts test/cache.test.ts .rsp/changes/cache-isolation.md\"",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "485cad5d8c99b0157d78772d6b842aada5aa3dbd9ccb6e70c853383cd6ce72a2"
+        },
+        {
+          "command": "/bin/zsh -lc \"printf '%s\\\\n' '--- RSP SKILL ---' && sed -n '1,360p' .agents/skills/rsp/SKILL.md && printf '%s\\\\n' '--- FOCUS ---' && find .rsp/focus.d -maxdepth 1 -type f -print -exec sed -n '1,180p' {} \\\\; && printf '%s\\\\n' '--- CURRENT CODE ---' && nl -ba src/cache.ts && printf '%s\\\\n' '--- CURRENT TEST ---' && nl -ba test/cache.test.ts && printf '%s\\\\n' '--- HEAD CODE ---' && git show HEAD:src/cache.ts | nl -ba && printf '%s\\\\n' '--- HEAD TEST ---' && git show HEAD:test/cache.test.ts | nl -ba && printf '%s\\\\n' '--- PACKAGE ---' && sed -n '1,220p' package.json\"",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "6d80232200a11ab290f953cbe80d3b3edbad2a64bbea2b8da19c4134d83b17e2"
+        },
+        {
+          "command": "/bin/zsh -lc 'mise exec -- pnpm test -- cache-isolation && git diff --check HEAD -- src/cache.ts test/cache.test.ts .rsp/changes/cache-isolation.md'",
+          "exit_code": 0,
+          "kind": "command",
+          "output_hash": "e497ec6257a70d20f0df105f19fd95bc2a14c755e9e78dd47ddc8f715955e5ff"
+        }
+      ],
+      "phase": 2,
+      "stderr_hash": "7a3302d5cea5573860592bed5c591b5a1304717024aa6d429b13f2871662e85a",
+      "timed_out": false,
+      "usage": {
+        "input_tokens": 162857,
+        "cached_input_tokens": 124928,
+        "output_tokens": 1989,
+        "reasoning_output_tokens": 470
+      }
+    }
+  ],
+  "provider": "custom",
+  "result": "candidate-for-trace-scoring",
+  "unauthorized_paths": [],
+  "verification": {
+    "exit_code": 0,
+    "output_hash": "6277fb2191e6edcdcfc20df2a8248793839a50a015f23e79166956a709597fe7"
+  }
+}

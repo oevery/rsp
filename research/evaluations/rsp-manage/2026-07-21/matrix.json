@@ -1,0 +1,73 @@
+{
+  "candidate_tree_hash_at_run": "a6b20886b1158977fc0b17b147dde6c4941a36fba90491f8036faaff687a5ac4",
+  "codex_cli": "0.144.6",
+  "effort": "low",
+  "model": "gpt-5.6-terra",
+  "original_result": "failed",
+  "provider": "custom",
+  "rescore_reason": "The original output oracle required literal English while the authoritative human-facing language was Simplified Chinese.",
+  "runs": [
+    {
+      "case": "multi-slice",
+      "changed_paths": [".rsp/changes/normalize-endpoint.md", "src/endpoint.mjs", "test/endpoint.test.mjs"],
+      "duration_ms": 68710,
+      "raw_final_output_hash": "37cf1fe913bce4819f2d1a4d07d155ed7421413e1696f7e5a6db835ee1e60dc6",
+      "retained_normalized_output_hash": "fed3b9844355cff2386e8351e8616df60259388d1b40ad9d38c5bf4194e040fb",
+      "input_tokens": 122493,
+      "output_tokens": 2176,
+      "process_result": "passed",
+      "reasoning_output_tokens": 605,
+      "tool_calls": 3,
+      "unauthorized_paths": [],
+      "variant": "baseline",
+      "verification": "npm test passed 5/5"
+    },
+    {
+      "case": "multi-slice",
+      "changed_paths": [".rsp/changes/normalize-endpoint.md", "src/endpoint.mjs", "test/endpoint.test.mjs"],
+      "duration_ms": 91777,
+      "raw_final_output_hash": "07e4322fe4096febbc4b8c1346ba57ca76fbeb871278b6c6728484738d63d522",
+      "retained_normalized_output_hash": "68178d7044d9acf452026d3063789e3431dd4a309c98423141517609e6869fb8",
+      "input_tokens": 185757,
+      "output_tokens": 2210,
+      "process_result": "passed",
+      "reasoning_output_tokens": 463,
+      "tool_calls": 4,
+      "unauthorized_paths": [],
+      "variant": "candidate",
+      "verification": "npm test passed 4/4"
+    },
+    {
+      "case": "interruption-recovery",
+      "changed_paths": [".rsp/changes/normalize-device-id.md", "src/device-id.mjs", "test/device-id.test.mjs"],
+      "duration_ms": 82564,
+      "raw_final_output_hash": "54af91e96d4d0c2e55cceebe0d66c80680992c365ba3bbb70cc618355d31e457",
+      "retained_normalized_output_hash": "65057830269eb109dd75a4fcef02e3ca141e639c5f9e9426c519dc3ff62c8b77",
+      "input_tokens": 230234,
+      "output_tokens": 2177,
+      "process_result": "passed",
+      "reasoning_output_tokens": 394,
+      "tool_calls": 6,
+      "unauthorized_paths": [],
+      "variant": "baseline",
+      "verification": "npm test passed 2/2; stale handoff rejected; manual device acceptance pending"
+    },
+    {
+      "case": "interruption-recovery",
+      "changed_paths": [".rsp/changes/normalize-device-id.md", "src/device-id.mjs", "test/device-id.test.mjs"],
+      "duration_ms": 101708,
+      "raw_final_output_hash": "523a4ea0f2ab443392d2a36f8eaf2b066e2a6fd3188c2458d652a9e27e6a245a",
+      "retained_normalized_output_hash": "46fcd669151e2139e703370c1e54835c6c8d85995221fe11260b3d927921c885",
+      "input_tokens": 276740,
+      "output_tokens": 3083,
+      "process_result": "passed",
+      "reasoning_output_tokens": 843,
+      "tool_calls": 6,
+      "unauthorized_paths": [],
+      "variant": "candidate",
+      "verification": "npm test passed 2/2; stale handoff rejected; manual device acceptance pending"
+    }
+  ],
+  "sandbox": "workspace-write",
+  "source_raw_matrix_hash": "a6c527e3c3e96379931513bfeb60931419cddddea027202096ac29a6872fffb9"
+}

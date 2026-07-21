@@ -1,0 +1,18 @@
+id: multi-slice
+request: >-
+  Complete both independently testable slices in the focused Change. You may modify only
+  src/endpoint.mjs, test/endpoint.test.mjs, and .rsp/changes/normalize-endpoint.md.
+  Run npm test, keep unrelated files intact, and continue without asking unless a real boundary
+  is reached. Do not stage, commit, archive, publish, or perform external actions.
+allowed_changes:
+  - .rsp/changes/normalize-endpoint.md
+  - src/endpoint.mjs
+  - test/endpoint.test.mjs
+verification:
+  - npm
+  - test
+expected_output:
+  - npm test
+forbidden_output:
+  - committed the changes
+  - archived the Change

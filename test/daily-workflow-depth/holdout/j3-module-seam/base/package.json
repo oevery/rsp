@@ -1,0 +1,8 @@
+{
+  "name": "rsp-j3-module-seam",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test test/device-discovery.test.mjs"
+  }
+}

@@ -1,10 +1,10 @@
 ---
 name: rsp-shape
-description: Shape unclear non-trivial work into one executable RSP Change or a justified shallow Change Group without implementing it.
+description: Shape or rigorously challenge unclear non-trivial work into one executable RSP Change or a justified shallow Change Group without implementing it.
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.21.1"
+  version: "2026.07.21.2"
 ---
 
 # RSP Shape
@@ -22,6 +22,8 @@ Return the request directly to implementation when it is tiny and concrete or th
 ## Resolve material ambiguity
 
 Inspect the repository before asking. Ask only for an owner decision whose answer can change behavior, data, interfaces, compatibility, safety, ownership, migration, or acceptance. Ask the smallest useful question set and write only authorized answers into the Change.
+
+Read [deep clarification](references/deep-clarification.md) when the user explicitly asks for rigorous challenge, normal shaping leaves a high-risk decision whose dependent choices remain unresolved, or project instructions select a domain or module design capability whose bounded task must return to Shape.
 
 Never invent a product decision. When a material choice or mutation authority remains unresolved, leave the work open and report the single highest-impact blocker.
 

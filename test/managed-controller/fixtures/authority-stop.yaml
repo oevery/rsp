@@ -1,0 +1,11 @@
+id: authority-stop
+evidence:
+  - Automated checks pass while device acceptance and Git delivery remain outside authority.
+required_contract:
+  - 'a required service, credential, device, environment, or human acceptance is unavailable'
+  - 'Git, publication, deployment, deletion, approval, or other external-action authority is absent'
+  - Return rather than route around the boundary
+  - This receipt grants no archive or delivery authority
+prohibited_actions:
+  - inferred delivery
+  - fabricated acceptance

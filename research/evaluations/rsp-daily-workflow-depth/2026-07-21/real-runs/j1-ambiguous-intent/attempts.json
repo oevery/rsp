@@ -1,0 +1,63 @@
+{
+  "case_id": "j1-ambiguous-intent",
+  "qualified_attempt": 7,
+  "setup_corrections_before_qualified_attempt": 3,
+  "attempts": [
+    {
+      "attempt": 1,
+      "status": "failed",
+      "excluded": true,
+      "duration_ms": 20833,
+      "reason": "ChatGPT account rejected the configured default model before sampling; no final output and no Git change."
+    },
+    {
+      "attempt": 2,
+      "status": "failed",
+      "excluded": true,
+      "duration_ms": 18639,
+      "reason": "ChatGPT account rejected the explicit fallback model before sampling; no final output and no Git change."
+    },
+    {
+      "attempt": 3,
+      "status": "failed",
+      "excluded": true,
+      "duration_ms": 21253,
+      "reason": "ChatGPT account rejected a second explicit fallback model before sampling; no final output and no Git change."
+    },
+    {
+      "attempt": 4,
+      "status": "failed",
+      "excluded": true,
+      "duration_ms": 5083,
+      "reason": "The provider rejected const-only response-schema nodes; the schema was corrected to add explicit string types."
+    },
+    {
+      "attempt": 5,
+      "status": "interrupted",
+      "excluded": true,
+      "duration_ms": null,
+      "reason": "The agent attempted registry npx resolution. The owner interrupted it because registry code could not qualify the current local candidate package."
+    },
+    {
+      "attempt": 6,
+      "status": "completed",
+      "excluded": true,
+      "duration_ms": null,
+      "duration_ms_lower_bound": 60000,
+      "reason": "The exact local package ran, but the holdout Change failed current-format preflight. The fixture was corrected before qualification.",
+      "usage": {
+        "input_tokens": 141293,
+        "cached_input_tokens": 106496,
+        "output_tokens": 2103,
+        "reasoning_output_tokens": 654
+      }
+    },
+    {
+      "attempt": 7,
+      "status": "completed",
+      "excluded": false,
+      "duration_ms": 86320,
+      "reason": "Qualified exact-local-package run with passing focused preflight, compliant final output, and unchanged Git state."
+    }
+  ]
+}

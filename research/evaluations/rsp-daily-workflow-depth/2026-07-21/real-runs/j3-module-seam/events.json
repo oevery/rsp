@@ -1,0 +1,66 @@
+{
+  "case_id": "j3-module-seam",
+  "events": [
+    {
+      "observed_by": "command",
+      "path": "client/AGENTS.md",
+      "type": "file_read"
+    },
+    {
+      "observed_by": "command",
+      "path": "client/CONTEXT.md",
+      "type": "file_read"
+    },
+    {
+      "capability": "codebase-design",
+      "expected_artifact": "module-seam-decision",
+      "mutation_boundary": "selected-change-only",
+      "observed_by": "host",
+      "type": "capability_dispatch",
+      "work_ref": ".rsp/changes/device-discovery-boundary.md"
+    },
+    {
+      "observed_by": "host",
+      "owner": "rsp-implement",
+      "type": "return",
+      "work_ref": ".rsp/changes/device-discovery-boundary.md"
+    },
+    {
+      "observed_by": "filesystem",
+      "path": "client/packages/device-discovery/src/index.ts",
+      "scope": "selected-change",
+      "type": "mutation"
+    },
+    {
+      "argv": [
+        "mise",
+        "exec",
+        "--",
+        "pnpm",
+        "test",
+        "--",
+        "device-discovery"
+      ],
+      "exit_code": 0,
+      "observed_by": "command",
+      "phase": "verify",
+      "type": "command"
+    },
+    {
+      "class": "hardware",
+      "next_action_present": true,
+      "observed_by": "host",
+      "owner": "human",
+      "status": "unavailable",
+      "type": "coverage"
+    },
+    {
+      "boundary": "environment-acceptance",
+      "next_action_present": true,
+      "observed_by": "host",
+      "owner": "human",
+      "type": "stop"
+    }
+  ],
+  "status": "incomplete"
+}

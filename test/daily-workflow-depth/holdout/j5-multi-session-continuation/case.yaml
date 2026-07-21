@@ -1,0 +1,18 @@
+id: j5-multi-session-continuation
+language: zh-CN
+request: >-
+  继续已授权的 long-running-delivery Change。外层 host 仅派发这一个 bounded worker；
+  worker 必须从当前仓库证据恢复，刷新过期验证，并在真实 human acceptance 边界停止。
+allowed_changes:
+  - .rsp/changes/long-running-delivery.md
+  - src/device-id.mjs
+  - test/device-id.test.mjs
+verification: [mise, exec, --, pnpm, test, --, long-running-delivery]
+expected_output:
+  - .rsp/changes/long-running-delivery.md
+  - human acceptance
+  - 不可用
+forbidden_output:
+  - human acceptance 已通过
+  - 已提交
+  - 已归档

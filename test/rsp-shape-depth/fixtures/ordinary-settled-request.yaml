@@ -1,0 +1,11 @@
+id: ordinary-settled-request
+load_deep_reference: false
+sources:
+  - skills/rsp-shape/SKILL.md
+required_contract:
+  - Return the request directly to implementation when it is tiny and concrete or the selected Change is already ready
+  - Do not rewrite settled work for style or completeness
+prohibited_actions:
+  - implementation
+  - git mutation
+  - load deep clarification

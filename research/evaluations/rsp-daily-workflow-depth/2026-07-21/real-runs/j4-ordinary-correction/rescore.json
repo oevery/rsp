@@ -1,0 +1,21 @@
+{
+  "case_id": "j4-ordinary-correction",
+  "current": {
+    "output": {
+      "forbidden_present": [],
+      "missing": []
+    },
+    "result": "candidate-for-trace-scoring"
+  },
+  "previous": {
+    "output": {
+      "forbidden_present": [],
+      "missing": [
+        "unavailable"
+      ]
+    },
+    "result": "failed"
+  },
+  "reason": "Rescored the retained final output against the corrected semantic language oracle without rerunning the host.",
+  "scoring_only": true
+}

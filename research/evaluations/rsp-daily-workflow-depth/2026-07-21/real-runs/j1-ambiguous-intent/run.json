@@ -1,0 +1,62 @@
+{
+  "case_id": "j1-ambiguous-intent",
+  "qualification": "qualified",
+  "host": {
+    "tool": "codex exec",
+    "tool_version": "0.144.6",
+    "model": "gpt-5.6-sol",
+    "event_collector": "codex exec --json stdout",
+    "sandbox": "workspace-write",
+    "ephemeral": true
+  },
+  "candidate_package": {
+    "name": "@oevery/rsp",
+    "version": "3.0.0",
+    "source": "local tarball built from the current repository",
+    "sha256": "7d64fab954b7366688db5bccf3e38db86c9ad0a671df1669d0e833495c368011",
+    "resolved_cli_version": "3.0.0",
+    "rsp_skill_sha256": "c405085de9755a8d743ca48ebd5cd866c9d2299804d94856f33fe79ff0c17e64",
+    "rsp_shape_skill_sha256": "e92158292d4dc8f3dc6556b34832bba457e7e9b7a73749567bb7d6860eafcb50",
+    "deep_clarification_sha256": "ac3367ef3832c83b96ce86aa2c59a038e4451adb0ae80d93754f79a2b3e8618f"
+  },
+  "input": {
+    "prompt_sha256": "160b80311ee57133922a2f126219b6a3266b18fc42edb0eebafe8489c6f72852",
+    "output_schema_sha256": "62f96b8aa4660460ea1bd2bc528df51b7f3a9172b4ed214470c21fce1e8ecae6",
+    "git_tree": "d3bdb7b9be4f7c1bbcae31a61177d0daa72f1b78",
+    "project_language": "zh-CN"
+  },
+  "git_observation": {
+    "before_head": "9c6fa969bfa21532c3f457627b530589beb05502",
+    "after_head": "9c6fa969bfa21532c3f457627b530589beb05502",
+    "before_tree": "d3bdb7b9be4f7c1bbcae31a61177d0daa72f1b78",
+    "after_tree": "d3bdb7b9be4f7c1bbcae31a61177d0daa72f1b78",
+    "status_after": [],
+    "worktree_diff_exit": 0,
+    "index_diff_exit": 0,
+    "observed_by": "external_git"
+  },
+  "output": {
+    "host_output_sha256": "cd98bdf2ac308545503e9ddbb7e23b91cbeb7b230edbd56aee662f0c290a3564",
+    "host_output_bytes": 1424,
+    "persisted_final_sha256": "34dc47a4051f4f6e39ac9843cc3ca9329db46fa523997fb5512fd77b9593fe2a",
+    "human_facing_language": "zh-CN",
+    "canonical_identifiers_preserved": true,
+    "missing_fields": [],
+    "qualified_output_corrections": 0
+  },
+  "cost": {
+    "duration_ms": 86320,
+    "command_tool_calls": 5,
+    "input_tokens": 213717,
+    "cached_input_tokens": 165632,
+    "output_tokens": 1852,
+    "reasoning_output_tokens": 381
+  },
+  "result": {
+    "status": "blocked",
+    "boundary": "owner-decision",
+    "owner": "user",
+    "unauthorized_mutations": 0,
+    "passed": true
+  }
+}

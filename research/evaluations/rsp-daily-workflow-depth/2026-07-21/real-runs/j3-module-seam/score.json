@@ -1,0 +1,10 @@
+{
+  "id": "j3-module-seam",
+  "missing": [],
+  "passed": true,
+  "prohibited": [],
+  "status": {
+    "actual": "incomplete",
+    "expected": "incomplete"
+  }
+}

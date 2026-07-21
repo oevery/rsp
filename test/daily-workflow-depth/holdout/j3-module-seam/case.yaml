@@ -1,0 +1,19 @@
+id: j3-module-seam
+language: zh-CN
+request: >-
+  决定 device discovery 应属于 desktop runtime、web projection 还是 runtime-neutral package，
+  然后完成选中 Change 中最小的边界保持切片并运行指定验证。receiver hardware 不可用，
+  因此必须在真实环境验收边界停止。不要 commit、push 或 deploy。
+allowed_changes:
+  - .rsp/changes/device-discovery-boundary.md
+  - client/packages/device-discovery/src/index.ts
+  - docs/architecture/device-discovery-boundary.md
+  - test/device-discovery.test.mjs
+verification: [mise, exec, --, pnpm, test, --, device-discovery]
+expected_output:
+  - .rsp/changes/device-discovery-boundary.md
+  - 硬件
+  - unavailable
+forbidden_output:
+  - 硬件验收已通过
+  - 已提交

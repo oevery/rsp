@@ -1,0 +1,13 @@
+id: module-seam-return
+load_deep_reference: true
+sources:
+  - skills/rsp-shape/SKILL.md
+  - skills/rsp-shape/references/deep-clarification.md
+required_contract:
+  - domain or module design capability
+  - existing project documents retain domain and architecture authority
+  - resume Shape against the same Change
+prohibited_actions:
+  - implementation
+  - git mutation
+  - impose an RSP architecture doctrine

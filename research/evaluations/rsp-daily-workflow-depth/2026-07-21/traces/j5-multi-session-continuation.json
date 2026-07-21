@@ -1,0 +1,63 @@
+{
+  "case_id": "j5-multi-session-continuation",
+  "status": "incomplete",
+  "evidence_class": "excluded-composite-replay",
+  "events": [
+    {
+      "type": "session_resume",
+      "observed_by": "host",
+      "work_ref": ".rsp/changes/long-running-delivery.md",
+      "evidence_freshness_checked": true,
+      "evidence": [{ "kind": "host-metadata", "path": "research/evaluations/rsp-manage/2026-07-21/matrix.json", "locator": "stale handoff rejected" }]
+    },
+    {
+      "type": "capability_dispatch",
+      "observed_by": "host",
+      "bounded": true,
+      "work_ref": ".rsp/changes/long-running-delivery.md",
+      "mutation_boundary_present": true,
+      "verification_present": true,
+      "stop_boundary_present": true,
+      "controller_owner": "external-host",
+      "evidence": [
+        { "kind": "host-metadata", "path": "research/evaluations/rsp-manage/2026-07-21/report.md", "locator": "The baseline reached the same observable result" },
+        { "kind": "contract", "path": "research/candidates/skills/rsp-manage/SKILL.md", "locator": "## Dispatch Envelope" }
+      ]
+    },
+    {
+      "type": "command",
+      "observed_by": "command",
+      "purpose": "refresh-stale-verification",
+      "exit_code": 0,
+      "evidence": [{ "kind": "host-metadata", "path": "research/evaluations/rsp-manage/2026-07-21/matrix.json", "locator": "npm test passed 2/2; stale handoff rejected" }]
+    },
+    {
+      "type": "return",
+      "observed_by": "host",
+      "work_ref": ".rsp/changes/long-running-delivery.md",
+      "durable_truth_owner": "selected-change",
+      "evidence": [{ "kind": "host-output", "path": "research/evaluations/rsp-manage/2026-07-21/outputs/interruption-recovery-baseline.md", "locator": "更新 Change" }]
+    },
+    {
+      "type": "coverage",
+      "observed_by": "host",
+      "class": "human",
+      "status": "unavailable",
+      "owner": "user",
+      "next_action_present": true,
+      "evidence": [{ "kind": "host-output", "path": "research/evaluations/rsp-manage/2026-07-21/outputs/interruption-recovery-baseline.md", "locator": "人工验收尚未执行" }]
+    },
+    {
+      "type": "stop",
+      "observed_by": "host",
+      "boundary": "human-acceptance",
+      "owner": "user",
+      "next_action_present": true,
+      "product_owner": "external-host",
+      "evidence": [
+        { "kind": "host-output", "path": "research/evaluations/rsp-manage/2026-07-21/outputs/interruption-recovery-baseline.md", "locator": "下一步是在真实接收设备上验证" },
+        { "kind": "host-metadata", "path": "research/evaluations/rsp-manage/2026-07-21/summary.json", "locator": "\"recommendation\": \"revise\"" }
+      ]
+    }
+  ]
+}

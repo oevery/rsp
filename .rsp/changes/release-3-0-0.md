@@ -79,5 +79,5 @@ kind: "ops"
 - requires `engineering-disciplines/validate-discipline-composition`: needs standalone TDD and diagnosis Skills to pass the installed-suite discipline gate
 - requires `fix-review-output-and-eval-runner`: needs review follow-up safety and output-language fixes before release preparation
 - requires `matt-first-daily-capability-audit`: needs the maintainer-requested daily capability audit before the 3.0 product boundary is frozen
-- daily workflow depth: select or reject the audit's recommended shaping/controller follow-up before release preparation
+- requires `daily-workflow-depth/validate-daily-workflow-depth`: needs the selected shaping and managed-continuation candidates to pass the terminal five-journey gate
 - none

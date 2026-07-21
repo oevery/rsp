@@ -1,0 +1,83 @@
+{
+  "case_id": "j1-ambiguous-intent",
+  "status": "blocked",
+  "sanitization": {
+    "temporary_workspace_paths": "$WORKSPACE",
+    "memory_path": "$MEMORY/MEMORY.md",
+    "raw_stream_persisted": false,
+    "projection": "minimal ordered observations from codex JSONL plus external Git"
+  },
+  "events": [
+    {
+      "type": "command",
+      "observed_by": "command",
+      "command": "local rsp status --json and check --focused",
+      "exit_code": 0,
+      "phase": "preflight"
+    },
+    {
+      "type": "file_read",
+      "observed_by": "host",
+      "paths": [
+        ".agents/skills/rsp/SKILL.md",
+        ".agents/skills/rsp-shape/SKILL.md",
+        ".agents/skills/rsp-shape/references/deep-clarification.md",
+        ".agents/skills/rsp-shape/references/complex-shaping.md"
+      ],
+      "command_exit_code": 0
+    },
+    {
+      "type": "file_read",
+      "observed_by": "host",
+      "path": "CONTEXT.md",
+      "paths": [
+        "AGENTS.md",
+        "CONTEXT.md",
+        ".rsp/focus.d/course-transition",
+        ".rsp/changes/course-transition.md",
+        ".rsp/specs/design.md"
+      ],
+      "command_exit_code": 0
+    },
+    {
+      "type": "command",
+      "observed_by": "host",
+      "command": "./node_modules/.bin/rsp status --json and show --focused --json",
+      "exit_code": 0,
+      "observed": {
+        "focused": "course-transition",
+        "blocked": true,
+        "ready": []
+      }
+    },
+    {
+      "type": "question",
+      "observed_by": "host",
+      "decision": "transition-owner",
+      "one_at_a_time": true,
+      "recommended_answer_present": true
+    },
+    {
+      "type": "output",
+      "observed_by": "host",
+      "field": "unresolved_decision",
+      "value": "transition-owner",
+      "language": "zh-CN"
+    },
+    {
+      "type": "stop",
+      "observed_by": "host",
+      "boundary": "owner-decision",
+      "owner": "user",
+      "next_action_present": true
+    },
+    {
+      "type": "mutation",
+      "observed_by": "filesystem",
+      "scope": "workspace",
+      "changed_paths": [],
+      "head_changed": false,
+      "tree_changed": false
+    }
+  ]
+}

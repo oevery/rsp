@@ -1,0 +1,1 @@
+请严格 challenge 当前 feature direction，直到 ownership、migration 和 acceptance 决策清晰；现在不要实现。请先检查项目事实与已选中的 Change，然后只问一个最关键的 owner decision，并给出有依据的推荐答案。若仍需用户决定，请停止，不要修改文件。

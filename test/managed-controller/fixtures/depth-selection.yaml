@@ -1,0 +1,11 @@
+id: depth-selection
+evidence:
+  - Explicit managed authority and one focused Change are available.
+required_contract:
+  - '**direct:** one small action'
+  - '**assisted:** one bounded capability or worker'
+  - '**managed:** at least two independently bounded slices'
+  - Subagents and proprietary resume features are optional accelerators
+prohibited_actions:
+  - mandatory subagents
+  - implicit lifecycle mutation

@@ -1,0 +1,11 @@
+id: interruption-recovery
+evidence:
+  - A handoff claims completion but repository evidence may have drifted.
+required_contract:
+  - 'Treat any handoff as transient pointers, not project truth'
+  - 'Resume by rereading user authority, nearest instructions, focus, Group Brief, Change, status, worktree, and referenced evidence'
+  - mark changed or unverifiable completion and verification claims pending
+  - 'Never create a durable controller status, retry graph, or parallel lifecycle'
+prohibited_actions:
+  - stale handoff as authority
+  - durable run state under .rsp
