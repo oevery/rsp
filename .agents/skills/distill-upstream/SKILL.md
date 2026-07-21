@@ -32,6 +32,20 @@ Create or update `research/models/<topic>.md` only when the user asks to synthes
 - Keep RSP's current product files as the authority. A model is intermediate research, not a rule or design decision.
 - Do not promote a recommendation until the user selects it for a normal RSP change.
 
+## Candidate handoff
+
+Distillation completion does not imply candidate work. Start a candidate only when a normal RSP Change names:
+
+- one observed RSP workflow failure or missing capability;
+- the smallest three to five non-default behaviors that close it;
+- hard authority and mutation boundaries;
+- one existing artifact owner that receives the result;
+- only the source reports, recommendation IDs, and adoption modes needed for that delta.
+
+Do not require a complete capability catalog, another cross-source model, or acceptance of unrelated revisions. Retain those artifacts only when the user asks for audit coverage or the candidate genuinely depends on multiple conflicting sources.
+
+During candidate iteration, prefer portable static validation, deterministic hard-boundary checks, and a small unseen real-task holdout. Reserve repeated provider matrices, cost calibration, and additional-host evidence for an explicitly selected release candidate. Measure task success and corrections together with total input/output tokens, elapsed time, and tool calls; input-token overhead alone is not a quality result.
+
 ## Guardrails
 
 - No local RSP problem or gap means no adoption recommendation.
@@ -39,4 +53,5 @@ Create or update `research/models/<topic>.md` only when the user asks to synthes
 - Prefer one owning RSP target per future recommendation.
 - Preserve license and attribution requirements for any future direct adaptation.
 - When a recommendation is selected, require the normal RSP change to cite its report path, recommendation ID, and adoption mode (`adapted`, `independent-reimplementation`, or `model-only`). Do not add a promotion command or research lock.
+- Stop research-to-candidate translation once the selected capability delta is supported; do not restate the same contract through successive coverage, capability, and system models.
 - Never regenerate or overwrite existing research content automatically.

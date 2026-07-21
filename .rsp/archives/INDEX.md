@@ -4,7 +4,7 @@ summary: Completed RSP changes.
 kind: generated-index
 index_type: archives
 source_dir: .rsp/archives
-entry_count: 22
+entry_count: 32
 ---
 
 # Archive Index
@@ -33,3 +33,13 @@ entry_count: 22
 | 2026-07-20 | rsp-review-evaluation-hardening | research | Make rsp-review evaluation reproducible and decide whether the candidate can be promoted |
 | 2026-07-20 | rsp-review-scope-state-revision | research | Correct rsp-review pipeline scope states and mixed-change coverage without regressing restraint or cost |
 | 2026-07-20 | skill-system-foundation | feature | Establish the host-neutral Skill contract and evaluate the first rsp-review candidate |
+| 2026-07-20 | minimum-skill-suite/build-rsp-implement | feature | Build and promote a bounded RSP implementation Discipline Skill. |
+| 2026-07-20 | minimum-skill-suite/build-rsp-shape | feature | Build and promote the host-neutral RSP shaping/slicing Discipline Skill. |
+| 2026-07-21 | minimum-skill-suite/simplify-native-skills | refactor | Restore a gap-driven path from upstream distillation to concise RSP-native Skills. |
+| 2026-07-21 | minimum-skill-suite/validate-native-skill-depth | refactor | Preserve valuable complex shaping branches without bloating runtime context, and validate both concise native Skills on real mutation work. |
+| 2026-07-20 | skill-capability-research/accept-research-baselines | research | Close the reviewed upstream baseline used by the Skill System research. |
+| 2026-07-20 | skill-capability-research/brief | group | — |
+| 2026-07-20 | skill-capability-research/map-capability-coverage | research | Account for upstream and local Skills by capability instead of only by source repository. |
+| 2026-07-20 | skill-capability-research/reconcile-skill-system | research | Reconcile the frozen Skill System model with completed capability-level research. |
+| 2026-07-20 | skill-capability-research/synthesize-implementation-capability | research | Define a standalone RSP implementation capability with fresh verification evidence. |
+| 2026-07-20 | skill-capability-research/synthesize-shaping-capability | research | Define the smallest RSP-native shaping and slicing capability from selected cross-source evidence. |

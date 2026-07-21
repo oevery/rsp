@@ -49,8 +49,11 @@
 - `rsp create --lite` is a short template for explicitly tracked small changes; simple current-session tasks should not create RSP changes unless tracking is intentionally needed.
 - Semantic judgment, including durable writeback decisions, belongs to an RSP skill or a human reviewer.
 - Durable review decides current-fact updates and Decision Record updates independently; archive never promotes Change content automatically.
-- The published `skills/rsp` and `skills/rsp-review` artifacts use the portable intersection of Agent Skills and active target-client validation: they omit optional `compatibility`, carry `license: MIT`, `metadata.author`, and independent quoted content CalVer values that change only for meaningful Skill-content releases rather than every CLI release.
+- The published `skills/rsp`, `skills/rsp-shape`, `skills/rsp-implement`, and `skills/rsp-review` artifacts use the portable intersection of Agent Skills and active target-client validation: they omit optional `compatibility`, carry `license: MIT`, `metadata.author`, and independent quoted content CalVer values that change only for meaningful Skill-content releases rather than every CLI release.
+- `skills/rsp-shape` is the canonical shaping capability. It inspects evidence before asking, uses an objective Shape Ready Gate, creates or refines only authorized Change artifacts, progressively loads complex multi-round, Group, and terminal-delivery guidance, preserves unresolved owner decisions, and never implements the shaped work.
+- `skills/rsp-implement` is the canonical bounded implementation capability. It executes one selected, ready Change, uses normal bounded repository discovery to establish owners, preserves unrelated work, returns truthful Tasks and Blockers, and records fresh verification evidence without converting failed or unavailable checks into completion.
 - `skills/rsp-review` is the canonical read-only review capability for Code, Document, and mixed scopes. It preserves separate pipeline verdicts, emits one deduplicated report, and cannot implement, commit, publish, or approve.
+- The four Skills remain independently invocable and return results to existing project, Change, Spec, Decision Record, and archive owners. The minimum suite adds no manifest, runtime router overlay, hidden state, recursive Skill orchestration, or implicit Git and publication authority.
 - Product distribution includes the fallback protocol and portable RSP Skills; host-specific slash-command prompts and metadata are outside the core package until a concrete host consumer requires a projection.
 - The RSP-managed `AGENTS.md` block is a navigation entrypoint and must not become a durable rules or design store; project-owned sections outside it may hold stable scoped instructions.
 - `.rsp/rsp-rules.md` is the only runtime fallback path; `rsp update` migrates the obsolete generated path and removes it.
@@ -90,9 +93,11 @@
 - `scripts/upstreams.mjs` is repository-maintainer tooling for upstream manifest validation, Git cache lifecycle, candidate comparison, and atomic lock serialization; it is not part of the published RSP CLI.
 - `.agents/skills/distill-upstream/` is a repository-maintainer skill for semantic upstream research; it is not a published RSP product skill.
 - `research/` contains tracked intermediate upstream distillations and models; it is not a product truth or runtime context source.
+- Native Skill candidates start from one demonstrated RSP gap and a concise capability delta. Complete path inventories and cross-source models are optional audit evidence rather than candidate prerequisites.
+- Draft Skill validation covers portable structure, hard authority/mutation/truthfulness boundaries, and a small unseen real-task holdout. Repeated provider matrices, cost calibration, and additional-host evidence are release-candidate gates; evaluation considers task success, corrections, total tokens, elapsed time, and tool calls rather than input-token overhead alone.
 - `bin/rsp.mjs` is the executable entrypoint that loads the built CLI.
 - `rules/rsp-rules.md` is the package-authored fallback source copied to consumer `.rsp/rsp-rules.md` during initialization or update.
-- `skills/rsp/` contains operational workflow guidance; `skills/rsp-review/` contains the read-only review capability. Both are canonical published Agent Skills.
+- `skills/rsp/` contains operational workflow guidance; `skills/rsp-shape/` contains shaping and slicing; `skills/rsp-implement/` contains bounded implementation with fresh verification; and `skills/rsp-review/` contains read-only review. All four are canonical published Agent Skills.
 - `docs/design-philosophy.md` records explanatory product and design rationale for maintainers.
 - `test/` contains Vitest coverage for command behavior and core helpers.
 

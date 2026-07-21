@@ -1,7 +1,10 @@
 version: 1
 revisions:
   agent-skills-spec: 38a2ff82958afee88dadf4831509e6f7e9d8ef4e
+  andrej-karpathy-skills: 2c606141936f1eeef17fa3043a72095b4765b9c2
+  antfu-skills: a74f281a27dadc02397bc1a174b0f2c97531b6ae
   compound-engineering: d1bff966296b687eb8509312098458e5fa2535dc
+  gsd-core: 24273e9fdf54f85af23000e7edeaa99d8b74aab9
   matt-skills: 9603c1cc8118d08bc1b3bf34cf714f62178dea3b
   openai-plugins: 11c74d6ba24d3a6d48f54a194cd00ef3beea18f9
   openspec: 46a4d782229ebb104268130a16e85cb7662a2281

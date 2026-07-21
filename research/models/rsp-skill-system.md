@@ -4,6 +4,7 @@ status: complete
 implementation_status: proposed
 decision_status: frozen
 frozen_on: 2026-07-20
+reconciled_on: 2026-07-21
 selected_recommendations:
   - S1
   - S2
@@ -12,6 +13,7 @@ selected_recommendations:
   - S5
   - S6
   - S7
+  - S8
 sources:
   - "agent-skills-spec@38a2ff82958afee88dadf4831509e6f7e9d8ef4e -> research/upstreams/agent-skills-spec/38a2ff82958afee88dadf4831509e6f7e9d8ef4e.md"
   - "matt-skills@9603c1cc8118d08bc1b3bf34cf714f62178dea3b -> research/upstreams/matt-skills/9603c1cc8118d08bc1b3bf34cf714f62178dea3b.md"
@@ -24,9 +26,14 @@ sources:
   - "openai-plugins@11c74d6ba24d3a6d48f54a194cd00ef3beea18f9 -> research/upstreams/openai-plugins/11c74d6ba24d3a6d48f54a194cd00ef3beea18f9.md"
   - "andrej-karpathy-skills@2c606141936f1eeef17fa3043a72095b4765b9c2 -> research/upstreams/andrej-karpathy-skills/2c606141936f1eeef17fa3043a72095b4765b9c2.md"
   - "planning-with-files@7c6c6cbb76ebee7c7a7e28a38a08d3ad7d1e0427 -> research/upstreams/planning-with-files/7c6c6cbb76ebee7c7a7e28a38a08d3ad7d1e0427.md"
-  - "local-skills@worktree-2026-07-19 -> research/local-skills/2026-07-19.md"
+  - "openspec@46a4d782229ebb104268130a16e85cb7662a2281 -> research/upstreams/openspec/46a4d782229ebb104268130a16e85cb7662a2281.md"
+  - "spec-kit@57cc518d63d6f10da3dd93df1ebcadda87c59374 -> research/upstreams/spec-kit/57cc518d63d6f10da3dd93df1ebcadda87c59374.md"
+  - "local-skills@4407a54264c2e93b19cd90fca87ab0aeb7f32366+dirty-2026-07-19 -> research/local-skills/2026-07-19.md"
 design_inputs:
   - "research/models/rsp-engineering-domain-model.md"
+  - "research/models/rsp-capability-coverage.md"
+  - "research/models/rsp-shaping-capability.md"
+  - "research/models/rsp-implementation-capability.md"
   - "codex://threads/019f40b7-974a-7861-adca-4fc1d17c44ad"
 ---
 
@@ -42,7 +49,20 @@ RSP should be a progressive system with a removable deterministic core:
 4. **Managed Controller:** a later opt-in mode composes stable capabilities for autonomous delivery.
 5. **Distribution:** host projections and an optional plugin package make capabilities installable; they do not redefine behavior or project truth.
 
-This document is intermediate research with a frozen target design. It does not authorize edits to published `skills/`, `.rsp/`, CLI source, or package metadata. Implementation begins only through a normal RSP Change that selects a bounded slice of this model.
+This document is intermediate research with a reconciled frozen target design. It does not authorize edits to published `skills/`, `.rsp/`, CLI source, or package metadata. Implementation begins only through a normal RSP Change that selects a bounded slice of this model and its capability-specific recommendations.
+
+## Reconciled Minimum Suite
+
+Capability coverage demonstrates four RSP-specific owners for the 3.0 manual suite:
+
+1. `rsp` derives one next action from project and RSP evidence without becoming a catalog or controller.
+2. `rsp-shape` turns unclear non-trivial intent into one executable Change or a justified shallow Group; it implements `rsp-shaping-capability` recommendations S1-S5.
+3. `rsp-implement` executes one selected Change and returns truthful state plus fresh verification evidence; it implements `rsp-implementation-capability` recommendations I1-I6.
+4. `rsp-review` remains the stable report-only code/document reviewer and receives a fixed comparison scope from implementation or direct invocation.
+
+Shaping and implementation are now selected standalone Discipline Skills, not placeholders owned by a future Controller. Diagnosis and TDD remain external optional disciplines because coverage found no RSP-specific ownership gap. Handoff and autonomous coordination remain deferred Controller/host concerns.
+
+The minimum suite composes manually through existing project files, Change Tasks/Verify/Blockers, FocusSet, Specs/Decisions, and deterministic CLI projections. It adds no suite state, recursive invocation contract, or implicit Git/publication authority.
 
 ## Shared Findings
 
@@ -58,7 +78,7 @@ Host-specific metadata such as `agents/openai.yaml`, installation layouts, and p
 
 ### Skills are behavior contracts, not folders of prose
 
-Superpowers, Ponytail, Compound, and Agent Skills evidence shows that metadata validation is necessary but insufficient. A publishable skill needs trigger tests, expected-action fixtures, correct-non-action fixtures, authority checks, fresh verification evidence, and context-cost observations.
+Superpowers, Ponytail, Compound, and Agent Skills evidence shows that metadata validation is necessary but insufficient. A publishable Skill needs a demonstrated capability delta, hard authority and truthfulness checks, unseen real-task evidence, and total-cost observations. Synthetic fixtures may test deterministic safety boundaries; they must not dictate response wording or repository reasoning.
 
 ### Review behavior follows the reviewed object
 
@@ -168,9 +188,8 @@ skills/
     ├── scripts/               # only capability-owned runtime helpers
     └── assets/                # only capability-owned assets
 
-tests/
-├── skill-contract/            # schema/package/static constraints
-└── skill-behavior/            # fixtures, harnesses, scorecards
+test/
+└── skill-contract/            # schema/package and hard-boundary constraints
 
 dist/ or package staging       # generated host/plugin projections, if selected
 ```
@@ -209,15 +228,15 @@ Canonical behavior may depend on the portable Agent Skills contract, ordinary fi
 - optional host metadata does not add or override canonical behavior;
 - canonical source and host projections do not drift.
 
-### Behavioral fixtures
+### Evidence ladder
 
-- positive fixture: the skill performs its intended capability;
-- restraint negative: clean/no-op or missing-authority case does not invent work;
-- ambiguity fixture: asks or stops instead of guessing focus/spec;
-- scope fixture: preserves unrelated dirty work and only mutates authorized owners;
-- verification fixture: completion language requires fresh observed evidence;
-- explicit-invocation and mid-conversation fixture;
-- adversarial shortcut fixture for skipped gates or unauthorized Git/publication.
+Draft candidates require:
+
+- portable static conformance;
+- deterministic checks for hard authority, mutation, package, and completion-truth boundaries;
+- a small unseen real-task holdout that measures useful completion and human correction.
+
+After a release candidate is selected, add only the repeated matrices, isolation, cost calibration, and supported-host evidence needed for the release decision. Keep holdout tasks separate from candidate-writing fixtures and do not require fixed response tokens.
 
 ### Quality axes
 
@@ -245,13 +264,15 @@ Document Pipeline axes:
 
 ### Isolation
 
-Compare current behavior, candidate, and no-skill baseline in fresh workspaces with pinned source revision, host configuration, prompt, and judge settings. Deterministic gates precede LLM judging. Record limitations and check for host/plugin contamination.
+During candidate drafting, compare normal behavior and the candidate on a small unseen real-task holdout. Use deterministic checks only for portable structure and hard authority, mutation, and truthfulness boundaries. Do not tune fixed response wording or repository-discovery strategy to synthetic fixtures.
+
+After selecting a release candidate, compare current behavior, candidate, and no-skill baseline in fresh workspaces with pinned source revision, host configuration, prompt, and judge settings. Repeated matrices and cost calibration belong only at this boundary. Record task success, corrections, total input/output tokens, elapsed time, and tool calls together; input-token overhead alone is insufficient. Record limitations and check for host/plugin contamination.
 
 The initial executable host is Codex because it is the available evaluation environment, not because Codex behavior is normative. Promotion requires Agent Skills conformance, host-neutral instructions, and one real-host behavior run. Additional hosts expand compatibility evidence later without creating separate behavior implementations.
 
 ### Promotion
 
-Promotion requires selected ownership, complete provenance/license review, passing gates, acceptable context budget, supported-host evidence, documentation, and a normal RSP Change. Registry presence or generated files alone never make a candidate stable.
+Promotion requires a demonstrated capability delta, selected ownership, complete relevant provenance/license review, passing hard-boundary and unseen-task evidence, acceptable total cost, supported-host evidence, documentation, and a normal RSP Change. Exhaustive source coverage and intermediate model count are not promotion gates. Registry presence or generated files alone never make a candidate stable.
 
 ## Proposed Capability Map
 
@@ -260,9 +281,9 @@ Promotion requires selected ownership, complete provenance/license review, passi
 | `rsp` core | Existing; refine | selected Change and derived next action | Keep minimal; progressive routing only |
 | RSP review | Candidate | one normalized report returned to Tasks/Verify/Blockers | One host-neutral package with shared scope/output plus progressive code and document pipelines |
 | RSP readiness/status | Candidate behavior in core | derived diagnostic only | Prefer deterministic CLI output; skill explains/remediates |
-| RSP shaping/slicing | Candidate | proposal/design/tasks in one Change | Add vertical-slice rubric only after behavior tests |
-| RSP implement | Later candidate | code/tests plus verification receipt | Compose project rules and selected Change; no Git authority |
-| RSP diagnose/TDD | Later discipline skills | diagnosis or tested behavior | Reuse local/Matt concepts through independent native design |
+| RSP shaping/slicing | Selected next candidate | one executable Change or justified shallow Group | Implement shaping S1-S5; preserve one lifecycle and derived dependency navigation |
+| RSP implement | Selected next candidate | code/tests plus fresh verification receipt returned to one Change | Implement I1-I6 as a standalone manual capability; no Controller or Git authority |
+| RSP diagnose/TDD | External optional disciplines | project-owned diagnosis or tested behavior | Compose existing project Skills; create no RSP duplicate without a measured gap |
 | RSP handoff | Later optional | compact pointers/evidence/next action | Avoid duplicating authoritative artifacts |
 | Managed delivery | Later controller, not a skill baseline | run-local state and results returned to Change | Opt-in direct → assisted → managed progression |
 | Host adapter | Deferred integration | optional host-specific acceleration | Keep outside canonical behavior; add only for a demonstrated host capability gap |
@@ -285,19 +306,22 @@ Promotion requires selected ownership, complete provenance/license review, passi
 ## Frozen Delivery Sequence
 
 - **S1 — Adopt this layered domain boundary.** Protocol → Core Skill → Discipline Skills → optional Controller → optional Distribution. This is the prerequisite decision for later implementation.
-- **S2 — Define the canonical skill contract and promotion gate through the first vertical slice.** Implement only the schema, provenance, behavior fixtures, restraint negatives, isolation, and context-budget support required to evaluate `rsp-review`; do not build a speculative general platform first.
+- **S2 — Define the canonical skill contract and promotion gate through the first vertical slice.** Extract one concise capability delta, validate portable structure and hard boundaries, then forward-test unseen real work. Add repeated provider and cost evidence only for the selected release candidate; do not build a speculative general platform first.
 - **S3 — Refine the existing `rsp` core skill without turning it into a router catalog.** It should derive stage/next action and name at most the selected optional capability.
 - **S4 — Make RSP review the first evaluated discipline candidate.** Publish one Skill with shared scope, authority, read-only policy, and finding schema, then progressively load distinct Code and Document pipelines. Run both for mixed Changes, deduplicate cross-artifact evidence, and defer other review objects.
-- **S5 — Follow with shaping/slicing, implementation, diagnosis/TDD, and handoff only when each has a demonstrated RSP-specific gap.** Adapt mechanisms, not upstream prose or lifecycle.
-- **S6 — Design managed delivery only after two or more stable discipline skills compose successfully.** Keep controller state external to `.rsp/`, enforce budgets and authority stops, and preserve direct/manual use.
+- **S5 — Promote shaping and standalone implementation as the remaining minimum Discipline Skills.** Implement `rsp-shaping-capability` S1-S5 and `rsp-implementation-capability` I1-I6 through separate normal Changes. Keep diagnosis/TDD external and handoff deferred because capability coverage found no additional RSP owner.
+- **S6 — Design managed delivery only after Shape, Implement, and Review compose successfully through existing RSP artifacts.** Keep controller state external to `.rsp/`, enforce budgets and authority stops, and preserve direct/manual use.
 - **S7 — Keep the release host-neutral and treat host integration as optional release work.** The first stable Skill must conform to Agent Skills, avoid required proprietary capabilities, and pass one Codex execution run. Keep metadata authoritative in each `SKILL.md`; permit `agents/openai.yaml` as presentation-only metadata; do not add a suite manifest, general installer, or plugin until a concrete consumer requires one.
+- **S8 — Gate 3.0 on the installed manual suite, not individual Skill success.** Shape and Implement may be developed independently; refine Core routing after both are promoted, then prove `shape -> implement -> review -> durable decision -> archive` plus direct invocation, ambiguity, failure, dirty-worktree, and prohibited-action cases before release.
 
 ## Frozen Decisions
 
 1. The first implementation slice is a minimal `rsp-review` candidate plus only enough shared contract and evaluation support to compare it.
 2. The first `rsp-review` candidate is one capability package with separate `code-review.md` and `document-review.md` pipelines. Code simplicity follows correctness, Spec, Standards, and test gates; documents use coherence, traceability, completeness, feasibility, scope, and ambiguity instead of the code rubric.
-3. Canonical Skills are host-neutral. Initial promotion requires Agent Skills conformance and one real Codex behavior run; Claude and other hosts are later compatibility evidence rather than first-release blockers.
+3. Canonical Skills are host-neutral. Initial promotion requires Agent Skills conformance and unseen real-task evidence from one available host; repeated matrices and other hosts are release-candidate or later compatibility evidence rather than drafting gates.
 4. Canonical metadata lives in each `SKILL.md`. No suite manifest is introduced until multiple real projections demonstrate a duplication or drift problem.
-5. `agents/openai.yaml` may remain as presentation-only metadata. Proprietary host behavior belongs in an optional Adapter or Plugin and cannot change canonical outcomes.
-6. Candidates live under `research/candidates/skills/`, outside normal agent discovery and package output. Stable promoted Skills live under `skills/`.
-7. Mixed Changes run both applicable pipelines and return one deduplicated report. UI, security-specific, and evaluation-coverage reviews remain deferred; `skipped` is never reported as `clean`.
+5. The 3.0 minimum suite is exactly `rsp`, `rsp-shape`, `rsp-implement`, and `rsp-review`; promotion infrastructure is maintainer tooling, while diagnosis/TDD, handoff, Controller, host adapter, and plugin remain outside the minimum product surface.
+6. The implementation order is two independent capability slices (`rsp-shape` and `rsp-implement`), then Core routing against promoted capabilities, then installed-suite composition. Dependency edges express this order; list position is not execution state.
+7. `agents/openai.yaml` may remain as presentation-only metadata. Proprietary host behavior belongs in an optional Adapter or Plugin and cannot change canonical outcomes.
+8. Candidates live under `research/candidates/skills/`, outside normal agent discovery and package output. Stable promoted Skills live under `skills/`.
+9. Mixed Changes run both applicable pipelines and return one deduplicated report. UI, security-specific, and evaluation-coverage reviews remain deferred; `skipped` is never reported as `clean`.

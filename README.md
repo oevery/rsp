@@ -119,16 +119,23 @@ Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENT
 
 ## Skills
 
-RSP publishes two host-neutral Skills for on-demand loading:
+RSP publishes four host-neutral Skills for on-demand loading:
 
 - `rsp`: setup, workflow, durable review, and archive guidance.
+- `rsp-shape`: shape unclear non-trivial work into one ready Change or justified shallow Group without implementing it.
+- `rsp-implement`: implement one selected, ready Change within explicit mutation authority and return truthful Tasks, Blockers, and fresh verification evidence.
 - `rsp-review`: read-only review of code, document, or mixed Changes against fixed scope and project authority.
+
+Each Skill is independently invocable and returns results to existing project or RSP artifact owners. The suite adds no hidden workflow state or recursive Skill orchestration, and no Skill infers commit, push, or publication authority.
 
 Reading guidance:
 
 - `README.md`: human-oriented overview and examples
 - `.rsp/rsp-rules.md`: minimal fallback protocol when the skill is unavailable
 - `skills/rsp/SKILL.md`: preferred operational guide for agents
+- `skills/rsp-shape/SKILL.md`: bounded shaping and slicing guidance
+- `skills/rsp-implement/SKILL.md`: bounded implementation and fresh verification guidance
+- `skills/rsp-review/SKILL.md`: read-only review guidance
 
 Surface matrix:
 
@@ -137,6 +144,8 @@ Surface matrix:
 | `README.md` | Humans | Overview, onboarding, examples |
 | `.rsp/rsp-rules.md` | Agents without the skill | Minimal tool-agnostic fallback protocol |
 | `skills/rsp/SKILL.md` | Agents | Preferred operational guide |
+| `skills/rsp-shape/SKILL.md` | Agents | Shape one executable Change or justified shallow Group |
+| `skills/rsp-implement/SKILL.md` | Agents | Implement one ready Change with fresh verification evidence |
 | `skills/rsp-review/SKILL.md` | Agents | Read-only Code and Document review |
 | `AGENTS.md` | Humans and agents | Scoped project instructions and RSP navigation |
 
@@ -144,7 +153,7 @@ Humans should usually start with `README.md`; agents should follow nearest `AGEN
 
 When this README shows `rsp <command>`, it assumes the command is already available in your environment. Otherwise use `npx -y @oevery/rsp <command>`.
 
-Example optional installation flow for both Skills:
+Example optional installation flow for the suite:
 
 ```bash
 npx skills add oevery/rsp
@@ -154,6 +163,8 @@ Install only one capability when preferred:
 
 ```bash
 npx skills add oevery/rsp --skill rsp
+npx skills add oevery/rsp --skill rsp-shape
+npx skills add oevery/rsp --skill rsp-implement
 npx skills add oevery/rsp --skill rsp-review
 ```
 

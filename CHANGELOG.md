@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.0.0 (Unreleased)
+
+- Move the consumer fallback protocol to `.rsp/rsp-rules.md` as the only runtime path; `rsp update` migrates and removes the obsolete generated path.
+- Move stable scoped instructions to project-owned `AGENTS.md` files and remove the project-rules CLI and templates.
+- Keep arbitrary old `.rsp/rules/` contents untouched for explicit semantic migration, prune empty directory trees, and report every residual entry through `rsp doctor`.
+- Add one authoritative Decision Record path with safe external routing, mutation preflight, inactive-record diagnostics, Specs-index isolation, and independent current-fact/rationale review guidance.
+- Add typed WorkRef resolution, shared no-follow managed-path checks, safe Spec parent resolution, and shared inspection for Changes, project `AGENTS.md`, focus markers, archives, and recursive Specs; reserve Group Brief identity without enabling its lifecycle, preflight lifecycle and index mutations, repair missing work roots, and make status/check/doctor fail visibly on recursive paths, unsupported entries, missing or unreadable current work, invalid roots or prefixes, incomplete reads, and identity collisions.
+- Add shallow Change Groups with explicit brief creation and close commands, declared direct-child membership, child-only focus and archive behavior, grouped context, derived completion projections, and one-way Group identities without recursive hierarchy or persisted progress state.
+- Add concise RSP-native shaping and implementation Skills, with gap-driven candidate extraction, bounded repository discovery, hard authority and verification boundaries, and release-candidate-only provider calibration.
+
 ## 2.0.4 (2026-05-28)
 
 - Add safe `doctor --fix` behavior that reports only real filesystem changes and stays quiet when no repairs are needed.

@@ -119,10 +119,14 @@ Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENT
 
 ## Skills
 
-RSP 发布两个宿主无关、按需加载的 Skills：
+RSP 发布四个宿主无关、按需加载的 Skills：
 
 - `rsp`：setup、workflow、durable review 和 archive 指导。
+- `rsp-shape`：在不实现代码的前提下，将不清晰的非平凡工作塑造成一个 ready Change 或合理的 shallow Group。
+- `rsp-implement`：在显式 mutation authority 内实现一个 selected、ready Change，并如实回写 Tasks、Blockers 和 fresh verification evidence。
 - `rsp-review`：基于固定范围与项目权威，对 Code、Document 或 mixed Change 进行只读审查。
+
+每个 Skill 都可以独立调用，并把结果返回现有项目或 RSP artifact owner。套件不引入隐藏 workflow state 或递归 Skill 编排，也不会由任何 Skill 推断 commit、push 或 publication 权限。
 
 文档分层矩阵：
 
@@ -131,6 +135,8 @@ RSP 发布两个宿主无关、按需加载的 Skills：
 | `README.md` | 人类 | 概览、入门、示例 |
 | `.rsp/rsp-rules.md` | 未安装 skill 的 agent | 最小 tool-agnostic fallback protocol |
 | `skills/rsp/SKILL.md` | agent | 首选操作指南 |
+| `skills/rsp-shape/SKILL.md` | agent | 塑造一个可执行 Change 或合理的 shallow Group |
+| `skills/rsp-implement/SKILL.md` | agent | 用 fresh verification evidence 实现一个 ready Change |
 | `skills/rsp-review/SKILL.md` | agent | Code 与 Document 只读审查 |
 | `AGENTS.md` | 人类与 agent | 有作用域的项目指令与 RSP 导航入口 |
 
@@ -138,7 +144,7 @@ RSP 发布两个宿主无关、按需加载的 Skills：
 
 如果文档中写的是 `rsp <command>`，默认前提是你的环境里已经能直接运行 `rsp`；否则请使用 `npx -y @oevery/rsp <command>`。
 
-同时安装两个 Skills 的可选示例：
+安装完整套件的可选示例：
 
 ```bash
 npx skills add oevery/rsp
@@ -148,6 +154,8 @@ npx skills add oevery/rsp
 
 ```bash
 npx skills add oevery/rsp --skill rsp
+npx skills add oevery/rsp --skill rsp-shape
+npx skills add oevery/rsp --skill rsp-implement
 npx skills add oevery/rsp --skill rsp-review
 ```
 

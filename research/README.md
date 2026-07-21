@@ -9,11 +9,23 @@ Mechanical diffs, file inventories, and temporary eval work belong under ignored
 
 Run `node scripts/upstreams.mjs prepare <source>` to scaffold a source report, then load the repo-local `distill-upstream` skill. Do not edit an existing source report through regeneration; each report is owned by its exact candidate revision.
 
-Use this minimal promotion provenance in the selected RSP change:
+## Candidate handoff
+
+Begin candidate work only for one observed RSP gap. The selected Change records the baseline failure, three to five RSP-specific behaviors, hard authority boundaries, returned owner, and minimal provenance:
 
 ```markdown
+### Capability delta
+- Baseline failure: <observed RSP workflow failure>
+- Native behavior: <three to five non-default behaviors>
+- Hard boundaries: <authority and mutation limits>
+- Returned owner: <existing project or RSP artifact>
+
 ### Research provenance
 - Source report: research/upstreams/<source>/<revision>.md
 - Recommendation: R1
 - Adoption: adapted | independent-reimplementation | model-only
 ```
+
+Complete path inventories and cross-source models are optional audit evidence, not candidate prerequisites. Draft candidates receive schema/package validation, deterministic tests for hard safety boundaries, and a small unseen real-task holdout. Run repeated provider matrices, cost calibration, and broader host checks only after selecting a release candidate.
+
+Evaluate real task success, user correction, total input/output tokens, elapsed time, and tool calls. Do not optimize a candidate against fixed response tokens or treat input-token overhead alone as proof of quality.
