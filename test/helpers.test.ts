@@ -243,7 +243,7 @@ describe('documentation command examples', () => {
 
     const custom = metadata.metadata as Record<string, unknown>
     expect(custom.author).toBe('oevery')
-    expect(custom.version).toBe('2026.07.20.1')
+    expect(custom.version).toBe('2026.07.21.1')
     expect(Object.values(custom).every(value => typeof value === 'string')).toBe(true)
     expect(custom.version).toMatch(/^\d{4}\.\d{2}\.\d{2}(?:\.\d+)?$/)
   })
@@ -289,7 +289,7 @@ describe('documentation command examples', () => {
     expect(skill).toContain('only when the user explicitly wants RSP tracking for a small, straightforward change')
     expect(skill).toContain('metadata:')
     expect(skill).toContain('author: oevery')
-    expect(skill).toContain('version: "2026.07.20.1"')
+    expect(skill).toContain('version: "2026.07.21.1"')
     expect(skill).toContain('Resolve executable Change names as either `<change>` or one direct `<group>/<change>` child.')
     expect(skill).toContain('Treat logical `<group>/brief`, physically stored as `<group>/00-brief.md`, as non-executable and non-focusable.')
     expect(rules).toContain('With no focus, status uses Group Brief declaration order and derived blockers to recommend the first executable slice.')

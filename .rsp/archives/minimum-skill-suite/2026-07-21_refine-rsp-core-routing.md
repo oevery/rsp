@@ -29,7 +29,7 @@ kind: "feature"
 ## Design
 - Approach:
   - Implement only the routing contract selected by completed research, keep deterministic checks to hard routing boundaries, and forward-test a small unseen real-task holdout.
-  - Select `rsp-skill-system` S3/S8 and capability coverage C01/C45/C46; route only to installed promoted capabilities and preserve an explicit manual fallback.
+  - Select `rsp-skill-system` S3/S8 as model-only guidance, C01 by independent reimplementation, C45 as model-only evidence, and C46 only through the already promoted `rsp-shape`; route only to host-loaded promoted capabilities and preserve an explicit manual fallback.
 - Affected areas:
   - `skills/rsp/SKILL.md`
   - Skill contract checks under `test/`
@@ -37,18 +37,18 @@ kind: "feature"
   - Preserve host neutrality, compactness, and independent content CalVer.
 
 ## Tasks
-- [ ] Select exact research recommendation IDs and adoption mode.
-- [ ] Define and test the minimal stage/next-action contract.
-- [ ] Update the Core Skill without adding a catalog or hidden lifecycle.
-- [ ] Run static/hard-boundary checks and a small unseen real-task holdout; add repeated host/cost evidence only after selecting a release candidate.
+- [x] Select exact research recommendation IDs and adoption mode.
+- [x] Define and test the minimal stage/next-action contract.
+- [x] Update the Core Skill without adding a catalog or hidden lifecycle.
+- [x] Run static/hard-boundary checks and a small unseen real-task holdout; add repeated host/cost evidence only after selecting a release candidate.
 
 ## Verify
 - Automated:
-  - [ ] Agent Skills validation, focused contract checks, build, typecheck, lint, and full tests.
+  - [x] Agent Skills validation, focused contract checks, build, typecheck, lint, and all 12 test files / 267 tests passed; package dry-run and diff hygiene also passed.
 - Manual:
-  - [ ] Forward-test unseen no-focus, ambiguous-focus, incomplete-shape, implementation-ready, review-requested, and archive-ready cases without fixed response wording.
+  - [x] Forward-tested unseen no-focus, ambiguous-focus, incomplete-shape, implementation-ready, review-requested, and archive-ready cases without fixed response wording; all final isolated read-only runs passed.
 - Durable updates:
-  - [ ] Update `.rsp/specs/design.md` only with stable promoted behavior.
+  - [x] Updated `.rsp/specs/design.md` only with the stable derived-routing and authority boundary.
 
 ## Blockers
 - requires `skill-capability-research/reconcile-skill-system`: needs the reconciled routing recommendations

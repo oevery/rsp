@@ -4,7 +4,7 @@ description: Use this skill when initializing RSP, operating an existing .rsp pr
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.20.1"
+  version: "2026.07.21.1"
 ---
 
 # RSP Skill
@@ -14,6 +14,8 @@ Load this skill when you need to initialize RSP, operate `.rsp/`, audit or repai
 This skill is the preferred operational guide. `.rsp/rsp-rules.md` is the only runtime fallback protocol when this skill is unavailable; old projects migrate to it with `rsp update`.
 
 Prefer exact file paths, exact commands, and exact durable facts over vague summaries.
+
+Write artifact prose in the language explicitly requested by the user. Otherwise follow the nearest project instructions, then the existing artifact's language, then the conversation language. Preserve canonical RSP headings, keywords, identifiers, and commands unchanged.
 
 ## When to use
 
@@ -26,6 +28,23 @@ Prefer exact file paths, exact commands, and exact durable facts over vague summ
 - Do not load when the repository does not use RSP and the user did not ask to adopt it.
 - Do not create an RSP change for a simple current-session task unless the user explicitly wants RSP tracking.
 - Do not treat this skill or the fallback protocol as a replacement for nearest project `AGENTS.md` instructions or relevant module `CONTEXT.md`.
+
+## Derive one next action
+
+Before operating the workflow, derive the current stage from user intent, nearest project authority, `rsp status --json`, the selected Change's readiness, fresh verification evidence, and blockers. Stages are derived guidance, never persisted state.
+
+Apply these gates in order:
+
+1. If authority, selection, or a material owner decision is ambiguous, return the one decision or evidence needed to proceed. If a declared blocker prevents the next operation, return its owning artifact or person; do not route around it.
+2. If the user requests a report-only review against a fixed scope, select `rsp-review` only when it is available; otherwise name the manual read-only review and return its findings to the selected Change's Tasks, Verify, or Blockers.
+3. If no Change is selected, use the status plan to name one ready WorkRef and the direct focus action. For tiny settled work, return the direct engineering action without creating RSP state. For unclear non-trivial work, select `rsp-shape` only when it is available and the user authorized its Change mutation; otherwise give the manual fallback of creating or refining one Change.
+4. If the selected Change is not shape-ready, select `rsp-shape` under the same authority rule or give the manual fallback of completing its Proposal, Spec, Design, Tasks, Verify, and Blockers.
+5. If a shape-ready Change has incomplete implementation tasks, or its required verification is missing, stale, or failed, select `rsp-implement` only when it is available and implementation is authorized; otherwise name the single manual implementation or verification action owned by that Change.
+6. If required Tasks and verification pass with no blocker, perform the Core durable decision. Archive only after required current facts and rationale are written or explicitly judged unnecessary.
+
+State the derived stage, one next action, required input, returned owner, and decisive evidence. Name at most one available optional capability. Only name an optional capability when it is the one next action, and treat it as available only when it appears in the host's loaded skill inventory. Missing optional capabilities never invalidate RSP; always provide the manual fallback against the same owner.
+
+Do not preload, enumerate, or recursively invoke optional capabilities. Do not infer implementation, review, Git, publication, or approval authority from routing, readiness, or capability availability.
 
 ## Workflows
 
