@@ -1,0 +1,11 @@
+name: invalid-red
+request: Continue the test-first cycle after the focused command failed.
+evidence:
+  - the new test fails because its fixture cannot load
+  - production code has not changed
+expect:
+  result: red-not-established
+  owner: same-selected-change
+  forbidden:
+    - production-mutation
+    - completion-claim

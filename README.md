@@ -119,17 +119,19 @@ Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENT
 
 ## Skills
 
-RSP publishes five host-neutral Skills for on-demand loading:
+RSP publishes seven host-neutral Skills for on-demand loading:
 
 - `rsp`: setup, workflow, durable review, and archive guidance.
 - `rsp-shape`: shape unclear non-trivial work into one ready Change or justified shallow Group without implementing it.
 - `rsp-implement`: implement one selected, ready Change within explicit mutation authority and return truthful Tasks, Blockers, and fresh verification evidence.
+- `rsp-diagnose`: establish a confirmed cause or truthful unresolved diagnosis before production correction.
+- `rsp-tdd`: drive one clear behavior through observed RED, minimal GREEN, optional safe REFACTOR, and fresh verification.
 - `rsp-review`: read-only review of code, document, or mixed Changes against fixed scope and project authority.
 - `rsp-address-review`: dispose fixed review findings, apply only authorized accepted corrections, require fresh verification and report-only re-review, and return a recoverable artifact-scoped handoff when work remains.
 
 Each Skill is independently invocable and returns results to existing project or RSP artifact owners. The suite adds no hidden workflow state or recursive Skill orchestration, and no Skill infers commit, push, or publication authority.
 
-For a complete tracked change, compose the suite as evidence requires: `rsp-shape` returns an executable Change, `rsp-implement` returns code/tests and fresh verification to that Change, `rsp-review` returns a read-only report, `rsp-address-review` disposes findings and returns accepted corrections through fresh verification and re-review, and `rsp` performs the durable decision before archive. Ambiguity, failed gates, and missing authority stop at their existing owner; they do not trigger an automatic retry loop.
+For a complete tracked change, compose the suite as evidence requires: `rsp-shape` returns an executable Change; Core routes unexplained failures to `rsp-diagnose`, clear test-first behavior to `rsp-tdd`, and evidenced edits to `rsp-implement`; `rsp-review` returns a read-only report; `rsp-address-review` disposes findings and returns accepted corrections through fresh verification and re-review; and `rsp` performs the durable decision before archive. Each discipline returns to the same Change. Ambiguity, failed gates, and missing authority stop at their existing owner; they do not trigger an automatic retry loop.
 
 Reading guidance:
 
@@ -138,6 +140,8 @@ Reading guidance:
 - `skills/rsp/SKILL.md`: preferred operational guide for agents
 - `skills/rsp-shape/SKILL.md`: bounded shaping and slicing guidance
 - `skills/rsp-implement/SKILL.md`: bounded implementation and fresh verification guidance
+- `skills/rsp-diagnose/SKILL.md`: evidence-backed cause isolation before correction
+- `skills/rsp-tdd/SKILL.md`: bounded red-green-refactor guidance
 - `skills/rsp-review/SKILL.md`: read-only review guidance
 - `skills/rsp-address-review/SKILL.md`: review finding disposition, correction, re-review, and recovery guidance
 
@@ -150,6 +154,8 @@ Surface matrix:
 | `skills/rsp/SKILL.md` | Agents | Preferred operational guide |
 | `skills/rsp-shape/SKILL.md` | Agents | Shape one executable Change or justified shallow Group |
 | `skills/rsp-implement/SKILL.md` | Agents | Implement one ready Change with fresh verification evidence |
+| `skills/rsp-diagnose/SKILL.md` | Agents | Confirm a cause before production correction |
+| `skills/rsp-tdd/SKILL.md` | Agents | Implement one clear behavior test-first |
 | `skills/rsp-review/SKILL.md` | Agents | Read-only Code and Document review |
 | `skills/rsp-address-review/SKILL.md` | Agents | Resolve review findings and return a recoverable handoff |
 | `AGENTS.md` | Humans and agents | Scoped project instructions and RSP navigation |
@@ -170,6 +176,8 @@ Install only one capability when preferred:
 npx skills add oevery/rsp --skill rsp
 npx skills add oevery/rsp --skill rsp-shape
 npx skills add oevery/rsp --skill rsp-implement
+npx skills add oevery/rsp --skill rsp-diagnose
+npx skills add oevery/rsp --skill rsp-tdd
 npx skills add oevery/rsp --skill rsp-review
 npx skills add oevery/rsp --skill rsp-address-review
 ```

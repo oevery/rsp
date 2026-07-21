@@ -3,9 +3,9 @@ stage: implementation
 evidence:
   - the requirement is testable behavior
   - no focused failing test establishes the intended behavior
-  - tdd is available in the loaded skill inventory
+  - rsp-tdd is available in the loaded skill inventory
 expected:
-  next_action: select tdd once to establish the focused failing test
+  next_action: select rsp-tdd once to establish the focused failing test
   returned_owner: the same selected Change
 sources:
   - skills/rsp/SKILL.md
@@ -13,6 +13,6 @@ sources:
 required_contract:
   - testable behavior
   - focused failing test
-  - Select `tdd` only when it is available
+  - Select `rsp-tdd` only when it is available
   - same selected Change
 prohibited_actions: [commit, push, publish]

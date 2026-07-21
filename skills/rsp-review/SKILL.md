@@ -4,7 +4,7 @@ description: Review an RSP-tracked code, document, or mixed change against a fix
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.21.1"
+  version: "2026.07.21.2"
 ---
 
 # RSP Review
@@ -62,6 +62,8 @@ Before the Document verdict, enumerate every unresolved choice in each changed d
 Anchor Findings to the smallest heading or claim. Do not apply code-style or test-coverage rules to semantic documents, auto-fix meaning, or rewrite prose for taste.
 
 ## Report
+
+Render headings, field labels, explanations, and verdict prose in the language explicitly requested by the user; otherwise follow nearest project instructions, then the conversation language. Treat the shape below as semantic field order rather than fixed English wording: translate its human-facing labels when the output language differs. Preserve paths, commands, identifiers, WorkRefs, severity labels `P0`-`P3`, and the values `issues_found`, `clean`, `skipped`, and `blocked` unchanged.
 
 Use this shape:
 

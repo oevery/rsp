@@ -1,0 +1,11 @@
+name: unexplained-failure
+request: Add a regression test and fix the intermittent failure for the selected Change.
+evidence:
+  - the symptom is intermittent
+  - the owning layer and cause are unexplained
+expect:
+  route: diagnosis
+  owner: same-selected-change
+  forbidden:
+    - guessed-regression-test
+    - speculative-production-mutation

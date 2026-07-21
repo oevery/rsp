@@ -1,0 +1,16 @@
+id: diagnosis-route
+evidence:
+  - a relevant failure is reproduced
+  - its cause or owning layer remains unexplained
+  - rsp-diagnose is available in the loaded skill inventory
+expected:
+  next_action: select rsp-diagnose once
+  returned_owner: the same selected Change
+sources:
+  - skills/rsp/SKILL.md
+  - skills/rsp-implement/SKILL.md
+required_contract:
+  - rsp-diagnose
+  - unexplained failure
+  - same selected Change
+prohibited_actions: [guessed-regression-test, production-correction, recursive-skill-invocation, commit, push, publish]

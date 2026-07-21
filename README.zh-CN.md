@@ -119,16 +119,19 @@ Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENT
 
 ## Skills
 
-RSP 发布四个宿主无关、按需加载的 Skills：
+RSP 发布七个宿主无关、按需加载的 Skills：
 
 - `rsp`：setup、workflow、durable review 和 archive 指导。
 - `rsp-shape`：在不实现代码的前提下，将不清晰的非平凡工作塑造成一个 ready Change 或合理的 shallow Group。
 - `rsp-implement`：在显式 mutation authority 内实现一个 selected、ready Change，并如实回写 Tasks、Blockers 和 fresh verification evidence。
+- `rsp-diagnose`：在生产修复前确认原因，或如实返回 unresolved diagnosis。
+- `rsp-tdd`：让一个清晰行为经过 observed RED、minimal GREEN、可选 safe REFACTOR 与 fresh verification。
 - `rsp-review`：基于固定范围与项目权威，对 Code、Document 或 mixed Change 进行只读审查。
+- `rsp-address-review`：处置固定 review findings，仅修复已授权且 accepted 的 finding，并要求 fresh verification 与 report-only re-review。
 
 每个 Skill 都可以独立调用，并把结果返回现有项目或 RSP artifact owner。套件不引入隐藏 workflow state 或递归 Skill 编排，也不会由任何 Skill 推断 commit、push 或 publication 权限。
 
-完成一个 tracked Change 时，应按证据手动组合套件：`rsp-shape` 返回可执行 Change，`rsp-implement` 把代码、测试与 fresh verification 返回该 Change，`rsp-review` 返回只读报告，最后由 `rsp` 在 archive 前完成 durable decision。遇到歧义、失败门禁或缺失权限时，流程停在现有 owner，不会自动重试。
+完成一个 tracked Change 时，应按证据组合套件：`rsp-shape` 返回可执行 Change；Core 把 unexplained failure 路由到 `rsp-diagnose`，把清晰的 test-first 行为路由到 `rsp-tdd`，把已有证据的修改路由到 `rsp-implement`；`rsp-review` 返回只读报告；`rsp-address-review` 处置 finding；最后由 `rsp` 在 archive 前完成 durable decision。每个 discipline 都返回同一个 Change。遇到歧义、失败门禁或缺失权限时，流程停在现有 owner，不会自动重试。
 
 文档分层矩阵：
 
@@ -139,7 +142,10 @@ RSP 发布四个宿主无关、按需加载的 Skills：
 | `skills/rsp/SKILL.md` | agent | 首选操作指南 |
 | `skills/rsp-shape/SKILL.md` | agent | 塑造一个可执行 Change 或合理的 shallow Group |
 | `skills/rsp-implement/SKILL.md` | agent | 用 fresh verification evidence 实现一个 ready Change |
+| `skills/rsp-diagnose/SKILL.md` | agent | 在生产修复前确认原因 |
+| `skills/rsp-tdd/SKILL.md` | agent | 以 test-first 方式实现一个清晰行为 |
 | `skills/rsp-review/SKILL.md` | agent | Code 与 Document 只读审查 |
+| `skills/rsp-address-review/SKILL.md` | agent | 处置 review findings 并返回可恢复 handoff |
 | `AGENTS.md` | 人类与 agent | 有作用域的项目指令与 RSP 导航入口 |
 
 通常应由人先读 `README.md`；agent 应遵循 nearest `AGENTS.md`，可用时加载 `rsp` skill，仅在 skill 不可用时读取 `.rsp/rsp-rules.md`。
@@ -158,7 +164,10 @@ npx skills add oevery/rsp
 npx skills add oevery/rsp --skill rsp
 npx skills add oevery/rsp --skill rsp-shape
 npx skills add oevery/rsp --skill rsp-implement
+npx skills add oevery/rsp --skill rsp-diagnose
+npx skills add oevery/rsp --skill rsp-tdd
 npx skills add oevery/rsp --skill rsp-review
+npx skills add oevery/rsp --skill rsp-address-review
 ```
 
 `rsp update` 只会刷新项目内的 RSP 文件。如果你在使用发布出来的 RSP Skills，升级后还需要单独刷新：

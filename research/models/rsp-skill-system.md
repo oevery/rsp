@@ -53,15 +53,17 @@ This document is intermediate research with a reconciled frozen target design. I
 
 ## Reconciled Assisted Suite
 
-The minimum four-Skill suite proved manual composition. The tightened 3.0 release gate demonstrates five RSP-specific owners for an assisted suite:
+The minimum four-Skill suite proved manual composition. The tightened 3.0 release gate now demonstrates seven RSP-specific owners for an engineering suite:
 
 1. `rsp` derives one next action from project and RSP evidence without becoming a catalog or controller.
 2. `rsp-shape` turns unclear non-trivial intent into one executable Change or a justified shallow Group; it implements `rsp-shaping-capability` recommendations S1-S5.
 3. `rsp-implement` executes one selected Change and returns truthful state plus fresh verification evidence; it implements `rsp-implementation-capability` recommendations I1-I6.
 4. `rsp-review` remains the stable report-only code/document reviewer and receives a fixed comparison scope from implementation or direct invocation.
 5. `rsp-address-review` owns evidence-backed Finding disposition, one authorized correction pass, fresh verification, fixed-scope re-review, and an artifact-scoped recovery handoff.
+6. `rsp-diagnose` establishes a confirmed cause or truthful unresolved result before correction without production mutation authority.
+7. `rsp-tdd` owns one observed RED, minimal GREEN, optional safe REFACTOR, and fresh verification cycle for a clear behavior.
 
-Shaping and implementation are standalone Discipline Skills, not placeholders owned by a future Controller. Diagnosis and TDD implementations remain external optional disciplines; Core and Implement own evidence classification, selection, manual fallback, and return to the same Change. Review-resolution handoff is now bounded product behavior, while generic session handoff and autonomous coordination remain deferred Controller/host concerns.
+Shaping, implementation, diagnosis, and TDD are standalone Discipline Skills, not placeholders owned by a future Controller. Core owns evidence classification and selects at most one available discipline; Implement detects route changes and returns the matching seam instead of reproducing another discipline. A compact manual fallback preserves Core-only operation. Review-resolution handoff is bounded product behavior, while generic session handoff and autonomous coordination remain deferred Controller/host concerns.
 
 The assisted suite composes through existing project files, Change Tasks/Verify/Blockers, FocusSet, Specs/Decisions, and deterministic CLI projections. It adds no suite state, recursive invocation contract, automatic retry loop, or implicit Git/publication authority.
 
@@ -284,7 +286,8 @@ Promotion requires a demonstrated capability delta, selected ownership, complete
 | RSP readiness/status | Candidate behavior in core | derived diagnostic only | Prefer deterministic CLI output; skill explains/remediates |
 | RSP shaping/slicing | Stable | one executable Change or justified shallow Group | Preserve one lifecycle and derived dependency navigation |
 | RSP implement | Stable | code/tests plus fresh verification receipt returned to one Change | Reclassify new failures without recursively invoking another Skill; no Controller or Git authority |
-| RSP diagnose/TDD | External optional disciplines | project-owned diagnosis or tested behavior | Compose existing project Skills; create no RSP duplicate without a measured gap |
+| RSP diagnose | Stable | confirmed cause or truthful unresolved evidence returned to one Change | Keep correction outside diagnosis and progressively disclose special branches only after measured need |
+| RSP TDD | Stable | observed RED/GREEN/REFACTOR and fresh checks returned to one Change | Keep one clear behavior per cycle; return unexplained failures to diagnosis |
 | RSP review resolution | Stable | Finding dispositions, authorized correction, verification, re-review request | `rsp-address-review` owns one bounded pass and returns to the Change/reviewer |
 | RSP handoff | Bounded review-resolution behavior | authoritative pointers/evidence/next action | Keep artifact-scoped and non-authoritative; generic session recovery remains deferred |
 | Managed delivery | Later controller, not a skill baseline | run-local state and results returned to Change | Opt-in direct → assisted → managed progression |
@@ -311,7 +314,7 @@ Promotion requires a demonstrated capability delta, selected ownership, complete
 - **S2 — Define the canonical skill contract and promotion gate through the first vertical slice.** Extract one concise capability delta, validate portable structure and hard boundaries, then forward-test unseen real work. Add repeated provider and cost evidence only for the selected release candidate; do not build a speculative general platform first.
 - **S3 — Refine the existing `rsp` core skill without turning it into a router catalog.** It should derive stage/next action and name at most the selected optional capability.
 - **S4 — Make RSP review the first evaluated discipline candidate.** Publish one Skill with shared scope, authority, read-only policy, and finding schema, then progressively load distinct Code and Document pipelines. Run both for mixed Changes, deduplicate cross-artifact evidence, and defer other review objects.
-- **S5 — Promote shaping, standalone implementation, and bounded review resolution as Discipline Skills.** Implement shaping and implementation through separate normal Changes. Keep diagnosis/TDD implementations external, but make their evidence routing and manual fallback explicit. Add review resolution only for the demonstrated disposition, correction, re-review, and artifact-scoped recovery gap.
+- **S5 — Promote shaping, standalone implementation, bounded review resolution, diagnosis, and TDD as Discipline Skills.** Use separate normal Changes and concise canonical contracts. Keep routing and fallback in Core, return route changes from Implement, and keep each discipline's authority and completion evidence independent.
 - **S6 — Design managed delivery only after Shape, Implement, and Review compose successfully through existing RSP artifacts.** Keep controller state external to `.rsp/`, enforce budgets and authority stops, and preserve direct/manual use.
 - **S7 — Keep the release host-neutral and treat host integration as optional release work.** The first stable Skill must conform to Agent Skills, avoid required proprietary capabilities, and pass one Codex execution run. Keep metadata authoritative in each `SKILL.md`; permit `agents/openai.yaml` as presentation-only metadata; do not add a suite manifest, general installer, or plugin until a concrete consumer requires one.
 - **S8 — Gate 3.0 on the installed assisted suite, not individual Skill success.** Prove the manual composition path plus deterministic shaping, implementation routing, review resolution, handoff recovery, and authority-restraint scenarios. Require a bounded installed-package host holdout without treating it as cross-host or managed-controller evidence.
@@ -322,7 +325,7 @@ Promotion requires a demonstrated capability delta, selected ownership, complete
 2. The first `rsp-review` candidate is one capability package with separate `code-review.md` and `document-review.md` pipelines. Code simplicity follows correctness, Spec, Standards, and test gates; documents use coherence, traceability, completeness, feasibility, scope, and ambiguity instead of the code rubric.
 3. Canonical Skills are host-neutral. Initial promotion requires Agent Skills conformance and unseen real-task evidence from one available host; repeated matrices and other hosts are release-candidate or later compatibility evidence rather than drafting gates.
 4. Canonical metadata lives in each `SKILL.md`. No suite manifest is introduced until multiple real projections demonstrate a duplication or drift problem.
-5. The 3.0 assisted suite is exactly `rsp`, `rsp-shape`, `rsp-implement`, `rsp-review`, and `rsp-address-review`; diagnosis/TDD implementations, generic handoff, Controller, host adapter, and plugin remain outside the product surface.
+5. The 3.0 engineering suite is exactly `rsp`, `rsp-shape`, `rsp-implement`, `rsp-diagnose`, `rsp-tdd`, `rsp-review`, and `rsp-address-review`; generic handoff, Controller, host adapter, and plugin remain outside the product surface.
 6. The implementation order is two independent capability slices (`rsp-shape` and `rsp-implement`), then Core routing against promoted capabilities, then installed-suite composition. Dependency edges express this order; list position is not execution state.
 7. `agents/openai.yaml` may remain as presentation-only metadata. Proprietary host behavior belongs in an optional Adapter or Plugin and cannot change canonical outcomes.
 8. Candidates live under `research/candidates/skills/`, outside normal agent discovery and package output. Stable promoted Skills live under `skills/`.

@@ -1,0 +1,15 @@
+id: ordinary-implementation
+evidence:
+  - the cause and required correction are evidenced
+  - the Change and risk do not require a new test-first cycle
+expected:
+  next_action: continue ordinary rsp-implement work
+  returned_owner: the same selected Change
+sources:
+  - skills/rsp/SKILL.md
+  - skills/rsp-implement/SKILL.md
+required_contract:
+  - ordinary `rsp-implement`
+  - cause and edit are evidenced
+  - same selected Change
+prohibited_actions: [unnecessary-diagnosis, unnecessary-tdd, recursive-skill-invocation, commit, push, publish]

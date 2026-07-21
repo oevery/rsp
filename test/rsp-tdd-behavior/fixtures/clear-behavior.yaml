@@ -1,0 +1,18 @@
+name: clear-behavior
+request: Implement the focused boundary behavior test-first for the selected Change.
+evidence:
+  - one selected ready Change
+  - clear observable behavior and owning seam
+  - test and production mutation authority
+expect:
+  route: tdd
+  sequence:
+    - observed-red
+    - minimal-green
+    - optional-safe-refactor
+    - fresh-required-checks
+  owner: same-selected-change
+  forbidden:
+    - production-before-red
+    - recursive-skill-invocation
+    - git-delivery

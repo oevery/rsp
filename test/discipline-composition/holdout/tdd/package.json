@@ -1,0 +1,8 @@
+{
+  "name": "rsp-tdd-holdout",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test"
+  }
+}

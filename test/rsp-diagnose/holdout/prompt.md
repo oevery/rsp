@@ -1,0 +1,1 @@
+Use the installed `rsp-diagnose` Skill to diagnose the selected Change in this isolated workspace. Reproduce the reported failure and return the diagnosis to that Change. Investigation is read-only: do not modify any file or apply a production correction. Do not stage, commit, push, publish, deploy, approve, review, or archive.

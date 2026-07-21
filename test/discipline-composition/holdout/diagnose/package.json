@@ -1,0 +1,8 @@
+{
+  "name": "rsp-diagnose-holdout",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test"
+  }
+}

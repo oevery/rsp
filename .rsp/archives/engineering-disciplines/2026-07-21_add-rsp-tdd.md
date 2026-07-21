@@ -37,19 +37,20 @@ kind: "feature"
   - Keep the canonical body concise and host-neutral; rely on model knowledge for generic testing guidance and encode only behavior-changing RSP discipline.
 
 ## Tasks
-- [ ] Create and validate the concise canonical `rsp-tdd` Skill.
-- [ ] Add contract and forward behavior evidence for red, green, refactor, stops, restraint, and return ownership.
-- [ ] Verify the result and update only required durable models/specs.
+- [x] Create and validate the concise canonical `rsp-tdd` Skill.
+- [x] Add contract and forward behavior evidence for red, green, refactor, stops, restraint, and return ownership.
+- [x] Verify the result; defer shared durable model/spec promotion to the terminal composition slice.
 
 ## Verify
 - Automated:
-  - [ ] Run focused portable contract and behavior tests selected by this slice.
-  - [ ] `mise exec -- pnpm run build && mise exec -- pnpm run lint && mise exec -- pnpm run test`
+  - [x] `mise exec -- pnpm exec vitest run test/rsp-tdd-skill-contract.test.ts test/rsp-tdd-behavior.test.ts` — 2 files and 4 tests passed.
+  - [x] `mise exec -- pnpm exec eslint skills/rsp-tdd/SKILL.md test/rsp-tdd-skill-contract.test.ts test/rsp-tdd-behavior.test.ts` — passed.
+  - [x] `node dist/cli.mjs check --focused` — all three focused engineering-discipline Changes valid.
+  - [x] `mise exec -- pnpm run build && mise exec -- pnpm run lint && mise exec -- pnpm run test` — passed after shared routing integration; 18 test files and 287 tests passed.
 - Manual:
-  - [ ] Inspect a fresh-context run and confirm red fails for the expected reason before production mutation and no delivery action occurs.
+  - [x] Fresh isolated `gpt-5.6-terra`/low run observed test-only RED before the minimum production mutation, reached GREEN, skipped unjustified REFACTOR, returned to the same Change, and performed no delivery action; retained report: `research/evaluations/rsp-tdd/2026-07-21/report.md`.
 - Durable updates:
-  - [ ] Decide whether this change produced durable knowledge that belongs in `.rsp/specs/` or stable instructions that belong in the nearest project-owned `AGENTS.md`
-  - [ ] If yes, write only stable facts to the smallest correct target file before archive; do not promote task history, debugging notes, or one-off implementation context
+  - [x] No slice-local durable update: the terminal composition Change owns the shared suite model/spec promotion after both disciplines pass.
 
 ## Blockers
 - none

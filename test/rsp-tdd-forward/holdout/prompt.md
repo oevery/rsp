@@ -1,0 +1,1 @@
+Use the installed `rsp-tdd` Skill to implement the selected ready Change in this isolated workspace. Work only within the mutation scope authorized by the Change and project instructions. Return the result to that Change. Do not stage, commit, push, publish, deploy, approve, delete, review, or archive.

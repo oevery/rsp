@@ -36,11 +36,11 @@ describe('rsp core routing contract', () => {
 
     expect(body).toContain('### Route implementation evidence')
     expect(body).toContain('unexplained failure')
-    expect(body).toContain('`diagnosing-bugs`')
+    expect(body).toContain('`rsp-diagnose`')
     expect(body).toContain('manual diagnosis fallback')
     expect(body).toContain('testable behavior')
     expect(body).toContain('focused failing test')
-    expect(body).toContain('`tdd`')
+    expect(body).toContain('`rsp-tdd`')
     expect(body).toContain('manual TDD fallback')
     expect(body).toContain('ordinary `rsp-implement`')
     expect(body).toContain('same selected Change')

@@ -37,19 +37,21 @@ kind: "feature"
   - Keep the canonical body concise and host-neutral; distinguish investigation authority from production mutation authority.
 
 ## Tasks
-- [ ] Create and validate the concise canonical `rsp-diagnose` Skill.
-- [ ] Add contract and forward behavior evidence for reproduction, discrimination, confirmation, stops, restraint, and return ownership.
-- [ ] Verify the result and update only required durable models/specs.
+- [x] Create and validate the concise canonical `rsp-diagnose` Skill.
+- [x] Add contract and forward behavior evidence for reproduction, discrimination, confirmation, stops, restraint, and return ownership.
+- [x] Verify the result and update only required durable models/specs.
 
 ## Verify
 - Automated:
-  - [ ] Run focused portable contract and behavior tests selected by this slice.
-  - [ ] `mise exec -- pnpm run build && mise exec -- pnpm run lint && mise exec -- pnpm run test`
+  - [x] Run focused portable contract and behavior tests selected by this slice.
+  - [x] `mise exec -- pnpm run build && mise exec -- pnpm run lint && mise exec -- pnpm run test` — passed after shared routing integration; 18 test files and 287 tests passed.
 - Manual:
-  - [ ] Inspect a fresh-context run and confirm it establishes or truthfully fails to establish cause before any production correction.
+  - [x] Inspect a fresh-context run and confirm it establishes or truthfully fails to establish cause before any production correction.
 - Durable updates:
-  - [ ] Decide whether this change produced durable knowledge that belongs in `.rsp/specs/` or stable instructions that belong in the nearest project-owned `AGENTS.md`
-  - [ ] If yes, write only stable facts to the smallest correct target file before archive; do not promote task history, debugging notes, or one-off implementation context
+  - [x] Decide whether this change produced durable knowledge that belongs in `.rsp/specs/` or stable instructions that belong in the nearest project-owned `AGENTS.md`
+  - [x] If yes, write only stable facts to the smallest correct target file before archive; do not promote task history, debugging notes, or one-off implementation context
+
+Durable decision: the terminal composition slice owns the shared model/spec promotion after both independent discipline Skills are proven. This slice adds no competing shared fact or Decision Record.
 
 ## Blockers
 - none

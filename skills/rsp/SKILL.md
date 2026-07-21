@@ -4,7 +4,7 @@ description: Use this skill when initializing RSP, operating an existing .rsp pr
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.21.2"
+  version: "2026.07.21.3"
 ---
 
 # RSP Skill
@@ -37,8 +37,8 @@ Before operating the workflow, derive the current stage from user intent, neares
 
 When work has reached implementation, classify the decisive evidence before selecting a capability:
 
-- **Diagnosis:** an observed failure is reproducible or materially evidenced, but its cause or owning layer remains unexplained. Conflicting, intermittent, or multi-layer symptoms also take this branch. Select `diagnosing-bugs` only when it is available; otherwise use the manual diagnosis fallback: reproduce, isolate the failing layer, state competing hypotheses, test the smallest discriminating hypothesis, and return the evidenced cause without speculative production edits.
-- **TDD:** there is no unexplained failure, the required or corrected testable behavior is clear, and a focused failing test can demonstrate the missing behavior for the expected reason before production mutation. Select `tdd` only when it is available; otherwise use the manual TDD fallback: add the smallest focused test, confirm the expected failure, implement the minimum behavior, then rerun the focused and required checks.
+- **Diagnosis:** an observed failure is reproducible or materially evidenced, but its cause or owning layer remains unexplained. Conflicting, intermittent, or multi-layer symptoms also take this branch. Select `rsp-diagnose` only when it is available; otherwise use the manual diagnosis fallback: reproduce, locate, test the smallest discriminating hypothesis, and return the evidenced cause without speculative production edits.
+- **TDD:** there is no unexplained failure, the required or corrected testable behavior is clear, and a focused failing test can demonstrate the missing behavior for the expected reason before production mutation. Select `rsp-tdd` only when it is available; otherwise use the manual TDD fallback: observe the focused RED, make the minimum GREEN change, optionally REFACTOR while green, then rerun required checks.
 - **Ordinary implementation:** the cause and required change are already evidenced, and no new test-first cycle is required by the Change, project instructions, or the changed risk. Continue with ordinary `rsp-implement` when available, or the single manual implementation/verification action when it is not.
 
 Diagnosis takes precedence over TDD: do not encode an unexplained symptom as a guessed regression test. Each branch returns its evidence, Tasks, Verify updates, and unresolved Blockers to the same selected Change. Capability availability changes execution assistance, not the owner or required outcome.

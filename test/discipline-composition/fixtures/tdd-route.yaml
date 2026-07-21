@@ -1,0 +1,16 @@
+id: tdd-route
+evidence:
+  - no unexplained failure remains
+  - one clear testable behavior lacks focused failing evidence
+  - rsp-tdd is available in the loaded skill inventory
+expected:
+  next_action: select rsp-tdd once
+  returned_owner: the same selected Change
+sources:
+  - skills/rsp/SKILL.md
+  - skills/rsp-implement/SKILL.md
+required_contract:
+  - rsp-tdd
+  - focused failing test
+  - same selected Change
+prohibited_actions: [production-before-red, recursive-skill-invocation, review, commit, push, publish]

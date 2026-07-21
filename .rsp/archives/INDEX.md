@@ -4,7 +4,7 @@ summary: Completed RSP changes.
 kind: generated-index
 index_type: archives
 source_dir: .rsp/archives
-entry_count: 40
+entry_count: 45
 ---
 
 # Archive Index
@@ -33,11 +33,16 @@ entry_count: 40
 | 2026-07-20 | rsp-review-evaluation-hardening | research | Make rsp-review evaluation reproducible and decide whether the candidate can be promoted |
 | 2026-07-20 | rsp-review-scope-state-revision | research | Correct rsp-review pipeline scope states and mixed-change coverage without regressing restraint or cost |
 | 2026-07-20 | skill-system-foundation | feature | Establish the host-neutral Skill contract and evaluate the first rsp-review candidate |
+| 2026-07-21 | fix-review-output-and-eval-runner | fix | Remove an unsafe one-off diagnosis runner and make review-facing Skill output follow the user's language without destabilizing protocol tokens. |
 | 2026-07-21 | fix-rsp-review-production-chain | fix | Require `rsp-review` to verify that a changed production consumer actually reaches a defective or recommended seam. |
 | 2026-07-21 | 3-0-skill-readiness/brief | group | — |
 | 2026-07-21 | 3-0-skill-readiness/close-review-resolution-handoff | feature | Add a host-neutral review-resolution capability that disposes fixed findings, corrects accepted findings under explicit authority, requires verification and re-review, and returns a recoverable handoff when interrupted. |
 | 2026-07-21 | 3-0-skill-readiness/integrate-diagnosis-tdd-routing | feature | Add deterministic, host-neutral routing from implementation evidence to diagnosis, TDD, or ordinary implementation. |
 | 2026-07-21 | 3-0-skill-readiness/validate-assisted-engineering-loop | research | Validate the tightened RSP 3.0 assisted engineering loop with eight repeatable, host-neutral scenarios after the routing and review-resolution slices land. |
+| 2026-07-21 | engineering-disciplines/add-rsp-diagnose | feature | Publish a concise host-neutral `rsp-diagnose` Skill that establishes a confirmed cause before production correction. |
+| 2026-07-21 | engineering-disciplines/add-rsp-tdd | feature | Publish a concise host-neutral `rsp-tdd` Skill that produces observed red-green-refactor evidence for one selected Change. |
+| 2026-07-21 | engineering-disciplines/brief | group | — |
+| 2026-07-21 | engineering-disciplines/validate-discipline-composition | research | Validate concise `rsp-tdd` and `rsp-diagnose` behavior, Core routing, context cost, and conflict restraint in an installed RSP suite. |
 | 2026-07-20 | minimum-skill-suite/build-rsp-implement | feature | Build and promote a bounded RSP implementation Discipline Skill. |
 | 2026-07-20 | minimum-skill-suite/build-rsp-shape | feature | Build and promote the host-neutral RSP shaping/slicing Discipline Skill. |
 | 2026-07-21 | minimum-skill-suite/brief | group | — |

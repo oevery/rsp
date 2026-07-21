@@ -1,0 +1,15 @@
+id: missing-capability-fallback
+evidence:
+  - diagnosis or TDD is the evidenced next action
+  - the matching standalone Skill is absent from the loaded inventory
+expected:
+  next_action: use the named compact manual fallback
+  returned_owner: the same selected Change
+sources:
+  - skills/rsp/SKILL.md
+required_contract:
+  - manual diagnosis fallback
+  - manual TDD fallback
+  - Missing optional capabilities never invalidate RSP
+  - same selected Change
+prohibited_actions: [hidden-state, recursive-skill-invocation, commit, push, publish]

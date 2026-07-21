@@ -35,19 +35,19 @@ kind: "research"
   - Do not substitute source-fragment tests for real behavior; keep raw runs ignored and commit only sanitized prompts, fixtures, hashes, metrics, and conclusions.
 
 ## Tasks
-- [ ] Build deterministic routing, discipline, fallback, and conflict-restraint scenarios.
-- [ ] Run fresh installed-package diagnosis and TDD behavior holdouts after prerequisites archive.
-- [ ] Record the supported release recommendation, limitations, and durable model/spec updates.
+- [x] Build deterministic routing, discipline, fallback, and conflict-restraint scenarios.
+- [x] Run fresh installed-package diagnosis and TDD behavior holdouts after prerequisites archive.
+- [x] Record the supported release recommendation, limitations, and durable model/spec updates.
 
 ## Verify
 - Automated:
-  - [ ] Run the focused discipline composition harness.
-  - [ ] `mise exec -- pnpm run build && mise exec -- pnpm run lint && mise exec -- pnpm run test`
+  - [x] Focused discipline composition and shared contract run passed 4 files and 14 tests.
+  - [x] `mise exec -- pnpm run build && mise exec -- pnpm run lint && mise exec -- pnpm run test` — build and lint passed; 18 files and 287 tests passed.
 - Manual:
-  - [ ] Inspect raw holdout outputs for correct sequence, evidence, return ownership, conflicts, unauthorized actions, and omitted coverage.
+  - [x] Inspected raw holdout outputs for correct sequence, evidence, return ownership, conflicts, unauthorized actions, and omitted coverage; retained report: `research/evaluations/rsp-engineering-disciplines/2026-07-21/report.md`.
 - Durable updates:
-  - [ ] Decide whether this change produced durable knowledge that belongs in `.rsp/specs/` or stable instructions that belong in the nearest project-owned `AGENTS.md`
-  - [ ] If yes, write only stable facts to the smallest correct target file before archive; do not promote task history, debugging notes, or one-off implementation context
+  - [x] Updated `.rsp/specs/design.md` with the seven-Skill surface, standalone discipline ownership, and composition seam.
+  - [x] Updated `research/models/rsp-skill-system.md` and `research/models/rsp-capability-coverage.md`; no Decision Record or project instruction update is needed.
 
 ## Blockers
 - requires `engineering-disciplines/add-rsp-tdd`: validate the promoted TDD Skill rather than a speculative fixture contract

@@ -8,6 +8,8 @@ const root = fileURLToPath(new URL('..', import.meta.url))
 const coreSkill = join(root, 'skills', 'rsp')
 const reviewSkill = join(root, 'skills', 'rsp-review')
 const addressReviewSkill = join(root, 'skills', 'rsp-address-review')
+const diagnoseSkill = join(root, 'skills', 'rsp-diagnose')
+const tddSkill = join(root, 'skills', 'rsp-tdd')
 const portableKeys = new Set([
   'description',
   'license',
@@ -96,15 +98,28 @@ describe('rsp Skill contract', () => {
   it('publishes a portable canonical review Skill', () => {
     expectPortableSkill(reviewSkill)
     expect(reviewSkill.includes(`${sep}.agents${sep}skills${sep}`)).toBe(false)
-    expect(readSkill(reviewSkill).body).toContain('verify that the changed production consumer actually reaches that seam')
-    expect(readSkill(reviewSkill).body).toContain('never return `clean` for authority-only documents')
-    expect(readSkill(reviewSkill).body).toContain('Absence of a new test is not actionable by itself')
+    const { body } = readSkill(reviewSkill)
+    expect(body).toContain('verify that the changed production consumer actually reaches that seam')
+    expect(body).toContain('never return `clean` for authority-only documents')
+    expect(body).toContain('Absence of a new test is not actionable by itself')
+    expect(body).toContain('conversation language')
+    expect(body).toContain('shape below as semantic field order rather than fixed English wording')
+    expect(body).toContain('`issues_found`, `clean`, `skipped`, and `blocked`')
   })
 
   it('publishes a portable canonical review-resolution Skill', () => {
     expectPortableSkill(addressReviewSkill)
-    expect(readSkill(addressReviewSkill).body).toContain('authoritative pointers, not project truth')
-    expect(readSkill(addressReviewSkill).body).toContain('fresh fixed-scope re-review')
+    const { body } = readSkill(addressReviewSkill)
+    expect(body).toContain('authoritative pointers, not project truth')
+    expect(body).toContain('fresh fixed-scope re-review')
+    expect(body).toContain('conversation language')
+    expect(body).toContain('shapes as semantic field order rather than fixed English wording')
+    expect(body).toContain('`accepted`, `rejected`, and `needs-clarification`')
+  })
+
+  it('publishes portable canonical diagnosis and TDD Skills', () => {
+    expectPortableSkill(diagnoseSkill)
+    expectPortableSkill(tddSkill)
   })
 
   it('publishes the complete assisted suite while keeping research outside package roots', () => {
@@ -117,5 +132,7 @@ describe('rsp Skill contract', () => {
     expect(publishedSkills).toContain('rsp-implement')
     expect(publishedSkills).toContain('rsp-review')
     expect(publishedSkills).toContain('rsp-address-review')
+    expect(publishedSkills).toContain('rsp-diagnose')
+    expect(publishedSkills).toContain('rsp-tdd')
   })
 })

@@ -1,0 +1,16 @@
+id: diagnosis-precedence
+evidence:
+  - a failing behavior could be encoded as a test
+  - the observed symptom still has an unexplained cause
+expected:
+  next_action: select diagnosis before TDD
+  returned_owner: the same selected Change
+sources:
+  - skills/rsp/SKILL.md
+  - skills/rsp-implement/SKILL.md
+  - skills/rsp-tdd/SKILL.md
+required_contract:
+  - Diagnosis takes precedence over TDD
+  - returns to diagnosis
+  - same selected Change
+prohibited_actions: [guessed-regression-test, production-mutation, recursive-skill-invocation, commit, push, publish]
