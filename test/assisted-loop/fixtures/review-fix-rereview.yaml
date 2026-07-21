@@ -1,0 +1,20 @@
+id: review-fix-rereview
+stage: review-resolution
+evidence:
+  - a fixed-scope review returned findings
+  - the user authorized one resolution pass
+expected:
+  next_action: disposition every finding, fix accepted findings, verify, and request a fixed-scope re-review
+  returned_owner: the selected Change and then the fixed-scope review checkpoint
+sources:
+  - skills/rsp-address-review/SKILL.md
+required_contract:
+  - '## Disposition every finding'
+  - accepted
+  - rejected
+  - needs-clarification
+  - '## Fix accepted findings'
+  - fresh verification
+  - fresh fixed-scope re-review
+  - one resolution pass
+prohibited_actions: [commit, push, publish]

@@ -1,0 +1,17 @@
+id: implementation-known-cause
+stage: implementation
+evidence:
+  - the cause is understood
+  - test-first work has no safer incremental gain
+expected:
+  next_action: continue ordinary rsp-implement work
+  returned_owner: the same selected Change
+sources:
+  - skills/rsp/SKILL.md
+  - skills/rsp-implement/SKILL.md
+required_contract:
+  - '### Route implementation evidence'
+  - cause and required change are already evidenced
+  - ordinary `rsp-implement`
+  - same selected Change
+prohibited_actions: [commit, push, publish]

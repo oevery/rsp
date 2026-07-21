@@ -1,0 +1,16 @@
+id: missing-discipline-fallback
+stage: implementation
+evidence:
+  - diagnosis or test-first work is selected by evidence
+  - the matching optional capability is absent
+expected:
+  next_action: use the corresponding manual diagnosis or TDD fallback
+  returned_owner: the same selected Change
+sources:
+  - skills/rsp/SKILL.md
+required_contract:
+  - manual diagnosis fallback
+  - manual TDD fallback
+  - Missing optional capabilities never invalidate RSP
+  - same selected Change
+prohibited_actions: [commit, push, publish]

@@ -4,7 +4,7 @@ description: Implement exactly one selected, ready RSP Change within explicit mu
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.21.1"
+  version: "2026.07.21.2"
 ---
 
 # RSP Implement
@@ -23,7 +23,15 @@ Identify the outcome, required owners, verification, and pre-existing work befor
 
 Git delivery, publication, deployment, approval, and out-of-scope deletion require separate explicit authority. A plan, finding, check, or completion request does not grant it. Verify request-named findings before applying them and report each disposition.
 
-Use TDD or diagnosis only when the user, project instructions, or the work itself selects that discipline; do not recursively invoke review or delivery.
+## Classify implementation evidence
+
+Before mutation and after verification failure, classify the evidence:
+
+- An unexplained failure requires diagnosis before a guessed fix or regression test. Without a selected, available diagnosis Skill, use the manual diagnosis fallback: reproduce, isolate the failing layer, test competing hypotheses, and preserve the evidenced cause.
+- Clear testable behavior that needs new behavioral evidence should use a focused failing test. Without a selected, available TDD Skill, use the manual TDD fallback: confirm the expected failure, implement the minimum behavior, and rerun the test.
+- Continue ordinary implementation when the cause and edit are evidenced and neither branch applies.
+
+Diagnosis takes precedence over TDD. Do not invoke another Skill from inside this Skill. If new evidence changes the route, stop speculative mutation and return the next action, evidence, and same selected Change to the user, Core, or authorized controller. A missing optional Skill uses its manual fallback. Do not recursively invoke review or delivery.
 
 ## Implement and verify
 

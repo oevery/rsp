@@ -44,4 +44,17 @@ describe('rsp-implement Skill contract', () => {
     expect(body).toContain('Claim completion only when required Tasks and checks pass')
     expect(body).not.toMatch(/resolve-context|first backticked|Outcome:|tee \/dev\/null|provider matrix|research\//i)
   })
+
+  it('classifies implementation evidence without recursively invoking optional disciplines', () => {
+    const { body } = readSkill()
+
+    expect(body).toContain('## Classify implementation evidence')
+    expect(body).toContain('unexplained failure')
+    expect(body).toContain('manual diagnosis fallback')
+    expect(body).toContain('focused failing test')
+    expect(body).toContain('manual TDD fallback')
+    expect(body).toContain('ordinary implementation')
+    expect(body).toContain('Do not invoke another Skill from inside this Skill')
+    expect(body).toContain('same selected Change')
+  })
 })

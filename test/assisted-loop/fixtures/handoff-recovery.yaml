@@ -1,0 +1,16 @@
+id: handoff-recovery
+stage: handoff
+evidence:
+  - the current execution context must be continued later
+  - authoritative RSP artifacts remain available
+expected:
+  next_action: reconstruct the next action from authoritative pointers and current evidence
+  returned_owner: the selected Change
+sources:
+  - skills/rsp-address-review/SKILL.md
+required_contract:
+  - '## Handoff and recovery'
+  - artifact-scoped handoff
+  - authoritative pointers, not project truth
+  - do not begin an automatic retry loop
+prohibited_actions: [commit, push, publish]

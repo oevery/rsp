@@ -119,16 +119,17 @@ Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENT
 
 ## Skills
 
-RSP publishes four host-neutral Skills for on-demand loading:
+RSP publishes five host-neutral Skills for on-demand loading:
 
 - `rsp`: setup, workflow, durable review, and archive guidance.
 - `rsp-shape`: shape unclear non-trivial work into one ready Change or justified shallow Group without implementing it.
 - `rsp-implement`: implement one selected, ready Change within explicit mutation authority and return truthful Tasks, Blockers, and fresh verification evidence.
 - `rsp-review`: read-only review of code, document, or mixed Changes against fixed scope and project authority.
+- `rsp-address-review`: dispose fixed review findings, apply only authorized accepted corrections, require fresh verification and report-only re-review, and return a recoverable artifact-scoped handoff when work remains.
 
 Each Skill is independently invocable and returns results to existing project or RSP artifact owners. The suite adds no hidden workflow state or recursive Skill orchestration, and no Skill infers commit, push, or publication authority.
 
-For a complete tracked change, compose the suite manually as evidence requires: `rsp-shape` returns an executable Change, `rsp-implement` returns code/tests and fresh verification to that Change, `rsp-review` returns a read-only report, and `rsp` performs the durable decision before archive. Ambiguity, failed gates, and missing authority stop at their existing owner; they do not trigger an automatic retry loop.
+For a complete tracked change, compose the suite as evidence requires: `rsp-shape` returns an executable Change, `rsp-implement` returns code/tests and fresh verification to that Change, `rsp-review` returns a read-only report, `rsp-address-review` disposes findings and returns accepted corrections through fresh verification and re-review, and `rsp` performs the durable decision before archive. Ambiguity, failed gates, and missing authority stop at their existing owner; they do not trigger an automatic retry loop.
 
 Reading guidance:
 
@@ -138,6 +139,7 @@ Reading guidance:
 - `skills/rsp-shape/SKILL.md`: bounded shaping and slicing guidance
 - `skills/rsp-implement/SKILL.md`: bounded implementation and fresh verification guidance
 - `skills/rsp-review/SKILL.md`: read-only review guidance
+- `skills/rsp-address-review/SKILL.md`: review finding disposition, correction, re-review, and recovery guidance
 
 Surface matrix:
 
@@ -149,6 +151,7 @@ Surface matrix:
 | `skills/rsp-shape/SKILL.md` | Agents | Shape one executable Change or justified shallow Group |
 | `skills/rsp-implement/SKILL.md` | Agents | Implement one ready Change with fresh verification evidence |
 | `skills/rsp-review/SKILL.md` | Agents | Read-only Code and Document review |
+| `skills/rsp-address-review/SKILL.md` | Agents | Resolve review findings and return a recoverable handoff |
 | `AGENTS.md` | Humans and agents | Scoped project instructions and RSP navigation |
 
 Humans should usually start with `README.md`; agents should follow nearest `AGENTS.md`, load the `rsp` skill when available, and use `.rsp/rsp-rules.md` only as fallback.
@@ -168,6 +171,7 @@ npx skills add oevery/rsp --skill rsp
 npx skills add oevery/rsp --skill rsp-shape
 npx skills add oevery/rsp --skill rsp-implement
 npx skills add oevery/rsp --skill rsp-review
+npx skills add oevery/rsp --skill rsp-address-review
 ```
 
 `rsp update` refreshes project-local RSP files only. If you use published RSP Skills, refresh them separately after upgrading:

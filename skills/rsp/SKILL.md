@@ -4,7 +4,7 @@ description: Use this skill when initializing RSP, operating an existing .rsp pr
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.21.1"
+  version: "2026.07.21.2"
 ---
 
 # RSP Skill
@@ -33,13 +33,23 @@ Write artifact prose in the language explicitly requested by the user. Otherwise
 
 Before operating the workflow, derive the current stage from user intent, nearest project authority, `rsp status --json`, the selected Change's readiness, fresh verification evidence, and blockers. Stages are derived guidance, never persisted state.
 
+### Route implementation evidence
+
+When work has reached implementation, classify the decisive evidence before selecting a capability:
+
+- **Diagnosis:** an observed failure is reproducible or materially evidenced, but its cause or owning layer remains unexplained. Conflicting, intermittent, or multi-layer symptoms also take this branch. Select `diagnosing-bugs` only when it is available; otherwise use the manual diagnosis fallback: reproduce, isolate the failing layer, state competing hypotheses, test the smallest discriminating hypothesis, and return the evidenced cause without speculative production edits.
+- **TDD:** there is no unexplained failure, the required or corrected testable behavior is clear, and a focused failing test can demonstrate the missing behavior for the expected reason before production mutation. Select `tdd` only when it is available; otherwise use the manual TDD fallback: add the smallest focused test, confirm the expected failure, implement the minimum behavior, then rerun the focused and required checks.
+- **Ordinary implementation:** the cause and required change are already evidenced, and no new test-first cycle is required by the Change, project instructions, or the changed risk. Continue with ordinary `rsp-implement` when available, or the single manual implementation/verification action when it is not.
+
+Diagnosis takes precedence over TDD: do not encode an unexplained symptom as a guessed regression test. Each branch returns its evidence, Tasks, Verify updates, and unresolved Blockers to the same selected Change. Capability availability changes execution assistance, not the owner or required outcome.
+
 Apply these gates in order:
 
 1. If authority, selection, or a material owner decision is ambiguous, return the one decision or evidence needed to proceed. If a declared blocker prevents the next operation, return its owning artifact or person; do not route around it.
 2. If the user requests a report-only review against a fixed scope, select `rsp-review` only when it is available; otherwise name the manual read-only review and return its findings to the selected Change's Tasks, Verify, or Blockers.
 3. If no Change is selected, use the status plan to name one ready WorkRef and the direct focus action. For tiny settled work, return the direct engineering action without creating RSP state. For unclear non-trivial work, select `rsp-shape` only when it is available and the user authorized its Change mutation; otherwise give the manual fallback of creating or refining one Change.
 4. If the selected Change is not shape-ready, select `rsp-shape` under the same authority rule or give the manual fallback of completing its Proposal, Spec, Design, Tasks, Verify, and Blockers.
-5. If a shape-ready Change has incomplete implementation tasks, or its required verification is missing, stale, or failed, select `rsp-implement` only when it is available and implementation is authorized; otherwise name the single manual implementation or verification action owned by that Change.
+5. If a shape-ready Change has incomplete implementation tasks, or its required verification is missing, stale, or failed, apply the implementation-evidence routing above. Select only its resulting available capability when authorized; otherwise name its manual fallback owned by that Change.
 6. If required Tasks and verification pass with no blocker, perform the Core durable decision. Archive only after required current facts and rationale are written or explicitly judged unnecessary.
 
 State the derived stage, one next action, required input, returned owner, and decisive evidence. Name at most one available optional capability. Only name an optional capability when it is the one next action, and treat it as available only when it appears in the host's loaded skill inventory. Missing optional capabilities never invalidate RSP; always provide the manual fallback against the same owner.

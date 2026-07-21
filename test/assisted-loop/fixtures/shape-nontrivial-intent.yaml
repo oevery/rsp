@@ -1,0 +1,16 @@
+id: shape-nontrivial-intent
+stage: shaping
+evidence:
+  - non-trivial intent is unclear
+  - no executable Change is ready
+expected:
+  next_action: select rsp-shape or manually create or refine one Change
+  returned_owner: the selected or newly created Change
+sources:
+  - skills/rsp/SKILL.md
+  - skills/rsp-shape/SKILL.md
+required_contract:
+  - unclear non-trivial work
+  - otherwise give the manual fallback of creating or refining one Change
+  - Do not implement the shaped work
+prohibited_actions: [commit, push, publish]

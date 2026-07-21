@@ -5,11 +5,11 @@ kind: "ops"
 # Change: release-3-0-0
 
 ## Proposal
-- Summary: Deliver RSP 3.0.0 as a deterministic protocol plus a complete minimum Skill Suite, then perform the authorized external release.
+- Summary: Deliver RSP 3.0.0 as a deterministic protocol plus the complete promoted Skill Suite, then perform the authorized external release.
 - Why:
   - The major release should ship a usable protocol-to-engineering loop rather than a review-only partial suite.
 - Scope:
-  - Serve as the Overall Delivery Contract for the research, minimum-suite, and terminal release outcomes required by RSP 3.0.0.
+  - Serve as the Overall Delivery Contract for the research, promoted capability groups, and terminal release outcomes required by RSP 3.0.0.
   - Own only the terminal delivery work: finalize version/changelog/migration documentation, run release gates, commit release preparation, then perform separately authorized external release operations.
 - Non-goals:
   - Re-owning or duplicating upstream Group tasks, progress, verification, or completion conditions.
@@ -17,16 +17,18 @@ kind: "ops"
 
 ## Spec
 ### MODIFIED
-- Requirement: RSP 3.0.0 packages the deterministic protocol and the complete promoted minimum Skill Suite with truthful migration and release notes.
+- Requirement: RSP 3.0.0 packages the deterministic protocol and the complete promoted Skill Suite with truthful migration and release notes.
   - `skill-capability-research/brief` owns the accepted evidence baseline and selected shaping/implementation models.
   - `minimum-skill-suite/brief` owns the promoted Core, Shape, Implement, and Review composition outcome.
+  - `3-0-skill-readiness/brief` owns review resolution, implementation-evidence routing, and assisted-loop qualification.
+  - `engineering-disciplines/brief` owns standalone TDD and diagnosis behavior plus their installed-suite qualification.
   - `release-3-0-0` owns version identity, packaging, migration communication, and authorized external release operations.
   - The release artifact excludes research, evaluation, cache, self-hosting Change state, and maintainer-only tooling.
   - Push, tag, npm publish, and GitHub Release each require explicit external-action authority.
 
 ### Acceptance
 #### Scenario: overall delivery contract becomes release-ready
-- GIVEN `skill-capability-research` and `minimum-skill-suite` are closed and composition gates pass
+- GIVEN all declared capability Groups are closed and their terminal composition gates pass
 - WHEN the maintainer reviews the derived dependency plan and repository history
 - THEN every upstream outcome has one semantic owner and `release-3-0-0` contains only terminal delivery work
 - AND no upstream task, progress, or verification state is duplicated in this Change
@@ -44,6 +46,8 @@ kind: "ops"
 - Delivery ownership:
   - `skill-capability-research/brief`: accepted research baseline, capability coverage, selected capability contracts, and reconciled Skill System model.
   - `minimum-skill-suite/brief`: promoted minimum Skill Suite and verified composition through existing RSP artifacts.
+  - `3-0-skill-readiness/brief`: assisted review-resolution loop and its qualification evidence.
+  - `engineering-disciplines/brief`: standalone TDD and diagnosis Skills plus their terminal composition evidence.
   - `release-3-0-0`: version preparation, package verification, migration communication, and authorized external publication.
   - Current dependency state and execution waves are derived by `rsp status`; this ownership map contains no live status.
 - Affected areas:
@@ -54,7 +58,7 @@ kind: "ops"
   - Do not copy upstream Group completion checklists or turn referenced Groups into child entities.
 
 ## Tasks
-- [ ] Confirm both upstream Groups are closed and repository history contains the accepted models and every promoted capability.
+- [ ] Confirm every declared upstream capability Group is closed and repository history contains the accepted models and every promoted capability.
 - [ ] Complete 3.0.0 changelog, migration notes, version identity, and release date.
 - [ ] Run full release, package-content, clean-install, and CLI/Skill discovery gates.
 - [ ] Commit the release preparation as one scoped commit.
@@ -71,4 +75,6 @@ kind: "ops"
 
 ## Blockers
 - requires `minimum-skill-suite/validate-skill-composition`: needs the installed minimum suite to pass composition gates
+- requires `3-0-skill-readiness/validate-assisted-engineering-loop`: needs the tightened assisted engineering loop to pass the 3.0 readiness gate
+- requires `engineering-disciplines/validate-discipline-composition`: needs standalone TDD and diagnosis Skills to pass the installed-suite discipline gate
 - none

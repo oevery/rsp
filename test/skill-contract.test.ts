@@ -7,6 +7,7 @@ import { parse as parseYaml } from 'yaml'
 const root = fileURLToPath(new URL('..', import.meta.url))
 const coreSkill = join(root, 'skills', 'rsp')
 const reviewSkill = join(root, 'skills', 'rsp-review')
+const addressReviewSkill = join(root, 'skills', 'rsp-address-review')
 const portableKeys = new Set([
   'description',
   'license',
@@ -100,7 +101,13 @@ describe('rsp Skill contract', () => {
     expect(readSkill(reviewSkill).body).toContain('Absence of a new test is not actionable by itself')
   })
 
-  it('publishes the complete minimum suite while keeping research outside package roots', () => {
+  it('publishes a portable canonical review-resolution Skill', () => {
+    expectPortableSkill(addressReviewSkill)
+    expect(readSkill(addressReviewSkill).body).toContain('authoritative pointers, not project truth')
+    expect(readSkill(addressReviewSkill).body).toContain('fresh fixed-scope re-review')
+  })
+
+  it('publishes the complete assisted suite while keeping research outside package roots', () => {
     const packageJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as { files: string[] }
     const publishedSkills = readdirSync(join(root, 'skills'))
     expect(packageJson.files.some(path => path.startsWith('research'))).toBe(false)
@@ -109,5 +116,6 @@ describe('rsp Skill contract', () => {
     expect(publishedSkills).toContain('rsp-shape')
     expect(publishedSkills).toContain('rsp-implement')
     expect(publishedSkills).toContain('rsp-review')
+    expect(publishedSkills).toContain('rsp-address-review')
   })
 })

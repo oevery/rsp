@@ -1,0 +1,18 @@
+id: implementation-diagnosis
+stage: implementation
+evidence:
+  - a fresh relevant verification failure is unexplained
+  - diagnosing-bugs is available in the loaded skill inventory
+expected:
+  next_action: select diagnosing-bugs once
+  returned_owner: the same selected Change
+sources:
+  - skills/rsp/SKILL.md
+  - skills/rsp-implement/SKILL.md
+required_contract:
+  - '### Route implementation evidence'
+  - unexplained failure
+  - diagnosing-bugs
+  - '## Classify implementation evidence'
+  - Do not invoke another Skill from inside this Skill
+prohibited_actions: [commit, push, publish]
