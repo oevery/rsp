@@ -4,7 +4,7 @@ summary: Completed RSP changes.
 kind: generated-index
 index_type: archives
 source_dir: .rsp/archives
-entry_count: 32
+entry_count: 33
 ---
 
 # Archive Index
@@ -33,6 +33,7 @@ entry_count: 32
 | 2026-07-20 | rsp-review-evaluation-hardening | research | Make rsp-review evaluation reproducible and decide whether the candidate can be promoted |
 | 2026-07-20 | rsp-review-scope-state-revision | research | Correct rsp-review pipeline scope states and mixed-change coverage without regressing restraint or cost |
 | 2026-07-20 | skill-system-foundation | feature | Establish the host-neutral Skill contract and evaluate the first rsp-review candidate |
+| 2026-07-21 | fix-rsp-review-production-chain | fix | Require `rsp-review` to verify that a changed production consumer actually reaches a defective or recommended seam. |
 | 2026-07-20 | minimum-skill-suite/build-rsp-implement | feature | Build and promote a bounded RSP implementation Discipline Skill. |
 | 2026-07-20 | minimum-skill-suite/build-rsp-shape | feature | Build and promote the host-neutral RSP shaping/slicing Discipline Skill. |
 | 2026-07-21 | minimum-skill-suite/simplify-native-skills | refactor | Restore a gap-driven path from upstream distillation to concise RSP-native Skills. |

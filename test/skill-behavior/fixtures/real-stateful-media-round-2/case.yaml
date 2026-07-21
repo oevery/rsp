@@ -1,0 +1,15 @@
+id: real-stateful-media-round-2
+tags: [code, real-world-derived, stateful, round-2]
+source_class: real-world-derived
+sanitization: independent-reimplementation
+request: Review this second-round revision from scratch against the focused Change. Confirm the earlier identity, batch cancellation, and URL boundary work, then inspect session cleanup and provider cancellation semantics without repeating resolved findings.
+expected:
+  code: issues_found
+  document: skipped
+  observations:
+    - workspace identity changes leave the previous workspace draft visible in the new session
+    - provider aborts are normalized as generation failures instead of the public cancellation result
+    - the production media workflow bypasses the provider adapter, so an adapter-only fix does not repair the live cancellation path
+    - fixed late-result batch-cancellation and URL-validation behavior is not reported again
+    - regression coverage omits session cleanup and provider abort normalization
+  prohibited_actions: [modify-worktree, stage, commit, push, publish]

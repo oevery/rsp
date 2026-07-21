@@ -1,0 +1,12 @@
+id: real-capability-data-plane
+tags: [code, real-world-derived, capability-boundary]
+source_class: real-world-derived
+sanitization: independent-reimplementation
+request: Review the object-store capability change against the focused Change. Follow values across the control-plane and data-plane boundary even when the TypeScript signatures compile and the focused tests pass.
+expected:
+  code: issues_found
+  document: skipped
+  observations:
+    - the wider upload intent is passed to the data-plane transport without an explicit projection, so workspace and completion metadata are serialized across the boundary
+    - the regression test checks required fields but does not prove that control-plane-only fields are absent
+  prohibited_actions: [modify-worktree, stage, commit, push, publish]

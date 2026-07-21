@@ -4,7 +4,7 @@ description: Review an RSP-tracked code, document, or mixed change against a fix
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.20.5"
+  version: "2026.07.21.1"
 ---
 
 # RSP Review
@@ -30,7 +30,7 @@ The user request fixes the requested outcome and allowed operations subject to n
 - **Code:** executable code, tests, configuration, scripts, schemas, executable prompts, Skills, commands, hooks, and workflows.
 - **Document:** requirements, plans, Changes, Specs, Decision Records, ADRs, explanatory documentation, and user-facing documentation.
 
-Determine applicability only from artifacts inside the fixed comparison scope. A Change, Spec, instruction, implementation file, or test read only as authority or evidence is not thereby a reviewed artifact. Run each applicable pipeline; return `skipped` for a pipeline with no reviewed artifacts even when authority of that kind was inspected. When such authority is missing, ambiguous, or conflicting, record it in Review Scope, Coverage, and Verdict; do not emit a Finding owned by a skipped pipeline. An executable document may need both; merge evidence for the same underlying issue into one cross-artifact finding.
+Determine applicability only from artifacts inside the fixed comparison scope. A Change, Spec, instruction, implementation file, or test read only as authority or evidence is not thereby a reviewed artifact. Run each applicable pipeline; return `skipped` for a pipeline with no reviewed artifacts even when authority of that kind was inspected, and never return `clean` for authority-only documents. When such authority is missing, ambiguous, or conflicting, record it in Review Scope, Coverage, and Verdict; do not emit a Finding owned by a skipped pipeline. An executable document may need both; merge evidence for the same underlying issue into one cross-artifact finding.
 
 Inspect in a bounded order: fixed status/diff, selected authority, then only the smallest direct behavior chain and tests needed to resolve a concrete question. Stop when every applicable pipeline can be judged. Do not search unrelated files or broaden authority merely to fill Coverage or Findings.
 
@@ -41,8 +41,9 @@ Check in this order:
 1. Safety and correctness: reachable bugs, data loss, security violations, invalid state transitions, broken contracts, unsafe failures, and regressions.
 2. Change and Spec fidelity: observable behavior against explicit intent and stable facts.
 3. Project standards: only rules established by nearest instructions or authoritative local conventions.
-4. Regression evidence — hard gate before `clean`: for every changed Code artifact, compare public return and failure behavior at the comparison point with the reviewed diff. Changing failure delivery between throw/rejection, sentinel values, `null`, status codes, or result objects is always a failure-contract change, even when implementation matches the selected Change. Without a focused test or other explicit verification evidence, emit a Finding and return `issues_found`. The simple deterministic-correction exception never applies to those changes; use it only when public behavior shape is preserved and no risky branch, state transition, concurrency, persistence, security behavior, or failure delivery changes.
-5. Simplicity: unnecessary abstraction, duplication, indirection, dependency, or scope expansion with a concrete smaller alternative; never trade away required behavior.
+4. Production reachability — hard gate before completing a seam-dependent Finding: when a Finding or suggested correction depends on an adapter, wrapper, validator, normalizer, or similar seam, name the direct production caller, compare its actual callee with that seam, and verify that the changed production consumer actually reaches that seam. Put the comparison in Evidence or Coverage. If the live path bypasses the seam, report the bypass and do not present an isolated seam fix as sufficient.
+5. Regression evidence — hard gate before `clean`: for every changed Code artifact, compare public return and failure behavior at the comparison point with the reviewed diff. Changing failure delivery between throw/rejection, sentinel values, `null`, status codes, or result objects is always a failure-contract change, even when implementation matches the selected Change. Without a focused test or other explicit verification evidence, emit a Finding and return `issues_found`. Absence of a new test is not actionable by itself: apply the simple deterministic-correction exception when the public behavior shape is preserved and no risky branch, state transition, concurrency, persistence, security behavior, or failure delivery changes, even though the corrected value differs. The exception never applies to a failure-contract change.
+6. Simplicity: unnecessary abstraction, duplication, indirection, dependency, or scope expansion with a concrete smaller alternative; never trade away required behavior.
 
 Anchor each Finding to changed lines or the smallest behavior chain. State a realistic trigger and impact. Do not report formatting, naming, generated output, taste, or hypothetical cleanup without authority or demonstrated downside.
 

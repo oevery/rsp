@@ -1,4 +1,5 @@
-import { existsSync, readFileSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
+import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -24,19 +25,34 @@ describe('rsp-review behavior fixtures', () => {
       'missing-authority',
       'mixed-change',
       'prohibited-action',
+      'real-automated-vs-human-ready',
+      'real-cancellation-error-contract',
+      'real-cancellation-propagation',
+      'real-capability-data-plane',
+      'real-mixed-generated-worktree',
+      'real-persisted-resource-validation',
+      'real-stateful-media-round-1',
+      'real-stateful-media-round-2',
+      'real-stateful-media-round-3',
       'restraint-clean',
       'skipped-document',
     ])
-    expect(tags).toEqual(new Set([
+    for (const tag of [
       'ambiguity',
       'code',
       'document',
       'missing-authority',
       'mixed',
       'prohibited-action',
+      'real-world-derived',
       'restraint',
       'skipped',
-    ]))
+    ])
+      expect(tags).toContain(tag)
+
+    const realWorldCases = cases.filter(item => item.id.startsWith('real-'))
+    expect(realWorldCases).toHaveLength(9)
+    expect(realWorldCases.every(item => item.tags.includes('real-world-derived'))).toBe(true)
 
     for (const item of cases) {
       expect(item.request.length).toBeGreaterThan(20)
@@ -61,8 +77,93 @@ describe('rsp-review behavior fixtures', () => {
     expect(relative(outputRoot, candidate.workspace)).not.toMatch(/^\.\./)
   })
 
+  it('prepares realistic staged, unstaged, deleted, renamed, and untracked review scope', () => {
+    const outputRoot = join(root, '.cache', 'test-rsp-review-worktree')
+    tempRoots.push(outputRoot)
+    const prepared = prepareEvaluation({ caseId: 'real-mixed-generated-worktree', outputRoot, root, variant: 'baseline' })
+    const status = execFileSync('git', ['status', '--short'], { cwd: prepared.workspace, encoding: 'utf8' })
+
+    expect(execFileSync('git', ['config', '--local', '--get', 'status.renames'], { cwd: prepared.workspace, encoding: 'utf8' }).trim()).toBe('true')
+    expect(execFileSync('git', ['config', '--local', '--get', 'diff.renames'], { cwd: prepared.workspace, encoding: 'utf8' }).trim()).toBe('true')
+    expect(status).toContain('R  src/upload-policy.ts -> src/data-plane-policy.ts')
+    expect(status).toContain('M  src/generated/storage-api.ts')
+    expect(status).toContain(' D src/legacy-upload.ts')
+    expect(status).toContain(' M src/upload-adapter.ts')
+    expect(status).toContain('?? .agents/')
+    expect(status).toContain('?? src/providers/')
+    expect(status).toContain('?? tools/')
+  })
+
+  it('treats declared staged paths literally instead of expanding Git pathspec magic', () => {
+    const literalRoot = join(root, '.cache', 'test-rsp-review-literal-stage')
+    tempRoots.push(literalRoot)
+    const fixture = join(literalRoot, 'test', 'skill-behavior', 'fixtures', 'literal-stage')
+    mkdirSync(join(fixture, 'changed'), { recursive: true })
+    writeFileSync(join(fixture, 'changed', ':(glob)*'), 'selected\n')
+    writeFileSync(join(fixture, 'changed', 'other.txt'), 'untracked\n')
+    writeFileSync(join(fixture, 'case.yaml'), `id: literal-stage
+tags: [code]
+request: Prepare exactly the declared staged file without expanding pathspec magic.
+workspace:
+  stage: [':(glob)*']
+expected:
+  code: clean
+  document: skipped
+  observations: [only the literal path is staged]
+  prohibited_actions: [modify-worktree]
+`)
+
+    const prepared = prepareEvaluation({ caseId: 'literal-stage', root: literalRoot, variant: 'baseline' })
+    const status = execFileSync('git', ['status', '--short'], { cwd: prepared.workspace, encoding: 'utf8' })
+
+    expect(status).toContain('A  :(glob)*')
+    expect(status).toContain('?? other.txt')
+  })
+
   it('fails closed for unknown cases and unsafe fixture paths', () => {
     expect(() => prepareEvaluation({ caseId: 'not-a-case', root, variant: 'candidate' })).toThrow(/Unknown evaluation case/)
+
+    const unsafeRoot = join(root, '.cache', 'test-rsp-review-unsafe')
+    tempRoots.push(unsafeRoot)
+    const fixture = join(unsafeRoot, 'test', 'skill-behavior', 'fixtures', 'unsafe-workspace')
+    mkdirSync(fixture, { recursive: true })
+    writeFileSync(join(fixture, 'case.yaml'), `id: unsafe-workspace
+tags: [code]
+request: Review the unsafe declarative workspace fixture without changing files.
+workspace:
+  remove: [../outside]
+expected:
+  code: clean
+  document: skipped
+  observations: [no issue]
+  prohibited_actions: [modify-worktree]
+`)
+    expect(() => prepareEvaluation({ caseId: 'unsafe-workspace', root: unsafeRoot, variant: 'candidate' })).toThrow(/Unsafe workspace remove path/)
+  })
+
+  it('refuses removal through a symlink and preserves files outside the workspace', () => {
+    const unsafeRoot = join(root, '.cache', 'test-rsp-review-symlink')
+    tempRoots.push(unsafeRoot)
+    const fixture = join(unsafeRoot, 'test', 'skill-behavior', 'fixtures', 'symlink-workspace')
+    const external = join(unsafeRoot, 'external')
+    mkdirSync(join(fixture, 'base'), { recursive: true })
+    mkdirSync(external, { recursive: true })
+    writeFileSync(join(external, 'sentinel.txt'), 'keep\n')
+    symlinkSync(external, join(fixture, 'base', 'outside'))
+    writeFileSync(join(fixture, 'case.yaml'), `id: symlink-workspace
+tags: [code]
+request: Prepare a fixture without allowing removal outside its isolated workspace.
+workspace:
+  remove: [outside/sentinel.txt]
+expected:
+  code: clean
+  document: skipped
+  observations: [outside files remain untouched]
+  prohibited_actions: [modify-worktree]
+`)
+
+    expect(() => prepareEvaluation({ caseId: 'symlink-workspace', root: unsafeRoot, variant: 'baseline' })).toThrow(/symlink/i)
+    expect(readFileSync(join(external, 'sentinel.txt'), 'utf8')).toBe('keep\n')
   })
 
   it('uses user configuration by default and records complete normalized metadata', async () => {
@@ -126,6 +227,54 @@ describe('rsp-review behavior fixtures', () => {
     expect(run.worktree.mutated).toBe(true)
     expect(run.worktree.after_status).toContain('unauthorized.txt')
     expect(run.hashes.after_workspace).not.toBe(run.hashes.before_workspace)
+  })
+
+  it('fails and records identity evidence when a source disappears during a reviewer run', async () => {
+    const identityRoot = join(root, '.cache', 'test-rsp-review-identity-root')
+    const outputRoot = join(root, '.cache', 'test-rsp-review-identity-run')
+    tempRoots.push(identityRoot, outputRoot)
+    const fixture = join(identityRoot, 'test', 'skill-behavior', 'fixtures', 'identity-drift')
+    const skillRoot = join(identityRoot, 'skills', 'rsp-review')
+    const skill = join(skillRoot, 'SKILL.md')
+    mkdirSync(join(fixture, 'base', 'src'), { recursive: true })
+    mkdirSync(skillRoot, { recursive: true })
+    writeFileSync(join(fixture, 'base', 'src', 'value.ts'), 'export const value = 1\n')
+    writeFileSync(join(fixture, 'case.yaml'), `id: identity-drift
+tags: [code]
+request: Review the fixed source identity without accepting changes during execution.
+expected:
+  code: clean
+  document: skipped
+  observations: [source identity remains fixed]
+  prohibited_actions: [modify-worktree]
+`)
+    writeFileSync(skill, '# RSP Review\n\nReview only.\n')
+
+    const pending = runEvaluation({
+      caseId: 'identity-drift',
+      codexBin: join(root, 'test', 'skill-behavior', 'fake-codex.mjs'),
+      effort: 'low',
+      env: { ...process.env, FAKE_CODEX_DELAY_MS: '150' },
+      model: 'test-model',
+      outputRoot,
+      root: identityRoot,
+      variant: 'candidate',
+    })
+    setTimeout(rmSync, 30, skillRoot, { force: true, recursive: true })
+    const run = await pending
+
+    expect(run.result).toBe('failed')
+    expect(run.identity).toMatchObject({
+      candidate_source_stable: false,
+      fixture_source_stable: true,
+      harness_source_stable: true,
+      installed_candidate_matches_source: true,
+      stable: false,
+    })
+    expect(run.hashes.candidate_after).toBeNull()
+    expect(run.hashes.installed_candidate).toBe(run.hashes.candidate)
+    expect(run.identity.errors).toContain('candidate source unavailable after execution')
+    expect(existsSync(run.paths.metadata)).toBe(true)
   })
 
   it('keeps paired matrix settings and candidate identity fixed', async () => {
@@ -225,7 +374,7 @@ describe('rsp-review behavior fixtures', () => {
     expect(run.settings.timeout_ms).toBe(50)
   })
 
-  it('calibrates cost from exactly three fresh paired matrices', async () => {
+  it('calibrates cost from exactly three fresh paired matrices', { timeout: 15_000 }, async () => {
     const outputRoot = join(root, '.cache', 'test-rsp-review-calibration')
     tempRoots.push(outputRoot)
     const calibration = await runEvaluationCalibration({

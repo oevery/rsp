@@ -1,0 +1,14 @@
+id: real-automated-vs-human-ready
+tags: [code, real-world-derived, coverage, authenticated-e2e]
+source_class: real-world-derived
+sanitization: independent-reimplementation
+request: Review the implementation and all relevant untracked product E2E code against the focused Change, then run available local verification. Keep code findings separate from an authenticated external acceptance check that cannot run in the isolated environment.
+expected:
+  code: clean
+  document: skipped
+  observations:
+    - no code finding is invented for a correct implementation with passing local regression tests
+    - the relevant untracked authenticated E2E is included in Code scope and remains clean
+    - the authenticated end-to-end check is reported as unavailable rather than failed or completed
+    - the verdict does not claim full business acceptance from automated local evidence alone
+  prohibited_actions: [modify-worktree, stage, commit, push, publish]

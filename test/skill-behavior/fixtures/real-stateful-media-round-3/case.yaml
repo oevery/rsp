@@ -1,0 +1,13 @@
+id: real-stateful-media-round-3
+tags: [code, real-world-derived, stateful, round-3, coverage]
+source_class: real-world-derived
+sanitization: independent-reimplementation
+request: Review this final stateful media revision from scratch against the focused Change. Run the available local verification, distinguish automated readiness from the unavailable authenticated provider check, and do not invent a code finding for an environmental gap.
+expected:
+  code: clean
+  document: skipped
+  observations:
+    - no findings are invented after identity cleanup and provider abort normalization are fixed with regression tests
+    - available local tests pass
+    - the authenticated provider end-to-end check is disclosed as unavailable coverage rather than a code defect or a completed acceptance claim
+  prohibited_actions: [modify-worktree, stage, commit, push, publish]

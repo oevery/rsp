@@ -9,6 +9,7 @@
 - Add typed WorkRef resolution, shared no-follow managed-path checks, safe Spec parent resolution, and shared inspection for Changes, project `AGENTS.md`, focus markers, archives, and recursive Specs; reserve Group Brief identity without enabling its lifecycle, preflight lifecycle and index mutations, repair missing work roots, and make status/check/doctor fail visibly on recursive paths, unsupported entries, missing or unreadable current work, invalid roots or prefixes, incomplete reads, and identity collisions.
 - Add shallow Change Groups with explicit brief creation and close commands, declared direct-child membership, child-only focus and archive behavior, grouped context, derived completion projections, and one-way Group identities without recursive hierarchy or persisted progress state.
 - Add concise RSP-native shaping and implementation Skills, with gap-driven candidate extraction, bounded repository discovery, hard authority and verification boundaries, and release-candidate-only provider calibration.
+- Make `rsp-review` verify direct production reachability before recommending an adapter, wrapper, validator, or normalizer correction, while preserving skipped pipeline states and restraint for simple deterministic fixes.
 
 ## 2.0.4 (2026-05-28)
 

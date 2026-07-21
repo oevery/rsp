@@ -2,8 +2,8 @@
 
 import { execFileSync, spawn } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { basename, join, relative, resolve, sep } from 'node:path'
+import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { parse as parseYaml } from 'yaml'
@@ -21,6 +21,25 @@ function assertContained(parent, child, label) {
 
 function fixtureRoot(root) {
   return join(root, 'test', 'skill-behavior', 'fixtures')
+}
+
+function assertRelativeFixturePath(path, label) {
+  if (typeof path !== 'string' || path.length === 0 || isAbsolute(path))
+    throw new Error(`Invalid ${label}: ${String(path)}`)
+  const probeRoot = resolve('/fixture')
+  const resolved = resolve(probeRoot, path)
+  assertContained(probeRoot, resolved, label)
+  if (resolved === probeRoot)
+    throw new Error(`Invalid ${label}: ${path}`)
+}
+
+function assertNoSymlinkPath(root, target, label) {
+  let current = root
+  for (const segment of relative(root, target).split(sep)) {
+    current = join(current, segment)
+    if (existsSync(current) && lstatSync(current).isSymbolicLink())
+      throw new Error(`Unsafe ${label}: symlink path component ${relative(root, current)}`)
+  }
 }
 
 function readCase(root, id) {
@@ -41,6 +60,21 @@ function readCase(root, id) {
     throw new Error(`Invalid pipeline expectations: ${id}`)
   if (!Array.isArray(value.expected.observations) || !Array.isArray(value.expected.prohibited_actions))
     throw new Error(`Invalid evaluation expectations: ${id}`)
+  if (value.tags.includes('real-world-derived')
+    && (value.source_class !== 'real-world-derived' || value.sanitization !== 'independent-reimplementation')) {
+    throw new Error(`Invalid real-world fixture provenance: ${id}`)
+  }
+  if (value.workspace !== undefined) {
+    if (!value.workspace || typeof value.workspace !== 'object' || Array.isArray(value.workspace))
+      throw new Error(`Invalid workspace operations: ${id}`)
+    for (const operation of ['remove', 'stage']) {
+      const paths = value.workspace[operation] ?? []
+      if (!Array.isArray(paths))
+        throw new Error(`Invalid workspace ${operation} paths: ${id}`)
+      for (const path of paths)
+        assertRelativeFixturePath(path, `workspace ${operation} path`)
+    }
+  }
 
   return { directory, value }
 }
@@ -63,6 +97,9 @@ function hashContent(content) {
 function hashFile(path) {
   return hashContent(readFileSync(path))
 }
+
+const HARNESS_PATH = fileURLToPath(import.meta.url)
+const LOADED_HARNESS_HASH = hashFile(HARNESS_PATH)
 
 function listTreeFiles(directory, current = directory) {
   const paths = []
@@ -87,6 +124,16 @@ function hashTree(directory) {
     hash.update('\0')
   }
   return hash.digest('hex')
+}
+
+function captureIdentityHash(label, compute, errors) {
+  try {
+    return compute()
+  }
+  catch {
+    errors.push(`${label} unavailable after execution`)
+    return null
+  }
 }
 
 function executable(codexBin, args) {
@@ -206,12 +253,24 @@ export function prepareEvaluation({ caseId, outputRoot, root, variant }) {
   git(workspace, ['init', '--quiet'])
   git(workspace, ['config', 'user.name', 'RSP Evaluation'])
   git(workspace, ['config', 'user.email', 'rsp-eval@example.invalid'])
+  git(workspace, ['config', 'status.renames', 'true'])
+  git(workspace, ['config', 'diff.renames', 'true'])
   git(workspace, ['add', '--all'])
   git(workspace, ['commit', '--quiet', '--allow-empty', '-m', 'fixture base'])
 
   const changed = join(directory, 'changed')
   if (existsSync(changed))
     cpSync(changed, workspace, { recursive: true })
+
+  for (const path of value.workspace?.remove ?? []) {
+    const target = resolve(workspace, path)
+    assertContained(workspace, target, 'workspace remove path')
+    assertNoSymlinkPath(workspace, target, 'workspace remove path')
+    rmSync(target, { force: true, recursive: true })
+  }
+  const staged = value.workspace?.stage ?? []
+  if (staged.length > 0)
+    git(workspace, ['--literal-pathspecs', 'add', '--all', '--', ...staged])
 
   if (variant === 'candidate') {
     const sourceSkill = reviewSkillPath(root)
@@ -244,6 +303,13 @@ export async function runEvaluation({ caseId, codexBin = 'codex', effort, env = 
   const configArgs = evaluationConfigArgs({ isolated, provider })
 
   const evaluations = resolve(outputRoot ?? join(root, '.cache', 'rsp-review-eval'))
+  const candidatePath = reviewSkillPath(root)
+  const fixturesPath = fixtureRoot(root)
+  const sourceIdentity = {
+    candidate: hashTree(candidatePath),
+    fixture: hashTree(fixturesPath),
+    harness: LOADED_HARNESS_HASH,
+  }
   const prepared = prepareEvaluation({ caseId, outputRoot: evaluations, root, variant })
   const runId = basename(prepared.workspace)
   const runDirectory = join(evaluations, 'runs', runId)
@@ -252,9 +318,8 @@ export async function runEvaluation({ caseId, codexBin = 'codex', effort, env = 
   const finalOutputPath = join(runDirectory, 'final.md')
   const metadataPath = join(runDirectory, 'metadata.json')
   const prompt = readFileSync(prepared.promptPath, 'utf8')
-  const candidatePath = reviewSkillPath(root)
-  const fixturesPath = fixtureRoot(root)
-  const harnessPath = fileURLToPath(import.meta.url)
+  const installedCandidatePath = join(prepared.workspace, '.agents', 'skills', 'rsp-review')
+  const installedCandidateHash = variant === 'candidate' ? hashTree(installedCandidatePath) : null
   const beforeStatus = git(prepared.workspace, ['status', '--porcelain=v1', '--untracked-files=all'])
   const beforeWorkspace = hashTree(prepared.workspace)
   const cliVersion = commandVersion(codexBin)
@@ -287,7 +352,26 @@ export async function runEvaluation({ caseId, codexBin = 'codex', effort, env = 
   const afterWorkspace = hashTree(prepared.workspace)
   const summary = summarizeEvents(executed.stdout)
   const mutated = beforeStatus !== afterStatus || beforeWorkspace !== afterWorkspace
-  const result = executed.code === 0 && existsSync(finalOutputPath) && !mutated ? 'passed' : 'failed'
+  const identityErrors = []
+  const sourceIdentityAfter = {
+    candidate: captureIdentityHash('candidate source', () => hashTree(candidatePath), identityErrors),
+    fixture: captureIdentityHash('fixture source', () => hashTree(fixturesPath), identityErrors),
+    harness: captureIdentityHash('harness source', () => hashFile(HARNESS_PATH), identityErrors),
+  }
+  const identity = {
+    candidate_source_stable: sourceIdentity.candidate === sourceIdentityAfter.candidate,
+    errors: identityErrors,
+    fixture_source_stable: sourceIdentity.fixture === sourceIdentityAfter.fixture,
+    harness_source_stable: sourceIdentity.harness === sourceIdentityAfter.harness,
+    installed_candidate_matches_source: variant === 'candidate'
+      ? installedCandidateHash === sourceIdentity.candidate
+      : null,
+  }
+  identity.stable = identity.candidate_source_stable
+    && identity.fixture_source_stable
+    && identity.harness_source_stable
+    && identity.installed_candidate_matches_source !== false
+  const result = executed.code === 0 && existsSync(finalOutputPath) && !mutated && identity.stable ? 'passed' : 'failed'
   const metadata = {
     case: prepared.case,
     duration_ms: ended.getTime() - started.getTime(),
@@ -297,12 +381,17 @@ export async function runEvaluation({ caseId, codexBin = 'codex', effort, env = 
     hashes: {
       after_workspace: afterWorkspace,
       before_workspace: beforeWorkspace,
-      candidate: hashTree(candidatePath),
+      candidate: sourceIdentity.candidate,
+      candidate_after: sourceIdentityAfter.candidate,
       final_output: existsSync(finalOutputPath) ? hashFile(finalOutputPath) : null,
-      fixture: hashTree(fixturesPath),
-      harness: hashFile(harnessPath),
+      fixture: sourceIdentity.fixture,
+      fixture_after: sourceIdentityAfter.fixture,
+      harness: sourceIdentity.harness,
+      harness_after: sourceIdentityAfter.harness,
+      installed_candidate: installedCandidateHash,
       prompt: hashContent(prompt),
     },
+    identity,
     paths: {
       final_output: finalOutputPath,
       metadata: metadataPath,

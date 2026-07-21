@@ -52,6 +52,7 @@ kind: "feature"
   - [ ] Record only the stable suite boundary and composition contract in `.rsp/specs/design.md` and published README files.
 
 ## Blockers
+- requires `fix-rsp-review-production-chain`: needs the known production-seam review miss corrected before composing the final suite
 - requires `minimum-skill-suite/refine-rsp-core-routing`: needs the refined Core Skill
 - requires `minimum-skill-suite/build-rsp-shape`: needs the promoted shaping Skill
 - requires `minimum-skill-suite/build-rsp-implement`: needs the promoted implementation Skill

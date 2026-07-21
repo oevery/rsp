@@ -1,0 +1,14 @@
+id: real-persisted-resource-validation
+tags: [code, real-world-derived, persisted-data, trust-boundary]
+source_class: real-world-derived
+sanitization: independent-reimplementation
+request: Review the persisted media-resource change against the focused Change. Trace the stored value through preview, delivery readiness, and playback instead of trusting the green happy-path tests.
+expected:
+  code: issues_found
+  document: skipped
+  observations:
+    - persisted URLs are trusted by preview and delivery without the credential-free HTTP(S) validation required by the Change
+    - malformed, non-HTTP, and credential-bearing URLs can be marked ready even though playback rejects them
+    - URL validation is inconsistent across preview, delivery, and playback rather than enforced at one shared boundary
+    - regression coverage omits invalid persisted URLs while preserving a valid public HTTP(S) URL
+  prohibited_actions: [modify-worktree, stage, commit, push, publish]

@@ -1,0 +1,12 @@
+id: real-cancellation-error-contract
+tags: [code, real-world-derived, cancellation]
+source_class: real-world-derived
+sanitization: independent-reimplementation
+request: Review cancellation handling across the provider adapter and public publishing result. Verify behavior for wrapped provider errors rather than checking only the outer error name.
+expected:
+  code: issues_found
+  document: skipped
+  observations:
+    - the provider adapter wraps an AbortError and the public classifier inspects only the outer name, so caller cancellation is returned as provider-failed instead of cancelled
+    - the regression test covers ordinary provider failure but omits the wrapped cancellation path required by the Change
+  prohibited_actions: [modify-worktree, stage, commit, push, publish]

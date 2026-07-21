@@ -1,0 +1,61 @@
+{
+  "candidate_hash": "399619e81e40cd16a29bf64a88bb7ca214410097a7d3d61adb927a28dc47c69c",
+  "fixture_hash": "230ec360f5d91f2c4cee67606d0dc8d5528cb7bb836385e6817e6bb8ae9489cd",
+  "harness_hash": "1beb340967ac77fa4d26e899d1b99ee608d835df518d661df3da4d7bd710fe0f",
+  "model": "gpt-5.6-terra",
+  "effort": "low",
+  "config_source": "user",
+  "runs": [
+    {
+      "case_id": "real-automated-vs-human-ready",
+      "variant": "candidate",
+      "process_result": "passed",
+      "quality_result": "passed",
+      "pipeline": { "code": "clean", "document": "skipped" },
+      "observations_matched": 4,
+      "observations_expected": 4,
+      "duration_ms": 53853,
+      "timed_out": false,
+      "workspace_mutated": false,
+      "identity_stable": true,
+      "tool_calls": 5,
+      "usage": {
+        "input_tokens": 154473,
+        "cached_input_tokens": 134656,
+        "output_tokens": 1786,
+        "reasoning_output_tokens": 482
+      },
+      "source_output_hash": "58cfeb43d6327c73bfbc42fe8bfb19ef2e961c0297750d3169afda33bc1da305",
+      "retained_output_hash": "93a8105bc7fe1504b93d2bea4800637f7f6439d09f3286901d4de89da50747f2",
+      "retained_output_kind": "normalized-copy",
+      "retained_output": "outputs/targeted-automated-candidate.md"
+    },
+    {
+      "case_id": "real-stateful-media-round-2",
+      "variant": "candidate",
+      "process_result": "passed",
+      "quality_result": "failed",
+      "pipeline": { "code": "issues_found", "document": "skipped" },
+      "observations_matched": 4,
+      "observations_expected": 5,
+      "missing_observations": [
+        "the production media workflow bypasses the provider adapter, so an adapter-only fix does not repair the live cancellation path"
+      ],
+      "duration_ms": 83278,
+      "timed_out": false,
+      "workspace_mutated": false,
+      "identity_stable": true,
+      "tool_calls": 7,
+      "usage": {
+        "input_tokens": 217359,
+        "cached_input_tokens": 194048,
+        "output_tokens": 3068,
+        "reasoning_output_tokens": 1050
+      },
+      "source_output_hash": "e3c31d8a2879ffe8673f28fb93f68c70f56fa8d319bf9e695e761568a9850bd8",
+      "retained_output_hash": "dd7982d784e0629143b5ee20e99aae1e95e7830ff4309506813ed4f87b937eac",
+      "retained_output_kind": "normalized-copy",
+      "retained_output": "outputs/targeted-r2-candidate.md"
+    }
+  ]
+}

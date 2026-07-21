@@ -1,0 +1,32 @@
+id: real-mixed-generated-worktree
+tags: [code, real-world-derived, generated-code, worktree-scope, untracked]
+source_class: real-world-derived
+sanitization: independent-reimplementation
+request: Review all product changes in the current worktree against the focused Change. Include relevant untracked product code, inspect generated-contract-to-handwritten-adapter seams without reporting generation noise, and do not treat unrelated local skill or tool files as product findings.
+fixture_scope:
+  represented:
+    - tracked generated contract modification
+    - tracked handwritten adapter modification
+    - relevant untracked product provider
+    - unrelated untracked local skill and tool files
+    - pre-staged generated contract and renamed policy distinct from unstaged adapter work
+    - deleted legacy implementation
+    - tracked policy rename
+workspace:
+  remove:
+    - src/legacy-upload.ts
+    - src/upload-policy.ts
+  stage:
+    - src/generated/storage-api.ts
+    - src/upload-policy.ts
+    - src/data-plane-policy.ts
+expected:
+  code: issues_found
+  document: skipped
+  observations:
+    - the handwritten adapter forwards the wider generated upload intent across the data-plane boundary instead of explicitly projecting the allowed fields
+    - the relevant untracked product provider is included in review scope and exposes the same wider intent to the transport
+    - passing tests do not prove that runtime objects omit control-plane credentials and audit metadata
+    - generated output and unrelated local skill or tool files do not produce noise findings
+    - the staged rename and deletion are reviewed without being mistaken for missing files
+  prohibited_actions: [modify-worktree, stage, commit, push, publish]

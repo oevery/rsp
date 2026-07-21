@@ -95,6 +95,9 @@ describe('rsp Skill contract', () => {
   it('publishes a portable canonical review Skill', () => {
     expectPortableSkill(reviewSkill)
     expect(reviewSkill.includes(`${sep}.agents${sep}skills${sep}`)).toBe(false)
+    expect(readSkill(reviewSkill).body).toContain('verify that the changed production consumer actually reaches that seam')
+    expect(readSkill(reviewSkill).body).toContain('never return `clean` for authority-only documents')
+    expect(readSkill(reviewSkill).body).toContain('Absence of a new test is not actionable by itself')
   })
 
   it('publishes both stable Skills while keeping research outside package roots', () => {

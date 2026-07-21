@@ -1,0 +1,14 @@
+id: real-stateful-media-round-1
+tags: [code, real-world-derived, stateful, round-1]
+source_class: real-world-derived
+sanitization: independent-reimplementation
+request: Review this first-round stateful media implementation against the focused Change, including all relevant untracked product tests in the review scope. Trace workspace identity, cancellation ownership, persisted media validation, and regression evidence across the complete behavior chain.
+expected:
+  code: issues_found
+  document: skipped
+  observations:
+    - a late generation result is persisted through the current workspace instead of the workspace that started it
+    - an active batch has no caller-visible cancellation entry point
+    - delivery accepts every non-empty persisted URL instead of only credential-free HTTP or HTTPS media URLs
+    - happy-path tests do not cover the identity race cancellation or unsafe persisted URLs
+  prohibited_actions: [modify-worktree, stage, commit, push, publish]

@@ -7,7 +7,13 @@ export interface EvaluationCase {
   }
   id: string
   request: string
+  sanitization?: 'independent-reimplementation'
+  source_class?: 'real-world-derived'
   tags: string[]
+  workspace?: {
+    remove?: string[]
+    stage?: string[]
+  }
 }
 
 export interface PreparedEvaluation {
@@ -32,10 +38,22 @@ export interface EvaluationRun {
     after_workspace: string
     before_workspace: string
     candidate: string
+    candidate_after: string | null
     final_output: string | null
     fixture: string
+    fixture_after: string | null
     harness: string
+    harness_after: string | null
+    installed_candidate: string | null
     prompt: string
+  }
+  identity: {
+    candidate_source_stable: boolean
+    errors: string[]
+    fixture_source_stable: boolean
+    harness_source_stable: boolean
+    installed_candidate_matches_source: boolean | null
+    stable: boolean
   }
   paths: {
     final_output: string

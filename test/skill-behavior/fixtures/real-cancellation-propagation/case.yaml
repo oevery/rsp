@@ -1,0 +1,13 @@
+id: real-cancellation-propagation
+tags: [code, real-world-derived, cancellation]
+source_class: real-world-derived
+sanitization: independent-reimplementation
+request: Review the newly cancellable publish pipeline against the focused Change. Trace cancellation through every asynchronous stage, including requests that are already aborted before the call begins.
+expected:
+  code: issues_found
+  document: skipped
+  observations:
+    - the abort signal reaches only the byte transfer while credential, intent, and completion requests continue without cancellation
+    - a pre-aborted signal still starts control-plane work instead of rejecting before the first side effect
+    - the regression test proves only transfer cancellation and leaves the rest of the pipeline unverified
+  prohibited_actions: [modify-worktree, stage, commit, push, publish]
