@@ -1,0 +1,8 @@
+{
+  "name": "rsp-manage-ordinary-restraint",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test"
+  }
+}

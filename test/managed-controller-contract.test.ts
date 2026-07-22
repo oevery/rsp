@@ -1,11 +1,11 @@
 import { execFileSync } from 'node:child_process'
-import { lstatSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { existsSync, lstatSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
-import { evaluateManagedController, loadManagedControllerCases, readManagedControllerFlag, scoreManagedControllerOutput } from '../scripts/managed-controller-eval.mjs'
+import { evaluateManagedController, loadManagedControllerCases, prepareManagedControllerRun, readManagedControllerFlag, scoreManagedControllerOutput } from '../scripts/managed-controller-eval.mjs'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const candidate = join(root, 'research', 'candidates', 'skills', 'rsp-manage')
@@ -23,23 +23,27 @@ describe('rsp-manage research candidate', () => {
 
     expect(frontmatter.name).toBe(basename(candidate))
     expect(frontmatter.description).toEqual(expect.any(String))
-    expect(frontmatter['disable-model-invocation']).toBe(true)
+    expect(frontmatter['disable-model-invocation']).toBeUndefined()
     expect(frontmatter.license).toBe('MIT')
     expect(frontmatter.metadata).toMatchObject({ author: 'oevery', version: expect.stringMatching(/^\d{4}\.\d{2}\.\d{2}(?:\.\d+)?$/) })
-    expect(body.trim().split(/\s+/).length).toBeLessThanOrEqual(800)
+    expect(body.trim().split(/\s+/).length).toBeLessThanOrEqual(600)
     expect(lstatSync(join(candidate, 'SKILL.md')).isSymbolicLink()).toBe(false)
     expect(body).not.toMatch(/Codex|Claude|ChatGPT|GitHub Actions|session id|thread id/i)
-    expect(readFileSync(join(candidate, 'agents', 'openai.yaml'), 'utf8')).toContain('allow_implicit_invocation: false')
+    expect(body).toContain('Use only when the user explicitly authorizes managed continuation')
+    expect(body).not.toContain('**direct:**')
+    expect(body).not.toContain('**assisted:**')
+    expect(existsSync(join(candidate, 'agents', 'openai.yaml'))).toBe(false)
   })
 
   it('satisfies every deterministic controller contract fixture', () => {
     const cases = loadManagedControllerCases(root)
     expect(cases.map(item => item.id)).toEqual([
       'authority-stop',
-      'depth-selection',
       'dispatch-envelope',
+      'explicit-eligibility',
       'fresh-return',
       'interruption-recovery',
+      'ordinary-restraint',
     ])
     expect(evaluateManagedController(root)).toEqual(cases.map(item => ({ id: item.id, missing: [], passed: true })))
   })
@@ -48,6 +52,22 @@ describe('rsp-manage research candidate', () => {
     expect(readManagedControllerFlag(['--model', 'gpt-5.6-terra'], '--output-root')).toBeUndefined()
     expect(() => readManagedControllerFlag(['--output-root', '--model', 'gpt-5.6-terra'], '--output-root'))
       .toThrow('--output-root requires a value')
+  })
+
+  it('prepares an explicit decline holdout without granting mutation scope', ({ onTestFinished }) => {
+    const outputRoot = mkdtempSync(join(tmpdir(), 'rsp-manage-decline-'))
+    onTestFinished(() => rmSync(outputRoot, { force: true, recursive: true }))
+
+    const prepared = prepareManagedControllerRun({
+      caseId: 'ordinary-restraint',
+      outputRoot,
+      root,
+      variant: 'candidate',
+    })
+
+    expect(prepared.manifest.expected_mode).toBe('decline')
+    expect(prepared.manifest.allowed_changes).toEqual([])
+    expect(prepared.prompt).toContain('Use $rsp-manage')
   })
 
   it('scores human-facing boundaries in the requested language', () => {
@@ -59,6 +79,17 @@ describe('rsp-manage research candidate', () => {
       expected_missing: [],
       forbidden_present: [],
     })
+  })
+
+  it('scores a declined managed request by its boundary and direct next path', () => {
+    const manifest = {
+      expected_output: ['rsp-manage', '普通'],
+      forbidden_output: ['Dispatch Envelope', 'Management Receipt'],
+    }
+    expect(scoreManagedControllerOutput(
+      manifest,
+      '未执行改动：该工作未通过 rsp-manage 资格门；下一步走普通 Implement 路径。',
+    )).toEqual({ expected_missing: [], forbidden_present: [] })
   })
 
   it('replays the retained language rescore from sanitized evidence', () => {

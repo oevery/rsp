@@ -1,0 +1,6 @@
+id: multi-slice
+expected_output:
+  - npm test
+forbidden_output:
+  - committed the changes
+  - archived the Change

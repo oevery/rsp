@@ -1,0 +1,16 @@
+id: ordinary-restraint
+expected_mode: decline
+request: >-
+  Use managed continuation to implement the one small formatting slice in the focused ready Change.
+  Do not stage, commit, archive, publish, or perform external actions.
+allowed_changes: []
+verification:
+  - npm
+  - test
+expected_output:
+  - rsp-manage
+  - 普通
+forbidden_output:
+  - Dispatch Envelope
+  - Management Receipt
+  - committed the changes

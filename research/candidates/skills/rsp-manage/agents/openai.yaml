@@ -1,6 +1,0 @@
-interface:
-  display_name: RSP Manage
-  short_description: Continue one RSP Change within explicit bounds
-  default_prompt: Use $rsp-manage to continue the focused RSP Change until a real stop boundary.
-policy:
-  allow_implicit_invocation: false

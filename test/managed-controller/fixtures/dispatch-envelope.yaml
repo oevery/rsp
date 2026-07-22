@@ -8,6 +8,8 @@ required_contract:
   - '- Mutation: <exact allowed paths or read-only>'
   - '- Verification: <commands and acceptance evidence>'
   - '- Stop: <ambiguity, failure, environment, human, or external-action boundary>'
+  - Parallelize only non-overlapping mutation scopes with independent verification
+  - Keep overlapping mutations or dependent verification sequential
 prohibited_actions:
   - overlapping parallel mutations
   - inherited delivery authority

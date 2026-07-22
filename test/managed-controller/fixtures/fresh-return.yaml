@@ -3,7 +3,8 @@ evidence:
   - A worker returns code and a claimed passing check.
 required_contract:
   - inspect the actual diff and fresh verification output
-  - Spend one retry only when new evidence identifies a corrective action inside the same envelope
+  - Spend at most one default corrective retry for the whole run
+  - Continue only after positive progress
   - its required checks are freshly observed
   - Continue to the next ready slice while budget and authority remain
 prohibited_actions:

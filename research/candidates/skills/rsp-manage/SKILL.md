@@ -1,34 +1,30 @@
 ---
 name: rsp-manage
-description: Continue one explicitly authorized RSP Change through bounded execution, delegation, verification, and interruption recovery until a real evidence or authority boundary.
-disable-model-invocation: true
+description: Continue one explicitly authorized focused RSP Change through genuinely independent bounded slices or interruption recovery. Use only when the user explicitly requests managed continuation; keep ordinary work on existing Core and Discipline paths.
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.21.1"
+  version: "2026.07.22.2"
 ---
 
 # RSP Manage
 
-Manage one focused RSP Change without becoming another project workflow. Use the existing Change, Group Brief, Specs, Decisions, project instructions, and worktree as authority; keep orchestration state run-local.
+Use only when the user explicitly authorizes managed continuation. Increase autonomous progress without becoming another project workflow or authority owner.
 
-## Establish the run
+## Qualify the run
 
-Require explicit managed-continuation authority and one focused, ready Change. Read nearest project instructions, relevant context, current RSP status, the sibling Group Brief when present, the Change, relevant durable authority, and the current worktree.
+Require one focused, ready Change. Read user authority, nearest instructions and context, the Group Brief when present, the Change, relevant Specs and Decisions, current RSP status, and the worktree.
 
-Name the allowed mutation scope, required verification, external actions, environment or human acceptance, and a finite run budget before execution. When the user sets no tighter budget, use at most three dispatches and one corrective retry per dispatch. Preserve unrelated work.
+Before any mutation, classify eligibility. This gate overrides a request to use managed continuation on ineligible work. Manage only work with at least two non-overlapping mutation scopes with independent verification, genuinely long authorized continuation, or interruption recovery whose stale-evidence cost justifies orchestration. Return ordinary single-slice or tightly coupled work to the exact Core or Discipline next action. Do not create a dispatch envelope, receipt, budget, or controller state for declined work.
 
-Choose the lightest depth that can finish the authorized work:
+If the work is ineligible, stop without modifying files and report the next action without executing it. Return immediately. Never execute, route to, or begin that next action in this invocation.
+Host worker capability does not make ineligible work managed.
 
-- **direct:** one small action in the current context;
-- **assisted:** one bounded capability or worker;
-- **managed:** at least two independently bounded slices, or recovery from an interrupted run.
+Name allowed mutations, required verification, unavailable acceptance, and external-action boundaries. Default to four dispatches and one corrective retry for the whole run unless the user sets a tighter budget. Preserve unrelated work.
 
-Subagents and proprietary resume features are optional accelerators. Execute directly when the host lacks them; capability availability never changes authority or completion evidence.
+## Dispatch bounded slices
 
-## Dispatch an envelope
-
-For each assisted or managed slice, provide one dispatch envelope:
+For each eligible slice provide:
 
 ```md
 ## Dispatch Envelope
@@ -39,47 +35,23 @@ For each assisted or managed slice, provide one dispatch envelope:
 - Mutation: <exact allowed paths or read-only>
 - Verification: <commands and acceptance evidence>
 - Stop: <ambiguity, failure, environment, human, or external-action boundary>
-- Budget: <dispatch and retry allowance>
+- Budget: <remaining dispatch and retry allowance>
 ```
 
-Keep overlapping mutation scopes sequential. Parallelize only independent scopes with independent verification. A worker returns evidence to this controller; it does not gain focus, lifecycle, Git, publication, approval, or cleanup authority.
+Parallelize only non-overlapping mutation scopes with independent verification. Keep overlapping mutations or dependent verification sequential. A worker receives no focus, lifecycle, Git, publication, approval, cleanup, or durable-write authority. Worker capability is optional; execute the same envelope locally when unavailable.
 
-After every return, inspect the actual diff and fresh verification output. Reclassify new unexplained failures to diagnosis, clear behavior gaps to TDD, fixed-scope review requests to review, and accepted findings to review resolution. Select capabilities only when available; otherwise perform the same bounded procedure directly. Spend one retry only when new evidence identifies a corrective action inside the same envelope.
+## Continue on evidence
 
-Complete a slice only when its output exists, its required checks are freshly observed, omissions are named, and the selected Change still owns the result. Continue to the next ready slice while budget and authority remain.
+After every return, inspect the actual diff and fresh verification output. Complete a slice only when its output exists, its required checks are freshly observed, omissions are named, and the Change still owns the result. Continue only after positive progress. Continue to the next ready slice while budget and authority remain.
+
+Spend at most one default corrective retry for the whole run, and only when new evidence identifies an in-scope correction. Otherwise stop; never hide repeated failure behind another dispatch. Select an existing Diagnose, TDD, Implement, Review, or Address Review capability only when it is the required bounded next action, without reproducing its procedure.
 
 ## Recover from interruption
 
-Treat any handoff as transient pointers, not project truth. Resume by rereading user authority, nearest instructions, focus, Group Brief, Change, status, worktree, and referenced evidence. Compare them with the handoff; mark changed or unverifiable completion and verification claims pending.
-
-Use a compact response receipt as the default recovery surface. Save one outside `.rsp/` only when the user authorizes a temporary artifact and the project ignores it. Never create a durable controller status, retry graph, or parallel lifecycle.
+Treat any handoff as transient pointers, not project truth. Resume by rereading user authority, nearest instructions, focus, Group Brief, Change, status, worktree, and referenced evidence. Compare current facts with the handoff and mark changed or unverifiable completion and verification claims pending. Never create a durable controller status, retry graph, or parallel lifecycle.
 
 ## Stop at the real boundary
 
-Stop when one of these owns the next action:
+Stop when a material owner decision is unresolved; a required service, credential, device, environment, or human acceptance is unavailable; Git, publication, deployment, deletion, approval, or other external-action authority is absent; verification lacks an evidenced in-scope correction; authority or worktree evidence drifts; or the finite budget is exhausted. Return rather than route around the boundary.
 
-- a material product or design decision needs the user;
-- mutation, lifecycle, Git, publication, deployment, deletion, approval, or other external-action authority is absent or belongs to a project/host adapter;
-- a required service, credential, device, environment, or human acceptance is unavailable;
-- verification fails without an evidenced correction inside the current envelope;
-- the worktree or authoritative artifact changed outside the envelope;
-- the finite dispatch, retry, time, or context budget is exhausted.
-
-Return rather than route around the boundary. Durable current facts and lasting rationale go to their existing Spec, scoped instruction, or Decision Record owner through the normal RSP durable decision; the controller never promotes them automatically.
-
-## Return the receipt
-
-```md
-## Management Receipt
-- WorkRef: <focused Change>
-- Depth: <direct | assisted | managed>
-- Completed: <slices with fresh evidence>
-- Pending: <slices or stale claims>
-- Verification: <command, scope, result, and omissions>
-- Budget: <dispatches and retries used/remaining>
-- Boundary: <owner and evidence, or none>
-- Next action: <one bounded action>
-- Durable owner: <Change, Spec, Decision, project instruction, or none>
-```
-
-Completion requires every authorized slice to satisfy its checkable Change contract and every omitted environment or human gate to remain explicit. This receipt grants no archive or delivery authority.
+Return completed and pending slices, fresh verification and omissions, budget used and remaining, the boundary owner, one next action, and any candidate durable owner. This receipt grants no archive or delivery authority. Durable facts still use Core's normal artifact-routing decision.

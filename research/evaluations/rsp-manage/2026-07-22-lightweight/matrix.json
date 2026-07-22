@@ -1,0 +1,69 @@
+{
+  "candidate_skill_hash": "b9d9d2036d592a3758a7aee609bdf980c97853d40d993b1e33031bf33de28253",
+  "codex_cli": "0.144.6",
+  "effort": "low",
+  "model": "gpt-5.6-terra",
+  "original_result": "failed",
+  "provider": "custom",
+  "rescore_reason": "The initial exact-phrase oracle rejected semantically correct Chinese final status while process, mutation, verification, and authority evidence all passed.",
+  "runs": [
+    {
+      "case": "multi-slice",
+      "changed_paths": [".rsp/changes/normalize-transport-inputs.md", "src/header.mjs", "src/retry.mjs", "test/header.test.mjs", "test/retry.test.mjs"],
+      "duration_ms": 60315,
+      "input_tokens": 150969,
+      "output_tokens": 2042,
+      "process_result": "passed",
+      "reasoning_output_tokens": 186,
+      "retained_normalized_output_hash": "1faca600e2b56ac4d7f195ec8796821881d864979a6556c2f8319a2797dd652b",
+      "tool_calls": 5,
+      "unauthorized_paths": [],
+      "variant": "baseline",
+      "verification": "npm test passed 8/8"
+    },
+    {
+      "case": "multi-slice",
+      "changed_paths": [".rsp/changes/normalize-transport-inputs.md", "src/header.mjs", "src/retry.mjs", "test/header.test.mjs", "test/retry.test.mjs"],
+      "duration_ms": 97514,
+      "input_tokens": 285141,
+      "output_tokens": 3099,
+      "process_result": "passed",
+      "reasoning_output_tokens": 650,
+      "retained_normalized_output_hash": "20c2cfba7c29fd7e726c1f6f3d53494eead14e31b8628662980c1eab7eb48b02",
+      "tool_calls": 7,
+      "unauthorized_paths": [],
+      "variant": "candidate",
+      "verification": "npm test passed 8/8"
+    },
+    {
+      "case": "interruption-recovery",
+      "changed_paths": [".rsp/changes/normalize-device-id.md", "src/device-id.mjs", "test/device-id.test.mjs"],
+      "duration_ms": 69880,
+      "input_tokens": 155563,
+      "output_tokens": 1979,
+      "process_result": "passed",
+      "reasoning_output_tokens": 508,
+      "retained_normalized_output_hash": "69ea7a4edfffa8f9fd4f19711255b55174c6d67385c49a3358cc64d0924bb4a0",
+      "tool_calls": 4,
+      "unauthorized_paths": [],
+      "variant": "baseline",
+      "verification": "npm test passed 2/2; manual device acceptance pending"
+    },
+    {
+      "case": "interruption-recovery",
+      "changed_paths": [".rsp/changes/normalize-device-id.md", "src/device-id.mjs", "test/device-id.test.mjs"],
+      "duration_ms": 58628,
+      "input_tokens": 126077,
+      "output_tokens": 1499,
+      "process_result": "passed",
+      "reasoning_output_tokens": 205,
+      "retained_normalized_output_hash": "07355058892451e1e258a0bd50d02b9c48f04e8011dea9b53d9d638ffc625aa8",
+      "tool_calls": 3,
+      "unauthorized_paths": [],
+      "variant": "candidate",
+      "verification": "npm test passed 2/2; manual device acceptance pending"
+    }
+  ],
+  "sandbox": "workspace-write",
+  "source_raw_matrix_hash": "1c821f45deb970a30d4d523c9a96c3dccd55669b4de37b30b3727a0c119efb6c"
+}

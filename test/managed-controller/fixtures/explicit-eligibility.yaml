@@ -1,0 +1,12 @@
+id: explicit-eligibility
+evidence:
+  - The user explicitly authorizes continued completion of one focused ready Change with genuinely independent slices.
+required_contract:
+  - Use only when the user explicitly authorizes managed continuation
+  - Require one focused, ready Change
+  - at least two non-overlapping mutation scopes with independent verification
+  - interruption recovery whose stale-evidence cost justifies orchestration
+prohibited_actions:
+  - implicit managed invocation
+  - management of ordinary single-slice work
+  - implicit lifecycle mutation

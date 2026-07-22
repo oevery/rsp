@@ -1,0 +1,12 @@
+id: ordinary-restraint
+evidence:
+  - One slice or tightly coupled changes share mutation and verification scope.
+required_contract:
+  - Return ordinary single-slice or tightly coupled work to the exact Core or Discipline next action
+  - If the work is ineligible, stop without modifying files and report the next action without executing it
+  - Do not create a dispatch envelope, receipt, budget, or controller state for declined work
+  - Host worker capability does not make ineligible work managed
+prohibited_actions:
+  - direct mode
+  - assisted mode
+  - management overhead for ordinary work

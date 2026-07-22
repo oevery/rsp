@@ -1,0 +1,7 @@
+id: interruption-recovery
+expected_output:
+  - 人工验收
+  - 尚未执行
+forbidden_output:
+  - 人工验收已通过
+  - committed the changes

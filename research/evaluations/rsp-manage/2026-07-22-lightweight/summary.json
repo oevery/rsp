@@ -1,0 +1,22 @@
+{
+  "aggregate": {
+    "baseline": { "duration_ms": 130195, "input_tokens": 306532, "output_tokens": 4021, "tool_calls": 9 },
+    "candidate": { "duration_ms": 156142, "input_tokens": 411218, "output_tokens": 4598, "tool_calls": 10 },
+    "candidate_overhead_pct": { "duration": 19.93, "input_tokens": 34.15, "output_tokens": 14.35 }
+  },
+  "ordinary_restraint": {
+    "changed_paths": [],
+    "duration_ms": 26304,
+    "input_tokens": 97713,
+    "output_tokens": 759,
+    "result": "passed",
+    "tool_calls": 3
+  },
+  "recommendation": "revise",
+  "unauthorized_actions": 0,
+  "worker_forward_test": {
+    "header": "2/2 focused tests passed; only src/header.mjs changed",
+    "retry": "4/4 focused tests passed; only src/retry.mjs and test/retry.test.mjs changed",
+    "integrated": "npm test passed 6/6; no cross-slice mutation"
+  }
+}

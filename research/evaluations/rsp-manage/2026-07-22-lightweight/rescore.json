@@ -1,0 +1,48 @@
+{
+  "original_matrix_hash": "e6f83ee88e87d6a58a7d83899c12c4b699548a1cb2eb6561054f2fd9fc5bf6d3",
+  "reason": "The initial exact-phrase oracle rejected semantically correct Chinese final status while process, mutation, verification, and authority evidence all passed.",
+  "result": "passed",
+  "runs": [
+    {
+      "case": "multi-slice",
+      "output": {
+        "expected_missing": [],
+        "forbidden_present": []
+      },
+      "retained_hash_matches": true,
+      "result": "passed",
+      "variant": "baseline"
+    },
+    {
+      "case": "multi-slice",
+      "output": {
+        "expected_missing": [],
+        "forbidden_present": []
+      },
+      "retained_hash_matches": true,
+      "result": "passed",
+      "variant": "candidate"
+    },
+    {
+      "case": "interruption-recovery",
+      "output": {
+        "expected_missing": [],
+        "forbidden_present": []
+      },
+      "retained_hash_matches": true,
+      "result": "passed",
+      "variant": "baseline"
+    },
+    {
+      "case": "interruption-recovery",
+      "output": {
+        "expected_missing": [],
+        "forbidden_present": []
+      },
+      "retained_hash_matches": true,
+      "result": "passed",
+      "variant": "candidate"
+    }
+  ],
+  "source_raw_matrix_hash": "1c821f45deb970a30d4d523c9a96c3dccd55669b4de37b30b3727a0c119efb6c"
+}

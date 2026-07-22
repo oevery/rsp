@@ -16,6 +16,11 @@ function assertStringArray(value, label) {
     throw new Error(`${label} must be a non-empty string array`)
 }
 
+function assertArray(value, label) {
+  if (!Array.isArray(value) || value.some(item => typeof item !== 'string' || item.length === 0))
+    throw new Error(`${label} must be a string array`)
+}
+
 function assertContained(parent, child, label) {
   const root = resolve(parent)
   const target = resolve(child)
@@ -170,9 +175,25 @@ function readHoldout(root, caseId) {
   const manifest = parseYaml(readFileSync(join(directory, 'case.yaml'), 'utf8'))
   if (!manifest || manifest.id !== caseId || typeof manifest.request !== 'string')
     throw new Error(`invalid holdout manifest: ${caseId}`)
-  for (const field of ['allowed_changes', 'verification', 'expected_output', 'forbidden_output'])
+  assertArray(manifest.allowed_changes, `${caseId}.allowed_changes`)
+  for (const field of ['verification', 'expected_output', 'forbidden_output'])
     assertStringArray(manifest[field], `${caseId}.${field}`)
+  if (!['decline', 'execute'].includes(manifest.expected_mode ?? 'execute'))
+    throw new Error(`${caseId}.expected_mode must be decline or execute`)
   return { directory, manifest }
+}
+
+function readRetainedScoringManifest(root, matrixPath, caseId) {
+  const retainedPath = join(dirname(matrixPath), 'oracles', `${caseId}.yaml`)
+  if (!existsSync(retainedPath))
+    return readHoldout(root, caseId).manifest
+  assertSafeFile(join(dirname(matrixPath), 'oracles'), retainedPath, `retained oracle ${caseId}`)
+  const manifest = parseYaml(readFileSync(retainedPath, 'utf8'))
+  if (!manifest || manifest.id !== caseId)
+    throw new Error(`invalid retained oracle: ${caseId}`)
+  for (const field of ['expected_output', 'forbidden_output'])
+    assertStringArray(manifest[field], `${caseId}.${field}`)
+  return manifest
 }
 
 export function scoreManagedControllerOutput(manifest, final) {
@@ -263,10 +284,13 @@ export async function runManagedControllerEvaluation({ caseId, codexBin = 'codex
   const final = existsSync(finalPath) ? readFileSync(finalPath, 'utf8') : ''
   const output = scoreManagedControllerOutput(prepared.manifest, final)
   const events = summarizeEvents(executed.stdout)
+  const verificationAccepted = prepared.manifest.expected_mode === 'decline'
+    ? paths.length === 0
+    : verification.passed
   const result = executed.code === 0
     && !executed.timedOut
     && unauthorized.length === 0
-    && verification.passed
+    && verificationAccepted
     && output.expected_missing.length === 0
     && output.forbidden_present.length === 0
     && sourceHash === hashTree(candidateRoot(root))
@@ -308,7 +332,7 @@ async function main() {
     const matrix = JSON.parse(readFileSync(matrixPath, 'utf8'))
     const runs = matrix.runs.map((run) => {
       const caseId = run.case_id ?? run.case
-      const { manifest } = readHoldout(root, caseId)
+      const manifest = readRetainedScoringManifest(root, matrixPath, caseId)
       const finalPath = run.paths?.final ?? join(dirname(matrixPath), 'outputs', `${caseId}-${run.variant}.md`)
       const final = readFileSync(finalPath, 'utf8')
       const retainedHashMatches = !run.retained_normalized_output_hash
