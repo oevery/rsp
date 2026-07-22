@@ -60,7 +60,7 @@ function hashTree(directory) {
 function readPublishedSkillEvidence(root) {
   const packageJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))
   const inventory = readdirSync(join(root, 'skills'), { withFileTypes: true })
-    .filter(entry => entry.isDirectory())
+    .filter(entry => entry.isDirectory() && PUBLISHED_SKILLS.includes(entry.name))
     .map(entry => entry.name)
     .sort()
   return {

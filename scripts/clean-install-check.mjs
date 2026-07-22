@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url'
 import { parse as parseYaml } from 'yaml'
 
 const EXPECTED_SKILLS = [
+  'prepare-release-notes',
   'rsp',
   'rsp-address-review',
   'rsp-design',
@@ -23,6 +24,10 @@ const EXPECTED_DESIGN_REFERENCES = [
   'domain-modeling.md',
   'module-seams.md',
   'reversible-exploration.md',
+]
+const EXPECTED_RELEASE_REFERENCES = [
+  'convention-discovery.md',
+  'output-contracts.md',
 ]
 const FORBIDDEN_PACKAGE_ROOTS = ['.agents', '.cache', '.rsp', 'research', 'scripts']
 const PORTABLE_FRONTMATTER_KEYS = new Set(['description', 'license', 'metadata', 'name'])
@@ -161,6 +166,10 @@ function main() {
     if (JSON.stringify(designReferences) !== JSON.stringify(EXPECTED_DESIGN_REFERENCES))
       fail(`rsp-design reference inventory mismatch: ${designReferences.join(', ')}`)
 
+    const releaseReferences = readdirSync(join(skillRoot, 'prepare-release-notes', 'references')).sort()
+    if (JSON.stringify(releaseReferences) !== JSON.stringify(EXPECTED_RELEASE_REFERENCES))
+      fail(`prepare-release-notes reference inventory mismatch: ${releaseReferences.join(', ')}`)
+
     const installedFiles = walkNoSymlinks(installedRoot)
       .map(path => relative(installedRoot, path).split(sep).join('/'))
       .sort()
@@ -171,6 +180,7 @@ function main() {
         skills: installedSkills,
       },
       package: `${packResult.name}@${packResult.version}`,
+      prepareReleaseNotesReferences: releaseReferences,
       rspDesignReferences: designReferences,
       tarballSha256: createHash('sha256').update(readFileSync(tarball)).digest('hex'),
     }

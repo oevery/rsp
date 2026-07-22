@@ -11,6 +11,7 @@ const addressReviewSkill = join(root, 'skills', 'rsp-address-review')
 const diagnoseSkill = join(root, 'skills', 'rsp-diagnose')
 const tddSkill = join(root, 'skills', 'rsp-tdd')
 const designSkill = join(root, 'skills', 'rsp-design')
+const releaseNotesSkill = join(root, 'skills', 'prepare-release-notes')
 const portableKeys = new Set([
   'description',
   'license',
@@ -127,6 +128,10 @@ describe('rsp Skill contract', () => {
     expectPortableSkill(designSkill)
   })
 
+  it('publishes a portable canonical release-documentation Skill', () => {
+    expectPortableSkill(releaseNotesSkill)
+  })
+
   it('publishes the complete assisted suite while keeping research outside package roots', () => {
     const packageJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as { files: string[] }
     const publishedSkills = readdirSync(join(root, 'skills'))
@@ -140,5 +145,6 @@ describe('rsp Skill contract', () => {
     expect(publishedSkills).toContain('rsp-diagnose')
     expect(publishedSkills).toContain('rsp-tdd')
     expect(publishedSkills).toContain('rsp-design')
+    expect(publishedSkills).toContain('prepare-release-notes')
   })
 })

@@ -119,7 +119,7 @@ Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENT
 
 ## Skills
 
-RSP 发布八个宿主无关、按需加载的 Skills：
+RSP 发布九个宿主无关、按需加载的 Skills：
 
 - `rsp`：setup、workflow、durable review 和 archive 指导。
 - `rsp-shape`：在不实现代码的前提下，将不清晰的非平凡工作塑造成一个 ready Change 或合理的 shallow Group；当用户明确要求严格质询或高风险决策仍未解决时，渐进加载 deep clarification，并让关键设计问题通过同一个 WorkRef 返回。
@@ -129,12 +129,13 @@ RSP 发布八个宿主无关、按需加载的 Skills：
 - `rsp-tdd`：让一个清晰行为经过 observed RED、minimal GREEN、可选 safe REFACTOR 与 fresh verification。
 - `rsp-review`：基于固定范围与项目权威，对 Code、Document 或 mixed Change 进行只读审查。
 - `rsp-address-review`：处置固定 review findings，仅修复已授权且 accepted 的 finding，并要求 fresh verification 与 report-only re-review。
+- `prepare-release-notes`：根据证据准备或审计 Changelog、Release Notes 和 Migration Notes，并适配用户要求与仓库现有约定。
 
 每个 Skill 都可以独立调用，并把结果返回现有项目或 RSP artifact owner。套件不引入隐藏 workflow state 或递归 Skill 编排，也不会由任何 Skill 推断 commit、push 或 publication 权限。
 
-3.0 产品面是这八个 Skills。五个 same-case terminal journeys 已验证 Shape progressive depth，同时保留 owner、environment 和 acceptance stop。RSP 内置有边界的 artifact routing 与 response continuation；长时 managed orchestration 仍由 host 或 external workflow 显式组合，并且必须重新读取当前 RSP artifacts、保留其 ownership，在 mutation、Git、publication、environment 或 human-decision authority 边界停止。已评估的 `rsp-manage` prototype 保留在 research 中，recommendation 为 `revise`，不会作为 RSP capability 安装或发布。
+3.0 产品面是这九个 Skills。五个 same-case terminal journeys 已验证 Shape progressive depth，同时保留 owner、environment 和 acceptance stop。RSP 内置有边界的 artifact routing、response continuation 与 evidence-based release documentation；长时 managed orchestration 仍由 host 或 external workflow 显式组合，并且必须重新读取当前 RSP artifacts、保留其 ownership，在 mutation、Git、publication、environment 或 human-decision authority 边界停止。已评估的 `rsp-manage` prototype 保留在 research 中，recommendation 为 `revise`，不会作为 RSP capability 安装或发布。
 
-完成一个 tracked Change 时，应按证据组合套件：`rsp-shape` 返回可执行 Change，并把一个关键设计问题交给 `rsp-design`；`rsp-design` 把证据、建议、备选方案和已授权的 planned-design 更新返回同一个 WorkRef；Core 把 unexplained failure 路由到 `rsp-diagnose`，把清晰的 test-first 行为路由到 `rsp-tdd`，把已有证据的修改路由到 `rsp-implement`；`rsp-review` 返回只读报告；`rsp-address-review` 处置 finding；最后由 `rsp` 在 archive 前把 implemented current facts、lasting rationale、项目自有 context/instructions 与 temporary continuation 路由到各自已有的 semantic owner。每个 discipline 都返回同一个 Change。遇到歧义、失败门禁、缺失权限或超出范围的 Git conflict 时，流程停在现有 owner；任何 Skill 都不会推断 Git continuation、commit、delivery 权限或自动重试。
+完成一个 tracked Change 时，应按证据组合套件：`rsp-shape` 返回可执行 Change，并把一个关键设计问题交给 `rsp-design`；`rsp-design` 把证据、建议、备选方案和已授权的 planned-design 更新返回同一个 WorkRef；Core 把 unexplained failure 路由到 `rsp-diagnose`，把清晰的 test-first 行为路由到 `rsp-tdd`，把已有证据的修改路由到 `rsp-implement`；`rsp-review` 返回只读报告；`rsp-address-review` 处置 finding；`prepare-release-notes` 把已确认的 release range 投影为职责不同的 Changelog、Release Notes 和 Migration Notes，但不推断 publication authority；最后由 `rsp` 在 archive 前把 implemented current facts、lasting rationale、项目自有 context/instructions 与 temporary continuation 路由到各自已有的 semantic owner。每个 discipline 都返回现有 owner。遇到歧义、失败门禁、缺失权限或超出范围的 Git conflict 时，流程停在该 owner；任何 Skill 都不会推断 Git continuation、commit、delivery 权限或自动重试。
 
 文档分层矩阵：
 
@@ -150,6 +151,7 @@ RSP 发布八个宿主无关、按需加载的 Skills：
 | `skills/rsp-tdd/SKILL.md` | agent | 以 test-first 方式实现一个清晰行为 |
 | `skills/rsp-review/SKILL.md` | agent | Code 与 Document 只读审查 |
 | `skills/rsp-address-review/SKILL.md` | agent | 处置 review findings 并返回可恢复 continuation |
+| `skills/prepare-release-notes/SKILL.md` | agent | 准备或审计符合项目约定的发布文档 |
 | `AGENTS.md` | 人类与 agent | 有作用域的项目指令与 RSP 导航入口 |
 
 通常应由人先读 `README.md`；agent 应遵循 nearest `AGENTS.md`，可用时加载 `rsp` skill，仅在 skill 不可用时读取 `.rsp/rsp-rules.md`。

@@ -65,7 +65,7 @@ describe('native-design composition terminal evaluator', () => {
     }
   })
 
-  it('binds retained execution evidence to all current published Skills', () => {
+  it('binds retained execution evidence to the assisted-engineering Skill suite', () => {
     const metadata = JSON.parse(readFileSync(join(retainedRun, 'metadata.json'), 'utf8')) as { package: Record<string, any> }
     const accepted = validateCurrentNativeDesignArtifact(root, metadata.package)
     const driftedExecutedSkill = structuredClone(metadata.package)

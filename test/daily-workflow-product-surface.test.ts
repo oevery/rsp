@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const stableSkills = [
+  'prepare-release-notes',
   'rsp',
   'rsp-address-review',
   'rsp-design',
@@ -20,7 +21,7 @@ function read(path: string): string {
 }
 
 describe('3.0 daily-workflow product surface', () => {
-  it('keeps native design and progressive shaping depth inside the eight-Skill suite', () => {
+  it('keeps native design, progressive shaping depth, and release documentation inside the nine-Skill suite', () => {
     expect(readdirSync(join(root, 'skills')).sort()).toEqual(stableSkills)
 
     const shape = read('skills/rsp-shape/SKILL.md')
@@ -33,8 +34,8 @@ describe('3.0 daily-workflow product surface', () => {
     const readme = read('README.md')
     const readmeZh = read('README.zh-CN.md')
     const design = read('.rsp/specs/design.md')
-    expect(readme).toContain('The 3.0 product surface is these eight Skills.')
-    expect(readmeZh).toContain('3.0 产品面是这八个 Skills。')
+    expect(readme).toContain('The 3.0 product surface is these nine Skills.')
+    expect(readmeZh).toContain('3.0 产品面是这九个 Skills。')
     expect(readmeZh).toContain('返回同一个 WorkRef')
     expect(design).toContain('Same-case terminal evidence qualifies the deep branch')
     expect(readme).toContain('Five same-case terminal journeys qualify Shape')

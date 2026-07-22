@@ -4,7 +4,7 @@ summary: Completed RSP changes.
 kind: generated-index
 index_type: archives
 source_dir: .rsp/archives
-entry_count: 60
+entry_count: 61
 ---
 
 # Archive Index
@@ -39,6 +39,7 @@ entry_count: 60
 | 2026-07-22 | fix-clean-install-npm10-json | fix | Make the clean-install release gate tolerate npm 10 pack lifecycle output on supported Node 18 and 20 runtimes |
 | 2026-07-22 | fix-native-composition-retained-gate | fix | Bind retained native composition evidence to current product artifacts and auditable durable output |
 | 2026-07-22 | fix-native-durable-semantic-oracle | fix | Reject contradictory ownership in retained durable composition evidence |
+| 2026-07-22 | prepare-release-notes-skill | feature | Add a host-neutral RSP Skill that prepares and audits evidence-based changelogs, release notes, and migration notes while adapting to user and repository conventions. |
 | 2026-07-21 | 3-0-skill-readiness/brief | group | — |
 | 2026-07-21 | 3-0-skill-readiness/close-review-resolution-handoff | feature | Add a host-neutral review-resolution capability that disposes fixed findings, corrects accepted findings under explicit authority, requires verification and re-review, and returns a recoverable handoff when interrupted. |
 | 2026-07-21 | 3-0-skill-readiness/integrate-diagnosis-tdd-routing | feature | Add deterministic, host-neutral routing from implementation evidence to diagnosis, TDD, or ordinary implementation. |

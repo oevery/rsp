@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const expectedSkills = [
+  'prepare-release-notes',
   'rsp',
   'rsp-address-review',
   'rsp-design',
@@ -37,7 +38,13 @@ describe('clean install package check', () => {
         'module-seams.md',
         'reversible-exploration.md',
       ])
+      expect(report.prepareReleaseNotesReferences).toEqual([
+        'convention-discovery.md',
+        'output-contracts.md',
+      ])
       expect(report.inventory.files).toContain('skills/rsp-design/SKILL.md')
+      expect(report.inventory.files).toContain('skills/prepare-release-notes/SKILL.md')
+      expect(report.inventory.files).toContain('skills/prepare-release-notes/references/output-contracts.md')
       expect(report.inventory.files.some((path: string) => /^(?:research|\.rsp|\.agents|scripts|\.cache)(?:\/|$)/u.test(path))).toBe(false)
       expect(readdirSync(temporaryRoot)).toEqual([])
     }
