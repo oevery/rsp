@@ -243,7 +243,7 @@ describe('documentation command examples', () => {
 
     const custom = metadata.metadata as Record<string, unknown>
     expect(custom.author).toBe('oevery')
-    expect(custom.version).toBe('2026.07.22')
+    expect(custom.version).toBe('2026.07.22.2')
     expect(Object.values(custom).every(value => typeof value === 'string')).toBe(true)
     expect(custom.version).toMatch(/^\d{4}\.\d{2}\.\d{2}(?:\.\d+)?$/)
   })
@@ -289,7 +289,7 @@ describe('documentation command examples', () => {
     expect(skill).toContain('only when the user explicitly wants RSP tracking for a small, straightforward change')
     expect(skill).toContain('metadata:')
     expect(skill).toContain('author: oevery')
-    expect(skill).toContain('version: "2026.07.22"')
+    expect(skill).toContain('version: "2026.07.22.2"')
     expect(skill).toContain('Resolve executable Change names as either `<change>` or one direct `<group>/<change>` child.')
     expect(skill).toContain('Treat logical `<group>/brief`, physically stored as `<group>/00-brief.md`, as non-executable and non-focusable.')
     expect(rules).toContain('With no focus, status uses Group Brief declaration order and derived blockers to recommend the first executable slice.')
@@ -316,18 +316,17 @@ describe('documentation command examples', () => {
     expect(skill).not.toContain('Minimal example:')
   })
 
-  it('documents the minimal durable decision example and surface matrix', () => {
+  it('documents the localized durable decision contract and surface matrix', () => {
     const root = fileURLToPath(new URL('..', import.meta.url))
     const skill = readFileSync(join(root, 'skills', 'rsp', 'SKILL.md'), 'utf-8')
     const readme = readFileSync(join(root, 'README.md'), 'utf-8')
     const zhReadme = readFileSync(join(root, 'README.zh-CN.md'), 'utf-8')
     const projectDesign = readFileSync(join(root, '.rsp', 'specs', 'design.md'), 'utf-8')
 
-    expect(skill).toContain('Use this exact format:')
-    expect(skill).toContain('- Current-fact target: <exact file path or N/A>')
-    expect(skill).toContain('Short example:')
-    expect(skill).toContain('- Current-fact target: .rsp/specs/design.md')
-    expect(skill).toContain('Default API retries are capped at 3 attempts.')
+    expect(skill).toContain('Use these semantic fields in this exact order.')
+    expect(skill).toContain('Localize the heading and human-facing labels to the response language')
+    expect(skill).toContain('- <localized Current-fact target label>: <exact file path or N/A>')
+    expect(skill).not.toContain('Short example:')
     expect(skill).toContain('Treat `doctor --fix` `fixed` entries as actual filesystem changes')
     expect(skill).toContain('An empty `fixed` array or `No safe fixes needed.` means the repair pass changed nothing.')
     expect(readme).toContain('Surface matrix:')

@@ -4,7 +4,7 @@ description: Use this skill when initializing RSP, operating an existing .rsp pr
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.22"
+  version: "2026.07.22.2"
 ---
 
 # RSP Skill
@@ -15,7 +15,7 @@ This skill is the preferred operational guide. `.rsp/rsp-rules.md` is the only r
 
 Prefer exact file paths, exact commands, and exact durable facts over vague summaries.
 
-Write artifact prose in the language explicitly requested by the user. Otherwise follow the nearest project instructions, then the existing artifact's language, then the conversation language. Preserve canonical RSP headings, keywords, identifiers, and commands unchanged.
+Choose response language and artifact language independently. Render human-facing response headings, field labels, explanations, and conclusions in the language explicitly requested for the response; otherwise follow response-specific project instructions, then the conversation language. Write artifact prose in the language explicitly requested for that artifact; otherwise follow artifact-specific project instructions, then the existing artifact's language, then the conversation language. Preserve canonical RSP artifact headings, keywords, identifiers, paths, commands, and machine-consumed values unchanged. Response-only Continuation and Durable Decision headings and labels are not canonical artifact headings and must be localized.
 
 ## When to use
 
@@ -43,6 +43,12 @@ When work has reached implementation, classify the decisive evidence before sele
 
 Diagnosis takes precedence over TDD: do not encode an unexplained symptom as a guessed regression test. Each branch returns its evidence, Tasks, Verify updates, and unresolved Blockers to the same selected Change. Capability availability changes execution assistance, not the owner or required outcome.
 
+### Route release documentation
+
+Use the release-documentation branch only when the selected Change explicitly owns a confirmed release identity or range and still has unfinished changelog, release-note, or migration work. Lifecycle stage, completed implementation, or archive readiness alone is insufficient; ordinary Changes continue to the Core durable decision.
+
+When both conditions hold, select `rsp-release-docs` when available. Otherwise use the manual release-documentation fallback against the same Change: confirm the release range and audience, build one net-release evidence ledger, and project it into the repository-owned changelog, release notes, and applicable migration guidance. This route prepares or audits documentation only; it does not grant commit, tag, push, release creation, publication, deployment, or approval authority.
+
 Apply these gates in order:
 
 1. If authority, selection, or a material owner decision is ambiguous, return the one decision or evidence needed to proceed. If a declared blocker prevents the next operation, return its owning artifact or person; do not route around it.
@@ -51,7 +57,8 @@ Apply these gates in order:
 4. If the user or Shape has isolated one material domain, module/seam, or evidence-seeking design question for the selected Change, select `rsp-design` when available; otherwise return the compact manual design fallback: inspect project authority and the live path, compare credible alternatives, separate evidence from owner choice, and return the result to the same WorkRef without implementation or durable-truth mutation.
 5. If the selected Change is not shape-ready and no bounded design question has been isolated, select `rsp-shape` under the same authority rule or give the manual fallback of completing its Proposal, Spec, Design, Tasks, Verify, and Blockers.
 6. If a shape-ready Change has incomplete implementation tasks, or its required verification is missing, stale, or failed, apply the implementation-evidence routing above. Select only its resulting available capability when authorized; otherwise name its manual fallback owned by that Change.
-7. If required Tasks and verification pass with no blocker, perform the Core durable decision. Archive only after required current facts and rationale are written or explicitly judged unnecessary.
+7. If implementation Tasks and required verification pass with no blocker, and the selected Change meets both release-documentation conditions above, select `rsp-release-docs` under the same availability rule or use its manual fallback. Return its evidence and artifact dispositions to the same Change.
+8. Otherwise, when required Tasks and verification pass with no blocker, perform the Core durable decision. Archive only after required current facts and rationale are written or explicitly judged unnecessary.
 
 State the derived stage, one next action, required input, returned owner, and decisive evidence. Name at most one available optional capability. Only name an optional capability when it is the one next action, and treat it as available only when it appears in the host's loaded skill inventory. Missing optional capabilities never invalidate RSP; always provide the manual fallback against the same owner.
 
@@ -105,15 +112,17 @@ Use one semantic routing matrix throughout shaping, execution, and pre-archive r
 When accepted work remains, return this compact artifact-scoped continuation in the response:
 
 ```md
-## RSP Continuation
-- WorkRef: <selected Change>
-- Authority: <project, Change, Spec, decision, or report pointers>
-- Current state: <completed, partial, failed, unavailable, or blocked plus decisive state>
-- Changed artifacts: <paths or none>
-- Fresh verification: <command and result, or pending reason>
-- Blockers: <exact blocker and owner, or none>
-- Next action: <smallest bounded action and owner>
+## <localized RSP Continuation heading>
+- <localized WorkRef label>: <selected Change>
+- <localized Authority label>: <project, Change, Spec, decision, or report pointers>
+- <localized Current state label>: <completed, partial, failed, unavailable, or blocked plus decisive state>
+- <localized Changed artifacts label>: <paths or none>
+- <localized Fresh verification label>: <command and result, or pending reason>
+- <localized Blockers label>: <exact blocker and owner, or none>
+- <localized Next action label>: <smallest bounded action and owner>
 ```
+
+Treat this continuation shape as semantic field order rather than fixed English wording. Localize its human-facing title and labels to the response language while preserving WorkRefs, paths, commands, identifiers, and machine-consumed values. A localized label may retain a technical token in parentheses but must not use that English token alone; for example, use `工作引用（WorkRef）` in a Chinese response. Do not use the response language to rewrite referenced project artifact prose.
 
 The continuation points to existing owners; it is not a second state store. On resume, reopen every authority pointer, inspect worktree and artifact drift, and refresh any verification supporting the next action. Never create hidden handoff/controller state or persist the continuation without explicit path authority.
 
@@ -180,35 +189,22 @@ Write stable facts or lasting rationale, not narrative history, task-by-task not
 
 ## Output template
 
-Use this exact format:
+Use these semantic fields in this exact order. Localize the heading and human-facing labels to the response language; preserve the decision values shown in angle brackets as canonical values.
 
 ```md
-## Durable Decision
-- Current facts: <No current-fact update needed | Update existing spec or scoped instruction | Create a new durable spec>
-- Current-fact target: <exact file path or N/A>
-- Facts to write:
+## <localized Durable Decision heading>
+- <localized Current facts label>: <No current-fact update needed | Update existing spec or scoped instruction | Create a new durable spec>
+- <localized Current-fact target label>: <exact file path or N/A>
+- <localized Facts to write label>:
   - <durable fact or none>
-- Decision Record: <No Decision Record needed | Create or update a Decision Record>
-- Decision Record target: <exact file path or N/A>
-- Rationale to write:
+- <localized Decision Record label>: <No Decision Record needed | Create or update a Decision Record>
+- <localized Decision Record target label>: <exact file path or N/A>
+- <localized Rationale to write label>:
   - <lasting rationale or none>
-- Archive ready: <yes | no>
+- <localized Archive ready label>: <yes | no>
 ```
 
-Short example:
-
-```md
-## Durable Decision
-- Current facts: Update existing spec or scoped instruction
-- Current-fact target: .rsp/specs/design.md
-- Facts to write:
-  - Default API retries are capped at 3 attempts.
-- Decision Record: No Decision Record needed
-- Decision Record target: N/A
-- Rationale to write:
-  - none
-- Archive ready: no
-```
+These are response labels, not canonical RSP artifact headings. A localized label may retain its technical field identity in parentheses; for example, a Chinese response may use `## 持久化决策`, `决策记录（Decision Record）`, and `可归档（Archive ready）`, but not their English labels alone.
 
 Rules for the output:
 

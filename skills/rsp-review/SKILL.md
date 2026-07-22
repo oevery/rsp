@@ -4,7 +4,7 @@ description: Review an RSP-tracked code, document, or mixed change against a fix
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.21.2"
+  version: "2026.07.22.3"
 ---
 
 # RSP Review
@@ -68,28 +68,28 @@ Render headings, field labels, explanations, and verdict prose in the language e
 Use this shape:
 
 ```md
-## Review Scope
-- Comparison: <fixed ref, range, or file set>
-- Intent: <authorities, missing, or ambiguous>
-- Code: <issues_found | clean | skipped | blocked>
-- Document: <issues_found | clean | skipped | blocked>
-- Excluded: <paths and reasons, or none>
+## <localized Review Scope heading>
+- <localized Comparison label>: <fixed ref, range, or file set>
+- <localized Intent label>: <authorities, missing, or ambiguous>
+- <localized Code label>: <issues_found | clean | skipped | blocked>
+- <localized Document label>: <issues_found | clean | skipped | blocked>
+- <localized Excluded label>: <paths and reasons, or none>
 
-## Findings
+## <localized Findings heading>
 ### [P0-P3] <title>
-- Artifact kind: <code | document | cross-artifact>
-- Axis: <pipeline axis>
-- Location: <path:line or precise section>
-- Authority: <authority or observed invariant>
-- Evidence: <conflicting behavior or text>
-- Impact: <real consequence>
-- Suggested action: <smallest correction; no edit>
-- Confidence: <high | medium | low>
+- <localized Artifact kind label>: <code | document | cross-artifact>
+- <localized Axis label>: <pipeline axis>
+- <localized Location label>: <path:line or precise section>
+- <localized Authority label>: <authority or observed invariant>
+- <localized Evidence label>: <conflicting behavior or text>
+- <localized Impact label>: <real consequence>
+- <localized Suggested action label>: <smallest correction; no edit>
+- <localized Confidence label>: <high | medium | low>
 
-## Coverage
+## <localized Coverage heading>
 - <checked and unverified scope, including non-actionable missing coverage>
 
-## Verdict
+## <localized Verdict heading>
 <blocked | findings | clean, with the smallest next action>
 ```
 

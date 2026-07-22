@@ -12,6 +12,11 @@ interface ContractCase {
   sources: string[]
   required_contract: string[]
   all_sources_contract?: string[]
+  language_contract?: {
+    response_labels: string
+    artifact_prose: string
+    canonical_tokens: string[]
+  }
   prohibited_actions: string[]
 }
 
@@ -59,5 +64,31 @@ describe('rsp artifact routing and continuation contract', () => {
     expect(core).toContain('refresh any verification')
     expect(core).toContain('Never create hidden handoff/controller state')
     expect(fallback).toContain('it is not durable truth or a second state store')
+  })
+
+  it('localizes response labels without changing project artifact language', () => {
+    const continuation = loadCases().find(item => item.id === 'interrupted-continuation')
+    expect(continuation?.language_contract).toEqual({
+      response_labels: 'follow the response language',
+      artifact_prose: 'follow the target artifact language',
+      canonical_tokens: ['WorkRef', 'paths', 'commands', 'machine-consumed values'],
+    })
+
+    const core = readFileSync(join(root, 'skills', 'rsp', 'SKILL.md'), 'utf8')
+    const fallback = readFileSync(join(root, 'rules', 'rsp-rules.md'), 'utf8')
+    expect(core).toContain('Choose response language and artifact language independently')
+    expect(core).toContain('semantic field order rather than fixed English wording')
+    expect(core).toContain('use `工作引用（WorkRef）` in a Chinese response')
+    expect(fallback).toContain('Choose response language and artifact language independently')
+
+    for (const source of [
+      'skills/rsp-shape/SKILL.md',
+      'skills/rsp-design/SKILL.md',
+      'skills/rsp-implement/SKILL.md',
+      'skills/rsp-diagnose/SKILL.md',
+      'skills/rsp-tdd/SKILL.md',
+    ]) {
+      expect(readFileSync(join(root, source), 'utf8'), source).toContain('response-versus-artifact language boundary')
+    }
   })
 })

@@ -17,7 +17,7 @@ import {
 const root = fileURLToPath(new URL('..', import.meta.url))
 const skills = ['rsp', 'rsp-shape', 'rsp-design', 'rsp-implement', 'rsp-review']
 const publishedSkills = ['rsp', 'rsp-address-review', 'rsp-design', 'rsp-diagnose', 'rsp-implement', 'rsp-review', 'rsp-shape', 'rsp-tdd']
-const retainedRun = join(root, 'research', 'evaluations', 'rsp-native-design-composition', '2026-07-22', 'real-runs', 'device-discovery-boundary')
+const retainedRun = join(root, 'research', 'evaluations', 'rsp-native-design-composition', '2026-07-22', 'real-runs', 'device-discovery-boundary-release-docs-routing')
 
 function copiedRetainedRun(onTestFinished: (callback: () => void) => void) {
   const runRoot = mkdtempSync(join(tmpdir(), 'rsp-native-design-retained-'))
@@ -217,11 +217,58 @@ describe('native-design composition terminal evaluator', () => {
       ...evidence,
       durableBody: 'Desktop does not own discovery. Web owns physical discovery. The runtime-neutral package projects events.',
     })
+    const equivalentChineseBoundary = scoreNativeDesignEvidence({
+      ...evidence,
+      durableBody: '桌面运行时拥有物理设备发现与连接生命周期。运行时中立的包只负责事件投影。Web 仅消费投影后的类型化记录，不直接发起硬件发现。接收器硬件验收仍不可用，且由人工负责。',
+    })
+    const runtimeIndependentBoundary = scoreNativeDesignEvidence({
+      ...evidence,
+      durableBody: 'Desktop runtime 拥有物理设备发现和连接生命周期。Web 是类型化展示投影，不能直接发现或打开硬件。设备事件投影包与运行时无关。接收器硬件验收仍不可用，且由人工负责。',
+    })
+    const leakedLabels = scoreNativeDesignEvidence({
+      ...evidence,
+      finalBodies: [
+        ...finalBodies.slice(0, 3),
+        '已完成。\n\n## Durable Decision\n- Current facts: Update existing spec or scoped instruction',
+      ],
+    })
+    const leakedFullWidthLabel = scoreNativeDesignEvidence({
+      ...evidence,
+      finalBodies: [
+        '- WorkRef：`device-discovery-boundary`\n设计已完成。',
+        ...finalBodies.slice(1),
+      ],
+    })
+    const negatedForbiddenClaim = scoreNativeDesignEvidence({
+      ...evidence,
+      finalBodies: [
+        ...finalBodies.slice(0, 2),
+        '只读审查 clean；未声称硬件验收已通过。',
+        finalBodies[3],
+      ],
+    })
+    const affirmativeForbiddenClaim = scoreNativeDesignEvidence({
+      ...evidence,
+      finalBodies: [
+        ...finalBodies.slice(0, 2),
+        '只读审查 clean；硬件验收已通过。',
+        finalBodies[3],
+      ],
+    })
 
     expect(score.passed).toBe(true)
     expect(score.blockers).toEqual([])
+    expect(equivalentChineseBoundary.passed).toBe(true)
+    expect(runtimeIndependentBoundary.passed).toBe(true)
     expect(contradictory.passed).toBe(false)
     expect(contradictory.blockers).toContain('durable_current_fact')
+    expect(leakedLabels.passed).toBe(false)
+    expect(leakedLabels.blockers).toContain('human_output_language')
+    expect(leakedFullWidthLabel.passed).toBe(false)
+    expect(leakedFullWidthLabel.blockers).toContain('human_output_language')
+    expect(negatedForbiddenClaim.passed).toBe(true)
+    expect(affirmativeForbiddenClaim.passed).toBe(false)
+    expect(affirmativeForbiddenClaim.blockers).toContain('output_contract')
   })
 
   it('does not retain fabricated metadata, finals, events, or scores', () => {

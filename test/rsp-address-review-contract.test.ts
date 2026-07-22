@@ -55,7 +55,7 @@ describe('rsp-address-review Skill contract', () => {
     const { body } = readSkill()
 
     expect(body).toContain('## Handoff and recovery')
-    expect(body).toContain('## Review Resolution Handoff')
+    expect(body).toContain('## <localized Review Resolution Handoff heading>')
     expect(body).toContain('authoritative pointers, not project truth')
     expect(body).toContain('never create a hidden receipt or persistent run state')
     expect(body).toContain('inspect current worktree drift')

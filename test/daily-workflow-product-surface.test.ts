@@ -5,12 +5,12 @@ import { describe, expect, it } from 'vitest'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const stableSkills = [
-  'prepare-release-notes',
   'rsp',
   'rsp-address-review',
   'rsp-design',
   'rsp-diagnose',
   'rsp-implement',
+  'rsp-release-docs',
   'rsp-review',
   'rsp-shape',
   'rsp-tdd',

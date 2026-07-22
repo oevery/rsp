@@ -76,6 +76,7 @@ kind: "ops"
   - [ ] Changelog and migration documentation are the durable release record; no additional product Spec is required unless final behavior differs.
 
 ## Blockers
+- requires `dogfood-project-rsp-skills`: needs the published RSP Skills to be exercised through real project discovery before the 3.0 release
 - requires `prepare-release-notes-skill`: needs the RSP-native release-documentation capability and ninth-Skill package contract to land before the 3.0 product boundary is released
 - requires `minimum-skill-suite/validate-skill-composition`: needs the installed minimum suite to pass composition gates
 - requires `3-0-skill-readiness/validate-assisted-engineering-loop`: needs the tightened assisted engineering loop to pass the 3.0 readiness gate
@@ -86,3 +87,4 @@ kind: "ops"
 - requires `rsp-native-design-and-artifacts/validate-native-design-composition`: needs native design and artifact ownership to pass the expanded installed-suite gate
 - requires `fix-native-composition-retained-gate`: needs retained native composition evidence to bind current product artifacts and auditable durable output
 - requires `fix-native-durable-semantic-oracle`: needs the retained durable artifact gate to reject contradictory ownership facts
+- requires `rsp-release-docs-routing`: needs the release-documentation capability to use the final RSP name and bounded Core release-stage routing

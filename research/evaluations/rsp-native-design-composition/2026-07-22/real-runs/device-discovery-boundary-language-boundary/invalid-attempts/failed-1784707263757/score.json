@@ -1,0 +1,38 @@
+{
+  "blockers": [
+    "design_returns_workref",
+    "design_section_only",
+    "durable_current_fact",
+    "external_verification",
+    "human_output_language",
+    "implementation_runs_exact_verification",
+    "output_contract",
+    "phase_boundaries",
+    "phase_runs",
+    "runtime_isolation"
+  ],
+  "expected_missing": [
+    "mise exec -- pnpm test -- device-discovery"
+  ],
+  "forbidden_present": [],
+  "gates": {
+    "design_returns_workref": false,
+    "design_section_only": false,
+    "durable_current_fact": false,
+    "exact_package": true,
+    "external_verification": false,
+    "git_head_unchanged": true,
+    "hardware_unavailable": true,
+    "human_output_language": false,
+    "implementation_rereads_change": true,
+    "implementation_runs_exact_verification": false,
+    "output_contract": false,
+    "phase_boundaries": false,
+    "phase_runs": false,
+    "review_inspects_fixed_scope": true,
+    "review_read_only_sandbox": true,
+    "runtime_isolation": false
+  },
+  "passed": false,
+  "evidence_sha256": "e0c7ed9330328f964ed4bc0f2dfb6f136e5d151068b62b2abba0bf6eacb278cb"
+}

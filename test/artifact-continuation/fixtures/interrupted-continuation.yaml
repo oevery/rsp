@@ -20,6 +20,14 @@ all_sources_contract:
   - Fresh verification
   - Blockers
   - Next action
+language_contract:
+  response_labels: follow the response language
+  artifact_prose: follow the target artifact language
+  canonical_tokens:
+    - WorkRef
+    - paths
+    - commands
+    - machine-consumed values
 required_contract:
   - inspect worktree
   - not durable truth

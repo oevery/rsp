@@ -18,6 +18,7 @@ This file is the minimal fallback protocol for agents that cannot load the `rsp`
 
 ## Core
 
+- Choose response language and artifact language independently. Localize human-facing response headings, labels, explanations, and conclusions according to the requested response language, response-specific project instructions, then conversation language. Write artifact prose according to the requested artifact language, artifact-specific project instructions, existing artifact language, then conversation language. Preserve canonical RSP artifact headings, WorkRef values, paths, commands, identifiers, and machine-consumed values. Response-only Continuation and Durable Decision labels are not artifact headings; a technical token may appear in parentheses but cannot replace the localized label.
 - `changes/` stores open work; `archives/` stores completed history; `specs/` stores stable current facts; the configured Decision Record path stores lasting rationale.
 - Every Change is one Markdown file with explicit `kind` and the fixed `Proposal`, `Spec`, `Design`, `Tasks`, `Verify`, and `Blockers` sections.
 - In a Change `Blockers` section, `- requires \`<change-work-ref>\`: <reason>` declares an exact dependency on another executable Change. Other meaningful blocker prose remains external and is never inferred as a dependency.
@@ -35,6 +36,7 @@ This file is the minimal fallback protocol for agents that cannot load the `rsp`
 - A Group Brief blocker is inherited by its direct child Changes as an external blocker; it does not create inferred dependency edges.
 - Persist only `open` and `archived`; readiness, blockers, verification, and next actions are derived.
 - Route one isolated domain, module/seam, or evidence-seeking design question to `rsp-design` when available, or use a compact manual design pass. Return evidence, alternatives, owner decisions, and any authorized planned-design update to the same selected Change; do not implement or write durable current truth from that pass.
+- Route release documentation only when the selected Change explicitly owns a confirmed release identity or range and still has unfinished changelog, release-note, or migration work. Select `rsp-release-docs` when available, or use the same evidence-led manual fallback; lifecycle stage, completed implementation, and archive readiness alone are insufficient. This route never grants commit, tag, push, release creation, publication, deployment, or approval authority.
 - Do not infer current work from open Changes or filenames.
 - Prefer RSP commands for deterministic setup, status, validation, repair, focus, index, and archive operations.
 
@@ -50,7 +52,7 @@ This file is the minimal fallback protocol for agents that cannot load the `rsp`
 
 ## Continuation and conflicts
 
-- When execution stops with accepted work remaining, return one compact continuation with `WorkRef`, `Authority`, `Current state`, `Changed artifacts`, `Fresh verification`, `Blockers`, and `Next action`. Reopen its authority pointers, inspect drift, and refresh verification before resuming; it is not durable truth or a second state store.
+- When execution stops with accepted work remaining, return one compact continuation with the semantic fields `WorkRef`, `Authority`, `Current state`, `Changed artifacts`, `Fresh verification`, `Blockers`, and `Next action`. Keep this field order, but localize the human-facing title and labels to the response language without changing referenced artifact prose or canonical technical values. Reopen its authority pointers, inspect drift, and refresh verification before resuming; it is not durable truth or a second state store.
 - Write a continuation file only when explicitly authorized. Never persist hidden handoff or controller state.
 - If an active merge, rebase, or cherry-pick conflict intersects authorized implementation, inspect the exact operation and conflicted paths, then compare base/ours/theirs semantics in that operation. Resolve only evidenced in-scope content while preserving unrelated work.
 - Stop on unrelated user work, an unresolved product decision, incomplete side/base evidence, or scope beyond the WorkRef. Name the exact conflict and required owner input; do not choose a side, stage a resolution, continue or abort the Git operation, commit, or infer any Git authority.

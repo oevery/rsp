@@ -4,12 +4,14 @@ description: Shape or rigorously challenge unclear non-trivial work into one exe
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.22"
+  version: "2026.07.22.1"
 ---
 
 # RSP Shape
 
 Shape intent into existing RSP owners. Do not implement the shaped work.
+
+Follow Core's response-versus-artifact language boundary.
 
 ## Establish the boundary
 

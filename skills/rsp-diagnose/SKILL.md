@@ -4,12 +4,14 @@ description: Diagnose one selected RSP Change when a reproducible or materially 
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.22"
+  version: "2026.07.22.1"
 ---
 
 # RSP Diagnose
 
 Establish a confirmed cause before correction. Keep the selected Change as owner and return investigation evidence to it.
+
+Follow Core's response-versus-artifact language boundary.
 
 ## Establish bounds
 

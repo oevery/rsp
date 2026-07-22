@@ -23,15 +23,27 @@ durable_current_facts:
     desktop_owns_physical_discovery:
       - Desktop runtime 拥有物理设备发现
       - Desktop owns physical discovery
+      - 桌面运行时负责物理设备发现和连接生命周期
+      - 桌面运行时拥有物理设备发现和连接生命周期
     runtime_neutral_projects_only:
       - runtime-neutral 事件投影边界
       - runtime-neutral package only projects
+      - runtime-neutral 包，只拥有原始设备事件的纯投影
+      - 运行时中立的设备事件投影
+      - 纯、运行时中立投影
     web_does_not_discover:
       - Web 不直接发现硬件
       - Web does not directly discover
+      - Web 只能将投影后的事件作为类型化展示数据，不能直接发现硬件
+      - Web 只能消费投影后的类型化数据，不得直接发现硬件
+      - Web 只能消费投影后的类型化记录，不能导入硬件适配器或主动发起设备发现
+      - Web 仅消费投影后的类型化记录，不直接发起硬件发现
     hardware_acceptance_unavailable:
       - 硬件验收仍不可用
       - hardware acceptance remains unavailable
+      - 硬件验收仍为人工负责，尚不可用
+      - 硬件验收仍为人工负责，尚未完成
+      - 接收器硬件验收仍不可用，且由人工负责
   forbidden:
     - Desktop 不拥有物理设备发现
     - Desktop does not own discovery

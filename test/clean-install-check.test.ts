@@ -7,12 +7,12 @@ import { describe, expect, it } from 'vitest'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const expectedSkills = [
-  'prepare-release-notes',
   'rsp',
   'rsp-address-review',
   'rsp-design',
   'rsp-diagnose',
   'rsp-implement',
+  'rsp-release-docs',
   'rsp-review',
   'rsp-shape',
   'rsp-tdd',
@@ -43,9 +43,9 @@ describe('clean install package check', () => {
         'output-contracts.md',
       ])
       expect(report.inventory.files).toContain('skills/rsp-design/SKILL.md')
-      expect(report.inventory.files).toContain('skills/prepare-release-notes/SKILL.md')
-      expect(report.inventory.files).toContain('skills/prepare-release-notes/references/output-contracts.md')
-      expect(report.inventory.files.some((path: string) => /^(?:research|\.rsp|\.agents|scripts|\.cache)(?:\/|$)/u.test(path))).toBe(false)
+      expect(report.inventory.files).toContain('skills/rsp-release-docs/SKILL.md')
+      expect(report.inventory.files).toContain('skills/rsp-release-docs/references/output-contracts.md')
+      expect(report.inventory.files.some((path: string) => /^(?:research|\.rsp|\.agents|\.codex|scripts|\.cache)(?:\/|$)/u.test(path))).toBe(false)
       expect(readdirSync(temporaryRoot)).toEqual([])
     }
     finally {

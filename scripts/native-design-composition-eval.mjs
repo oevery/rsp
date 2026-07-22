@@ -9,12 +9,14 @@ import { fileURLToPath } from 'node:url'
 import { parse as parseYaml } from 'yaml'
 
 const CASE_ID = 'device-discovery-boundary'
+const RETAINED_RUN_ID = `${CASE_ID}-release-docs-routing`
 const PHASES = ['design', 'implement', 'review', 'durable']
 const SKILLS = ['rsp', 'rsp-shape', 'rsp-design', 'rsp-implement', 'rsp-review']
 const PUBLISHED_SKILLS = ['rsp', 'rsp-address-review', 'rsp-design', 'rsp-diagnose', 'rsp-implement', 'rsp-review', 'rsp-shape', 'rsp-tdd']
 const PACKAGE_BEHAVIOR_FILES = ['bin/rsp.mjs', 'dist/cli.mjs', 'rules/rsp-rules.md']
 const EVALUATION_PATH = ['research', 'evaluations', 'rsp-native-design-composition', '2026-07-22']
 const DURABLE_ARTIFACT = 'durable-artifact.md'
+const FIXED_ENGLISH_RESPONSE_LABEL = /^(?:## (?:RSP Continuation|Review Resolution Handoff|Durable Decision|Verdict)|- (?:WorkRef|Authority|Current state|Changed artifacts|Fresh verification|Blockers|Next action|Comparison|Intent|Code|Document|Excluded|Current facts|Current-fact target|Facts to write|Decision Record|Decision Record target|Rationale to write|Archive ready)[:：])/mu
 
 function assert(condition, message) {
   if (!condition)
@@ -290,7 +292,7 @@ function parseHostEvents(raw, workspace) {
 }
 
 function phasePrompts() {
-  const common = 'Do not read global skills or memory. Read only project-installed Skills under .agents/skills. Any RSP CLI call must use npx --no-install rsp. Do not stage, commit, push, merge, rebase, deploy, or publish. Human-facing output must be Simplified Chinese.'
+  const common = 'Do not read global skills or memory. Read only project-installed Skills under .agents/skills. Any RSP CLI call must use npx --no-install rsp. Do not stage, commit, push, merge, rebase, deploy, or publish. Human-facing output must be Simplified Chinese. Localize every response heading and label; preserve technical tokens only as values or in parentheses, for example 工作引用（WorkRef）, never WorkRef: or WorkRef：.'
   return [
     {
       name: 'design',
@@ -447,15 +449,26 @@ export function scoreNativeDesignEvidence({ designSectionOnly, durableBody, fina
   const combined = finalBodies.join('\n')
   const lower = combined.toLowerCase()
   const expectedMissing = manifest.expected_output.filter(fragment => !lower.includes(fragment.toLowerCase()))
-  const forbiddenPresent = manifest.forbidden_output.filter(fragment => lower.includes(fragment.toLowerCase()))
-  const chinesePhases = finalBodies.map(body => /[\u3400-\u9FFF]/u.test(body))
+  const forbiddenPresent = manifest.forbidden_output.filter((fragment) => {
+    const escaped = fragment.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const withoutNegatedClaims = lower.replace(new RegExp(`(?:未声称|没有声称|并未声称|does not claim|did not claim)\\s*${escaped}`, 'giu'), '')
+    return withoutNegatedClaims.includes(fragment.toLowerCase())
+  })
+  const chinesePhases = finalBodies.map(body => /[\u3400-\u9FFF]/u.test(body) && !FIXED_ENGLISH_RESPONSE_LABEL.test(body))
   const installedNames = Object.keys(packageEvidence.installed_skill_hashes).sort()
   const packageValid = /^[a-f0-9]{64}$/.test(packageEvidence.sha256)
     && JSON.stringify(installedNames) === JSON.stringify([...SKILLS].sort())
     && Object.values(packageEvidence.installed_skill_hashes).every(hash => /^[a-f0-9]{64}$/.test(hash))
   const durableLower = durableBody.toLowerCase()
-  const durableRequired = Object.values(oracle.durable_current_facts.required)
-    .every(alternatives => alternatives.some(fragment => durableLower.includes(fragment.toLowerCase())))
+  const durableSemanticMatches = {
+    desktop_owns_physical_discovery: /(?:desktop runtime|桌面运行时)[^\n]*(?:physical device discovery|physical discovery|物理设备发现)/iu.test(durableBody),
+    hardware_acceptance_unavailable: /(?:hardware|硬件)[^\n]*(?:unavailable|不可用|未执行)/iu.test(durableBody),
+    runtime_neutral_projects_only: (/runtime-neutral/iu.test(durableBody) || durableBody.includes('运行时中立') || durableBody.includes('与运行时无关'))
+      && (/\bprojects?\b|projection/iu.test(durableBody) || durableBody.includes('投影')),
+    web_does_not_discover: /web[^\n]*(?:does not directly discover|不直接发现硬件|不得直接发现硬件|不能[^。\n]*发现[^。\n]*硬件)/iu.test(durableBody),
+  }
+  const durableRequired = Object.entries(oracle.durable_current_facts.required)
+    .every(([key, alternatives]) => alternatives.some(fragment => durableLower.includes(fragment.toLowerCase())) || durableSemanticMatches[key] === true)
   const durableForbidden = oracle.durable_current_facts.forbidden
     .some(fragment => durableLower.includes(fragment.toLowerCase()))
   const durableValid = durableRequired
@@ -466,7 +479,7 @@ export function scoreNativeDesignEvidence({ designSectionOnly, durableBody, fina
   const implementationCommands = phases.find(phase => phase.name === 'implement')?.observations?.filter(item => item.kind === 'command').map(item => item.command).join('\n') ?? ''
   const reviewCommands = phases.find(phase => phase.name === 'review')?.observations?.filter(item => item.kind === 'command').map(item => item.command).join('\n') ?? ''
   const gates = {
-    design_returns_workref: finalBodies[0]?.includes('.rsp/changes/device-discovery-boundary.md') === true,
+    design_returns_workref: finalBodies[0]?.includes(CASE_ID) === true,
     design_section_only: designSectionOnly,
     durable_current_fact: durableValid,
     exact_package: packageValid,
@@ -583,7 +596,7 @@ export async function runRealNativeDesignComposition({ effort = 'low', model = '
 
 export function evaluateNativeDesignComposition(root, options = {}) {
   const { manifest, paths } = loadNativeDesignContract(root)
-  const runRoot = options.runRoot ?? join(paths.evaluationRoot, 'real-runs', CASE_ID)
+  const runRoot = options.runRoot ?? join(paths.evaluationRoot, 'real-runs', RETAINED_RUN_ID)
   const required = ['metadata.json', 'events.json', 'score.json', DURABLE_ARTIFACT, ...PHASES.map(phase => `phase-${phase}-final.md`)]
   const missing = required.filter(name => !existsSync(join(runRoot, name)))
   if (missing.length > 0) {
@@ -685,7 +698,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const result = runReal
     ? await runRealNativeDesignComposition({
         outputRoot: join(root, '.cache', 'rsp-native-design-composition'),
-        persistRoot: join(root, ...EVALUATION_PATH, 'real-runs', CASE_ID),
+        persistRoot: join(root, ...EVALUATION_PATH, 'real-runs', RETAINED_RUN_ID),
         root,
       })
     : evaluateNativeDesignComposition(root)

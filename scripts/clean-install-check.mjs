@@ -10,12 +10,12 @@ import { fileURLToPath } from 'node:url'
 import { parse as parseYaml } from 'yaml'
 
 const EXPECTED_SKILLS = [
-  'prepare-release-notes',
   'rsp',
   'rsp-address-review',
   'rsp-design',
   'rsp-diagnose',
   'rsp-implement',
+  'rsp-release-docs',
   'rsp-review',
   'rsp-shape',
   'rsp-tdd',
@@ -29,7 +29,7 @@ const EXPECTED_RELEASE_REFERENCES = [
   'convention-discovery.md',
   'output-contracts.md',
 ]
-const FORBIDDEN_PACKAGE_ROOTS = ['.agents', '.cache', '.rsp', 'research', 'scripts']
+const FORBIDDEN_PACKAGE_ROOTS = ['.agents', '.cache', '.codex', '.rsp', 'research', 'scripts']
 const PORTABLE_FRONTMATTER_KEYS = new Set(['description', 'license', 'metadata', 'name'])
 
 function fail(message) {
@@ -166,9 +166,9 @@ function main() {
     if (JSON.stringify(designReferences) !== JSON.stringify(EXPECTED_DESIGN_REFERENCES))
       fail(`rsp-design reference inventory mismatch: ${designReferences.join(', ')}`)
 
-    const releaseReferences = readdirSync(join(skillRoot, 'prepare-release-notes', 'references')).sort()
+    const releaseReferences = readdirSync(join(skillRoot, 'rsp-release-docs', 'references')).sort()
     if (JSON.stringify(releaseReferences) !== JSON.stringify(EXPECTED_RELEASE_REFERENCES))
-      fail(`prepare-release-notes reference inventory mismatch: ${releaseReferences.join(', ')}`)
+      fail(`rsp-release-docs reference inventory mismatch: ${releaseReferences.join(', ')}`)
 
     const installedFiles = walkNoSymlinks(installedRoot)
       .map(path => relative(installedRoot, path).split(sep).join('/'))

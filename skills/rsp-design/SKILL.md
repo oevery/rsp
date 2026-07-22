@@ -4,7 +4,7 @@ description: Resolve one material domain-model, module/seam, or evidence-seeking
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.22.1"
+  version: "2026.07.22.2"
 ---
 
 # RSP Design
@@ -35,7 +35,7 @@ An exploration additionally requires explicit disposable-code authority and the 
 
 ## Return the bounded result
 
-Use the requested language, then project or existing-artifact language, then conversation language. Return these semantic fields in natural prose:
+Follow Core's response-versus-artifact language boundary: use the requested language for natural prose, while any authorized `Design` update follows the selected Change's language and canonical headings. Do not use a technical token alone as a response label; retain it only in parentheses after a localized label. Return these semantic fields:
 
 - selected WorkRef and exact question;
 - inspected evidence and material gaps;

@@ -1,13 +1,13 @@
 ---
-name: prepare-release-notes
+name: rsp-release-docs
 description: Prepare and audit evidence-based changelogs, release notes, and migration notes. Use when drafting or updating release documentation, reviewing an Unreleased section, summarizing a version range, deciding references or omissions, or checking that release prose matches shipped behavior and repository conventions.
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.22"
+  version: "2026.07.22.1"
 ---
 
-# Prepare Release Notes
+# RSP Release Docs
 
 Build one release evidence ledger, then project it into the repository's release surfaces. Treat Git history as navigation, not product truth.
 

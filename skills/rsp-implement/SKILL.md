@@ -4,12 +4,12 @@ description: Implement exactly one selected, ready RSP Change within explicit mu
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.22"
+  version: "2026.07.22.1"
 ---
 
 # RSP Implement
 
-Implement exactly one selected RSP Change and return observed facts to it.
+Implement one selected RSP Change and return observed facts.
 
 ## Select and inspect
 
@@ -45,6 +45,6 @@ Record concise fresh verification evidence in the Change when its Verify section
 
 Report whether the Change is completed, partial, blocked before implementation, verification-failed, verification-unavailable, or verification-blocked. Use failed when a check exercised its intended behavior and found a defect; use unavailable when a missing tool, dependency, service, credential, or environment prevented the check from exercising it. Use blocked only when scoped checks pass but a required gate cannot pass solely because of a confirmed pre-existing or out-of-scope baseline defect; record the evidence and never waive the gate when this Change may contribute.
 
-When work remains, return Core's compact `WorkRef`, `Authority`, `Current state`, `Changed artifacts`, `Fresh verification`, `Blockers`, and `Next action` fields. They are not durable truth; persistence requires explicit path authority.
+When work remains, follow Core's response-versus-artifact language boundary and return `WorkRef`, `Authority`, `Current state`, `Changed artifacts`, `Fresh verification`, `Blockers`, and `Next action`. They are not durable truth; persistence requires explicit path authority.
 
 Claim completion only when required Tasks and checks pass and no blocker remains. Do not claim review, archive, Git delivery, or release unless separately performed with explicit authority.

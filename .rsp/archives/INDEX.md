@@ -4,7 +4,7 @@ summary: Completed RSP changes.
 kind: generated-index
 index_type: archives
 source_dir: .rsp/archives
-entry_count: 61
+entry_count: 63
 ---
 
 # Archive Index
@@ -36,10 +36,12 @@ entry_count: 61
 | 2026-07-21 | fix-review-output-and-eval-runner | fix | Remove an unsafe one-off diagnosis runner and make review-facing Skill output follow the user's language without destabilizing protocol tokens. |
 | 2026-07-21 | fix-rsp-review-production-chain | fix | Require `rsp-review` to verify that a changed production consumer actually reaches a defective or recommended seam. |
 | 2026-07-21 | matt-first-daily-capability-audit | research | Audit the complete stable Matt engineering suite against RSP's seven-Skill assisted suite and real daily project journeys before 3.0 release preparation. |
+| 2026-07-22 | dogfood-project-rsp-skills | ops | Dogfood every published RSP Skill through repository-local discovery and route overlapping engineering work away from global Matt Skills inside this repository. |
 | 2026-07-22 | fix-clean-install-npm10-json | fix | Make the clean-install release gate tolerate npm 10 pack lifecycle output on supported Node 18 and 20 runtimes |
 | 2026-07-22 | fix-native-composition-retained-gate | fix | Bind retained native composition evidence to current product artifacts and auditable durable output |
 | 2026-07-22 | fix-native-durable-semantic-oracle | fix | Reject contradictory ownership in retained durable composition evidence |
 | 2026-07-22 | prepare-release-notes-skill | feature | Add a host-neutral RSP Skill that prepares and audits evidence-based changelogs, release notes, and migration notes while adapting to user and repository conventions. |
+| 2026-07-22 | rsp-release-docs-routing | fix | Rename the release-documentation Skill to `rsp-release-docs` and route eligible release Changes to it from Core. |
 | 2026-07-21 | 3-0-skill-readiness/brief | group | — |
 | 2026-07-21 | 3-0-skill-readiness/close-review-resolution-handoff | feature | Add a host-neutral review-resolution capability that disposes fixed findings, corrects accepted findings under explicit authority, requires verification and re-review, and returns a recoverable handoff when interrupted. |
 | 2026-07-21 | 3-0-skill-readiness/integrate-diagnosis-tdd-routing | feature | Add deterministic, host-neutral routing from implementation evidence to diagnosis, TDD, or ordinary implementation. |

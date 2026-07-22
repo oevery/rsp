@@ -70,7 +70,7 @@ describe('rsp-review behavior fixtures', () => {
     expect(baseline.workspace).not.toBe(candidate.workspace)
     expect(existsSync(join(baseline.workspace, '.agents', 'skills', 'rsp-review'))).toBe(false)
     expect(existsSync(join(candidate.workspace, '.agents', 'skills', 'rsp-review', 'SKILL.md'))).toBe(true)
-    expect(existsSync(join(root, '.agents', 'skills', 'rsp-review'))).toBe(false)
+    expect(existsSync(join(root, '.agents', 'skills', 'rsp-review', 'SKILL.md'))).toBe(true)
     expect(readFileSync(baseline.promptPath, 'utf8')).not.toContain('Load the rsp-review skill')
     expect(readFileSync(candidate.promptPath, 'utf8')).toContain('Load the rsp-review skill')
     expect(readFileSync(join(candidate.workspace, 'docs', 'usage.md'), 'utf8')).toContain('Returns zero on failure')

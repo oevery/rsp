@@ -9,10 +9,15 @@ function read(path: string): string {
   return readFileSync(join(root, path), 'utf8')
 }
 
-describe('prepare-release-notes Skill contract', () => {
-  const skill = read('skills/prepare-release-notes/SKILL.md')
-  const conventions = read('skills/prepare-release-notes/references/convention-discovery.md')
-  const outputs = read('skills/prepare-release-notes/references/output-contracts.md')
+describe('rsp-release-docs Skill contract', () => {
+  const skill = read('skills/rsp-release-docs/SKILL.md')
+  const conventions = read('skills/rsp-release-docs/references/convention-discovery.md')
+  const outputs = read('skills/rsp-release-docs/references/output-contracts.md')
+
+  it('uses the canonical suite name and broad release-documentation trigger', () => {
+    expect(skill).toContain('name: rsp-release-docs')
+    expect(skill).toContain('changelogs, release notes, and migration notes')
+  })
 
   it('adapts to user and repository authority without inventing configuration', () => {
     expect(skill).toContain('user\'s explicit scope, audience, language, format, reference, and mutation requirements')

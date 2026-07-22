@@ -4,12 +4,14 @@ description: Drive one clear testable behavior owned by a selected RSP Change th
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.22"
+  version: "2026.07.22.1"
 ---
 
 # RSP TDD
 
 Implement one clear behavior test-first and return observed evidence to its selected Change.
+
+Follow Core's response-versus-artifact language boundary.
 
 ## Establish the cycle
 

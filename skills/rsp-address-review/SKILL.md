@@ -4,7 +4,7 @@ description: Resolve one fixed rsp-review report for an RSP-tracked change. Use 
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.22"
+  version: "2026.07.22.1"
 ---
 
 # RSP Address Review
@@ -42,14 +42,14 @@ Require a fresh fixed-scope re-review before claiming resolution. Return a re-re
 When work stops before a clean re-review, return Core's compact artifact-scoped continuation with review state embedded in the shared fields:
 
 ```md
-## Review Resolution Handoff
-- WorkRef: <selected Change>
-- Authority: <project, Change, fixed report, and comparison pointers>
-- Current state: <review input, FindingRef dispositions, and re-review status>
-- Changed artifacts: <reviewed and changed paths, or none>
-- Fresh verification: <command and result, or pending reason>
-- Blockers: <unresolved FindingRefs and required owner input, or none>
-- Next action: <smallest bounded action and owner>
+## <localized Review Resolution Handoff heading>
+- <localized WorkRef label>: <selected Change>
+- <localized Authority label>: <project, Change, fixed report, and comparison pointers>
+- <localized Current state label>: <review input, FindingRef dispositions, and re-review status>
+- <localized Changed artifacts label>: <reviewed and changed paths, or none>
+- <localized Fresh verification label>: <command and result, or pending reason>
+- <localized Blockers label>: <unresolved FindingRefs and required owner input, or none>
+- <localized Next action label>: <smallest bounded action and owner>
 ```
 
 The handoff contains authoritative pointers, not project truth. Return it in the response unless the user explicitly authorizes a path; never create a hidden receipt or persistent run state. It is not durable truth or a second state store. Exclude secrets, full logs, and duplicated Change text.

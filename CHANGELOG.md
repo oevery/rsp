@@ -2,14 +2,14 @@
 
 ## 3.0.0 (Unreleased)
 
-- Move the consumer fallback protocol to `.rsp/rsp-rules.md` as the only runtime path; `rsp update` migrates and removes the obsolete generated path.
-- Move stable scoped instructions to project-owned `AGENTS.md` files and remove the project-rules CLI and templates.
-- Keep arbitrary old `.rsp/rules/` contents untouched for explicit semantic migration, prune empty directory trees, and report every residual entry through `rsp doctor`.
-- Add one authoritative Decision Record path with safe external routing, mutation preflight, inactive-record diagnostics, Specs-index isolation, and independent current-fact/rationale review guidance.
-- Add typed WorkRef resolution, shared no-follow managed-path checks, safe Spec parent resolution, and shared inspection for Changes, project `AGENTS.md`, focus markers, archives, and recursive Specs; reserve Group Brief identity without enabling its lifecycle, preflight lifecycle and index mutations, repair missing work roots, and make status/check/doctor fail visibly on recursive paths, unsupported entries, missing or unreadable current work, invalid roots or prefixes, incomplete reads, and identity collisions.
-- Add shallow Change Groups with explicit brief creation and close commands, declared direct-child membership, child-only focus and archive behavior, grouped context, derived completion projections, and one-way Group identities without recursive hierarchy or persisted progress state.
-- Add concise RSP-native shaping and implementation Skills, with gap-driven candidate extraction, bounded repository discovery, hard authority and verification boundaries, and release-candidate-only provider calibration.
-- Make `rsp-review` verify direct production reachability before recommending an adapter, wrapper, validator, or normalizer correction, while preserving skipped pipeline states and restraint for simple deterministic fixes.
+- **Breaking:** Use `.rsp/rsp-rules.md` as the only runtime fallback protocol and project-owned `AGENTS.md` files for stable scoped instructions; the project-rules CLI and templates have been removed. After upgrading from 2.x, run `rsp update`, migrate any residual custom `.rsp/rules/` content deliberately, flatten work paths deeper than one Group level, and finish with `rsp doctor`.
+- Add typed WorkRefs and shallow Change Groups with explicit briefs, declared direct-child membership, grouped context, independent child focus and archive behavior, and `rsp group create` / `rsp group close` lifecycle commands. Recursive Groups and persisted progress graphs remain unsupported.
+- Derive ready work, exact dependency edges with reasons, blockers, and stable execution waves from Change facts in `rsp status`; apply shared no-follow inspection and mutation preflight across Changes, focus markers, archives, recursive Specs, and generated indexes so invalid or incomplete work trees fail visibly.
+- Add one authoritative Decision Record path, including safe external routing, inactive-record diagnostics, Specs-index isolation, and independent pre-archive judgments for current facts and lasting rationale.
+- Publish nine independently invocable, host-neutral Skills: `rsp`, `rsp-shape`, `rsp-design`, `rsp-implement`, `rsp-diagnose`, `rsp-tdd`, `rsp-review`, `rsp-address-review`, and `rsp-release-docs`.
+- Route tracked work by evidence through shaping, design, diagnosis, test-driven development, implementation, read-only review, review resolution, durable artifact ownership, and, only for Changes with explicit confirmed release ownership and unfinished documentation, `rsp-release-docs`. Every Skill returns results to the existing WorkRef or project owner, localizes human-facing response labels without changing the target artifact language, and preserves explicit mutation, Git, verification, and publication boundaries.
+- Strengthen `rsp-review` with fixed comparison scope, separate code and document states, direct production-reachability checks, and report-only handoff; add bounded finding disposition, fresh verification, and re-review through `rsp-address-review`.
+- Ship only the CLI, fallback rules, and the nine-Skill suite in the npm package; keep source research, evaluations, self-hosting Change state, maintainer tooling, and the evaluated `rsp-manage` prototype out of the published product. Clean-install package validation now consumes npm 10 JSON output reliably.
 
 ## 2.0.4 (2026-05-28)
 
