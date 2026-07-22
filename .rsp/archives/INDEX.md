@@ -4,7 +4,7 @@ summary: Completed RSP changes.
 kind: generated-index
 index_type: archives
 source_dir: .rsp/archives
-entry_count: 59
+entry_count: 60
 ---
 
 # Archive Index
@@ -36,6 +36,7 @@ entry_count: 59
 | 2026-07-21 | fix-review-output-and-eval-runner | fix | Remove an unsafe one-off diagnosis runner and make review-facing Skill output follow the user's language without destabilizing protocol tokens. |
 | 2026-07-21 | fix-rsp-review-production-chain | fix | Require `rsp-review` to verify that a changed production consumer actually reaches a defective or recommended seam. |
 | 2026-07-21 | matt-first-daily-capability-audit | research | Audit the complete stable Matt engineering suite against RSP's seven-Skill assisted suite and real daily project journeys before 3.0 release preparation. |
+| 2026-07-22 | fix-clean-install-npm10-json | fix | Make the clean-install release gate tolerate npm 10 pack lifecycle output on supported Node 18 and 20 runtimes |
 | 2026-07-22 | fix-native-composition-retained-gate | fix | Bind retained native composition evidence to current product artifacts and auditable durable output |
 | 2026-07-22 | fix-native-durable-semantic-oracle | fix | Reject contradictory ownership in retained durable composition evidence |
 | 2026-07-21 | 3-0-skill-readiness/brief | group | — |

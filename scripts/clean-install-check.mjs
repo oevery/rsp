@@ -117,6 +117,7 @@ function main() {
     const packOutput = run('npm', [
       'pack',
       '--ignore-scripts',
+      '--foreground-scripts=false',
       '--json',
       '--pack-destination',
       packRoot,
