@@ -1,0 +1,40 @@
+id: device-discovery-boundary
+evidence_class: same-case-real-host-observations
+source_class: real-world-derived
+sanitization: independent-reimplementation
+ordered_phases: [design, implement, review, durable]
+required_skills: [rsp, rsp-shape, rsp-design, rsp-implement, rsp-review]
+required_commands:
+  - npx --no-install rsp --help
+  - npx --no-install rsp check --focused
+  - mise exec -- pnpm test -- device-discovery
+required_outcomes:
+  - design-only-change-update
+  - implementation-rereads-change
+  - focused-verification-passes
+  - review-read-only
+  - durable-fact-written-after-implementation
+  - hardware-unavailable
+  - simplified-chinese-human-output
+  - no-git-delivery
+expected_status: incomplete
+durable_current_facts:
+  required:
+    desktop_owns_physical_discovery:
+      - Desktop runtime 拥有物理设备发现
+      - Desktop owns physical discovery
+    runtime_neutral_projects_only:
+      - runtime-neutral 事件投影边界
+      - runtime-neutral package only projects
+    web_does_not_discover:
+      - Web 不直接发现硬件
+      - Web does not directly discover
+    hardware_acceptance_unavailable:
+      - 硬件验收仍不可用
+      - hardware acceptance remains unavailable
+  forbidden:
+    - Desktop 不拥有物理设备发现
+    - Desktop does not own discovery
+    - Web 拥有物理设备发现
+    - Web owns physical discovery
+    - runtime-neutral package owns discovery

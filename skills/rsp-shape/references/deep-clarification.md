@@ -6,9 +6,9 @@ Read this reference only when the user explicitly asks for rigorous challenge, o
 
 Inspect the available code, tests, project instructions, Specs, and Decision Records before questioning the owner. Name the unresolved decision and the implementation consequence that makes it material.
 
-## Project design return
+## RSP design return
 
-When the repository selects a domain or module design capability needed to resolve that decision, return one bounded design task containing:
+When `rsp-design` is available, it is the canonical domain or module design capability for an RSP-tracked question. Otherwise use an equivalent project-selected capability or Core's compact manual design fallback. Return one bounded design task containing:
 
 - the unresolved design question;
 - authoritative project inputs by path;
@@ -16,7 +16,7 @@ When the repository selects a domain or module design capability needed to resol
 - its permitted mutation boundary;
 - the same returning WorkRef.
 
-The selected capability owns the design analysis, while existing project documents retain domain and architecture authority. Consume its settled result and evidence on return, then resume Shape against the same Change.
+The selected capability owns only the design analysis, while existing project documents retain domain and architecture authority. Consume its settled result and evidence on return, then resume Shape against the same Change.
 
 ## Traverse one decision at a time
 

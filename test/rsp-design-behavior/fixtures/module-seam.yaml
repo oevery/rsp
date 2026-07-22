@@ -1,0 +1,21 @@
+name: module-seam
+question: Where should runtime normalization live so both callers use one verified interface?
+authority:
+  work_ref: normalize-runtime-input
+  selected_change_design_write: false
+evidence:
+  - direct-production-consumer
+  - complete-call-path
+  - interface-obligations
+expect:
+  reference: module-seams
+  owner: same-selected-change
+  output:
+    - recommendation
+    - affected-consumers
+    - verification-surface
+    - smallest-next-action
+  forbidden:
+    - production-implementation
+    - change-write-without-authority
+    - speculative-adapter

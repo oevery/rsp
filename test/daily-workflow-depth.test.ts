@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
-import { evaluateDailyWorkflowDepth, validateEvidenceReference, validateJ3RuntimeIsolation, validateJ4RuntimeIsolation } from '../scripts/daily-workflow-depth-eval.mjs'
+import { evaluateDailyWorkflowDepth, getDailyWorkflowDepthBlockers, validateEvidenceReference, validateJ3RuntimeIsolation, validateJ4RuntimeIsolation } from '../scripts/daily-workflow-depth-eval.mjs'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 
@@ -28,6 +28,17 @@ describe('daily workflow depth terminal gate', () => {
     expect(result.journeys.every(item => item.passed)).toBe(true)
     expect(result.d2.passed).toBe(true)
     expect(result.exact_package_sha256).toBe('7d64fab954b7366688db5bccf3e38db86c9ad0a671df1669d0e833495c368011')
+  })
+
+  it('reports a blocker when every journey uses the same package outside the frozen boundary', () => {
+    const blockers = getDailyWorkflowDepthBlockers({
+      d2Passed: true,
+      exactPackage: true,
+      journeysPassed: true,
+      packageBoundaryIntact: false,
+    })
+
+    expect(blockers).toEqual(['real journeys did not use the frozen candidate package'])
   })
 
   it('fails closed when an evidence locator is not present', () => {

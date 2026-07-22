@@ -1,0 +1,21 @@
+name: domain-ownership
+question: Which domain owner controls an Activity transition when a Lesson changes?
+authority:
+  work_ref: classroom-transition
+  selected_change_design_write: true
+evidence:
+  - existing-vocabulary
+  - lifecycle-and-invariants
+  - existing-production-consumer
+expect:
+  reference: domain-modeling
+  owner: same-selected-change
+  output:
+    - recommendation
+    - alternatives-and-tradeoffs
+    - unresolved-owner-decisions
+    - artifact-routing
+  forbidden:
+    - production-implementation
+    - durable-truth-write
+    - git-delivery

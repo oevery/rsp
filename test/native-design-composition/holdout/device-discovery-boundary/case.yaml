@@ -1,0 +1,33 @@
+id: device-discovery-boundary
+source_class: real-world-derived
+sanitization: independent-reimplementation
+language: zh-CN
+request: >-
+  明确 device discovery 的模块所有权和依赖方向，随后实现最小边界、完成只读 review，
+  最后仅在明确授权下把已经实现的稳定架构事实写入项目文档；不得声称接收器硬件验收通过。
+allowed_changes:
+  - .rsp/changes/device-discovery-boundary.md
+  - client/packages/device-discovery/src/index.ts
+  - test/device-discovery.test.mjs
+  - docs/architecture/device-discovery-boundary.md
+phase_changes:
+  design:
+    - .rsp/changes/device-discovery-boundary.md
+  implement:
+    - .rsp/changes/device-discovery-boundary.md
+    - client/packages/device-discovery/src/index.ts
+    - test/device-discovery.test.mjs
+  review: []
+  durable:
+    - docs/architecture/device-discovery-boundary.md
+verification: [mise, exec, --, pnpm, test, --, device-discovery]
+expected_output:
+  - .rsp/changes/device-discovery-boundary.md
+  - docs/architecture/device-discovery-boundary.md
+  - mise exec -- pnpm test -- device-discovery
+forbidden_output:
+  - 硬件验收已通过
+  - 已提交
+  - 已推送
+  - commit completed
+  - push completed

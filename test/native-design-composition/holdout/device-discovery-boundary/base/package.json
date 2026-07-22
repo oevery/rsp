@@ -1,0 +1,8 @@
+{
+  "name": "rsp-native-design-device-discovery",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test test/device-discovery.test.mjs"
+  }
+}

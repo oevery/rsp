@@ -4,7 +4,7 @@ description: Drive one clear testable behavior owned by a selected RSP Change th
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.21.1"
+  version: "2026.07.22"
 ---
 
 # RSP TDD
@@ -36,5 +36,7 @@ Refactor only after GREEN and only when a concrete local improvement is justifie
 After the final mutation, run fresh required Change checks plus the narrow checks needed for the changed risk. A failed or unavailable check cannot support completion. Update Tasks and Verify only with observed facts, and keep unresolved authority, environment, baseline, or semantic issues in Blockers.
 
 Return the WorkRef, behavior exercised, RED/GREEN/REFACTOR evidence, changed artifacts, fresh required checks, omissions, remaining Tasks and Blockers, and one next action. Return to the same selected Change; do not create parallel lifecycle state or recursively invoke another Skill.
+
+When work remains, return Core's compact continuation fields in order: `WorkRef`, `Authority`, `Current state`, `Changed artifacts`, `Fresh verification`, `Blockers`, and `Next action`. Put behavior and RED/GREEN/REFACTOR evidence in `Current state`, and the exact fresh commands, results, and omissions in `Fresh verification`. Reopen authority pointers, inspect drift, and refresh verification before resuming. The continuation is not durable truth and must not be persisted without explicit path authority.
 
 Git staging, commit, push, publication, deployment, review, archive, and approval remain separate actions requiring their own authority.

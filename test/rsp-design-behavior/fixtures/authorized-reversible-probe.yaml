@@ -1,0 +1,21 @@
+name: authorized-reversible-probe
+question: Does the undocumented adapter preserve cancellation across the runtime boundary?
+authority:
+  work_ref: cancellation-boundary
+  disposable_probe: true
+evidence:
+  - static-path-is-insufficient
+  - isolated-local-observation-is-safe
+expect:
+  reference: reversible-exploration
+  owner: same-selected-change
+  sequence:
+    - record-pre-probe-state
+    - run-minimum-observation
+    - capture-evidence
+    - remove-disposable-artifacts
+    - verify-cleanup
+  forbidden:
+    - production-implementation
+    - external-side-effect
+    - durable-prototype

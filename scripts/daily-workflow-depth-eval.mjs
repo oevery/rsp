@@ -527,6 +527,15 @@ export function materializeRealTrace({ caseId, persistRoot, root }) {
   return scored
 }
 
+export function getDailyWorkflowDepthBlockers({ d2Passed, exactPackage, journeysPassed, packageBoundaryIntact }) {
+  return [
+    !journeysPassed && 'one or more real journeys failed',
+    !exactPackage && 'real journeys used different package tarballs',
+    exactPackage && !packageBoundaryIntact && 'real journeys did not use the frozen candidate package',
+    !d2Passed && 'D2 paired correction-count gate is incomplete',
+  ].filter(Boolean)
+}
+
 export function evaluateDailyWorkflowDepth(root) {
   const evaluationRoot = join(root, 'research', 'evaluations', 'rsp-daily-workflow-depth', '2026-07-21')
   const replayDirectory = join(evaluationRoot, 'traces')
@@ -562,19 +571,19 @@ export function evaluateDailyWorkflowDepth(root) {
   const exactPackage = new Set(packageHashes).size === 1
   const journeysPassed = results.length === 5 && results.every(result => result.passed)
   const stableSkills = ['rsp', 'rsp-shape', 'rsp-implement', 'rsp-diagnose', 'rsp-tdd', 'rsp-review', 'rsp-address-review']
-  const packagedSkills = readdirSync(join(root, 'skills'), { withFileTypes: true })
-    .filter(entry => entry.isDirectory())
-    .map(entry => entry.name)
-    .sort()
-  const passed = journeysPassed && exactPackage && d2.passed
+  const frozenPackageSha256 = '7d64fab954b7366688db5bccf3e38db86c9ad0a671df1669d0e833495c368011'
+  const packageBoundaryIntact = exactPackage && packageHashes[0] === frozenPackageSha256
+  const passed = journeysPassed && packageBoundaryIntact && d2.passed
   return {
-    blockers: passed ? [] : [!journeysPassed && 'one or more real journeys failed', !exactPackage && 'real journeys used different package tarballs', !d2.passed && 'D2 paired correction-count gate is incomplete'].filter(Boolean),
+    blockers: passed
+      ? []
+      : getDailyWorkflowDepthBlockers({ d2Passed: d2.passed, exactPackage, journeysPassed, packageBoundaryIntact }),
     d2,
     evidence_class: 'same-case-real-host-observations',
     exact_package_sha256: exactPackage ? packageHashes[0] : null,
     journeys: results,
     oracle_replay_passed: replayResults.length === 5 && replayResults.every(result => result.passed),
-    package_boundary_intact: JSON.stringify(packagedSkills) === JSON.stringify([...stableSkills].sort()),
+    package_boundary_intact: packageBoundaryIntact,
     passed,
     recommendation: passed ? 'resume-release-preparation' : 'hold-release-preparation',
     stable_skills: stableSkills,

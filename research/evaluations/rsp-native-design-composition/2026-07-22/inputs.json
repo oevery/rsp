@@ -1,0 +1,26 @@
+{
+  "case_id": "device-discovery-boundary",
+  "source_case": "boats-cloud device discovery boundary, independently reimplemented from the J3 module-seam journey",
+  "holdout": "test/native-design-composition/holdout/device-discovery-boundary",
+  "package_skills": [
+    "rsp",
+    "rsp-shape",
+    "rsp-design",
+    "rsp-implement",
+    "rsp-review"
+  ],
+  "phase_order": [
+    "design",
+    "implement",
+    "review",
+    "durable"
+  ],
+  "runtime_boundaries": [
+    "exact local tarball",
+    "npx --no-install rsp",
+    "project-installed skills only",
+    "no global skill reads",
+    "no global memory reads",
+    "no Git delivery"
+  ]
+}

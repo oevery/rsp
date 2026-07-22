@@ -1,0 +1,19 @@
+id: durable-routing
+stage: pre-archive
+evidence:
+  - implementation produced a stable current module boundary
+  - the Change still contains its planned design and a lasting tradeoff
+expected:
+  returned_owner: the smallest authoritative artifact for each semantic class
+  next_action: judge current facts and lasting rationale independently
+sources:
+  - skills/rsp/SKILL.md
+  - rules/rsp-rules.md
+required_contract:
+  - Planned future design
+  - Implemented stable current facts
+  - Lasting rationale
+  - project-owned `CONTEXT.md`
+  - project-owned `AGENTS.md`
+  - Temporary execution state
+prohibited_actions: [promote-planned-state, duplicate-rationale, overwrite-project-owned-context]

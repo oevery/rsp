@@ -1,0 +1,20 @@
+id: conflict-restraint
+stage: implementation
+evidence:
+  - an active Git conflict intersects the selected WorkRef
+  - another conflicted hunk contains unrelated user work or an unresolved product decision
+expected:
+  returned_owner: the exact conflict and required owner input
+  next_action: stop before Git continuation or commit
+sources:
+  - skills/rsp/SKILL.md
+  - rules/rsp-rules.md
+  - skills/rsp-implement/SKILL.md
+required_contract:
+  - base/ours/theirs
+  - preserve unrelated work
+  - unresolved product decision
+  - do not stage
+  - continue or abort the Git operation
+  - commit
+prohibited_actions: [choose-side, stage, continue, abort, commit, push]

@@ -4,7 +4,7 @@ description: Resolve one fixed rsp-review report for an RSP-tracked change. Use 
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.21.2"
+  version: "2026.07.22"
 ---
 
 # RSP Address Review
@@ -39,22 +39,20 @@ Require a fresh fixed-scope re-review before claiming resolution. Return a re-re
 
 ## Handoff and recovery
 
-When work stops before a clean re-review, return this artifact-scoped handoff:
+When work stops before a clean re-review, return Core's compact artifact-scoped continuation with review state embedded in the shared fields:
 
 ```md
 ## Review Resolution Handoff
 - WorkRef: <selected Change>
-- Authority: <project and RSP pointers>
-- Review input: <fixed report and comparison>
-- Scope: <reviewed and changed files>
-- Dispositions: <FindingRef -> disposition and evidence>
-- Verification: <fresh command/result or pending reason>
-- Re-review: <request, result, or pending>
-- Pending: <unresolved FindingRefs and required input>
-- Next action: <one bounded action and owner>
+- Authority: <project, Change, fixed report, and comparison pointers>
+- Current state: <review input, FindingRef dispositions, and re-review status>
+- Changed artifacts: <reviewed and changed paths, or none>
+- Fresh verification: <command and result, or pending reason>
+- Blockers: <unresolved FindingRefs and required owner input, or none>
+- Next action: <smallest bounded action and owner>
 ```
 
-The handoff contains authoritative pointers, not project truth. Return it in the response unless the user explicitly authorizes a path; never create a hidden receipt or persistent run state. Exclude secrets, full logs, and duplicated Change text.
+The handoff contains authoritative pointers, not project truth. Return it in the response unless the user explicitly authorizes a path; never create a hidden receipt or persistent run state. It is not durable truth or a second state store. Exclude secrets, full logs, and duplicated Change text.
 
 To recover, reopen every authority pointer, confirm the WorkRef and comparison still identify the intended scope, inspect current worktree drift, and revalidate claimed verification. Mark stale evidence pending instead of trusting the handoff. Continue only the named pass; host threads, agents, hooks, or proprietary resume features are optional and never required.
 

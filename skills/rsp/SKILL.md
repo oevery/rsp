@@ -4,7 +4,7 @@ description: Use this skill when initializing RSP, operating an existing .rsp pr
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.21.3"
+  version: "2026.07.22"
 ---
 
 # RSP Skill
@@ -48,9 +48,10 @@ Apply these gates in order:
 1. If authority, selection, or a material owner decision is ambiguous, return the one decision or evidence needed to proceed. If a declared blocker prevents the next operation, return its owning artifact or person; do not route around it.
 2. If the user requests a report-only review against a fixed scope, select `rsp-review` only when it is available; otherwise name the manual read-only review and return its findings to the selected Change's Tasks, Verify, or Blockers.
 3. If no Change is selected, use the status plan to name one ready WorkRef and the direct focus action. For tiny settled work, return the direct engineering action without creating RSP state. For unclear non-trivial work, select `rsp-shape` only when it is available and the user authorized its Change mutation; otherwise give the manual fallback of creating or refining one Change.
-4. If the selected Change is not shape-ready, select `rsp-shape` under the same authority rule or give the manual fallback of completing its Proposal, Spec, Design, Tasks, Verify, and Blockers.
-5. If a shape-ready Change has incomplete implementation tasks, or its required verification is missing, stale, or failed, apply the implementation-evidence routing above. Select only its resulting available capability when authorized; otherwise name its manual fallback owned by that Change.
-6. If required Tasks and verification pass with no blocker, perform the Core durable decision. Archive only after required current facts and rationale are written or explicitly judged unnecessary.
+4. If the user or Shape has isolated one material domain, module/seam, or evidence-seeking design question for the selected Change, select `rsp-design` when available; otherwise return the compact manual design fallback: inspect project authority and the live path, compare credible alternatives, separate evidence from owner choice, and return the result to the same WorkRef without implementation or durable-truth mutation.
+5. If the selected Change is not shape-ready and no bounded design question has been isolated, select `rsp-shape` under the same authority rule or give the manual fallback of completing its Proposal, Spec, Design, Tasks, Verify, and Blockers.
+6. If a shape-ready Change has incomplete implementation tasks, or its required verification is missing, stale, or failed, apply the implementation-evidence routing above. Select only its resulting available capability when authorized; otherwise name its manual fallback owned by that Change.
+7. If required Tasks and verification pass with no blocker, perform the Core durable decision. Archive only after required current facts and rationale are written or explicitly judged unnecessary.
 
 State the derived stage, one next action, required input, returned owner, and decisive evidence. Name at most one available optional capability. Only name an optional capability when it is the one next action, and treat it as available only when it appears in the host's loaded skill inventory. Missing optional capabilities never invalidate RSP; always provide the manual fallback against the same owner.
 
@@ -88,6 +89,46 @@ Do not preload, enumerate, or recursively invoke optional capabilities. Do not i
 15. Update `## Tasks`, `## Verify`, and any invalidated `## Proposal`, `## Spec`, or `## Design` content in the same working session as implementation facts change.
 16. Keep temporary debugging notes, task history, and command transcripts out of `specs/` and project-owned `AGENTS.md` instructions.
 
+### Route artifacts by owner
+
+Use one semantic routing matrix throughout shaping, execution, and pre-archive review:
+
+| Content | Owner | Boundary |
+| --- | --- | --- |
+| Planned future design | selected Change `## Design` | Never write planned state as current truth. |
+| Implemented stable current facts | smallest relevant Spec, usually `.rsp/specs/design.md` or an existing domain Spec | Write only observed stable facts under authority. |
+| Lasting rationale and tradeoffs | one exact file under `durableReview.decisionRecordsPath` | Judge independently from current facts; do not duplicate them. |
+| Stable scoped navigation or current context | project-owned `CONTEXT.md`, when that convention exists | Preserve project ownership and edit only with explicit authority. |
+| Stable operating instructions | nearest project-owned `AGENTS.md` outside the managed RSP block | Preserve project ownership and edit only with explicit authority. |
+| Temporary execution state | response continuation | Not durable truth; write a file only when explicitly authorized. |
+
+When accepted work remains, return this compact artifact-scoped continuation in the response:
+
+```md
+## RSP Continuation
+- WorkRef: <selected Change>
+- Authority: <project, Change, Spec, decision, or report pointers>
+- Current state: <completed, partial, failed, unavailable, or blocked plus decisive state>
+- Changed artifacts: <paths or none>
+- Fresh verification: <command and result, or pending reason>
+- Blockers: <exact blocker and owner, or none>
+- Next action: <smallest bounded action and owner>
+```
+
+The continuation points to existing owners; it is not a second state store. On resume, reopen every authority pointer, inspect worktree and artifact drift, and refresh any verification supporting the next action. Never create hidden handoff/controller state or persist the continuation without explicit path authority.
+
+### Handle an active Git conflict
+
+When a merge, rebase, or cherry-pick conflict intersects authorized implementation:
+
+1. Inspect the exact Git operation, conflicted paths, current index/worktree, and pre-existing user changes.
+2. Interpret base, ours, and theirs in that operation; trace the relevant behavior and authority instead of choosing a side mechanically.
+3. Resolve only evidenced content inside the WorkRef and mutation authority. Preserve unrelated work and do not stage the resolution unless separately authorized.
+4. Stop when the conflict includes unrelated user work, an unresolved product decision, incomplete side/base evidence, or out-of-scope content. Return the exact conflict and required owner input in the continuation.
+5. After an authorized working-tree resolution, rerun affected checks and return their fresh result.
+
+Do not continue or abort the Git operation, commit, push, or infer Git delivery authority from implementation or conflict-resolution authority. RSP does not need a separate merge-conflict Skill for this fallback.
+
 ### Pre-archive durable decision
 
 1. Run `npx -y @oevery/rsp check --focused` for focused work, or `npx -y @oevery/rsp check` when reviewing all open changes.
@@ -123,10 +164,11 @@ Write a durable update only when one of these is true:
 
 Create or update a Decision Record only when the choice is hard to reverse, would be surprising without context, and reflects a real tradeoff. Decision Records own rationale, alternatives, tradeoffs, and consequences; Specs own what is currently true.
 
-Choose the smallest correct target:
+Apply the artifact-routing matrix and choose the smallest correct target:
 
 - project-wide design, boundaries, defaults, and durable context -> `.rsp/specs/design.md`
 - stable project or module operating instructions -> nearest project-owned `AGENTS.md`, only with authority to edit its non-managed content
+- stable navigation or scoped current context -> project-owned `CONTEXT.md`, only when the project uses it and authority permits the edit
 - an additional reusable project-level spec -> `.rsp/specs/<name>.md`
 - lasting rationale -> one exact Markdown file under `durableReview.decisionRecordsPath`
 

@@ -22,6 +22,7 @@ kind: "ops"
   - `minimum-skill-suite/brief` owns the promoted Core, Shape, Implement, and Review composition outcome.
   - `3-0-skill-readiness/brief` owns review resolution, implementation-evidence routing, and assisted-loop qualification.
   - `engineering-disciplines/brief` owns standalone TDD and diagnosis behavior plus their installed-suite qualification.
+  - `rsp-native-design-and-artifacts/brief` owns native design resolution, durable artifact/continuation behavior, and terminal installed-suite composition evidence.
   - `release-3-0-0` owns version identity, packaging, migration communication, and authorized external release operations.
   - The release artifact excludes research, evaluation, cache, self-hosting Change state, and maintainer-only tooling.
   - Push, tag, npm publish, and GitHub Release each require explicit external-action authority.
@@ -48,6 +49,7 @@ kind: "ops"
   - `minimum-skill-suite/brief`: promoted minimum Skill Suite and verified composition through existing RSP artifacts.
   - `3-0-skill-readiness/brief`: assisted review-resolution loop and its qualification evidence.
   - `engineering-disciplines/brief`: standalone TDD and diagnosis Skills plus their terminal composition evidence.
+  - `rsp-native-design-and-artifacts/brief`: native design, durable artifact/continuation behavior, and the expanded installed-suite qualification.
   - `release-3-0-0`: version preparation, package verification, migration communication, and authorized external publication.
   - Current dependency state and execution waves are derived by `rsp status`; this ownership map contains no live status.
 - Affected areas:
@@ -80,4 +82,6 @@ kind: "ops"
 - requires `fix-review-output-and-eval-runner`: needs review follow-up safety and output-language fixes before release preparation
 - requires `matt-first-daily-capability-audit`: needs the maintainer-requested daily capability audit before the 3.0 product boundary is frozen
 - requires `daily-workflow-depth/validate-daily-workflow-depth`: needs the selected shaping and managed-continuation candidates to pass the terminal five-journey gate
-- none
+- requires `rsp-native-design-and-artifacts/validate-native-design-composition`: needs native design and artifact ownership to pass the expanded installed-suite gate
+- requires `fix-native-composition-retained-gate`: needs retained native composition evidence to bind current product artifacts and auditable durable output
+- requires `fix-native-durable-semantic-oracle`: needs the retained durable artifact gate to reject contradictory ownership facts

@@ -35,4 +35,5 @@ export interface RuntimeIsolationResult {
 export function validateEvidenceReference(root: string, reference: DailyWorkflowEvidenceReference, label: string): void
 export function validateJ3RuntimeIsolation(phases: Array<{ observations?: Array<{ command: string, kind: string }> }>): RuntimeIsolationResult
 export function validateJ4RuntimeIsolation(phases: Array<{ observations?: Array<{ command: string, kind: string }> }>): RuntimeIsolationResult
+export function getDailyWorkflowDepthBlockers(input: { d2Passed: boolean, exactPackage: boolean, journeysPassed: boolean, packageBoundaryIntact: boolean }): string[]
 export function evaluateDailyWorkflowDepth(root: string): DailyWorkflowDepthResult

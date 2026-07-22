@@ -4,7 +4,7 @@ description: Shape or rigorously challenge unclear non-trivial work into one exe
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.21.2"
+  version: "2026.07.22"
 ---
 
 # RSP Shape
@@ -23,7 +23,7 @@ Return the request directly to implementation when it is tiny and concrete or th
 
 Inspect the repository before asking. Ask only for an owner decision whose answer can change behavior, data, interfaces, compatibility, safety, ownership, migration, or acceptance. Ask the smallest useful question set and write only authorized answers into the Change.
 
-Read [deep clarification](references/deep-clarification.md) when the user explicitly asks for rigorous challenge, normal shaping leaves a high-risk decision whose dependent choices remain unresolved, or project instructions select a domain or module design capability whose bounded task must return to Shape.
+Read [deep clarification](references/deep-clarification.md) when the user explicitly asks for rigorous challenge, normal shaping leaves a high-risk decision whose dependent choices remain unresolved, or one bounded domain, module/seam, or evidence-seeking design question must return to Shape. Prefer the installed `rsp-design` capability for that RSP-tracked design question; otherwise return its compact manual fallback against the same WorkRef.
 
 Never invent a product decision. When a material choice or mutation authority remains unresolved, leave the work open and report the single highest-impact blocker.
 

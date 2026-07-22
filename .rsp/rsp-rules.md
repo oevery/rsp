@@ -34,16 +34,27 @@ This file is the minimal fallback protocol for agents that cannot load the `rsp`
 - Parallel Changes in one Group follow the Brief `Slices` declaration order in plan output; unrelated work uses stable lexical ordering.
 - A Group Brief blocker is inherited by its direct child Changes as an external blocker; it does not create inferred dependency edges.
 - Persist only `open` and `archived`; readiness, blockers, verification, and next actions are derived.
+- Route one isolated domain, module/seam, or evidence-seeking design question to `rsp-design` when available, or use a compact manual design pass. Return evidence, alternatives, owner decisions, and any authorized planned-design update to the same selected Change; do not implement or write durable current truth from that pass.
 - Do not infer current work from open Changes or filenames.
 - Prefer RSP commands for deterministic setup, status, validation, repair, focus, index, and archive operations.
 
 ## Durable review
 
+- Route artifacts by semantic owner: planned future design stays in the selected Change; implemented stable current facts go to the smallest authoritative Spec or, with explicit authority, project-owned context/instructions; lasting rationale is judged independently for the configured Decision Record path; temporary continuation stays in the response unless a path is explicitly authorized.
+- Project-owned `CONTEXT.md` owns stable navigation or scoped current context, while project-owned `AGENTS.md` owns stable operating instructions. Preserve their conventions and never treat RSP as their owner.
 - Before archive, decide independently whether current facts need a Spec or scoped-instruction update and whether lasting rationale needs a Decision Record.
 - Decision Records are for hard-to-reverse choices with real tradeoffs; they do not duplicate current facts.
 - Change Spec deltas are planning aids and are never promoted automatically into Specs or Decision Records.
 - Keep task history, debugging notes, and transient execution state out of Specs and Decision Records.
 - Generated indexes and archives are not current-truth owners.
+
+## Continuation and conflicts
+
+- When execution stops with accepted work remaining, return one compact continuation with `WorkRef`, `Authority`, `Current state`, `Changed artifacts`, `Fresh verification`, `Blockers`, and `Next action`. Reopen its authority pointers, inspect drift, and refresh verification before resuming; it is not durable truth or a second state store.
+- Write a continuation file only when explicitly authorized. Never persist hidden handoff or controller state.
+- If an active merge, rebase, or cherry-pick conflict intersects authorized implementation, inspect the exact operation and conflicted paths, then compare base/ours/theirs semantics in that operation. Resolve only evidenced in-scope content while preserving unrelated work.
+- Stop on unrelated user work, an unresolved product decision, incomplete side/base evidence, or scope beyond the WorkRef. Name the exact conflict and required owner input; do not choose a side, stage a resolution, continue or abort the Git operation, commit, or infer any Git authority.
+- After an authorized working-tree resolution, rerun affected checks and return the continuation. Conflict-resolution authority alone does not grant Git continuation or delivery.
 
 ## Safety
 

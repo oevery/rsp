@@ -4,7 +4,7 @@ summary: Completed RSP changes.
 kind: generated-index
 index_type: archives
 source_dir: .rsp/archives
-entry_count: 50
+entry_count: 56
 ---
 
 # Archive Index
@@ -36,6 +36,8 @@ entry_count: 50
 | 2026-07-21 | fix-review-output-and-eval-runner | fix | Remove an unsafe one-off diagnosis runner and make review-facing Skill output follow the user's language without destabilizing protocol tokens. |
 | 2026-07-21 | fix-rsp-review-production-chain | fix | Require `rsp-review` to verify that a changed production consumer actually reaches a defective or recommended seam. |
 | 2026-07-21 | matt-first-daily-capability-audit | research | Audit the complete stable Matt engineering suite against RSP's seven-Skill assisted suite and real daily project journeys before 3.0 release preparation. |
+| 2026-07-22 | fix-native-composition-retained-gate | fix | Bind retained native composition evidence to current product artifacts and auditable durable output |
+| 2026-07-22 | fix-native-durable-semantic-oracle | fix | Reject contradictory ownership in retained durable composition evidence |
 | 2026-07-21 | 3-0-skill-readiness/brief | group | — |
 | 2026-07-21 | 3-0-skill-readiness/close-review-resolution-handoff | feature | Add a host-neutral review-resolution capability that disposes fixed findings, corrects accepted findings under explicit authority, requires verification and re-review, and returns a recoverable handoff when interrupted. |
 | 2026-07-21 | 3-0-skill-readiness/integrate-diagnosis-tdd-routing | feature | Add deterministic, host-neutral routing from implementation evidence to diagnosis, TDD, or ordinary implementation. |
@@ -55,6 +57,10 @@ entry_count: 50
 | 2026-07-21 | minimum-skill-suite/simplify-native-skills | refactor | Restore a gap-driven path from upstream distillation to concise RSP-native Skills. |
 | 2026-07-21 | minimum-skill-suite/validate-native-skill-depth | refactor | Preserve valuable complex shaping branches without bloating runtime context, and validate both concise native Skills on real mutation work. |
 | 2026-07-21 | minimum-skill-suite/validate-skill-composition | feature | Prove the minimum Skill Suite composes through existing RSP artifacts before 3.0 release. |
+| 2026-07-22 | rsp-native-design-and-artifacts/brief | group | — |
+| 2026-07-22 | rsp-native-design-and-artifacts/promote-rsp-design | feature | Promote a concise `rsp-design` discipline for resolving tracked domain, module, and evidence-seeking design questions. |
+| 2026-07-22 | rsp-native-design-and-artifacts/strengthen-artifact-continuation | feature | Make durable artifact writing, bounded continuation, and safe Git-conflict fallback explicit RSP-native behavior. |
+| 2026-07-22 | rsp-native-design-and-artifacts/validate-native-design-composition | ops | Qualify the eight-Skill assisted suite and gate RSP 3.0 on native design and durable artifact ownership. |
 | 2026-07-20 | skill-capability-research/accept-research-baselines | research | Close the reviewed upstream baseline used by the Skill System research. |
 | 2026-07-20 | skill-capability-research/brief | group | — |
 | 2026-07-20 | skill-capability-research/map-capability-coverage | research | Account for upstream and local Skills by capability instead of only by source repository. |

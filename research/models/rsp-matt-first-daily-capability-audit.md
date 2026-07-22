@@ -1,8 +1,8 @@
 ---
 topic: rsp-matt-first-daily-capability-audit
 status: complete
-implementation_status: proposed
-decision_status: candidate
+implementation_status: implemented
+decision_status: accepted
 sources:
   - "matt-skills@9603c1cc8118d08bc1b3bf34cf714f62178dea3b -> research/upstreams/matt-skills/9603c1cc8118d08bc1b3bf34cf714f62178dea3b.md"
   - "superpowers@d884ae04edebef577e82ff7c4e143debd0bbec99 -> research/upstreams/superpowers/d884ae04edebef577e82ff7c4e143debd0bbec99.md"
@@ -14,19 +14,20 @@ sources:
 
 ## Decision
 
-Keep Matt as the primary behavioral reference for small daily engineering disciplines, but do not reproduce its Skill inventory one-for-one. The current seven-Skill suite already covers navigation, shaping output, implementation, diagnosis, TDD, review, and review resolution. Its material daily-depth gaps are narrower:
+Keep Matt as the primary behavioral reference for small daily engineering disciplines, but do not reproduce its Skill inventory one-for-one. The current eight-Skill suite covers navigation, shaping output, tracked design resolution, implementation, diagnosis, TDD, review, and review resolution. Its remaining daily-depth gap is managed orchestration rather than another general engineering discipline.
 
-1. `rsp-shape` can resolve and record ambiguity, but it does not itself provide Matt's deliberate one-question-at-a-time stress-test mode or active domain-modeling discipline.
-2. The suite has no generic owner for authorized multi-stage continuation, bounded delegation, or cross-session recovery after the stable disciplines compose.
+1. `rsp-shape` now provides the selected one-decision-at-a-time deep-clarification branch.
+2. Real boats-cloud work demonstrated that domain ownership, module seams, and cheap reversible evidence seeking belong in an RSP-native design discipline because they decide the selected Change and its artifact routing; `rsp-design` independently reimplements that bounded need without importing Matt's formats or vocabulary as project authority.
+3. RSP execution now returns compact artifact-scoped continuation, while generic authorized multi-stage coordination, bounded delegation, budgets, and automatic retry still have no product owner.
 
-Treat the first as a candidate progressive shaping branch, not a new always-discoverable Skill. Treat the second as an optional Managed Controller outside the seven-Skill assisted suite. Keep module design, prototypes, tracker operations, merge conflicts, Git delivery, teaching, and general research in project/host-selected capabilities unless a later RSP-specific failure proves a different owner.
+The first two selections are implemented as `rsp-shape` progressive disclosure plus independently reimplemented `rsp-design`. Treat generic multi-stage coordination as optional managed orchestration outside the eight-Skill assisted suite. Keep broad architecture audits, open-ended prototypes, tracker operations, Git continuation/delivery, teaching, and general research in project/host-selected capabilities. Ordinary in-scope conflict handling needs only Core's compact model fallback, not a published Skill.
 
-This audit does not qualify either candidate. It blocks 3.0 product-boundary freeze until the maintainer selects or rejects the two follow-ups and their paired evaluation gate.
+The native design and continuation boundary is selected, but the expanded exact-package terminal gate remains responsible for qualifying it before 3.0 release preparation resumes.
 
 ## Evidence Boundary
 
 - Matt source: accepted complete report at revision `9603c1cc8118d08bc1b3bf34cf714f62178dea3b`; all required upstream paths matched and status reports no pending revision.
-- Current product: `skills/rsp`, `rsp-shape`, `rsp-implement`, `rsp-diagnose`, `rsp-tdd`, `rsp-review`, and `rsp-address-review` plus their frozen system/capability models.
+- Current product: `skills/rsp`, `rsp-shape`, `rsp-design`, `rsp-implement`, `rsp-diagnose`, `rsp-tdd`, `rsp-review`, and `rsp-address-review` plus their reconciled system/capability models.
 - Retained behavior evidence: Shape's three complete 15-case paired matrices, Core's six-case holdout, the assisted-loop three-turn installed-package holdout, and the installed diagnosis/TDD holdouts.
 - Local daily evidence: boats-cloud uses project-owned `.scratch` issues, rich `AGENTS.md`/`CONTEXT.md` domain authority, cross-Web/Desktop changes, logical commit slicing, authenticated or hardware acceptance, and handoff to a different code owner.
 
@@ -39,14 +40,14 @@ No fresh Matt-versus-RSP provider matrix was run for this research slice. Cost a
 | Navigation | `ask-matt` | Core derives one next action from intent, focus, readiness, and available capabilities | Covered without loading a catalog | Keep `rsp`; no new router |
 | Clarification | `grilling`, `grill-me`, `grill-with-docs` | Shape inspects evidence, asks material owner questions, and progressively loads multi-round shaping; external grilling is optional | Basic and multi-round clarification are covered, but deliberate stress-testing is not self-contained | Evaluate one progressive deep-clarification branch |
 | Specification and slicing | `to-spec`, `to-tickets` | Shape writes one six-section Change or shallow Group with tracer-bullet slices and exact blockers | Covered for RSP-owned work | Keep `rsp-shape`; do not add PRD/ticket duplicates |
-| Domain and module design | `domain-modeling`, `codebase-design` | RSP reads project context, Specs, and Decisions but owns no generic design vocabulary | Real projects often already own richer domain/module rules; duplicating them would create competing authority | Keep project-selected by default; test only a narrow Shape routing hook |
-| Exploration | `prototype`, `improve-codebase-architecture` | No RSP owner | Distinct report/disposable-code outputs and broad mutation scope do not belong to ordinary shaping | External explicit opt-in |
+| Domain and module design | `domain-modeling`, `codebase-design` | `rsp-design` resolves one tracked domain or module/seam question from project authority and returns the same WorkRef | boats-cloud showed that the decision affects Change execution and artifact ownership, while project vocabulary remains authoritative | Independent RSP reimplementation; do not copy Matt formats |
+| Exploration | `prototype`, `improve-codebase-architecture` | `rsp-design` may run one explicitly authorized reversible probe; broad audits remain unowned | Question-bounded evidence seeking belongs with design, while repository-wide reports and open-ended mutation do not | Native bounded branch; broad work external |
 | Implementation | `implement` | Implement owns one selected ready Change, dirty-worktree restraint, fresh verification, and return ownership | Covered | Keep `rsp-implement` |
 | Test and diagnosis | `tdd`, `diagnosing-bugs` | Standalone concise TDD and non-corrective diagnosis Skills | Covered for ordinary clear behavior and confirmed-cause diagnosis; specialized flaky/performance/HITL branches remain intentionally unqualified | Keep concise contracts; add depth only after a failing holdout |
 | Review | `code-review` | Fixed-scope Code/Document review plus separate finding resolution | Covered and behavior-qualified | Keep Review and Address Review separate |
-| Continuity | `handoff`, `wayfinder` | Address Review has an artifact-scoped handoff; generic continuity is deferred | The stable disciplines now compose, and repeated long work still requires manual next-step prompting | Select an optional Controller candidate; do not import Wayfinder's tracker map |
+| Continuity | `handoff`, `wayfinder` | Core and execution Skills return a compact response continuation; generic coordination is external | Resume can recover from existing owners without a second state store, while repeated managed work still requires host coordination | Keep bounded continuation native; managed orchestration external |
 | Tracker/project setup | `setup-matt-pocock-skills`, `triage` | RSP has its own protocol; projects may use another tracker | A second tracker authority would be harmful | External project workflow |
-| Git conflict handling | `resolving-merge-conflicts` | No RSP owner | Requires a concrete Git state and authority, independent of RSP lifecycle | External project/host discipline |
+| Git conflict handling | `resolving-merge-conflicts` | Core supplies a compact fallback for conflicts intersecting authorized implementation | A full Git workflow remains independent, but model-capable ordinary resolution needs only operation semantics, scope restraint, verification, and stops | Native compact fallback; Git continuation/delivery external |
 | Research | `research` | Maintainer `distill-upstream`; ordinary project research remains host-selected | Covered for RSP maintenance, not a runtime product gap | Do not publish a duplicate |
 | Teaching and Skill authoring | `teach`, `writing-great-skills` | No RSP runtime owner | User/productivity capability rather than RSP workflow state | External |
 
@@ -72,7 +73,7 @@ Deprecated, in-progress, personal, and miscellaneous Matt Skills remain research
 
 **Matt delta:** `domain-modeling` actively challenges terms with edge cases and writes settled glossary/decision material; `grill-with-docs` composes that behavior with a deep interview.
 
-**Finding:** RSP has the durable destinations but not the active design discipline. In boats-cloud, project-owned `CONTEXT.md`, ADRs, and scoped instructions already provide richer domain authority than a generic RSP vocabulary. The smallest RSP improvement is a Shape routing/return contract for explicit domain-model work, not a competing universal glossary format.
+**Finding:** RSP has the durable destinations and now needs the active decision discipline that determines how a selected Change uses them. In boats-cloud, project-owned `CONTEXT.md`, ADRs, scoped instructions, domain lifecycles, and runtime ownership supplied the authority; the missing behavior was a concise method that reads those owners, challenges the model, separates evidence from owner choices, and returns the conclusion to the same WorkRef. This supports an independent RSP implementation, not a universal glossary format or Matt runtime dependency.
 
 ### J3 — Module seam design
 
@@ -82,13 +83,13 @@ Deprecated, in-progress, personal, and miscellaneous Matt Skills remain research
 
 **Matt delta:** `codebase-design` supplies a consistent vocabulary for module depth, interfaces, seams, deletion tests, and test surfaces; `improve-codebase-architecture` applies it through a broad audit.
 
-**Finding:** the capability is valuable, but the authority usually belongs to the project's architecture rules. boats-cloud already defines owner-first modules, typed Web/Electron boundaries, published interfaces, and testing seams. RSP should route an explicitly requested design task to an available project capability and consume its settled result; it should not make Matt's vocabulary an RSP protocol rule.
+**Finding:** the project's architecture rules remain authoritative, but RSP owns the tracked question and its return path. boats-cloud already defines owner-first modules, typed Web/Electron boundaries, published interfaces, and testing seams; `rsp-design` independently reimplements only the evidence-reading, alternative comparison, seam-placement, and same-WorkRef return mechanics. Matt's vocabulary does not become an RSP protocol rule.
 
 ### J4 — Ordinary implementation and correction
 
 **Representative need:** implement a clear vertical slice, use TDD or diagnosis when evidence selects it, review the fixed scope, address accepted findings, and preserve unrelated work.
 
-**Current evidence:** the installed seven-Skill package passed deterministic composition plus fresh diagnosis, RED/GREEN, review-resolution, and re-review holdouts. The TDD confirmation skipped an unjustified refactor; diagnosis stopped before production correction; no run inferred Git authority.
+**Current evidence:** the prior installed seven-Skill package passed deterministic composition plus fresh diagnosis, RED/GREEN, review-resolution, and re-review holdouts. The eighth Skill and revised artifact contracts require the new exact-package composition gate rather than retroactive reuse of that tarball evidence.
 
 **Matt delta:** Matt offers richer tutorials and specialized feedback-loop techniques, but no missing ordinary owner. Superpowers adds stricter shortcut defenses at much greater instruction weight.
 
@@ -98,7 +99,7 @@ Deprecated, in-progress, personal, and miscellaneous Matt Skills remain research
 
 **Representative need:** the user authorizes completion across several slices or agents and expects work to continue until a genuine decision, environment, human-acceptance, or external-action boundary.
 
-**Current evidence:** Core intentionally returns one next action. Discipline Skills return to the same Change and cannot recursively invoke one another. Address Review can recover one bounded pass, but the assisted-loop report explicitly does not qualify a Managed Controller, automatic retries, parallel agents, or generic handoff.
+**Current evidence:** Core intentionally returns one next action. Discipline Skills return a shared bounded continuation to the same Change and cannot recursively invoke one another. This supports drift-aware recovery from existing owners but does not qualify a Managed Controller, automatic retries, parallel agents, or generic coordination.
 
 **Matt and cross-source delta:** Matt's `handoff` keeps compact pointers to authoritative artifacts; Matt's implementation loop and router expose the main path. GSD and Compound separately support an optional controller with explicit inputs/outputs, run-local state, budgets, and authority stops. Superpowers contributes bounded delegation and review-after-implementation constraints, not the mandatory full method.
 
@@ -106,7 +107,7 @@ Deprecated, in-progress, personal, and miscellaneous Matt Skills remain research
 
 ## Candidate Recommendations
 
-### D1 — Deep clarification as a progressive Shape branch (`model-only`)
+### D1 — Deep clarification as a progressive Shape branch (`model-only`, implemented)
 
 - **Observed gap:** users who explicitly request relentless questioning cannot get a self-contained high-depth mode from RSP alone.
 - **Owner:** `rsp-shape` capability-local reference, loaded only for explicit deep exploration or a high-risk multi-round decision.
@@ -114,18 +115,18 @@ Deprecated, in-progress, personal, and miscellaneous Matt Skills remain research
 - **Boundaries:** no implementation, Git, hidden state, invented product decision, or automatic durable-document mutation.
 - **Evidence gate:** compare current Shape and the candidate on ambiguous product, domain term, premature-action restraint, already-settled restraint, and ordinary-shaping cost cases.
 
-### D2 — Project design capability routing, not RSP-owned design doctrine (`model-only`)
+### D2 — RSP-native tracked design discipline (`independent-reimplementation`)
 
-- **Observed gap:** Shape can identify a design decision but cannot supply every project's domain/module discipline.
-- **Owner:** Core/Shape return contract to one available project-selected `domain-modeling`, `codebase-design`, or equivalent capability.
-- **Smallest behaviors:** name the unresolved design question, authoritative project docs, expected design artifact, mutation boundary, and same returning WorkRef.
-- **Boundaries:** no catalog enumeration, required Matt dependency, duplicate glossary/ADR owner, or recursive invocation inside Shape.
-- **Evidence gate:** a domain-language and module-seam holdout must show fewer owner corrections than ordinary Shape without adding cost to unrelated work.
+- **Observed gap:** Shape can identify a design decision, but real boats-cloud work still needs a package-distributed discipline to resolve domain ownership, module seams, and questions requiring reversible evidence without assuming separately installed Matt Skills.
+- **Owner:** `rsp-design`, invoked for one explicit or unambiguously focused WorkRef and returned to Shape or the user against that WorkRef.
+- **Smallest behaviors:** read project authority and the smallest code/evidence chain; select only domain, module/seam, or reversible-exploration guidance; separate evidenced conclusions from owner choices; compare credible alternatives; route planned design only to an authorized Change `Design`; return evidence, recommendation, gaps, artifact routing, and next action.
+- **Boundaries:** no required upstream dependency, catalog enumeration, duplicate glossary/ADR owner, current-truth write, production implementation, lifecycle mutation, recursive Skill invocation, or Git/delivery authority.
+- **Evidence gate:** domain ownership, module seam, missing authority, and authorized reversible-probe fixtures plus an exact-package Shape → Design → Implement → Review → durable-decision journey.
 
 ### D3 — Optional Managed Controller experiment (`model-only` plus independent implementation)
 
 - **Observed gap:** authorized long work requires repeated user prompts and has no generic continuation/recovery owner.
-- **Owner:** optional Controller outside the seven-Skill suite and outside durable `.rsp/` truth.
+- **Owner:** optional Controller outside the eight-Skill suite and outside durable `.rsp/` truth.
 - **Smallest behaviors:** consume one focused Change; select direct/assisted/managed depth from task size and explicit user intent; dispatch bounded capabilities with named inputs/output/mutation/verification/stop; continue until a real authority or evidence boundary; keep only a transient artifact-scoped handoff and return durable facts to existing owners.
 - **Boundaries:** no new project state model, recursive hidden retry loop, implicit commit/push/publish, mandatory subagents, or requirement for proprietary host features.
 - **Evidence gate:** paired current-versus-controller runs on one multi-slice task and one interruption/recovery task, measuring success, corrections, elapsed time, total tokens, tool calls, unauthorized actions, and stale-evidence handling.
@@ -141,8 +142,8 @@ Deprecated, in-progress, personal, and miscellaneous Matt Skills remain research
 ### D5 — Freeze by daily-depth composition, not Skill count (`independent-reimplementation`)
 
 - **Observed gap:** the minimum suite gate proves assisted composition but not the maintainer's end-to-end daily workflow.
-- **Owner:** a future RSP Change Group selected by the maintainer, with D1/D2 shaping depth, D3 controller, and one terminal composition slice.
-- **Evidence gate:** five sanitized journeys corresponding to J1-J5; candidate promotion requires only demonstrated deltas, hard-boundary tests, one available-host run, and total-cost reporting.
+- **Owner:** the selected RSP Change Group, with D1/D2 native behavior, D3 explicitly rejected from the product surface, and one terminal composition slice.
+- **Evidence gate:** deterministic restraint cases plus one exact installed-package native-design/artifact journey; preserve the prior five-journey evidence as the seven-Skill baseline rather than relabeling it.
 
 ## Rejected Expansion
 
@@ -150,9 +151,9 @@ Deprecated, in-progress, personal, and miscellaneous Matt Skills remain research
 - Adding `rsp-accept` when verification coverage can remain evidence in existing owners.
 - Adding `rsp-deliver` to the canonical suite; explicit Git delivery remains project/host authority and may be called only by an authorized controller adapter.
 - Treating `.scratch`, GitHub, Linear, or another external tracker item as an RSP WorkRef inside every Discipline Skill.
-- Adding generic architecture, prototype, research, teaching, setup, triage, or merge-conflict Skills before a distinct RSP-owned failure exists.
+- Adding broad architecture, open-ended prototype, research, teaching, setup, triage, or merge-conflict Skills when the bounded RSP-owned behavior is already covered or no distinct RSP owner exists.
 - Using Superpowers' universal invocation, mandatory TDD/worktree sequence, Iron-Law repetition, or full-method bootstrap as the daily RSP flow.
 
 ## Release Decision
 
-The seven stable Skills remain a valid 3.0 **assisted suite**. They are not yet evidence for a self-contained **managed daily workflow**. Because the maintainer explicitly requires the latter, release preparation should remain blocked until D1/D2 and D3 are selected or rejected and D5's scope is fixed. The next product action is one decision: authorize a shallow `daily-workflow-depth` Group containing a shaping-depth candidate, a Managed Controller experiment, and a terminal five-journey composition gate, or narrow the 3.0 promise back to the already qualified assisted suite.
+The eight stable Skills define the intended 3.0 **assisted suite**: D1 and D2 are native, bounded artifact continuation is native, and D3 managed orchestration remains research-only with recommendation `revise`. This is not a promise of a self-contained managed daily workflow. The exact installed eight-Skill native-design/artifact composition gate passed on 2026-07-22 against package SHA-256 `6b07aaedfa04539013b564eb6640968b3e9b6783dd8259feddcb099155bae4b7`, so this capability slice no longer blocks release preparation; generic orchestration, Git delivery, cross-host qualification, real-hardware acceptance, and platform acceptance remain explicit external boundaries.

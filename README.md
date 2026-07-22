@@ -119,21 +119,22 @@ Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENT
 
 ## Skills
 
-RSP publishes seven host-neutral Skills for on-demand loading:
+RSP publishes eight host-neutral Skills for on-demand loading:
 
 - `rsp`: setup, workflow, durable review, and archive guidance.
-- `rsp-shape`: shape unclear non-trivial work into one ready Change or justified shallow Group without implementing it; progressively load deep clarification for an explicit rigorous challenge or unresolved high-risk decision, and return project-selected design work through the same WorkRef.
+- `rsp-shape`: shape unclear non-trivial work into one ready Change or justified shallow Group without implementing it; progressively load deep clarification for an explicit rigorous challenge or unresolved high-risk decision, and return material design questions to the same WorkRef.
+- `rsp-design`: resolve one tracked domain-model, module/seam, or reversible-exploration question from project evidence, writing only authorized planned design back to the selected Change.
 - `rsp-implement`: implement one selected, ready Change within explicit mutation authority and return truthful Tasks, Blockers, and fresh verification evidence.
 - `rsp-diagnose`: establish a confirmed cause or truthful unresolved diagnosis before production correction.
 - `rsp-tdd`: drive one clear behavior through observed RED, minimal GREEN, optional safe REFACTOR, and fresh verification.
 - `rsp-review`: read-only review of code, document, or mixed Changes against fixed scope and project authority.
-- `rsp-address-review`: dispose fixed review findings, apply only authorized accepted corrections, require fresh verification and report-only re-review, and return a recoverable artifact-scoped handoff when work remains.
+- `rsp-address-review`: dispose fixed review findings, apply only authorized accepted corrections, require fresh verification and report-only re-review, and return a recoverable artifact-scoped continuation when work remains.
 
 Each Skill is independently invocable and returns results to existing project or RSP artifact owners. The suite adds no hidden workflow state or recursive Skill orchestration, and no Skill infers commit, push, or publication authority.
 
-The 3.0 product surface remains these seven Skills. Five same-case terminal journeys qualify Shape's progressive depth while preserving owner, environment, and acceptance stops. Long managed continuation may be composed explicitly by a host or external workflow, but it must reread current RSP artifacts, preserve their ownership, and stop at mutation, Git, publication, environment, or human-decision boundaries. The evaluated `rsp-manage` prototype remains research-only and is not installed or published as an RSP capability.
+The 3.0 product surface is these eight Skills. Five same-case terminal journeys qualify Shape's progressive depth while preserving owner, environment, and acceptance stops. RSP now owns bounded artifact routing and response-based continuation, while long managed orchestration remains an explicit host or external workflow that must reread current RSP artifacts, preserve their ownership, and stop at mutation, Git, publication, environment, or human-decision boundaries. The evaluated `rsp-manage` prototype remains research-only and is not installed or published as an RSP capability.
 
-For a complete tracked change, compose the suite as evidence requires: `rsp-shape` returns an executable Change; Core routes unexplained failures to `rsp-diagnose`, clear test-first behavior to `rsp-tdd`, and evidenced edits to `rsp-implement`; `rsp-review` returns a read-only report; `rsp-address-review` disposes findings and returns accepted corrections through fresh verification and re-review; and `rsp` performs the durable decision before archive. Each discipline returns to the same Change. Ambiguity, failed gates, and missing authority stop at their existing owner; they do not trigger an automatic retry loop.
+For a complete tracked change, compose the suite as evidence requires: `rsp-shape` returns an executable Change and sends one material design question to `rsp-design`; `rsp-design` returns its evidence, recommendation, alternatives, and any authorized planned-design update to the same WorkRef; Core routes unexplained failures to `rsp-diagnose`, clear test-first behavior to `rsp-tdd`, and evidenced edits to `rsp-implement`; `rsp-review` returns a read-only report; `rsp-address-review` disposes findings and returns accepted corrections through fresh verification and re-review; and `rsp` routes implemented current facts, lasting rationale, project-owned context or instructions, and temporary continuation to their existing semantic owners before archive. Each discipline returns to the same Change. Ambiguity, failed gates, missing authority, and out-of-scope Git conflicts stop at their existing owner; no Skill infers Git continuation, commit, delivery, or an automatic retry loop.
 
 Reading guidance:
 
@@ -141,6 +142,7 @@ Reading guidance:
 - `.rsp/rsp-rules.md`: minimal fallback protocol when the skill is unavailable
 - `skills/rsp/SKILL.md`: preferred operational guide for agents
 - `skills/rsp-shape/SKILL.md`: bounded shaping and slicing guidance
+- `skills/rsp-design/SKILL.md`: tracked domain, module/seam, and reversible-exploration design guidance
 - `skills/rsp-implement/SKILL.md`: bounded implementation and fresh verification guidance
 - `skills/rsp-diagnose/SKILL.md`: evidence-backed cause isolation before correction
 - `skills/rsp-tdd/SKILL.md`: bounded red-green-refactor guidance
@@ -155,11 +157,12 @@ Surface matrix:
 | `.rsp/rsp-rules.md` | Agents without the skill | Minimal tool-agnostic fallback protocol |
 | `skills/rsp/SKILL.md` | Agents | Preferred operational guide |
 | `skills/rsp-shape/SKILL.md` | Agents | Shape one executable Change or justified shallow Group |
+| `skills/rsp-design/SKILL.md` | Agents | Resolve one tracked design question and return it to the same WorkRef |
 | `skills/rsp-implement/SKILL.md` | Agents | Implement one ready Change with fresh verification evidence |
 | `skills/rsp-diagnose/SKILL.md` | Agents | Confirm a cause before production correction |
 | `skills/rsp-tdd/SKILL.md` | Agents | Implement one clear behavior test-first |
 | `skills/rsp-review/SKILL.md` | Agents | Read-only Code and Document review |
-| `skills/rsp-address-review/SKILL.md` | Agents | Resolve review findings and return a recoverable handoff |
+| `skills/rsp-address-review/SKILL.md` | Agents | Resolve review findings and return a recoverable continuation |
 | `AGENTS.md` | Humans and agents | Scoped project instructions and RSP navigation |
 
 Humans should usually start with `README.md`; agents should follow nearest `AGENTS.md`, load the `rsp` skill when available, and use `.rsp/rsp-rules.md` only as fallback.
@@ -177,6 +180,7 @@ Install only one capability when preferred:
 ```bash
 npx skills add oevery/rsp --skill rsp
 npx skills add oevery/rsp --skill rsp-shape
+npx skills add oevery/rsp --skill rsp-design
 npx skills add oevery/rsp --skill rsp-implement
 npx skills add oevery/rsp --skill rsp-diagnose
 npx skills add oevery/rsp --skill rsp-tdd

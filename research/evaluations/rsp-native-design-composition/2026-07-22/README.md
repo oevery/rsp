@@ -1,0 +1,11 @@
+# RSP native-design composition evaluation
+
+This directory freezes the oracle and input identity for one independently reimplemented, real-world-derived device-discovery case.
+
+The terminal run evaluates one exact local `@oevery/rsp` tarball through four ordered host phases: `rsp-design`, `rsp-implement`, `rsp-review`, and RSP Core durable review. It requires project-installed Skills, project-local `npx --no-install rsp`, per-phase mutation allowlists, fresh focused verification, read-only review, explicit durable-write authority, Simplified Chinese human-facing output, truthful unavailable hardware coverage, and no Git delivery.
+
+No synthetic or reconstructed real-run output is committed. Until `node scripts/native-design-composition-eval.mjs --run-real` completes successfully, the default evaluator fails closed with a missing retained-run blocker. A real run writes sanitized `metadata.json`, phase final messages, normalized `events.json`, `score.json`, and the durable artifact beneath `real-runs/device-discovery-boundary/`; package SHA-256, the complete eight-Skill inventory and hashes, exact commands, runtime isolation, changed paths, phase boundaries, final-output hashes, durable-artifact hash, and external verification remain auditable.
+
+The retained durable artifact was materialized from the still-present successful real-run workspace only after all four sanitized final-message hashes matched `metadata.json`; it was not reconstructed from the final report. The default evaluator re-scores deterministic gates from retained events, finals, the durable artifact, and current contract files. It also requires complete tree hashes for the five executed Skills, the full eight-Skill inventory and tree hashes, and the package behavior files `bin/rsp.mjs`, `dist/cli.mjs`, and `rules/rsp-rules.md` to match the current publish tree. README and other release-only documentation are intentionally outside this behavioral identity.
+
+Focused re-review later strengthened the independently authored durable oracle with explicit ownership and acceptance facts. The retained authentic artifact is re-scored against that stricter contract; no model output was reconstructed or relabeled as a fresh run.

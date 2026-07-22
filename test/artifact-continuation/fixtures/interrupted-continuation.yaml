@@ -1,0 +1,27 @@
+id: interrupted-continuation
+stage: execution
+evidence:
+  - accepted mutations remain in the selected Change
+  - another session must inspect drift before continuing
+expected:
+  returned_owner: the same selected Change and its existing authority pointers
+  next_action: resume the smallest bounded action from fresh evidence
+sources:
+  - skills/rsp/SKILL.md
+  - skills/rsp-implement/SKILL.md
+  - skills/rsp-diagnose/SKILL.md
+  - skills/rsp-tdd/SKILL.md
+  - skills/rsp-address-review/SKILL.md
+all_sources_contract:
+  - WorkRef
+  - Authority
+  - Current state
+  - Changed artifacts
+  - Fresh verification
+  - Blockers
+  - Next action
+required_contract:
+  - inspect worktree
+  - not durable truth
+  - explicit path authority
+prohibited_actions: [hidden-state, stale-verification, second-state-store]

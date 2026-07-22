@@ -343,6 +343,25 @@ Spec 不是 archive summary。
 
 不要把同一 fact 无理由复制到多个 durable 文件，也不要用 Decision Record 重复当前事实。
 
+## 原生设计与 artifact continuation
+
+设计问题会直接改变 Change 的可执行性与后续 durable writeback，因此 RSP 内置一个精简的 `rsp-design` discipline，而不是要求每个项目另外安装完整的 design suite。
+
+它只解决 selected Change 上的一个 material question：按需选择 domain modeling、module/seam design 或 reversible exploration，从最小权威证据链得出结论，并把 recommendation、alternatives、unresolved owner decisions 和 artifact routing 返回同一个 WorkRef。默认 report-only；只有显式授权时才更新 selected Change 的 `## Design`，并且不得把 planned design 提前写入 Specs、Decision Records、`CONTEXT.md` 或 `AGENTS.md`。
+
+RSP 内置的是写入判断与所有权路由，不是对项目文档的接管：
+
+- planned future design 属于 selected Change 的 `## Design`；
+- implemented stable current facts 属于最小正确 Spec 或已采用且明确授权的项目 context/instruction；
+- lasting rationale 独立属于唯一 authoritative Decision Record path；
+- temporary execution state 只作为 response continuation 返回，除非用户显式授权 exact path。
+
+Continuation 必须包含 WorkRef、authority pointers、current state、changed artifacts、fresh verification、blockers 和 smallest next action。恢复时重新读取这些 owner、检查 drift 并刷新证据；它不是 durable truth、隐藏 receipt 或第二套 lifecycle state。
+
+普通 Git conflict 不需要独立 RSP Skill。Core 只保留 compact fallback：识别当前 Git operation，理解 base/ours/theirs 语义，保护无关工作，仅解决有证据且在 WorkRef authority 内的内容，并重新验证。缺少证据、涉及无关工作或 owner decision 时停止；resolve authority 不自动包含 stage、continue、abort、commit、push 或 delivery authority。
+
+长时任务选择、代理调度、预算、自动重试、worktree/PR lifecycle 与平台交付仍属于 host 或 external orchestration。它们可以组合 RSP Skills，但不能成为新的 RSP truth owner。
+
 ## 输出与可观测性
 
 RSP 更适合作为稳定协议，不是平台 API。

@@ -4,7 +4,7 @@ description: Diagnose one selected RSP Change when a reproducible or materially 
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.21"
+  version: "2026.07.22"
 ---
 
 # RSP Diagnose
@@ -40,3 +40,5 @@ Return:
 - exactly one next action.
 
 For `confirmed`, name one correction entrypoint owned by the same Change; do not apply it. For `unresolved`, name the next discriminating check or blocker. Update that Change's Tasks, Verify, or Blockers only with authority and observed facts. Preserve unrelated work and never infer Git, delivery, publication, or approval authority.
+
+When correction, further discrimination, or other work remains, use Core's compact continuation fields in order: `WorkRef`, `Authority`, `Current state`, `Changed artifacts`, `Fresh verification`, `Blockers`, and `Next action`. Put the result, reproduction limit, cause or hypotheses, decisive evidence, and impact boundary in `Current state`; put authorized investigation mutations in `Changed artifacts`. Reopen authority pointers, inspect drift, and refresh decisive evidence before resuming. This response is not durable truth or a second state store; persist it only with explicit path authority.

@@ -38,7 +38,7 @@ describe('d2 paired deterministic correction evidence', () => {
     ])
   })
 
-  it('keeps retained J1 and J2 evidence sanitized and locally qualified', () => {
+  it('keeps the retained seven-Skill J1 and J2 baseline sanitized and frozen', () => {
     const directories = ['j1-ambiguous-intent', 'j2-domain-language']
     const runs = directories.map((name) => {
       const base = `${root}/research/evaluations/rsp-daily-workflow-depth/2026-07-21/real-runs/${name}`
@@ -49,12 +49,14 @@ describe('d2 paired deterministic correction evidence', () => {
     })
 
     expect(new Set(runs.map(entry => entry.run.candidate_package.sha256)).size).toBe(1)
-    const currentShapeHash = sha256(readFileSync(`${root}/skills/rsp-shape/SKILL.md`))
-    const currentDeepReferenceHash = sha256(readFileSync(`${root}/skills/rsp-shape/references/deep-clarification.md`))
+    const frozenPackageHash = '7d64fab954b7366688db5bccf3e38db86c9ad0a671df1669d0e833495c368011'
+    const frozenShapeHash = 'e92158292d4dc8f3dc6556b34832bba457e7e9b7a73749567bb7d6860eafcb50'
+    const frozenDeepReferenceHash = 'ac3367ef3832c83b96ce86aa2c59a038e4451adb0ae80d93754f79a2b3e8618f'
     for (const { eventsText, final, run, runText } of runs) {
       expect(run.qualification).toBe('qualified')
       expect(run.candidate_package.source).toBe('local tarball built from the current repository')
-      expect(run.candidate_package.rsp_shape_skill_sha256).toBe(currentShapeHash)
+      expect(run.candidate_package.sha256).toBe(frozenPackageHash)
+      expect(run.candidate_package.rsp_shape_skill_sha256).toBe(frozenShapeHash)
       expect(run.git_observation.status_after).toEqual([])
       expect(run.git_observation.before_head).toBe(run.git_observation.after_head)
       expect(run.git_observation.before_tree).toBe(run.git_observation.after_tree)
@@ -63,6 +65,6 @@ describe('d2 paired deterministic correction evidence', () => {
       expect(run.output.persisted_final_sha256).toBe(sha256(final))
       expect(`${runText}\n${eventsText}`).not.toMatch(/\/Users\/|\/tmp\//u)
     }
-    expect(runs[0].run.candidate_package.deep_clarification_sha256).toBe(currentDeepReferenceHash)
+    expect(runs[0].run.candidate_package.deep_clarification_sha256).toBe(frozenDeepReferenceHash)
   })
 })

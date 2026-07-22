@@ -45,4 +45,13 @@ describe('rsp core routing contract', () => {
     expect(body).toContain('ordinary `rsp-implement`')
     expect(body).toContain('same selected Change')
   })
+
+  it('routes one tracked design question without making design a controller', () => {
+    const body = readFileSync(skillPath, 'utf8')
+
+    expect(body).toContain('one material domain, module/seam, or evidence-seeking design question')
+    expect(body).toContain('`rsp-design` when available')
+    expect(body).toContain('compact manual design fallback')
+    expect(body).toContain('same WorkRef without implementation or durable-truth mutation')
+  })
 })

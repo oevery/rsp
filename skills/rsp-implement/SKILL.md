@@ -4,7 +4,7 @@ description: Implement exactly one selected, ready RSP Change within explicit mu
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.21.3"
+  version: "2026.07.22"
 ---
 
 # RSP Implement
@@ -13,7 +13,7 @@ Implement exactly one selected RSP Change and return observed facts to it.
 
 ## Select and inspect
 
-Use an explicit WorkRef or require one unambiguous focus marker. A Group Brief supplies context but is not executable. Stop when selection, readiness, product authority, acceptance, or required decisions are unresolved.
+Require an explicit WorkRef or one unambiguous focus marker. A Group Brief supplies context but is not executable. Stop when selection, readiness, product authority, acceptance, or required decisions are unresolved.
 
 Read nearest project instructions and context, the RSP core skill or fallback protocol, the selected Change and sibling Brief, relevant Specs and decisions, current worktree state, then the smallest code and test chain needed to establish ownership. Use normal repository discovery; do not guess owners or treat a heuristic projection as complete evidence.
 
@@ -21,7 +21,7 @@ Read nearest project instructions and context, the RSP core skill or fallback pr
 
 Identify the outcome, required owners, verification, and pre-existing work before editing. Modify only what the Change requires plus its Tasks, Verify, and Blockers. Preserve unrelated modified, staged, and untracked work. An overlap is unsafe when the required edit would discard, guess, or rewrite pre-existing intent; stop then instead of overwriting it.
 
-Git delivery, publication, deployment, approval, and out-of-scope deletion require separate explicit authority. A plan, finding, check, or completion request does not grant it. Verify request-named findings before applying them and report each disposition.
+Git delivery, publication, deployment, approval, and out-of-scope deletion require separate explicit authority. For active conflicts, use Core's fallback: inspect base/ours/theirs semantics, preserve unrelated work, resolve only evidenced in-scope content, rerun checks, and stop before staging, continuation, abort, or commit without separate authority. Verify request-named findings before applying them and report each disposition.
 
 ## Classify implementation evidence
 
@@ -43,6 +43,8 @@ Record concise fresh verification evidence in the Change when its Verify section
 
 ## Return ownership
 
-Report whether the Change is completed, partial, blocked before implementation, verification-failed, verification-unavailable, or verification-blocked. Use failed when a check exercised its intended behavior and found a defect; use unavailable when a missing tool, dependency, service, credential, or environment prevented the check from exercising it. Use blocked only when scoped checks pass but a required gate cannot pass solely because of a confirmed pre-existing or out-of-scope baseline defect; record the evidence and never waive the gate when this Change may contribute. Name the WorkRef, changed artifacts, preserved unrelated work, remaining Tasks and Blockers, fresh checks and omissions, finding dispositions, and the smallest next action.
+Report whether the Change is completed, partial, blocked before implementation, verification-failed, verification-unavailable, or verification-blocked. Use failed when a check exercised its intended behavior and found a defect; use unavailable when a missing tool, dependency, service, credential, or environment prevented the check from exercising it. Use blocked only when scoped checks pass but a required gate cannot pass solely because of a confirmed pre-existing or out-of-scope baseline defect; record the evidence and never waive the gate when this Change may contribute.
+
+When work remains, return Core's compact `WorkRef`, `Authority`, `Current state`, `Changed artifacts`, `Fresh verification`, `Blockers`, and `Next action` fields. They are not durable truth; persistence requires explicit path authority.
 
 Claim completion only when required Tasks and checks pass and no blocker remains. Do not claim review, archive, Git delivery, or release unless separately performed with explicit authority.

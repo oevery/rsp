@@ -34,7 +34,8 @@
   },
   "scripts": {
     "prepare": "pnpm run build",
-    "release:check": "pnpm run build && pnpm run typecheck && pnpm run lint && pnpm run test && npm pack --dry-run --ignore-scripts",
+    "release:check": "pnpm run build && pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run release:package-check",
+    "release:package-check": "node scripts/clean-install-check.mjs",
     "prepublishOnly": "pnpm run release:check",
     "build": "tsup",
     "dev": "tsup --watch",
