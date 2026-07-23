@@ -110,7 +110,6 @@ export async function showReady(name: string, options: CommandRunOptions = {}): 
     exitReadyError(name, { code: 'invalid_config', message: `.rsp/config.yaml could not be parsed: ${toErrorMessage(error)}` }, options)
   }
   const durableReview = buildDurableReviewGuidance(getDurableReviewCandidateTargets(), decisionRecordsPath)
-
   const result: ReadyResult = {
     command: 'ready',
     ok: true,
@@ -139,7 +138,6 @@ export async function showReady(name: string, options: CommandRunOptions = {}): 
       console.log(`  ${pc.yellow('⚠')} ${line}`)
     console.log()
     console.log(`  ${pc.dim('Review the warnings above before treating this work as fully closed.')}`)
-    console.log(`  ${pc.dim('Run:')} rsp archive ${name}\n`)
   }
 
   console.log(`  ${pc.dim('Deterministic readiness:')} ${readiness.deterministic === 'pass' ? pc.green('pass') : pc.yellow('warnings')}`)
@@ -151,7 +149,6 @@ export async function showReady(name: string, options: CommandRunOptions = {}): 
   console.log(`    ${pc.dim('Current-fact targets:')} ${durableReview.factCandidateTargets.join(', ')}`)
   console.log(`    ${pc.dim('Decision Record path:')} ${durableReview.decisionRecordsPath}`)
   console.log(`    ${pc.dim(durableReview.note)}\n`)
-
   return result
 }
 

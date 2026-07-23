@@ -4,7 +4,7 @@ description: Use this skill when initializing RSP, operating an existing .rsp pr
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.22.2"
+  version: "2026.07.23.1"
 ---
 
 # RSP Skill
@@ -58,7 +58,7 @@ Apply these gates in order:
 5. If the selected Change is not shape-ready and no bounded design question has been isolated, select `rsp-shape` under the same authority rule or give the manual fallback of completing its Proposal, Spec, Design, Tasks, Verify, and Blockers.
 6. If a shape-ready Change has incomplete implementation tasks, or its required verification is missing, stale, or failed, apply the implementation-evidence routing above. Select only its resulting available capability when authorized; otherwise name its manual fallback owned by that Change.
 7. If implementation Tasks and required verification pass with no blocker, and the selected Change meets both release-documentation conditions above, select `rsp-release-docs` under the same availability rule or use its manual fallback. Return its evidence and artifact dispositions to the same Change.
-8. Otherwise, when required Tasks and verification pass with no blocker, perform the Core durable decision. Archive only after required current facts and rationale are written or explicitly judged unnecessary.
+8. Otherwise, when required Tasks and verification pass with no blocker, perform the Core durable decision. Archive only after required current facts and rationale are written or explicitly judged unnecessary. Recommend explicit archive as the next action before final Git delivery; Core does not execute archive or grant authority to stage, commit, push, or publish.
 
 State the derived stage, one next action, required input, returned owner, and decisive evidence. Name at most one available optional capability. Only name an optional capability when it is the one next action, and treat it as available only when it appears in the host's loaded skill inventory. Missing optional capabilities never invalidate RSP; always provide the manual fallback against the same owner.
 

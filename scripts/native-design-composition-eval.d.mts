@@ -30,3 +30,4 @@ export function validateCurrentNativeDesignArtifact(root: string, packageEvidenc
 export function scoreNativeDesignEvidence(input: Record<string, any>): { blockers: string[], gates: Record<string, boolean>, passed: boolean }
 export function evaluateNativeDesignComposition(root: string, options?: { runRoot?: string }): NativeDesignCompositionResult
 export function runRealNativeDesignComposition(input: Record<string, any>): Promise<Record<string, any>>
+export function rescoreNativeDesignAttempt(input: { attemptRoot: string, persistRoot: string, reason: string, root: string }): { metadata: Record<string, any>, score: { blockers: string[], gates: Record<string, boolean>, passed: boolean } }

@@ -8,6 +8,7 @@ import {
   evaluateNativeDesignComposition,
   loadNativeDesignContract,
   masksOnlyDesign,
+  rescoreNativeDesignAttempt,
   scoreNativeDesignEvidence,
   validateCurrentNativeDesignArtifact,
   validateNativeDesignPhaseChanges,
@@ -17,7 +18,8 @@ import {
 const root = fileURLToPath(new URL('..', import.meta.url))
 const skills = ['rsp', 'rsp-shape', 'rsp-design', 'rsp-implement', 'rsp-review']
 const publishedSkills = ['rsp', 'rsp-address-review', 'rsp-design', 'rsp-diagnose', 'rsp-implement', 'rsp-review', 'rsp-shape', 'rsp-tdd']
-const retainedRun = join(root, 'research', 'evaluations', 'rsp-native-design-composition', '2026-07-22', 'real-runs', 'device-discovery-boundary-compact-json-output')
+const retainedRun = join(root, 'research', 'evaluations', 'rsp-native-design-composition', '2026-07-22', 'real-runs', 'device-discovery-boundary-layer-archive-closeout')
+const correctedAttempt = join(retainedRun, 'invalid-attempts', 'failed-1784788188154')
 
 function copiedRetainedRun(onTestFinished: (callback: () => void) => void) {
   const runRoot = mkdtempSync(join(tmpdir(), 'rsp-native-design-retained-'))
@@ -63,6 +65,25 @@ describe('native-design composition terminal evaluator', () => {
       expect(result.passed).toBe(false)
       expect(result.recommendation).toBe('hold-release-preparation')
     }
+  })
+
+  it('promotes a corrected-oracle rescore without rewriting the failed source attempt', ({ onTestFinished }) => {
+    const runRoot = mkdtempSync(join(tmpdir(), 'rsp-native-design-rescore-'))
+    onTestFinished(() => rmSync(runRoot, { force: true, recursive: true }))
+    const sourceBefore = readFileSync(join(correctedAttempt, 'metadata.json'), 'utf8')
+
+    const result = rescoreNativeDesignAttempt({
+      attemptRoot: correctedAttempt,
+      persistRoot: runRoot,
+      reason: 'accept equivalent Chinese unique-owner wording',
+      root,
+    })
+
+    expect(result.score.passed).toBe(true)
+    expect(result.metadata.result).toBe('passed')
+    expect(result.metadata.rescore.source_attempt).toContain('failed-1784788188154')
+    expect(evaluateNativeDesignComposition(root, { runRoot }).passed).toBe(true)
+    expect(readFileSync(join(correctedAttempt, 'metadata.json'), 'utf8')).toBe(sourceBefore)
   })
 
   it('binds retained execution evidence to the assisted-engineering Skill suite', () => {
@@ -237,6 +258,10 @@ describe('native-design composition terminal evaluator', () => {
       ...evidence,
       durableBody: '物理设备发现和连接生命周期属于桌面运行时；Web 不直接发现硬件。runtime-neutral 包只负责设备事件投影。接收器硬件验收仍不可用。',
     })
+    const uniqueOwnerChineseBoundary = scoreNativeDesignEvidence({
+      ...evidence,
+      durableBody: '桌面运行时是物理设备发现、接收器打开和连接生命周期的唯一所有者。Web 只消费已投影的设备事件，不直接发现或打开硬件。运行时中立包只负责设备事件投影。接收器硬件验收仍不可用。',
+    })
     const negatedInvertedChineseBoundary = scoreNativeDesignEvidence({
       ...evidence,
       durableBody: '物理设备发现不属于桌面运行时；Web 不直接发现硬件。runtime-neutral 包只负责设备事件投影。接收器硬件验收仍不可用。',
@@ -279,6 +304,7 @@ describe('native-design composition terminal evaluator', () => {
     expect(compactRuntimeIndependentBoundary.passed).toBe(true)
     expect(receiverWordedChineseBoundary.passed).toBe(true)
     expect(invertedChineseBoundary.passed).toBe(true)
+    expect(uniqueOwnerChineseBoundary.passed).toBe(true)
     expect(negatedInvertedChineseBoundary.passed).toBe(false)
     expect(contradictory.passed).toBe(false)
     expect(contradictory.blockers).toContain('durable_current_fact')

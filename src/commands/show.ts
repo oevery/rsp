@@ -173,7 +173,6 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
     : []
   const contextPaths = [...groupContextPaths, ...factCandidateTargets, decisionRecordsPath]
   const durableReview = buildDurableReviewGuidance(factCandidateTargets, decisionRecordsPath)
-
   const result: ShowResult = {
     command: 'show',
     ok: true,
@@ -226,7 +225,6 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
   console.log(`    ${pc.dim('Decision Record path:')} ${durableReview.decisionRecordsPath}`)
   console.log(`    ${pc.dim(durableReview.note)}`)
   console.log()
-
   return result
 }
 

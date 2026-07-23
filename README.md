@@ -164,7 +164,7 @@ Each Skill is independently invocable and returns results to existing project or
 
 Response language and artifact language are independent. Human-facing response headings, labels, explanations, and conclusions follow the requested response language, response-specific project instructions, then the conversation language. Authorized artifact prose follows the requested artifact language, artifact-specific project instructions, then the existing artifact language, and only then the conversation language. Canonical RSP artifact headings, WorkRef values, paths, commands, identifiers, and machine-consumed values remain unchanged; response labels may retain technical tokens in parentheses but never use them as untranslated labels.
 
-The 3.0 product surface is these nine Skills. Five same-case terminal journeys qualify Shape's progressive depth while preserving owner, environment, and acceptance stops. RSP now owns bounded artifact routing, response-based continuation, and evidence-based release documentation, while long managed orchestration remains an explicit host or external workflow that must reread current RSP artifacts, preserve their ownership, and stop at mutation, Git, publication, environment, or human-decision boundaries. The evaluated `rsp-manage` prototype remains research-only and is not installed or published as an RSP capability.
+The 3.0 product surface is these nine Skills. Five same-case terminal journeys qualify Shape's progressive depth while preserving owner, environment, and acceptance stops. RSP now owns bounded artifact routing, response-based continuation, and evidence-based release documentation, while long managed orchestration remains an explicit host or external workflow that must reread current RSP artifacts, preserve their ownership, and stop at mutation, Git, publication, environment, or human-decision boundaries. The evaluated `rsp-manage` prototype remains research-only and is not installed or published as an RSP capability; its candidate closeout branch may execute archive only under explicit lifecycle-closeout authority after Core's durable decision.
 
 For a complete tracked change, compose the suite as evidence requires: `rsp-shape` returns an executable Change and sends one material design question to `rsp-design`; `rsp-design` returns its evidence, recommendation, alternatives, and any authorized planned-design update to the same WorkRef; Core routes unexplained failures to `rsp-diagnose`, clear test-first behavior to `rsp-tdd`, and evidenced edits to `rsp-implement`; `rsp-review` returns a read-only report; `rsp-address-review` disposes findings and returns accepted corrections through fresh verification and re-review; when a selected Change explicitly owns a confirmed release identity or range and unfinished release documentation, Core routes that work to `rsp-release-docs`, which turns one evidence ledger into distinct changelog, release-note, and migration surfaces without inferring publication authority; and `rsp` routes implemented current facts, lasting rationale, project-owned context or instructions, and temporary continuation to their existing semantic owners before archive. Each discipline returns to its existing owner. Ambiguity, failed gates, missing authority, and out-of-scope Git conflicts stop at that owner; no Skill infers Git continuation, commit, delivery, or an automatic retry loop.
 
@@ -270,7 +270,7 @@ Agents should treat only entries in `focus.d/` as current work. Unfocused files 
 
 Durable review makes two independent semantic choices: whether current facts or scoped instructions need an update, and whether lasting rationale needs a Decision Record. The RSP skill or a human reviewer owns both judgments.
 
-`rsp ready` and `rsp show` expose both deterministic readiness and semantic-review signals. Deterministic readiness comes from checkboxes, blockers, and scenarios; semantic review remains required for durable-update decisions.
+`rsp ready` and `rsp show` expose deterministic readiness and semantic-review signals without turning deterministic success into an archive action. Deterministic readiness comes from checkboxes, blockers, and scenarios; Core or a human still owns the durable-update decision and the advisory archive recommendation.
 
 `rsp ready --json` and `rsp show --json` include `durableReview.factDecisions`, `rationaleDecisions`, `factCandidateTargets`, and the one authoritative `decisionRecordsPath`. This is routing guidance only; RSP does not fabricate filenames or promote Change content automatically.
 
@@ -288,7 +288,7 @@ New project:
 8. Use `rsp unfocus <name>` when you want to remove a change from the current focus set
 9. Edit the change file directly to implement the work and mark tasks complete
 10. Use the RSP skill or a human review to decide whether durable updates are needed
-11. Finish with `rsp archive <name>`
+11. After Core recommends archive, run `rsp archive <name>` before final Git delivery; inspect the complete resulting worktree and obtain Git authority separately
 
 Existing project with a rich `AGENTS.md`:
 

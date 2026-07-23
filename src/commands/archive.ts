@@ -106,10 +106,9 @@ export async function archiveChange(name: string, options: ArchiveOptions = {}) 
         console.log(`  ${pc.dim('Archive completed, but follow-up cleanup was only partially successful.')}\n`)
 
       if (existsSync('.git')) {
-        const archiveRelPath = workRef.group ? join(workRef.group, archiveName) : archiveName
-        console.log(`  ${pc.cyan('Git workflow:')}\n`)
-        console.log(`    git add .rsp/archives/${archiveRelPath}`)
-        console.log(`    git commit -m "feat: archive ${name}"`)
+        console.log(`  ${pc.cyan('Git delivery:')}\n`)
+        console.log(`    git status --short`)
+        console.log(`    Inspect the complete archive transition; stage and commit only with separate Git authority.`)
         console.log()
       }
     })

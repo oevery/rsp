@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 import { parse as parseYaml } from 'yaml'
 
 const CASE_ID = 'device-discovery-boundary'
-const RETAINED_RUN_ID = `${CASE_ID}-compact-json-output`
+const RETAINED_RUN_ID = `${CASE_ID}-layer-archive-closeout`
 const PHASES = ['design', 'implement', 'review', 'durable']
 const SKILLS = ['rsp', 'rsp-shape', 'rsp-design', 'rsp-implement', 'rsp-review']
 const PUBLISHED_SKILLS = ['rsp', 'rsp-address-review', 'rsp-design', 'rsp-diagnose', 'rsp-implement', 'rsp-review', 'rsp-shape', 'rsp-tdd']
@@ -460,15 +460,23 @@ export function scoreNativeDesignEvidence({ designSectionOnly, durableBody, fina
     && JSON.stringify(installedNames) === JSON.stringify([...SKILLS].sort())
     && Object.values(packageEvidence.installed_skill_hashes).every(hash => /^[a-f0-9]{64}$/.test(hash))
   const durableLower = durableBody.toLowerCase()
+  const durableSentences = durableBody.split(/[。\n]/u)
+  const uniqueOwnerSentence = durableSentences.find(sentence => sentence.includes('桌面运行时')
+    && /物理(?:设备|接收器)的?发现/u.test(sentence)
+    && sentence.includes('所有者'))
+  const uniqueOwnerNegated = uniqueOwnerSentence?.includes('不是') || uniqueOwnerSentence?.includes('并非')
+  const uniqueOwnerPositive = Boolean(uniqueOwnerSentence?.includes('是')) && !uniqueOwnerNegated
   const desktopOwnershipNegated = /物理(?:设备|接收器)的?发现[^。\n]*(?:不属于|并非[^。\n]*属于|不应属于)[^。\n]*桌面运行时/u.test(durableBody)
+    || uniqueOwnerNegated
   const desktopOwnershipPositive = /(?:desktop runtime|desktop|桌面运行时)[^\n]*(?:own|owns|拥有|负责)[^\n]*(?:physical (?:device )?discovery|物理(?:设备|接收器)的?发现)/iu.test(durableBody)
     || /物理(?:设备|接收器)的?发现[^。\n]*(?:属于|归属于)[^。\n]*桌面运行时/u.test(durableBody)
+    || uniqueOwnerPositive
   const durableSemanticMatches = {
     desktop_owns_physical_discovery: desktopOwnershipPositive && !desktopOwnershipNegated,
     hardware_acceptance_unavailable: /(?:hardware|硬件)[^\n]*(?:unavailable|不可用|未执行)/iu.test(durableBody),
     runtime_neutral_projects_only: (/runtime-neutral/iu.test(durableBody) || durableBody.includes('运行时中立') || durableBody.includes('运行时无关'))
       && (/\bprojects?\b|projection/iu.test(durableBody) || durableBody.includes('投影')),
-    web_does_not_discover: /web[^\n]*(?:does not directly discover|不直接发现硬件|不得直接发现硬件|不能[^。\n]*发现[^。\n]*硬件)/iu.test(durableBody),
+    web_does_not_discover: /web[^\n]*(?:does not directly discover|不直接发现(?:或打开)?硬件|不得直接发现硬件|不能[^。\n]*发现[^。\n]*硬件)/iu.test(durableBody),
   }
   const durableRequired = Object.entries(oracle.durable_current_facts.required)
     .every(([key, alternatives]) => alternatives.some(fragment => durableLower.includes(fragment.toLowerCase())) || durableSemanticMatches[key] === true)
@@ -597,6 +605,69 @@ export async function runRealNativeDesignComposition({ effort = 'low', model = '
   return { metadata, score: retainedScore }
 }
 
+export function rescoreNativeDesignAttempt({ attemptRoot, persistRoot, reason, root }) {
+  assert(reason?.trim(), 'native-design rescore requires a reason')
+  const required = ['metadata.json', 'events.json', DURABLE_ARTIFACT, ...PHASES.map(phase => `phase-${phase}-final.md`)]
+  for (const name of required)
+    assertSafeFile(attemptRoot, join(attemptRoot, name), `rescore source ${name}`)
+
+  const sourceMetadata = JSON.parse(readFileSync(join(attemptRoot, 'metadata.json'), 'utf8'))
+  assert(sourceMetadata.result === 'failed', 'native-design rescore source must be a failed attempt')
+  const eventsRaw = readFileSync(join(attemptRoot, 'events.json'), 'utf8')
+  const events = JSON.parse(eventsRaw)
+  const durableBody = readFileSync(join(attemptRoot, DURABLE_ARTIFACT), 'utf8')
+  const finals = PHASES.map(phase => readFileSync(join(attemptRoot, `phase-${phase}-final.md`), 'utf8'))
+  const phases = sourceMetadata.phases.map(phase => ({
+    ...phase,
+    observations: events.filter(event => event.phase === phase.name).map(({ phase: _phase, ...event }) => event),
+  }))
+  const { manifest, oracle } = loadNativeDesignContract(root)
+  const score = scoreNativeDesignEvidence({
+    designSectionOnly: sourceMetadata.design_section_only === true,
+    durableBody,
+    finalBodies: finals,
+    gitHeadUnchanged: sourceMetadata.git_head_unchanged === true,
+    manifest,
+    oracle,
+    packageEvidence: sourceMetadata.package,
+    phaseBoundaries: validateNativeDesignPhaseChanges(manifest, sourceMetadata.phase_changes ?? {}),
+    phases,
+    runtimeIsolation: validateNativeDesignRuntimeIsolation(phases),
+    verification: sourceMetadata.verification ?? {},
+  })
+  if ((sourceMetadata.unauthorized_paths ?? []).length > 0) {
+    score.passed = false
+    score.blockers.push('changed_allowlist')
+  }
+  assert(score.passed, `native-design rescore still fails: ${score.blockers.join(', ')}`)
+
+  const metadata = {
+    ...sourceMetadata,
+    rescore: {
+      reason: reason.trim(),
+      source_attempt: relative(root, attemptRoot).replaceAll('\\', '/'),
+    },
+    result: 'passed',
+  }
+  const evidenceSha = hashContent(JSON.stringify({
+    durable_artifact_sha256: metadata.durable_artifact?.sha256,
+    events_sha256: metadata.events_sha256,
+    final_hashes: metadata.phases.map(phase => phase.final_hash),
+    metadata,
+  }))
+  const retainedScore = { ...score, evidence_sha256: evidenceSha }
+
+  mkdirSync(persistRoot, { recursive: true })
+  archivePreviousAttempt(persistRoot)
+  cpSync(join(attemptRoot, DURABLE_ARTIFACT), join(persistRoot, DURABLE_ARTIFACT))
+  cpSync(join(attemptRoot, 'events.json'), join(persistRoot, 'events.json'))
+  for (const phase of PHASES)
+    cpSync(join(attemptRoot, `phase-${phase}-final.md`), join(persistRoot, `phase-${phase}-final.md`))
+  writeFileSync(join(persistRoot, 'metadata.json'), `${sanitize(JSON.stringify(metadata, null, 2))}\n`)
+  writeFileSync(join(persistRoot, 'score.json'), `${JSON.stringify(retainedScore, null, 2)}\n`)
+  return { metadata, score: retainedScore }
+}
+
 export function evaluateNativeDesignComposition(root, options = {}) {
   const { manifest, paths } = loadNativeDesignContract(root)
   const runRoot = options.runRoot ?? join(paths.evaluationRoot, 'real-runs', RETAINED_RUN_ID)
@@ -698,14 +769,27 @@ export function evaluateNativeDesignComposition(root, options = {}) {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
   const runReal = process.argv.includes('--run-real')
-  const result = runReal
-    ? await runRealNativeDesignComposition({
-        outputRoot: join(root, '.cache', 'rsp-native-design-composition'),
+  const rescoreIndex = process.argv.indexOf('--rescore-attempt')
+  const rescoreReasonIndex = process.argv.indexOf('--rescore-reason')
+  const rescoreAttempt = rescoreIndex >= 0 ? process.argv[rescoreIndex + 1] : undefined
+  const rescoreReason = rescoreReasonIndex >= 0 ? process.argv[rescoreReasonIndex + 1] : undefined
+  assert(rescoreIndex < 0 || rescoreAttempt, '--rescore-attempt requires a path')
+  assert(rescoreIndex < 0 || rescoreReason, '--rescore-reason requires a value')
+  const result = rescoreAttempt
+    ? rescoreNativeDesignAttempt({
+        attemptRoot: resolve(root, rescoreAttempt),
         persistRoot: join(root, ...EVALUATION_PATH, 'real-runs', RETAINED_RUN_ID),
+        reason: rescoreReason,
         root,
       })
-    : evaluateNativeDesignComposition(root)
+    : runReal
+      ? await runRealNativeDesignComposition({
+          outputRoot: join(root, '.cache', 'rsp-native-design-composition'),
+          persistRoot: join(root, ...EVALUATION_PATH, 'real-runs', RETAINED_RUN_ID),
+          root,
+        })
+      : evaluateNativeDesignComposition(root)
   console.log(JSON.stringify(result, null, 2))
-  if (runReal ? !result.score.passed : !result.passed)
+  if (runReal || rescoreAttempt ? !result.score.passed : !result.passed)
     process.exitCode = 1
 }

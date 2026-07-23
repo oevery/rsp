@@ -35,6 +35,15 @@ describe('rsp-manage research candidate', () => {
     expect(existsSync(join(candidate, 'agents', 'openai.yaml'))).toBe(false)
   })
 
+  it('executes archive only under explicit lifecycle-closeout authority', () => {
+    const { body } = readSkill()
+
+    expect(body).toContain('explicit lifecycle-closeout authority')
+    expect(body).toContain('run `rsp archive <work-ref>`')
+    expect(body).toContain('stop with the advisory archive action')
+    expect(body).toContain('never infer Git staging or commit authority')
+  })
+
   it('satisfies every deterministic controller contract fixture', () => {
     const cases = loadManagedControllerCases(root)
     expect(cases.map(item => item.id)).toEqual([

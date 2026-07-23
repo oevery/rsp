@@ -45,6 +45,7 @@ This file is the minimal fallback protocol for agents that cannot load the `rsp`
 - Route artifacts by semantic owner: planned future design stays in the selected Change; implemented stable current facts go to the smallest authoritative Spec or, with explicit authority, project-owned context/instructions; lasting rationale is judged independently for the configured Decision Record path; temporary continuation stays in the response unless a path is explicitly authorized.
 - Project-owned `CONTEXT.md` owns stable navigation or scoped current context, while project-owned `AGENTS.md` owns stable operating instructions. Preserve their conventions and never treat RSP as their owner.
 - Before archive, decide independently whether current facts need a Spec or scoped-instruction update and whether lasting rationale needs a Decision Record.
+- After required durable updates, Core recommends explicit archive before final Git delivery. Core does not execute archive or grant authority to stage, commit, push, or publish.
 - Decision Records are for hard-to-reverse choices with real tradeoffs; they do not duplicate current facts.
 - Change Spec deltas are planning aids and are never promoted automatically into Specs or Decision Records.
 - Keep task history, debugging notes, and transient execution state out of Specs and Decision Records.
