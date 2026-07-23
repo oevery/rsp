@@ -17,7 +17,7 @@ import {
 const root = fileURLToPath(new URL('..', import.meta.url))
 const skills = ['rsp', 'rsp-shape', 'rsp-design', 'rsp-implement', 'rsp-review']
 const publishedSkills = ['rsp', 'rsp-address-review', 'rsp-design', 'rsp-diagnose', 'rsp-implement', 'rsp-review', 'rsp-shape', 'rsp-tdd']
-const retainedRun = join(root, 'research', 'evaluations', 'rsp-native-design-composition', '2026-07-22', 'real-runs', 'device-discovery-boundary-config-template-contract-review-fixes')
+const retainedRun = join(root, 'research', 'evaluations', 'rsp-native-design-composition', '2026-07-22', 'real-runs', 'device-discovery-boundary-doctor-config-inspection-fix')
 
 function copiedRetainedRun(onTestFinished: (callback: () => void) => void) {
   const runRoot = mkdtempSync(join(tmpdir(), 'rsp-native-design-retained-'))

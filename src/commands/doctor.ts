@@ -4,10 +4,10 @@ import { readdir, readFile, stat } from 'node:fs/promises'
 import { basename, join, relative } from 'node:path'
 
 import { inspectChangeGroups } from '../core/change-group.js'
-import { CONFIG_PATH, loadRspConfig, OBSOLETE_RSP_RULES_PATH, pc, RSP_DIR, RSP_RULES_PATH, validateRspConfig } from '../core/config.js'
+import { clearConfigCache, inspectRspConfig, loadRspConfig, OBSOLETE_RSP_RULES_PATH, pc, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
 import { DEFAULT_DECISION_RECORDS_PATH, resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
-import { hasRspAgentsBlock, inspectUnsupportedRules, normalizeLogicalPath, parseFrontmatter, parseYamlText, walkMarkdownFiles } from '../core/helpers.js'
+import { hasRspAgentsBlock, inspectUnsupportedRules, normalizeLogicalPath, parseFrontmatter, walkMarkdownFiles } from '../core/helpers.js'
 import { inspectManagedFile } from '../core/managed-path.js'
 import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
 import { GROUP_BRIEF_FILENAME, inspectArchiveTree, inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
@@ -15,6 +15,7 @@ import { updateProject } from './update.js'
 
 interface DoctorCheck {
   status: 'ok' | 'issue' | 'info'
+  code?: string
   label: string
   message?: string
   hint?: string
@@ -325,43 +326,33 @@ async function checkArchiveNaming(checks: DoctorCheck[]): Promise<void> {
 }
 
 async function checkConfigSemantics(checks: DoctorCheck[], reportRuntime: (diagnostic: RuntimeDiagnostic) => void): Promise<boolean> {
-  const configFile = inspectManagedFile(CONFIG_PATH, 'config file', { allowMissing: true })
-  if (configFile.issue) {
-    checks.push({ status: 'issue', label: 'config.yaml semantic checks', message: configFile.issue.message, hint: 'Replace the unsupported entry with a project-local regular file.' })
-    return false
-  }
-  if (!configFile.exists)
-    return true
-
-  let content: string
+  clearConfigCache()
+  let inspection: Awaited<ReturnType<typeof inspectRspConfig>>
   try {
-    content = await readFile(CONFIG_PATH, 'utf-8')
+    inspection = await inspectRspConfig()
   }
   catch (error) {
+    const message = toErrorMessage(error)
     reportRuntime({
-      code: 'config_read_failed',
-      operation: 'readFile',
-      path: CONFIG_PATH,
-      message: toErrorMessage(error),
+      code: 'invalid_config',
+      operation: 'inspectRspConfig',
+      path: '.rsp/config.yaml',
+      message,
     })
-    checks.push({ status: 'issue', label: 'config.yaml semantic checks', message: 'config.yaml could not be read', hint: 'Check .rsp/config.yaml permissions or recreate it with rsp init' })
-    return false
-  }
-
-  let parsed: Record<string, unknown>
-  try {
-    parsed = parseYamlText(content)
-  }
-  catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
-    checks.push({ status: 'issue', label: 'config.yaml semantic checks', message: 'config.yaml is not valid YAML', hint: message })
-    return false
-  }
-
-  const issues = validateRspConfig(parsed)
-  for (const issue of issues) {
     checks.push({
       status: 'issue',
+      code: 'invalid_config',
+      label: 'config.yaml semantic checks',
+      message,
+      hint: 'Fix the reported config file, YAML, or managed-path issue.',
+    })
+    return false
+  }
+
+  for (const issue of inspection.issues) {
+    checks.push({
+      status: 'issue',
+      code: 'invalid_config',
       label: 'config.yaml semantic checks',
       message: issue,
       hint: issue.includes('decisions')
@@ -370,10 +361,10 @@ async function checkConfigSemantics(checks: DoctorCheck[], reportRuntime: (diagn
     })
   }
 
-  if (issues.length === 0 && 'kinds' in parsed)
+  if (inspection.issues.length === 0 && inspection.config.kinds !== undefined)
     checks.push({ status: 'ok', label: 'config.yaml field "kinds" has valid list semantics' })
 
-  return issues.length === 0
+  return inspection.issues.length === 0
 }
 
 async function checkDecisionRecordsDirectory(checks: DoctorCheck[], reportRuntime: (diagnostic: RuntimeDiagnostic) => void): Promise<void> {

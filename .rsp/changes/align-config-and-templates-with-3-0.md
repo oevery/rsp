@@ -66,12 +66,13 @@ kind: "fix"
 - [x] Add focused tests for the optimized ordinary, lite, project-setup, Group Brief, and config templates.
 - [x] Implement the shared configuration contract and template changes as one compatible slice.
 - [x] Stabilize the existing local-Git upstream lifecycle test with a scoped timeout after repeated full-suite contention.
+- [x] Resolve the accepted CLI review finding by routing `doctor` through the shared configuration inspection result and preserving structured `invalid_config` diagnostics.
 - [x] Run focused and full project verification, then record observed coverage truthfully.
 
 ## Verify
 - Automated:
   - [x] `mise exec -- pnpm vitest run test/config.test.ts test/helpers.test.ts test/integration.test.ts test/native-design-composition.test.ts` — 217 tests passed; proves focused configuration, template, and retained-evidence behavior
-  - [x] `node scripts/native-design-composition-eval.mjs --run-real` — all 15 external gates passed against the packed 3.0.0 artifact; proves the four-phase Skill composition, language boundary, and durable-fact routing remain valid
+  - [x] `node scripts/native-design-composition-eval.mjs --run-real` — all 15 external gates passed against the packed 3.0.0 artifact and retained evidence under `device-discovery-boundary-doctor-config-inspection-fix`; proves the four-phase Skill composition, language boundary, and durable-fact routing remain valid
   - [x] `mise exec -- pnpm run build` — passed; proves TypeScript and package output remain buildable
   - [x] `mise exec -- pnpm run lint` — passed; proves project lint remains clean
   - [x] `mise exec -- pnpm run test` — 352 tests passed; proves the complete project suite remains compatible

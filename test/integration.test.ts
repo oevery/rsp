@@ -1594,6 +1594,14 @@ describe('init and doctor', () => {
     }
 
     expect(output).toContain('config.yaml field "required_sections" is no longer supported')
+
+    const jsonResult = spawnSync('node', [cliPath(), 'doctor', '--json'], { cwd: doctorDir, encoding: 'utf-8' })
+    const jsonOutput = JSON.parse(jsonResult.stdout)
+    expect(jsonOutput.checks).toContainEqual(expect.objectContaining({
+      status: 'issue',
+      code: 'invalid_config',
+      message: 'config.yaml field "required_sections" is no longer supported',
+    }))
   })
 
   it('fails a normal config consumer with structured invalid_config output', async () => {
@@ -1634,11 +1642,17 @@ describe('init and doctor', () => {
     await writeFile(join(doctorDir, '.rsp', 'config.yaml'), 'decisions: [\n')
 
     const result = spawnSync('node', [cliPath(), 'doctor', '--json'], { cwd: doctorDir, encoding: 'utf-8' })
+    const checkResult = spawnSync('node', [cliPath(), 'check', '--json'], { cwd: doctorDir, encoding: 'utf-8' })
     const output = JSON.parse(result.stdout)
+    const checkOutput = JSON.parse(checkResult.stdout)
 
     expect(result.status).not.toBe(0)
     expect(output.ok).toBe(false)
-    expect(output.checks.some((check: { message?: string }) => check.message === 'config.yaml is not valid YAML')).toBe(true)
+    expect(output.checks).toContainEqual(expect.objectContaining({
+      status: 'issue',
+      code: 'invalid_config',
+      message: checkOutput.diagnostics[0].message,
+    }))
   })
 
   it('does not partially scaffold when an existing config is invalid', async () => {
