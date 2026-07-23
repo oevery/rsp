@@ -177,6 +177,7 @@ npx skills add oevery/rsp --skill rsp-diagnose
 npx skills add oevery/rsp --skill rsp-tdd
 npx skills add oevery/rsp --skill rsp-review
 npx skills add oevery/rsp --skill rsp-address-review
+npx skills add oevery/rsp --skill rsp-release-docs
 ```
 
 `rsp update` 只会刷新项目内的 RSP 文件。如果你在使用发布出来的 RSP Skills，升级后还需要单独刷新：
@@ -188,6 +189,8 @@ npx skills add oevery/rsp
 ## 从 2.x 迁移
 
 版本 3 仅使用 `.rsp/rsp-rules.md` 作为运行时 fallback，并从 RSP 模型中移除了 project rules：
+
+完整的兼容性、恢复与验证说明见 [3.0 migration guide](https://github.com/oevery/rsp/blob/v3.0.0/docs/migrations/3.0.md)。
 
 1. 升级 RSP CLI。
 2. 运行 `rsp update`，生成 canonical fallback 并删除旧的 `.rsp/rules/rsp-rules.md` 生成文件。

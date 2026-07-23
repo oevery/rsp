@@ -278,6 +278,7 @@ describe('documentation command examples', () => {
     const root = fileURLToPath(new URL('..', import.meta.url))
     const readme = readFileSync(join(root, 'README.md'), 'utf-8')
     expect(readme).toContain('Otherwise use `npx -y @oevery/rsp <command>`')
+    expect(readme).toContain('npx skills add oevery/rsp --skill rsp-release-docs')
   })
 
   it('marks the canonical-only protocol release as a breaking version', () => {
@@ -286,7 +287,7 @@ describe('documentation command examples', () => {
     const changelog = readFileSync(join(root, 'CHANGELOG.md'), 'utf-8')
 
     expect(packageJson.version).toBe('3.0.0')
-    expect(changelog).toContain('## 3.0.0 (Unreleased)')
+    expect(changelog).toContain('## 3.0.0 (2026-07-23)')
   })
 
   it('keeps high-value guardrails in rules and skill', () => {

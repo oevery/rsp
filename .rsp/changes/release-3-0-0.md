@@ -60,20 +60,21 @@ kind: "ops"
   - Do not copy upstream Group completion checklists or turn referenced Groups into child entities.
 
 ## Tasks
-- [ ] Confirm every declared upstream capability Group is closed and repository history contains the accepted models and every promoted capability.
-- [ ] Complete 3.0.0 changelog, migration notes, version identity, and release date.
-- [ ] Run full release, package-content, clean-install, and CLI/Skill discovery gates.
+- [x] Confirm every declared upstream capability Group is closed and repository history contains the accepted models and every promoted capability.
+- [x] Complete 3.0.0 changelog, release notes, migration notes, version identity, and release date.
+- [x] Run full release, package-content, clean-install, and CLI/Skill discovery gates.
 - [ ] Commit the release preparation as one scoped commit.
 - [ ] After separate authorization, push, tag, publish, create release notes, and verify installed registry contents.
 
 ## Verify
 - Automated:
-  - [ ] `mise exec -- pnpm run release:check`
-  - [ ] Pack and install the exact artifact into a clean temporary prefix.
+  - [x] `mise exec -- pnpm run release:check` — build, typecheck, lint, 30 test files / 352 tests, and release package check passed on 2026-07-23
+  - [x] Pack and install the exact artifact into a clean temporary prefix — `@oevery/rsp@3.0.0`, SHA-256 `f82943b18681c45757d036e40084c914052bccb20e41ba70340f2f4104849bb4`; CLI and all nine Skills discovered; forbidden repository-only roots absent
+  - [x] `mise exec node@18 -- node scripts/clean-install-check.mjs --json` — exact artifact clean install and discovery passed with Node.js 18.20.8
 - Manual:
-  - [ ] Compare Git tag, npm metadata, package file list, changelog, migration notes, CLI version, and installed Skill inventory.
+  - [x] Compared package identity and file list, changelog, release notes, migration notes, CLI `3.0.0`, and installed nine-Skill inventory; npm `latest` remains `2.0.4` and remote `v3.0.0` is absent before separately authorized publication
 - Durable updates:
-  - [ ] Changelog and migration documentation are the durable release record; no additional product Spec is required unless final behavior differs.
+  - [x] `CHANGELOG.md`, `docs/releases/3.0.0.md`, and `docs/migrations/3.0.md` are the durable release record; no additional product Spec is required because final behavior matches `.rsp/specs/design.md`.
 
 ## Blockers
 - requires `align-config-and-templates-with-3-0`: needs project configuration and generated templates to match the final 3.0 capability and artifact-ownership contract

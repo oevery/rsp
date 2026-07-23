@@ -1,15 +1,18 @@
 # Changelog
 
-## 3.0.0 (Unreleased)
+## 3.0.0 (2026-07-23)
 
 - **Breaking:** Use `.rsp/rsp-rules.md` as the only runtime fallback protocol and project-owned `AGENTS.md` files for stable scoped instructions; the project-rules CLI and templates have been removed. After upgrading from 2.x, run `rsp update`, migrate any residual custom `.rsp/rules/` content deliberately, flatten work paths deeper than one Group level, and finish with `rsp doctor`.
 - Add typed WorkRefs and shallow Change Groups with explicit briefs, declared direct-child membership, grouped context, independent child focus and archive behavior, and `rsp group create` / `rsp group close` lifecycle commands. Recursive Groups and persisted progress graphs remain unsupported.
 - Derive ready work, exact dependency edges with reasons, blockers, and stable execution waves from Change facts in `rsp status`; apply shared no-follow inspection and mutation preflight across Changes, focus markers, archives, recursive Specs, and generated indexes so invalid or incomplete work trees fail visibly.
 - Add one authoritative Decision Record path, including safe external routing, inactive-record diagnostics, Specs-index isolation, and independent pre-archive judgments for current facts and lasting rationale.
+- Make `.rsp/config.yaml` fail closed through one shared validation contract, preserve `kinds` replacement semantics, and align generated Change, project-setup, and Group Brief templates with executable Tasks, explicit verification coverage, and separate current-fact and rationale ownership.
 - Publish nine independently invocable, host-neutral Skills: `rsp`, `rsp-shape`, `rsp-design`, `rsp-implement`, `rsp-diagnose`, `rsp-tdd`, `rsp-review`, `rsp-address-review`, and `rsp-release-docs`.
 - Route tracked work by evidence through shaping, design, diagnosis, test-driven development, implementation, read-only review, review resolution, durable artifact ownership, and, only for Changes with explicit confirmed release ownership and unfinished documentation, `rsp-release-docs`. Every Skill returns results to the existing WorkRef or project owner, localizes human-facing response labels without changing the target artifact language, and preserves explicit mutation, Git, verification, and publication boundaries.
 - Strengthen `rsp-review` with fixed comparison scope, separate code and document states, direct production-reachability checks, and report-only handoff; add bounded finding disposition, fresh verification, and re-review through `rsp-address-review`.
 - Ship only the CLI, fallback rules, and the nine-Skill suite in the npm package; keep source research, evaluations, self-hosting Change state, maintainer tooling, and the evaluated `rsp-manage` prototype out of the published product. Clean-install package validation now consumes npm 10 JSON output reliably.
+
+See the [3.0.0 release notes](docs/releases/3.0.0.md) and [2.x migration guide](docs/migrations/3.0.md).
 
 ## 2.0.4 (2026-05-28)
 

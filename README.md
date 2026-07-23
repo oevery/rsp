@@ -191,6 +191,7 @@ npx skills add oevery/rsp --skill rsp-diagnose
 npx skills add oevery/rsp --skill rsp-tdd
 npx skills add oevery/rsp --skill rsp-review
 npx skills add oevery/rsp --skill rsp-address-review
+npx skills add oevery/rsp --skill rsp-release-docs
 ```
 
 `rsp update` refreshes project-local RSP files only. If you use published RSP Skills, refresh them separately after upgrading:
@@ -202,6 +203,8 @@ npx skills add oevery/rsp
 ## Migrating from 2.x
 
 Version 3 uses `.rsp/rsp-rules.md` as the only runtime fallback path and removes project rules from the RSP model:
+
+See the [complete 3.0 migration guide](https://github.com/oevery/rsp/blob/v3.0.0/docs/migrations/3.0.md) for compatibility, recovery, and validation details.
 
 1. Upgrade the RSP CLI.
 2. Run `rsp update` to create the canonical fallback and remove the obsolete generated `.rsp/rules/rsp-rules.md`.
