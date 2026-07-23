@@ -335,7 +335,9 @@ Use `skills/rsp/SKILL.md` for operations. When the skill is unavailable, use `.r
 
 When there is no focused change, `rsp status` and `rsp show --focused --json` print `nextActions` instead of guessing which open change is current.
 
-`rsp status --json` returns the same dependency projection under `plan.ready`, `plan.edges`, `plan.blocked`, and `plan.waves`. These are derived navigation facts, not execution authority or persisted workflow state.
+Human-readable `rsp status` renders its execution guidance as a dependency forest: each parent requires its children, shared prerequisites are referenced instead of expanded repeatedly, and `Next action` names the currently executable Change or Changes.
+
+`rsp status --json` returns the same dependency graph under `plan.nodes`, `plan.ready`, `plan.edges`, `plan.blocked`, and `plan.waves`. Nodes distinguish filter-selected Changes from prerequisite context, while filtered plans retain the transitive prerequisite closure needed to explain the result. JSON stays flat rather than nesting children because prerequisites may be shared by multiple Changes. Each edge reads as “`change` requires `requires`”. These are derived navigation facts, not execution authority or persisted workflow state.
 
 The JSON-producing inspection commands `status`, `show`, `ready`, `check`, and `doctor` accept `--json --compact` for the same parsed value as `--json`, serialized on one LF-terminated line. `--compact` requires `--json`; other commands reject it before running command behavior.
 

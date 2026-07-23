@@ -18,8 +18,9 @@ import {
 const root = fileURLToPath(new URL('..', import.meta.url))
 const skills = ['rsp', 'rsp-shape', 'rsp-design', 'rsp-implement', 'rsp-review']
 const publishedSkills = ['rsp', 'rsp-address-review', 'rsp-design', 'rsp-diagnose', 'rsp-implement', 'rsp-review', 'rsp-shape', 'rsp-tdd']
-const retainedRun = join(root, 'research', 'evaluations', 'rsp-native-design-composition', '2026-07-22', 'real-runs', 'device-discovery-boundary-layer-archive-closeout')
-const correctedAttempt = join(retainedRun, 'invalid-attempts', 'failed-1784788188154')
+const realRuns = join(root, 'research', 'evaluations', 'rsp-native-design-composition', '2026-07-22', 'real-runs')
+const retainedRun = join(realRuns, 'device-discovery-boundary-dependency-graph-output')
+const correctedAttempt = join(realRuns, 'device-discovery-boundary-layer-archive-closeout', 'invalid-attempts', 'failed-1784788188154')
 
 function copiedRetainedRun(onTestFinished: (callback: () => void) => void) {
   const runRoot = mkdtempSync(join(tmpdir(), 'rsp-native-design-retained-'))
@@ -67,7 +68,7 @@ describe('native-design composition terminal evaluator', () => {
     }
   })
 
-  it('promotes a corrected-oracle rescore without rewriting the failed source attempt', ({ onTestFinished }) => {
+  it('preserves a corrected historical rescore without treating it as current-package evidence', ({ onTestFinished }) => {
     const runRoot = mkdtempSync(join(tmpdir(), 'rsp-native-design-rescore-'))
     onTestFinished(() => rmSync(runRoot, { force: true, recursive: true }))
     const sourceBefore = readFileSync(join(correctedAttempt, 'metadata.json'), 'utf8')
@@ -82,7 +83,9 @@ describe('native-design composition terminal evaluator', () => {
     expect(result.score.passed).toBe(true)
     expect(result.metadata.result).toBe('passed')
     expect(result.metadata.rescore.source_attempt).toContain('failed-1784788188154')
-    expect(evaluateNativeDesignComposition(root, { runRoot }).passed).toBe(true)
+    const historical = evaluateNativeDesignComposition(root, { runRoot })
+    expect(historical.passed).toBe(false)
+    expect(historical.blockers).toContain('current_release_artifact')
     expect(readFileSync(join(correctedAttempt, 'metadata.json'), 'utf8')).toBe(sourceBefore)
   })
 

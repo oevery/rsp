@@ -321,7 +321,9 @@ rsp doctor [--fix] [--json] [--verbose]
 
 当没有 focused change 时，`rsp status` 和 `rsp show --focused --json` 会输出 `nextActions`，但不会自动猜测哪个 open change 是当前工作。
 
-`rsp status --json` 会在 `plan.ready`、`plan.edges`、`plan.blocked` 和 `plan.waves` 中返回同一份依赖投影。它们是派生的导航事实，不是执行授权或持久化 workflow state。
+人类可读的 `rsp status` 会把执行指引渲染成依赖森林：父节点依赖其子节点，共享前置依赖以引用方式显示而不重复展开，`Next action` 直接指出当前可执行的 Change。
+
+`rsp status --json` 会在 `plan.nodes`、`plan.ready`、`plan.edges`、`plan.blocked` 和 `plan.waves` 中返回同一份依赖图。节点会区分过滤器选中的 Change 与仅用于解释的前置依赖上下文；过滤后的计划会保留解释结果所需的传递前置依赖闭包。由于同一个前置依赖可能被多个 Change 共享，JSON 保持扁平图结构而不嵌套 children。每条边都读作“`change` requires `requires`”。这些内容是派生的导航事实，不是执行授权或持久化 workflow state。
 
 `rsp create --lite` 是用于显式跟踪小 change 的短模板；简单的当前会话任务默认不应创建 RSP change，除非确实需要跟踪。
 

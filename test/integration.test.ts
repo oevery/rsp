@@ -1005,6 +1005,12 @@ describe('status commands', () => {
     const focused = JSON.parse(execSync(`node ${cliPath()} status --focused --json`, { cwd: statusDir, encoding: 'utf-8' }))
 
     expect(output.plan).toEqual({
+      nodes: [
+        { name: 'approval', selection: 'selected', state: 'blocked' },
+        { name: 'implement', selection: 'selected', state: 'waiting' },
+        { name: 'release', selection: 'selected', state: 'waiting' },
+        { name: 'research', selection: 'selected', state: 'ready' },
+      ],
       ready: ['research'],
       edges: [
         { change: 'implement', requires: 'research', reason: 'needs the accepted research model', state: 'open' },
@@ -1023,11 +1029,23 @@ describe('status commands', () => {
     expect(focused.plan.edges).toEqual([
       { change: 'implement', requires: 'research', reason: 'needs the accepted research model', state: 'open' },
     ])
+    expect(focused.plan.nodes).toEqual([
+      { name: 'implement', selection: 'selected', state: 'waiting' },
+      { name: 'research', selection: 'prerequisite', state: 'ready' },
+    ])
     expect(focused.plan.blocked).toEqual([
       { change: 'implement', requires: ['research'], external: false },
     ])
-    expect(focused.plan.ready).toEqual([])
-    expect(focused.plan.waves).toEqual([[], ['implement']])
+    expect(focused.plan.ready).toEqual(['research'])
+    expect(focused.plan.waves).toEqual([['research'], ['implement']])
+
+    const human = execSync(`node ${cliPath()} status --focused`, { cwd: statusDir, encoding: 'utf-8' })
+    expect(human).toContain('Dependency graph')
+    expect(human).toContain('(parent requires children)')
+    expect(human).toMatch(/◎ implement\s+selected · waiting/)
+    expect(human).toMatch(/└── ● research\s+prerequisite · ready/)
+    expect(human).toContain('needs the accepted research model')
+    expect(human).toContain('Next action: research')
   })
 
   it('resolves an exact dependency when its prerequisite is archived', async () => {
@@ -1044,10 +1062,40 @@ describe('status commands', () => {
     expect(status.plan.edges).toEqual([
       { change: 'implement', requires: 'research', reason: 'needs the accepted research model', state: 'archived' },
     ])
+    expect(status.plan.nodes).toEqual([
+      { name: 'implement', selection: 'selected', state: 'ready' },
+      { name: 'research', selection: 'prerequisite', state: 'archived' },
+    ])
     expect(status.plan.ready).toEqual(['implement'])
     expect(status.plan.blocked).toEqual([])
     expect(status.records[0].isBlocked).toBe(false)
     expect(ready.readiness.activeBlockers).toBe(false)
+  })
+
+  it('renders a shared prerequisite once and references repeated graph nodes', async () => {
+    const statusDir = await createRspFixture('rsp-status-shared-prerequisite-test', ['specs', 'changes', 'archives', 'focus.d'])
+    await writeFile(join(statusDir, '.rsp', 'changes', 'research.md'), renderChange('research'))
+    for (const name of ['implement-a', 'implement-b']) {
+      await writeFile(join(statusDir, '.rsp', 'changes', `${name}.md`), renderChange(name).replace(
+        '## Blockers\n- none',
+        '## Blockers\n- requires `research`: needs the shared research model',
+      ))
+      await writeFile(join(statusDir, '.rsp', 'focus.d', name), '')
+    }
+
+    const json = JSON.parse(execSync(`node ${cliPath()} status --focused --json`, { cwd: statusDir, encoding: 'utf-8' }))
+    expect(json.plan.nodes).toEqual([
+      { name: 'implement-a', selection: 'selected', state: 'waiting' },
+      { name: 'implement-b', selection: 'selected', state: 'waiting' },
+      { name: 'research', selection: 'prerequisite', state: 'ready' },
+    ])
+    expect(json.plan.ready).toEqual(['research'])
+    expect(json.plan.waves).toEqual([['research'], ['implement-a', 'implement-b']])
+
+    const human = execSync(`node ${cliPath()} status --focused`, { cwd: statusDir, encoding: 'utf-8' })
+    expect(human.match(/● research/g)).toHaveLength(2)
+    expect(human.match(/↩ shared/g)).toHaveLength(1)
+    expect(human).toContain('Next action: research')
   })
 
   it('fails check and doctor on invalid structured dependency graphs', async () => {
@@ -1103,9 +1151,10 @@ describe('status commands', () => {
     const show = JSON.parse(execSync(`node ${cliPath()} show implement --json`, { cwd: statusDir, encoding: 'utf-8' }))
     const archive = execSync(`node ${cliPath()} archive implement --dry-run`, { cwd: statusDir, encoding: 'utf-8' })
 
-    expect(status).toContain('Execution plan')
-    expect(status).toContain('Ready now: implement')
-    expect(status).toContain('implement <- research (archived) — needs the accepted research model')
+    expect(status).toContain('Dependency graph')
+    expect(status).toMatch(/◎ implement\s+selected · ready/)
+    expect(status).toMatch(/└── ✓ research\s+prerequisite · archived — needs the accepted research model/)
+    expect(status).toContain('Next action: implement')
     expect(show.change.blockers).toBe(false)
     expect(show.change.readiness.activeBlockers).toBe(false)
     expect(archive).not.toContain('active blockers are present')

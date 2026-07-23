@@ -4,7 +4,7 @@ description: Use this skill when initializing RSP, operating an existing .rsp pr
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.23.1"
+  version: "2026.07.23.2"
 ---
 
 # RSP Skill
@@ -85,7 +85,7 @@ Do not preload, enumerate, or recursively invoke optional capabilities. Do not i
 4. Use a Change Group only for at least two independently executable Changes sharing one goal or completion contract. Create it with `npx -y @oevery/rsp group create <group> [goal]`, then replace the brief placeholders and declare every direct child identity and boundary under `Slices` before creating children.
 5. Treat logical `<group>/brief`, physically stored as `<group>/00-brief.md`, as non-executable and non-focusable. For grouped work, read it before the selected child Change. Its `Slices` declaration order guides navigation; a Brief blocker is inherited as an external blocker by every direct child without creating edges. Archive children independently, then close only the brief with `npx -y @oevery/rsp group close <group>` when all group gates pass.
 6. Declare an exact prerequisite only as `- requires \`<change-work-ref>\`: <reason>` under the dependent Change's `Blockers`. Targets must be executable Changes, not Group Briefs. Keep external blockers as ordinary prose and never infer an edge from them.
-7. Use `npx -y @oevery/rsp status --json` as the derived dependency view. Read `plan.ready`, `plan.edges`, `plan.blocked`, and `plan.waves`; each edge contains `requires`, `reason`, and `state`. Do not create or maintain a separate graph or copy live delivery state into a Group Brief. Archived prerequisites resolve without rewriting the dependent Change, while incomplete archive inspection produces no ready plan.
+7. Use `npx -y @oevery/rsp status --json` as the derived dependency view. Read `plan.nodes`, `plan.ready`, `plan.edges`, `plan.blocked`, and `plan.waves`; nodes distinguish selected Changes from prerequisite context, and each edge reads as “`change` requires `requires`” with `reason` and `state`. Filtered plans retain the transitive prerequisite closure needed to explain the selection. Human status renders the same flat graph as a dependency forest; do not infer nested JSON ownership from that presentation. Do not create or maintain a separate graph or copy live delivery state into a Group Brief. Archived prerequisites resolve without rewriting the dependent Change, while incomplete archive inspection produces no ready plan.
 8. Read the focused change before editing code.
 9. If a focused change is missing an explicit `kind`, repair the frontmatter before continuing.
 10. Run `npx -y @oevery/rsp check --focused` before treating focused work as ready; resolve dependency errors, placeholders, or clarification warnings when they represent real unfinished content.

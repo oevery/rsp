@@ -384,29 +384,89 @@ function printChangeGroups(groups: StatusJsonShape['groups']): void {
 }
 
 function printDependencyPlan(plan: StatusJsonShape['plan']): void {
-  console.log(`  ${pc.bold('Execution plan')}`)
-  console.log(`  ${pc.dim('Ready now:')} ${plan.ready.length > 0 ? plan.ready.join(', ') : pc.dim('none')}`)
-  for (let index = 1; index < plan.waves.length; index++)
-    console.log(`  ${pc.dim(`Then ${index + 1}:`)} ${plan.waves[index].join(', ')}`)
-  if (plan.edges.length > 0) {
-    console.log(`  ${pc.dim('Dependencies:')}`)
-    for (const edge of plan.edges)
-      console.log(`    ${edge.change} <- ${edge.requires} (${edge.state}) — ${edge.reason}`)
+  console.log(`  ${pc.bold('Dependency graph')}`)
+  console.log(`  ${pc.dim('(parent requires children)')}`)
+
+  const nodesByName = new Map(plan.nodes.map(node => [node.name, node]))
+  const selected = new Set(plan.nodes.filter(node => node.selection === 'selected').map(node => node.name))
+  const nestedSelected = new Set(
+    plan.edges
+      .filter(edge => selected.has(edge.change) && selected.has(edge.requires))
+      .map(edge => edge.requires),
+  )
+  let roots = [...selected].filter(name => !nestedSelected.has(name)).sort()
+  if (roots.length === 0)
+    roots = [...selected].sort()
+
+  const expanded = new Set<string>()
+  const detailColumn = Math.max(40, ...plan.nodes.map(node => node.name.length + 8))
+  const renderNode = (name: string, prefix: string, last: boolean | null, reason?: string): void => {
+    const node = nodesByName.get(name)
+    if (!node)
+      return
+    const connector = last === null ? '' : last ? '└── ' : '├── '
+    const symbol = node.selection === 'selected'
+      ? '◎'
+      : node.state === 'ready'
+        ? '●'
+        : node.state === 'archived'
+          ? '✓'
+          : node.state === 'missing' || node.state === 'blocked'
+            ? '!'
+            : '○'
+    const repeated = expanded.has(name)
+    const identity = `${prefix}${connector}${symbol} ${name}`.padEnd(detailColumn)
+    const reference = repeated ? ' · ↩ shared' : ''
+    const explanation = reason ? ` — ${reason}` : ''
+    console.log(`  ${identity} ${node.selection} · ${node.state}${reference}${explanation}`)
+    if (repeated)
+      return
+    expanded.add(name)
+
+    const children = plan.edges
+      .filter(edge => edge.change === name)
+      .sort((left, right) => left.requires.localeCompare(right.requires))
+    const childPrefix = prefix + (last === null ? '' : last ? '    ' : '│   ')
+    for (const [index, edge] of children.entries())
+      renderNode(edge.requires, childPrefix, index === children.length - 1, edge.reason)
   }
+
+  if (roots.length === 0)
+    console.log(`  ${pc.dim('none')}`)
+  else
+    roots.forEach(name => renderNode(name, '', null))
+
   const external = plan.blocked.filter(blocker => blocker.external).map(blocker => blocker.change)
   if (external.length > 0)
     console.log(`  ${pc.dim('External blockers:')} ${external.join(', ')}`)
+  console.log(`  ${pc.dim('Next action:')} ${plan.ready.length > 0 ? plan.ready.join(', ') : pc.dim('none')}`)
+  console.log(`  ${pc.dim('Legend:')} ◎ selected  ● ready  ○ waiting  ✓ resolved  ! blocked`)
   console.log()
 }
 
 function filterDependencyPlan(plan: StatusJsonShape['plan'], names: Set<string>): StatusJsonShape['plan'] {
-  const waves = plan.waves.map(wave => wave.filter(name => names.has(name)))
-  while (waves.at(-1)?.length === 0)
-    waves.pop()
+  const included = new Set(names)
+  let changed = true
+  while (changed) {
+    changed = false
+    for (const edge of plan.edges) {
+      if (included.has(edge.change) && !included.has(edge.requires)) {
+        included.add(edge.requires)
+        changed = true
+      }
+    }
+  }
+
+  const waves = plan.waves
+    .map(wave => wave.filter(name => included.has(name)))
+    .filter(wave => wave.length > 0)
   return {
-    ready: plan.ready.filter(name => names.has(name)),
-    edges: plan.edges.filter(edge => names.has(edge.change)),
-    blocked: plan.blocked.filter(blocker => names.has(blocker.change)),
+    nodes: plan.nodes
+      .filter(node => included.has(node.name))
+      .map(node => ({ ...node, selection: names.has(node.name) ? 'selected' as const : 'prerequisite' as const })),
+    ready: waves[0] ?? [],
+    edges: plan.edges.filter(edge => included.has(edge.change)),
+    blocked: plan.blocked.filter(blocker => included.has(blocker.change)),
     waves,
   }
 }

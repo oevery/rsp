@@ -23,6 +23,7 @@ export function emitStatusJsonError(error: { code: string, message: string }, op
     records: [],
     groups: [],
     plan: {
+      nodes: [],
       ready: [],
       edges: [],
       blocked: [],

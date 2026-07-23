@@ -98,7 +98,14 @@ export interface ChangeDependencyBlockerOutput {
   external: boolean
 }
 
+export interface ChangeDependencyNodeOutput {
+  name: string
+  selection: 'selected' | 'prerequisite'
+  state: 'ready' | 'waiting' | 'blocked' | 'archived' | 'missing'
+}
+
 export interface ChangeDependencyPlanOutput {
+  nodes: ChangeDependencyNodeOutput[]
   ready: string[]
   edges: ChangeDependencyEdgeOutput[]
   blocked: ChangeDependencyBlockerOutput[]

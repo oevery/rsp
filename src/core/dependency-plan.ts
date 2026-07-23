@@ -160,9 +160,28 @@ export async function inspectChangeDependencies(options: { workTree?: WorkTreeIn
     for (const name of openNames)
       activeBlockers.set(name, true)
   }
+  const ready = graphValid ? waves[0] ?? [] : []
+  const executable = new Set(graphValid ? waves.flat() : [])
+  const nodes = [...new Set([...openNames, ...edges.map(edge => edge.requires)])]
+    .sort()
+    .map((name) => {
+      let state: ChangeDependencyPlanOutput['nodes'][number]['state']
+      if (archivedNames.has(name))
+        state = 'archived'
+      else if (!openNames.has(name))
+        state = 'missing'
+      else if (ready.includes(name))
+        state = 'ready'
+      else if (executable.has(name))
+        state = 'waiting'
+      else
+        state = 'blocked'
+      return { name, selection: openNames.has(name) ? 'selected' as const : 'prerequisite' as const, state }
+    })
   return {
     plan: {
-      ready: graphValid ? waves[0] ?? [] : [],
+      nodes,
+      ready,
       edges,
       blocked,
       waves: graphValid ? waves : [],
