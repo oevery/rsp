@@ -51,8 +51,8 @@ export async function updateProject(options: UpdateOptions = {}): Promise<Update
 
     clearConfigCache()
     const configInspection = await inspectRspConfig()
-    if (configInspection.decisionRecordsIssue)
-      throw new Error(configInspection.decisionRecordsIssue)
+    if (configInspection.issues.length > 0)
+      throw new Error(configInspection.issues.join('; '))
     const decisionRecordsPath = resolveDecisionRecordsPath(configInspection.config)
     const decisionRecordsFilesystemIssue = await validateDecisionRecordsFilesystemPath(decisionRecordsPath)
     if (decisionRecordsFilesystemIssue)

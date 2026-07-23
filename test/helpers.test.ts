@@ -119,9 +119,9 @@ describe('generateChangeContent', () => {
     expect(content).toContain('# Change: my-change')
   })
 
-  it('includes summary when provided', () => {
+  it('uses the provided summary as the observable outcome', () => {
     const content = generateChangeContent('my-change', 'A cool change')
-    expect(content).toContain('- Summary: A cool change')
+    expect(content).toContain('- Outcome: A cool change')
   })
 
   it('contains required sections', () => {
@@ -132,14 +132,16 @@ describe('generateChangeContent', () => {
     expect(content).toContain('## Tasks')
     expect(content).toContain('## Verify')
     expect(content).toContain('## Blockers')
-    expect(content).toContain('- [ ] Finalize the proposal, spec, and design details for this change')
-    expect(content).toContain('- [ ] Verify the result and update any required durable specs or scoped instructions')
+    expect(content).toContain('- Boundaries:')
+    expect(content).toContain('- Coverage:')
+    expect(content).not.toContain('Finalize the proposal, spec, and design details')
+    expect(content).not.toContain('Durable updates:')
   })
 
   it('renders a shorter lite template with required sections', () => {
     const content = generateChangeContent('small-fix', 'Fix small issue', 'fix', { lite: true })
     expect(content).toContain('kind: "fix"')
-    expect(content).toContain('- Summary: Fix small issue')
+    expect(content).toContain('- Outcome: Fix small issue')
     expect(content).toContain('## Proposal')
     expect(content).toContain('## Spec')
     expect(content).toContain('## Design')
@@ -148,6 +150,8 @@ describe('generateChangeContent', () => {
     expect(content).toContain('## Blockers')
     expect(content).toContain('- [ ] Implement the small change')
     expect(content).not.toContain('Finalize the proposal, spec, and design details')
+    expect(content).toContain('- Coverage:')
+    expect(content).not.toContain('Durable updates:')
   })
 
   it('reminds the user to choose kind explicitly', () => {
@@ -159,10 +163,15 @@ describe('generateChangeContent', () => {
     const content = generateChangeContent('project-setup')
     expect(content).toContain('# Change: project-setup')
     expect(content).toContain('.rsp/specs/design.md')
-    expect(content).toContain('nearest project-owned AGENTS.md')
-    expect(content).toContain('Review AGENTS.md and confirm the RSP entry points to the right project files')
+    expect(content).toContain('Stable navigation and context are reflected in project-owned CONTEXT.md when that convention exists')
+    expect(content).toContain('Stable agent instructions are reflected in the nearest project-owned AGENTS.md when needed')
+    expect(content).toContain('Review project-owned CONTEXT.md and AGENTS.md and confirm the RSP entry points to the right project files')
+    expect(content).toContain('project-owned CONTEXT.md and the nearest AGENTS.md contain only the stable context and instructions assigned to them by Host Project conventions')
+    expect(content).not.toContain('Stable validation or workflow constraints are reflected in the nearest project-owned AGENTS.md when needed')
     expect(content).toContain('Run rsp doctor')
-    expect(content).toContain('do not promote task history, debugging notes, or one-off implementation context')
+    expect(content).toContain('- Current facts:')
+    expect(content).toContain('- Lasting rationale:')
+    expect(content).toContain('CONTEXT.md')
   })
 
   it('uses a docs-oriented template when kind is docs', () => {
@@ -188,25 +197,34 @@ describe('generateChangeContent', () => {
     expect(content).toContain('<rollback, safety, reliability, environment, or scope constraint that must hold>')
   })
 
+  it('does not let the fix template invent an unexplained root cause', () => {
+    const content = generateChangeContent('repair-cache', 'Repair cache behavior', 'fix')
+    expect(content).toContain('<confirmed cause and correction strategy, or exact evidence needed to establish the cause>')
+    expect(content).not.toContain('<root cause analysis and fix strategy>')
+  })
+
   it('uses more concrete affected area and verification placeholders', () => {
     const content = generateChangeContent('my-change')
     expect(content).toContain('<concrete file path, directory, module, or subsystem 1>')
     expect(content).toContain('<concrete file path, directory, module, or subsystem 2 if needed>')
-    expect(content).toContain('<exact test, lint, build, or check command>')
-    expect(content).toContain('<exact end-to-end scenario to validate>')
+    expect(content).toContain('<exact test, lint, build, or check command> — proves: <behavior or scope covered>')
+    expect(content).toContain('<exact acceptance scenario, or unavailable/not applicable: owner and reason>')
     expect(content).toContain('<behavior, compatibility, performance, safety, or scope constraint that must hold>')
   })
 
-  it('tightens durable update guidance in verify', () => {
+  it('keeps durable review separate from implementation verification', () => {
     const content = generateChangeContent('my-change')
-    expect(content).toContain('write only stable facts to the smallest correct target file before archive')
-    expect(content).toContain('do not promote task history, debugging notes, or one-off implementation context')
-    expect(content).toContain('- Durable updates:\n  - [ ] Decide whether this change produced durable knowledge')
+    expect(content).toContain('- Coverage:\n  - <omitted or unavailable relevant coverage and reason, or none>')
+    expect(content).not.toContain('Durable updates:')
+    expect(content).not.toContain('before archive')
   })
 
-  it('uses consistent verify indentation in project setup template', () => {
+  it('uses consistent verification and durable-outcome ownership in project setup', () => {
     const content = generateChangeContent('project-setup')
-    expect(content).toContain('- Manual:\n  - [ ] Review .rsp/specs/design.md and the nearest project-owned AGENTS.md and confirm they match the repository\n- Durable updates:')
+    expect(content).toContain('- Manual or environment:\n  - [ ] Review .rsp/specs/design.md and project-owned context or instructions and confirm they match the repository')
+    expect(content).toContain('- Coverage:\n  - none')
+    expect(content).toContain('- Durable outcome targets:')
+    expect(content).not.toContain('## Durable Outcomes')
   })
 })
 

@@ -15,7 +15,9 @@ import { buildSpecsIndex } from './specs-index.js'
 function generateConfigTemplate(): string {
   const fmtList = (items: string[], indent: number) => items.map(i => `${' '.repeat(indent)}# - ${i}`).join('\n')
   return `# RSP project configuration
-# Uncomment any section below to customize classification values.
+# Omit kinds or use [] to retain the built-in defaults.
+# A non-empty kinds list replaces the built-in defaults; it does not extend them.
+# Every entry must be a unique non-empty string.
 #
 # Built-in defaults:
 #   kinds:               ${VALID_KINDS.join(', ')}
@@ -24,7 +26,7 @@ function generateConfigTemplate(): string {
 ${fmtList(VALID_KINDS, 2)}
 
 # Decision Records default to .rsp/specs/decisions.
-# Set one project-relative external authoritative directory when the Host Project already owns ADRs.
+# Set exactly one project-relative authoritative directory when the Host Project already owns Decision Records elsewhere.
 # decisions:
 #   path: docs/adr
 `
@@ -61,8 +63,8 @@ export async function initProject(args: InitArgs = {}) {
     if (existsSync(CONFIG_PATH)) {
       clearConfigCache()
       const existingConfig = await inspectRspConfig()
-      if (existingConfig.decisionRecordsIssue)
-        throw new Error(existingConfig.decisionRecordsIssue)
+      if (existingConfig.issues.length > 0)
+        throw new Error(existingConfig.issues.join('; '))
       const existingDecisionRecordsPath = resolveDecisionRecordsPath(existingConfig.config)
       const filesystemIssue = await validateDecisionRecordsFilesystemPath(existingDecisionRecordsPath)
       if (filesystemIssue)
@@ -88,8 +90,8 @@ export async function initProject(args: InitArgs = {}) {
     created = (await ensureFile(join(RSP_DIR, 'config.yaml'), generateConfigTemplate())) || created
     clearConfigCache()
     const configInspection = await inspectRspConfig()
-    if (configInspection.decisionRecordsIssue)
-      throw new Error(configInspection.decisionRecordsIssue)
+    if (configInspection.issues.length > 0)
+      throw new Error(configInspection.issues.join('; '))
     const decisionRecordsPath = resolveDecisionRecordsPath(configInspection.config)
     created = (await ensureDecisionRecordsDirectory(decisionRecordsPath)) || created
     const createdSpecsIndex = await ensureFile(join(RSP_DIR, 'specs', 'INDEX.md'), '# Specs Index\n\n_Additional project-level specs beyond `design.md`._\n')

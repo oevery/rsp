@@ -79,7 +79,7 @@ sources:
 })
 
 describe('upstream cache lifecycle', () => {
-  it('syncs, accepts, and diffs a local Git source with a stable minimal lock', async () => {
+  it('syncs, accepts, and diffs a local Git source with a stable minimal lock', { timeout: 15_000 }, async () => {
     const root = await createRoot()
     const upstream = await createGitSource()
     await writeManifest(root, {

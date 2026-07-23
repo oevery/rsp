@@ -80,6 +80,65 @@ decisions:
     }
   })
 
+  it('rejects unsupported top-level fields instead of silently ignoring them', async () => {
+    const configDir = join(tmpdir(), 'rsp-config-unknown-field-test', randomUUID())
+    await mkdir(join(configDir, '.rsp'), { recursive: true })
+    await writeFile(join(configDir, '.rsp', 'config.yaml'), 'kindz: [fix]\n')
+
+    const cwd = process.cwd()
+    process.chdir(configDir)
+
+    try {
+      await expect(loadRspConfig()).rejects.toThrow('config.yaml field "kindz" is not supported')
+    }
+    finally {
+      process.chdir(cwd)
+    }
+  })
+
+  it('rejects non-string, empty, and duplicate kind values', async () => {
+    const configDir = join(tmpdir(), 'rsp-config-invalid-kinds-test', randomUUID())
+    await mkdir(join(configDir, '.rsp'), { recursive: true })
+    const configPath = join(configDir, '.rsp', 'config.yaml')
+
+    const cwd = process.cwd()
+    process.chdir(configDir)
+
+    try {
+      await writeFile(configPath, 'kinds: [fix, 1]\n')
+      await expect(loadRspConfig()).rejects.toThrow('config.yaml field "kinds" must contain only non-empty strings')
+
+      clearConfigCache()
+      await writeFile(configPath, 'kinds: [fix, ""]\n')
+      await expect(loadRspConfig()).rejects.toThrow('config.yaml field "kinds" must contain only non-empty strings')
+
+      clearConfigCache()
+      await writeFile(configPath, 'kinds: [fix, fix]\n')
+      await expect(loadRspConfig()).rejects.toThrow('config.yaml field "kinds" contains duplicate entries: fix')
+    }
+    finally {
+      process.chdir(cwd)
+    }
+  })
+
+  it('retains an empty kinds list so callers can resolve built-in defaults', async () => {
+    const configDir = join(tmpdir(), 'rsp-config-empty-kinds-test', randomUUID())
+    await mkdir(join(configDir, '.rsp'), { recursive: true })
+    await writeFile(join(configDir, '.rsp', 'config.yaml'), 'kinds: []\n')
+
+    const cwd = process.cwd()
+    process.chdir(configDir)
+
+    try {
+      const config = await loadRspConfig()
+      expect(config.kinds).toEqual([])
+      expect(resolveKinds(config)).toEqual(VALID_KINDS)
+    }
+    finally {
+      process.chdir(cwd)
+    }
+  })
+
   it('returns cached config until clearConfigCache is called', async () => {
     const configDir = join(tmpdir(), 'rsp-config-cache-test', randomUUID())
     await mkdir(join(configDir, '.rsp'), { recursive: true })

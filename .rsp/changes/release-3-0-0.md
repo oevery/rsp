@@ -76,6 +76,7 @@ kind: "ops"
   - [ ] Changelog and migration documentation are the durable release record; no additional product Spec is required unless final behavior differs.
 
 ## Blockers
+- requires `align-config-and-templates-with-3-0`: needs project configuration and generated templates to match the final 3.0 capability and artifact-ownership contract
 - requires `dogfood-project-rsp-skills`: needs the published RSP Skills to be exercised through real project discovery before the 3.0 release
 - requires `prepare-release-notes-skill`: needs the RSP-native release-documentation capability and ninth-Skill package contract to land before the 3.0 product boundary is released
 - requires `minimum-skill-suite/validate-skill-composition`: needs the installed minimum suite to pass composition gates

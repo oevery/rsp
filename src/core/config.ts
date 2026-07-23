@@ -38,7 +38,7 @@ export const DEFAULT_REQUIRED_SECTIONS = ['Proposal', 'Spec', 'Design', 'Tasks',
 
 export interface RspConfigInspection {
   config: RspConfig
-  decisionRecordsIssue: string | null
+  issues: string[]
 }
 
 /** Cached parsed config inspection to avoid repeated file reads. */
@@ -49,7 +49,10 @@ let _configCache: { cwd: string, inspection: RspConfigInspection } | null = null
  * Returns defaults when no config file exists.
  */
 export async function loadRspConfig(): Promise<RspConfig> {
-  return (await inspectRspConfig()).config
+  const inspection = await inspectRspConfig()
+  if (inspection.issues.length > 0)
+    throw new Error(inspection.issues.join('; '))
+  return inspection.config
 }
 
 /** Load typed config plus semantic issues needed by routing commands. */
@@ -62,31 +65,71 @@ export async function inspectRspConfig(): Promise<RspConfigInspection> {
   if (configFile.issue)
     throw configFile.issue
   if (!configFile.exists) {
-    const inspection = { config: {}, decisionRecordsIssue: null }
+    const inspection = { config: {}, issues: [] }
     _configCache = { cwd, inspection }
     return inspection
   }
 
   const raw = await readFile(CONFIG_PATH, 'utf-8')
   const parsed = parseYamlText(raw)
+  const issues = validateRspConfig(parsed)
   const decisions = parsed.decisions && typeof parsed.decisions === 'object' && !Array.isArray(parsed.decisions)
     ? parsed.decisions as Record<string, unknown>
     : undefined
   const decisionPath = decisions?.path
+  const kinds = Array.isArray(parsed.kinds) && parsed.kinds.every(value => typeof value === 'string' && value.trim() !== '')
+    ? parsed.kinds.map(value => value.trim())
+    : undefined
   const decisionRecordsIssue = getDecisionRecordsConfigIssue(parsed)
 
   const inspection: RspConfigInspection = {
     config: {
-      kinds: Array.isArray(parsed.kinds) ? parsed.kinds.map(String) : undefined,
+      kinds,
       decisions: decisionRecordsIssue === null && validateDecisionRecordsPath(decisionPath) === null
         ? { path: normalizeDecisionRecordsPath(String(decisionPath)) }
         : undefined,
     },
-    decisionRecordsIssue,
+    issues,
   }
   _configCache = { cwd, inspection }
 
   return inspection
+}
+
+/** Validate the complete supported .rsp/config.yaml contract without coercing invalid input. */
+export function validateRspConfig(parsed: Record<string, unknown>): string[] {
+  const issues: string[] = []
+  const supported = new Set(['kinds', 'decisions'])
+
+  for (const key of Object.keys(parsed)) {
+    if (key === 'required_sections') {
+      issues.push('config.yaml field "required_sections" is no longer supported')
+    }
+    else if (!supported.has(key)) {
+      issues.push(`config.yaml field "${key}" is not supported`)
+    }
+  }
+
+  if ('kinds' in parsed) {
+    if (!Array.isArray(parsed.kinds)) {
+      issues.push('config.yaml field "kinds" must be a YAML list')
+    }
+    else if (!parsed.kinds.every(value => typeof value === 'string' && value.trim() !== '')) {
+      issues.push('config.yaml field "kinds" must contain only non-empty strings')
+    }
+    else {
+      const kinds = parsed.kinds.map(value => value.trim())
+      const duplicates = [...new Set(kinds.filter((value, index) => kinds.indexOf(value) !== index))]
+      if (duplicates.length > 0)
+        issues.push(`config.yaml field "kinds" contains duplicate entries: ${duplicates.join(', ')}`)
+    }
+  }
+
+  const decisionRecordsIssue = getDecisionRecordsConfigIssue(parsed)
+  if (decisionRecordsIssue)
+    issues.push(decisionRecordsIssue)
+
+  return issues
 }
 
 /** Clear the config cache (for testing). */

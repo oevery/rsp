@@ -1,5 +1,7 @@
 # RSP project configuration
-# Uncomment any section below to customize classification values.
+# Omit kinds or use [] to retain the built-in defaults.
+# A non-empty kinds list replaces the built-in defaults; it does not extend them.
+# Every entry must be a unique non-empty string.
 #
 # Built-in defaults:
 #   kinds:               feature, fix, refactor, docs, ops, research
@@ -13,6 +15,6 @@
   # - research
 
 # Decision Records default to .rsp/specs/decisions.
-# Set one project-relative external authoritative directory when the Host Project already owns ADRs.
+# Set exactly one project-relative authoritative directory when the Host Project already owns Decision Records elsewhere.
 # decisions:
 #   path: docs/adr

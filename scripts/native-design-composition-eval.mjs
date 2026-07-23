@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 import { parse as parseYaml } from 'yaml'
 
 const CASE_ID = 'device-discovery-boundary'
-const RETAINED_RUN_ID = `${CASE_ID}-release-docs-routing`
+const RETAINED_RUN_ID = `${CASE_ID}-config-template-contract-review-fixes`
 const PHASES = ['design', 'implement', 'review', 'durable']
 const SKILLS = ['rsp', 'rsp-shape', 'rsp-design', 'rsp-implement', 'rsp-review']
 const PUBLISHED_SKILLS = ['rsp', 'rsp-address-review', 'rsp-design', 'rsp-diagnose', 'rsp-implement', 'rsp-review', 'rsp-shape', 'rsp-tdd']
@@ -460,8 +460,11 @@ export function scoreNativeDesignEvidence({ designSectionOnly, durableBody, fina
     && JSON.stringify(installedNames) === JSON.stringify([...SKILLS].sort())
     && Object.values(packageEvidence.installed_skill_hashes).every(hash => /^[a-f0-9]{64}$/.test(hash))
   const durableLower = durableBody.toLowerCase()
+  const desktopOwnershipNegated = /物理(?:设备|接收器)的?发现[^。\n]*(?:不属于|并非[^。\n]*属于|不应属于)[^。\n]*桌面运行时/u.test(durableBody)
+  const desktopOwnershipPositive = /(?:desktop runtime|desktop|桌面运行时)[^\n]*(?:own|owns|拥有|负责)[^\n]*(?:physical (?:device )?discovery|物理(?:设备|接收器)的?发现)/iu.test(durableBody)
+    || /物理(?:设备|接收器)的?发现[^。\n]*(?:属于|归属于)[^。\n]*桌面运行时/u.test(durableBody)
   const durableSemanticMatches = {
-    desktop_owns_physical_discovery: /(?:desktop runtime|桌面运行时)[^\n]*(?:physical device discovery|physical discovery|物理设备发现)/iu.test(durableBody),
+    desktop_owns_physical_discovery: desktopOwnershipPositive && !desktopOwnershipNegated,
     hardware_acceptance_unavailable: /(?:hardware|硬件)[^\n]*(?:unavailable|不可用|未执行)/iu.test(durableBody),
     runtime_neutral_projects_only: (/runtime-neutral/iu.test(durableBody) || durableBody.includes('运行时中立') || durableBody.includes('与运行时无关'))
       && (/\bprojects?\b|projection/iu.test(durableBody) || durableBody.includes('投影')),

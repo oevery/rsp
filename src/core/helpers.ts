@@ -162,13 +162,13 @@ kind: ops
 # Change: project-setup
 
 ## Proposal
-- Summary: ${proposalSummary}
+- Outcome: ${proposalSummary}
 - Why:
   - Establish a durable project model before normal implementation work starts
 - Scope:
   - Review the repository structure, entrypoints, and primary outputs
   - Fill .rsp/specs/design.md with durable architecture facts
-  - Add stable local instructions or validation steps to the nearest project-owned AGENTS.md when needed
+  - Add stable navigation, context, instructions, or validation steps to project-owned CONTEXT.md or the nearest AGENTS.md when those conventions exist
 - Non-goals:
   - Do not duplicate durable project facts across this change, specs, and AGENTS.md
 
@@ -178,39 +178,44 @@ kind: ops
   - The repository's purpose, scope, and structure are reflected in .rsp/specs/design.md
 
 ### MODIFIED
-- Requirement: stable local operating constraints
-  - Stable validation or workflow constraints are reflected in the nearest project-owned AGENTS.md when needed
+- Requirement: stable project-owned context and instructions
+  - Stable navigation and context are reflected in project-owned CONTEXT.md when that convention exists
+  - Stable agent instructions are reflected in the nearest project-owned AGENTS.md when needed
 
 ### Acceptance
 #### Scenario: project model captured
 - GIVEN an initialized RSP project
 - WHEN project setup is completed
 - THEN .rsp/specs/design.md reflects durable project facts
-- AND the nearest project-owned AGENTS.md contains only the stable local instructions that agents must follow
+- AND project-owned CONTEXT.md and the nearest AGENTS.md contain only the stable context and instructions assigned to them by Host Project conventions
 
 ## Design
 - Approach:
-  - Keep bootstrap knowledge in this single change while moving durable facts into specs and scoped instructions into AGENTS.md
+  - Keep bootstrap work in this single Change while returning durable outcomes to their existing project owners
+- Boundaries:
+  - Specs own stable current facts; project-owned CONTEXT.md and AGENTS.md retain their navigation, context, and instruction roles
 - Affected areas:
   - .rsp/specs/design.md
-  - AGENTS.md
+  - Project-owned CONTEXT.md or AGENTS.md when applicable
+- Durable outcome targets:
+  - Current facts: .rsp/specs/design.md, existing scoped Specs, CONTEXT.md, or AGENTS.md as applicable
+  - Lasting rationale: one Decision Record under the configured authoritative path, only when a hard-to-reverse tradeoff exists
 - Constraints:
   - Keep the setup lightweight and avoid duplicating durable project facts
 
 ## Tasks
 - [ ] Review the repository structure, entrypoints, and primary outputs
-- [ ] Review AGENTS.md and confirm the RSP entry points to the right project files
+- [ ] Review project-owned CONTEXT.md and AGENTS.md and confirm the RSP entry points to the right project files
 - [ ] Fill .rsp/specs/design.md with durable architecture facts
-- [ ] Add stable local rules or validation steps to the nearest project-owned AGENTS.md if needed
+- [ ] Add stable project-owned context, instructions, or validation steps only where the Host Project convention requires them
 
 ## Verify
 - Automated:
-  - [ ] Run rsp doctor
-- Manual:
-  - [ ] Review .rsp/specs/design.md and the nearest project-owned AGENTS.md and confirm they match the repository
-- Durable updates:
-  - [ ] Decide whether this change produced durable knowledge that belongs in \`.rsp/specs/\` or stable instructions that belong in the nearest project-owned \`AGENTS.md\`
-  - [ ] If yes, write only stable facts to the smallest correct target file before archive; do not promote task history, debugging notes, or one-off implementation context
+  - [ ] Run rsp doctor — proves: the initialized RSP workspace is structurally valid
+- Manual or environment:
+  - [ ] Review .rsp/specs/design.md and project-owned context or instructions and confirm they match the repository
+- Coverage:
+  - none
 
 ## Blockers
 - none
@@ -230,7 +235,7 @@ kind: "${frontmatterKind}"
 # Change: ${name}
 
 ## Proposal
-- Summary: ${proposalSummary}
+- Outcome: ${proposalSummary}
 - Why:
   - ${template.why}
 - Scope:
@@ -247,6 +252,8 @@ ${template.acceptanceSection}
 ## Design
 - Approach:
   - ${template.approach}
+- Boundaries:
+  - <module, interface, data, document, or ownership boundary affected>
 - Affected areas:
   - ${template.affectedArea1}
   - ${template.affectedArea2}
@@ -254,21 +261,20 @@ ${template.acceptanceSection}
   - ${template.constraints}
 
 ## Tasks
-- [ ] Finalize the proposal, spec, and design details for this change
 - [ ] ${template.task}
-- [ ] Verify the result and update any required durable specs or scoped instructions
 
 ## Verify
 - Automated:
-  - [ ] ${template.automatedVerify}
-- Manual:
+  - [ ] ${template.automatedVerify} — proves: <behavior or scope covered>
+- Manual or environment:
   - [ ] ${template.manualVerify}
-- Durable updates:
-  - [ ] Decide whether this change produced durable knowledge that belongs in \`.rsp/specs/\` or stable instructions that belong in the nearest project-owned \`AGENTS.md\`
-  - [ ] If yes, write only stable facts to the smallest correct target file before archive; do not promote task history, debugging notes, or one-off implementation context
+- Coverage:
+  - <omitted or unavailable relevant coverage and reason, or none>
 
 ## Blockers
 - none
+<!-- Exact prerequisite: - requires \`<work-ref>\`: <reason>
+     Missing authority, owner decisions, credentials, environment, hardware, and human acceptance remain ordinary blocker prose. -->
 `
 }
 
@@ -280,7 +286,7 @@ kind: "${frontmatterKind}"
 # Change: ${name}
 
 ## Proposal
-- Summary: ${proposalSummary}
+- Outcome: ${proposalSummary}
 - Why:
   - <why this small change matters>
 - Scope:
@@ -302,6 +308,8 @@ kind: "${frontmatterKind}"
 ## Design
 - Approach:
   - <minimal implementation approach>
+- Boundaries:
+  - <primary ownership or interface boundary>
 - Affected areas:
   - <primary file, directory, or doc path>
 - Constraints:
@@ -309,19 +317,19 @@ kind: "${frontmatterKind}"
 
 ## Tasks
 - [ ] Implement the small change
-- [ ] Verify the result
 
 ## Verify
 - Automated:
-  - [ ] <exact command, or not needed: reason>
-- Manual:
-  - [ ] <exact scenario, or not needed: reason>
-- Durable updates:
-  - [ ] Decide whether this change produced durable knowledge that belongs in ".rsp/specs/" or stable instructions that belong in the nearest project-owned "AGENTS.md"
-  - [ ] If yes, write only stable facts to the smallest correct target file before archive
+  - [ ] <exact command, or not applicable: reason> — proves: <behavior or scope covered>
+- Manual or environment:
+  - [ ] <exact acceptance scenario, or unavailable/not applicable: owner and reason>
+- Coverage:
+  - <omitted or unavailable relevant coverage and reason, or none>
 
 ## Blockers
 - none
+<!-- Exact prerequisite: - requires \`<work-ref>\`: <reason>
+     Missing authority, owner decisions, credentials, environment, hardware, and human acceptance remain ordinary blocker prose. -->
 `
 }
 
@@ -340,7 +348,7 @@ function getChangeTemplateByKind(kind?: string) {
         constraints: '<behavior, compatibility, performance, safety, or scope constraint that must hold>',
         task: '<implement the new behavior and its acceptance scenario in the affected areas>',
         automatedVerify: '<exact test, lint, build, or check command for the new behavior>',
-        manualVerify: '<exact end-to-end user scenario to validate the new capability>',
+        manualVerify: '<exact end-to-end user scenario to validate the new capability, or unavailable/not applicable: owner and reason>',
       }
     case 'fix':
       return {
@@ -349,13 +357,13 @@ function getChangeTemplateByKind(kind?: string) {
         nonGoals: '<what related but separate issues are out of scope>',
         specSection: '<!-- Describe expected correct behavior. Implementation notes belong in ## Design. -->\n### MODIFIED\n- Requirement: correct behavior\n  - <expected correct behavior after the fix>',
         acceptanceSection: '#### Scenario: defect is resolved\n- GIVEN <conditions that trigger the defect>\n- WHEN <action that previously failed>\n- THEN <expected correct outcome>\n- AND the original broken outcome no longer occurs',
-        approach: '<root cause analysis and fix strategy>',
+        approach: '<confirmed cause and correction strategy, or exact evidence needed to establish the cause>',
         affectedArea1: '<concrete file path, directory, module, or subsystem containing the defect>',
         affectedArea2: '<secondary path, dependency, or test file if needed>',
         constraints: '<regression, backward-compatibility, safety, or scope constraint that must hold>',
         task: '<identify the root cause and apply the minimal fix>',
         automatedVerify: '<exact regression test, lint, build, or check command that proves the fix>',
-        manualVerify: '<exact steps to reproduce the original issue and confirm it no longer occurs>',
+        manualVerify: '<exact steps to reproduce the original issue and confirm it no longer occurs, or unavailable/not applicable: owner and reason>',
       }
     case 'refactor':
       return {
@@ -370,7 +378,7 @@ function getChangeTemplateByKind(kind?: string) {
         constraints: '<observable behavior must remain unchanged; compatibility, performance, and safety constraints must still hold>',
         task: '<restructure the code while keeping behavior identical>',
         automatedVerify: '<exact existing test, lint, build, or check command that must continue to pass>',
-        manualVerify: '<exact scenario to spot-check that behavior is unchanged after the refactor>',
+        manualVerify: '<exact scenario to spot-check that behavior is unchanged after the refactor, or unavailable/not applicable: owner and reason>',
       }
     case 'docs':
       return {
@@ -385,7 +393,7 @@ function getChangeTemplateByKind(kind?: string) {
         constraints: '<durable wording, consistency, scope, or audience constraint that must hold>',
         task: '<update the target documentation and supporting references>',
         automatedVerify: '<exact markdown, docs, link, lint, build, or check command if applicable>',
-        manualVerify: '<exact reader or operator scenario to confirm the updated guidance is accurate>',
+        manualVerify: '<exact reader or operator scenario to confirm the updated guidance is accurate, or unavailable/not applicable: owner and reason>',
       }
     case 'research':
       return {
@@ -400,7 +408,7 @@ function getChangeTemplateByKind(kind?: string) {
         constraints: '<time, evidence, safety, or scope constraint for the investigation>',
         task: '<gather evidence, record the recommendation or finding, and note any follow-up implementation work if needed>',
         automatedVerify: '<exact command, script, query, or check used to confirm the observed behavior>',
-        manualVerify: '<exact review of the findings to confirm they answer the original question and identify follow-up work if needed>',
+        manualVerify: '<exact review of the findings to confirm they answer the original question and identify follow-up work if needed, or unavailable/not applicable: owner and reason>',
       }
     case 'ops':
       return {
@@ -415,7 +423,7 @@ function getChangeTemplateByKind(kind?: string) {
         constraints: '<rollback, safety, reliability, environment, or scope constraint that must hold>',
         task: '<apply and verify the operational change>',
         automatedVerify: '<exact operational validation, lint, build, deploy, or check command>',
-        manualVerify: '<exact operator workflow or environment scenario to confirm the operational result>',
+        manualVerify: '<exact operator workflow or environment scenario to confirm the operational result, or unavailable/not applicable: owner and reason>',
       }
     default:
       return {
@@ -430,7 +438,7 @@ function getChangeTemplateByKind(kind?: string) {
         constraints: '<behavior, compatibility, performance, safety, or scope constraint that must hold>',
         task: '<implement the core change in the affected areas>',
         automatedVerify: '<exact test, lint, build, or check command>',
-        manualVerify: '<exact end-to-end scenario to validate>',
+        manualVerify: '<exact acceptance scenario, or unavailable/not applicable: owner and reason>',
       }
   }
 }

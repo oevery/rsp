@@ -99,8 +99,8 @@ export async function showReady(name: string, options: CommandRunOptions = {}): 
   let decisionRecordsPath: string
   try {
     const configInspection = await inspectRspConfig()
-    if (configInspection.decisionRecordsIssue)
-      exitReadyError(name, { code: 'invalid_config', message: configInspection.decisionRecordsIssue }, options)
+    if (configInspection.issues.length > 0)
+      exitReadyError(name, { code: 'invalid_config', message: configInspection.issues.join('; ') }, options)
     decisionRecordsPath = resolveDecisionRecordsPath(configInspection.config)
     const filesystemIssue = await validateDecisionRecordsFilesystemPath(decisionRecordsPath)
     if (filesystemIssue)

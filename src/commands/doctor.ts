@@ -4,8 +4,8 @@ import { readdir, readFile, stat } from 'node:fs/promises'
 import { basename, join, relative } from 'node:path'
 
 import { inspectChangeGroups } from '../core/change-group.js'
-import { CONFIG_PATH, loadRspConfig, OBSOLETE_RSP_RULES_PATH, pc, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
-import { DEFAULT_DECISION_RECORDS_PATH, getDecisionRecordsConfigIssue, resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
+import { CONFIG_PATH, loadRspConfig, OBSOLETE_RSP_RULES_PATH, pc, RSP_DIR, RSP_RULES_PATH, validateRspConfig } from '../core/config.js'
+import { DEFAULT_DECISION_RECORDS_PATH, resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
 import { hasRspAgentsBlock, inspectUnsupportedRules, normalizeLogicalPath, parseFrontmatter, parseYamlText, walkMarkdownFiles } from '../core/helpers.js'
 import { inspectManagedFile } from '../core/managed-path.js'
@@ -358,28 +358,22 @@ async function checkConfigSemantics(checks: DoctorCheck[], reportRuntime: (diagn
     return false
   }
 
-  reportConfigListField(checks, parsed, 'kinds')
-
-  const decisionRecordsIssue = getDecisionRecordsConfigIssue(parsed)
-  if (decisionRecordsIssue) {
+  const issues = validateRspConfig(parsed)
+  for (const issue of issues) {
     checks.push({
       status: 'issue',
       label: 'config.yaml semantic checks',
-      message: decisionRecordsIssue,
-      hint: 'Use .rsp/specs/decisions or one project-relative path outside .rsp/.',
+      message: issue,
+      hint: issue.includes('decisions')
+        ? 'Use .rsp/specs/decisions or one project-relative path outside .rsp/.'
+        : 'Remove the unsupported field or provide the documented value type.',
     })
   }
 
-  if ('required_sections' in parsed) {
-    checks.push({
-      status: 'issue',
-      label: 'config.yaml semantic checks',
-      message: 'config.yaml field "required_sections" is no longer supported',
-      hint: 'RSP keeps the core change section structure fixed. Remove "required_sections" from .rsp/config.yaml.',
-    })
-  }
+  if (issues.length === 0 && 'kinds' in parsed)
+    checks.push({ status: 'ok', label: 'config.yaml field "kinds" has valid list semantics' })
 
-  return decisionRecordsIssue === null
+  return issues.length === 0
 }
 
 async function checkDecisionRecordsDirectory(checks: DoctorCheck[], reportRuntime: (diagnostic: RuntimeDiagnostic) => void): Promise<void> {
@@ -456,36 +450,6 @@ async function checkInactiveDefaultDecisionRecords(checks: DoctorCheck[], report
     label: 'inactive default Decision Records are migrated',
     message: `inactive default Decision Records: ${inactiveRecords.join(', ')}`,
     hint: `Move lasting rationale to ${decisionRecordsPath}, then remove the inactive files from ${DEFAULT_DECISION_RECORDS_PATH}.`,
-  })
-}
-
-function reportConfigListField(checks: DoctorCheck[], parsed: Record<string, unknown>, key: 'kinds'): void {
-  if (!(key in parsed))
-    return
-
-  const value = parsed[key]
-  if (!Array.isArray(value)) {
-    checks.push({
-      status: 'issue',
-      label: 'config.yaml semantic checks',
-      message: `config.yaml field "${key}" must be a YAML list`,
-      hint: `Update .rsp/config.yaml so "${key}" is a YAML sequence (for example: ${key}: [item])`,
-    })
-    return
-  }
-
-  const items = value.map(String)
-  const duplicates = [...new Set(items.filter((item, index) => items.indexOf(item) !== index))]
-  if (duplicates.length === 0) {
-    checks.push({ status: 'ok', label: `config.yaml field "${key}" has valid list semantics` })
-    return
-  }
-
-  checks.push({
-    status: 'issue',
-    label: 'config.yaml semantic checks',
-    message: `config.yaml field "${key}" contains duplicate entries: ${duplicates.join(', ')}`,
-    hint: `Remove duplicate values from .rsp/config.yaml:${key}`,
   })
 }
 

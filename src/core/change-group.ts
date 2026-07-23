@@ -46,7 +46,8 @@ kind: group
 - [ ] <end-to-end condition beyond individual child verification>
 
 ## Durable Outcomes
-- <stable fact, scoped instruction, or Decision Record target; use none when unnecessary>
+- Current facts: <Spec, CONTEXT.md, scoped instruction target, or none>
+- Lasting rationale: <Decision Record target, or none>
 
 ## Blockers
 - none

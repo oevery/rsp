@@ -15,8 +15,8 @@ export async function buildSpecsIndex({ acquireLock = true, quiet = false } = {}
 
   const specsDir = join(RSP_DIR, 'specs')
   const configInspection = await inspectRspConfig()
-  if (configInspection.decisionRecordsIssue)
-    throw new Error(configInspection.decisionRecordsIssue)
+  if (configInspection.issues.length > 0)
+    throw new Error(configInspection.issues.join('; '))
   const decisionRecordsPath = resolveDecisionRecordsPath(configInspection.config)
 
   const inspection = await inspectManagedFileTree(specsDir, 'Specs', { allowMissing: true })

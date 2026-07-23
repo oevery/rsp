@@ -1,4 +1,4 @@
-import type { CommandDiagnostic, CommandRunOptions, RuntimeDiagnostic } from '../types.js'
+import type { CommandDiagnostic, CommandRunOptions, RspConfig, RuntimeDiagnostic } from '../types.js'
 import { readFile } from 'node:fs/promises'
 
 import { inspectChangeGroups } from '../core/change-group.js'
@@ -33,13 +33,31 @@ interface CheckResult {
  * When focused is true, only currently focused changes are validated.
  */
 export async function runCheck(options: CheckOptions = {}): Promise<CheckResult> {
-  const config = await loadRspConfig()
+  const diagnostics: CommandDiagnostic[] = []
+  const runtime: RuntimeDiagnostic[] = []
+  let config: RspConfig
+  try {
+    config = await loadRspConfig()
+  }
+  catch (error) {
+    const result: CheckResult = {
+      command: 'check',
+      ok: false,
+      focused: Boolean(options.focused),
+      diagnostics: [{ severity: 'error', code: 'invalid_config', path: '.rsp/config.yaml', message: toErrorMessage(error) }],
+      runtime,
+      summary: { changeFiles: 0, errors: 1, warnings: 0 },
+    }
+    if (options.json)
+      emitJson(result)
+    else
+      console.error(`  ${pc.red('Error:')} ${toErrorMessage(error)}`)
+    return result
+  }
   const validKinds = resolveKinds(config)
   const requiredSections = resolveRequiredSections(config)
   const choosePlaceholderRe = /^<choose:/i
 
-  const diagnostics: CommandDiagnostic[] = []
-  const runtime: RuntimeDiagnostic[] = []
   const reportRuntime = (diagnostic: RuntimeDiagnostic) => recordRuntimeDiagnostic(runtime, diagnostic, Boolean(options.verbose) && !options.json)
   const addDiagnostic = (diagnostic: CommandDiagnostic) => diagnostics.push(diagnostic)
   const focusTree = await inspectFocusTree()

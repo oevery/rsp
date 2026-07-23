@@ -66,12 +66,18 @@ export async function buildArchiveIndex({ acquireLock = true, quiet = false } = 
       if (typeof fm?.summary === 'string')
         summary = fm.summary.trim()
       const proposal = extractSection(content, 'Proposal')
-      const summaryLine = proposal
+      const outcomeLine = proposal
+        .split('\n')
+        .map(line => line.trim())
+        .find(line => line.startsWith('- Outcome:'))
+      const legacySummaryLine = proposal
         .split('\n')
         .map(line => line.trim())
         .find(line => line.startsWith('- Summary:'))
-      if (!summary && summaryLine)
-        summary = summaryLine.slice('- Summary:'.length).trim()
+      if (!summary && outcomeLine)
+        summary = outcomeLine.slice('- Outcome:'.length).trim()
+      if (!summary && legacySummaryLine)
+        summary = legacySummaryLine.slice('- Summary:'.length).trim()
     }
     catch { /* ignore malformed archive entries */ }
 

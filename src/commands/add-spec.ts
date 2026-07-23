@@ -21,8 +21,8 @@ export async function addSpec(name: string, projectName = 'project') {
 
   try {
     const configInspection = await inspectRspConfig()
-    if (configInspection.decisionRecordsIssue) {
-      console.error(`  ${pc.red('Error:')} ${configInspection.decisionRecordsIssue}`)
+    if (configInspection.issues.length > 0) {
+      console.error(`  ${pc.red('Error:')} ${configInspection.issues.join('; ')}`)
       process.exit(1)
     }
   }

@@ -181,7 +181,7 @@ describe('change lifecycle integration', () => {
 
     const content = await readFile(changesPath('test-change.md'), 'utf-8')
     expect(content).toContain('# Change: test-change')
-    expect(content).toContain('- Summary: A test change')
+    expect(content).toContain('- Outcome: A test change')
     expect(existsSync(focusDPath('test-change'))).toBe(true)
   })
 
@@ -345,7 +345,7 @@ describe('change lifecycle integration', () => {
       const content = await readFile(join(createDir, '.rsp', 'changes', 'tiny-fix.md'), 'utf-8')
       expect(output).toContain('fill the lite change details')
       expect(content).toContain('kind: "fix"')
-      expect(content).toContain('- Summary: Fix tiny issue')
+      expect(content).toContain('- Outcome: Fix tiny issue')
       expect(content).toContain('- [ ] Implement the small change')
       expect(content).not.toContain('Finalize the proposal, spec, and design details')
     })()
@@ -731,7 +731,7 @@ kind: feature
     })()
   })
 
-  it('ignores legacy required_sections config overrides', () => {
+  it('rejects legacy required_sections before validating Change content', () => {
     const configDir = join(tmpdir(), 'rsp-check-required-sections-test', randomUUID())
     return (async () => {
       await mkdir(join(configDir, '.rsp', 'changes'), { recursive: true })
@@ -764,18 +764,11 @@ kind: fix
 - none
 `)
 
-      let output = ''
-      let failed = false
-      try {
-        output = execSync(`node ${cliPath()} check`, { cwd: configDir, encoding: 'utf-8' })
-      }
-      catch (error) {
-        failed = true
-        output = String((error as { stdout?: string }).stdout || '')
-      }
+      const result = spawnSync('node', [cliPath(), 'check'], { cwd: configDir, encoding: 'utf-8' })
 
-      expect(failed).toBe(true)
-      expect(output).toContain('missing "## Spec" section')
+      expect(result.status).not.toBe(0)
+      expect(result.stderr).toContain('config.yaml field "required_sections" is no longer supported')
+      expect(result.stdout).not.toContain('missing "## Spec" section')
     })()
   })
 })
@@ -1603,6 +1596,37 @@ describe('init and doctor', () => {
     expect(output).toContain('config.yaml field "required_sections" is no longer supported')
   })
 
+  it('fails a normal config consumer with structured invalid_config output', async () => {
+    const checkDir = join(tmpdir(), 'rsp-check-invalid-config-test', randomUUID())
+    await mkdir(checkDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: checkDir })
+    await writeFile(join(checkDir, '.rsp', 'config.yaml'), 'kindz: [fix]\n')
+
+    const result = spawnSync('node', [cliPath(), 'check', '--json'], { cwd: checkDir, encoding: 'utf-8' })
+    const output = JSON.parse(result.stdout)
+
+    expect(result.status).not.toBe(0)
+    expect(output.ok).toBe(false)
+    expect(output.diagnostics).toContainEqual(expect.objectContaining({
+      severity: 'error',
+      code: 'invalid_config',
+      message: 'config.yaml field "kindz" is not supported',
+    }))
+  })
+
+  it('fails a non-structured config consumer with the shared validation issue', async () => {
+    const addSpecDir = join(tmpdir(), 'rsp-add-spec-invalid-config-test', randomUUID())
+    await mkdir(addSpecDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: addSpecDir })
+    await writeFile(join(addSpecDir, '.rsp', 'config.yaml'), 'kindz: [fix]\n')
+
+    const result = spawnSync('node', [cliPath(), 'add', 'spec', 'architecture'], { cwd: addSpecDir, encoding: 'utf-8' })
+
+    expect(result.status).not.toBe(0)
+    expect(result.stderr).toContain('config.yaml field "kindz" is not supported')
+    expect(existsSync(join(addSpecDir, '.rsp', 'specs', 'architecture.md'))).toBe(false)
+  })
+
   it('reports invalid config YAML as structured doctor output', async () => {
     const doctorDir = join(tmpdir(), 'rsp-doctor-invalid-yaml-test', randomUUID())
     await mkdir(doctorDir, { recursive: true })
@@ -2273,7 +2297,20 @@ describe('change groups', () => {
     expect(brief).toContain('## Goal\n- Ship the release')
     expect(brief).toContain('## Slices')
     expect(brief).toContain('## Completion Conditions')
+    expect(brief).toContain('- Current facts:')
+    expect(brief).toContain('- Lasting rationale:')
     expect(existsSync(join(groupDir, '.rsp', 'focus.d', 'release', 'brief'))).toBe(false)
+  })
+
+  it('documents replacement and validation semantics in the generated config template', async () => {
+    const initDir = join(tmpdir(), 'rsp-config-template-test', randomUUID())
+    await mkdir(initDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: initDir })
+
+    const config = await readFile(join(initDir, '.rsp', 'config.yaml'), 'utf-8')
+    expect(config).toContain('A non-empty kinds list replaces the built-in defaults; it does not extend them.')
+    expect(config).toContain('Every entry must be a unique non-empty string.')
+    expect(config).toContain('Set exactly one project-relative authoritative directory')
   })
 
   it('rejects a grouped Change until its Group Brief exists', async () => {
