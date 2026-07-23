@@ -46,6 +46,7 @@ export interface RspConfig {
 /** Shared output-mode options for read-only commands. */
 export interface CommandRunOptions {
   json?: boolean
+  compact?: boolean
   verbose?: boolean
 }
 

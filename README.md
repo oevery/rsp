@@ -319,15 +319,15 @@ rsp focus <name>                Mark an open change as currently focused
 rsp unfocus <name>              Remove an open change from the current focus set
 rsp archive <name>              Archive to .rsp/archives/ + update archive index
 rsp archive --dry-run <name>    Preview archive readiness without moving the change
-rsp ready <name> [--json] [--verbose]
+rsp ready <name> [--json [--compact]] [--verbose]
                                   Preview archive readiness (same as archive --dry-run)
-rsp show <name|--focused> [--json] [--verbose]
+rsp show <name|--focused> [--json [--compact]] [--verbose]
                                   Show change context with readiness signals and context paths
-rsp status [--focused|--blocked|--stale <days>] [--json] [--verbose]
+rsp status [--focused|--blocked|--stale <days>] [--json [--compact]] [--verbose]
                                   Show project status plus derived dependency plan with focus-aware filters
-rsp check [--focused] [--json] [--verbose]
+rsp check [--focused] [--json [--compact]] [--verbose]
                                   Validate change files and lightly lint template/scenario structure
-rsp doctor [--fix] [--json] [--verbose]
+rsp doctor [--fix] [--json [--compact]] [--verbose]
                                   Check setup health and common issues
 ```
 
@@ -336,6 +336,8 @@ Use `skills/rsp/SKILL.md` for operations. When the skill is unavailable, use `.r
 When there is no focused change, `rsp status` and `rsp show --focused --json` print `nextActions` instead of guessing which open change is current.
 
 `rsp status --json` returns the same dependency projection under `plan.ready`, `plan.edges`, `plan.blocked`, and `plan.waves`. These are derived navigation facts, not execution authority or persisted workflow state.
+
+The JSON-producing inspection commands `status`, `show`, `ready`, `check`, and `doctor` accept `--json --compact` for the same parsed value as `--json`, serialized on one LF-terminated line. `--compact` requires `--json`; other commands reject it before running command behavior.
 
 `rsp create --lite` is a shorter template for explicitly tracked small changes; simple current-session tasks should not create RSP changes unless tracking is intentionally needed.
 

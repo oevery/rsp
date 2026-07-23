@@ -59,7 +59,7 @@ function exitShowError(error: { code: string, message: string }, options: ShowOp
       runtime: [],
       nextActions,
       error,
-    })
+    }, options)
   }
   else {
     console.error(`  ${pc.red('Error:')} ${error.message}`)
@@ -193,7 +193,7 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
   }
 
   if (options.json) {
-    emitJson(result)
+    emitJson(result, options)
     return result
   }
 

@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 import { parse as parseYaml } from 'yaml'
 
 const CASE_ID = 'device-discovery-boundary'
-const RETAINED_RUN_ID = `${CASE_ID}-reposition-rsp-product`
+const RETAINED_RUN_ID = `${CASE_ID}-compact-json-output`
 const PHASES = ['design', 'implement', 'review', 'durable']
 const SKILLS = ['rsp', 'rsp-shape', 'rsp-design', 'rsp-implement', 'rsp-review']
 const PUBLISHED_SKILLS = ['rsp', 'rsp-address-review', 'rsp-design', 'rsp-diagnose', 'rsp-implement', 'rsp-review', 'rsp-shape', 'rsp-tdd']
@@ -466,7 +466,7 @@ export function scoreNativeDesignEvidence({ designSectionOnly, durableBody, fina
   const durableSemanticMatches = {
     desktop_owns_physical_discovery: desktopOwnershipPositive && !desktopOwnershipNegated,
     hardware_acceptance_unavailable: /(?:hardware|硬件)[^\n]*(?:unavailable|不可用|未执行)/iu.test(durableBody),
-    runtime_neutral_projects_only: (/runtime-neutral/iu.test(durableBody) || durableBody.includes('运行时中立') || durableBody.includes('与运行时无关'))
+    runtime_neutral_projects_only: (/runtime-neutral/iu.test(durableBody) || durableBody.includes('运行时中立') || durableBody.includes('运行时无关'))
       && (/\bprojects?\b|projection/iu.test(durableBody) || durableBody.includes('投影')),
     web_does_not_discover: /web[^\n]*(?:does not directly discover|不直接发现硬件|不得直接发现硬件|不能[^。\n]*发现[^。\n]*硬件)/iu.test(durableBody),
   }

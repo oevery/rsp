@@ -1,4 +1,4 @@
-import { execSync, spawnSync } from 'node:child_process'
+import { execFileSync, execSync, spawnSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import { existsSync, utimesSync } from 'node:fs'
 import { chmod, cp, mkdir, readdir, readFile, rm, symlink, writeFile } from 'node:fs/promises'
@@ -428,6 +428,72 @@ describe('change lifecycle integration', () => {
 
     await focusChange('auth/login')
     expect(existsSync(focusDPath('auth', 'login'))).toBe(true)
+  })
+})
+
+describe('compact JSON output', () => {
+  it('emits equivalent LF-terminated compact JSON for every JSON inspection command', async () => {
+    const compactDir = join(tmpdir(), 'rsp-compact-json-test', randomUUID())
+    await mkdir(compactDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: compactDir, stdio: 'pipe' })
+    await writeFile(join(compactDir, '.rsp', 'changes', 'compact-me.md'), renderChange('compact-me'))
+
+    const commands = [
+      ['status'],
+      ['show', 'compact-me'],
+      ['ready', 'compact-me'],
+      ['check'],
+      ['doctor'],
+    ]
+
+    for (const command of commands) {
+      const pretty = execFileSync('node', [cliPath(), ...command, '--json'], { cwd: compactDir, encoding: 'utf-8' })
+      const compact = execFileSync('node', [cliPath(), ...command, '--json', '--compact'], { cwd: compactDir, encoding: 'utf-8' })
+
+      expect(JSON.parse(compact)).toEqual(JSON.parse(pretty))
+      expect(compact).toBe(`${JSON.stringify(JSON.parse(pretty))}\n`)
+    }
+  })
+
+  it('uses compact serialization for existing structured JSON errors', async () => {
+    const compactDir = await createRspFixture('rsp-compact-json-error-test', ['specs', 'changes', 'focus.d'])
+    const pretty = spawnSync('node', [cliPath(), 'status', '--json', '--stale', 'nope'], { cwd: compactDir, encoding: 'utf-8' })
+    const compact = spawnSync('node', [cliPath(), 'status', '--json', '--compact', '--stale', 'nope'], { cwd: compactDir, encoding: 'utf-8' })
+
+    expect(pretty.status).toBe(1)
+    expect(compact.status).toBe(1)
+    expect(compact.stderr).toBe('')
+    expect(JSON.parse(compact.stdout)).toEqual(JSON.parse(pretty.stdout))
+    expect(compact.stdout).toBe(`${JSON.stringify(JSON.parse(pretty.stdout))}\n`)
+  })
+
+  it('rejects compact on JSON commands when JSON mode is absent', async () => {
+    const compactDir = await createRspFixture('rsp-compact-requires-json-test', ['specs', 'changes', 'focus.d'])
+    const result = spawnSync('node', [cliPath(), 'status', '--compact'], { cwd: compactDir, encoding: 'utf-8' })
+
+    expect(result.status).toBe(1)
+    expect(result.stdout).toBe('')
+    expect(result.stderr).toContain('--compact requires --json')
+  })
+
+  it('rejects compact on other commands before command behavior runs', async () => {
+    const compactDir = await createRspFixture('rsp-compact-unsupported-command-test', ['specs', 'changes', 'focus.d'])
+    const result = spawnSync('node', [cliPath(), 'create', 'must-not-exist', '--compact'], { cwd: compactDir, encoding: 'utf-8' })
+
+    expect(result.status).toBe(1)
+    expect(result.stdout).toBe('')
+    expect(result.stderr).toContain('--compact is unsupported for rsp create')
+    expect(existsSync(join(compactDir, '.rsp', 'changes', 'must-not-exist.md'))).toBe(false)
+  })
+
+  it('documents compact only on JSON inspection command help', () => {
+    for (const command of ['status', 'show', 'ready', 'check', 'doctor']) {
+      const output = execFileSync('node', [cliPath(), command, '--help'], { encoding: 'utf-8' })
+      expect(output).toContain('--compact')
+    }
+
+    const createHelp = execFileSync('node', [cliPath(), 'create', '--help'], { encoding: 'utf-8' })
+    expect(createHelp).not.toContain('--compact')
   })
 })
 

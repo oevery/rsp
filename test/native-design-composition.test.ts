@@ -17,7 +17,7 @@ import {
 const root = fileURLToPath(new URL('..', import.meta.url))
 const skills = ['rsp', 'rsp-shape', 'rsp-design', 'rsp-implement', 'rsp-review']
 const publishedSkills = ['rsp', 'rsp-address-review', 'rsp-design', 'rsp-diagnose', 'rsp-implement', 'rsp-review', 'rsp-shape', 'rsp-tdd']
-const retainedRun = join(root, 'research', 'evaluations', 'rsp-native-design-composition', '2026-07-22', 'real-runs', 'device-discovery-boundary-reposition-rsp-product')
+const retainedRun = join(root, 'research', 'evaluations', 'rsp-native-design-composition', '2026-07-22', 'real-runs', 'device-discovery-boundary-compact-json-output')
 
 function copiedRetainedRun(onTestFinished: (callback: () => void) => void) {
   const runRoot = mkdtempSync(join(tmpdir(), 'rsp-native-design-retained-'))
@@ -225,6 +225,10 @@ describe('native-design composition terminal evaluator', () => {
       ...evidence,
       durableBody: 'Desktop runtime 拥有物理设备发现和连接生命周期。Web 是类型化展示投影，不能直接发现或打开硬件。设备事件投影包与运行时无关。接收器硬件验收仍不可用，且由人工负责。',
     })
+    const compactRuntimeIndependentBoundary = scoreNativeDesignEvidence({
+      ...evidence,
+      durableBody: '桌面运行时拥有物理设备发现和连接生命周期。Web 只消费类型化的设备事件投影，不直接发现硬件。device-discovery 是运行时无关的纯投影边界。接收器硬件验收目前不可用。',
+    })
     const receiverWordedChineseBoundary = scoreNativeDesignEvidence({
       ...evidence,
       durableBody: '桌面运行时拥有物理接收器的发现和连接生命周期。Web 只消费类型化投影，不直接发现硬件。运行时中立包只负责设备事件投影。接收器硬件验收仍不可用，且由人工负责。',
@@ -272,6 +276,7 @@ describe('native-design composition terminal evaluator', () => {
     expect(score.blockers).toEqual([])
     expect(equivalentChineseBoundary.passed).toBe(true)
     expect(runtimeIndependentBoundary.passed).toBe(true)
+    expect(compactRuntimeIndependentBoundary.passed).toBe(true)
     expect(receiverWordedChineseBoundary.passed).toBe(true)
     expect(invertedChineseBoundary.passed).toBe(true)
     expect(negatedInvertedChineseBoundary.passed).toBe(false)

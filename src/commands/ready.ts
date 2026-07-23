@@ -45,7 +45,7 @@ function exitReadyError(name: string, error: { code: string, message: string }, 
       warnings: [],
       runtime: [],
       error,
-    })
+    }, options)
   }
   else {
     console.error(`  ${pc.red('Error:')} ${error.message}`)
@@ -123,7 +123,7 @@ export async function showReady(name: string, options: CommandRunOptions = {}): 
   }
 
   if (options.json) {
-    emitJson(result)
+    emitJson(result, options)
     return result
   }
 

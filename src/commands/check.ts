@@ -49,7 +49,7 @@ export async function runCheck(options: CheckOptions = {}): Promise<CheckResult>
       summary: { changeFiles: 0, errors: 1, warnings: 0 },
     }
     if (options.json)
-      emitJson(result)
+      emitJson(result, options)
     else
       console.error(`  ${pc.red('Error:')} ${toErrorMessage(error)}`)
     return result
@@ -168,7 +168,7 @@ export async function runCheck(options: CheckOptions = {}): Promise<CheckResult>
       },
     }
     if (options.json) {
-      emitJson(result)
+      emitJson(result, options)
       return result
     }
     console.log()
@@ -400,7 +400,7 @@ export async function runCheck(options: CheckOptions = {}): Promise<CheckResult>
   }
 
   if (options.json) {
-    emitJson(result)
+    emitJson(result, options)
     return result
   }
 

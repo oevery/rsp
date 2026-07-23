@@ -4,7 +4,7 @@ summary: Completed RSP changes.
 kind: generated-index
 index_type: archives
 source_dir: .rsp/archives
-entry_count: 66
+entry_count: 67
 ---
 
 # Archive Index
@@ -49,6 +49,7 @@ entry_count: 66
 | 2026-07-21 | 3-0-skill-readiness/close-review-resolution-handoff | feature | Add a host-neutral review-resolution capability that disposes fixed findings, corrects accepted findings under explicit authority, requires verification and re-review, and returns a recoverable handoff when interrupted. |
 | 2026-07-21 | 3-0-skill-readiness/integrate-diagnosis-tdd-routing | feature | Add deterministic, host-neutral routing from implementation evidence to diagnosis, TDD, or ordinary implementation. |
 | 2026-07-21 | 3-0-skill-readiness/validate-assisted-engineering-loop | research | Validate the tightened RSP 3.0 assisted engineering loop with eight repeatable, host-neutral scenarios after the routing and review-resolution slices land. |
+| 2026-07-23 | cli-machine-output/add-compact-json-output | feature | Add an opt-in compact serialization mode for RSP's machine-readable JSON commands. |
 | 2026-07-21 | daily-workflow-depth/brief | group | — |
 | 2026-07-21 | daily-workflow-depth/deepen-rsp-shape | feature | Deepen explicit shaping without taxing ordinary runs |
 | 2026-07-21 | daily-workflow-depth/prototype-managed-controller | research | Prototype an optional bounded managed controller |

@@ -45,6 +45,7 @@
 - A meaningful Group Brief blocker is inherited by every direct child as a derived external blocker. It suppresses child readiness without becoming a dependency edge or duplicating blocker text into child files.
 - Every change file must declare an explicit `kind` in frontmatter.
 - CLI commands handle deterministic filesystem operations, structure checks, generated indexes, and warnings.
+- The JSON-producing inspection commands `status`, `show`, `ready`, `check`, and `doctor` preserve pretty-printed `--json` as the default and accept `--json --compact` for the same parsed value on one LF-terminated line. `--compact` without `--json`, or on any other command, fails before command behavior runs.
 - Generated `INDEX.md` files use lightweight YAML frontmatter with `kind: generated-index` and an `index_type` value for machine-readable classification.
 - Generated index builders avoid rewriting unchanged `INDEX.md` files.
 - `rsp doctor` identifies generated indexes by frontmatter metadata instead of body footer text.

@@ -5,11 +5,12 @@ export function toErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
 
-export function emitJson(data: unknown): void {
-  console.log(JSON.stringify(data, null, 2))
+export function emitJson(data: unknown, options: { compact?: boolean } = {}): void {
+  const indentation = options.compact ? undefined : 2
+  process.stdout.write(`${JSON.stringify(data, null, indentation)}\n`)
 }
 
-export function emitStatusJsonError(error: { code: string, message: string }, options: { focused: boolean, blocked: boolean }) {
+export function emitStatusJsonError(error: { code: string, message: string }, options: { focused: boolean, blocked: boolean, compact?: boolean }) {
   const payload: StatusJsonShape & { error: { code: string, message: string } } = {
     command: 'status',
     ok: false,
@@ -38,7 +39,7 @@ export function emitStatusJsonError(error: { code: string, message: string }, op
     runtime: [],
     error,
   }
-  emitJson(payload)
+  emitJson(payload, options)
 }
 
 export function recordRuntimeDiagnostic(runtime: RuntimeDiagnostic[], diagnostic: RuntimeDiagnostic, verbose = false): void {

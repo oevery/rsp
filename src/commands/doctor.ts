@@ -96,7 +96,7 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
   }
 
   if (options.json) {
-    emitJson(result)
+    emitJson(result, options)
     return result
   }
 

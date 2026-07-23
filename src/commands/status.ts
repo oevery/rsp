@@ -247,7 +247,7 @@ export async function showStatus(options: StatusOptions = {}, runOptions: Comman
   }
 
   if (runOptions.json) {
-    emitJson(statusResult)
+    emitJson(statusResult, runOptions)
     return statusResult
   }
 

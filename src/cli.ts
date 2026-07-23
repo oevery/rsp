@@ -18,6 +18,19 @@ import { updateProject } from './commands/update.js'
 import { getVersion } from './core/config.js'
 import { emitStatusJsonError } from './core/output.js'
 
+const COMPACT_JSON_COMMANDS = new Set(['status', 'show', 'ready', 'check', 'doctor'])
+
+function validateCompactInvocation(rawArgs: string[]): void {
+  if (!rawArgs.includes('--compact'))
+    return
+
+  const command = rawArgs[0]
+  if (!command || !COMPACT_JSON_COMMANDS.has(command))
+    throw new Error(`--compact is unsupported for rsp${command ? ` ${command}` : ''}`)
+  if (!rawArgs.includes('--json'))
+    throw new Error('--compact requires --json')
+}
+
 const initCommand = defineCommand({
   meta: {
     name: 'init',
@@ -224,6 +237,11 @@ const statusCommand = defineCommand({
       description: 'Print machine-readable JSON output',
       default: false,
     },
+    compact: {
+      type: 'boolean',
+      description: 'Print JSON without indentation (requires --json)',
+      default: false,
+    },
     verbose: {
       type: 'boolean',
       description: 'Print runtime diagnostics for suppressed I/O issues',
@@ -240,6 +258,7 @@ const statusCommand = defineCommand({
         }, {
           focused: Boolean(args.focused),
           blocked: Boolean(args.blocked),
+          compact: Boolean(args.compact),
         })
       }
       else {
@@ -254,6 +273,7 @@ const statusCommand = defineCommand({
       stale,
     }, {
       json: Boolean(args.json),
+      compact: Boolean(args.compact),
       verbose: Boolean(args.verbose),
     })
     if (!result.ok)
@@ -277,6 +297,11 @@ const checkCommand = defineCommand({
       description: 'Print machine-readable JSON output',
       default: false,
     },
+    compact: {
+      type: 'boolean',
+      description: 'Print JSON without indentation (requires --json)',
+      default: false,
+    },
     verbose: {
       type: 'boolean',
       description: 'Print runtime diagnostics for suppressed I/O issues',
@@ -287,6 +312,7 @@ const checkCommand = defineCommand({
     const result = await runCheck({
       focused: Boolean(args.focused),
       json: Boolean(args.json),
+      compact: Boolean(args.compact),
       verbose: Boolean(args.verbose),
     })
     if (!result.ok)
@@ -317,6 +343,11 @@ const doctorCommand = defineCommand({
       description: 'Print machine-readable JSON output',
       default: false,
     },
+    compact: {
+      type: 'boolean',
+      description: 'Print JSON without indentation (requires --json)',
+      default: false,
+    },
     verbose: {
       type: 'boolean',
       description: 'Print runtime diagnostics for suppressed I/O issues',
@@ -329,7 +360,7 @@ const doctorCommand = defineCommand({
     },
   },
   async run({ args }) {
-    const result = await runDoctor({ json: Boolean(args.json), verbose: Boolean(args.verbose), fix: Boolean(args.fix) })
+    const result = await runDoctor({ json: Boolean(args.json), compact: Boolean(args.compact), verbose: Boolean(args.verbose), fix: Boolean(args.fix) })
     if (!result.ok)
       process.exit(1)
   },
@@ -351,14 +382,19 @@ const readyCommand = defineCommand({
       description: 'Print machine-readable JSON output',
       default: false,
     },
+    compact: {
+      type: 'boolean',
+      description: 'Print JSON without indentation (requires --json)',
+      default: false,
+    },
     verbose: {
       type: 'boolean',
       description: 'Print runtime diagnostics for suppressed I/O issues',
       default: false,
     },
   },
-  async run({ args }: { args: { name: string, json: boolean, verbose: boolean } }) {
-    await showReady(args.name, { json: Boolean(args.json), verbose: Boolean(args.verbose) })
+  async run({ args }: { args: { name: string, json: boolean, compact: boolean, verbose: boolean } }) {
+    await showReady(args.name, { json: Boolean(args.json), compact: Boolean(args.compact), verbose: Boolean(args.verbose) })
   },
 })
 
@@ -383,22 +419,29 @@ const showCommand = defineCommand({
       description: 'Print machine-readable JSON output',
       default: false,
     },
+    compact: {
+      type: 'boolean',
+      description: 'Print JSON without indentation (requires --json)',
+      default: false,
+    },
     verbose: {
       type: 'boolean',
       description: 'Print runtime diagnostics for suppressed I/O issues',
       default: false,
     },
   },
-  async run({ args }: { args: { name?: string, focused: boolean, json: boolean, verbose: boolean } }) {
+  async run({ args }: { args: { name?: string, focused: boolean, json: boolean, compact: boolean, verbose: boolean } }) {
     await showChange(args.name, {
       focused: Boolean(args.focused),
       json: Boolean(args.json),
+      compact: Boolean(args.compact),
       verbose: Boolean(args.verbose),
     })
   },
 })
 
 export async function runCli(rawArgs = process.argv.slice(2)) {
+  validateCompactInvocation(rawArgs)
   const version = await getVersion()
 
   const main = defineCommand({

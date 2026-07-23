@@ -71,24 +71,25 @@ kind: "feature"
   - Do not use this slice to change validation behavior for any unknown option other than `--compact`.
 
 ## Tasks
-- [ ] Refactor shared JSON emission so every supported command and structured error can select pretty or compact serialization.
-- [ ] Add the compact option consistently to status, show, ready, check, and doctor without changing their parsed values.
-- [ ] Reject `--compact` without `--json` consistently without emitting a JSON document.
-- [ ] Reject `--compact` on every other command before command behavior runs without changing general unknown-option handling.
-- [ ] Document the option and add equivalence, structured-error, line-framing, invalid-combination, help, and compatibility coverage.
-- [ ] Requalify the changed `dist/cli.mjs` artifact through a new immutable native-composition retained run without overwriting prior successful evidence.
+- [x] Refactor shared JSON emission so every supported command and structured error can select pretty or compact serialization.
+- [x] Add the compact option consistently to status, show, ready, check, and doctor without changing their parsed values.
+- [x] Reject `--compact` without `--json` consistently without emitting a JSON document.
+- [x] Reject `--compact` on every other command before command behavior runs without changing general unknown-option handling.
+- [x] Document the option and add equivalence, structured-error, line-framing, invalid-combination, help, and compatibility coverage.
+- [x] Requalify the changed `dist/cli.mjs` artifact through a new immutable native-composition retained run without overwriting prior successful evidence.
 
 ## Verify
 - Automated:
-  - [ ] `mise exec -- pnpm exec vitest run test/integration.test.ts`
-  - [ ] `mise exec -- pnpm run build`
-  - [ ] `mise exec -- pnpm run lint`
-  - [ ] `node scripts/native-design-composition-eval.mjs --run-real`
-  - [ ] `mise exec -- pnpm run test`
+  - [x] `mise exec -- pnpm exec vitest run test/integration.test.ts` — 148 passed.
+  - [x] `mise exec -- pnpm run build`
+  - [x] `mise exec -- pnpm run lint`
+  - [x] `mise exec -- pnpm exec vitest run test/native-design-composition.test.ts -t "scores external evidence"` — observed RED for the unrecognized `运行时无关` phrase, then passed GREEN after the minimal scorer correction.
+  - [x] `node scripts/native-design-composition-eval.mjs --run-real` — all 15 gates passed for the new `device-discovery-boundary-compact-json-output` retained run; the earlier failed scorer attempt remains under `invalid-attempts/` and prior successful run identities remain unchanged.
+  - [x] `mise exec -- pnpm run test` — 30 files and 357 tests passed.
 - Manual:
-  - [ ] Compare pretty and compact success/existing-structured-error output for every JSON-producing inspection command, confirm deep equality after parsing, confirm compact output is one LF-terminated line, and confirm a representative non-JSON command rejects `--compact` before acting.
+  - [x] Compare pretty and compact success/existing-structured-error output for every JSON-producing inspection command, confirm deep equality after parsing, confirm compact output is one LF-terminated line, and confirm a representative non-JSON command rejects `--compact` before acting.
 - Durable updates:
-  - [ ] Update `.rsp/specs/design.md` and `README.md` with the settled compact serialization contract if implementation confirms it.
+  - [x] Update `.rsp/specs/design.md` and `README.md` with the settled compact serialization contract if implementation confirms it.
 
 ## Blockers
 - none
