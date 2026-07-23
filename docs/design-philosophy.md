@@ -21,21 +21,29 @@
 
 ## 产品定位
 
-RSP 是面向 AI 辅助软件工作的轻量工作流。
+RSP 是 **Reliable Software Practice**：面向人类与 AI agent 的仓库原生工程工作流。
+
+它采用三层产品模型：
+
+- **Practice**：以可靠、可恢复、证据驱动的软件工程结果作为产品承诺。
+- **Workflow**：通过可组合 Skills 覆盖 shaping、design、diagnosis、TDD、implementation、review、release documentation 与 durable review，并把结果返回已有 owner。
+- **Protocol**：以 Rules、Specs、Plans 为轻量 artifact foundation，提供确定性的项目内文件约定、检查和路由事实。
+
+`Reliable Software Practice` 回答 RSP 是什么；`Rules, Specs, Plans` 解释 RSP 如何在仓库中落地。工作流层不会把派生阶段或 controller state 持久化成第二套权威。
 
 它提供：
 
-- durable project knowledge layer。
-- open work tracking layer。
-- 人类判断与 AI 执行之间的桥梁。
-- 无平台绑定的文件约定。
+- durable project knowledge 与 rationale ownership。
+- open work、focus、verification 和 completed history 的可恢复协调。
+- 人类判断与 AI 执行之间有明确权限边界的桥梁。
+- 无平台绑定的文件协议与宿主无关的组合式工程能力。
 
 它不是：
 
 - 项目管理系统。
 - git history 替代品。
 - schema-heavy spec framework。
-- plugin platform。
+- 通用 plugin 或 project-management platform。
 - 绑定单一 IDE、agent 或 hosting platform 的系统。
 
 ## 核心模型
@@ -166,7 +174,7 @@ RSP 不追求最大可扩展性。
 - 更低仓库间语义漂移。
 - 更稳定的跨项目心智模型。
 
-RSP 是稳定协议，不是通用平台。
+RSP 的 protocol foundation 保持稳定、确定且低扩展；完整产品是一套可组合工程工作流，而不是通用平台。
 
 ### 7. 跨仓库一致性优先
 

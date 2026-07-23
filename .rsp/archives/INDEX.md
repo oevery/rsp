@@ -4,7 +4,7 @@ summary: Completed RSP changes.
 kind: generated-index
 index_type: archives
 source_dir: .rsp/archives
-entry_count: 64
+entry_count: 65
 ---
 
 # Archive Index
@@ -43,6 +43,7 @@ entry_count: 64
 | 2026-07-22 | prepare-release-notes-skill | feature | Add a host-neutral RSP Skill that prepares and audits evidence-based changelogs, release notes, and migration notes while adapting to user and repository conventions. |
 | 2026-07-22 | rsp-release-docs-routing | fix | Rename the release-documentation Skill to `rsp-release-docs` and route eligible release Changes to it from Core. |
 | 2026-07-23 | align-config-and-templates-with-3-0 | fix | Project configuration fails closed through one validation contract, and newly generated RSP artifacts express the final 3.0 capability and artifact-ownership boundaries without adding lifecycle or Skill state. |
+| 2026-07-23 | reposition-rsp-product | docs | Reposition RSP as Reliable Software Practice and make the English and Chinese product documentation lead with the complete repository-native engineering workflow rather than only its file protocol. |
 | 2026-07-21 | 3-0-skill-readiness/brief | group | — |
 | 2026-07-21 | 3-0-skill-readiness/close-review-resolution-handoff | feature | Add a host-neutral review-resolution capability that disposes fixed findings, corrects accepted findings under explicit authority, requires verification and re-review, and returns a recoverable handoff when interrupted. |
 | 2026-07-21 | 3-0-skill-readiness/integrate-diagnosis-tdd-routing | feature | Add deterministic, host-neutral routing from implementation evidence to diagnosis, TDD, or ordinary implementation. |

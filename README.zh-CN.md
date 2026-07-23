@@ -1,8 +1,35 @@
-# RSP：Rules, Specs, Plans
+# RSP — Reliable Software Practice
 
 [English](./README.md) | 简体中文
 
-RSP = **Rules、Specs、Plans**。这是一个面向 AI 协作开发、长期项目知识与单文件 change 跟踪的轻量项目协议。
+**面向人类与 AI Agent 的仓库原生工程工作流。**
+
+RSP 将模糊意图逐步转化为边界明确、经过实现、审查和验证的软件变更，同时让项目知识可以长期维护、让未完成工作可以可靠恢复。九个可组合 Skills 共同覆盖工程旅程，但不引入隐藏 workflow state，也不取代项目自己的文件、工具和权限边界。
+
+这套工作流建立在轻量的 **Rules、Specs、Plans** artifact foundation 之上。
+
+## RSP 帮助你完成什么
+
+- 将模糊工作塑造成一个可执行 Change，或一组彼此独立的小切片。
+- 在实现前，根据仓库证据解决关键设计问题。
+- 将原因不明的失败交给 diagnosis，将行为清晰的工作交给 TDD，将已有充分证据的修改交给 implementation。
+- 按明确范围审查变更、处理已接受的 findings，并重新运行 fresh verification。
+- 将稳定事实、作用域指令、长期理由和完成历史分别保存在正确的 owner 中。
+- 当 Change 明确拥有已确认的 release 时，准备对应的发布文档。
+
+## 工作流如何组合
+
+```text
+意图
+  → Shape
+  → 按需 Design
+  → Diagnose | TDD | Implement
+  → Review → Address accepted findings
+  → 按需准备 Release Docs
+  → Durable Review → Archive
+```
+
+RSP 根据 selected Change、仓库证据、验证结果和 blockers 推导下一步动作。每个能力都把结果返回已有的项目或 RSP owner。RSP 不会自行推断修改代码、继续 Git 操作、commit、publish、deploy 或 approve 的权限。
 
 ## 快速开始
 
@@ -20,7 +47,9 @@ npx -y @oevery/rsp init --with-project-setup
 npx -y @oevery/rsp doctor
 ```
 
-## 核心思路
+## Artifact foundation
+
+`Reliable Software Practice` 表达产品承诺；`Rules、Specs、Plans` 描述让这套工作流保持仓库原生的轻量 artifact model：
 
 - nearest `AGENTS.md` 存放有作用域的项目或模块操作指令。
 - `rsp-rules.md` 是最小、tool-agnostic 的 fallback protocol。

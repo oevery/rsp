@@ -2,7 +2,7 @@
   "name": "@oevery/rsp",
   "type": "module",
   "version": "3.0.0",
-  "description": "RSP (Rules, Specs, Plans) workflow for lightweight AI-assisted change management",
+  "description": "RSP (Reliable Software Practice), a repository-native engineering workflow for humans and AI agents",
   "author": "oevery",
   "license": "MIT",
   "homepage": "https://github.com/oevery/rsp#readme",
@@ -13,6 +13,9 @@
   "bugs": "https://github.com/oevery/rsp/issues",
   "keywords": [
     "rsp",
+    "reliable-software-practice",
+    "repository-native",
+    "engineering-workflow",
     "rules",
     "specs",
     "plans",

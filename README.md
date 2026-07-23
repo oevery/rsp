@@ -1,8 +1,35 @@
-# RSP: Rules, Specs, Plans
+# RSP — Reliable Software Practice
 
 English | [简体中文](./README.zh-CN.md)
 
-RSP = **Rules, Specs, Plans**. A lightweight project protocol for AI-assisted development, durable knowledge, and single-file change tracking.
+**A repository-native engineering workflow for humans and AI agents.**
+
+RSP helps turn unclear intent into shaped, implemented, reviewed, and verified software changes while keeping project knowledge durable and work recoverable. Its nine composable Skills guide the engineering journey without introducing hidden workflow state or replacing the project's own files, tools, and authority.
+
+The workflow rests on a lightweight artifact foundation of **Rules, Specs, and Plans**.
+
+## What RSP helps you do
+
+- Shape ambiguous work into one executable Change or a small set of independent slices.
+- Resolve material design questions from repository evidence before implementation.
+- Route unexplained failures to diagnosis, clear behaviors to TDD, and evidenced edits to implementation.
+- Review changes against explicit scope, address accepted findings, and rerun fresh verification.
+- Preserve stable facts, scoped instructions, lasting rationale, and completed history in their proper owners.
+- Prepare release documentation when a Change explicitly owns a confirmed release.
+
+## How the workflow fits together
+
+```text
+intent
+  → shape
+  → design when needed
+  → diagnose | TDD | implement
+  → review → address accepted findings
+  → release docs when owned
+  → durable review → archive
+```
+
+RSP derives the next action from the selected Change, repository evidence, verification, and blockers. Each capability returns its result to the existing project or RSP owner. RSP does not infer permission to modify code, continue Git operations, commit, publish, deploy, or approve work.
 
 ## Quick start
 
@@ -20,7 +47,9 @@ npx -y @oevery/rsp init --with-project-setup
 npx -y @oevery/rsp doctor
 ```
 
-## Core idea
+## Artifact foundation
+
+`Reliable Software Practice` is the product promise; `Rules, Specs, Plans` describes the lightweight artifact model that makes the workflow repository-native:
 
 - nearest `AGENTS.md` stores scoped project or module instructions.
 - `rsp-rules.md` is the minimal tool-agnostic fallback protocol.

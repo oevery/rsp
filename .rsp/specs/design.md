@@ -1,13 +1,15 @@
 # Project Design: @oevery/rsp
 
 ## Purpose
-- RSP is a lightweight workflow for AI-assisted software work.
+- RSP is Reliable Software Practice, a repository-native engineering workflow for humans and AI agents.
+- Its composable Skills guide work from unclear intent through implementation, review, verification, durable review, and archive without introducing hidden workflow state or replacing Host Project authority.
 - It separates durable project knowledge from open implementation work.
 - It provides a platform-agnostic file convention that humans and different coding agents can read consistently.
 
 ## Stable Facts
 - The npm package name is `@oevery/rsp`; it publishes a CLI binary named `rsp`.
-- RSP stands for Rules, Specs, Plans.
+- RSP stands for Reliable Software Practice.
+- Rules, Specs, Plans is the lightweight artifact foundation beneath the product workflow, not the current expansion of the product name.
 - RSP uses `.rsp/` as the project-local workflow root.
 - `.rsp/rsp-rules.md` is the minimal tool-agnostic fallback protocol for agents that cannot load the `rsp` skill.
 - The `rsp` skill is the preferred detailed operational guide; the fallback protocol is deliberately not a second full manual.
