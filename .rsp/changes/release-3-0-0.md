@@ -63,7 +63,7 @@ kind: "ops"
 - [x] Confirm every declared upstream capability Group is closed and repository history contains the accepted models and every promoted capability.
 - [x] Complete 3.0.0 changelog, release notes, migration notes, version identity, and release date.
 - [x] Run full release, package-content, clean-install, and CLI/Skill discovery gates.
-- [ ] Commit the release preparation as one scoped commit.
+- [x] Commit the release preparation as one scoped commit — `1852e0a docs(release): prepare 3.0.0`.
 - [ ] After separate authorization, push, tag, publish, create release notes, and verify installed registry contents.
 
 ## Verify
