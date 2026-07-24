@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "date": "2026-07-24",
+  "runtimeAcquisition": "npx -y -p node@22 node",
+  "runtime": {
+    "node": "v22.23.1",
+    "platform": "darwin",
+    "arch": "arm64",
+    "npm": "11.16.0"
+  },
+  "verificationCommand": "/Users/oevery/.npm/_npx/52027bd8fc0022aa/node_modules/node/bin/node scripts/clean-install-check.mjs --json --npm-cli /Users/oevery/.local/share/mise/installs/node/24.18.0/lib/node_modules/npm/bin/npm-cli.js",
+  "executionBoundary": "clean-install-check runs npm-cli.js and every installed CLI smoke through the Node 22 process.execPath",
+  "package": "@oevery/rsp@3.0.0",
+  "tarballSha256": "860fc21614991227c495acab30d35cd881fcc4d7d2b3d147d3a81628b78f117f",
+  "entrySmoke": {
+    "help": "passed",
+    "statusJson": "passed",
+    "nonTtyUi": {
+      "exitCode": 1,
+      "stderr": "Error: rsp ui requires an interactive terminal; use rsp status or rsp status --json instead"
+    },
+    "invalidLocale": {
+      "exitCode": 1,
+      "stderr": "Error: --lang must be auto, en, or zh-CN"
+    }
+  },
+  "footprintCommand": "/Users/oevery/.npm/_npx/52027bd8fc0022aa/node_modules/node/bin/node scripts/package-footprint.mjs --npm-cli /Users/oevery/.local/share/mise/installs/node/24.18.0/lib/node_modules/npm/bin/npm-cli.js",
+  "footprint": {
+    "packedBytes": 95630,
+    "packedFiles": 27,
+    "unpackedBytes": 364731,
+    "installedLogicalBytes": 8712221,
+    "installedFiles": 4905,
+    "lockfileSha256": "d34703da216a5d659a139872c52adf8234d2acb052794888116bbd3f84d333c6"
+  },
+  "passed": true
+}

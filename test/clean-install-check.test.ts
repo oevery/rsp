@@ -31,6 +31,12 @@ describe('clean install package check', () => {
       expect(result.status, result.stderr || result.stdout).toBe(0)
       const report = JSON.parse(result.stdout) as Record<string, any>
       expect(report.package).toBe('@oevery/rsp@3.0.0')
+      expect(report.entrySmoke).toEqual({
+        help: true,
+        statusJson: true,
+        nonTtyUi: { exitCode: 1, stderr: 'Error: rsp ui requires an interactive terminal; use rsp status or rsp status --json instead' },
+        invalidLocale: { exitCode: 1, stderr: 'Error: --lang must be auto, en, or zh-CN' },
+      })
       expect(report.tarballSha256).toMatch(/^[a-f0-9]{64}$/)
       expect(report.inventory.skills).toEqual(expectedSkills)
       expect(report.rspDesignReferences).toEqual([

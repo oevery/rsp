@@ -45,6 +45,8 @@
 - A meaningful Group Brief blocker is inherited by every direct child as a derived external blocker. It suppresses child readiness without becoming a dependency edge or duplicating blocker text into child files.
 - Every change file must declare an explicit `kind` in frontmatter.
 - CLI commands handle deterministic filesystem operations, structure checks, generated indexes, and warnings.
+- Bare `rsp` opens the read-only interactive dashboard only when stdin and stdout are TTYs, `TERM` is not `dumb`, and `CI` is absent or exactly `false`; otherwise it preserves non-interactive help behavior. `rsp ui` is the explicit dual-TTY entry, while every existing subcommand, root help/version/error path, plain status report, and JSON contract remains deterministic and non-interactive.
+- TUI-owned labels support `en` and `zh-CN` without localizing WorkRefs, paths, commands, canonical states, existing CLI output, JSON, Skills, or persisted artifacts. The dashboard presents status and deterministic next commands but does not mutate project state.
 - The JSON-producing inspection commands `status`, `show`, `ready`, `check`, and `doctor` preserve pretty-printed `--json` as the default and accept `--json --compact` for the same parsed value on one LF-terminated line. `--compact` without `--json`, or on any other command, fails before command behavior runs.
 - Generated `INDEX.md` files use lightweight YAML frontmatter with `kind: generated-index` and an `index_type` value for machine-readable classification.
 - Generated index builders avoid rewriting unchanged `INDEX.md` files.
@@ -107,6 +109,8 @@
 - `src/cli.ts` defines the CLI surface and command registration.
 - `src/commands/` contains command implementations for RSP operations.
 - `src/core/` contains shared filesystem, config, output, helper, and locking logic.
+- `src/status/` owns the internal serializable project-status snapshot, filesystem-backed inspection, pure filtering and recommendation derivation, the exact public v3 JSON adapter, and plain-text presentation. `src/cli.ts` owns status argument validation, command-error emission, and exit decisions; `src/commands/status.ts` only coordinates the status layers and returns their result.
+- `src/tui/` owns the interactive reducer, Ink presentation, typed English and Simplified Chinese catalogs, display-cell layout, and terminal lifecycle. The TUI entry consumes the status snapshot as a sibling presenter and is dynamically imported only after interactive routing succeeds.
 - `src/core/work-ref.ts` owns open-work classification, full-tree inspection, bounded path derivation, executable filtering, regular-file checks, and identity-collision checks.
 - `src/core/change-group.ts` owns the Group Brief contract, declared membership, open/archive/focus projections, and derived close readiness; `src/commands/group.ts` owns explicit create and close mutations.
 - `scripts/upstreams.mjs` is repository-maintainer tooling for upstream manifest validation, Git cache lifecycle, candidate comparison, and atomic lock serialization; it is not part of the published RSP CLI.
@@ -136,6 +140,8 @@
 Dependency direction is constrained:
 
 - `bin/` loads the built product runtime; CLI registration delegates to commands, which use domain interpretation and core filesystem/output support.
+- Status inspection may depend on `src/core/`, while `src/core/` does not depend on `src/status/`. Status derivation is I/O-free, and status presenters do not inspect the filesystem or depend on command or TUI modules.
+- TUI modules may depend on the status snapshot and presentation-neutral types; status and core modules do not depend on the TUI. React, Ink, and Yoga remain outside ordinary command evaluation.
 - Product runtime must not import `research/`, `.cache/`, `.agents/skills/`, `.rsp/`, or repository-maintainer scripts.
 - Published `rules/` and `skills/` must operate without a source checkout, research corpus, or upstream cache.
 - Maintainer tooling may inspect product source and maintainer knowledge, but it enters product surfaces only through a selected normal RSP change.
@@ -145,7 +151,7 @@ Dependency direction is constrained:
 - New directories are created only for a selected capability with a distinct owner; upstream symmetry or speculative future use is insufficient.
 
 ## Constraints
-- Runtime support requires Node.js 18 or newer.
+- Runtime support requires Node.js 22 or newer.
 - Prefer the smallest model that correctly solves the workflow problem.
 - Preserve the single-file change model and fixed six-section change structure.
 - Keep open work flat or at one direct group level; never interpret recursive directories as Change identity.

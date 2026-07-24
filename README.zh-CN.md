@@ -297,6 +297,7 @@ AI 协助接入：
 rsp init --agents-mode <mode>   搭建 .rsp/，并确保 AGENTS.md 含有 RSP 入口块
 rsp init --with-project-setup   同时创建 .rsp/changes/project-setup.md
 rsp update                      刷新 fallback protocol、修复 AGENTS 受管块并重建索引
+rsp ui [--lang auto|en|zh-CN]   打开只读交互式仪表盘
 rsp add spec <name>             创建 .rsp/specs/<name>.md 并重建 specs 索引
 rsp create <name> [summary]     创建 .rsp/changes/<name>.md；可加 --lite 使用更短模板
 rsp group create <name> [goal] 创建不进入 focus 的 .rsp/changes/<name>/00-brief.md
@@ -319,6 +320,10 @@ rsp doctor [--fix] [--json] [--verbose]
 
 操作优先使用 `skills/rsp/SKILL.md`；skill 不可用时使用 `.rsp/rsp-rules.md` 作为最小 fallback protocol。
 
+在真实交互式终端中，裸 `rsp` 会打开与 `rsp ui` 相同的只读仪表盘。CI、管道、重定向流和 `TERM=dumb` 继续使用静态命令输出；人类快照使用 `rsp status`，自动化使用 `rsp status --json`。仪表盘不会创建、聚焦或归档工作。
+
+仪表盘快捷键：`Tab` 切换 Changes/Groups，方向键或 `j`/`k` 移动，`/` 筛选，`Enter` 打开全宽详情，`r` 刷新，`?` 显示帮助，`q`、`Ctrl-C` 或顶层 `Esc` 退出。可设置 `RSP_UI_LANG=en|zh-CN` 或传入 `rsp ui --lang`；只有仪表盘自有标签会本地化。现有 CLI help、纯文本输出、JSON、WorkRef、路径、命令、Skills 和 RSP artifacts 仍保持英文。
+
 当没有 focused change 时，`rsp status` 和 `rsp show --focused --json` 会输出 `nextActions`，但不会自动猜测哪个 open change 是当前工作。
 
 人类可读的 `rsp status` 会把执行指引渲染成依赖森林：父节点依赖其子节点，共享前置依赖以引用方式显示而不重复展开，`Next action` 直接指出当前可执行的 Change。
@@ -331,4 +336,4 @@ rsp doctor [--fix] [--json] [--verbose]
 
 ## 工具无关
 
-`.rsp/` 是纯文件约定，适用于 Kilo Code、Cursor、Claude Code、Cline、GitHub Copilot 或任何能读取项目文件的 AI 助手。需要 Node.js 18+。
+`.rsp/` 是纯文件约定，适用于 Kilo Code、Cursor、Claude Code、Cline、GitHub Copilot 或任何能读取项目文件的 AI 助手。RSP 3.1 需要 Node.js 22+；从 3.0 升级时须先更新 Node.js 再安装。

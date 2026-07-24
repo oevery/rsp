@@ -1,0 +1,180 @@
+[
+  {
+    "command": "/bin/zsh -lc \"sed -n '1,240p' .agents/skills/rsp/SKILL.md && sed -n '1,280p' .agents/skills/rsp-shape/SKILL.md && sed -n '1,300p' .agents/skills/rsp-design/SKILL.md && sed -n '1,300p' AGENTS.md && sed -n '1,300p' client/AGENTS.md && sed -n '1,340p' client/CONTEXT.md && sed -n '1,360p' .rsp/changes/device-discovery-boundary.md\"",
+    "exit_code": 0,
+    "kind": "command",
+    "output_hash": "0a2af5d136064d0afc3c4b3093b3720d9cf904f31f916cab40f2d112e7b4a53e",
+    "phase": "design"
+  },
+  {
+    "command": "/bin/zsh -lc \"sed -n '1,280p' .agents/skills/rsp-design/references/module-seams.md\nif [ -f CONTEXT-MAP.md ]; then sed -n '1,260p' CONTEXT-MAP.md; fi\nprintf '\\\\n-- focus --\\\\n'\nfind .rsp/focus.d -maxdepth 1 -type f -print -exec sed -n '1,80p' {} \\\\;\nprintf '\\\\n-- status --\\\\n'\ngit status --short\nprintf '\\\\n-- relevant files --\\\\n'\nrg --files client | rg '(device|discover|discovery|event|desktop|runtime|test)' | head -200\nprintf '\\\\n-- relevant symbols --\\\\n'\nrg -n -i -C 3 'device.*discover|discover.*device|connected|project.*event|DeviceEvent|desktop adapter' client --glob '\"'!**/node_modules/**'\"'\"",
+    "exit_code": 0,
+    "kind": "command",
+    "output_hash": "72e7fb00ad0d0e08adae6cad3c71e50506f048759913f7ef7d9ab07d6f2febc3",
+    "phase": "design"
+  },
+  {
+    "command": "/bin/zsh -lc \"sed -n '1,200p' client/packages/device-discovery/src/index.ts\nfind client -maxdepth 4 -type f | sort\nprintf '\\\\n-- manifests --\\\\n'\nfind . -maxdepth 3 \\\\( -name package.json -o -name tsconfig.json -o -name pnpm-workspace.yaml -o -name mise.toml \\\\) -type f -print | sort | while IFS= read -r f; do printf '\\\\n[%s]\\\\n' \\\"\"'$f\"; sed -n '\"'1,220p' \\\"\"'$f\"; done\nprintf '\"'\\\\n-- tracked relevant --\\\\n'\ngit ls-files | rg '(\"'^client/|device-discovery|package.json|mise)'\"'\"",
+    "exit_code": 0,
+    "kind": "command",
+    "output_hash": "4fafb38e4fee29d6d2963ec2e190057eb603ab6ef62b725b952eea6762d6ba25",
+    "phase": "design"
+  },
+  {
+    "command": "/bin/zsh -lc \"sed -n '1,240p' test/device-discovery.test.mjs\nprintf '\\\\n-- tracked tree --\\\\n'\ngit ls-tree -r --name-only HEAD | sort\nprintf '\\\\n-- focused check --\\\\n'\nnpx --no-install rsp check --focused\"",
+    "exit_code": 0,
+    "kind": "command",
+    "output_hash": "b1df70dae31b2811d3dabe9dbf4c9f1fdca8dc2874941c4e1fbade84e1cf7c28",
+    "phase": "design"
+  },
+  {
+    "kind": "file_change",
+    "operation": "update",
+    "path": ".rsp/changes/device-discovery-boundary.md",
+    "phase": "design"
+  },
+  {
+    "command": "/bin/zsh -lc 'git diff --check && git diff -- .rsp/changes/device-discovery-boundary.md && npx --no-install rsp check --focused && git status --short'",
+    "exit_code": 0,
+    "kind": "command",
+    "output_hash": "d17def3780f283495f22d6e825992adf3407f6aaebfaa683e0832c3702273cf8",
+    "phase": "design"
+  },
+  {
+    "command": "/bin/zsh -lc \"sed -n '1,240p' .agents/skills/rsp/SKILL.md && sed -n '1,300p' .agents/skills/rsp-implement/SKILL.md && sed -n '1,260p' AGENTS.md && sed -n '1,260p' client/AGENTS.md && sed -n '1,280p' client/CONTEXT.md && sed -n '1,360p' .rsp/changes/device-discovery-boundary.md\"",
+    "exit_code": 0,
+    "kind": "command",
+    "output_hash": "dc89f0bf6230a8378bbeb2fbc32ff4ccf0c7432057b516f6c36b8270692670e5",
+    "phase": "implement"
+  },
+  {
+    "command": "/bin/zsh -lc \"git status --short && find .rsp/focus.d -maxdepth 2 -type f -print && rg --files client | rg 'device-discovery|package.json|pnpm-workspace|vitest|test' && find client/packages -maxdepth 3 -type f | sort\"",
+    "exit_code": 0,
+    "kind": "command",
+    "output_hash": "0895622335478d374923b1cef126dfd48370a717a4cf95efedc1947488e06e5d",
+    "phase": "implement"
+  },
+  {
+    "command": "/bin/zsh -lc \"sed -n '1,220p' client/packages/device-discovery/src/index.ts && find client -maxdepth 3 -type f \\\\( -name package.json -o -name 'pnpm-workspace.yaml' -o -name 'vitest.config.*' -o -name 'tsconfig.json' \\\\) -print | sort && find client -maxdepth 4 -type f -path '*test*' -print | sort && sed -n '1,240p' client/package.json\"",
+    "exit_code": 1,
+    "kind": "command",
+    "output_hash": "1228df8a9099ce955908ad4e4683a7331387f3884b9a2c9c395e6db9fa71622f",
+    "phase": "implement"
+  },
+  {
+    "command": "/bin/zsh -lc 'find . -maxdepth 4 -type f | sort && find . -maxdepth 3 -type d | sort && git diff -- .rsp/changes/device-discovery-boundary.md client/packages/device-discovery/src/index.ts'",
+    "exit_code": 0,
+    "kind": "command",
+    "output_hash": "c9e8adf82f056317cb857ddf5c24fe7ca8c566f26177039bbe4028acbb7a6a2e",
+    "phase": "implement"
+  },
+  {
+    "command": "/bin/zsh -lc \"sed -n '1,220p' package.json && sed -n '1,260p' test/device-discovery.test.mjs && sed -n '1,220p' .rsp/specs/design.md && git diff --check\"",
+    "exit_code": 0,
+    "kind": "command",
+    "output_hash": "39825693d68f96e121e8f3bb50a6d3052cc88348b36aadfa376bbadcaf7740f0",
+    "phase": "implement"
+  },
+  {
+    "kind": "file_change",
+    "operation": "update",
+    "path": "client/packages/device-discovery/src/index.ts",
+    "phase": "implement"
+  },
+  {
+    "command": "/bin/zsh -lc 'mise exec -- pnpm test -- device-discovery'",
+    "exit_code": 0,
+    "kind": "command",
+    "output_hash": "cfee61118fa5ad08e9b2db95cb30e48fe0083094b08676a01888980803847412",
+    "phase": "implement"
+  },
+  {
+    "kind": "file_change",
+    "operation": "update",
+    "path": ".rsp/changes/device-discovery-boundary.md",
+    "phase": "implement"
+  },
+  {
+    "command": "/bin/zsh -lc 'git status --short && git diff --check && git diff -- .rsp/changes/device-discovery-boundary.md client/packages/device-discovery/src/index.ts'",
+    "exit_code": 0,
+    "kind": "command",
+    "output_hash": "583dc16e5917026582d726c21cd20bf30ed25dc4964518e612c5fb936bb7cf97",
+    "phase": "implement"
+  },
+  {
+    "command": "/bin/zsh -lc \"pwd && rg --files -g 'AGENTS.md' -g 'CONTEXT-MAP.md' -g 'CONTEXT.md' -g 'SKILL.md' -g 'rsp-rules.md' -g 'focus.d/**' -g 'index.ts' -g 'device-discovery.test.mjs' -g 'package.json' | sed -n '1,240p'\"",
+    "exit_code": 0,
+    "kind": "command",
+    "output_hash": "76ea3bec917fabc9379551cd264770ad7f4650fa37e2fa261bfbcd3927dcb6a2",
+    "phase": "review"
+  },
+  {
+    "command": "/bin/zsh -lc \"sed -n '1,260p' .agents/skills/rsp-review/SKILL.md && printf '\\\\n--- ROOT CONTEXT MAP ---\\\\n' && if [ -f CONTEXT-MAP.md ]; then sed -n '1,260p' CONTEXT-MAP.md; fi && printf '\\\\n--- CLIENT AGENTS ---\\\\n' && sed -n '1,260p' client/AGENTS.md && printf '\\\\n--- CLIENT CONTEXT ---\\\\n' && sed -n '1,300p' client/CONTEXT.md && printf '\\\\n--- FOCUS ---\\\\n' && find .rsp/focus.d -maxdepth 2 -type f -print -exec sed -n '1,260p' {} \\\\;\"",
+    "exit_code": 0,
+    "kind": "command",
+    "output_hash": "c1f73e924f4512272c213d47fe42ef484c0c2fd50c5d23d36dc2e776bf7f27c1",
+    "phase": "review"
+  },
+  {
+    "command": "/bin/zsh -lc \"printf '%s\\\\n' '--- SELECTED CHANGE ---' && selected_path=\"'$(sed -n '\"'1p' .rsp/focus.d/device-discovery-boundary) && printf '%s\\\\n' \\\"\"'$selected_path\" && if [ -f \"$selected_path\" ]; then sed -n '\"'1,360p' \\\"\"'$selected_path\"; else find .rsp -type f -iname '\"'*device-discovery-boundary*' -print; fi && printf '%s\\\\n' '--- PROJECT RSP AUTHORITY ---' && sed -n '1,300p' .rsp/rsp-rules.md && printf '%s\\\\n' '--- RELEVANT AUTHORITIES ---' && rg -l -i 'device discovery|device-discovery|raw.*connected|empty id|immutable typed|trim.*id' .rsp/specs .rsp/decisions 2>/dev/null | while IFS= read -r f; do printf '\\\\n### %s\\\\n' \\\"\"'$f\"; sed -n '\"'1,300p' \\\"\"'$f\"; done && printf '\"'%s\\\\n' '--- REVIEWED SOURCE ---' && nl -ba client/packages/device-discovery/src/index.ts && printf '%s\\\\n' '--- REVIEWED TEST ---' && nl -ba test/device-discovery.test.mjs && printf '%s\\\\n' '--- PACKAGE SCRIPTS ---' && node -e \\\"const p=require('./package.json'); console.log(JSON.stringify(p.scripts ?? {}, null, 2))\\\"\"",
+    "exit_code": 0,
+    "kind": "command",
+    "output_hash": "b81f2de50712d493eed865b5c2cb200ced28de3d2f3eb7b627a68a56ed88ff94",
+    "phase": "review"
+  },
+  {
+    "command": "/bin/zsh -lc \"printf '%s\\\\n' '--- FOCUS MARKER METADATA ---' && ls -l .rsp/focus.d/device-discovery-boundary && file .rsp/focus.d/device-discovery-boundary && printf '%s\\\\n' '--- SELECTED CHANGE CONTENT ---' && sed -n '1,360p' .rsp/changes/device-discovery-boundary.md && printf '%s\\\\n' '--- EXPLICIT FIXED-SCOPE DIFF ---' && git diff --no-ext-diff -- .rsp/changes/device-discovery-boundary.md client/packages/device-discovery/src/index.ts test/device-discovery.test.mjs && printf '%s\\\\n' '--- EXPLICIT FIXED-SCOPE STATUS ---' && git status --short -- .rsp/changes/device-discovery-boundary.md client/packages/device-discovery/src/index.ts test/device-discovery.test.mjs && printf '%s\\\\n' '--- BASELINES ---' && git diff --no-ext-diff --name-status HEAD -- .rsp/changes/device-discovery-boundary.md client/packages/device-discovery/src/index.ts test/device-discovery.test.mjs && printf '%s\\\\n' '--- FOCUSED TEST ---' && npx --no-install rsp status --json && npm test\"",
+    "exit_code": 0,
+    "kind": "command",
+    "output_hash": "7a091959c1b64511a0e5417ebd60c41233b00382b0373488883910edc7b9781f",
+    "phase": "review"
+  },
+  {
+    "command": "/bin/zsh -lc \"printf '%s\\\\n' '--- PRODUCTION REACHABILITY SEARCH ---' && rg -n --glob '\"'!node_modules/**'\"' --glob '\"'!test/device-discovery.test.mjs'\"' 'projectDeviceEvent|device-discovery' client .rsp/changes/device-discovery-boundary.md && printf '%s\\\\n' '--- FIXED-SCOPE WHITESPACE CHECK ---' && git diff --check -- .rsp/changes/device-discovery-boundary.md client/packages/device-discovery/src/index.ts test/device-discovery.test.mjs && printf '%s\\\\n' '--- BASE SOURCE CONTRACT ---' && git show HEAD:client/packages/device-discovery/src/index.ts && printf '%s\\\\n' '--- BASE CHANGE ---' && git show HEAD:.rsp/changes/device-discovery-boundary.md | sed -n '1,160p'\"",
+    "exit_code": 0,
+    "kind": "command",
+    "output_hash": "6b60962daa113f0fa1a4459462dd025da98c2238fd9736bd8cdbbdc51a234d0a",
+    "phase": "review"
+  },
+  {
+    "command": "/bin/zsh -lc 'mise exec -- pnpm test -- device-discovery'",
+    "exit_code": 0,
+    "kind": "command",
+    "output_hash": "20e04ca56ed822f06f02dd073df22448153014617b43fa8c3c8a4dda71db3344",
+    "phase": "review"
+  },
+  {
+    "command": "/bin/zsh -lc \"sed -n '1,240p' .agents/skills/rsp/SKILL.md && rg --files -g 'AGENTS.md' -g 'CONTEXT-MAP.md' -g 'CONTEXT.md' -g 'device-discovery-boundary.md' -g 'device-discovery-boundary.md' -g 'device-discovery*' | sort\"",
+    "exit_code": 0,
+    "kind": "command",
+    "output_hash": "676273f38a18d10b9dbb4ea662a84b7fe326c8009ea663a939c06a291c73418b",
+    "phase": "durable"
+  },
+  {
+    "command": "/bin/zsh -lc \"sed -n '1,240p' client/AGENTS.md && sed -n '1,240p' client/CONTEXT.md && printf '\\\\n--- focus ---\\\\n' && find .rsp/focus.d -maxdepth 2 -type f -print -exec sed -n '1,80p' {} \\\\; && printf '\\\\n--- change ---\\\\n' && sed -n '1,300p' .rsp/changes/device-discovery-boundary.md && printf '\\\\n--- durable target ---\\\\n' && if [ -f docs/architecture/device-discovery-boundary.md ]; then sed -n '1,300p' docs/architecture/device-discovery-boundary.md; else printf '(missing)\\\\n'; fi && printf '\\\\n--- source ---\\\\n' && sed -n '1,260p' client/packages/device-discovery/src/index.ts && printf '\\\\n--- test ---\\\\n' && sed -n '1,260p' test/device-discovery.test.mjs && printf '\\\\n--- readiness ---\\\\n' && npx --no-install rsp check --focused && npx --no-install rsp show --focused --json\"",
+    "exit_code": 0,
+    "kind": "command",
+    "output_hash": "2e9d6d1f7e6d39b18c15981a838fc725864b02022252795bd0dcce715c0ed7ed",
+    "phase": "durable"
+  },
+  {
+    "command": "/bin/zsh -lc 'rg --files docs client/packages/device-discovery | sort && git status --short && git diff --no-ext-diff -- client/packages/device-discovery/src/index.ts test/device-discovery.test.mjs .rsp/changes/device-discovery-boundary.md'",
+    "exit_code": 0,
+    "kind": "command",
+    "output_hash": "91e6f9c346a44d4b0b7107082ade4c03b74073d3503dd2b91bc3e1b210dba8a1",
+    "phase": "durable"
+  },
+  {
+    "kind": "file_change",
+    "operation": "add",
+    "path": "docs/architecture/device-discovery-boundary.md",
+    "phase": "durable"
+  },
+  {
+    "command": "/bin/zsh -lc \"sed -n '1,220p' docs/architecture/device-discovery-boundary.md && git diff --check -- docs/architecture/device-discovery-boundary.md && git diff --no-ext-diff -- docs/architecture/device-discovery-boundary.md && git status --short\"",
+    "exit_code": 0,
+    "kind": "command",
+    "output_hash": "b827950860317204a451f5b6099625d88605e080818c3dc46e1cf64b045c8de2",
+    "phase": "durable"
+  }
+]

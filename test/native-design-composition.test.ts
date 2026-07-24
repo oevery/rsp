@@ -19,7 +19,7 @@ const root = fileURLToPath(new URL('..', import.meta.url))
 const skills = ['rsp', 'rsp-shape', 'rsp-design', 'rsp-implement', 'rsp-review']
 const publishedSkills = ['rsp', 'rsp-address-review', 'rsp-design', 'rsp-diagnose', 'rsp-implement', 'rsp-review', 'rsp-shape', 'rsp-tdd']
 const realRuns = join(root, 'research', 'evaluations', 'rsp-native-design-composition', '2026-07-22', 'real-runs')
-const retainedRun = join(realRuns, 'device-discovery-boundary-dependency-graph-output')
+const retainedRun = join(realRuns, 'device-discovery-boundary-ink-tui-dashboard-visual-refinement-correction')
 const correctedAttempt = join(realRuns, 'device-discovery-boundary-layer-archive-closeout', 'invalid-attempts', 'failed-1784788188154')
 
 function copiedRetainedRun(onTestFinished: (callback: () => void) => void) {
@@ -245,6 +245,10 @@ describe('native-design composition terminal evaluator', () => {
       ...evidence,
       durableBody: '桌面运行时拥有物理设备发现与连接生命周期。运行时中立的包只负责事件投影。Web 仅消费投影后的类型化记录，不直接发起硬件发现。接收器硬件验收仍不可用，且由人工负责。',
     })
+    const strongerEnglishBoundary = scoreNativeDesignEvidence({
+      ...evidence,
+      durableBody: 'The desktop runtime owns physical device discovery and connection lifecycle. The Web layer does not discover hardware or import a hardware adapter. The runtime-neutral package owns pure event projection only. Physical receiver hardware acceptance is unavailable.',
+    })
     const runtimeIndependentBoundary = scoreNativeDesignEvidence({
       ...evidence,
       durableBody: 'Desktop runtime 拥有物理设备发现和连接生命周期。Web 是类型化展示投影，不能直接发现或打开硬件。设备事件投影包与运行时无关。接收器硬件验收仍不可用，且由人工负责。',
@@ -261,9 +265,21 @@ describe('native-design composition terminal evaluator', () => {
       ...evidence,
       durableBody: '物理设备发现和连接生命周期属于桌面运行时；Web 不直接发现硬件。runtime-neutral 包只负责设备事件投影。接收器硬件验收仍不可用。',
     })
+    const naturalOwnershipChineseBoundary = scoreNativeDesignEvidence({
+      ...evidence,
+      durableBody: '物理设备发现与连接生命周期仍归桌面运行时所有；Web 不直接发现硬件。client/packages/device-discovery 提供运行时中立的纯投影。接收器硬件验收仍不可用。',
+    })
     const uniqueOwnerChineseBoundary = scoreNativeDesignEvidence({
       ...evidence,
       durableBody: '桌面运行时是物理设备发现、接收器打开和连接生命周期的唯一所有者。Web 只消费已投影的设备事件，不直接发现或打开硬件。运行时中立包只负责设备事件投影。接收器硬件验收仍不可用。',
+    })
+    const exclusiveOwnerChineseBoundary = scoreNativeDesignEvidence({
+      ...evidence,
+      durableBody: '桌面运行时独占物理设备发现与连接生命周期。Web 只消费类型化展示投影，不直接发现硬件。运行时中立包可以拥有纯事件投影，但不得打开设备或依赖硬件 API。接收器硬件验收当前不可用。',
+    })
+    const dependencySeparatedWebBoundary = scoreNativeDesignEvidence({
+      ...evidence,
+      durableBody: '桌面运行时拥有物理设备发现和连接生命周期。client/packages/device-discovery 是运行时中立的边界，只负责将原始记录投影为类型化事件。Web 只能消费投影后的事件；不得依赖桌面适配器、直接发现硬件或打开设备。接收器硬件验收仍不可用，且属于人工负责的独立检查。',
     })
     const negatedInvertedChineseBoundary = scoreNativeDesignEvidence({
       ...evidence,
@@ -303,11 +319,15 @@ describe('native-design composition terminal evaluator', () => {
     expect(score.passed).toBe(true)
     expect(score.blockers).toEqual([])
     expect(equivalentChineseBoundary.passed).toBe(true)
+    expect(strongerEnglishBoundary.passed).toBe(true)
     expect(runtimeIndependentBoundary.passed).toBe(true)
     expect(compactRuntimeIndependentBoundary.passed).toBe(true)
     expect(receiverWordedChineseBoundary.passed).toBe(true)
     expect(invertedChineseBoundary.passed).toBe(true)
+    expect(naturalOwnershipChineseBoundary.passed).toBe(true)
     expect(uniqueOwnerChineseBoundary.passed).toBe(true)
+    expect(exclusiveOwnerChineseBoundary.passed).toBe(true)
+    expect(dependencySeparatedWebBoundary.passed).toBe(true)
     expect(negatedInvertedChineseBoundary.passed).toBe(false)
     expect(contradictory.passed).toBe(false)
     expect(contradictory.blockers).toContain('durable_current_fact')

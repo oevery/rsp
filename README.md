@@ -311,6 +311,7 @@ AI-assisted setup:
 rsp init --agents-mode <mode>   Scaffold .rsp/ and ensure AGENTS.md contains the RSP entry block
 rsp init --with-project-setup   Also create .rsp/changes/project-setup.md
 rsp update                      Refresh the fallback protocol, repair the AGENTS block, and rebuild indices
+rsp ui [--lang auto|en|zh-CN]   Open the read-only interactive dashboard
 rsp add spec <name>             Create .rsp/specs/<name>.md and rebuild specs index
 rsp create <name> [summary]     Create .rsp/changes/<name>.md; add --lite for a shorter template
 rsp group create <name> [goal] Create an unfocused .rsp/changes/<name>/00-brief.md
@@ -333,6 +334,10 @@ rsp doctor [--fix] [--json [--compact]] [--verbose]
 
 Use `skills/rsp/SKILL.md` for operations. When the skill is unavailable, use `.rsp/rsp-rules.md` as the minimal fallback protocol.
 
+On a real interactive terminal, bare `rsp` opens the same read-only dashboard as `rsp ui`. CI, pipes, redirected streams, and `TERM=dumb` stay on static command output; use `rsp status` for a human snapshot or `rsp status --json` for automation. The dashboard never creates, focuses, or archives work.
+
+Dashboard keys: `Tab` switches Changes/Groups, arrows or `j`/`k` move, `/` filters, `Enter` opens full-width detail, `r` refreshes, `?` shows help, and `q`, `Ctrl-C`, or top-level `Esc` exits. Set `RSP_UI_LANG=en|zh-CN` or pass `rsp ui --lang`; only dashboard-owned labels are localized. Existing CLI help, plain output, JSON, WorkRefs, paths, commands, Skills, and RSP artifacts remain English.
+
 When there is no focused change, `rsp status` and `rsp show --focused --json` print `nextActions` instead of guessing which open change is current.
 
 Human-readable `rsp status` renders its execution guidance as a dependency forest: each parent requires its children, shared prerequisites are referenced instead of expanded repeatedly, and `Next action` names the currently executable Change or Changes.
@@ -347,4 +352,4 @@ The JSON-producing inspection commands `status`, `show`, `ready`, `check`, and `
 
 ## Platform-agnostic
 
-`.rsp/` is a plain file convention. It works with Kilo Code, Cursor, Claude Code, Cline, GitHub Copilot, or any assistant that reads project files. Requires Node.js 18+.
+`.rsp/` is a plain file convention. It works with Kilo Code, Cursor, Claude Code, Cline, GitHub Copilot, or any assistant that reads project files. RSP 3.1 requires Node.js 22+; users upgrading from 3.0 must update Node before installing.

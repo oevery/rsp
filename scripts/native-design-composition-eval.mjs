@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 import { parse as parseYaml } from 'yaml'
 
 const CASE_ID = 'device-discovery-boundary'
-const RETAINED_RUN_ID = `${CASE_ID}-dependency-graph-output`
+const RETAINED_RUN_ID = `${CASE_ID}-ink-tui-dashboard-visual-refinement-correction`
 const PHASES = ['design', 'implement', 'review', 'durable']
 const SKILLS = ['rsp', 'rsp-shape', 'rsp-design', 'rsp-implement', 'rsp-review']
 const PUBLISHED_SKILLS = ['rsp', 'rsp-address-review', 'rsp-design', 'rsp-diagnose', 'rsp-implement', 'rsp-review', 'rsp-shape', 'rsp-tdd']
@@ -312,7 +312,7 @@ function phasePrompts() {
     {
       name: 'durable',
       sandbox: 'workspace-write',
-      text: `${common}\n\nRead .agents/skills/rsp/SKILL.md, project authority, the implemented Change, current source/tests, and the review result available in this request context. You now have explicit authority to write only docs/architecture/device-discovery-boundary.md. Perform Core's two-axis durable decision, write only implemented stable architecture facts to that file, do not create an ADR, and do not modify the Change or code. Keep hardware acceptance unavailable.`,
+      text: `${common}\n\nRead .agents/skills/rsp/SKILL.md, project authority, the implemented Change, current source/tests, and the review result available in this request context. You now have explicit authority to write only docs/architecture/device-discovery-boundary.md. Perform Core's two-axis durable decision, write only implemented stable architecture facts to that file, do not create an ADR, and do not modify the Change or code. The durable artifact must explicitly record that receiver hardware acceptance remains unavailable and that automated tests are not hardware acceptance.`,
     },
   ]
 }
@@ -466,17 +466,23 @@ export function scoreNativeDesignEvidence({ designSectionOnly, durableBody, fina
     && sentence.includes('所有者'))
   const uniqueOwnerNegated = uniqueOwnerSentence?.includes('不是') || uniqueOwnerSentence?.includes('并非')
   const uniqueOwnerPositive = Boolean(uniqueOwnerSentence?.includes('是')) && !uniqueOwnerNegated
+  const naturalOwnerSentence = durableSentences.find(sentence => /物理(?:设备|接收器)的?发现/u.test(sentence)
+    && sentence.includes('归桌面运行时所有'))
+  const naturalOwnerNegated = naturalOwnerSentence?.includes('不归桌面运行时所有') || naturalOwnerSentence?.includes('并非归桌面运行时所有')
+  const naturalOwnerPositive = Boolean(naturalOwnerSentence) && !naturalOwnerNegated
   const desktopOwnershipNegated = /物理(?:设备|接收器)的?发现[^。\n]*(?:不属于|并非[^。\n]*属于|不应属于)[^。\n]*桌面运行时/u.test(durableBody)
+    || naturalOwnerNegated
     || uniqueOwnerNegated
-  const desktopOwnershipPositive = /(?:desktop runtime|desktop|桌面运行时)[^\n]*(?:own|owns|拥有|负责)[^\n]*(?:physical (?:device )?discovery|物理(?:设备|接收器)的?发现)/iu.test(durableBody)
+  const desktopOwnershipPositive = /(?:desktop runtime|desktop|桌面运行时)[^\n]*(?:own|owns|拥有|负责|独占)[^\n]*(?:physical (?:device )?discovery|物理(?:设备|接收器)的?发现)/iu.test(durableBody)
     || /物理(?:设备|接收器)的?发现[^。\n]*(?:属于|归属于)[^。\n]*桌面运行时/u.test(durableBody)
+    || naturalOwnerPositive
     || uniqueOwnerPositive
   const durableSemanticMatches = {
     desktop_owns_physical_discovery: desktopOwnershipPositive && !desktopOwnershipNegated,
     hardware_acceptance_unavailable: /(?:hardware|硬件)[^\n]*(?:unavailable|不可用|未执行)/iu.test(durableBody),
     runtime_neutral_projects_only: (/runtime-neutral/iu.test(durableBody) || durableBody.includes('运行时中立') || durableBody.includes('运行时无关'))
       && (/\bprojects?\b|projection/iu.test(durableBody) || durableBody.includes('投影')),
-    web_does_not_discover: /web[^\n]*(?:does not directly discover|不直接发现(?:或打开)?硬件|不得直接发现硬件|不能[^。\n]*发现[^。\n]*硬件)/iu.test(durableBody),
+    web_does_not_discover: /web[^\n]*(?:does not (?:directly )?discover|不直接发现(?:或打开)?硬件|不得[^。\n]*直接发现(?:或打开)?硬件|不能[^。\n]*发现[^。\n]*硬件)/iu.test(durableBody),
   }
   const durableRequired = Object.entries(oracle.durable_current_facts.required)
     .every(([key, alternatives]) => alternatives.some(fragment => durableLower.includes(fragment.toLowerCase())) || durableSemanticMatches[key] === true)

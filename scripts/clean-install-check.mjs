@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { execFileSync } from 'node:child_process'
+import { execFileSync, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -32,6 +32,11 @@ const EXPECTED_RELEASE_REFERENCES = [
 const FORBIDDEN_PACKAGE_ROOTS = ['.agents', '.cache', '.codex', '.rsp', 'research', 'scripts']
 const PORTABLE_FRONTMATTER_KEYS = new Set(['description', 'license', 'metadata', 'name'])
 
+function argument(name) {
+  const index = process.argv.indexOf(name)
+  return index < 0 ? undefined : process.argv[index + 1]
+}
+
 function fail(message) {
   throw new Error(message)
 }
@@ -42,6 +47,14 @@ function run(command, args, options = {}) {
     stdio: ['ignore', 'pipe', 'pipe'],
     ...options,
   }).trim()
+}
+
+function runResult(command, args, options = {}) {
+  return spawnSync(command, args, {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    ...options,
+  })
 }
 
 function walkNoSymlinks(root) {
@@ -107,6 +120,10 @@ function assertPackageInventory(files) {
 
 function main() {
   const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+  const npmCli = argument('--npm-cli')
+  const runNpm = (args, options = {}) => npmCli
+    ? run(process.execPath, [resolve(npmCli), ...args], options)
+    : run('npm', args, options)
   const temporaryParent = resolve(process.env.RSP_PACKAGE_CHECK_TMP_ROOT || tmpdir())
   mkdirSync(temporaryParent, { recursive: true })
   const workspace = mkdtempSync(join(temporaryParent, 'rsp-clean-install-'))
@@ -119,7 +136,7 @@ function main() {
     mkdirSync(projectRoot)
     writeFileSync(join(projectRoot, 'package.json'), '{"name":"rsp-clean-install-smoke","private":true}\n')
 
-    const packOutput = run('npm', [
+    const packOutput = runNpm([
       'pack',
       '--ignore-scripts',
       '--foreground-scripts=false',
@@ -135,7 +152,7 @@ function main() {
     const packageFiles = packResult.files.map(file => file.path).sort()
     assertPackageInventory(packageFiles)
 
-    run('npm', [
+    runNpm([
       'install',
       '--ignore-scripts',
       '--no-audit',
@@ -144,11 +161,27 @@ function main() {
       '--package-lock=false',
       tarball,
     ], { cwd: projectRoot })
-    const help = run('npx', ['--no-install', 'rsp', '--help'], { cwd: projectRoot })
+    const installedRoot = join(projectRoot, 'node_modules', '@oevery', 'rsp')
+    const installedBin = join(installedRoot, 'bin', 'rsp.mjs')
+    const help = run(process.execPath, [installedBin, '--help'], { cwd: projectRoot })
     if (!help.includes('rsp'))
       fail('Installed rsp executable did not return its help output')
+    for (const directory of ['changes', 'focus.d', 'archives', 'specs'])
+      mkdirSync(join(projectRoot, '.rsp', directory), { recursive: true })
+    writeFileSync(join(projectRoot, '.rsp', 'rsp-rules.md'), '# RSP\n')
+    writeFileSync(join(projectRoot, '.rsp', 'specs', 'design.md'), '# Design\n')
+    const status = runResult(process.execPath, [installedBin, 'status', '--json'], { cwd: projectRoot })
+    if (status.status !== 0 || JSON.parse(status.stdout).command !== 'status')
+      fail('Installed rsp executable did not return normal status JSON')
+    const nonTtyUi = runResult(process.execPath, [installedBin, 'ui'], { cwd: projectRoot, env: { ...process.env, CI: 'false', TERM: 'xterm-256color' } })
+    const invalidLocale = runResult(process.execPath, [installedBin, 'ui', '--lang', 'fr'], { cwd: projectRoot, env: { ...process.env, CI: 'false', TERM: 'xterm-256color' } })
+    const expectedNonTtyError = '  Error: rsp ui requires an interactive terminal; use rsp status or rsp status --json instead\n'
+    const expectedLocaleError = '  Error: --lang must be auto, en, or zh-CN\n'
+    if (nonTtyUi.status !== 1 || nonTtyUi.stdout !== '' || nonTtyUi.stderr !== expectedNonTtyError)
+      fail('Installed rsp ui non-TTY error boundary was not concise')
+    if (invalidLocale.status !== 1 || invalidLocale.stdout !== '' || invalidLocale.stderr !== expectedLocaleError)
+      fail('Installed rsp ui locale error boundary was not concise')
 
-    const installedRoot = join(projectRoot, 'node_modules', '@oevery', 'rsp')
     const installedManifest = JSON.parse(readFileSync(join(installedRoot, 'package.json'), 'utf8'))
     if (installedManifest.name !== packResult.name || installedManifest.version !== packResult.version)
       fail(`Installed package identity mismatch: ${installedManifest.name}@${installedManifest.version}`)
@@ -180,6 +213,13 @@ function main() {
         skills: installedSkills,
       },
       package: `${packResult.name}@${packResult.version}`,
+      runtime: { node: process.version, npm: runNpm(['--version']) },
+      entrySmoke: {
+        help: true,
+        statusJson: true,
+        nonTtyUi: { exitCode: nonTtyUi.status, stderr: nonTtyUi.stderr.trim() },
+        invalidLocale: { exitCode: invalidLocale.status, stderr: invalidLocale.stderr.trim() },
+      },
       prepareReleaseNotesReferences: releaseReferences,
       rspDesignReferences: designReferences,
       tarballSha256: createHash('sha256').update(readFileSync(tarball)).digest('hex'),

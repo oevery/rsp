@@ -1,0 +1,242 @@
+{
+  "schema": 1,
+  "baselineRef": "8d351c2",
+  "exactCommands": [
+    "git worktree add --detach /var/folders/mh/vh6mkhdd3t3b_j9nzfbhrc300000gn/T/rsp-package-evidence-Ps7f16/baseline-source 8d351c2",
+    "cd /var/folders/mh/vh6mkhdd3t3b_j9nzfbhrc300000gn/T/rsp-package-evidence-Ps7f16/baseline-source && mise exec -- pnpm install --frozen-lockfile --ignore-scripts && mise exec -- pnpm run build",
+    "cd /Users/oevery/Developer/lab/rsp && mise exec -- pnpm install --frozen-lockfile --ignore-scripts && mise exec -- pnpm run build",
+    "cd /var/folders/mh/vh6mkhdd3t3b_j9nzfbhrc300000gn/T/rsp-package-evidence-Ps7f16/baseline-source && npm pack --ignore-scripts --foreground-scripts=false --json --pack-destination /var/folders/mh/vh6mkhdd3t3b_j9nzfbhrc300000gn/T/rsp-package-evidence-Ps7f16/baseline-pack",
+    "cd /Users/oevery/Developer/lab/rsp && npm pack --ignore-scripts --foreground-scripts=false --json --pack-destination /var/folders/mh/vh6mkhdd3t3b_j9nzfbhrc300000gn/T/rsp-package-evidence-Ps7f16/candidate-pack",
+    "npm install --omit=dev --ignore-scripts --no-audit --no-fund --package-lock=false /var/folders/mh/vh6mkhdd3t3b_j9nzfbhrc300000gn/T/rsp-package-evidence-Ps7f16/baseline-pack/oevery-rsp-3.0.0.tgz",
+    "npm install --omit=dev --ignore-scripts --no-audit --no-fund --package-lock=false /var/folders/mh/vh6mkhdd3t3b_j9nzfbhrc300000gn/T/rsp-package-evidence-Ps7f16/candidate-pack/oevery-rsp-3.0.0.tgz",
+    "node scripts/status-startup-benchmark.mjs --baseline-cli /var/folders/mh/vh6mkhdd3t3b_j9nzfbhrc300000gn/T/rsp-package-evidence-Ps7f16/baseline-install/node_modules/@oevery/rsp/bin/rsp.mjs --candidate-cli /var/folders/mh/vh6mkhdd3t3b_j9nzfbhrc300000gn/T/rsp-package-evidence-Ps7f16/candidate-install/node_modules/@oevery/rsp/bin/rsp.mjs --warmups 5 --samples 25",
+    "node scripts/tui-terminal-check.mjs --cli /var/folders/mh/vh6mkhdd3t3b_j9nzfbhrc300000gn/T/rsp-package-evidence-Ps7f16/candidate-install/node_modules/@oevery/rsp/bin/rsp.mjs"
+  ],
+  "invocation": "node scripts/package-evidence.mjs --baseline-ref 8d351c2 --output research/evaluations/rsp-package-footprint/2026-07-24/ink-tui-dashboard-visual-refinement/measurement.json",
+  "runtime": {
+    "node": "v24.18.0",
+    "platform": "darwin",
+    "release": "25.5.0",
+    "arch": "arm64",
+    "npm": "11.16.0",
+    "pnpm": "11.10.0"
+  },
+  "baseline": {
+    "transientPaths": {
+      "sourceRoot": "/var/folders/mh/vh6mkhdd3t3b_j9nzfbhrc300000gn/T/rsp-package-evidence-Ps7f16/baseline-source",
+      "tarball": "/var/folders/mh/vh6mkhdd3t3b_j9nzfbhrc300000gn/T/rsp-package-evidence-Ps7f16/baseline-pack/oevery-rsp-3.0.0.tgz",
+      "installedBin": "/var/folders/mh/vh6mkhdd3t3b_j9nzfbhrc300000gn/T/rsp-package-evidence-Ps7f16/baseline-install/node_modules/@oevery/rsp/bin/rsp.mjs"
+    },
+    "lock": {
+      "name": "pnpm-lock.yaml",
+      "sha256": "7b65d76a6212d78fede55c5b8d4ee9469bf4e327d19653c80d84b27a3a06d05f"
+    },
+    "tarballSha256": "e621a85f78fa9ceaa5d91c08a697c8b5dcf5cd160f0e2a6611e7bbf8ef72444d",
+    "packed": {
+      "bytes": 87382,
+      "files": 24,
+      "unpackedBytes": 332750
+    },
+    "installedLogical": {
+      "bytes": 1061309,
+      "files": 272
+    },
+    "installedBin": "node_modules/@oevery/rsp/bin/rsp.mjs"
+  },
+  "candidate": {
+    "transientPaths": {
+      "sourceRoot": "/Users/oevery/Developer/lab/rsp",
+      "tarball": "/var/folders/mh/vh6mkhdd3t3b_j9nzfbhrc300000gn/T/rsp-package-evidence-Ps7f16/candidate-pack/oevery-rsp-3.0.0.tgz",
+      "installedBin": "/var/folders/mh/vh6mkhdd3t3b_j9nzfbhrc300000gn/T/rsp-package-evidence-Ps7f16/candidate-install/node_modules/@oevery/rsp/bin/rsp.mjs"
+    },
+    "lock": {
+      "name": "pnpm-lock.yaml",
+      "sha256": "d34703da216a5d659a139872c52adf8234d2acb052794888116bbd3f84d333c6"
+    },
+    "tarballSha256": "3c1aafb37372032b3f87e2ae469090913bcbf646d836d0c8a1298030738b52ef",
+    "packed": {
+      "bytes": 96092,
+      "files": 27,
+      "unpackedBytes": 366584
+    },
+    "installedLogical": {
+      "bytes": 8714091,
+      "files": 4905
+    },
+    "installedBin": "node_modules/@oevery/rsp/bin/rsp.mjs"
+  },
+  "delta": {
+    "packedBytes": 8710,
+    "installedBytes": 7652782,
+    "installedFiles": 4633
+  },
+  "startup": {
+    "schema": 1,
+    "command": "node <cli> status --json",
+    "warmups": 5,
+    "samples": 25,
+    "baseline": {
+      "cli": "/var/folders/mh/vh6mkhdd3t3b_j9nzfbhrc300000gn/T/rsp-package-evidence-Ps7f16/baseline-install/node_modules/@oevery/rsp/bin/rsp.mjs",
+      "samplesMs": [
+        35.465,
+        34.245,
+        35.36,
+        34.157,
+        34.525,
+        36.012,
+        35.067,
+        33.773,
+        33.464,
+        34.099,
+        35.455,
+        34.124,
+        34.043,
+        34.808,
+        36.441,
+        35.579,
+        34.552,
+        33.561,
+        34.028,
+        34.592,
+        34.526,
+        33.982,
+        34.02,
+        33.379,
+        33.741
+      ],
+      "medianMs": 34.245
+    },
+    "candidate": {
+      "cli": "/var/folders/mh/vh6mkhdd3t3b_j9nzfbhrc300000gn/T/rsp-package-evidence-Ps7f16/candidate-install/node_modules/@oevery/rsp/bin/rsp.mjs",
+      "samplesMs": [
+        34.093,
+        34.46,
+        34.469,
+        34.394,
+        34.662,
+        34.703,
+        35.38,
+        35.316,
+        36.014,
+        35.79,
+        34.85,
+        34.683,
+        36.261,
+        36.572,
+        35.472,
+        36.113,
+        35.423,
+        35.4,
+        35.069,
+        34.331,
+        35.609,
+        39.683,
+        67.666,
+        49.293,
+        39.097
+      ],
+      "medianMs": 35.4
+    },
+    "regressionMs": 1.155,
+    "allowedRegressionMs": 25,
+    "passed": true,
+    "runtime": {
+      "node": "v24.18.0",
+      "platform": "darwin",
+      "arch": "arm64"
+    }
+  },
+  "terminal": {
+    "schema": 1,
+    "command": "node scripts/tui-terminal-check.mjs --cli /var/folders/mh/vh6mkhdd3t3b_j9nzfbhrc300000gn/T/rsp-package-evidence-Ps7f16/candidate-install/node_modules/@oevery/rsp/bin/rsp.mjs",
+    "runtime": {
+      "node": "v24.18.0",
+      "platform": "darwin",
+      "arch": "arm64",
+      "python": "Python 3.14.6"
+    },
+    "cli": "/var/folders/mh/vh6mkhdd3t3b_j9nzfbhrc300000gn/T/rsp-package-evidence-Ps7f16/candidate-install/node_modules/@oevery/rsp/bin/rsp.mjs",
+    "cases": [
+      {
+        "action": "q",
+        "exitCode": 0,
+        "expectedCode": 0,
+        "alternateEnter": 1,
+        "alternateExit": 1,
+        "cursorHide": 2,
+        "cursorShow": 4,
+        "terminalAttributesRestored": true,
+        "rawModeObserved": true,
+        "passed": true
+      },
+      {
+        "action": "context-esc",
+        "exitCode": 0,
+        "expectedCode": 0,
+        "alternateEnter": 1,
+        "alternateExit": 1,
+        "cursorHide": 2,
+        "cursorShow": 4,
+        "terminalAttributesRestored": true,
+        "rawModeObserved": true,
+        "passed": true
+      },
+      {
+        "action": "raw-ctrl-c",
+        "exitCode": 0,
+        "expectedCode": 0,
+        "alternateEnter": 1,
+        "alternateExit": 1,
+        "cursorHide": 2,
+        "cursorShow": 4,
+        "terminalAttributesRestored": true,
+        "rawModeObserved": true,
+        "passed": true
+      },
+      {
+        "action": "SIGINT",
+        "exitCode": 130,
+        "expectedCode": 130,
+        "alternateEnter": 1,
+        "alternateExit": 1,
+        "cursorHide": 2,
+        "cursorShow": 4,
+        "terminalAttributesRestored": true,
+        "rawModeObserved": true,
+        "passed": true
+      },
+      {
+        "action": "SIGTERM",
+        "exitCode": 143,
+        "expectedCode": 143,
+        "alternateEnter": 1,
+        "alternateExit": 1,
+        "cursorHide": 2,
+        "cursorShow": 4,
+        "terminalAttributesRestored": true,
+        "rawModeObserved": true,
+        "passed": true
+      },
+      {
+        "action": "SIGHUP",
+        "exitCode": 129,
+        "expectedCode": 129,
+        "alternateEnter": 1,
+        "alternateExit": 1,
+        "cursorHide": 2,
+        "cursorShow": 4,
+        "terminalAttributesRestored": true,
+        "rawModeObserved": true,
+        "passed": true
+      }
+    ],
+    "passed": true
+  },
+  "gates": {
+    "packedBelow512KiB": true,
+    "installedDeltaBelow15MiB": true,
+    "startup": true,
+    "terminal": true
+  },
+  "passed": true
+}

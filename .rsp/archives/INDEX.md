@@ -4,7 +4,7 @@ summary: Completed RSP changes.
 kind: generated-index
 index_type: archives
 source_dir: .rsp/archives
-entry_count: 70
+entry_count: 72
 ---
 
 # Archive Index
@@ -43,10 +43,12 @@ entry_count: 70
 | 2026-07-22 | prepare-release-notes-skill | feature | Add a host-neutral RSP Skill that prepares and audits evidence-based changelogs, release notes, and migration notes while adapting to user and repository conventions. |
 | 2026-07-22 | rsp-release-docs-routing | fix | Rename the release-documentation Skill to `rsp-release-docs` and route eligible release Changes to it from Core. |
 | 2026-07-23 | align-config-and-templates-with-3-0 | fix | Project configuration fails closed through one validation contract, and newly generated RSP artifacts express the final 3.0 capability and artifact-ownership boundaries without adding lifecycle or Skill state. |
+| 2026-07-23 | extract-project-status-boundary | refactor | Extract the current project-status collection, derivation, v3 JSON adaptation, and plain-text presentation into explicit one-way modules that preserve every existing `rsp status` behavior and provide the stable internal snapshot required by the later Ink dashboard. |
 | 2026-07-23 | guide-archive-before-final-commit | feature | Guide explicit archive before the final Git commit |
 | 2026-07-23 | layer-archive-closeout | fix | Layer advisory archive guidance and managed closeout execution |
 | 2026-07-23 | release-3-0-0 | ops | Deliver RSP 3.0.0 as a deterministic protocol plus the complete promoted Skill Suite, then perform the authorized external release. |
 | 2026-07-23 | reposition-rsp-product | docs | Reposition RSP as Reliable Software Practice and make the English and Chinese product documentation lead with the complete repository-native engineering workflow rather than only its file protocol. |
+| 2026-07-24 | add-ink-tui-dashboard | feature | Ship a lazy-loaded, read-only Ink dashboard as the default human-facing `rsp` experience on an interactive terminal for RSP 3.1.0, while retaining deterministic plain-text and JSON command output. |
 | 2026-07-21 | 3-0-skill-readiness/brief | group | — |
 | 2026-07-21 | 3-0-skill-readiness/close-review-resolution-handoff | feature | Add a host-neutral review-resolution capability that disposes fixed findings, corrects accepted findings under explicit authority, requires verification and re-review, and returns a recoverable handoff when interrupted. |
 | 2026-07-21 | 3-0-skill-readiness/integrate-diagnosis-tdd-routing | feature | Add deterministic, host-neutral routing from implementation evidence to diagnosis, TDD, or ordinary implementation. |

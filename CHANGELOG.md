@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.1.0 (Unreleased)
+
+- **Breaking:** Raise the minimum runtime from Node.js 18 to Node.js 22.
+- Add a read-only Ink dashboard for bare interactive `rsp` and explicit `rsp ui`, with responsive Change/Group navigation, filtering, detail, refresh, terminal cleanup, and TUI-only English/Simplified Chinese localization.
+- Keep automation on deterministic command paths: non-interactive bare `rsp` prints help, `rsp status` remains static human output, and `rsp status --json` retains the 3.0 machine contract without loading Ink, React, or Yoga.
+- Improve dense plain status output with focused/open/prerequisite terminology, stacked long WorkRefs, completed-work guidance, and deduplicated blockers.
+
 ## 3.0.0 (2026-07-23)
 
 - **Breaking:** Use `.rsp/rsp-rules.md` as the only runtime fallback protocol and project-owned `AGENTS.md` files for stable scoped instructions; the project-rules CLI and templates have been removed. After upgrading from 2.x, run `rsp update`, migrate any residual custom `.rsp/rules/` content deliberately, flatten work paths deeper than one Group level, and finish with `rsp doctor`.

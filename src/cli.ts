@@ -16,7 +16,9 @@ import { showChange } from './commands/show.js'
 import { showStatus } from './commands/status.js'
 import { updateProject } from './commands/update.js'
 import { getVersion } from './core/config.js'
-import { emitStatusJsonError } from './core/output.js'
+import { emitJson } from './core/output.js'
+import { toStatusJsonError } from './status/v3-json.js'
+import { isInteractiveTerminal, shouldAutoLaunchUi, validateUiArgs } from './tui/route.js'
 
 const COMPACT_JSON_COMMANDS = new Set(['status', 'show', 'ready', 'check', 'doctor'])
 
@@ -252,14 +254,13 @@ const statusCommand = defineCommand({
     const stale = args.stale === undefined ? undefined : Number(args.stale)
     if (stale !== undefined && (Number.isFinite(stale) === false || Number.isInteger(stale) === false || stale < 0)) {
       if (args.json) {
-        emitStatusJsonError({
+        emitJson(toStatusJsonError({
           code: 'invalid_stale_filter',
           message: '--stale must be a non-negative integer number of days',
         }, {
           focused: Boolean(args.focused),
           blocked: Boolean(args.blocked),
-          compact: Boolean(args.compact),
-        })
+        }), { compact: Boolean(args.compact) })
       }
       else {
         console.error(`  Error: --stale must be a non-negative integer number of days`)
@@ -441,6 +442,29 @@ const showCommand = defineCommand({
 })
 
 export async function runCli(rawArgs = process.argv.slice(2)) {
+  const terminalEnvironment = {
+    stdinTty: Boolean(process.stdin.isTTY),
+    stdoutTty: Boolean(process.stdout.isTTY),
+    term: process.env.TERM,
+    ci: process.env.CI,
+  }
+  const explicitUi = rawArgs[0] === 'ui'
+  if (explicitUi || shouldAutoLaunchUi(rawArgs, terminalEnvironment)) {
+    const { lang } = validateUiArgs(explicitUi ? rawArgs.slice(1) : [])
+    if (!isInteractiveTerminal(terminalEnvironment)) {
+      if (explicitUi)
+        throw new Error('rsp ui requires an interactive terminal; use rsp status or rsp status --json instead')
+    }
+    else {
+      const { resolveUiLocale } = await import('./tui/i18n/locale.js')
+      const locale = resolveUiLocale(lang, process.env.RSP_UI_LANG, process.env.LC_ALL ?? process.env.LC_MESSAGES ?? process.env.LANG ?? Intl.DateTimeFormat().resolvedOptions().locale)
+      const { runTui } = await import('./tui/entry.js')
+      const exitCode = await runTui(locale)
+      if (exitCode !== 0)
+        process.exitCode = exitCode
+      return
+    }
+  }
   validateCompactInvocation(rawArgs)
   const version = await getVersion()
 
@@ -470,11 +494,17 @@ export async function runCli(rawArgs = process.argv.slice(2)) {
   await runMain(main, { rawArgs })
 }
 
-const isMain = process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])
-if (isMain) {
-  runCli().catch((err: unknown) => {
-    const message = err instanceof Error ? err.message : String(err)
+export async function runCliMain(rawArgs = process.argv.slice(2)): Promise<void> {
+  try {
+    await runCli(rawArgs)
+  }
+  catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
     console.error(`  Error: ${message}`)
-    process.exit(1)
-  })
+    process.exitCode = 1
+  }
 }
+
+const isMain = process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])
+if (isMain)
+  await runCliMain()
