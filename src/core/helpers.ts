@@ -320,7 +320,7 @@ kind: "${frontmatterKind}"
 
 ## Verify
 - Automated:
-  - [ ] <exact command, or not applicable: reason> — proves: <behavior or scope covered>
+  - [ ] <cheapest decisive check; retain a new test only when justified, or not applicable: reason> — proves: <behavior or scope covered>
 - Manual or environment:
   - [ ] <exact acceptance scenario, or unavailable/not applicable: owner and reason>
 - Coverage:
@@ -334,6 +334,8 @@ kind: "${frontmatterKind}"
 }
 
 function getChangeTemplateByKind(kind?: string) {
+  const automatedVerify = '<cheapest decisive check; retain a new test only when justified, or not applicable: reason>'
+
   switch (kind) {
     case 'feature':
       return {
@@ -347,7 +349,7 @@ function getChangeTemplateByKind(kind?: string) {
         affectedArea2: '<concrete file path, directory, module, or subsystem 2 if needed>',
         constraints: '<behavior, compatibility, performance, safety, or scope constraint that must hold>',
         task: '<implement the new behavior and its acceptance scenario in the affected areas>',
-        automatedVerify: '<exact test, lint, build, or check command for the new behavior>',
+        automatedVerify,
         manualVerify: '<exact end-to-end user scenario to validate the new capability, or unavailable/not applicable: owner and reason>',
       }
     case 'fix':
@@ -362,7 +364,7 @@ function getChangeTemplateByKind(kind?: string) {
         affectedArea2: '<secondary path, dependency, or test file if needed>',
         constraints: '<regression, backward-compatibility, safety, or scope constraint that must hold>',
         task: '<identify the root cause and apply the minimal fix>',
-        automatedVerify: '<exact regression test, lint, build, or check command that proves the fix>',
+        automatedVerify,
         manualVerify: '<exact steps to reproduce the original issue and confirm it no longer occurs, or unavailable/not applicable: owner and reason>',
       }
     case 'refactor':
@@ -377,7 +379,7 @@ function getChangeTemplateByKind(kind?: string) {
         affectedArea2: '<secondary path, dependency, or test file if needed>',
         constraints: '<observable behavior must remain unchanged; compatibility, performance, and safety constraints must still hold>',
         task: '<restructure the code while keeping behavior identical>',
-        automatedVerify: '<exact existing test, lint, build, or check command that must continue to pass>',
+        automatedVerify,
         manualVerify: '<exact scenario to spot-check that behavior is unchanged after the refactor, or unavailable/not applicable: owner and reason>',
       }
     case 'docs':
@@ -392,7 +394,7 @@ function getChangeTemplateByKind(kind?: string) {
         affectedArea2: '<secondary doc path or reference file if needed>',
         constraints: '<durable wording, consistency, scope, or audience constraint that must hold>',
         task: '<update the target documentation and supporting references>',
-        automatedVerify: '<exact markdown, docs, link, lint, build, or check command if applicable>',
+        automatedVerify,
         manualVerify: '<exact reader or operator scenario to confirm the updated guidance is accurate, or unavailable/not applicable: owner and reason>',
       }
     case 'research':
@@ -407,7 +409,7 @@ function getChangeTemplateByKind(kind?: string) {
         affectedArea2: '<secondary path, dependency, environment, or evidence source if needed>',
         constraints: '<time, evidence, safety, or scope constraint for the investigation>',
         task: '<gather evidence, record the recommendation or finding, and note any follow-up implementation work if needed>',
-        automatedVerify: '<exact command, script, query, or check used to confirm the observed behavior>',
+        automatedVerify,
         manualVerify: '<exact review of the findings to confirm they answer the original question and identify follow-up work if needed, or unavailable/not applicable: owner and reason>',
       }
     case 'ops':
@@ -422,7 +424,7 @@ function getChangeTemplateByKind(kind?: string) {
         affectedArea2: '<secondary script, config path, dependency, or environment surface if needed>',
         constraints: '<rollback, safety, reliability, environment, or scope constraint that must hold>',
         task: '<apply and verify the operational change>',
-        automatedVerify: '<exact operational validation, lint, build, deploy, or check command>',
+        automatedVerify,
         manualVerify: '<exact operator workflow or environment scenario to confirm the operational result, or unavailable/not applicable: owner and reason>',
       }
     default:
@@ -437,7 +439,7 @@ function getChangeTemplateByKind(kind?: string) {
         affectedArea2: '<concrete file path, directory, module, or subsystem 2 if needed>',
         constraints: '<behavior, compatibility, performance, safety, or scope constraint that must hold>',
         task: '<implement the core change in the affected areas>',
-        automatedVerify: '<exact test, lint, build, or check command>',
+        automatedVerify,
         manualVerify: '<exact acceptance scenario, or unavailable/not applicable: owner and reason>',
       }
   }

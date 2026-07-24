@@ -12,7 +12,7 @@ RSP 将模糊意图逐步转化为边界明确、经过实现、审查和验证�
 
 - 将模糊工作塑造成一个可执行 Change，或一组彼此独立的小切片。
 - 在实现前，根据仓库证据解决关键设计问题。
-- 将原因不明的失败交给 diagnosis，将行为清晰的工作交给 TDD，将已有充分证据的修改交给 implementation。
+- 将原因不明的失败交给 diagnosis，将普通且证据充分的修改交给 implementation，仅将明确要求或具有具体风险的 test-first 工作交给 TDD。
 - 按明确范围审查变更、处理已接受的 findings，并重新运行 fresh verification。
 - 将稳定事实、作用域指令、长期理由和完成历史分别保存在正确的 owner 中。
 - 当 Change 明确拥有已确认的 release 时，准备对应的发布文档。
@@ -82,6 +82,7 @@ npx -y @oevery/rsp doctor
 - Decision Records 描述难以逆转选择的长期理由、备选方案、取舍和后果；默认位于 `.rsp/specs/decisions/`，也可以配置唯一的外部权威路径。
 - `changes/` 描述 open work，包括 feature、fix、refactor、docs、ops 和 research。
 - 每个 change 始终是单个 Markdown 文件，并包含 proposal、spec、design、tasks、verification 与 blockers 等明确 section。
+- Change 保持为“当前计划与最终证据”的收敛快照：选择足以证明结果的最小验证，只保留具有长期价值的新测试，并让临时 probe 和执行流水留在持久产物之外。持久正文描述真实的领域、系统、用户或操作员；只有 AI 或 agent 确实是产品参与者或约束时才提及它们。
 - 精确 blocker 行 `- requires \`<change-work-ref>\`: <reason>` 表示依赖另一个可执行 Change。自由文本 blocker 保持为外部阻塞，RSP 不会从 prose 猜测依赖边；前置 Change 归档后依赖会自动解除。
 - Change 名称只能是扁平的 `<change>` 或一层直接子项 `<group>/<change>`；递归 work 目录会被拒绝。
 - Change Group 是可选且唯一的复合 work 形态。其不可执行、不可 focus 的逻辑身份 `<group>/brief` 在磁盘上存储为 `<group>/00-brief.md`，为至少两个直接子 Change 统一拥有目标、共享约束、slice 声明、整体完成条件、durable outcomes 和 blockers。
@@ -166,7 +167,7 @@ RSP 发布九个宿主无关、按需加载的 Skills：
 
 3.0 产品面是这九个 Skills。五个 same-case terminal journeys 已验证 Shape progressive depth，同时保留 owner、environment 和 acceptance stop。RSP 内置有边界的 artifact routing、response continuation 与 evidence-based release documentation；长时 managed orchestration 仍由 host 或 external workflow 显式组合，并且必须重新读取当前 RSP artifacts、保留其 ownership，在 mutation、Git、publication、environment 或 human-decision authority 边界停止。已评估的 `rsp-manage` prototype 保留在 research 中，recommendation 为 `revise`，不会作为 RSP capability 安装或发布；其候选收尾分支仅能在显式 lifecycle-closeout authority 下、Core 完成 durable decision 后执行 archive。
 
-完成一个 tracked Change 时，应按证据组合套件：`rsp-shape` 返回可执行 Change，并把一个关键设计问题交给 `rsp-design`；`rsp-design` 把证据、建议、备选方案和已授权的 planned-design 更新返回同一个 WorkRef；Core 把 unexplained failure 路由到 `rsp-diagnose`，把清晰的 test-first 行为路由到 `rsp-tdd`，把已有证据的修改路由到 `rsp-implement`；`rsp-review` 返回只读报告；`rsp-address-review` 处置 finding；当 selected Change 明确拥有已确认的 release identity 或 range，且发布文档尚未完成时，Core 才把工作路由到 `rsp-release-docs`，由它把一份证据账本投影为职责不同的 Changelog、Release Notes 和 Migration Notes，但不推断 publication authority；最后由 `rsp` 在 archive 前把 implemented current facts、lasting rationale、项目自有 context/instructions 与 temporary continuation 路由到各自已有的 semantic owner。每个 discipline 都返回现有 owner。遇到歧义、失败门禁、缺失权限或超出范围的 Git conflict 时，流程停在该 owner；任何 Skill 都不会推断 Git continuation、commit、delivery 权限或自动重试。
+完成一个 tracked Change 时，应按证据组合套件：`rsp-shape` 返回可执行 Change，并把一个关键设计问题交给 `rsp-design`；`rsp-design` 把证据、建议、备选方案和已授权的 planned-design 更新返回同一个 WorkRef；Core 把 unexplained failure 路由到 `rsp-diagnose`，仅把明确要求或具有具体风险的 test-first 工作路由到 `rsp-tdd`，把普通且证据充分的修改路由到 `rsp-implement`；`rsp-review` 返回只读报告；`rsp-address-review` 处置 finding；当 selected Change 明确拥有已确认的 release identity 或 range，且发布文档尚未完成时，Core 才把工作路由到 `rsp-release-docs`，由它把一份证据账本投影为职责不同的 Changelog、Release Notes 和 Migration Notes，但不推断 publication authority；最后由 `rsp` 在 archive 前把 implemented current facts、lasting rationale、项目自有 context/instructions 与 temporary continuation 路由到各自已有的 semantic owner。每个 discipline 都返回现有 owner。遇到歧义、失败门禁、缺失权限或超出范围的 Git conflict 时，流程停在该 owner；任何 Skill 都不会推断 Git continuation、commit、delivery 权限或自动重试。
 
 文档分层矩阵：
 

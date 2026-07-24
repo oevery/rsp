@@ -41,6 +41,23 @@ describe('rsp-tdd Skill contract', () => {
     expect(body).toContain('rerun the focused check')
   })
 
+  it('retains only valuable tests and cleans disposable probes before final verification', () => {
+    const { body } = readSkill()
+
+    expect(body).toContain('## Retain or remove the test')
+    expect(body).toContain('observable behavior or a real boundary')
+    expect(body).toContain('distinct future confidence beyond existing checks')
+    expect(body).toContain('implementation-detail coupling or duplicate coverage')
+    expect(body).toContain('proportionate maintenance cost')
+    expect(body).toContain('A user, Change, or project requirement to retain the test remains authoritative')
+    expect(body).toContain('treat it as a disposable probe')
+    expect(body).toContain('remove it before completion')
+    expect(body).toContain('verify that no disposable fixture or helper remains')
+    expect(body).toContain('cheapest decisive existing check against the final production state')
+    expect(body).toContain('A removed probe is process evidence, not final verification')
+    expect(body).toContain('final decisive evidence, omissions, and unresolved risk rather than a chronological test transcript')
+  })
+
   it('stops truthfully and returns evidence to the same Change', () => {
     const { body } = readSkill()
 

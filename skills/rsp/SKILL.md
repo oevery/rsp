@@ -4,7 +4,7 @@ description: Use this skill when initializing RSP, operating an existing .rsp pr
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.23.2"
+  version: "2026.07.24.1"
 ---
 
 # RSP Skill
@@ -16,6 +16,8 @@ This skill is the preferred operational guide. `.rsp/rsp-rules.md` is the only r
 Prefer exact file paths, exact commands, and exact durable facts over vague summaries.
 
 Choose response language and artifact language independently. Render human-facing response headings, field labels, explanations, and conclusions in the language explicitly requested for the response; otherwise follow response-specific project instructions, then the conversation language. Write artifact prose in the language explicitly requested for that artifact; otherwise follow artifact-specific project instructions, then the existing artifact's language, then the conversation language. Preserve canonical RSP artifact headings, keywords, identifiers, paths, commands, and machine-consumed values unchanged. Response-only Continuation and Durable Decision headings and labels are not canonical artifact headings and must be localized.
+
+Write persistent artifacts in domain, system, user, or operator language. Mention AI or agents only when they are actual product actors, consumers, interface participants, or constraints; using AI to perform the work is not itself a durable fact.
 
 ## When to use
 
@@ -38,10 +40,10 @@ Before operating the workflow, derive the current stage from user intent, neares
 When work has reached implementation, classify the decisive evidence before selecting a capability:
 
 - **Diagnosis:** an observed failure is reproducible or materially evidenced, but its cause or owning layer remains unexplained. Conflicting, intermittent, or multi-layer symptoms also take this branch. Select `rsp-diagnose` only when it is available; otherwise use the manual diagnosis fallback: reproduce, locate, test the smallest discriminating hypothesis, and return the evidenced cause without speculative production edits.
-- **TDD:** there is no unexplained failure, the required or corrected testable behavior is clear, and a focused failing test can demonstrate the missing behavior for the expected reason before production mutation. Select `rsp-tdd` only when it is available; otherwise use the manual TDD fallback: observe the focused RED, make the minimum GREEN change, optionally REFACTOR while green, then rerun required checks.
-- **Ordinary implementation:** the cause and required change are already evidenced, and no new test-first cycle is required by the Change, project instructions, or the changed risk. Continue with ordinary `rsp-implement` when available, or the single manual implementation/verification action when it is not.
+- **TDD:** there is no unexplained failure, the required or corrected behavior is clear, and test-first work is explicitly required by the user, selected Change, or project instructions, or a concrete changed risk makes an observed pre-mutation RED materially safer. Concrete risks include public APIs or protocols, persisted data, security or money, concurrency or cancellation, complex state transitions, and defects that escaped to production. Select `rsp-tdd` only when it is available; otherwise use the manual TDD fallback: observe the focused RED, make the minimum GREEN change, optionally REFACTOR while green, then rerun required checks. Behavior being testable, a test being possible, or the work being a fix is not sufficient by itself.
+- **Ordinary implementation:** this is the default when diagnosis does not apply and no TDD gate above is met. Continue with ordinary `rsp-implement` when the required behavior, cause, or edit is sufficiently evidenced, or use the single manual implementation/verification action when that Skill is unavailable.
 
-Diagnosis takes precedence over TDD: do not encode an unexplained symptom as a guessed regression test. Each branch returns its evidence, Tasks, Verify updates, and unresolved Blockers to the same selected Change. Capability availability changes execution assistance, not the owner or required outcome.
+Diagnosis takes precedence over TDD: do not encode an unexplained symptom as a guessed regression test. Fresh verification is required, but a new test is only one evidence option; prefer the cheapest decisive existing test, static check, build, or acceptance evidence that covers the changed risk. Each branch returns its evidence, Tasks, Verify updates, and unresolved Blockers to the same selected Change. Capability availability changes execution assistance, not the owner or required outcome.
 
 ### Route release documentation
 
@@ -94,7 +96,8 @@ Do not preload, enumerate, or recursively invoke optional capabilities. Do not i
 13. Convert actionable `## Tasks` checkboxes into your agent-local task tracker when one is available.
 14. Keep implementation sequential by default; parallelize only independent read-only discovery or mechanical checks.
 15. Update `## Tasks`, `## Verify`, and any invalidated `## Proposal`, `## Spec`, or `## Design` content in the same working session as implementation facts change.
-16. Keep temporary debugging notes, task history, and command transcripts out of `specs/` and project-owned `AGENTS.md` instructions.
+16. Keep the selected Change as a convergent snapshot of the current plan and final decisive evidence. Replace stale or superseded content; keep routine attempts, RED/GREEN loops, command transcripts, and correction chronology in the response, then compress any material history to final outcomes, coverage, omissions, and unresolved risks before archive.
+17. Keep temporary debugging notes, task history, and command transcripts out of `specs/` and project-owned `AGENTS.md` instructions.
 
 ### Route artifacts by owner
 

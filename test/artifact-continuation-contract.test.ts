@@ -66,6 +66,28 @@ describe('rsp artifact routing and continuation contract', () => {
     expect(fallback).toContain('it is not durable truth or a second state store')
   })
 
+  it('converges Changes before archive and gates persistent artifact audience', () => {
+    const shape = readFileSync(join(root, 'skills', 'rsp-shape', 'SKILL.md'), 'utf8')
+    const fallback = readFileSync(join(root, 'rules', 'rsp-rules.md'), 'utf8')
+
+    for (const body of [shape, fallback]) {
+      expect(body).toMatch(/convergent current-plan(?: and |\/)final-evidence snapshot/)
+      expect(body).toContain('not an append-only execution log')
+      expect(body).toMatch(/replace superseded/i)
+      expect(body).toContain('final decisive')
+      expect(body).toContain('in the response')
+      expect(body).toContain('Before archive')
+      expect(body).toContain('real product actors')
+      expect(body).toMatch(/domain(?:, system, user, or operator)? language/)
+    }
+
+    expect(shape).toContain('not authors or execution narrators')
+    expect(fallback).toContain('hypothetical future agent')
+    expect(fallback).toContain('Ordinary implementation is the default')
+    expect(fallback).toContain('Retain a new test only when it protects observable behavior or a real boundary')
+    expect(fallback).toContain('otherwise remove the temporary probe')
+  })
+
   it('localizes response labels without changing project artifact language', () => {
     const continuation = loadCases().find(item => item.id === 'interrupted-continuation')
     expect(continuation?.language_contract).toEqual({

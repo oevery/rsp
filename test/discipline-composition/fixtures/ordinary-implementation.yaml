@@ -1,7 +1,8 @@
 id: ordinary-implementation
 evidence:
-  - the cause and required correction are evidenced
-  - the Change and risk do not require a new test-first cycle
+  - the required behavior and correction are evidenced and testable
+  - no user, Change, or project instruction requires test-first work
+  - no concrete changed risk makes a pre-mutation RED materially safer
 expected:
   next_action: continue ordinary rsp-implement work
   returned_owner: the same selected Change
@@ -10,6 +11,8 @@ sources:
   - skills/rsp-implement/SKILL.md
 required_contract:
   - ordinary `rsp-implement`
-  - cause and edit are evidenced
+  - this is the default when diagnosis does not apply
+  - Behavior being testable, a test being possible, or the work being a fix is not sufficient by itself
+  - Fresh verification is required, but a new test is only one evidence option
   - same selected Change
 prohibited_actions: [unnecessary-diagnosis, unnecessary-tdd, recursive-skill-invocation, commit, push, publish]

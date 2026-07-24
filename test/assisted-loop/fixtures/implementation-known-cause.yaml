@@ -1,8 +1,8 @@
 id: implementation-known-cause
 stage: implementation
 evidence:
-  - the cause is understood
-  - test-first work has no safer incremental gain
+  - the required correction is understood and testable
+  - no explicit or concrete-risk TDD gate is met
 expected:
   next_action: continue ordinary rsp-implement work
   returned_owner: the same selected Change
@@ -11,7 +11,8 @@ sources:
   - skills/rsp-implement/SKILL.md
 required_contract:
   - '### Route implementation evidence'
-  - cause and required change are already evidenced
+  - this is the default when diagnosis does not apply
+  - Fresh verification is required, but a new test is only one evidence option
   - ordinary `rsp-implement`
   - same selected Change
 prohibited_actions: [commit, push, publish]

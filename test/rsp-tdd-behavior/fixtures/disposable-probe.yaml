@@ -1,0 +1,17 @@
+name: disposable-probe
+request: Use one focused probe to guide the selected behavior, then finish with proportionate durable evidence.
+evidence:
+  - the probe established RED and guided the minimum GREEN change
+  - the probe duplicates stronger existing coverage and asserts implementation details
+  - an existing focused check exercises the final production behavior
+expect:
+  sequence:
+    - observed-red
+    - minimal-green
+    - remove-disposable-probe
+    - final-existing-check
+  owner: same-selected-change
+  forbidden:
+    - retain-implementation-detail-test
+    - leave-disposable-fixture
+    - use-removed-probe-as-final-verification

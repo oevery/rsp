@@ -43,6 +43,17 @@ describe('rsp-shape Skill contract', () => {
     expect(body).not.toMatch(/Outcome:|research\/|\.cache\/|provider matrix|resolver/i)
   })
 
+  it('plans retained tests only when they provide distinct durable value', () => {
+    const { body } = readSkill()
+
+    expect(body).toContain('protects observable behavior or a real boundary')
+    expect(body).toContain('adds distinct future confidence')
+    expect(body).toContain('avoids duplicate or implementation-detail coverage')
+    expect(body).toContain('costs proportionately')
+    expect(body).toContain('smallest sufficient evidence')
+    expect(body).toContain('keep probes temporary')
+  })
+
   it('progressively discloses complex shaping without duplicating the ordinary path', () => {
     const { body } = readSkill()
     const reference = readFileSync(join(skill, 'references', 'complex-shaping.md'), 'utf8')

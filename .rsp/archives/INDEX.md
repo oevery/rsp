@@ -4,7 +4,7 @@ summary: Completed RSP changes.
 kind: generated-index
 index_type: archives
 source_dir: .rsp/archives
-entry_count: 75
+entry_count: 76
 ---
 
 # Archive Index
@@ -50,6 +50,7 @@ entry_count: 75
 | 2026-07-23 | reposition-rsp-product | docs | Reposition RSP as Reliable Software Practice and make the English and Chinese product documentation lead with the complete repository-native engineering workflow rather than only its file protocol. |
 | 2026-07-24 | add-ink-tui-dashboard | feature | Ship a lazy-loaded, read-only Ink dashboard as the default human-facing `rsp` experience on an interactive terminal for RSP 3.1.0, while retaining deterministic plain-text and JSON command output. |
 | 2026-07-24 | add-tui-history-browser | feature | Add bounded archive-history browsing to the read-only TUI |
+| 2026-07-24 | reduce-test-and-artifact-noise | fix | Make ordinary implementation and compact artifact updates the default while retaining tests and durable prose only when they provide distinct long-term value. |
 | 2026-07-21 | 3-0-skill-readiness/brief | group | — |
 | 2026-07-21 | 3-0-skill-readiness/close-review-resolution-handoff | feature | Add a host-neutral review-resolution capability that disposes fixed findings, corrects accepted findings under explicit authority, requires verification and re-review, and returns a recoverable handoff when interrupted. |
 | 2026-07-21 | 3-0-skill-readiness/integrate-diagnosis-tdd-routing | feature | Add deterministic, host-neutral routing from implementation evidence to diagnosis, TDD, or ordinary implementation. |

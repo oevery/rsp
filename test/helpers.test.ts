@@ -152,6 +152,7 @@ describe('generateChangeContent', () => {
     expect(content).not.toContain('Finalize the proposal, spec, and design details')
     expect(content).toContain('- Coverage:')
     expect(content).not.toContain('Durable updates:')
+    expect(content).toContain('<cheapest decisive check; retain a new test only when justified, or not applicable: reason>')
   })
 
   it('reminds the user to choose kind explicitly', () => {
@@ -179,7 +180,7 @@ describe('generateChangeContent', () => {
     expect(content).toContain('Requirement: documentation accuracy')
     expect(content).toContain('reader follows the updated guidance')
     expect(content).toContain('<concrete doc path, directory, module doc, or documentation surface 1>')
-    expect(content).toContain('<exact markdown, docs, link, lint, build, or check command if applicable>')
+    expect(content).toContain('<cheapest decisive check; retain a new test only when justified, or not applicable: reason>')
   })
 
   it('uses a research-oriented template when kind is research', () => {
@@ -201,15 +202,23 @@ describe('generateChangeContent', () => {
     const content = generateChangeContent('repair-cache', 'Repair cache behavior', 'fix')
     expect(content).toContain('<confirmed cause and correction strategy, or exact evidence needed to establish the cause>')
     expect(content).not.toContain('<root cause analysis and fix strategy>')
+    expect(content).not.toContain('regression test')
   })
 
-  it('uses more concrete affected area and verification placeholders', () => {
+  it('uses concrete affected areas and value-sensitive verification placeholders', () => {
     const content = generateChangeContent('my-change')
     expect(content).toContain('<concrete file path, directory, module, or subsystem 1>')
     expect(content).toContain('<concrete file path, directory, module, or subsystem 2 if needed>')
-    expect(content).toContain('<exact test, lint, build, or check command> — proves: <behavior or scope covered>')
+    expect(content).toContain('<cheapest decisive check; retain a new test only when justified, or not applicable: reason> — proves: <behavior or scope covered>')
     expect(content).toContain('<exact acceptance scenario, or unavailable/not applicable: owner and reason>')
     expect(content).toContain('<behavior, compatibility, performance, safety, or scope constraint that must hold>')
+  })
+
+  it('does not make a new test the default automated evidence for any change kind', () => {
+    for (const kind of ['feature', 'fix', 'refactor', 'docs', 'research', 'ops'] as const) {
+      const content = generateChangeContent(`${kind}-change`, `${kind} outcome`, kind)
+      expect(content).toContain('<cheapest decisive check; retain a new test only when justified, or not applicable: reason>')
+    }
   })
 
   it('keeps durable review separate from implementation verification', () => {
@@ -261,7 +270,7 @@ describe('documentation command examples', () => {
 
     const custom = metadata.metadata as Record<string, unknown>
     expect(custom.author).toBe('oevery')
-    expect(custom.version).toBe('2026.07.23.2')
+    expect(custom.version).toBe('2026.07.24.1')
     expect(Object.values(custom).every(value => typeof value === 'string')).toBe(true)
     expect(custom.version).toMatch(/^\d{4}\.\d{2}\.\d{2}(?:\.\d+)?$/)
   })
@@ -308,7 +317,7 @@ describe('documentation command examples', () => {
     expect(skill).toContain('only when the user explicitly wants RSP tracking for a small, straightforward change')
     expect(skill).toContain('metadata:')
     expect(skill).toContain('author: oevery')
-    expect(skill).toContain('version: "2026.07.23.2"')
+    expect(skill).toContain('version: "2026.07.24.1"')
     expect(skill).toContain('Resolve executable Change names as either `<change>` or one direct `<group>/<change>` child.')
     expect(skill).toContain('Treat logical `<group>/brief`, physically stored as `<group>/00-brief.md`, as non-executable and non-focusable.')
     expect(rules).toContain('With no focus, status uses Group Brief declaration order and derived blockers to recommend the first executable slice.')

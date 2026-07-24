@@ -32,6 +32,18 @@ describe('rsp core routing contract', () => {
     expect(body).toContain('Do not infer implementation, review, Git, publication, or approval authority')
   })
 
+  it('keeps Changes convergent and persistent artifacts domain-oriented', () => {
+    const body = readFileSync(skillPath, 'utf8')
+
+    expect(body).toContain('convergent snapshot of the current plan and final decisive evidence')
+    expect(body).toContain('Replace stale or superseded content')
+    expect(body).toContain('RED/GREEN loops')
+    expect(body).toContain('compress any material history')
+    expect(body).toContain('persistent artifacts in domain, system, user, or operator language')
+    expect(body).toContain('only when they are actual product actors, consumers, interface participants, or constraints')
+    expect(body).toContain('using AI to perform the work is not itself a durable fact')
+  })
+
   it('routes implementation evidence to diagnosis, TDD, or ordinary implementation', () => {
     const body = readFileSync(skillPath, 'utf8')
 
@@ -39,11 +51,14 @@ describe('rsp core routing contract', () => {
     expect(body).toContain('unexplained failure')
     expect(body).toContain('`rsp-diagnose`')
     expect(body).toContain('manual diagnosis fallback')
-    expect(body).toContain('testable behavior')
-    expect(body).toContain('focused failing test')
     expect(body).toContain('`rsp-tdd`')
     expect(body).toContain('manual TDD fallback')
     expect(body).toContain('ordinary `rsp-implement`')
+    expect(body).toContain('this is the default when diagnosis does not apply')
+    expect(body).toContain('explicitly required by the user, selected Change, or project instructions')
+    expect(body).toContain('concrete changed risk')
+    expect(body).toContain('Behavior being testable, a test being possible, or the work being a fix is not sufficient by itself')
+    expect(body).toContain('Fresh verification is required, but a new test is only one evidence option')
     expect(body).toContain('same selected Change')
   })
 

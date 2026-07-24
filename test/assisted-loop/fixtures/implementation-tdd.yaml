@@ -1,18 +1,18 @@
 id: implementation-tdd
 stage: implementation
 evidence:
-  - the requirement is testable behavior
-  - no focused failing test establishes the intended behavior
+  - the selected Change explicitly requires test-first evidence for a public API contract
+  - no unexplained failure remains
   - rsp-tdd is available in the loaded skill inventory
 expected:
-  next_action: select rsp-tdd once to establish the focused failing test
+  next_action: select rsp-tdd once for the explicit test-first cycle
   returned_owner: the same selected Change
 sources:
   - skills/rsp/SKILL.md
   - skills/rsp-implement/SKILL.md
 required_contract:
-  - testable behavior
-  - focused failing test
+  - explicitly required by the user, selected Change, or project instructions
+  - concrete changed risk
   - Select `rsp-tdd` only when it is available
   - same selected Change
 prohibited_actions: [commit, push, publish]

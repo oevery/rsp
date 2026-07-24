@@ -3,11 +3,13 @@ stage: pre-archive
 evidence:
   - implementation produced a stable current module boundary
   - the Change still contains its planned design and a lasting tradeoff
+  - the Change also contains superseded verification rounds and agent-authorship narration
 expected:
   returned_owner: the smallest authoritative artifact for each semantic class
-  next_action: judge current facts and lasting rationale independently
+  next_action: judge durable owners independently and compress the Change to final decisive evidence before archive
 sources:
   - skills/rsp/SKILL.md
+  - skills/rsp-shape/SKILL.md
   - rules/rsp-rules.md
 required_contract:
   - Planned future design
@@ -16,4 +18,10 @@ required_contract:
   - project-owned `CONTEXT.md`
   - project-owned `AGENTS.md`
   - Temporary execution state
-prohibited_actions: [promote-planned-state, duplicate-rationale, overwrite-project-owned-context]
+  - final-evidence snapshot
+  - superseded evidence
+  - final decisive
+  - in the response
+  - Before archive
+  - real product actors
+prohibited_actions: [promote-planned-state, duplicate-rationale, overwrite-project-owned-context, append-process-log, persist-agent-authorship]

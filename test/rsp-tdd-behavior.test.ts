@@ -16,7 +16,7 @@ describe('rsp-tdd behavior fixtures', () => {
         return [value.name, value]
       }))
 
-    expect(Object.keys(cases).sort()).toEqual(['clear-behavior', 'invalid-red', 'unexplained-failure'])
+    expect(Object.keys(cases).sort()).toEqual(['clear-behavior', 'disposable-probe', 'invalid-red', 'unexplained-failure'])
     expect(cases['clear-behavior'].expect.sequence).toEqual([
       'observed-red',
       'minimal-green',
@@ -28,6 +28,14 @@ describe('rsp-tdd behavior fixtures', () => {
     expect(cases['unexplained-failure'].expect.forbidden).toContain('guessed-regression-test')
     expect(cases['invalid-red'].expect.result).toBe('red-not-established')
     expect(cases['invalid-red'].expect.forbidden).toContain('production-mutation')
+    expect(cases['disposable-probe'].expect.sequence).toEqual([
+      'observed-red',
+      'minimal-green',
+      'remove-disposable-probe',
+      'final-existing-check',
+    ])
+    expect(cases['disposable-probe'].expect.forbidden).toContain('retain-implementation-detail-test')
+    expect(cases['disposable-probe'].expect.forbidden).toContain('use-removed-probe-as-final-verification')
     expect(Object.values(cases).every((value: any) => value.expect.owner === 'same-selected-change')).toBe(true)
   })
 })

@@ -4,46 +4,48 @@ description: Implement exactly one selected, ready RSP Change within explicit mu
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.22.1"
+  version: "2026.07.24.1"
 ---
 
 # RSP Implement
 
-Implement one selected RSP Change and return observed facts.
+Implement one selected Change and return facts.
 
 ## Select and inspect
 
-Require an explicit WorkRef or one unambiguous focus marker. A Group Brief supplies context but is not executable. Stop when selection, readiness, product authority, acceptance, or required decisions are unresolved.
+Require an explicit WorkRef or one unambiguous focus marker. A Group Brief is context, not executable work. Stop when selection, readiness, product authority, acceptance, or required decisions are unresolved.
 
-Read nearest project instructions and context, the RSP core skill or fallback protocol, the selected Change and sibling Brief, relevant Specs and decisions, current worktree state, then the smallest code and test chain needed to establish ownership. Use normal repository discovery; do not guess owners or treat a heuristic projection as complete evidence.
+Read nearest instructions, Core or fallback, Change and Brief, relevant Specs and decisions, worktree, then the smallest owning code/test chain. Use normal repository discovery; do not guess owners.
 
 ## Preserve authority
 
-Identify the outcome, required owners, verification, and pre-existing work before editing. Modify only what the Change requires plus its Tasks, Verify, and Blockers. Preserve unrelated modified, staged, and untracked work. An overlap is unsafe when the required edit would discard, guess, or rewrite pre-existing intent; stop then instead of overwriting it.
+Identify outcome, owners, verification, and pre-existing work. Modify only Change requirements, Tasks, Verify, and Blockers. Preserve unrelated modified, staged, and untracked work. Stop when overlap would discard, guess, or rewrite pre-existing intent.
 
-Git delivery, publication, deployment, approval, and out-of-scope deletion require separate explicit authority. For active conflicts, use Core's fallback: inspect base/ours/theirs semantics, preserve unrelated work, resolve only evidenced in-scope content, rerun checks, and stop before staging, continuation, abort, or commit without separate authority. Verify request-named findings before applying them and report each disposition.
+Git delivery, publication, deployment, approval, and out-of-scope deletion require separate explicit authority. For conflicts, inspect base/ours/theirs, preserve unrelated work, resolve only evidenced scope, rerun checks, and stop before staging, continuing, aborting, or committing. Verify named findings first.
 
 ## Classify implementation evidence
 
-Before mutation and after verification failure, classify the evidence:
+Classify evidence before mutation and after failure:
 
-- An unexplained failure returns `rsp-diagnose` as the next action when that Skill is available; otherwise return Core's compact manual diagnosis fallback.
-- Clear testable behavior whose gap can be shown by a focused failing test returns `rsp-tdd` as the next action when that Skill is available; otherwise return Core's compact manual TDD fallback.
-- Continue ordinary implementation when the cause and edit are evidenced and neither branch applies.
+- An unexplained failure returns `rsp-diagnose` when available; otherwise return Core's manual diagnosis fallback.
+- Return `rsp-tdd` only when test-first work is explicitly required by the user, selected Change, or project instructions, or a concrete changed risk makes pre-mutation RED materially safer; use Core's manual TDD fallback when unavailable. Behavior being testable, a test being possible, or the work being a fix is not sufficient by itself.
+- Continue ordinary implementation by default when diagnosis does not apply, the required behavior, cause, or edit is sufficiently evidenced, and no explicit or concrete-risk TDD gate is met.
 
-Diagnosis takes precedence over TDD. Do not invoke another Skill from inside this Skill. If new evidence changes the route, stop speculative mutation and return the next action, evidence, and same selected Change to the user, Core, or authorized controller. Do not reproduce either discipline inside Implement or recursively invoke review or delivery.
+Diagnosis precedes TDD. Do not invoke another Skill from inside this Skill. If evidence changes the route, stop mutation and return the next action, evidence, and same selected Change. Do not reproduce either discipline inside Implement or invoke review or delivery.
 
 ## Implement and verify
 
-Implement the smallest complete slice that satisfies the Change. Update Tasks only after the corresponding outcome exists. Keep unresolved authority, dependency, environment, or semantics visible in Blockers.
+Implement the smallest complete slice. Update Tasks after outcomes exist; keep unresolved issues in Blockers.
 
-After the final relevant mutation, run the Change's required checks and any narrower project check needed for the actual risk. Preserve the exact command, scope, result, decisive output, and omitted coverage. A prior run is stale; failed or unavailable verification cannot support completion. If a verification failure leads to another relevant edit, rerun the affected check.
+After final mutation, run required Change checks and narrower risk checks. Fresh verification is required, but a new test is only one evidence option; prefer the cheapest decisive existing test, static check, build, or acceptance evidence. Record command, scope, result, and omissions. Prior runs are stale; failed or unavailable verification cannot support completion. Rerun after relevant edits.
 
-Record concise fresh verification evidence in the Change when its Verify section owns that evidence. Do not create a separate receipt store or impose one shell wrapper on every project.
+Keep a new test only when it protects observable behavior or a real boundary, adds distinct future confidence, avoids duplicate or implementation-detail coverage, and has proportionate maintenance cost. Otherwise remove the disposable test, fixture, and helper before completion, then use smallest sufficient final evidence. User, Change, and project retention requirements remain authoritative.
+
+Record concise fresh evidence when Change Verify owns it. Do not create a receipt store or mandate one shell wrapper.
 
 ## Return ownership
 
-Report whether the Change is completed, partial, blocked before implementation, verification-failed, verification-unavailable, or verification-blocked. Use failed when a check exercised its intended behavior and found a defect; use unavailable when a missing tool, dependency, service, credential, or environment prevented the check from exercising it. Use blocked only when scoped checks pass but a required gate cannot pass solely because of a confirmed pre-existing or out-of-scope baseline defect; record the evidence and never waive the gate when this Change may contribute.
+Report whether the Change is completed, partial, blocked before implementation, verification-failed, verification-unavailable, or verification-blocked. Use failed for an exercised defect; use unavailable when a missing tool, dependency, service, credential, or environment prevents execution. Use blocked only when scoped checks pass but a required gate fails solely from a confirmed pre-existing or out-of-scope baseline defect; never waive affected gates.
 
 When work remains, follow Core's response-versus-artifact language boundary and return `WorkRef`, `Authority`, `Current state`, `Changed artifacts`, `Fresh verification`, `Blockers`, and `Next action`. They are not durable truth; persistence requires explicit path authority.
 
