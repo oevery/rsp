@@ -1,4 +1,5 @@
 import type { ProjectStatusSnapshot } from '../../src/status/model.js'
+import type { HistoryRecordOutput } from '../../src/types.js'
 import { Writable } from 'node:stream'
 import { describe, expect, it } from 'vitest'
 import { displayWidth, truncateDisplay } from '../../src/tui/display.js'
@@ -89,8 +90,8 @@ describe('dashboard projection', () => {
     const input = snapshot(['focused-ready', 'focused-blocked'])
     input.records[1].output.isFocused = true
     input.focused.push('focused-blocked')
-    expect(projectItemState({ workRef: 'focused-ready', title: '', searchable: '', record: input.records[0] }, input)).toEqual({ focused: true, execution: 'ready' })
-    const blocked = { workRef: 'focused-blocked', title: '', searchable: '', record: input.records[1] }
+    expect(projectItemState({ type: 'change', key: 'focused-ready', workRef: 'focused-ready', title: '', searchable: '', record: input.records[0] }, input)).toEqual({ focused: true, execution: 'ready' })
+    const blocked = { type: 'change' as const, key: 'focused-blocked', workRef: 'focused-blocked', title: '', searchable: '', record: input.records[1] }
     expect(projectItemState(blocked, input)).toEqual({ focused: true, execution: 'blocked' })
     expect(projectNextAction(blocked, input)).toEqual({ kind: 'blocked' })
   })
@@ -103,7 +104,7 @@ describe('dashboard projection', () => {
       { change: 'foundation', requires: 'setup', reason: 'foundation needs setup', state: 'archived' },
     ]
     input.plan.ready = ['delivery/api']
-    const item = { workRef: 'delivery', title: '', searchable: '', group: input.groups[0] }
+    const item = { type: 'group' as const, key: 'delivery', workRef: 'delivery', title: '', searchable: '', group: input.groups[0] }
     expect(projectItemDependencyForest(item, input)[0]?.children[0]?.children[0]?.name).toBe('setup')
     expect(projectNextAction(item, input)).toEqual({ kind: 'command', value: 'rsp show delivery/api' })
     input.groups[0].readyToClose = true
@@ -160,11 +161,11 @@ describe('dashboard reducer', () => {
     const first = snapshot(['a', 'b', 'c', 'd', 'e'])
     let state = initialDashboardState(first, { width: 80, height: 8 })
     state = reduceDashboard(state, { type: 'move', delta: 4 })
-    expect(state.selectedWorkRef).toBe('e')
+    expect(state.navigation.changes.selectedKey).toBe('e')
     expect(visibleItems(state).some(item => item.workRef === 'e')).toBe(true)
 
     state = reduceDashboard(state, { type: 'snapshot', snapshot: snapshot(['a', 'b', 'c']) })
-    expect(state.selectedWorkRef).toBe('c')
+    expect(state.navigation.changes.selectedKey).toBe('c')
   })
 
   it('filters, switches scope, handles resize, and retains last data on refresh failure', () => {
@@ -174,7 +175,7 @@ describe('dashboard reducer', () => {
     state = reduceDashboard(state, { type: 'filter', value: 'beta' })
     expect(visibleItems(state).map(item => item.workRef)).toEqual(['beta'])
     state = reduceDashboard(state, { type: 'scope', scope: 'groups' })
-    expect(state.selectedWorkRef).toBe('group-a')
+    expect(state.navigation.groups.selectedKey).toBe('group-a')
     state = reduceDashboard(state, { type: 'resize', width: 50, height: 10 })
     expect(state.layout).toBe('narrow')
     state = reduceDashboard(state, { type: 'refresh-failed', message: 'read failed' })
@@ -187,5 +188,47 @@ describe('dashboard reducer', () => {
     state = reduceDashboard(state, { type: 'refresh-requested' })
     state = reduceDashboard(state, { type: 'refresh-requested' })
     expect(state.refresh).toMatchObject({ running: true, queued: true })
+  })
+
+  it('cycles through three independent scopes and selects repeated WorkRefs by archive path', () => {
+    const records: HistoryRecordOutput[] = [
+      { date: '2026-07-24', workRef: 'repeat', group: null, kind: 'feature', summary: 'new', summaryTruncated: false, path: '.rsp/archives/2026-07-24_repeat.md' },
+      { date: '2026-07-23', workRef: 'repeat', group: null, kind: 'fix', summary: 'old', summaryTruncated: false, path: '.rsp/archives/2026-07-23_repeat.md' },
+    ]
+    let state = initialDashboardState(snapshot(['alpha']), { width: 80, height: 20 })
+    state = reduceDashboard(state, { type: 'scope-next' })
+    expect(state.scope).toBe('groups')
+    state = reduceDashboard(state, { type: 'scope-next' })
+    expect(state.scope).toBe('history')
+    state = reduceDashboard(state, { type: 'history-list-requested', requestId: 1 })
+    state = reduceDashboard(state, { type: 'history-list-loaded', requestId: 1, result: { records, summary: { matched: 2, returned: 2, hasMore: false } } })
+    expect(visibleItems(state).map(item => item.key)).toEqual(records.map(record => record.path))
+    state = reduceDashboard(state, { type: 'move', delta: 1 })
+    expect(state.navigation.history.selectedKey).toBe(records[1].path)
+    state = reduceDashboard(state, { type: 'filter', value: 'old' })
+    state = reduceDashboard(state, { type: 'scope-next' })
+    expect(state.scope).toBe('changes')
+    expect(state.navigation.changes.filter).toBe('')
+    state = reduceDashboard(state, { type: 'scope', scope: 'history' })
+    expect(state.navigation.history.filter).toBe('old')
+  })
+
+  it('ignores stale history results and preserves the last valid list on failure', () => {
+    const record: HistoryRecordOutput = { date: '2026-07-24', workRef: 'alpha', group: null, kind: 'feature', summary: 'done', summaryTruncated: false, path: '.rsp/archives/2026-07-24_alpha.md' }
+    let state = initialDashboardState(snapshot([]), { width: 80, height: 20 })
+    state = reduceDashboard(state, { type: 'history-list-requested', requestId: 1 })
+    state = reduceDashboard(state, { type: 'history-list-requested', requestId: 2 })
+    state = reduceDashboard(state, { type: 'history-list-loaded', requestId: 1, result: { records: [], summary: { matched: 0, returned: 0, hasMore: false } } })
+    expect(state.history.status).toBe('loading')
+    state = reduceDashboard(state, { type: 'history-list-loaded', requestId: 2, result: { records: [record], summary: { matched: 1, returned: 1, hasMore: false } } })
+    state = reduceDashboard(state, { type: 'history-list-requested', requestId: 3 })
+    state = reduceDashboard(state, { type: 'history-list-failed', requestId: 3, message: 'archive unreadable' })
+    expect(state.history.records).toEqual([record])
+    expect(state.history).toMatchObject({ status: 'error', error: 'archive unreadable' })
+    state = reduceDashboard(state, { type: 'history-detail-requested', requestId: 1, path: record.path })
+    state = reduceDashboard(state, { type: 'history-detail-failed', requestId: 1, message: 'detail oversized' })
+    expect(state.history.records).toEqual([record])
+    expect(state.history.detail.error).toBe('detail oversized')
+    expect(state.scope).toBe('changes')
   })
 })

@@ -11,22 +11,24 @@ export interface DashboardItemState {
 }
 
 export function projectItemState(item: DashboardItem, snapshot: ProjectStatusSnapshot): DashboardItemState {
-  const blocked = Boolean(item.record?.output.isBlocked || item.group?.blockers)
-  const ready = snapshot.plan.ready.includes(item.workRef) || Boolean(item.group?.readyToClose)
+  const blocked = item.type === 'change' ? item.record.output.isBlocked : item.type === 'group' ? item.group.blockers : false
+  const ready = snapshot.plan.ready.includes(item.workRef) || (item.type === 'group' && item.group.readyToClose)
   return {
-    focused: Boolean(item.record?.output.isFocused),
+    focused: item.type === 'change' && item.record.output.isFocused,
     execution: blocked ? 'blocked' : ready ? 'ready' : 'waiting',
   }
 }
 
 export function projectItemDependencyForest(item: DashboardItem, snapshot: ProjectStatusSnapshot): DependencyForestNode[] {
-  const roots = item.group ? item.group.slices.map(slice => slice.name) : [item.workRef]
+  if (item.type === 'history')
+    return []
+  const roots = item.type === 'group' ? item.group.slices.map(slice => slice.name) : [item.workRef]
   const forest = projectDependencyForest(snapshot.plan, roots)
-  return item.record ? forest[0]?.children ?? [] : forest
+  return item.type === 'change' ? forest[0]?.children ?? [] : forest
 }
 
 export function projectExternalBlockers(item: DashboardItem, snapshot: ProjectStatusSnapshot): string[] {
-  if (!item.record)
+  if (item.type !== 'change')
     return []
   const edges = snapshot.plan.edges.filter(edge => edge.change === item.workRef)
   return item.record.blockerEntries.filter((entry) => {
@@ -43,14 +45,16 @@ export type DashboardNextAction
     | { kind: 'blocked' }
 
 export function projectNextAction(item: DashboardItem, snapshot: ProjectStatusSnapshot): DashboardNextAction {
-  if (item.record && snapshot.plan.blocked.some(blocked => blocked.change === item.workRef && blocked.external))
+  if (item.type === 'history')
+    return { kind: 'brief', value: item.history.path }
+  if (item.type === 'change' && snapshot.plan.blocked.some(blocked => blocked.change === item.workRef && blocked.external))
     return { kind: 'blocked' }
-  if (item.record)
+  if (item.type === 'change')
     return { kind: 'command', value: `rsp show ${item.workRef}` }
-  if (item.group?.readyToClose)
+  if (item.group.readyToClose)
     return { kind: 'command', value: `rsp group close ${item.workRef}` }
-  const executableSlice = item.group?.slices.find(slice => slice.state === 'open' && snapshot.plan.ready.includes(slice.name))
+  const executableSlice = item.group.slices.find(slice => slice.state === 'open' && snapshot.plan.ready.includes(slice.name))
   if (executableSlice)
     return { kind: 'command', value: `rsp show ${executableSlice.name}` }
-  return { kind: 'brief', value: item.group?.path ?? item.workRef }
+  return { kind: 'brief', value: item.group.path }
 }

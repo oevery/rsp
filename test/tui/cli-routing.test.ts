@@ -39,7 +39,7 @@ describe('cLI TUI routing and isolation', () => {
       ['--help'],
       ['--version'],
       ['--not-a-command'],
-      ...['init', 'add', 'create', 'group', 'focus', 'unfocus', 'archive', 'ready', 'show', 'status', 'check', 'update', 'doctor'].map(command => [command, '--help']),
+      ...['init', 'add', 'create', 'group', 'focus', 'unfocus', 'archive', 'ready', 'show', 'status', 'history', 'check', 'update', 'doctor'].map(command => [command, '--help']),
     ]
     for (const args of invocations) {
       const result = run(args)

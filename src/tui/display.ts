@@ -41,3 +41,54 @@ export function truncateDisplay(value: string, maxWidth: number): string {
   }
   return `${result}…`
 }
+
+export function wrapDisplay(value: string, maxWidth: number, firstPrefix = '', continuationPrefix = firstPrefix): string[] {
+  const width = Math.max(1, maxWidth)
+  if (displayWidth(firstPrefix) >= width)
+    return [truncateDisplay(`${firstPrefix}${value}`, width)]
+
+  const lines: string[] = []
+  let prefix = firstPrefix
+  let line = prefix
+  const pushLine = () => {
+    lines.push(line)
+    prefix = continuationPrefix
+    line = prefix
+  }
+  const appendUnbroken = (token: string) => {
+    for (const { segment } of segmenter.segment(token)) {
+      if (displayWidth(line + segment) > width && line !== prefix)
+        pushLine()
+      if (displayWidth(line + segment) > width) {
+        lines.push(truncateDisplay(line + segment, width))
+        prefix = continuationPrefix
+        line = prefix
+        continue
+      }
+      line += segment
+    }
+  }
+
+  let pendingWhitespace = ''
+  for (const token of value.split(/(\s+)/u).filter(Boolean)) {
+    if (token.trim().length === 0) {
+      if (line !== prefix)
+        pendingWhitespace += token
+      continue
+    }
+
+    const separator = line === prefix ? '' : pendingWhitespace
+    if (displayWidth(line + separator + token) <= width) {
+      line += `${separator}${token}`
+    }
+    else {
+      if (line !== prefix && separator)
+        pushLine()
+      appendUnbroken(token)
+    }
+    pendingWhitespace = ''
+  }
+  if (line !== prefix || lines.length === 0)
+    lines.push(line)
+  return lines
+}

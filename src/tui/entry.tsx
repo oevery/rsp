@@ -5,6 +5,7 @@ import { render } from 'ink'
 import React from 'react'
 import { inspectProjectStatus } from '../status/inspect.js'
 import { DashboardApp } from './app.js'
+import { createTuiHistorySource } from './history-source.js'
 import { catalogs } from './i18n/messages.js'
 import { openTerminalSession } from './terminal.js'
 
@@ -29,14 +30,20 @@ interface TuiHost {
 
 export interface TuiRuntime {
   inspect: typeof inspectProjectStatus
+  inspectHistory: () => ReturnType<ReturnType<typeof createTuiHistorySource>['list']>
+  inspectHistoryDetail: (path: string) => ReturnType<ReturnType<typeof createTuiHistorySource>['detail']>
   render: (element: React.ReactElement, options: { exitOnCtrlC: boolean, patchConsole: boolean }) => TuiInstance
   openSession: typeof openTerminalSession
   host: TuiHost
   reportError: (message: string) => void
 }
 
+const defaultHistorySource = createTuiHistorySource()
+
 const defaultRuntime: TuiRuntime = {
   inspect: inspectProjectStatus,
+  inspectHistory: defaultHistorySource.list,
+  inspectHistoryDetail: defaultHistorySource.detail,
   render,
   openSession: openTerminalSession,
   host: process,
@@ -61,7 +68,13 @@ export async function runTui(locale: UiLocale, runtime: TuiRuntime = defaultRunt
   }
   try {
     const snapshot = await runtime.inspect()
-    instance = runtime.render(React.createElement(DashboardApp, { initialSnapshot: snapshot, messages: catalogs[locale] }), {
+    instance = runtime.render(React.createElement(DashboardApp, {
+      initialSnapshot: snapshot,
+      messages: catalogs[locale],
+      inspectStatus: runtime.inspect,
+      inspectHistory: runtime.inspectHistory,
+      inspectHistoryDetail: runtime.inspectHistoryDetail,
+    }), {
       exitOnCtrlC: false,
       patchConsole: false,
     })

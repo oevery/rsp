@@ -27,6 +27,8 @@ function runtime(overrides: Partial<TuiRuntime> = {}) {
   const reportError = vi.fn()
   const value: TuiRuntime = {
     inspect: vi.fn(async () => emptySnapshot),
+    inspectHistory: vi.fn(async () => ({ records: [], summary: { matched: 0, returned: 0, hasMore: false } })),
+    inspectHistoryDetail: vi.fn(async () => { throw new Error('no selected history record') }),
     render: vi.fn(() => ({ unmount, waitUntilExit: vi.fn(async () => {}) })),
     openSession: vi.fn(() => ({ cleanup })),
     host: {
@@ -48,6 +50,7 @@ describe('runTui host lifecycle', () => {
     expect(await runTui('en', host.value)).toBe(0)
     expect(host.cleanup).toHaveBeenCalledTimes(1)
     expect(host.unmount).toHaveBeenCalledTimes(1)
+    expect(host.value.inspectHistory).not.toHaveBeenCalled()
     for (const signal of ['SIGHUP', 'SIGINT', 'SIGTERM'])
       expect(host.events.listenerCount(signal)).toBe(0)
   })

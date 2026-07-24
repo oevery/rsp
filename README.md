@@ -340,7 +340,7 @@ Use `skills/rsp/SKILL.md` for operations. When the skill is unavailable, use `.r
 
 On a real interactive terminal, bare `rsp` opens the same read-only dashboard as `rsp ui`. CI, pipes, redirected streams, and `TERM=dumb` stay on static command output; use `rsp status` for a human snapshot or `rsp status --json` for automation. The dashboard never creates, focuses, or archives work.
 
-Dashboard keys: `Tab` switches Changes/Groups, arrows or `j`/`k` move, `/` filters, `Enter` opens full-width detail, `r` refreshes, `?` shows help, and `q`, `Ctrl-C`, or top-level `Esc` exits. Set `RSP_UI_LANG=en|zh-CN` or pass `rsp ui --lang`; only dashboard-owned labels are localized. Existing CLI help, plain output, JSON, WorkRefs, paths, commands, Skills, and RSP artifacts remain English.
+Dashboard keys: `Tab` cycles Changes/Groups/History, arrows or `j`/`k` move, `/` filters the active scope, `Enter` opens full-width detail, `r` refreshes the active scope, `?` shows help, and `q`, `Ctrl-C`, or top-level `Esc` exits. History is loaded only when first visited, uses the default bounded recent result, and loads one selected record's structured detail by its unique archive path only after `Enter`; use `rsp history` filters for older work. Set `RSP_UI_LANG=en|zh-CN` or pass `rsp ui --lang`; only dashboard-owned labels are localized. Existing CLI help, plain output, JSON, WorkRefs, paths, commands, Skills, and RSP artifacts remain English.
 
 When there is no focused change, `rsp status` and `rsp show --focused --json` print `nextActions` instead of guessing which open change is current.
 
