@@ -273,8 +273,6 @@ ${template.acceptanceSection}
 
 ## Blockers
 - none
-<!-- Exact prerequisite: - requires \`<work-ref>\`: <reason>
-     Missing authority, owner decisions, credentials, environment, hardware, and human acceptance remain ordinary blocker prose. -->
 `
 }
 
@@ -328,8 +326,6 @@ kind: "${frontmatterKind}"
 
 ## Blockers
 - none
-<!-- Exact prerequisite: - requires \`<work-ref>\`: <reason>
-     Missing authority, owner decisions, credentials, environment, hardware, and human acceptance remain ordinary blocker prose. -->
 `
 }
 
@@ -618,16 +614,18 @@ export function extractSection(content: string, heading: string): string {
   return body.join('\n').trim()
 }
 
-/** Return true when the Blockers section contains a real blocker entry. */
-export function hasMeaningfulBlockers(content: string): boolean {
-  const blockers = extractSection(content, 'Blockers')
-  if (!blockers)
-    return false
-
-  const lines = blockers
+/** Extract normalized semantic lines from Blockers, excluding well-formed Markdown HTML comments. */
+export function extractBlockerLines(content: string): string[] {
+  const uncommented = content.replace(/<!--[\s\S]*?-->/g, '')
+  return extractSection(uncommented, 'Blockers')
     .split('\n')
     .map(line => line.trim())
     .filter(Boolean)
+}
+
+/** Return true when the Blockers section contains a real blocker entry. */
+export function hasMeaningfulBlockers(content: string): boolean {
+  const lines = extractBlockerLines(content)
 
   if (lines.length === 0)
     return false

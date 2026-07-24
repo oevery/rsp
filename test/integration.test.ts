@@ -332,6 +332,7 @@ describe('change lifecycle integration', () => {
       expect(content).toContain('kind: "docs"')
       expect(content).toContain('Requirement: documentation accuracy')
       expect(content).toContain('reader follows the updated guidance')
+      expect(content).not.toContain('Exact prerequisite:')
     })()
   })
 
@@ -348,6 +349,7 @@ describe('change lifecycle integration', () => {
       expect(content).toContain('- Outcome: Fix tiny issue')
       expect(content).toContain('- [ ] Implement the small change')
       expect(content).not.toContain('Finalize the proposal, spec, and design details')
+      expect(content).not.toContain('Exact prerequisite:')
     })()
   })
 
@@ -1309,6 +1311,26 @@ describe('status commands', () => {
     expect(status).toContain('Next action: implement')
     expect(show.change.blockers).toBe(false)
     expect(show.change.readiness.activeBlockers).toBe(false)
+    expect(archive).not.toContain('active blockers are present')
+  })
+
+  it('ignores Blockers comments across dependency and readiness consumers', async () => {
+    const statusDir = await createRspFixture('rsp-commented-blockers-test', ['specs', 'changes', 'archives', 'focus.d'])
+    await writeFile(join(statusDir, '.rsp', 'changes', 'commented.md'), renderChange('commented', `<!--
+- requires \`ignored\`: example only
+operator guidance
+-->`))
+
+    const status = JSON.parse(execSync(`node ${cliPath()} status --json`, { cwd: statusDir, encoding: 'utf-8' }))
+    const show = JSON.parse(execSync(`node ${cliPath()} show commented --json`, { cwd: statusDir, encoding: 'utf-8' }))
+    const ready = JSON.parse(execSync(`node ${cliPath()} ready commented --json`, { cwd: statusDir, encoding: 'utf-8' }))
+    const archive = execSync(`node ${cliPath()} archive commented --dry-run`, { cwd: statusDir, encoding: 'utf-8' })
+
+    expect(status.records[0].isBlocked).toBe(false)
+    expect(status.plan.edges).toEqual([])
+    expect(show.change.blockers).toBe(false)
+    expect(show.change.readiness.activeBlockers).toBe(false)
+    expect(ready.readiness.activeBlockers).toBe(false)
     expect(archive).not.toContain('active blockers are present')
   })
 

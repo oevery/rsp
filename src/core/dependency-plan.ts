@@ -2,7 +2,7 @@ import type { ChangeDependencyEdgeOutput, ChangeDependencyPlanOutput, CommandDia
 import type { ArchiveTreeInspection, WorkTreeInspection } from './work-ref.js'
 import { readFile } from 'node:fs/promises'
 
-import { extractSection, hasMeaningfulBlockers } from './helpers.js'
+import { extractBlockerLines, hasMeaningfulBlockers } from './helpers.js'
 import { inspectArchiveTree, inspectWorkTree } from './work-ref.js'
 
 interface ParsedBlockers {
@@ -195,8 +195,7 @@ function parseDependencyBlockers(content: string): ParsedBlockers {
   const requires = new Map<string, string>()
   let external = false
   const malformed: string[] = []
-  for (const rawLine of extractSection(content, 'Blockers').split('\n')) {
-    const line = rawLine.trim()
+  for (const line of extractBlockerLines(content)) {
     if (!line || NONE_BLOCKER_RE.test(line) || /^none$/i.test(line))
       continue
     const dependency = line.match(REQUIRES_RE)

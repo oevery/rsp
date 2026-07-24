@@ -111,6 +111,21 @@ describe('hasMeaningfulBlockers', () => {
 - waiting on api migration`
     expect(hasMeaningfulBlockers(content)).toBe(true)
   })
+
+  it('ignores well-formed HTML comments but keeps incomplete comments fail-closed', () => {
+    const commented = `## Blockers
+- none
+<!--
+- requires \`ignored\`: example only
+operator guidance
+-->`
+    const incomplete = `## Blockers
+- none
+<!-- unresolved guidance`
+
+    expect(hasMeaningfulBlockers(commented)).toBe(false)
+    expect(hasMeaningfulBlockers(incomplete)).toBe(true)
+  })
 })
 
 describe('generateChangeContent', () => {
@@ -153,6 +168,7 @@ describe('generateChangeContent', () => {
     expect(content).toContain('- Coverage:')
     expect(content).not.toContain('Durable updates:')
     expect(content).toContain('<cheapest decisive check; retain a new test only when justified, or not applicable: reason>')
+    expect(content).not.toContain('Exact prerequisite:')
   })
 
   it('reminds the user to choose kind explicitly', () => {
@@ -203,6 +219,7 @@ describe('generateChangeContent', () => {
     expect(content).toContain('<confirmed cause and correction strategy, or exact evidence needed to establish the cause>')
     expect(content).not.toContain('<root cause analysis and fix strategy>')
     expect(content).not.toContain('regression test')
+    expect(content).not.toContain('Exact prerequisite:')
   })
 
   it('uses concrete affected areas and value-sensitive verification placeholders', () => {
