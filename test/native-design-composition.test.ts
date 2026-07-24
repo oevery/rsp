@@ -19,7 +19,7 @@ const root = fileURLToPath(new URL('..', import.meta.url))
 const skills = ['rsp', 'rsp-shape', 'rsp-design', 'rsp-implement', 'rsp-review']
 const publishedSkills = ['rsp', 'rsp-address-review', 'rsp-design', 'rsp-diagnose', 'rsp-implement', 'rsp-review', 'rsp-shape', 'rsp-tdd']
 const realRuns = join(root, 'research', 'evaluations', 'rsp-native-design-composition', '2026-07-22', 'real-runs')
-const retainedRun = join(realRuns, 'device-discovery-boundary-ink-tui-dashboard-visual-refinement-correction')
+const retainedRun = join(realRuns, 'device-discovery-boundary-bounded-history-query')
 const correctedAttempt = join(realRuns, 'device-discovery-boundary-layer-archive-closeout', 'invalid-attempts', 'failed-1784788188154')
 
 function copiedRetainedRun(onTestFinished: (callback: () => void) => void) {
@@ -245,6 +245,10 @@ describe('native-design composition terminal evaluator', () => {
       ...evidence,
       durableBody: '桌面运行时拥有物理设备发现与连接生命周期。运行时中立的包只负责事件投影。Web 仅消费投影后的类型化记录，不直接发起硬件发现。接收器硬件验收仍不可用，且由人工负责。',
     })
+    const desktopEndpointChineseBoundary = scoreNativeDesignEvidence({
+      ...evidence,
+      durableBody: '桌面端运行时拥有物理设备发现及其连接生命周期。运行时中立的包只负责事件投影。Web 仅消费投影后的类型化记录，不直接发起硬件发现。接收器硬件验收仍不可用，且由人工负责。',
+    })
     const strongerEnglishBoundary = scoreNativeDesignEvidence({
       ...evidence,
       durableBody: 'The desktop runtime owns physical device discovery and connection lifecycle. The Web layer does not discover hardware or import a hardware adapter. The runtime-neutral package owns pure event projection only. Physical receiver hardware acceptance is unavailable.',
@@ -285,6 +289,10 @@ describe('native-design composition terminal evaluator', () => {
       ...evidence,
       durableBody: '物理设备发现不属于桌面运行时；Web 不直接发现硬件。runtime-neutral 包只负责设备事件投影。接收器硬件验收仍不可用。',
     })
+    const negatedDesktopEndpointChineseBoundary = scoreNativeDesignEvidence({
+      ...evidence,
+      durableBody: '桌面端运行时不拥有物理设备发现及其连接生命周期。运行时中立的包只负责事件投影。Web 不直接发现硬件。接收器硬件验收仍不可用。',
+    })
     const leakedLabels = scoreNativeDesignEvidence({
       ...evidence,
       finalBodies: [
@@ -319,6 +327,7 @@ describe('native-design composition terminal evaluator', () => {
     expect(score.passed).toBe(true)
     expect(score.blockers).toEqual([])
     expect(equivalentChineseBoundary.passed).toBe(true)
+    expect(desktopEndpointChineseBoundary.passed).toBe(true)
     expect(strongerEnglishBoundary.passed).toBe(true)
     expect(runtimeIndependentBoundary.passed).toBe(true)
     expect(compactRuntimeIndependentBoundary.passed).toBe(true)
@@ -329,6 +338,8 @@ describe('native-design composition terminal evaluator', () => {
     expect(exclusiveOwnerChineseBoundary.passed).toBe(true)
     expect(dependencySeparatedWebBoundary.passed).toBe(true)
     expect(negatedInvertedChineseBoundary.passed).toBe(false)
+    expect(negatedDesktopEndpointChineseBoundary.passed).toBe(false)
+    expect(negatedDesktopEndpointChineseBoundary.blockers).toContain('durable_current_fact')
     expect(contradictory.passed).toBe(false)
     expect(contradictory.blockers).toContain('durable_current_fact')
     expect(leakedLabels.passed).toBe(false)

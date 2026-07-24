@@ -72,6 +72,34 @@ export interface RuntimeDiagnostic {
   message: string
 }
 
+export interface HistoryRecordOutput {
+  date: string
+  workRef: string
+  group: string | null
+  kind: string
+  summary: string
+  summaryTruncated: boolean
+  path: string
+}
+
+export interface HistoryEvidenceListOutput {
+  items: string[]
+  truncated: boolean
+}
+
+export interface HistoryDetailOutput extends HistoryRecordOutput {
+  scenarioCount: number
+  checkboxes: {
+    tasks: CheckboxCount
+    verify: CheckboxCount
+  }
+  evidence: {
+    tasks: HistoryEvidenceListOutput
+    verify: HistoryEvidenceListOutput
+    blockers: HistoryEvidenceListOutput
+  }
+}
+
 export interface StatusRecordOutput {
   name: string
   kind: string

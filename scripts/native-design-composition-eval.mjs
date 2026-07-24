@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 import { parse as parseYaml } from 'yaml'
 
 const CASE_ID = 'device-discovery-boundary'
-const RETAINED_RUN_ID = `${CASE_ID}-ink-tui-dashboard-visual-refinement-correction`
+const RETAINED_RUN_ID = `${CASE_ID}-bounded-history-query`
 const PHASES = ['design', 'implement', 'review', 'durable']
 const SKILLS = ['rsp', 'rsp-shape', 'rsp-design', 'rsp-implement', 'rsp-review']
 const PUBLISHED_SKILLS = ['rsp', 'rsp-address-review', 'rsp-design', 'rsp-diagnose', 'rsp-implement', 'rsp-review', 'rsp-shape', 'rsp-tdd']
@@ -312,7 +312,7 @@ function phasePrompts() {
     {
       name: 'durable',
       sandbox: 'workspace-write',
-      text: `${common}\n\nRead .agents/skills/rsp/SKILL.md, project authority, the implemented Change, current source/tests, and the review result available in this request context. You now have explicit authority to write only docs/architecture/device-discovery-boundary.md. Perform Core's two-axis durable decision, write only implemented stable architecture facts to that file, do not create an ADR, and do not modify the Change or code. The durable artifact must explicitly record that receiver hardware acceptance remains unavailable and that automated tests are not hardware acceptance.`,
+      text: `${common}\n\nRead .agents/skills/rsp/SKILL.md, project authority, the implemented Change, current source/tests, and the review result available in this request context. You now have explicit authority to write only docs/architecture/device-discovery-boundary.md. Perform Core's two-axis durable decision, write only implemented stable architecture facts to that file, do not create an ADR, and do not modify the Change or code. The durable artifact must explicitly state all four current facts: the desktop runtime owns physical device discovery; the runtime-neutral package only projects device events; Web does not directly discover hardware; and receiver hardware acceptance remains unavailable and human owned. It must also state that automated tests are not hardware acceptance.`,
     },
   ]
 }
@@ -461,20 +461,21 @@ export function scoreNativeDesignEvidence({ designSectionOnly, durableBody, fina
     && Object.values(packageEvidence.installed_skill_hashes).every(hash => /^[a-f0-9]{64}$/.test(hash))
   const durableLower = durableBody.toLowerCase()
   const durableSentences = durableBody.split(/[。\n]/u)
-  const uniqueOwnerSentence = durableSentences.find(sentence => sentence.includes('桌面运行时')
+  const uniqueOwnerSentence = durableSentences.find(sentence => /桌面端?运行时/u.test(sentence)
     && /物理(?:设备|接收器)的?发现/u.test(sentence)
     && sentence.includes('所有者'))
   const uniqueOwnerNegated = uniqueOwnerSentence?.includes('不是') || uniqueOwnerSentence?.includes('并非')
   const uniqueOwnerPositive = Boolean(uniqueOwnerSentence?.includes('是')) && !uniqueOwnerNegated
   const naturalOwnerSentence = durableSentences.find(sentence => /物理(?:设备|接收器)的?发现/u.test(sentence)
-    && sentence.includes('归桌面运行时所有'))
-  const naturalOwnerNegated = naturalOwnerSentence?.includes('不归桌面运行时所有') || naturalOwnerSentence?.includes('并非归桌面运行时所有')
+    && /归桌面端?运行时所有/u.test(sentence))
+  const naturalOwnerNegated = naturalOwnerSentence ? /(?:不|并非)归桌面端?运行时所有/u.test(naturalOwnerSentence) : false
   const naturalOwnerPositive = Boolean(naturalOwnerSentence) && !naturalOwnerNegated
-  const desktopOwnershipNegated = /物理(?:设备|接收器)的?发现[^。\n]*(?:不属于|并非[^。\n]*属于|不应属于)[^。\n]*桌面运行时/u.test(durableBody)
+  const desktopOwnershipNegated = /物理(?:设备|接收器)的?发现[^。\n]*(?:不属于|并非[^。\n]*属于|不应属于)[^。\n]*桌面端?运行时/u.test(durableBody)
+    || /桌面端?运行时(?:不拥有|不负责|不独占|并非拥有|并非负责|并非独占)[^。\n]*物理(?:设备|接收器)的?发现/u.test(durableBody)
     || naturalOwnerNegated
     || uniqueOwnerNegated
-  const desktopOwnershipPositive = /(?:desktop runtime|desktop|桌面运行时)[^\n]*(?:own|owns|拥有|负责|独占)[^\n]*(?:physical (?:device )?discovery|物理(?:设备|接收器)的?发现)/iu.test(durableBody)
-    || /物理(?:设备|接收器)的?发现[^。\n]*(?:属于|归属于)[^。\n]*桌面运行时/u.test(durableBody)
+  const desktopOwnershipPositive = /(?:desktop runtime|desktop|桌面端?运行时)[^\n]*(?:own|owns|拥有|负责|独占)[^\n]*(?:physical (?:device )?discovery|物理(?:设备|接收器)的?发现)/iu.test(durableBody)
+    || /物理(?:设备|接收器)的?发现[^。\n]*(?:属于|归属于)[^。\n]*桌面端?运行时/u.test(durableBody)
     || naturalOwnerPositive
     || uniqueOwnerPositive
   const durableSemanticMatches = {

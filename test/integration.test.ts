@@ -458,6 +458,7 @@ describe('compact JSON output', () => {
       ['ready', 'compact-me'],
       ['check'],
       ['doctor'],
+      ['history'],
     ]
 
     for (const command of commands) {
@@ -501,13 +502,164 @@ describe('compact JSON output', () => {
   })
 
   it('documents compact only on JSON inspection command help', () => {
-    for (const command of ['status', 'show', 'ready', 'check', 'doctor']) {
+    for (const command of ['status', 'show', 'ready', 'check', 'doctor', 'history']) {
       const output = execFileSync('node', [cliPath(), command, '--help'], { encoding: 'utf-8' })
       expect(output).toContain('--compact')
     }
 
     const createHelp = execFileSync('node', [cliPath(), 'create', '--help'], { encoding: 'utf-8' })
     expect(createHelp).not.toContain('--compact')
+  })
+})
+
+describe('history command', () => {
+  it('lists bounded deterministic archive summaries with inclusive filters', async () => {
+    const historyDir = await createRspFixture('rsp-history-list-test', ['specs', 'changes', 'archives', 'focus.d'])
+    await mkdir(join(historyDir, '.rsp', 'archives', 'release'), { recursive: true })
+    await writeFile(join(historyDir, '.rsp', 'archives', '2026-07-21_flat.md'), renderChange('flat').replace('kind: feature', 'kind: docs'))
+    await writeFile(join(historyDir, '.rsp', 'archives', 'release', '2026-07-24_api.md'), renderChange('release/api'))
+    await writeFile(join(historyDir, '.rsp', 'archives', 'release', '2026-07-23_ui.md'), renderChange('release/ui').replace('kind: feature', 'kind: fix'))
+    await writeFile(join(historyDir, '.rsp', 'archives', 'release', '2026-07-24_brief.md'), renderGroupBrief('release', ['release/api', 'release/ui']))
+
+    const output = execFileSync('node', [cliPath(), 'history', '--group', 'release', '--since', '2026-07-23', '--until', '2026-07-24', '--limit', '1', '--json'], { cwd: historyDir, encoding: 'utf-8' })
+    const result = JSON.parse(output)
+
+    expect(result).toEqual(expect.objectContaining({
+      command: 'history',
+      ok: true,
+      mode: 'list',
+      query: { limit: 1, since: '2026-07-23', until: '2026-07-24', kind: null, group: 'release' },
+      summary: { matched: 2, returned: 1, hasMore: true },
+      diagnostics: [],
+      runtime: [],
+    }))
+    expect(result.records).toEqual([expect.objectContaining({
+      date: '2026-07-24',
+      workRef: 'release/api',
+      group: 'release',
+      kind: 'feature',
+      summary: 'release/api summary',
+      path: '.rsp/archives/release/2026-07-24_api.md',
+    })])
+
+    const kindOutput = execFileSync('node', [cliPath(), 'history', '--kind', 'fix', '--json'], { cwd: historyDir, encoding: 'utf-8' })
+    expect(JSON.parse(kindOutput).records.map((record: { workRef: string }) => record.workRef)).toEqual(['release/ui'])
+  })
+
+  it('returns bounded detail for one exact WorkRef without unrelated archive bodies', async () => {
+    const historyDir = await createRspFixture('rsp-history-detail-test', ['specs', 'changes', 'archives', 'focus.d'])
+    await writeFile(join(historyDir, '.rsp', 'archives', '2026-07-24_target.md'), renderChange('target'))
+    await writeFile(join(historyDir, '.rsp', 'archives', '2026-07-23_other.md'), renderChange('other', 'UNRELATED_MARKER'))
+
+    const output = execFileSync('node', [cliPath(), 'history', 'target', '--json'], { cwd: historyDir, encoding: 'utf-8' })
+    const result = JSON.parse(output)
+
+    expect(result.command).toBe('history')
+    expect(result.ok).toBe(true)
+    expect(result.mode).toBe('detail')
+    expect(result.record).toEqual(expect.objectContaining({
+      workRef: 'target',
+      scenarioCount: 1,
+      checkboxes: expect.objectContaining({ tasks: expect.objectContaining({ todo: 1 }) }),
+      evidence: expect.objectContaining({ tasks: expect.objectContaining({ items: expect.any(Array), truncated: false }) }),
+    }))
+    expect(output).not.toContain('UNRELATED_MARKER')
+  })
+
+  it('returns structured not-found, ambiguous, invalid-filter, and incomplete-inspection failures', async () => {
+    const historyDir = await createRspFixture('rsp-history-errors-test', ['specs', 'changes', 'archives', 'focus.d'])
+    await writeFile(join(historyDir, '.rsp', 'archives', '2026-07-24_repeat.md'), renderChange('repeat'))
+    await writeFile(join(historyDir, '.rsp', 'archives', '2026-07-24_repeat-2.md'), renderChange('repeat'))
+
+    const ambiguous = spawnSync('node', [cliPath(), 'history', 'repeat', '--json'], { cwd: historyDir, encoding: 'utf-8' })
+    const missing = spawnSync('node', [cliPath(), 'history', 'missing', '--json'], { cwd: historyDir, encoding: 'utf-8' })
+    const invalid = spawnSync('node', [cliPath(), 'history', '--limit', '101', '--json'], { cwd: historyDir, encoding: 'utf-8' })
+    const invalidDate = spawnSync('node', [cliPath(), 'history', '--since', '2026-02-30', '--json'], { cwd: historyDir, encoding: 'utf-8' })
+    const reservedWorkRef = spawnSync('node', [cliPath(), 'history', 'release/00-brief', '--json'], { cwd: historyDir, encoding: 'utf-8' })
+    const detailFilter = spawnSync('node', [cliPath(), 'history', 'repeat', '--kind', 'feature', '--json'], { cwd: historyDir, encoding: 'utf-8' })
+
+    expect(ambiguous.status).toBe(1)
+    expect(ambiguous.stderr).toBe('')
+    expect(JSON.parse(ambiguous.stdout).error).toEqual(expect.objectContaining({ code: 'archive_ambiguous', candidates: expect.any(Array) }))
+    expect(JSON.parse(missing.stdout).error.code).toBe('archive_not_found')
+    expect(JSON.parse(invalid.stdout).error.code).toBe('invalid_history_limit')
+    expect(JSON.parse(invalidDate.stdout).error.code).toBe('invalid_history_since')
+    expect(JSON.parse(reservedWorkRef.stdout).error.code).toBe('invalid_history_work_ref')
+    expect(JSON.parse(detailFilter.stdout).error.code).toBe('history_detail_filters_unsupported')
+
+    await writeFile(join(historyDir, '.rsp', 'archives', '2026-07-20_wrong.md'), renderChange('different'))
+    const incomplete = spawnSync('node', [cliPath(), 'history', '--kind', 'does-not-match', '--json'], { cwd: historyDir, encoding: 'utf-8' })
+    const incompleteResult = JSON.parse(incomplete.stdout)
+    expect(incomplete.status).toBe(1)
+    expect(incompleteResult.ok).toBe(false)
+    expect(incompleteResult.diagnostics).toContainEqual(expect.objectContaining({ code: 'archive_identity_mismatch' }))
+  })
+
+  it('fails closed for a missing archive root and rejects extra positional arguments in every output mode', async () => {
+    const missingRootDir = await createRspFixture('rsp-history-missing-root-test', ['specs', 'changes', 'focus.d'])
+    const missingRoot = spawnSync('node', [cliPath(), 'history', '--json'], { cwd: missingRootDir, encoding: 'utf-8' })
+    expect(missingRoot.status).toBe(1)
+    expect(JSON.parse(missingRoot.stdout)).toEqual(expect.objectContaining({
+      ok: false,
+      error: expect.objectContaining({ code: 'archive_inspection_incomplete' }),
+      diagnostics: [expect.objectContaining({ code: 'archive_root_missing' })],
+      diagnosticSummary: { total: 1, returned: 1, hasMore: false },
+    }))
+
+    const human = spawnSync('node', [cliPath(), 'history', 'one', 'two'], { cwd: missingRootDir, encoding: 'utf-8' })
+    const json = spawnSync('node', [cliPath(), 'history', 'one', 'two', '--json'], { cwd: missingRootDir, encoding: 'utf-8' })
+    const compact = spawnSync('node', [cliPath(), 'history', 'one', 'two', '--json', '--compact'], { cwd: missingRootDir, encoding: 'utf-8' })
+
+    expect(human.status).toBe(1)
+    expect(human.stderr).toContain('history accepts at most one positional WorkRef')
+    expect(json.status).toBe(1)
+    expect(json.stderr).toBe('')
+    expect(JSON.parse(json.stdout).error.code).toBe('history_positional_args_unsupported')
+    expect(compact.status).toBe(1)
+    expect(compact.stderr).toBe('')
+    expect(compact.stdout).toBe(`${JSON.stringify(JSON.parse(compact.stdout))}\n`)
+  })
+
+  it('bounds human diagnostics and ambiguity candidates', async () => {
+    const diagnosticsDir = await createRspFixture('rsp-history-bounded-errors-test', ['specs', 'changes', 'archives', 'focus.d'])
+    for (let index = 0; index < 25; index++)
+      await writeFile(join(diagnosticsDir, '.rsp', 'archives', `2026-07-20_bad-${index}.md`), renderChange(`different-${index}`))
+
+    const diagnostics = spawnSync('node', [cliPath(), 'history'], { cwd: diagnosticsDir, encoding: 'utf-8' })
+    const diagnosticsJson = spawnSync('node', [cliPath(), 'history', '--json'], { cwd: diagnosticsDir, encoding: 'utf-8' })
+    expect(diagnostics.status).toBe(1)
+    expect(diagnostics.stderr.match(/\.rsp\/archives\/2026-07-20_bad-/g)).toHaveLength(20)
+    expect(diagnostics.stderr).toContain('5 additional diagnostic(s) omitted')
+    expect(JSON.parse(diagnosticsJson.stdout)).toEqual(expect.objectContaining({
+      diagnostics: expect.any(Array),
+      diagnosticSummary: { total: 25, returned: 20, hasMore: true },
+    }))
+    expect(JSON.parse(diagnosticsJson.stdout).diagnostics).toHaveLength(20)
+
+    const candidatesDir = await createRspFixture('rsp-history-bounded-candidates-test', ['specs', 'changes', 'archives', 'focus.d'])
+    for (let index = 0; index < 25; index++) {
+      const suffix = index === 0 ? '' : `-${index + 1}`
+      await writeFile(join(candidatesDir, '.rsp', 'archives', `2026-07-20_repeat${suffix}.md`), renderChange('repeat'))
+    }
+    const candidates = spawnSync('node', [cliPath(), 'history', 'repeat'], { cwd: candidatesDir, encoding: 'utf-8' })
+    const candidatesJson = spawnSync('node', [cliPath(), 'history', 'repeat', '--json'], { cwd: candidatesDir, encoding: 'utf-8' })
+    expect(candidates.status).toBe(1)
+    expect(candidates.stderr.match(/\.rsp\/archives\/2026-07-20_repeat/g)).toHaveLength(20)
+    expect(candidates.stderr).toContain('5 additional candidate(s) omitted')
+    expect(JSON.parse(candidatesJson.stdout).error).toEqual(expect.objectContaining({
+      candidates: expect.any(Array),
+      candidateSummary: { total: 25, returned: 20, hasMore: true },
+    }))
+    expect(JSON.parse(candidatesJson.stdout).error.candidates).toHaveLength(20)
+  })
+
+  it('renders an empty human list without reading the generated index', async () => {
+    const historyDir = await createRspFixture('rsp-history-empty-test', ['specs', 'changes', 'archives', 'focus.d'])
+    await writeFile(join(historyDir, '.rsp', 'archives', 'INDEX.md'), '# stale generated index\n| 2020-01-01 | stale | fix | stale |\n')
+
+    const output = execFileSync('node', [cliPath(), 'history'], { cwd: historyDir, encoding: 'utf-8' })
+    expect(output).toContain('No archived Changes match the query.')
+    expect(output).not.toContain('stale')
   })
 })
 

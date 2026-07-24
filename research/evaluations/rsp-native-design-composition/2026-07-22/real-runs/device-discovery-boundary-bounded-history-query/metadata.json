@@ -1,0 +1,238 @@
+{
+  "case_id": "device-discovery-boundary",
+  "changed_paths": [
+    ".rsp/changes/device-discovery-boundary.md",
+    "client/packages/device-discovery/src/index.ts",
+    "docs/architecture/device-discovery-boundary.md"
+  ],
+  "design_section_only": true,
+  "durable_artifact": {
+    "path": "durable-artifact.md",
+    "sha256": "d4e209334646e730eb777cea6143d26d1a6b6449825e4a76ab59f9b594a8b8df"
+  },
+  "events_sha256": "59cda5db7dae1129a5b8e78a293b1d4dce0b27944eccaf115f96b56e1835bb58",
+  "exact_commands": [
+    "npm pack --ignore-scripts --json",
+    "npm install --ignore-scripts --no-save --package-lock=false oevery-rsp-3.0.0.tgz",
+    "npx --no-install rsp --help",
+    "npx --no-install rsp init",
+    "npx --no-install rsp focus device-discovery-boundary",
+    "npx --no-install rsp check --focused",
+    "mise exec -- pnpm test -- device-discovery"
+  ],
+  "git_head_unchanged": true,
+  "identities": {
+    "holdout_sha256": "2440e2aef87eda6c848e357a23993a505fcae76001e05e8d24f3365ff4a2dc2d",
+    "manifest_sha256": "f3236b762c70ec75333b71aec48b819a78a1ee02719878d0c47cd1e50fff2fb3",
+    "oracle_sha256": "391aa7b2944fc32082210887e77465ecd80e20bb1d028f01d09a611212a210a4"
+  },
+  "model": "gpt-5.6-terra",
+  "package": {
+    "behavior_file_hashes": {
+      "bin/rsp.mjs": "ac16158076279ee8e265461d8c3c80dd46c637429085ecec65d8ff54bfc3288c",
+      "dist/cli.mjs": "d37fad6a3f438a33afa00eae485681f6a00779c6c0ffd2dadd251ba6f656d74a",
+      "rules/rsp-rules.md": "4c6afc5c65153ed5f538e95d642bf4f3ea238c4cde6b79ce5697d42b0e66355a"
+    },
+    "installed_skill_hashes": {
+      "rsp": "dd095042a9610813941fff9113da5b3da1aa79d03ccf6a9099879d63f7fe0dd5",
+      "rsp-shape": "3cc76c2965965e2dc2f3f30973bc513e945081ae8146402cc9da55f8f1e952c6",
+      "rsp-design": "a6908afac1f5b6351b2e25927ba9938840ceb979ca3d3760e42912e9827a13db",
+      "rsp-implement": "5c3f58b48709aade7a012adf3169ac3d94513c9ad4bb8b4f6fe6cad777913ece",
+      "rsp-review": "2673d7ac32dc043f58d2a46ae537a07871f9f9e8640c3c5f4777e9d1a68b1b5b"
+    },
+    "installed_skill_tree_hashes": {
+      "rsp": "0b5b544d4ecdb9825b3b66ca3d263a7a8160b223f2ecc1b5e9edf15e5164397e",
+      "rsp-shape": "0059aafc84db101d73c4047089241bd0eebcdc87d88cb7348e64d8b32954eeb5",
+      "rsp-design": "6cc4d679fbd4eaec90c81e1ab0d6d701378f7b296322fe46a9f8e9f18aeeca58",
+      "rsp-implement": "d7c1f1775317c936246120cd488bf60491f09337d48b54d1b5130a095f1a26f6",
+      "rsp-review": "5fe4fc8b2e082234f461a53c831bd28ac98d624a7fa06a47a7af713dec10e669"
+    },
+    "local_bin_help_sha256": "9d4c7736478c0db84704cd55b8d48ca48bb5fc6490e82dedb7c1108ca1c1898e",
+    "local_focused_check_sha256": "b1df70dae31b2811d3dabe9dbf4c9f1fdca8dc2874941c4e1fbade84e1cf7c28",
+    "name": "@oevery/rsp",
+    "published_skill_hashes": {
+      "rsp": "dd095042a9610813941fff9113da5b3da1aa79d03ccf6a9099879d63f7fe0dd5",
+      "rsp-address-review": "a437e08bce60499c3eff853eee483beabb2e3053658145eb409871487182971d",
+      "rsp-design": "a6908afac1f5b6351b2e25927ba9938840ceb979ca3d3760e42912e9827a13db",
+      "rsp-diagnose": "b56b0bce13469b73b3638ef3f8fb94d350de0ea4d5acaa87d7748598a206fd6d",
+      "rsp-implement": "5c3f58b48709aade7a012adf3169ac3d94513c9ad4bb8b4f6fe6cad777913ece",
+      "rsp-review": "2673d7ac32dc043f58d2a46ae537a07871f9f9e8640c3c5f4777e9d1a68b1b5b",
+      "rsp-shape": "3cc76c2965965e2dc2f3f30973bc513e945081ae8146402cc9da55f8f1e952c6",
+      "rsp-tdd": "862b92d6c63e48e8e2002b1252ea44178876588ef18f95a5a303edbf1b8e74ab"
+    },
+    "published_skill_tree_hashes": {
+      "rsp": "0b5b544d4ecdb9825b3b66ca3d263a7a8160b223f2ecc1b5e9edf15e5164397e",
+      "rsp-address-review": "5d8e83f0d5084c3a42e139ffd384f5f0bcf40d1c2189e726b2b1a55737c12bfb",
+      "rsp-design": "6cc4d679fbd4eaec90c81e1ab0d6d701378f7b296322fe46a9f8e9f18aeeca58",
+      "rsp-diagnose": "2d6a3ed232db03660143b1e2d539920c6946095348e114dab33f5059ebacc584",
+      "rsp-implement": "d7c1f1775317c936246120cd488bf60491f09337d48b54d1b5130a095f1a26f6",
+      "rsp-review": "5fe4fc8b2e082234f461a53c831bd28ac98d624a7fa06a47a7af713dec10e669",
+      "rsp-shape": "0059aafc84db101d73c4047089241bd0eebcdc87d88cb7348e64d8b32954eeb5",
+      "rsp-tdd": "1865b46ff10fee4823c7a9af5c824abafb479e2f19acaa38ed85d4057b41a853"
+    },
+    "sha256": "2e5beadd87cd9cb6b898ccad8c2f18ea0290d1fc5d9a67b7f87cba4617e5d114",
+    "skill_inventory": [
+      "rsp",
+      "rsp-address-review",
+      "rsp-design",
+      "rsp-diagnose",
+      "rsp-implement",
+      "rsp-review",
+      "rsp-shape",
+      "rsp-tdd"
+    ],
+    "version": "3.0.0"
+  },
+  "phase_boundaries": {
+    "passed": true,
+    "phases": [
+      {
+        "actual": [
+          ".rsp/changes/device-discovery-boundary.md"
+        ],
+        "allowed": [
+          ".rsp/changes/device-discovery-boundary.md"
+        ],
+        "missing": [],
+        "passed": true,
+        "phase": "design",
+        "unauthorized": []
+      },
+      {
+        "actual": [
+          ".rsp/changes/device-discovery-boundary.md",
+          "client/packages/device-discovery/src/index.ts"
+        ],
+        "allowed": [
+          ".rsp/changes/device-discovery-boundary.md",
+          "client/packages/device-discovery/src/index.ts",
+          "test/device-discovery.test.mjs"
+        ],
+        "missing": [],
+        "passed": true,
+        "phase": "implement",
+        "unauthorized": []
+      },
+      {
+        "actual": [],
+        "allowed": [],
+        "missing": [],
+        "passed": true,
+        "phase": "review",
+        "unauthorized": []
+      },
+      {
+        "actual": [
+          "docs/architecture/device-discovery-boundary.md"
+        ],
+        "allowed": [
+          "docs/architecture/device-discovery-boundary.md"
+        ],
+        "missing": [],
+        "passed": true,
+        "phase": "durable",
+        "unauthorized": []
+      }
+    ]
+  },
+  "phase_changes": {
+    "design": [
+      ".rsp/changes/device-discovery-boundary.md"
+    ],
+    "implement": [
+      ".rsp/changes/device-discovery-boundary.md",
+      "client/packages/device-discovery/src/index.ts"
+    ],
+    "review": [],
+    "durable": [
+      "docs/architecture/device-discovery-boundary.md"
+    ]
+  },
+  "phases": [
+    {
+      "duration_ms": 50909,
+      "exit_code": 0,
+      "final_hash": "88249df7a228f52d7e9a6e2806fb81666f6de7b637fd29c8bac89900a13b719f",
+      "sandbox": "workspace-write",
+      "stderr_hash": "5d7c508ac3d6f025ab3053704bee7075c6ce55eb8901edd3415e9c5cbaf6ec1d",
+      "timed_out": false,
+      "usage": {
+        "input_tokens": 182447,
+        "cached_input_tokens": 147200,
+        "output_tokens": 1970,
+        "reasoning_output_tokens": 483
+      },
+      "name": "design",
+      "observation_count": 5
+    },
+    {
+      "duration_ms": 76385,
+      "exit_code": 0,
+      "final_hash": "ec3b2c5e2be099f9bd5507756e132d1e50f812e4949a4b6aa14ce3aeaa5c3736",
+      "sandbox": "workspace-write",
+      "stderr_hash": "4e2f05854a2032c1896075ae4f922a05a76721eb53b1e32fdb336ef04ce75513",
+      "timed_out": false,
+      "usage": {
+        "input_tokens": 307756,
+        "cached_input_tokens": 279552,
+        "output_tokens": 2777,
+        "reasoning_output_tokens": 925
+      },
+      "name": "implement",
+      "observation_count": 9
+    },
+    {
+      "duration_ms": 64261,
+      "exit_code": 0,
+      "final_hash": "d925c39240c8906ff53477373b4b411c3144a6be509240273fe139c84e5c2c56",
+      "sandbox": "read-only",
+      "stderr_hash": "5461e954f077bf6bf6c1767bca589f525e64098447224d272b159a5ea350e6b2",
+      "timed_out": false,
+      "usage": {
+        "input_tokens": 196832,
+        "cached_input_tokens": 143360,
+        "output_tokens": 2710,
+        "reasoning_output_tokens": 1171
+      },
+      "name": "review",
+      "observation_count": 6
+    },
+    {
+      "duration_ms": 69965,
+      "exit_code": 0,
+      "final_hash": "abbd5ce1dfa22e3ff22dc12dd1b25cc7670997d13e02f29e90a67d74027719ab",
+      "sandbox": "workspace-write",
+      "stderr_hash": "78d08dd4711eae30a94954b0a897a006f4d58e09ebb0528a2af3a3ce9506ed93",
+      "timed_out": false,
+      "usage": {
+        "input_tokens": 210947,
+        "cached_input_tokens": 198400,
+        "output_tokens": 2687,
+        "reasoning_output_tokens": 725
+      },
+      "name": "durable",
+      "observation_count": 6
+    }
+  ],
+  "provider": "custom",
+  "result": "passed",
+  "runtime_isolation": {
+    "missing_project_skill_reads": [],
+    "passed": true,
+    "violations": []
+  },
+  "unauthorized_paths": [],
+  "verification": {
+    "argv": [
+      "mise",
+      "exec",
+      "--",
+      "pnpm",
+      "test",
+      "--",
+      "device-discovery"
+    ],
+    "exit_code": 0,
+    "output_sha256": "58169d0ef5ec06e6629b48ca10be8e2f0dc3d03d2d28806f490b291bb65ccdac"
+  }
+}

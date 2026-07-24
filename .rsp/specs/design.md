@@ -47,7 +47,13 @@
 - CLI commands handle deterministic filesystem operations, structure checks, generated indexes, and warnings.
 - Bare `rsp` opens the read-only interactive dashboard only when stdin and stdout are TTYs, `TERM` is not `dumb`, and `CI` is absent or exactly `false`; otherwise it preserves non-interactive help behavior. `rsp ui` is the explicit dual-TTY entry, while every existing subcommand, root help/version/error path, plain status report, and JSON contract remains deterministic and non-interactive.
 - TUI-owned labels support `en` and `zh-CN` without localizing WorkRefs, paths, commands, canonical states, existing CLI output, JSON, Skills, or persisted artifacts. The dashboard presents status and deterministic next commands but does not mutate project state.
-- The JSON-producing inspection commands `status`, `show`, `ready`, `check`, and `doctor` preserve pretty-printed `--json` as the default and accept `--json --compact` for the same parsed value on one LF-terminated line. `--compact` without `--json`, or on any other command, fails before command behavior runs.
+- The JSON-producing inspection commands `status`, `show`, `ready`, `check`, `doctor`, and `history` preserve pretty-printed `--json` as the default and accept `--json --compact` for the same parsed value on one LF-terminated line. `--compact` without `--json`, or on any other command, fails before command behavior runs.
+- `rsp history` is the bounded archive-query surface and does not expand the current-work `status` snapshot. Its presentation-neutral inspection reads the complete authoritative archive tree directly, recognizes but omits Group Briefs, validates archive identity and metadata fail-closed, and exposes deterministic Change records ordered by archive date descending, WorkRef, and project-relative archive path.
+- Archive history requires a real archive root and rejects executable headings that claim reserved grouped `brief` or `00-brief` identities, including collision-suffixed archive files. The CLI accepts at most one positional history WorkRef and rejects extras before archive inspection in every output mode.
+- History lists default to 20 records and accept a limit from 1 through 100 after inclusive date, exact historical kind, and exact Group filters. They report matched/returned counts and whether the bound omitted more matches; there is no first-release cursor or offset.
+- Exact history detail uses a WorkRef or, for internal presenters, one stable project-relative archive identity. It returns bounded summary, scenario and checkbox counts, and bounded Tasks, Verify, and Blockers evidence without raw Markdown. Duplicate archive generations of one WorkRef produce an ambiguous result with candidate identities rather than an implicit latest choice.
+- History diagnostics and ambiguous candidate identities are independently capped at 20 entries and expose total, returned, and `hasMore` metadata. Human errors use the same caps and omitted counts; archive read failures remain in diagnostics rather than being duplicated into runtime output.
+- `history` follows the same pretty JSON, structured error, LF termination, and opt-in `--compact` contract as the other JSON-producing inspection commands.
 - Generated `INDEX.md` files use lightweight YAML frontmatter with `kind: generated-index` and an `index_type` value for machine-readable classification.
 - Generated index builders avoid rewriting unchanged `INDEX.md` files.
 - `rsp doctor` identifies generated indexes by frontmatter metadata instead of body footer text.
@@ -111,6 +117,7 @@
 - `src/core/` contains shared filesystem, config, output, helper, and locking logic.
 - `src/status/` owns the internal serializable project-status snapshot, filesystem-backed inspection, pure filtering and recommendation derivation, the exact public v3 JSON adapter, and plain-text presentation. `src/cli.ts` owns status argument validation, command-error emission, and exit decisions; `src/commands/status.ts` only coordinates the status layers and returns their result.
 - `src/tui/` owns the interactive reducer, Ink presentation, typed English and Simplified Chinese catalogs, display-cell layout, and terminal lifecycle. The TUI entry consumes the status snapshot as a sibling presenter and is dynamically imported only after interactive routing succeeds.
+- `src/history/` owns presentation-neutral archive-history inspection, validation, filtering, bounds, and structured detail projection.
 - `src/core/work-ref.ts` owns open-work classification, full-tree inspection, bounded path derivation, executable filtering, regular-file checks, and identity-collision checks.
 - `src/core/change-group.ts` owns the Group Brief contract, declared membership, open/archive/focus projections, and derived close readiness; `src/commands/group.ts` owns explicit create and close mutations.
 - `scripts/upstreams.mjs` is repository-maintainer tooling for upstream manifest validation, Git cache lifecycle, candidate comparison, and atomic lock serialization; it is not part of the published RSP CLI.
@@ -141,7 +148,7 @@ Dependency direction is constrained:
 
 - `bin/` loads the built product runtime; CLI registration delegates to commands, which use domain interpretation and core filesystem/output support.
 - Status inspection may depend on `src/core/`, while `src/core/` does not depend on `src/status/`. Status derivation is I/O-free, and status presenters do not inspect the filesystem or depend on command or TUI modules.
-- TUI modules may depend on the status snapshot and presentation-neutral types; status and core modules do not depend on the TUI. React, Ink, and Yoga remain outside ordinary command evaluation.
+- TUI modules may depend on the status snapshot and presentation-neutral types; status, history, and core modules do not depend on the TUI. React, Ink, and Yoga remain outside ordinary command evaluation.
 - Product runtime must not import `research/`, `.cache/`, `.agents/skills/`, `.rsp/`, or repository-maintainer scripts.
 - Published `rules/` and `skills/` must operate without a source checkout, research corpus, or upstream cache.
 - Maintainer tooling may inspect product source and maintainer knowledge, but it enters product surfaces only through a selected normal RSP change.

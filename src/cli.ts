@@ -10,6 +10,7 @@ import { createChange } from './commands/create.js'
 import { runDoctor } from './commands/doctor.js'
 import { focusChange, unfocusChange } from './commands/focus.js'
 import { closeChangeGroup, createChangeGroup } from './commands/group.js'
+import { showHistory } from './commands/history.js'
 import { initProject } from './commands/init.js'
 import { showReady } from './commands/ready.js'
 import { showChange } from './commands/show.js'
@@ -20,7 +21,7 @@ import { emitJson } from './core/output.js'
 import { toStatusJsonError } from './status/v3-json.js'
 import { isInteractiveTerminal, shouldAutoLaunchUi, validateUiArgs } from './tui/route.js'
 
-const COMPACT_JSON_COMMANDS = new Set(['status', 'show', 'ready', 'check', 'doctor'])
+const COMPACT_JSON_COMMANDS = new Set(['status', 'show', 'ready', 'check', 'doctor', 'history'])
 
 function validateCompactInvocation(rawArgs: string[]): void {
   if (!rawArgs.includes('--compact'))
@@ -441,6 +442,63 @@ const showCommand = defineCommand({
   },
 })
 
+const historyCommand = defineCommand({
+  meta: {
+    name: 'history',
+    description: 'Query bounded archived Change summaries or one exact archived WorkRef',
+  },
+  args: {
+    name: {
+      type: 'positional',
+      description: 'Optional exact archived Change WorkRef for detail',
+      required: false,
+    },
+    limit: {
+      type: 'string',
+      description: 'Maximum list records from 1 through 100 (default: 20)',
+    },
+    since: {
+      type: 'string',
+      description: 'Include archives on or after YYYY-MM-DD',
+    },
+    until: {
+      type: 'string',
+      description: 'Include archives on or before YYYY-MM-DD',
+    },
+    kind: {
+      type: 'string',
+      description: 'Match one exact historical Change kind',
+    },
+    group: {
+      type: 'string',
+      description: 'Match one exact Change Group',
+    },
+    json: {
+      type: 'boolean',
+      description: 'Print machine-readable JSON output',
+      default: false,
+    },
+    compact: {
+      type: 'boolean',
+      description: 'Print JSON without indentation (requires --json)',
+      default: false,
+    },
+  },
+  async run({ args }: { args: { name?: string, limit?: string, since?: string, until?: string, kind?: string, group?: string, json: boolean, compact: boolean, _?: string[] } }) {
+    const result = await showHistory({
+      workRef: args.name,
+      limit: args.limit,
+      since: args.since,
+      until: args.until,
+      kind: args.kind,
+      group: args.group,
+      positionalCount: args._?.length ?? (args.name ? 1 : 0),
+    }, { json: Boolean(args.json), compact: Boolean(args.compact) })
+    if (!result.ok)
+      process.exitCode = 1
+  },
+})
+
 export async function runCli(rawArgs = process.argv.slice(2)) {
   const terminalEnvironment = {
     stdinTty: Boolean(process.stdin.isTTY),
@@ -484,6 +542,7 @@ export async function runCli(rawArgs = process.argv.slice(2)) {
       archive: archiveCommand,
       ready: readyCommand,
       show: showCommand,
+      history: historyCommand,
       status: statusCommand,
       check: checkCommand,
       update: updateCommand,

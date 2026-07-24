@@ -324,6 +324,10 @@ rsp ready <name> [--json [--compact]] [--verbose]
                                   Preview archive readiness (same as archive --dry-run)
 rsp show <name|--focused> [--json [--compact]] [--verbose]
                                   Show change context with readiness signals and context paths
+rsp history [--limit <n>] [--since <date>] [--until <date>] [--kind <kind>] [--group <group>] [--json [--compact]]
+                                  List bounded archived Change summaries (default 20, maximum 100)
+rsp history <work-ref> [--json [--compact]]
+                                  Show bounded evidence detail for one exact archived Change
 rsp status [--focused|--blocked|--stale <days>] [--json [--compact]] [--verbose]
                                   Show project status plus derived dependency plan with focus-aware filters
 rsp check [--focused] [--json [--compact]] [--verbose]
@@ -344,7 +348,16 @@ Human-readable `rsp status` renders its execution guidance as a dependency fores
 
 `rsp status --json` returns the same dependency graph under `plan.nodes`, `plan.ready`, `plan.edges`, `plan.blocked`, and `plan.waves`. Nodes distinguish filter-selected Changes from prerequisite context, while filtered plans retain the transitive prerequisite closure needed to explain the result. JSON stays flat rather than nesting children because prerequisites may be shared by multiple Changes. Each edge reads as “`change` requires `requires`”. These are derived navigation facts, not execution authority or persisted workflow state.
 
-The JSON-producing inspection commands `status`, `show`, `ready`, `check`, and `doctor` accept `--json --compact` for the same parsed value as `--json`, serialized on one LF-terminated line. `--compact` requires `--json`; other commands reject it before running command behavior.
+`rsp history` inspects authoritative archive files directly instead of trusting the generated archive index. List results are ordered by archive date descending, WorkRef, then source path; inclusive date, exact kind, and exact Group filters are applied before the 1–100 record bound. Each record includes its project-relative archive path as a stable identity. `rsp history <work-ref>` returns bounded summary, scenario and checkbox counts, and bounded Tasks/Verify/Blockers evidence. It never returns raw Markdown; duplicate generations of one WorkRef fail with candidate archive paths instead of choosing implicitly. Unreadable, malformed, path-inconsistent, missing-root, or reserved executable Group Brief identities fail the complete query even when filters would exclude them. Archived Group Briefs are validated but are not list records. The command accepts at most one positional WorkRef. Diagnostics and ambiguous candidates are capped at 20 entries with total/returned/`hasMore` metadata, and human errors report how many entries were omitted.
+
+Examples:
+
+```sh
+rsp history --since 2026-07-01 --kind fix --limit 10 --json
+rsp history cli-machine-output/add-bounded-history-query --json --compact
+```
+
+The JSON-producing inspection commands `status`, `show`, `ready`, `check`, `doctor`, and `history` accept `--json --compact` for the same parsed value as `--json`, serialized on one LF-terminated line. `--compact` requires `--json`; other commands reject it before running command behavior.
 
 `rsp create --lite` is a shorter template for explicitly tracked small changes; simple current-session tasks should not create RSP changes unless tracking is intentionally needed.
 
