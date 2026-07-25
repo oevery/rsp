@@ -303,8 +303,15 @@ describe('documentation command examples', () => {
   it('explains npx usage in the README', () => {
     const root = fileURLToPath(new URL('..', import.meta.url))
     const readme = readFileSync(join(root, 'README.md'), 'utf-8')
-    expect(readme).toContain('Otherwise use `npx -y @oevery/rsp <command>`')
-    expect(readme).toContain('npx skills add oevery/rsp --skill rsp-release-docs')
+    const chineseReadme = readFileSync(join(root, 'README.zh-CN.md'), 'utf-8')
+    expect(readme).toContain('otherwise use the exact `npx -y @oevery/rsp@3.1.0-beta.0 <command>` identity after publication')
+    expect(readme).toContain('npx -y @oevery/rsp@3.1.0-beta.0 init')
+    expect(readme).toContain('rsp skills install --dry-run')
+    expect(readme).toContain('npx -y @oevery/rsp@3.1.0-beta.0 skills install')
+    expect(readme).toContain('suggest `npx -y @oevery/rsp create <name>` for tracked work')
+    expect(chineseReadme).toContain('npx -y @oevery/rsp@3.1.0-beta.0 <command>')
+    expect(chineseReadme).toContain('npx -y @oevery/rsp@3.1.0-beta.0 init')
+    expect(chineseReadme).toContain('suggest `npx -y @oevery/rsp create <name>` for tracked work')
   })
 
   it('marks the canonical-only protocol release as a breaking version', () => {
@@ -312,7 +319,9 @@ describe('documentation command examples', () => {
     const packageJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf-8')) as { version: string }
     const changelog = readFileSync(join(root, 'CHANGELOG.md'), 'utf-8')
 
-    expect(packageJson.version).toBe('3.0.0')
+    expect(packageJson.version).toBe('3.1.0-beta.0')
+    expect(changelog).toContain('Reposition the product as Reliable Software Practice')
+    expect(changelog).toContain('Separate deterministic readiness from semantic durable review and archive guidance')
     expect(changelog).toContain('## 3.0.0 (2026-07-23)')
   })
 

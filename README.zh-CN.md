@@ -4,7 +4,7 @@
 
 **面向人类与 AI Agent 的仓库原生工程工作流。**
 
-RSP 将模糊意图逐步转化为边界明确、经过实现、审查和验证的软件变更，同时让项目知识可以长期维护、让未完成工作可以可靠恢复。九个可组合 Skills 共同覆盖工程旅程，但不引入隐藏 workflow state，也不取代项目自己的文件、工具和权限边界。
+RSP 将模糊意图逐步转化为边界明确、经过实现、审查和验证的软件变更，同时让项目知识可以长期维护、让未完成工作可以可靠恢复。十个可组合 Skills 共同覆盖工程旅程，但不引入隐藏 workflow state，也不取代项目自己的文件、工具和权限边界。
 
 这套工作流建立在轻量的 **Rules、Specs、Plans** artifact foundation 之上。
 
@@ -34,17 +34,17 @@ RSP 根据 selected Change、仓库证据、验证结果和 blockers 推导下�
 ## 快速开始
 
 ```bash
-npx -y @oevery/rsp init
-npx -y @oevery/rsp doctor
+npx -y @oevery/rsp@3.1.0-beta.0 init
+npx -y @oevery/rsp@3.1.0-beta.0 doctor
 ```
 
 推荐启动流程：
 
 ```bash
-npx -y @oevery/rsp init --with-project-setup
+npx -y @oevery/rsp@3.1.0-beta.0 init --with-project-setup
 # 填写 .rsp/changes/project-setup.md
 # 填写 .rsp/specs/design.md
-npx -y @oevery/rsp doctor
+npx -y @oevery/rsp@3.1.0-beta.0 doctor
 ```
 
 ## Artifact foundation
@@ -149,7 +149,7 @@ Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENT
 
 ## Skills
 
-RSP 发布九个宿主无关、按需加载的 Skills：
+RSP 发布十个宿主无关、按需加载的 Skills：
 
 - `rsp`：setup、workflow、durable review 和 archive 指导。
 - `rsp-shape`：在不实现代码的前提下，将不清晰的非平凡工作塑造成一个 ready Change 或合理的 shallow Group；当用户明确要求严格质询或高风险决策仍未解决时，渐进加载 deep clarification，并让关键设计问题通过同一个 WorkRef 返回。
@@ -160,14 +160,15 @@ RSP 发布九个宿主无关、按需加载的 Skills：
 - `rsp-review`：基于固定范围与项目权威，对 Code、Document 或 mixed Change 进行只读审查。
 - `rsp-address-review`：处置固定 review findings，仅修复已授权且 accepted 的 finding，并要求 fresh verification 与 report-only re-review。
 - `rsp-release-docs`：根据证据准备或审计 Changelog、Release Notes 和 Migration Notes，并适配用户要求与仓库现有约定。
+- `rsp-manage`：仅在用户显式请求后，跨真正独立的 slices 或中断恢复继续一个 focused Change；普通工作保持直接执行，编排状态保持临时。
 
 每个 Skill 都可以独立调用，并把结果返回现有项目或 RSP artifact owner。套件不引入隐藏 workflow state 或递归 Skill 编排，也不会由任何 Skill 推断 commit、push 或 publication 权限。
 
 响应语言与产物语言相互独立。面向人的响应标题、标签、解释和结论依次遵循明确指定的响应语言、项目中针对响应的指令和会话语言；已授权写入的产物正文依次遵循明确指定的产物语言、项目中针对产物的指令、目标产物的现有语言，最后才回退到会话语言。RSP 的 canonical artifact headings、WorkRef 值、路径、命令、标识符和机器消费值保持不变；响应标签可以在括号中保留技术 token，但不能直接使用未翻译的 token 作为标签。
 
-3.0 产品面是这九个 Skills。五个 same-case terminal journeys 已验证 Shape progressive depth，同时保留 owner、environment 和 acceptance stop。RSP 内置有边界的 artifact routing、response continuation 与 evidence-based release documentation；长时 managed orchestration 仍由 host 或 external workflow 显式组合，并且必须重新读取当前 RSP artifacts、保留其 ownership，在 mutation、Git、publication、environment 或 human-decision authority 边界停止。已评估的 `rsp-manage` prototype 保留在 research 中，recommendation 为 `revise`，不会作为 RSP capability 安装或发布；其候选收尾分支仅能在显式 lifecycle-closeout authority 下、Core 完成 durable decision 后执行 archive。
+3.1 beta 产品面包含这十个 Skills。可选的 `rsp-manage` 仅在显式请求后启用，并要求 focused ready Change 具有真正独立的 slices、长时 continuation 或中断恢复需求。小型或紧耦合工作直接返回 Core 或对应 Discipline，不产生 dispatch envelope。managed run 以当前项目和 RSP artifacts 为 authority，过程 chronology 不持久化，验证保持有界，并在 mutation、lifecycle、Git、publication、environment 或 human-decision authority 边界停止。
 
-完成一个 tracked Change 时，应按证据组合套件：`rsp-shape` 返回可执行 Change，并把一个关键设计问题交给 `rsp-design`；`rsp-design` 把证据、建议、备选方案和已授权的 planned-design 更新返回同一个 WorkRef；Core 把 unexplained failure 路由到 `rsp-diagnose`，仅把明确要求或具有具体风险的 test-first 工作路由到 `rsp-tdd`，把普通且证据充分的修改路由到 `rsp-implement`；`rsp-review` 返回只读报告；`rsp-address-review` 处置 finding；当 selected Change 明确拥有已确认的 release identity 或 range，且发布文档尚未完成时，Core 才把工作路由到 `rsp-release-docs`，由它把一份证据账本投影为职责不同的 Changelog、Release Notes 和 Migration Notes，但不推断 publication authority；最后由 `rsp` 在 archive 前把 implemented current facts、lasting rationale、项目自有 context/instructions 与 temporary continuation 路由到各自已有的 semantic owner。每个 discipline 都返回现有 owner。遇到歧义、失败门禁、缺失权限或超出范围的 Git conflict 时，流程停在该 owner；任何 Skill 都不会推断 Git continuation、commit、delivery 权限或自动重试。
+完成一个 tracked Change 时，应按证据组合套件：`rsp-shape` 返回可执行 Change，并把一个关键设计问题交给 `rsp-design`；`rsp-design` 把证据、建议、备选方案和已授权的 planned-design 更新返回同一个 WorkRef；Core 把 unexplained failure 路由到 `rsp-diagnose`，仅把明确要求或具有具体风险的 test-first 工作路由到 `rsp-tdd`，把普通且证据充分的修改路由到 `rsp-implement`；`rsp-review` 返回只读报告；`rsp-address-review` 处置 finding；当 selected Change 明确拥有已确认的 release identity 或 range，且发布文档尚未完成时，Core 才把工作路由到 `rsp-release-docs`；最后由 `rsp` 在 archive 前把 stable facts、lasting rationale 与 temporary continuation 路由到各自 owner。只有用户显式要求 managed continuation 且工作满足有界独立调度条件时才使用 `rsp-manage`。遇到歧义、失败门禁、缺失权限或越界 Git conflict 时停止；任何 Skill 都不会推断 Git continuation、commit、delivery 权限或自动重试。
 
 文档分层矩阵：
 
@@ -184,37 +185,28 @@ RSP 发布九个宿主无关、按需加载的 Skills：
 | `skills/rsp-review/SKILL.md` | agent | Code 与 Document 只读审查 |
 | `skills/rsp-address-review/SKILL.md` | agent | 处置 review findings 并返回可恢复 continuation |
 | `skills/rsp-release-docs/SKILL.md` | agent | 准备或审计符合项目约定的发布文档 |
+| `skills/rsp-manage/SKILL.md` | agent | 仅在显式调用后继续符合条件的独立 slices |
 | `AGENTS.md` | 人类与 agent | 有作用域的项目指令与 RSP 导航入口 |
 
 通常应由人先读 `README.md`；agent 应遵循 nearest `AGENTS.md`，可用时加载 `rsp` skill，仅在 skill 不可用时读取 `.rsp/rsp-rules.md`。
 
-如果文档中写的是 `rsp <command>`，默认前提是你的环境里已经能直接运行 `rsp`；否则请使用 `npx -y @oevery/rsp <command>`。
+如果文档中写的是 `rsp <command>`，默认前提是你的环境里已经能直接运行 `rsp`。对本次 opt-in beta，发布后应使用精确身份 `npx -y @oevery/rsp@3.1.0-beta.0 <command>`；stable 用户仍可使用不带版本的入口获取 npm `latest`。
 
-安装完整套件的可选示例：
-
-```bash
-npx skills add oevery/rsp
-```
-
-也可以只安装一个能力：
+将当前精确包内置的完整 Skill 套件安装到当前项目：
 
 ```bash
-npx skills add oevery/rsp --skill rsp
-npx skills add oevery/rsp --skill rsp-shape
-npx skills add oevery/rsp --skill rsp-design
-npx skills add oevery/rsp --skill rsp-implement
-npx skills add oevery/rsp --skill rsp-diagnose
-npx skills add oevery/rsp --skill rsp-tdd
-npx skills add oevery/rsp --skill rsp-review
-npx skills add oevery/rsp --skill rsp-address-review
-npx skills add oevery/rsp --skill rsp-release-docs
+rsp skills install --dry-run
+rsp skills install
 ```
 
-`rsp update` 只会刷新项目内的 RSP 文件。如果你在使用发布出来的 RSP Skills，升级后还需要单独刷新：
+该命令会预检全部十个 package-owned targets，保留无关的 `.agents/skills` 条目，并且只有显式传入 `--force` 才会替换内容不同的 package-owned 目录。它从调用 `rsp` 的同一个包安装，因此 beta 发布后可以固定精确 npm 身份：
 
 ```bash
-npx skills add oevery/rsp
+npx -y @oevery/rsp@3.1.0-beta.0 skills install --dry-run
+npx -y @oevery/rsp@3.1.0-beta.0 skills install
 ```
+
+在 `3.1.0-beta.0` 实际发布前，上述 registry 命令不可用。`rsp update` 只刷新由 RSP 管理的项目文件；刷新 package-owned Skill 套件需要单独运行 `rsp skills install`。
 
 ## 从 2.x 迁移
 
@@ -265,8 +257,8 @@ durable review 包含两个独立语义判断：是否更新当前事实或作�
 
 新项目：
 
-1. `npx -y @oevery/rsp init`
-2. 优先使用 `npx -y @oevery/rsp init --with-project-setup`，或手动执行 `rsp create project-setup`
+1. `npx -y @oevery/rsp@3.1.0-beta.0 init`
+2. 优先使用 `npx -y @oevery/rsp@3.1.0-beta.0 init --with-project-setup`，或手动执行 `rsp create project-setup`
 3. 填写 `.rsp/specs/design.md`
 4. 仅在需要新的长期项目文档时使用 `rsp add spec <name>`
 5. 将长期理由写入配置的 Decision Record 目录，将稳定的作用域操作指令写入 nearest project-owned `AGENTS.md`
@@ -279,14 +271,14 @@ durable review 包含两个独立语义判断：是否更新当前事实或作�
 
 已有复杂 `AGENTS.md` 的项目：
 
-1. `npx -y @oevery/rsp init`
+1. `npx -y @oevery/rsp@3.1.0-beta.0 init`
 2. 保持受管块尽量薄
 3. 将长期设计收敛到 `.rsp/specs/design.md`
 4. 只有需要额外的 durable current-fact 文档时才使用 `rsp add spec <name>`
 
 AI 协助接入：
 
-1. `npx -y @oevery/rsp init --agents-mode print --with-project-setup`
+1. `npx -y @oevery/rsp@3.1.0-beta.0 init --agents-mode print --with-project-setup`
 2. 保持受管块原样，只在需要时调整周围由人维护的内容
 3. 让 AI 审阅并填写 `.rsp/changes/project-setup.md`
 4. 让 AI 填写 `.rsp/specs/design.md`
@@ -299,6 +291,8 @@ rsp init --agents-mode <mode>   搭建 .rsp/，并确保 AGENTS.md 含有 RSP �
 rsp init --with-project-setup   同时创建 .rsp/changes/project-setup.md
 rsp update                      刷新 fallback protocol、修复 AGENTS 受管块并重建索引
 rsp ui [--lang auto|en|zh-CN]   打开只读交互式仪表盘
+rsp skills install [--dry-run] [--force]
+                                  将当前包的十个 Skills 安装到 .agents/skills
 rsp add spec <name>             创建 .rsp/specs/<name>.md 并重建 specs 索引
 rsp create <name> [summary]     创建 .rsp/changes/<name>.md；可加 --lite 使用更短模板
 rsp group create <name> [goal] 创建不进入 focus 的 .rsp/changes/<name>/00-brief.md
@@ -307,15 +301,19 @@ rsp focus <name>                将一个 open change 标记为当前聚焦
 rsp unfocus <name>              将一个 open change 移出当前聚焦集合
 rsp archive <name>              归档到 .rsp/archives/ 并更新 archive index
 rsp archive --dry-run <name>    预览归档就绪状态，不移动 change
-rsp ready <name> [--json] [--verbose]
+rsp ready <name> [--json [--compact]] [--verbose]
                                    预览归档就绪状态（与 archive --dry-run 相同）
-rsp show <name|--focused> [--json] [--verbose]
+rsp show <name|--focused> [--json [--compact]] [--verbose]
                                    显示 change 上下文，带就绪信号和上下文路径
-rsp status [--focused|--blocked|--stale <days>] [--json] [--verbose]
+rsp history [--limit <n>] [--since <date>] [--until <date>] [--kind <kind>] [--group <group>] [--json [--compact]]
+                                   列出有界的已归档 Change 摘要（默认 20，最大 100）
+rsp history <work-ref> [--json [--compact]]
+                                   显示一个精确已归档 Change 的有界证据详情
+rsp status [--focused|--blocked|--stale <days>] [--json [--compact]] [--verbose]
                                    查看项目状态与派生依赖计划，并支持当前聚焦相关的轻量筛选
-rsp check [--focused] [--json] [--verbose]
+rsp check [--focused] [--json [--compact]] [--verbose]
                                    校验 change 文件，并对 template/scenario 结构做轻量 lint
-rsp doctor [--fix] [--json] [--verbose]
+rsp doctor [--fix] [--json [--compact]] [--verbose]
                                    检查接入健康和常见问题
 ```
 
@@ -323,13 +321,17 @@ rsp doctor [--fix] [--json] [--verbose]
 
 在真实交互式终端中，裸 `rsp` 会打开与 `rsp ui` 相同的只读仪表盘。CI、管道、重定向流和 `TERM=dumb` 继续使用静态命令输出；人类快照使用 `rsp status`，自动化使用 `rsp status --json`。仪表盘不会创建、聚焦或归档工作。
 
-仪表盘快捷键：`Tab` 切换 Changes/Groups，方向键或 `j`/`k` 移动，`/` 筛选，`Enter` 打开全宽详情，`r` 刷新，`?` 显示帮助，`q`、`Ctrl-C` 或顶层 `Esc` 退出。可设置 `RSP_UI_LANG=en|zh-CN` 或传入 `rsp ui --lang`；只有仪表盘自有标签会本地化。现有 CLI help、纯文本输出、JSON、WorkRef、路径、命令、Skills 和 RSP artifacts 仍保持英文。
+仪表盘快捷键：`Tab` 按 Changes/Groups/History 顺序切换，方向键或 `j`/`k` 移动，`/` 筛选当前 scope，`Enter` 打开全宽详情，`r` 刷新当前 scope，`?` 显示帮助，`q`、`Ctrl-C` 或顶层 `Esc` 退出。History 首次进入时才加载默认有界的近期结果，只有选中记录并按 `Enter` 后才按唯一 archive path 加载结构化详情；更早的记录使用 `rsp history` 过滤查询。可设置 `RSP_UI_LANG=en|zh-CN` 或传入 `rsp ui --lang`；只有仪表盘自有标签会本地化。现有 CLI help、纯文本输出、JSON、WorkRef、路径、命令、Skills 和 RSP artifacts 仍保持英文。
 
 当没有 focused change 时，`rsp status` 和 `rsp show --focused --json` 会输出 `nextActions`，但不会自动猜测哪个 open change 是当前工作。
 
 人类可读的 `rsp status` 会把执行指引渲染成依赖森林：父节点依赖其子节点，共享前置依赖以引用方式显示而不重复展开，`Next action` 直接指出当前可执行的 Change。
 
 `rsp status --json` 会在 `plan.nodes`、`plan.ready`、`plan.edges`、`plan.blocked` 和 `plan.waves` 中返回同一份依赖图。节点会区分过滤器选中的 Change 与仅用于解释的前置依赖上下文；过滤后的计划会保留解释结果所需的传递前置依赖闭包。由于同一个前置依赖可能被多个 Change 共享，JSON 保持扁平图结构而不嵌套 children。每条边都读作“`change` requires `requires`”。这些内容是派生的导航事实，不是执行授权或持久化 workflow state。
+
+`rsp history` 直接检查权威 archive 文件，而不信任生成的 archive index。列表按 archive date 降序、WorkRef、source path 排序，在 1–100 的结果上限前应用 inclusive date、精确 kind 和精确 Group 过滤。详情只返回有界 summary、scenario/checkbox counts 与结构化 Tasks/Verify/Blockers evidence，不返回 raw Markdown；重复 WorkRef、不可读或格式错误的 archive 会 fail closed。
+
+产生 JSON 的 `status`、`show`、`ready`、`check`、`doctor` 和 `history` 都支持 `--json --compact`：内容与普通 `--json` 解析结果相同，但序列化为一行并以 LF 结尾。`--compact` 必须与 `--json` 同时使用，其他命令会在执行行为前拒绝它。
 
 `rsp create --lite` 是用于显式跟踪小 change 的短模板；简单的当前会话任务默认不应创建 RSP change，除非确实需要跟踪。
 

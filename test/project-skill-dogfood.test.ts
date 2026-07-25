@@ -10,6 +10,7 @@ const publishedSkills = [
   'rsp-design',
   'rsp-diagnose',
   'rsp-implement',
+  'rsp-manage',
   'rsp-release-docs',
   'rsp-review',
   'rsp-shape',

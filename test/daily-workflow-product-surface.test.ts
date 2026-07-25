@@ -4,12 +4,13 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
-const stableSkills = [
+const currentSkills = [
   'rsp',
   'rsp-address-review',
   'rsp-design',
   'rsp-diagnose',
   'rsp-implement',
+  'rsp-manage',
   'rsp-release-docs',
   'rsp-review',
   'rsp-shape',
@@ -20,9 +21,9 @@ function read(path: string): string {
   return readFileSync(join(root, path), 'utf8')
 }
 
-describe('3.0 daily-workflow product surface', () => {
-  it('keeps native design, progressive shaping depth, and release documentation inside the nine-Skill suite', () => {
-    expect(readdirSync(join(root, 'skills')).sort()).toEqual(stableSkills)
+describe('daily-workflow product surface', () => {
+  it('keeps the existing discipline Skills alongside managed continuation', () => {
+    expect(readdirSync(join(root, 'skills')).sort()).toEqual(currentSkills)
 
     const shape = read('skills/rsp-shape/SKILL.md')
     const deepClarification = read('skills/rsp-shape/references/deep-clarification.md')
@@ -31,26 +32,16 @@ describe('3.0 daily-workflow product surface', () => {
     expect(deepClarification).toContain('the same returning WorkRef')
     expect(rspDesign).toContain('Return to Shape or the user against the same WorkRef')
 
-    const readme = read('README.md')
-    const readmeZh = read('README.zh-CN.md')
-    const design = read('.rsp/specs/design.md')
-    expect(readme).toContain('The 3.0 product surface is these nine Skills.')
-    expect(readmeZh).toContain('3.0 产品面是这九个 Skills。')
-    expect(readmeZh).toContain('返回同一个 WorkRef')
-    expect(design).toContain('Same-case terminal evidence qualifies the deep branch')
-    expect(readme).toContain('Five same-case terminal journeys qualify Shape')
-    expect(design).toContain('`skills/rsp-design` is the canonical native design capability')
+    expect(read('skills/rsp-manage/SKILL.md')).toContain('Keep RSP artifacts as durable truth and process data transient')
   })
 
-  it('keeps managed orchestration external and the rsp-manage candidate unpromoted', () => {
+  it('preserves historical managed-controller research outside the promoted product Skill', () => {
     const packageJson = JSON.parse(read('package.json')) as { files: string[] }
     expect(packageJson.files.some(path => path.includes('research/candidates'))).toBe(false)
-    expect(stableSkills).not.toContain('rsp-manage')
+    expect(currentSkills).toContain('rsp-manage')
+    expect(read('skills/rsp-manage/SKILL.md')).toContain('Keep RSP artifacts as durable truth and process data transient')
 
     const productTruth = [
-      read('README.md'),
-      read('README.zh-CN.md'),
-      read('.rsp/specs/design.md'),
       read('research/models/rsp-skill-system.md'),
       read('research/models/rsp-capability-coverage.md'),
     ].join('\n')
@@ -58,11 +49,5 @@ describe('3.0 daily-workflow product surface', () => {
     expect(productTruth).toContain('recommendation `revise`')
     expect(productTruth).toContain('host/external orchestration')
     expect(productTruth).toContain('RSP artifacts')
-    expect(productTruth).toContain('Artifact routing is native Core behavior')
-    expect(productTruth).toContain('Managed orchestration is an optional host or external layer')
-
-    const readmeZh = read('README.zh-CN.md')
-    expect(readmeZh).toContain('recommendation 为 `revise`')
-    expect(readmeZh).toContain('五个 same-case terminal journeys 已验证 Shape progressive depth')
   })
 })

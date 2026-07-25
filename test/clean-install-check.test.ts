@@ -12,6 +12,7 @@ const expectedSkills = [
   'rsp-design',
   'rsp-diagnose',
   'rsp-implement',
+  'rsp-manage',
   'rsp-release-docs',
   'rsp-review',
   'rsp-shape',
@@ -30,9 +31,14 @@ describe('clean install package check', () => {
 
       expect(result.status, result.stderr || result.stdout).toBe(0)
       const report = JSON.parse(result.stdout) as Record<string, any>
-      expect(report.package).toBe('@oevery/rsp@3.0.0')
+      expect(report.package).toBe('@oevery/rsp@3.1.0-beta.0')
       expect(report.entrySmoke).toEqual({
         help: true,
+        version: '3.1.0-beta.0',
+        npmExecVersion: '3.1.0-beta.0',
+        init: true,
+        skillsInstall: true,
+        skillsInstallIdempotent: true,
         statusJson: true,
         nonTtyUi: { exitCode: 1, stderr: 'Error: rsp ui requires an interactive terminal; use rsp status or rsp status --json instead' },
         invalidLocale: { exitCode: 1, stderr: 'Error: --lang must be auto, en, or zh-CN' },
@@ -49,6 +55,7 @@ describe('clean install package check', () => {
         'output-contracts.md',
       ])
       expect(report.inventory.files).toContain('skills/rsp-design/SKILL.md')
+      expect(report.inventory.files).toContain('skills/rsp-manage/SKILL.md')
       expect(report.inventory.files).toContain('skills/rsp-release-docs/SKILL.md')
       expect(report.inventory.files).toContain('skills/rsp-release-docs/references/output-contracts.md')
       expect(report.inventory.files.some((path: string) => /^(?:research|\.rsp|\.agents|\.codex|scripts|\.cache)(?:\/|$)/u.test(path))).toBe(false)
@@ -99,6 +106,6 @@ process.exit(result.status ?? 1)
     })
 
     expect(result.status, result.stderr || result.stdout).toBe(0)
-    expect(JSON.parse(result.stdout).package).toBe('@oevery/rsp@3.0.0')
+    expect(JSON.parse(result.stdout).package).toBe('@oevery/rsp@3.1.0-beta.0')
   }, 120_000)
 })

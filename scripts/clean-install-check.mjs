@@ -15,6 +15,7 @@ const EXPECTED_SKILLS = [
   'rsp-design',
   'rsp-diagnose',
   'rsp-implement',
+  'rsp-manage',
   'rsp-release-docs',
   'rsp-review',
   'rsp-shape',
@@ -132,9 +133,12 @@ function main() {
   try {
     const packRoot = join(workspace, 'pack')
     const projectRoot = join(workspace, 'project')
+    const execRoot = join(workspace, 'exec-project')
     mkdirSync(packRoot)
     mkdirSync(projectRoot)
+    mkdirSync(execRoot)
     writeFileSync(join(projectRoot, 'package.json'), '{"name":"rsp-clean-install-smoke","private":true}\n')
+    writeFileSync(join(execRoot, 'package.json'), '{"name":"rsp-npm-exec-smoke","private":true}\n')
 
     const packOutput = runNpm([
       'pack',
@@ -166,10 +170,21 @@ function main() {
     const help = run(process.execPath, [installedBin, '--help'], { cwd: projectRoot })
     if (!help.includes('rsp'))
       fail('Installed rsp executable did not return its help output')
-    for (const directory of ['changes', 'focus.d', 'archives', 'specs'])
-      mkdirSync(join(projectRoot, '.rsp', directory), { recursive: true })
-    writeFileSync(join(projectRoot, '.rsp', 'rsp-rules.md'), '# RSP\n')
-    writeFileSync(join(projectRoot, '.rsp', 'specs', 'design.md'), '# Design\n')
+    const version = run(process.execPath, [installedBin, '--version'], { cwd: projectRoot })
+    if (version !== packResult.version)
+      fail(`Installed rsp version mismatch: expected ${packResult.version}, received ${version}`)
+    const npmExecVersion = runNpm(['exec', '--yes', '--package', tarball, '--', 'rsp', '--version'], { cwd: execRoot })
+    if (npmExecVersion !== packResult.version)
+      fail(`Local tarball npm exec version mismatch: expected ${packResult.version}, received ${npmExecVersion}`)
+    const init = runResult(process.execPath, [installedBin, 'init'], { cwd: projectRoot })
+    if (init.status !== 0)
+      fail(`Installed rsp init failed: ${init.stderr.trim()}`)
+    const skillInstall = runResult(process.execPath, [installedBin, 'skills', 'install'], { cwd: projectRoot })
+    if (skillInstall.status !== 0)
+      fail(`Installed rsp skills install failed: ${skillInstall.stderr.trim()}`)
+    const skillInstallRepeat = runResult(process.execPath, [installedBin, 'skills', 'install'], { cwd: projectRoot })
+    if (skillInstallRepeat.status !== 0 || !skillInstallRepeat.stdout.includes('unchanged:'))
+      fail('Installed rsp skills install was not idempotent')
     const status = runResult(process.execPath, [installedBin, 'status', '--json'], { cwd: projectRoot })
     if (status.status !== 0 || JSON.parse(status.stdout).command !== 'status')
       fail('Installed rsp executable did not return normal status JSON')
@@ -194,6 +209,12 @@ function main() {
       fail(`Installed Skill inventory mismatch: ${installedSkills.join(', ')}`)
     for (const skill of installedSkills)
       validateSkill(skillRoot, skill)
+    const projectSkills = readdirSync(join(projectRoot, '.agents', 'skills'), { withFileTypes: true })
+      .filter(entry => entry.isDirectory())
+      .map(entry => entry.name)
+      .sort()
+    if (JSON.stringify(projectSkills) !== JSON.stringify(EXPECTED_SKILLS))
+      fail(`Installed project Skill inventory mismatch: ${projectSkills.join(', ')}`)
 
     const designReferences = readdirSync(join(skillRoot, 'rsp-design', 'references')).sort()
     if (JSON.stringify(designReferences) !== JSON.stringify(EXPECTED_DESIGN_REFERENCES))
@@ -216,6 +237,11 @@ function main() {
       runtime: { node: process.version, npm: runNpm(['--version']) },
       entrySmoke: {
         help: true,
+        version,
+        npmExecVersion,
+        init: true,
+        skillsInstall: true,
+        skillsInstallIdempotent: true,
         statusJson: true,
         nonTtyUi: { exitCode: nonTtyUi.status, stderr: nonTtyUi.stderr.trim() },
         invalidLocale: { exitCode: invalidLocale.status, stderr: invalidLocale.stderr.trim() },

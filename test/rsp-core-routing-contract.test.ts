@@ -87,6 +87,17 @@ describe('rsp core routing contract', () => {
     expect(fallback).toContain('lifecycle stage, completed implementation, and archive readiness alone are insufficient')
   })
 
+  it('routes managed continuation only through an explicit eligibility gate', () => {
+    const body = readFileSync(skillPath, 'utf8')
+
+    expect(body).toContain('If the user explicitly requests managed continuation')
+    expect(body).toContain('select `rsp-manage` only when it is available')
+    expect(body).toContain('one focused ready Change with genuinely independent slices')
+    expect(body).toContain('an ineligible request returns the exact ordinary Core or Discipline next action')
+    expect(body).toContain('Managed routing is never implicit')
+    expect(body).toContain('grants no lifecycle, Git, publication, deployment, approval, or human-acceptance authority')
+  })
+
   it('localizes response-only durable decision labels without translating canonical values', () => {
     const body = readFileSync(skillPath, 'utf8')
 

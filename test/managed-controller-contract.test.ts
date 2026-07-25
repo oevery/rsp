@@ -9,9 +9,10 @@ import { evaluateManagedController, loadManagedControllerCases, prepareManagedCo
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const candidate = join(root, 'research', 'candidates', 'skills', 'rsp-manage')
+const product = join(root, 'skills', 'rsp-manage')
 
-function readSkill(): { body: string, frontmatter: Record<string, any> } {
-  const content = readFileSync(join(candidate, 'SKILL.md'), 'utf8')
+function readSkill(directory = candidate): { body: string, frontmatter: Record<string, any> } {
+  const content = readFileSync(join(directory, 'SKILL.md'), 'utf8')
   const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/)
   expect(match).not.toBeNull()
   return { body: match![2]!, frontmatter: parseYaml(match![1]!) as Record<string, any> }
@@ -118,5 +119,50 @@ describe('rsp-manage research candidate', () => {
     finally {
       rmSync(outputRoot, { force: true, recursive: true })
     }
+  })
+})
+
+describe('rsp-manage product Skill', () => {
+  it('is compact, portable, explicit-only, and distinct from retained research', () => {
+    const { body, frontmatter } = readSkill(product)
+
+    expect(frontmatter).toMatchObject({
+      name: 'rsp-manage',
+      license: 'MIT',
+      metadata: { author: 'oevery', version: expect.stringMatching(/^\d{4}\.\d{2}\.\d{2}(?:\.\d+)?$/) },
+    })
+    expect(body.trim().split(/\s+/).length).toBeLessThanOrEqual(600)
+    expect(lstatSync(join(product, 'SKILL.md')).isSymbolicLink()).toBe(false)
+    expect(body).toContain('only after the user explicitly requests managed continuation')
+    expect(body).toContain('Keep RSP artifacts as durable truth and process data transient')
+    expect(readFileSync(join(candidate, 'SKILL.md'), 'utf8')).not.toBe(readFileSync(join(product, 'SKILL.md'), 'utf8'))
+  })
+
+  it('declines ordinary work without controller overhead', () => {
+    const { body } = readSkill(product)
+
+    expect(body).toContain('A small single slice, tightly coupled scopes, or host worker availability alone is ineligible')
+    expect(body).toContain('make no mutation, create no dispatch envelope, receipt, budget, or controller state')
+    expect(body).toContain('return the exact Core or Discipline next action without executing it')
+  })
+
+  it('bounds authority reads, dispatch, correction, and verification', () => {
+    const { body } = readSkill(product)
+
+    expect(body).toContain('Snapshot the user authority')
+    expect(body).toContain('Send an internal compact envelope only to a worker that will execute an eligible slice')
+    expect(body).toContain('at most four worker dispatches and one corrective retry')
+    expect(body).toContain('choose the cheapest decisive focused check')
+    expect(body).toContain('Run at most one broader integration gate')
+    expect(body).toContain('reread stable authority only during interruption recovery or when evidenced authority or worktree drift')
+  })
+
+  it('keeps process chronology transient and returns only outcome evidence', () => {
+    const { body } = readSkill(product)
+
+    expect(body).toContain('Keep dispatch details, retry history, limits, and process chronology out of Changes, Specs, Decision Records')
+    expect(body).toContain('Return only completed and pending slices, fresh verification, omissions, the real boundary owner, and one next action')
+    expect(body).toContain('Do not expose dispatch, retry, or budget chronology')
+    expect(body).toContain('Archive never grants Git or publication authority')
   })
 })

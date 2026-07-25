@@ -26,7 +26,7 @@ RSP 是 **Reliable Software Practice**：面向人类与 AI agent 的仓库原�
 它采用三层产品模型：
 
 - **Practice**：以可靠、可恢复、证据驱动的软件工程结果作为产品承诺。
-- **Workflow**：通过可组合 Skills 覆盖 shaping、design、diagnosis、TDD、implementation、review、release documentation 与 durable review，并把结果返回已有 owner。
+- **Workflow**：通过可组合 Skills 覆盖 shaping、design、diagnosis、TDD、implementation、review、release documentation 与 durable review，并以显式可选的 managed continuation 处理真正独立的长时 slices；所有结果仍返回已有 owner。
 - **Protocol**：以 Rules、Specs、Plans 为轻量 artifact foundation，提供确定性的项目内文件约定、检查和路由事实。
 
 `Reliable Software Practice` 回答 RSP 是什么；`Rules, Specs, Plans` 解释 RSP 如何在仓库中落地。工作流层不会把派生阶段或 controller state 持久化成第二套权威。
@@ -368,7 +368,13 @@ Continuation 必须包含 WorkRef、authority pointers、current state、changed
 
 普通 Git conflict 不需要独立 RSP Skill。Core 只保留 compact fallback：识别当前 Git operation，理解 base/ours/theirs 语义，保护无关工作，仅解决有证据且在 WorkRef authority 内的内容，并重新验证。缺少证据、涉及无关工作或 owner decision 时停止；resolve authority 不自动包含 stage、continue、abort、commit、push 或 delivery authority。
 
-长时任务选择、代理调度、预算、自动重试、worktree/PR lifecycle 与平台交付仍属于 host 或 external orchestration。它们可以组合 RSP Skills，但不能成为新的 RSP truth owner。
+`rsp-manage` 是这一边界上的可选产品能力，而不是默认 controller。它只在用户显式请求、selected Change ready，且存在真正独立的 mutation/verification slices、长时 continuation 或中断恢复时运行；小型或紧耦合任务直接返回 Core 或对应 Discipline，不创建 envelope、receipt、budget 或 controller state。
+
+符合条件的 managed run 只对实际 worker 发送紧凑内部 envelope，稳定 authority 默认只读取一次，每个 slice 运行 cheapest decisive check，仅在 integration risk 需要时运行一次更宽门禁。dispatch、retry、budget 和过程 chronology 都是 transient state，不进入 Changes、Specs 或最终面向用户的结果；恢复只在 evidence 或 authority drift 时重新读取，并以有限 correction budget fail closed。
+
+长时任务选择、代理调度、worktree/PR lifecycle 与平台交付仍由 host 提供。`rsp-manage` 可以使用这些能力，但不能成为新的 RSP truth owner，也不会授予 mutation、archive、Git、publication、deployment、environment 或 human-acceptance authority。
+
+发布包通过 `rsp skills install` 把调用它的精确包内十个 Skills 复制到项目 `.agents/skills`。安装会先完整预检 package-owned targets，拒绝 symlink 和不支持的 entry，对相同内容保持 no-op，仅在显式 `--force` 时替换内容不同的精确目标，并始终保留无关 Skills；它不创建 manifest 或另一套 durable workflow state。
 
 ## 输出与可观测性
 

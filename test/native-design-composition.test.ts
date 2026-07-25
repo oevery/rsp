@@ -17,9 +17,9 @@ import {
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const skills = ['rsp', 'rsp-shape', 'rsp-design', 'rsp-implement', 'rsp-review']
-const publishedSkills = ['rsp', 'rsp-address-review', 'rsp-design', 'rsp-diagnose', 'rsp-implement', 'rsp-review', 'rsp-shape', 'rsp-tdd']
+const publishedSkills = ['rsp', 'rsp-address-review', 'rsp-design', 'rsp-diagnose', 'rsp-implement', 'rsp-manage', 'rsp-release-docs', 'rsp-review', 'rsp-shape', 'rsp-tdd']
 const realRuns = join(root, 'research', 'evaluations', 'rsp-native-design-composition', '2026-07-22', 'real-runs')
-const retainedRun = join(realRuns, 'device-discovery-boundary-ignore-blocker-template-comments')
+const retainedRun = join(realRuns, 'device-discovery-boundary-rsp-manage-beta-r5')
 const correctedAttempt = join(realRuns, 'device-discovery-boundary-layer-archive-closeout', 'invalid-attempts', 'failed-1784788188154')
 
 function copiedRetainedRun(onTestFinished: (callback: () => void) => void) {
@@ -151,13 +151,18 @@ describe('native-design composition terminal evaluator', () => {
 
   it('requires project-local skills and CLI without global memory or Git delivery', () => {
     const accepted = validateNativeDesignRuntimeIsolation([{ observations: [{
-      command: `sed -n '1,120p' ${skills.map(name => `.agents/skills/${name}/SKILL.md`).join(' ')} && npx --no-install rsp check --focused`,
+      command: `sed -n '1,120p' ${skills.map((name, index) => `${index === 0 ? './' : ''}.agents/skills/${name}/SKILL.md`).join(' ')} && npx --no-install rsp check --focused`,
       kind: 'command',
     }] }])
     const rejected = validateNativeDesignRuntimeIsolation([{ observations: [
       { command: 'npx -y @oevery/rsp check --focused', kind: 'command' },
       { command: 'sed -n 1,80p /Users/person/.agents/skills/rsp-design/SKILL.md', kind: 'command' },
+      { command: 'sed -n 1,80p ../.agents/skills/rsp/SKILL.md ../../.codex/skills/rsp/SKILL.md', kind: 'command' },
+      { command: 'sed -n 1,80p $CODEX_HOME/skills/rsp/SKILL.md $' + '{CODEX_HOME}/skills/rsp/SKILL.md', kind: 'command' },
+      { command: 'sed -n 1,80p $HOME/work/.agents/skills/rsp/SKILL.md $' + '{CODEX_HOME}/nested/skills/rsp/SKILL.md', kind: 'command' },
       { command: 'rg device /Users/person/.codex/memories/MEMORY.md', kind: 'command' },
+      { command: 'rg device ../.codex/memories/MEMORY.md $CODEX_HOME/memories/MEMORY.md', kind: 'command' },
+      { command: 'rg device $HOME/work/.codex/memories/MEMORY.md $' + '{CODEX_HOME}/nested/memories/MEMORY.md', kind: 'command' },
       { command: 'git add . && git commit -m done', kind: 'command' },
       { command: '/bin/zsh -lc "rsp check --focused"', kind: 'command' },
     ] }])

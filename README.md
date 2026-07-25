@@ -4,7 +4,7 @@ English | [简体中文](./README.zh-CN.md)
 
 **A repository-native engineering workflow for humans and AI agents.**
 
-RSP helps turn unclear intent into shaped, implemented, reviewed, and verified software changes while keeping project knowledge durable and work recoverable. Its nine composable Skills guide the engineering journey without introducing hidden workflow state or replacing the project's own files, tools, and authority.
+RSP helps turn unclear intent into shaped, implemented, reviewed, and verified software changes while keeping project knowledge durable and work recoverable. Its ten composable Skills guide the engineering journey without introducing hidden workflow state or replacing the project's own files, tools, and authority.
 
 The workflow rests on a lightweight artifact foundation of **Rules, Specs, and Plans**.
 
@@ -34,17 +34,17 @@ RSP derives the next action from the selected Change, repository evidence, verif
 ## Quick start
 
 ```bash
-npx -y @oevery/rsp init
-npx -y @oevery/rsp doctor
+npx -y @oevery/rsp@3.1.0-beta.0 init
+npx -y @oevery/rsp@3.1.0-beta.0 doctor
 ```
 
 Recommended bootstrap flow:
 
 ```bash
-npx -y @oevery/rsp init --with-project-setup
+npx -y @oevery/rsp@3.1.0-beta.0 init --with-project-setup
 # fill .rsp/changes/project-setup.md
 # fill .rsp/specs/design.md
-npx -y @oevery/rsp doctor
+npx -y @oevery/rsp@3.1.0-beta.0 doctor
 ```
 
 ## Artifact foundation
@@ -149,7 +149,7 @@ Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENT
 
 ## Skills
 
-RSP publishes nine host-neutral Skills for on-demand loading:
+RSP publishes ten host-neutral Skills for on-demand loading:
 
 - `rsp`: setup, workflow, durable review, and archive guidance.
 - `rsp-shape`: shape unclear non-trivial work into one ready Change or justified shallow Group without implementing it; progressively load deep clarification for an explicit rigorous challenge or unresolved high-risk decision, and return material design questions to the same WorkRef.
@@ -160,14 +160,15 @@ RSP publishes nine host-neutral Skills for on-demand loading:
 - `rsp-review`: read-only review of code, document, or mixed Changes against fixed scope and project authority.
 - `rsp-address-review`: dispose fixed review findings, apply only authorized accepted corrections, require fresh verification and report-only re-review, and return a recoverable artifact-scoped continuation when work remains.
 - `rsp-release-docs`: prepare or audit evidence-based changelogs, release notes, and migration notes while adapting to user requirements and repository conventions.
+- `rsp-manage`: continue one explicitly requested focused Change across genuinely independent slices or interruption recovery, while keeping ordinary work direct and orchestration state transient.
 
 Each Skill is independently invocable and returns results to existing project or RSP artifact owners. The suite adds no hidden workflow state or recursive Skill orchestration, and no Skill infers commit, push, or publication authority.
 
 Response language and artifact language are independent. Human-facing response headings, labels, explanations, and conclusions follow the requested response language, response-specific project instructions, then the conversation language. Authorized artifact prose follows the requested artifact language, artifact-specific project instructions, then the existing artifact language, and only then the conversation language. Canonical RSP artifact headings, WorkRef values, paths, commands, identifiers, and machine-consumed values remain unchanged; response labels may retain technical tokens in parentheses but never use them as untranslated labels.
 
-The 3.0 product surface is these nine Skills. Five same-case terminal journeys qualify Shape's progressive depth while preserving owner, environment, and acceptance stops. RSP now owns bounded artifact routing, response-based continuation, and evidence-based release documentation, while long managed orchestration remains an explicit host or external workflow that must reread current RSP artifacts, preserve their ownership, and stop at mutation, Git, publication, environment, or human-decision boundaries. The evaluated `rsp-manage` prototype remains research-only and is not installed or published as an RSP capability; its candidate closeout branch may execute archive only under explicit lifecycle-closeout authority after Core's durable decision.
+The 3.1 beta product surface contains these ten Skills. The optional `rsp-manage` capability activates only on explicit request and only for a focused ready Change with genuinely independent slices, long continuation, or interruption recovery. Small or coupled work returns directly to Core or the selected Discipline without a dispatch envelope. Managed runs keep authority in current project and RSP artifacts, keep process chronology transient, use bounded verification, and stop at mutation, lifecycle, Git, publication, environment, or human-decision boundaries.
 
-For a complete tracked change, compose the suite as evidence requires: `rsp-shape` returns an executable Change and sends one material design question to `rsp-design`; `rsp-design` returns its evidence, recommendation, alternatives, and any authorized planned-design update to the same WorkRef; Core routes unexplained failures to `rsp-diagnose`, explicit or concrete-risk test-first work to `rsp-tdd`, and ordinary evidenced edits to `rsp-implement`; `rsp-review` returns a read-only report; `rsp-address-review` disposes findings and returns accepted corrections through fresh verification and re-review; when a selected Change explicitly owns a confirmed release identity or range and unfinished release documentation, Core routes that work to `rsp-release-docs`, which turns one evidence ledger into distinct changelog, release-note, and migration surfaces without inferring publication authority; and `rsp` routes implemented current facts, lasting rationale, project-owned context or instructions, and temporary continuation to their existing semantic owners before archive. Each discipline returns to its existing owner. Ambiguity, failed gates, missing authority, and out-of-scope Git conflicts stop at that owner; no Skill infers Git continuation, commit, delivery, or an automatic retry loop.
+For a complete tracked change, compose the suite as evidence requires: `rsp-shape` returns an executable Change and sends one material design question to `rsp-design`; `rsp-design` returns its evidence, recommendation, alternatives, and any authorized planned-design update to the same WorkRef; Core routes unexplained failures to `rsp-diagnose`, explicit or concrete-risk test-first work to `rsp-tdd`, and ordinary evidenced edits to `rsp-implement`; `rsp-review` returns a read-only report; `rsp-address-review` disposes findings and returns accepted corrections through fresh verification and re-review; when a selected Change explicitly owns a confirmed release identity or range and unfinished release documentation, Core routes that work to `rsp-release-docs`, which turns one evidence ledger into distinct changelog, release-note, and migration surfaces without inferring publication authority; and `rsp` routes implemented current facts, lasting rationale, project-owned context or instructions, and temporary continuation to their existing semantic owners before archive. Use `rsp-manage` only when the user explicitly requests managed continuation and the work qualifies for bounded independent dispatch. Each discipline returns to its existing owner. Ambiguity, failed gates, missing authority, and out-of-scope Git conflicts stop at that owner; no Skill infers Git continuation, commit, delivery, or an automatic retry loop.
 
 Reading guidance:
 
@@ -182,6 +183,7 @@ Reading guidance:
 - `skills/rsp-review/SKILL.md`: read-only review guidance
 - `skills/rsp-address-review/SKILL.md`: review finding disposition, correction, re-review, and recovery guidance
 - `skills/rsp-release-docs/SKILL.md`: evidence-based changelog, release-note, and migration guidance
+- `skills/rsp-manage/SKILL.md`: explicit bounded continuation across independent slices
 
 Surface matrix:
 
@@ -198,37 +200,28 @@ Surface matrix:
 | `skills/rsp-review/SKILL.md` | Agents | Read-only Code and Document review |
 | `skills/rsp-address-review/SKILL.md` | Agents | Resolve review findings and return a recoverable continuation |
 | `skills/rsp-release-docs/SKILL.md` | Agents | Prepare or audit convention-compatible release documentation |
+| `skills/rsp-manage/SKILL.md` | Agents | Continue eligible independent slices only after explicit invocation |
 | `AGENTS.md` | Humans and agents | Scoped project instructions and RSP navigation |
 
 Humans should usually start with `README.md`; agents should follow nearest `AGENTS.md`, load the `rsp` skill when available, and use `.rsp/rsp-rules.md` only as fallback.
 
-When this README shows `rsp <command>`, it assumes the command is already available in your environment. Otherwise use `npx -y @oevery/rsp <command>`.
+When this README shows `rsp <command>`, it assumes the command is already available in your environment. For this opt-in beta, otherwise use the exact `npx -y @oevery/rsp@3.1.0-beta.0 <command>` identity after publication; stable users can keep using the unversioned package entrypoint for npm `latest`.
 
-Example optional installation flow for the suite:
-
-```bash
-npx skills add oevery/rsp
-```
-
-Install only one capability when preferred:
+Install the exact package-bundled suite into the current project:
 
 ```bash
-npx skills add oevery/rsp --skill rsp
-npx skills add oevery/rsp --skill rsp-shape
-npx skills add oevery/rsp --skill rsp-design
-npx skills add oevery/rsp --skill rsp-implement
-npx skills add oevery/rsp --skill rsp-diagnose
-npx skills add oevery/rsp --skill rsp-tdd
-npx skills add oevery/rsp --skill rsp-review
-npx skills add oevery/rsp --skill rsp-address-review
-npx skills add oevery/rsp --skill rsp-release-docs
+rsp skills install --dry-run
+rsp skills install
 ```
 
-`rsp update` refreshes project-local RSP files only. If you use published RSP Skills, refresh them separately after upgrading:
+The command preflights all ten package-owned targets, leaves unrelated `.agents/skills` entries untouched, and requires explicit `--force` before replacing a divergent package-owned directory. It installs from the package that invoked `rsp`, so prerelease dogfooding can use one exact npm identity after publication:
 
 ```bash
-npx skills add oevery/rsp
+npx -y @oevery/rsp@3.1.0-beta.0 skills install --dry-run
+npx -y @oevery/rsp@3.1.0-beta.0 skills install
 ```
+
+These registry commands remain unavailable until `3.1.0-beta.0` is published. `rsp update` refreshes RSP-managed project files only; run `rsp skills install` separately to refresh the package-owned Skill suite.
 
 ## Migrating from 2.x
 
@@ -279,8 +272,8 @@ Durable review makes two independent semantic choices: whether current facts or 
 
 New project:
 
-1. `npx -y @oevery/rsp init`
-2. Prefer `npx -y @oevery/rsp init --with-project-setup`, or run `rsp create project-setup` manually
+1. `npx -y @oevery/rsp@3.1.0-beta.0 init`
+2. Prefer `npx -y @oevery/rsp@3.1.0-beta.0 init --with-project-setup`, or run `rsp create project-setup` manually
 3. Fill `.rsp/specs/design.md`
 4. Use `rsp add spec <name>` only when a new durable project doc is needed
 5. Keep lasting rationale in the configured Decision Record directory and stable scoped operating instructions in the nearest project-owned `AGENTS.md`
@@ -293,14 +286,14 @@ New project:
 
 Existing project with a rich `AGENTS.md`:
 
-1. `npx -y @oevery/rsp init`
+1. `npx -y @oevery/rsp@3.1.0-beta.0 init`
 2. Keep the managed block thin
 3. Move durable design into `.rsp/specs/design.md`
 4. Use `rsp add spec <name>` only when another durable current-fact document is needed
 
 AI-assisted setup:
 
-1. `npx -y @oevery/rsp init --agents-mode print --with-project-setup`
+1. `npx -y @oevery/rsp@3.1.0-beta.0 init --agents-mode print --with-project-setup`
 2. Keep the managed block as generated and adapt only the surrounding human-owned content if needed
 3. Have the AI review and fill `.rsp/changes/project-setup.md`
 4. Have the AI fill `.rsp/specs/design.md`
@@ -313,6 +306,8 @@ rsp init --agents-mode <mode>   Scaffold .rsp/ and ensure AGENTS.md contains the
 rsp init --with-project-setup   Also create .rsp/changes/project-setup.md
 rsp update                      Refresh the fallback protocol, repair the AGENTS block, and rebuild indices
 rsp ui [--lang auto|en|zh-CN]   Open the read-only interactive dashboard
+rsp skills install [--dry-run] [--force]
+                                  Install the invoking package's ten Skills into .agents/skills
 rsp add spec <name>             Create .rsp/specs/<name>.md and rebuild specs index
 rsp create <name> [summary]     Create .rsp/changes/<name>.md; add --lite for a shorter template
 rsp group create <name> [goal] Create an unfocused .rsp/changes/<name>/00-brief.md

@@ -11,7 +11,7 @@ import { ensureManagedFile, inspectManagedDirectory, inspectManagedFile, writeMa
 import { buildArchiveIndex } from './archive-index.js'
 import { buildSpecsIndex } from './specs-index.js'
 
-const SKILL_REFRESH_HINT = '  Note: if you use the published RSP skill, refresh it too:\n    npx skills add oevery/rsp\n'
+const SKILL_REFRESH_HINT = '  Note: if you use package-bundled RSP Skills, refresh them too:\n    rsp skills install --dry-run\n    rsp skills install --force\n'
 
 export interface UpdateOptions {
   quiet?: boolean

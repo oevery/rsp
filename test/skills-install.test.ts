@@ -1,0 +1,243 @@
+import { spawnSync } from 'node:child_process'
+import { randomUUID } from 'node:crypto'
+import { copyFileSync, cpSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs'
+import { rename as fsRename, mkdir, readdir, readFile, rm, symlink, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { afterAll, afterEach, describe, expect, it } from 'vitest'
+import { installPackagedSkills } from '../src/commands/skills.js'
+
+const repoRoot = fileURLToPath(new URL('..', import.meta.url))
+const cliCacheRoot = join(repoRoot, '.cache')
+mkdirSync(cliCacheRoot, { recursive: true })
+const cliPackageRoot = mkdtempSync(join(cliCacheRoot, 'rsp-skills-package-'))
+cpSync(join(repoRoot, 'dist'), join(cliPackageRoot, 'dist'), { recursive: true })
+cpSync(join(repoRoot, 'skills'), join(cliPackageRoot, 'skills'), { recursive: true })
+copyFileSync(join(repoRoot, 'package.json'), join(cliPackageRoot, 'package.json'))
+const cli = join(cliPackageRoot, 'dist', 'cli.mjs')
+const temporaryRoots: string[] = []
+const expectedSkills = [
+  'rsp',
+  'rsp-address-review',
+  'rsp-design',
+  'rsp-diagnose',
+  'rsp-implement',
+  'rsp-manage',
+  'rsp-release-docs',
+  'rsp-review',
+  'rsp-shape',
+  'rsp-tdd',
+]
+
+async function temporaryRoot(label: string): Promise<string> {
+  const root = join(tmpdir(), `${label}-${randomUUID()}`)
+  await mkdir(root, { recursive: true })
+  temporaryRoots.push(root)
+  return root
+}
+
+function runInstall(projectRoot: string, ...args: string[]) {
+  return spawnSync('node', [cli, 'skills', 'install', ...args], {
+    cwd: projectRoot,
+    encoding: 'utf-8',
+  })
+}
+
+async function packagedSkillNames(): Promise<string[]> {
+  const entries = await readdir(join(repoRoot, 'skills'), { withFileTypes: true })
+  return entries.filter(entry => entry.isDirectory() && !entry.name.startsWith('.')).map(entry => entry.name).sort()
+}
+
+async function createTwoSkillFixture(label: string) {
+  const packageRoot = await temporaryRoot(`${label}-package`)
+  const projectRoot = await temporaryRoot(`${label}-project`)
+  for (const name of ['a', 'b']) {
+    await mkdir(join(packageRoot, 'skills', name), { recursive: true })
+    await writeFile(join(packageRoot, 'skills', name, 'SKILL.md'), `package ${name}\n`)
+    await mkdir(join(projectRoot, '.agents', 'skills', name), { recursive: true })
+    await writeFile(join(projectRoot, '.agents', 'skills', name, 'SKILL.md'), `project ${name}\n`)
+  }
+  return { packageRoot, projectRoot }
+}
+
+afterEach(async () => {
+  await Promise.all(temporaryRoots.splice(0).map(root => rm(root, { recursive: true, force: true })))
+})
+
+afterAll(() => {
+  rmSync(cliPackageRoot, { recursive: true, force: true })
+})
+
+describe('rsp skills install', () => {
+  it('installs the complete packaged inventory and is idempotent', async () => {
+    const projectRoot = await temporaryRoot('rsp-skills-install')
+    const unrelated = join(projectRoot, '.agents', 'skills', 'local-tool', 'SKILL.md')
+    await mkdir(join(projectRoot, '.agents', 'skills', 'local-tool'), { recursive: true })
+    await writeFile(unrelated, 'project owned\n')
+
+    const first = runInstall(projectRoot)
+    expect(first.status, first.stderr).toBe(0)
+    const names = await packagedSkillNames()
+    expect(names).toEqual(expectedSkills)
+    expect(first.stdout).toContain(`installed: ${names.join(', ')}`)
+    expect((await readdir(join(projectRoot, '.agents', 'skills'))).sort()).toEqual([...names, 'local-tool'].sort())
+    expect(await readFile(unrelated, 'utf-8')).toBe('project owned\n')
+
+    const second = runInstall(projectRoot)
+    expect(second.status, second.stderr).toBe(0)
+    expect(second.stdout).toContain(`unchanged: ${names.join(', ')}`)
+  })
+
+  it('preflights every target and performs no partial install after a conflict', async () => {
+    const projectRoot = await temporaryRoot('rsp-skills-conflict')
+    const conflicting = join(projectRoot, '.agents', 'skills', 'rsp', 'SKILL.md')
+    await mkdir(join(projectRoot, '.agents', 'skills', 'rsp'), { recursive: true })
+    await writeFile(conflicting, 'project version\n')
+
+    const result = runInstall(projectRoot)
+    expect(result.status).toBe(1)
+    expect(result.stderr).toContain('conflicting packaged Skills: rsp')
+    expect(await readFile(conflicting, 'utf-8')).toBe('project version\n')
+    expect(await readdir(join(projectRoot, '.agents', 'skills'))).toEqual(['rsp'])
+  })
+
+  it('keeps dry-run mutation-free and force replacement bounded to package-owned targets', async () => {
+    const projectRoot = await temporaryRoot('rsp-skills-force')
+    const conflicting = join(projectRoot, '.agents', 'skills', 'rsp', 'SKILL.md')
+    const unrelated = join(projectRoot, '.agents', 'skills', 'local-tool', 'SKILL.md')
+    await mkdir(join(projectRoot, '.agents', 'skills', 'rsp'), { recursive: true })
+    await mkdir(join(projectRoot, '.agents', 'skills', 'local-tool'), { recursive: true })
+    await writeFile(conflicting, 'project version\n')
+    await writeFile(unrelated, 'project owned\n')
+
+    const dryRun = runInstall(projectRoot, '--dry-run')
+    expect(dryRun.status).toBe(1)
+    expect(dryRun.stderr).toContain('conflicting packaged Skills: rsp')
+    expect(await readFile(conflicting, 'utf-8')).toBe('project version\n')
+    expect((await readdir(join(projectRoot, '.agents', 'skills'))).sort()).toEqual(['local-tool', 'rsp'])
+
+    const forcedDryRun = runInstall(projectRoot, '--dry-run', '--force')
+    expect(forcedDryRun.status, forcedDryRun.stderr).toBe(0)
+    expect(forcedDryRun.stdout).toContain('would be replaced: rsp')
+    expect(await readFile(conflicting, 'utf-8')).toBe('project version\n')
+    expect((await readdir(join(projectRoot, '.agents', 'skills'))).sort()).toEqual(['local-tool', 'rsp'])
+
+    const forced = runInstall(projectRoot, '--force')
+    expect(forced.status, forced.stderr).toBe(0)
+    expect(forced.stdout).toContain('replaced: rsp')
+    expect(await readFile(conflicting, 'utf-8')).toBe(await readFile(join(repoRoot, 'skills', 'rsp', 'SKILL.md'), 'utf-8'))
+    expect(await readFile(unrelated, 'utf-8')).toBe('project owned\n')
+  })
+
+  it('rejects symlinked package-owned destinations without writing other targets', async () => {
+    const projectRoot = await temporaryRoot('rsp-skills-destination-symlink')
+    const externalRoot = await temporaryRoot('rsp-skills-destination-external')
+    await mkdir(join(projectRoot, '.agents', 'skills'), { recursive: true })
+    await writeFile(join(externalRoot, 'SKILL.md'), 'external\n')
+    await symlink(externalRoot, join(projectRoot, '.agents', 'skills', 'rsp'))
+
+    const result = runInstall(projectRoot)
+    expect(result.status).toBe(1)
+    expect(result.stderr).toMatch(/unsupported entry.*installed Skill rsp/)
+    expect(await readFile(join(externalRoot, 'SKILL.md'), 'utf-8')).toBe('external\n')
+    expect(await readdir(join(projectRoot, '.agents', 'skills'))).toEqual(['rsp'])
+  })
+
+  it('rejects symlinked entries in a packaged Skill tree', async () => {
+    const packageRoot = await temporaryRoot('rsp-skills-source-package')
+    const projectRoot = await temporaryRoot('rsp-skills-source-project')
+    const externalRoot = await temporaryRoot('rsp-skills-source-external')
+    await mkdir(join(packageRoot, 'skills', 'rsp'), { recursive: true })
+    await writeFile(join(packageRoot, 'skills', 'rsp', 'SKILL.md'), 'rsp\n')
+    await writeFile(join(externalRoot, 'secret.md'), 'secret\n')
+    await symlink(join(externalRoot, 'secret.md'), join(packageRoot, 'skills', 'rsp', 'linked.md'))
+
+    await expect(installPackagedSkills({}, { packageRoot, projectRoot })).rejects.toThrow(/unsupported entry.*linked\.md/)
+    await expect(readdir(projectRoot)).resolves.toEqual([])
+  })
+
+  it('rejects a parent symlink introduced after preflight without writing through it', async () => {
+    const packageRoot = await temporaryRoot('rsp-skills-parent-drift-package')
+    const projectRoot = await temporaryRoot('rsp-skills-parent-drift-project')
+    const externalRoot = await temporaryRoot('rsp-skills-parent-drift-external')
+    await mkdir(join(packageRoot, 'skills', 'rsp'), { recursive: true })
+    await writeFile(join(packageRoot, 'skills', 'rsp', 'SKILL.md'), 'rsp\n')
+
+    await expect(installPackagedSkills({}, {
+      packageRoot,
+      projectRoot,
+      async onMutationStep(step) {
+        if (step.phase === 'before-target-root-mutation')
+          await symlink(externalRoot, join(projectRoot, '.agents'))
+      },
+    })).rejects.toThrow(/project Skills root must be a real directory/)
+
+    await expect(readdir(externalRoot)).resolves.toEqual([])
+  })
+
+  it('restores every original Skill after the second activation fails', async () => {
+    const { packageRoot, projectRoot } = await createTwoSkillFixture('rsp-skills-activation-failure')
+
+    await expect(installPackagedSkills({ force: true }, {
+      packageRoot,
+      projectRoot,
+      async renamePath(source, destination) {
+        if (source.includes('/next/b') && destination.endsWith('/b'))
+          throw new Error('injected second activation failure')
+        await fsRename(source, destination)
+      },
+    })).rejects.toThrow('injected second activation failure')
+
+    expect(await readFile(join(projectRoot, '.agents', 'skills', 'a', 'SKILL.md'), 'utf8')).toBe('project a\n')
+    expect(await readFile(join(projectRoot, '.agents', 'skills', 'b', 'SKILL.md'), 'utf8')).toBe('project b\n')
+    expect((await readdir(join(projectRoot, '.agents', 'skills'))).some(name => name.startsWith('.rsp-skills-install-'))).toBe(false)
+  })
+
+  it('retains recoverable originals and continues rollback when a restore target is occupied', async () => {
+    const { packageRoot, projectRoot } = await createTwoSkillFixture('rsp-skills-rollback-occupied')
+
+    await expect(installPackagedSkills({ force: true }, {
+      packageRoot,
+      projectRoot,
+      async renamePath(source, destination) {
+        if (source.includes('/next/b') && destination.endsWith('/b'))
+          throw new Error('injected second activation failure')
+        await fsRename(source, destination)
+      },
+      async onMutationStep(step) {
+        if (step.phase === 'before-rollback-restore' && step.name === 'b') {
+          await mkdir(step.target)
+          await writeFile(join(step.target, 'SKILL.md'), 'concurrent b\n')
+        }
+      },
+    })).rejects.toThrow(/rollback incomplete; recover original Skills from .*\/previous/)
+
+    expect(await readFile(join(projectRoot, '.agents', 'skills', 'a', 'SKILL.md'), 'utf8')).toBe('project a\n')
+    expect(await readFile(join(projectRoot, '.agents', 'skills', 'b', 'SKILL.md'), 'utf8')).toBe('concurrent b\n')
+    const staging = (await readdir(join(projectRoot, '.agents', 'skills'))).find(name => name.startsWith('.rsp-skills-install-'))
+    expect(staging).toBeDefined()
+    expect(await readFile(join(projectRoot, '.agents', 'skills', staging!, 'previous', 'b', 'SKILL.md'), 'utf8')).toBe('project b\n')
+  })
+
+  it('retains recoverable originals and continues rollback after a restore rename failure', async () => {
+    const { packageRoot, projectRoot } = await createTwoSkillFixture('rsp-skills-rollback-rename-failure')
+
+    await expect(installPackagedSkills({ force: true }, {
+      packageRoot,
+      projectRoot,
+      async renamePath(source, destination) {
+        if (source.includes('/next/b') && destination.endsWith('/b'))
+          throw new Error('injected second activation failure')
+        if (source.includes('/previous/b') && destination.endsWith('/b'))
+          throw new Error('injected restore rename failure')
+        await fsRename(source, destination)
+      },
+    })).rejects.toThrow(/rollback incomplete; recover original Skills from .*injected restore rename failure/)
+
+    expect(await readFile(join(projectRoot, '.agents', 'skills', 'a', 'SKILL.md'), 'utf8')).toBe('project a\n')
+    const staging = (await readdir(join(projectRoot, '.agents', 'skills'))).find(name => name.startsWith('.rsp-skills-install-'))
+    expect(staging).toBeDefined()
+    expect(await readFile(join(projectRoot, '.agents', 'skills', staging!, 'previous', 'b', 'SKILL.md'), 'utf8')).toBe('project b\n')
+  })
+})

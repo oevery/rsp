@@ -9,10 +9,10 @@ import { fileURLToPath } from 'node:url'
 import { parse as parseYaml } from 'yaml'
 
 const CASE_ID = 'device-discovery-boundary'
-const RETAINED_RUN_ID = `${CASE_ID}-ignore-blocker-template-comments`
+const RETAINED_RUN_ID = `${CASE_ID}-rsp-manage-beta-r5`
 const PHASES = ['design', 'implement', 'review', 'durable']
 const SKILLS = ['rsp', 'rsp-shape', 'rsp-design', 'rsp-implement', 'rsp-review']
-const PUBLISHED_SKILLS = ['rsp', 'rsp-address-review', 'rsp-design', 'rsp-diagnose', 'rsp-implement', 'rsp-review', 'rsp-shape', 'rsp-tdd']
+const PUBLISHED_SKILLS = ['rsp', 'rsp-address-review', 'rsp-design', 'rsp-diagnose', 'rsp-implement', 'rsp-manage', 'rsp-release-docs', 'rsp-review', 'rsp-shape', 'rsp-tdd']
 const PACKAGE_BEHAVIOR_FILES = ['bin/rsp.mjs', 'dist/cli.mjs', 'rules/rsp-rules.md']
 const EVALUATION_PATH = ['research', 'evaluations', 'rsp-native-design-composition', '2026-07-22']
 const DURABLE_ARTIFACT = 'durable-artifact.md'
@@ -202,9 +202,9 @@ export function validateNativeDesignRuntimeIsolation(phases) {
   if (/(?:^|[;&|\n]\s*|["']\s*)rsp\s+(?:status|check|init|focus|create|archive|group)\b/imu.test(body)) {
     violations.push('unqualified-rsp-cli')
   }
-  if (/\/(?:Users\/[^/]+\/)?\.(?:agents|codex)\/skills\//i.test(body))
+  if (/(?:^|[\s"'=(])(?:\/(?:[^/\s"';&|]+\/)*\.(?:agents|codex)\/skills\/|(?:\.\.\/)+(?:[^/\s"';&|]+\/)*\.(?:agents|codex)\/skills\/|(?:~|\$HOME|\$\{HOME\})\/(?:[^/\s"';&|]+\/)*\.(?:agents|codex)\/skills\/|(?:\$CODEX_HOME|\$\{CODEX_HOME\})\/(?:[^/\s"';&|]+\/)*skills\/)/imu.test(body))
     violations.push('global-skill-read')
-  if (/\/(?:Users\/[^/]+\/)?\.codex\/memories\//i.test(body))
+  if (/(?:^|[\s"'=(])(?:\/(?:[^/\s"';&|]+\/)*\.codex\/memories\/|(?:\.\.\/)+(?:[^/\s"';&|]+\/)*\.codex\/memories\/|(?:~|\$HOME|\$\{HOME\})\/(?:[^/\s"';&|]+\/)*\.codex\/memories\/|(?:\$CODEX_HOME|\$\{CODEX_HOME\})\/(?:[^/\s"';&|]+\/)*memories\/)/imu.test(body))
     violations.push('global-memory-read')
   if (/\bgit\s+(?:add|commit|push|merge|rebase|cherry-pick)\b/i.test(body))
     violations.push('git-delivery')

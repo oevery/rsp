@@ -1,11 +1,22 @@
 # Changelog
 
-## 3.1.0 (Unreleased)
+## 3.1.0-beta.0 (Unreleased)
 
 - **Breaking:** Raise the minimum runtime from Node.js 18 to Node.js 22.
+- Reposition the product as Reliable Software Practice: `Rules, Specs, Plans` remains the lightweight repository-native artifact foundation rather than the whole product identity.
 - Add a read-only Ink dashboard for bare interactive `rsp` and explicit `rsp ui`, with responsive Change/Group navigation, filtering, detail, refresh, terminal cleanup, and TUI-only English/Simplified Chinese localization.
-- Keep automation on deterministic command paths: non-interactive bare `rsp` prints help, `rsp status` remains static human output, and `rsp status --json` retains the 3.0 machine contract without loading Ink, React, or Yoga.
-- Improve dense plain status output with focused/open/prerequisite terminology, stacked long WorkRefs, completed-work guidance, and deduplicated blockers.
+- Add bounded archive browsing through `rsp history` and a lazy History scope in the dashboard, with deterministic filtering, stable archive identities, structured detail, and fail-closed diagnostics.
+- Add `--json --compact` to the JSON-producing inspection commands and expose the derived dependency graph under the stable `status --json` plan contract while keeping ordinary command paths free of Ink, React, and Yoga.
+- Improve dense plain status output with a dependency forest, focused/open/prerequisite terminology, stacked long WorkRefs, completed-work guidance, deduplicated blockers, and explicit next actions.
+- Separate deterministic readiness from semantic durable review and archive guidance: Core or a human owns the archive recommendation, while archive never grants Git delivery or publication authority.
+- Add the explicit-only `rsp-manage` Skill for bounded continuation across genuinely independent slices. Ineligible work returns to the direct Core or Discipline path; eligible work keeps dispatch and retry chronology transient and preserves explicit mutation, lifecycle, Git, publication, environment, and human-acceptance boundaries.
+- Add `rsp skills install [--dry-run] [--force]` to install all ten Skills from the exact package that invoked the CLI into `.agents/skills`, with deterministic preflight, idempotence, conflict-safe replacement, symlink rejection, and preservation of unrelated Skills.
+- Refine workflow guidance so Changes retain only converged plans and decisive evidence, tests are kept only for distinct lasting confidence, and temporary probes, command transcripts, correction chronology, and AI-centric process prose stay out of durable artifacts.
+- Ignore well-formed Markdown HTML comments when deriving `Blockers` and prerequisite edges, while keeping incomplete comments fail-closed and omitting blocker-syntax guidance comments from generated Changes.
+
+This prerelease has only local tarball, clean-install, and npm-exec validation until separately authorized publication; registry-resolved `npx`, the npm `beta` dist-tag, and boats-cloud integration remain unverified. Local preparation does not change npm `latest`. Users upgrading directly from 2.x must first follow the [3.0 migration guide](docs/migrations/3.0.md).
+
+See the [3.1.0-beta.0 release notes](docs/releases/3.1.0-beta.0.md).
 
 ## 3.0.0 (2026-07-23)
 

@@ -4,7 +4,7 @@ summary: Completed RSP changes.
 kind: generated-index
 index_type: archives
 source_dir: .rsp/archives
-entry_count: 77
+entry_count: 81
 ---
 
 # Archive Index
@@ -78,6 +78,10 @@ entry_count: 77
 | 2026-07-21 | minimum-skill-suite/simplify-native-skills | refactor | Restore a gap-driven path from upstream distillation to concise RSP-native Skills. |
 | 2026-07-21 | minimum-skill-suite/validate-native-skill-depth | refactor | Preserve valuable complex shaping branches without bloating runtime context, and validate both concise native Skills on real mutation work. |
 | 2026-07-21 | minimum-skill-suite/validate-skill-composition | feature | Prove the minimum Skill Suite composes through existing RSP artifacts before 3.0 release. |
+| 2026-07-25 | rsp-manage-beta/brief | group | — |
+| 2026-07-25 | rsp-manage-beta/install-packaged-skills | feature | Let one exact RSP npm package safely install its bundled Skills into a project's `.agents/skills`. |
+| 2026-07-25 | rsp-manage-beta/prepare-beta-package | ops | Prepare a locally verified `@oevery/rsp@3.1.0-beta.0` artifact and complete net-release communication for separately authorized npm beta publication. |
+| 2026-07-25 | rsp-manage-beta/productize-controller | feature | Promote a compact, explicit-only `rsp-manage` Skill for low-overhead continuation across genuinely independent slices. |
 | 2026-07-22 | rsp-native-design-and-artifacts/brief | group | — |
 | 2026-07-22 | rsp-native-design-and-artifacts/promote-rsp-design | feature | Promote a concise `rsp-design` discipline for resolving tracked domain, module, and evidence-seeking design questions. |
 | 2026-07-22 | rsp-native-design-and-artifacts/strengthen-artifact-continuation | feature | Make durable artifact writing, bounded continuation, and safe Git-conflict fallback explicit RSP-native behavior. |

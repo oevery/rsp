@@ -2111,7 +2111,8 @@ describe('init and doctor', () => {
     const output = execSync(`node ${cliPath()} update`, { cwd: updateDir, encoding: 'utf-8' })
     const agents = await readFile(join(updateDir, 'AGENTS.md'), 'utf-8')
     expect(agents).toContain('<!-- rsp:begin -->')
-    expect(output).toContain('npx skills add oevery/rsp')
+    expect(output).toContain('rsp skills install --dry-run')
+    expect(output).toContain('rsp skills install --force')
   })
 
   it('recreates AGENTS.md during update without writing [object Promise]', async () => {
@@ -2275,7 +2276,8 @@ describe('init and doctor', () => {
     const output = execSync(`node ${cliPath()} update`, { cwd: updateDir, encoding: 'utf-8' })
 
     expect(output).toContain('Already up to date.')
-    expect(output).toContain('npx skills add oevery/rsp')
+    expect(output).toContain('rsp skills install --dry-run')
+    expect(output).toContain('rsp skills install --force')
   })
 
   it('reports invalid archive naming conventions using change wording', async () => {

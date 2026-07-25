@@ -14,6 +14,7 @@ import { showHistory } from './commands/history.js'
 import { initProject } from './commands/init.js'
 import { showReady } from './commands/ready.js'
 import { showChange } from './commands/show.js'
+import { installPackagedSkills, printSkillInstallResult } from './commands/skills.js'
 import { showStatus } from './commands/status.js'
 import { updateProject } from './commands/update.js'
 import { getVersion } from './core/config.js'
@@ -334,6 +335,42 @@ const updateCommand = defineCommand({
   },
 })
 
+const skillsInstallCommand = defineCommand({
+  meta: {
+    name: 'install',
+    description: 'Install this package\'s bundled Skills into .agents/skills',
+  },
+  args: {
+    'dry-run': {
+      type: 'boolean',
+      description: 'Preflight all packaged Skills without changing files',
+      default: false,
+    },
+    'force': {
+      type: 'boolean',
+      description: 'Replace divergent package-owned Skill directories',
+      default: false,
+    },
+  },
+  async run({ args }: { args: { 'dry-run': boolean, 'force': boolean } }) {
+    const result = await installPackagedSkills({
+      dryRun: Boolean(args['dry-run']),
+      force: Boolean(args.force),
+    })
+    printSkillInstallResult(result, Boolean(args['dry-run']))
+  },
+})
+
+const skillsCommand = defineCommand({
+  meta: {
+    name: 'skills',
+    description: 'Manage package-bundled project Skills',
+  },
+  subCommands: {
+    install: skillsInstallCommand,
+  },
+})
+
 const doctorCommand = defineCommand({
   meta: {
     name: 'doctor',
@@ -547,6 +584,7 @@ export async function runCli(rawArgs = process.argv.slice(2)) {
       check: checkCommand,
       update: updateCommand,
       doctor: doctorCommand,
+      skills: skillsCommand,
     },
   })
 
