@@ -96,7 +96,6 @@ export function validateCurrentNativeDesignArtifact(root, packageEvidence) {
     executed_skills_match: executedSkillsMatch,
     inventory_matches: inventoryMatches,
     passed: current.name === packageEvidence?.name
-      && current.version === packageEvidence?.version
       && executedSkillsMatch
       && inventoryMatches
       && publishedSkillsMatch

@@ -106,6 +106,17 @@ describe('native-design composition terminal evaluator', () => {
     expect(validateCurrentNativeDesignArtifact(root, incompleteInventory).passed).toBe(false)
   })
 
+  it('keeps retained behavior evidence valid across release-only version changes', () => {
+    const metadata = JSON.parse(readFileSync(join(retainedRun, 'metadata.json'), 'utf8')) as { package: Record<string, any> }
+    const differentReleaseIdentity = structuredClone(metadata.package)
+    differentReleaseIdentity.version = '999.0.0-release-only'
+
+    const accepted = validateCurrentNativeDesignArtifact(root, differentReleaseIdentity)
+
+    expect(accepted.passed).toBe(true)
+    expect(accepted.current.version).not.toBe(differentReleaseIdentity.version)
+  })
+
   it('fails closed when a package behavior file drifts', () => {
     const metadata = JSON.parse(readFileSync(join(retainedRun, 'metadata.json'), 'utf8')) as { package: Record<string, any> }
     const driftedBehaviorFile = structuredClone(metadata.package)
