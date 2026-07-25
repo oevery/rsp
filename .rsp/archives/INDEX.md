@@ -4,7 +4,7 @@ summary: Completed RSP changes.
 kind: generated-index
 index_type: archives
 source_dir: .rsp/archives
-entry_count: 82
+entry_count: 83
 ---
 
 # Archive Index
@@ -53,6 +53,7 @@ entry_count: 82
 | 2026-07-24 | ignore-blocker-template-comments | fix | Ignore non-semantic template comments when deriving Blockers |
 | 2026-07-24 | reduce-test-and-artifact-noise | fix | Make ordinary implementation and compact artifact updates the default while retaining tests and durable prose only when they provide distinct long-term value. |
 | 2026-07-25 | decouple-retained-evidence-release-identity | fix | Retained native-composition evidence remains reusable across release-only version changes while continuing to fail closed on evaluated behavior drift. |
+| 2026-07-25 | harden-release-finalization-boundary | fix | Prevent pre-publication state and transient credentials from leaking into public release documentation, and correct the published beta.0 repository surfaces without rewriting its immutable artifacts. |
 | 2026-07-21 | 3-0-skill-readiness/brief | group | — |
 | 2026-07-21 | 3-0-skill-readiness/close-review-resolution-handoff | feature | Add a host-neutral review-resolution capability that disposes fixed findings, corrects accepted findings under explicit authority, requires verification and re-review, and returns a recoverable handoff when interrupted. |
 | 2026-07-21 | 3-0-skill-readiness/integrate-diagnosis-tdd-routing | feature | Add deterministic, host-neutral routing from implementation evidence to diagnosis, TDD, or ordinary implementation. |

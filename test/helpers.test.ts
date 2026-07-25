@@ -287,7 +287,7 @@ describe('documentation command examples', () => {
 
     const custom = metadata.metadata as Record<string, unknown>
     expect(custom.author).toBe('oevery')
-    expect(custom.version).toBe('2026.07.24.1')
+    expect(custom.version).toBe('2026.07.25.1')
     expect(Object.values(custom).every(value => typeof value === 'string')).toBe(true)
     expect(custom.version).toMatch(/^\d{4}\.\d{2}\.\d{2}(?:\.\d+)?$/)
   })
@@ -302,15 +302,17 @@ describe('documentation command examples', () => {
 
   it('explains npx usage in the README', () => {
     const root = fileURLToPath(new URL('..', import.meta.url))
+    const packageJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf-8')) as { version: string }
     const readme = readFileSync(join(root, 'README.md'), 'utf-8')
     const chineseReadme = readFileSync(join(root, 'README.zh-CN.md'), 'utf-8')
-    expect(readme).toContain('otherwise use the exact `npx -y @oevery/rsp@3.1.0-beta.0 <command>` identity after publication')
-    expect(readme).toContain('npx -y @oevery/rsp@3.1.0-beta.0 init')
+    expect(readme).toContain('For opt-in beta evaluation, pin the exact prerelease identity')
+    expect(readme).toContain(`npx -y @oevery/rsp@${packageJson.version} init`)
     expect(readme).toContain('rsp skills install --dry-run')
-    expect(readme).toContain('npx -y @oevery/rsp@3.1.0-beta.0 skills install')
+    expect(readme).toContain(`npx -y @oevery/rsp@${packageJson.version} skills install`)
     expect(readme).toContain('suggest `npx -y @oevery/rsp create <name>` for tracked work')
-    expect(chineseReadme).toContain('npx -y @oevery/rsp@3.1.0-beta.0 <command>')
-    expect(chineseReadme).toContain('npx -y @oevery/rsp@3.1.0-beta.0 init')
+    expect(chineseReadme).toContain('进行 opt-in beta 评估时，应固定精确 prerelease 身份')
+    expect(chineseReadme).toContain(`npx -y @oevery/rsp@${packageJson.version} <command>`)
+    expect(chineseReadme).toContain(`npx -y @oevery/rsp@${packageJson.version} init`)
     expect(chineseReadme).toContain('suggest `npx -y @oevery/rsp create <name>` for tracked work')
   })
 
@@ -343,7 +345,7 @@ describe('documentation command examples', () => {
     expect(skill).toContain('only when the user explicitly wants RSP tracking for a small, straightforward change')
     expect(skill).toContain('metadata:')
     expect(skill).toContain('author: oevery')
-    expect(skill).toContain('version: "2026.07.24.1"')
+    expect(skill).toContain('version: "2026.07.25.1"')
     expect(skill).toContain('Resolve executable Change names as either `<change>` or one direct `<group>/<change>` child.')
     expect(skill).toContain('Treat logical `<group>/brief`, physically stored as `<group>/00-brief.md`, as non-executable and non-focusable.')
     expect(rules).toContain('With no focus, status uses Group Brief declaration order and derived blockers to recommend the first executable slice.')

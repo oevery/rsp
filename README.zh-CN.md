@@ -190,7 +190,7 @@ RSP 发布十个宿主无关、按需加载的 Skills：
 
 通常应由人先读 `README.md`；agent 应遵循 nearest `AGENTS.md`，可用时加载 `rsp` skill，仅在 skill 不可用时读取 `.rsp/rsp-rules.md`。
 
-如果文档中写的是 `rsp <command>`，默认前提是你的环境里已经能直接运行 `rsp`。对本次 opt-in beta，发布后应使用精确身份 `npx -y @oevery/rsp@3.1.0-beta.0 <command>`；stable 用户仍可使用不带版本的入口获取 npm `latest`。
+如果文档中写的是 `rsp <command>`，默认前提是你的环境里已经能直接运行 `rsp`。进行 opt-in beta 评估时，应固定精确 prerelease 身份，例如 `npx -y @oevery/rsp@3.1.0-beta.0 <command>`；stable 用户仍可使用不带版本的入口获取 npm `latest`。
 
 将当前精确包内置的完整 Skill 套件安装到当前项目：
 
@@ -199,14 +199,14 @@ rsp skills install --dry-run
 rsp skills install
 ```
 
-该命令会预检全部十个 package-owned targets，保留无关的 `.agents/skills` 条目，并且只有显式传入 `--force` 才会替换内容不同的 package-owned 目录。它从调用 `rsp` 的同一个包安装，因此 beta 发布后可以固定精确 npm 身份：
+该命令会预检全部十个 package-owned targets，保留无关的 `.agents/skills` 条目，并且只有显式传入 `--force` 才会替换内容不同的 package-owned 目录。它从调用 `rsp` 的同一个包安装，因此 beta 评估可以固定精确 npm 身份：
 
 ```bash
 npx -y @oevery/rsp@3.1.0-beta.0 skills install --dry-run
 npx -y @oevery/rsp@3.1.0-beta.0 skills install
 ```
 
-在 `3.1.0-beta.0` 实际发布前，上述 registry 命令不可用。`rsp update` 只刷新由 RSP 管理的项目文件；刷新 package-owned Skill 套件需要单独运行 `rsp skills install`。
+精确 prerelease 身份可以避免依赖持续移动的 dist-tag。`rsp update` 只刷新由 RSP 管理的项目文件；刷新 package-owned Skill 套件需要单独运行 `rsp skills install`。
 
 ## 从 2.x 迁移
 

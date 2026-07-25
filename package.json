@@ -37,7 +37,8 @@
   },
   "scripts": {
     "prepare": "pnpm run build",
-    "release:check": "pnpm run build && pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run release:package-check",
+    "release:check": "pnpm run release:metadata-check && pnpm run build && pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run release:package-check",
+    "release:metadata-check": "node scripts/release-metadata-check.mjs",
     "release:package-check": "node scripts/clean-install-check.mjs",
     "prepublishOnly": "pnpm run release:check",
     "build": "tsup",

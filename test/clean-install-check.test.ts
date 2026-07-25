@@ -1,11 +1,12 @@
 import { spawnSync } from 'node:child_process'
-import { chmodSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { chmodSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { delimiter, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
+const packageVersion = (JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as { version: string }).version
 const expectedSkills = [
   'rsp',
   'rsp-address-review',
@@ -31,11 +32,11 @@ describe('clean install package check', () => {
 
       expect(result.status, result.stderr || result.stdout).toBe(0)
       const report = JSON.parse(result.stdout) as Record<string, any>
-      expect(report.package).toBe('@oevery/rsp@3.1.0-beta.0')
+      expect(report.package).toBe(`@oevery/rsp@${packageVersion}`)
       expect(report.entrySmoke).toEqual({
         help: true,
-        version: '3.1.0-beta.0',
-        npmExecVersion: '3.1.0-beta.0',
+        version: packageVersion,
+        npmExecVersion: packageVersion,
         init: true,
         skillsInstall: true,
         skillsInstallIdempotent: true,
@@ -106,6 +107,6 @@ process.exit(result.status ?? 1)
     })
 
     expect(result.status, result.stderr || result.stdout).toBe(0)
-    expect(JSON.parse(result.stdout).package).toBe('@oevery/rsp@3.1.0-beta.0')
+    expect(JSON.parse(result.stdout).package).toBe(`@oevery/rsp@${packageVersion}`)
   }, 120_000)
 })

@@ -1,10 +1,10 @@
 ---
 name: rsp-release-docs
-description: Prepare and audit evidence-based changelogs, release notes, and migration notes. Use when drafting or updating release documentation, reviewing an Unreleased section, summarizing a version range, deciding references or omissions, or checking that release prose matches shipped behavior and repository conventions.
+description: Prepare, finalize, reconcile, and audit evidence-based changelogs, release notes, and migration notes. Use when drafting or updating release documentation, reviewing an Unreleased section, summarizing a version range, deciding references or omissions, checking that release prose matches shipped behavior, finalizing artifacts before an explicit tag or publication request, or reconciling public release surfaces afterward.
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.22.1"
+  version: "2026.07.25.1"
 ---
 
 # RSP Release Docs
@@ -29,12 +29,13 @@ Completion criterion: name the release range, target version or draft state, aud
 ## Select the branch
 
 - **Audit:** inspect existing release prose and return findings without editing.
-- **Prepare:** draft requested artifacts; for a formal release, always include release notes. Update a changelog only when the repository owns one or the user requests one. Include migration guidance whenever users must act.
-- **Finalize:** replace Unreleased markers, dates, comparison links, or draft labels only when the release identity is confirmed.
+- **Draft:** draft requested artifacts while the release identity may still change; for a formal release, always include release notes. Update a changelog only when the repository owns one or the user requests one. Include migration guidance whenever users must act.
+- **Finalize for publication:** with a confirmed release identity and range, make every shipped surface true both immediately before and after publication, then produce a checkable publication handoff. An explicit request to create a tag, GitHub release, registry version, or equivalent public release must pass this branch even when earlier drafts were reviewed. Use the selected release Change before lifecycle closeout or one explicitly named archived release Change afterward; when project authority requires archive before final Git delivery, only the post-archive candidate may receive the final `ready` handoff.
+- **Reconcile published release:** verify the external release against the confirmed identity, repair only authorized mutable public surfaces, and record immutable discrepancies and their remediation owner. Never rewrite a published package or move an existing tag to make evidence appear consistent.
 
-Publication is a separate branch. Preparing prose never grants commit, tag, push, release creation, registry publication, deployment, deletion, or approval authority.
+Publication remains an external action. This Skill never executes commit, tag, push, release creation, registry publication, deployment, deletion, or approval; finalization returns a handoff to the separately authorized operator.
 
-Completion criterion: every requested surface has one disposition: draft, update, audit only, not applicable, or blocked by a named decision.
+Completion criterion: exactly one branch is selected, and every requested surface has one disposition: draft, finalize, reconcile, audit only, not applicable, or blocked by a named decision.
 
 ## Collect evidence
 
@@ -70,6 +71,18 @@ Collapse multiple commits into one outcome. Omit changes added and reverted with
 
 Completion criterion: the ledger describes the net released state rather than commit chronology, and every exclusion is intentional.
 
+## Assign surface lifetime
+
+Classify every release statement by the lifetime and owner of its destination:
+
+- **Shipped surfaces:** public release communication and package metadata captured by the release tag or package, including README content, changelog entries, repository release notes, manifests, and migration guides. Internal workflow records merely present in the source tag, such as archived Changes, remain governed by their own artifact lifetime rather than becoming release prose. Finalized shipped prose must be **publication-invariant**: it remains true before publication, at publication, and afterward. Use the target version and stable comparison target; exclude transient claims such as “not yet published,” “available after publication,” pending authentication, live registry state, or comparisons ending at `HEAD`.
+- **Mutable public surfaces:** hosted release descriptions, registry metadata that can be safely changed, and other public records outside the immutable artifact. Keep their stable narrative aligned with shipped surfaces; add post-publication verification only after observing it.
+- **Transient release state:** pending publication, credentials, command progress, authentication status, and unverified registry availability. Keep it in the selected Change, an authorized release tracker, temporary working ledger, or response handoff—never in shipped prose.
+
+When a published immutable surface is wrong, preserve the historical artifact, state the discrepancy on an authorized mutable surface, and name a corrective follow-up version or owner. Do not manufacture consistency by changing historical evidence.
+
+Completion criterion: every ledger statement has one named surface class and owner, and no transient release state is assigned to a shipped surface.
+
 ## Project the artifacts
 
 Read [output contracts](references/output-contracts.md) before creating a new format, preparing a major or breaking release, or producing more than one surface.
@@ -87,6 +100,35 @@ Write a release-specific narrative for the observed audience. Lead with the most
 State who is affected, required actions in order, changed defaults or removed surfaces, compatibility window, validation steps, and rollback or support path when known. Use a separate guide when the instructions would overwhelm the release notes.
 
 Completion criterion: every statement maps to the ledger, each surface serves its distinct audience and lifetime, and terminology remains consistent across surfaces.
+
+## Finalize for publication
+
+Enter this gate only with a confirmed target version and release range. Inspect the exact public release surfaces and package inventory, not every internal workflow record present in the source tag. When project authority requires archive before final Git delivery, an open Change may prepare these surfaces but the final handoff must rerun against the post-archive candidate ref using the explicitly named archived release Change as authority.
+
+Require all of the following before returning a publication handoff:
+
+- version manifests, changelog heading and date, release-note identity, migration guidance, and exact-version assertions agree on the target version;
+- the target changelog entry is no longer labeled `Unreleased`;
+- stable comparison links terminate at the target tag or immutable release ref rather than `HEAD`;
+- shipped surfaces contain no pending-publication, pending-authentication, or unverified-live-state prose;
+- the package inventory and release checks have been run at the exact candidate revision, with results and omissions named;
+- required lifecycle closeout is already captured by the candidate revision, and the working tree/candidate relationship is explicit, so the operator can tell exactly what the tag and package will contain.
+
+Return a publication handoff containing the target version and immutable candidate ref, required external actions, fresh checks, known omissions, and a clear `ready` or `not ready` result. `ready` means the documentation and candidate are internally eligible for a separately authorized publication operation; it is not publication authority or evidence that publication occurred.
+
+Completion criterion: every gate above has observed evidence or the result is `not ready` with the exact failed gate and owner.
+
+## Reconcile a published release
+
+After publication, observe the tag target, hosted release state, registry version and dist-tags, and exact-version consumer command when applicable. Compare them to the finalization handoff and shipped artifact inventory. Update authorized mutable public surfaces only when their current state is known; keep unknown external facts explicitly unverified. Record immutable drift as a release discrepancy with its corrective version or owner.
+
+Completion criterion: every intended external surface is verified, explicitly unverified, or assigned a discrepancy owner without rewriting immutable release history.
+
+## Protect transient credentials
+
+Treat one-time passwords, browser-auth URLs, device codes, and token-bearing query strings as transient credentials even when they expire or are single-use. Keep them out of release prose, Changes, evidence ledgers, command summaries, retained logs, and final responses. Prefer a CLI-owned interactive browser flow only when it does not copy authentication material into retained agent output. If the command would emit that material into a retained transcript, stop and let the authorized human complete authentication in a trusted local terminal, then resume credential-free verification. The release handoff may state that authentication is required or completed, but never include the credential value or URL.
+
+Completion criterion: retained artifacts contain only credential-free authentication status, and the publication operator owns any interactive authentication outside this Skill.
 
 ## Apply reference policy
 
@@ -113,8 +155,11 @@ Check all of the following:
 - user-visible net outcomes are not fragmented by commit;
 - links, dates, headings, language, and terminology match observed conventions;
 - changelog and release notes agree without becoming copies;
+- every shipped statement is publication-invariant and every transient fact stays with its release-state owner;
+- finalization gates are complete before any explicit tag or publication handoff is marked `ready`;
+- retained artifacts and responses contain no transient credential values or token-bearing URLs;
 - working-tree edits stay within authorized files.
 
 Return the release range, artifacts drafted or changed, coverage and exclusions, unresolved decisions, validation performed, and whether any external release action occurred.
 
-Completion criterion: the result is evidence-complete, convention-compatible, and truthful about omissions and publication state.
+Completion criterion: the result is evidence-complete, convention-compatible, lifetime-correct, credential-safe, and truthful about omissions and publication state.

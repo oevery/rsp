@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.1.0-beta.0 (Unreleased)
+## 3.1.0-beta.0 (2026-07-25)
 
 - **Breaking:** Raise the minimum runtime from Node.js 18 to Node.js 22.
 - Reposition the product as Reliable Software Practice: `Rules, Specs, Plans` remains the lightweight repository-native artifact foundation rather than the whole product identity.
@@ -14,7 +14,7 @@
 - Refine workflow guidance so Changes retain only converged plans and decisive evidence, tests are kept only for distinct lasting confidence, and temporary probes, command transcripts, correction chronology, and AI-centric process prose stay out of durable artifacts.
 - Ignore well-formed Markdown HTML comments when deriving `Blockers` and prerequisite edges, while keeping incomplete comments fail-closed and omitting blocker-syntax guidance comments from generated Changes.
 
-This prerelease has only local tarball, clean-install, and npm-exec validation until separately authorized publication; registry-resolved `npx`, the npm `beta` dist-tag, and boats-cloud integration remain unverified. Local preparation does not change npm `latest`. Users upgrading directly from 2.x must first follow the [3.0 migration guide](docs/migrations/3.0.md).
+This prerelease was published to npm under the `beta` dist-tag and its exact registry-resolved `npx` identity was verified. npm `latest` remained on 2.0.4. Real-project acceptance in boats-cloud remains unverified. Users upgrading directly from 2.x must first follow the [3.0 migration guide](docs/migrations/3.0.md).
 
 See the [3.1.0-beta.0 release notes](docs/releases/3.1.0-beta.0.md).
 

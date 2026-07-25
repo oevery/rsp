@@ -87,6 +87,30 @@ describe('rsp core routing contract', () => {
     expect(fallback).toContain('lifecycle stage, completed implementation, and archive readiness alone are insufficient')
   })
 
+  it('requires a credential-free finalization gate before explicit publication', () => {
+    const body = readFileSync(skillPath, 'utf8')
+
+    expect(body).toContain('explicit request to create a release tag, hosted release, registry publication, or equivalent public release')
+    expect(body).toContain('additional mandatory finalization gate')
+    expect(body).toContain('`rsp-release-docs` **Finalize for publication** branch')
+    expect(body).toContain('either one selected Change or one explicitly named archived release Change')
+    expect(body).toContain('rerun the exact finalization checks against the post-archive candidate ref')
+    expect(body).toContain('public tag/package release surfaces')
+    expect(body).toContain('rejects transient publication-state prose in shipped artifacts')
+    expect(body).toContain('credential-free `ready` or `not ready` handoff')
+    expect(body).toContain('Neither result executes or grants authority for the external action')
+    expect(body).toContain('This gate precedes ordinary no-focus and implementation routing')
+    expect(body.indexOf('If the user explicitly requests a tag, hosted release, registry publication, or published-release reconciliation')).toBeLessThan(body.indexOf('If no Change is selected'))
+  })
+
+  it('reconciles published surfaces without rewriting immutable history', () => {
+    const body = readFileSync(skillPath, 'utf8')
+
+    expect(body).toContain('`rsp-release-docs` **Reconcile published release** branch')
+    expect(body).toContain('unfinished external verification or mutable public-surface corrections')
+    expect(body).toContain('assign a corrective version or owner instead of moving tags or rewriting packages')
+  })
+
   it('routes managed continuation only through an explicit eligibility gate', () => {
     const body = readFileSync(skillPath, 'utf8')
 

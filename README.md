@@ -205,7 +205,7 @@ Surface matrix:
 
 Humans should usually start with `README.md`; agents should follow nearest `AGENTS.md`, load the `rsp` skill when available, and use `.rsp/rsp-rules.md` only as fallback.
 
-When this README shows `rsp <command>`, it assumes the command is already available in your environment. For this opt-in beta, otherwise use the exact `npx -y @oevery/rsp@3.1.0-beta.0 <command>` identity after publication; stable users can keep using the unversioned package entrypoint for npm `latest`.
+When this README shows `rsp <command>`, it assumes the command is already available in your environment. For opt-in beta evaluation, pin the exact prerelease identity, such as `npx -y @oevery/rsp@3.1.0-beta.0 <command>`; stable users can keep using the unversioned package entrypoint for npm `latest`.
 
 Install the exact package-bundled suite into the current project:
 
@@ -214,14 +214,14 @@ rsp skills install --dry-run
 rsp skills install
 ```
 
-The command preflights all ten package-owned targets, leaves unrelated `.agents/skills` entries untouched, and requires explicit `--force` before replacing a divergent package-owned directory. It installs from the package that invoked `rsp`, so prerelease dogfooding can use one exact npm identity after publication:
+The command preflights all ten package-owned targets, leaves unrelated `.agents/skills` entries untouched, and requires explicit `--force` before replacing a divergent package-owned directory. It installs from the package that invoked `rsp`, so prerelease dogfooding can pin one exact npm identity:
 
 ```bash
 npx -y @oevery/rsp@3.1.0-beta.0 skills install --dry-run
 npx -y @oevery/rsp@3.1.0-beta.0 skills install
 ```
 
-These registry commands remain unavailable until `3.1.0-beta.0` is published. `rsp update` refreshes RSP-managed project files only; run `rsp skills install` separately to refresh the package-owned Skill suite.
+Exact prerelease identities avoid depending on a moving dist-tag. `rsp update` refreshes RSP-managed project files only; run `rsp skills install` separately to refresh the package-owned Skill suite.
 
 ## Migrating from 2.x
 
