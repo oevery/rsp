@@ -1,0 +1,48 @@
+{
+  "case_id": "group-waves",
+  "variant": "product",
+  "result": "passed",
+  "original_runner_result": "failed",
+  "rescore_reason": "The original exact-word oracle required the final status to repeat the Chinese word for sequential. Execution events already recorded header then retry sequencing, while the final and worktree proved the shared lockfile stayed unchanged. The retained oracle scores observable behavior instead.",
+  "started_at": "2026-07-25T06:50:56.717Z",
+  "ended_at": "2026-07-25T06:53:14.659Z",
+  "duration_ms": 137942,
+  "model": "gpt-5.6-terra",
+  "provider": "custom",
+  "effort": "low",
+  "sandbox": "workspace-write",
+  "codex": "codex-cli 0.144.6",
+  "exit_code": 0,
+  "timed_out": false,
+  "tool_calls": 8,
+  "usage": {
+    "input_tokens": 412091,
+    "cached_input_tokens": 374016,
+    "output_tokens": 3319,
+    "reasoning_output_tokens": 593
+  },
+  "source_hash": "e77f6e045c574d10b8b39bdf1de1f842d04f3892f63225a62a85b6c8eae3076d",
+  "fixture_manifest_hash": "97c4c44cdc4683875e68f0e62fc20eb9be102363a2619e2becf0d63feffb11a7",
+  "raw_events_hash": "0941172affcb0c4043f73679b5cc81d0a1281c6e2fa5cbd0b7d6397c5a7f4b13",
+  "raw_final_hash": "17e96d1966c88a508f534978aa859fd4da709e451f42580bae46d444b22f389d",
+  "final_hash": "5308b89f4176a7ba8fdacd1d6cdb6ed4d12d6c06ead6f002aa28054101209b01",
+  "output_score": {
+    "expected_missing": [],
+    "forbidden_present": []
+  },
+  "verification": {
+    "command": "npm test",
+    "passed": true,
+    "tests": 7,
+    "failures": 0
+  },
+  "changed_paths": [
+    ".rsp/changes/delivery/header.md",
+    ".rsp/changes/delivery/retry.md",
+    "src/header.mjs",
+    "src/retry.mjs",
+    "test/header.test.mjs",
+    "test/retry.test.mjs"
+  ],
+  "unauthorized_paths": []
+}

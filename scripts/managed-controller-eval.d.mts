@@ -35,7 +35,7 @@ export function prepareManagedControllerRun(options: {
   caseId: string
   outputRoot: string
   root: string
-  variant: 'baseline' | 'candidate'
+  variant: 'baseline' | 'candidate' | 'product'
 }): PreparedManagedControllerRun
 export function readManagedControllerFlag(flags: string[], name: string): string | undefined
 export function scoreManagedControllerOutput(manifest: ManagedControllerOutputManifest, final: string): ManagedControllerOutputScore

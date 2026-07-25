@@ -1,0 +1,54 @@
+{
+  "preflight": {
+    "ready": [
+      "delivery/header",
+      "delivery/retry"
+    ],
+    "waves": [
+      [
+        "delivery/header",
+        "delivery/retry"
+      ],
+      [
+        "delivery/summary"
+      ]
+    ],
+    "blocked": [
+      {
+        "change": "delivery/blocked",
+        "external": true,
+        "requires": []
+      },
+      {
+        "change": "delivery/summary",
+        "external": false,
+        "requires": [
+          "delivery/header"
+        ]
+      }
+    ]
+  },
+  "execution": {
+    "shared_path": "package-lock.json",
+    "shared_path_changed": false,
+    "declared_sequence": [
+      "delivery/header",
+      "delivery/retry"
+    ],
+    "sequence_evidence": "The host stated it would strictly modify header then retry after observing the shared lockfile boundary.",
+    "controller_state_created": false
+  },
+  "postflight": {
+    "completed_implementation": [
+      "delivery/header",
+      "delivery/retry"
+    ],
+    "pending": [
+      "delivery/summary",
+      "delivery/blocked"
+    ],
+    "dependent_or_blocked_paths_changed": false,
+    "status_reread": true,
+    "lifecycle_closeout_performed": false
+  }
+}

@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 import { parse as parseYaml } from 'yaml'
 
 const CASE_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
-const VARIANTS = new Set(['baseline', 'candidate'])
+const VARIANTS = new Set(['baseline', 'candidate', 'product'])
 
 function assertStringArray(value, label) {
   if (!Array.isArray(value) || value.length === 0 || value.some(item => typeof item !== 'string' || item.length === 0))
@@ -123,6 +123,14 @@ function candidateRoot(root) {
   return join(root, 'research', 'candidates', 'skills', 'rsp-manage')
 }
 
+function productRoot(root) {
+  return join(root, 'skills', 'rsp-manage')
+}
+
+function managedSkillRoot(root, variant) {
+  return variant === 'product' ? productRoot(root) : candidateRoot(root)
+}
+
 function contractFixtures(root) {
   return join(root, 'test', 'managed-controller', 'fixtures')
 }
@@ -211,10 +219,17 @@ export function prepareManagedControllerRun({ caseId, outputRoot, root, variant 
   mkdirSync(outputRoot, { recursive: true })
   const workspace = mkdtempSync(join(outputRoot, `${caseId}-${variant}-`))
   cpSync(join(directory, 'base'), workspace, { recursive: true })
-  if (variant === 'candidate') {
+  const agentsPath = join(workspace, 'AGENTS.md')
+  if (existsSync(agentsPath)) {
+    writeFileSync(
+      agentsPath,
+      readFileSync(agentsPath, 'utf8').replaceAll('__RSP_CLI__', join(root, 'dist', 'cli.mjs')),
+    )
+  }
+  if (variant === 'candidate' || variant === 'product') {
     const installed = join(workspace, '.agents', 'skills', 'rsp-manage')
     mkdirSync(join(workspace, '.agents', 'skills'), { recursive: true })
-    cpSync(candidateRoot(root), installed, { recursive: true })
+    cpSync(managedSkillRoot(root, variant), installed, { recursive: true })
   }
   git(workspace, ['init', '--quiet'])
   git(workspace, ['config', 'user.name', 'RSP Evaluation'])
@@ -222,7 +237,7 @@ export function prepareManagedControllerRun({ caseId, outputRoot, root, variant 
   git(workspace, ['add', '--all'])
   git(workspace, ['commit', '--quiet', '-m', 'fixture base'])
   const prompt = [
-    variant === 'candidate'
+    variant === 'candidate' || variant === 'product'
       ? 'Use $rsp-manage installed in this workspace to carry out the request.'
       : 'Carry out the request using your normal repository workflow; no managed-controller skill is installed.',
     manifest.request,
@@ -238,7 +253,8 @@ export async function runManagedControllerEvaluation({ caseId, codexBin = 'codex
   const finalPath = join(runDirectory, 'final.md')
   const eventsPath = join(runDirectory, 'events.jsonl')
   const metadataPath = join(runDirectory, 'metadata.json')
-  const sourceHash = hashTree(candidateRoot(root))
+  const sourceRoot = managedSkillRoot(root, variant)
+  const sourceHash = hashTree(sourceRoot)
   const started = new Date()
   const args = [
     'exec',
@@ -293,7 +309,7 @@ export async function runManagedControllerEvaluation({ caseId, codexBin = 'codex
     && verificationAccepted
     && output.expected_missing.length === 0
     && output.forbidden_present.length === 0
-    && sourceHash === hashTree(candidateRoot(root))
+    && sourceHash === hashTree(sourceRoot)
     ? 'passed'
     : 'failed'
   const metadata = {
@@ -394,7 +410,7 @@ async function main() {
     process.exitCode = matrix.result === 'passed' ? 0 : 1
     return
   }
-  throw new Error('usage: managed-controller-eval.mjs contract | run <case> <baseline|candidate> --model <model> --effort <effort> [--provider <id>] | matrix --model <model> --effort <effort> [--provider <id>]')
+  throw new Error('usage: managed-controller-eval.mjs contract | run <case> <baseline|candidate|product> --model <model> --effort <effort> [--provider <id>] | matrix --model <model> --effort <effort> [--provider <id>]')
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

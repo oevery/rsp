@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import { existsSync, lstatSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, join } from 'node:path'
@@ -134,6 +135,7 @@ describe('rsp-manage product Skill', () => {
     expect(body.trim().split(/\s+/).length).toBeLessThanOrEqual(600)
     expect(lstatSync(join(product, 'SKILL.md')).isSymbolicLink()).toBe(false)
     expect(body).toContain('only after the user explicitly requests managed continuation')
+    expect(body).toContain('one selected ready Change or shallow Change Group')
     expect(body).toContain('Keep RSP artifacts as durable truth and process data transient')
     expect(readFileSync(join(candidate, 'SKILL.md'), 'utf8')).not.toBe(readFileSync(join(product, 'SKILL.md'), 'utf8'))
   })
@@ -150,19 +152,138 @@ describe('rsp-manage product Skill', () => {
     const { body } = readSkill(product)
 
     expect(body).toContain('Snapshot the user authority')
-    expect(body).toContain('Send an internal compact envelope only to a worker that will execute an eligible slice')
-    expect(body).toContain('at most four worker dispatches and one corrective retry')
-    expect(body).toContain('choose the cheapest decisive focused check')
+    expect(body).toContain('Send an internal compact envelope only for real work')
+    expect(body).toContain('four worker dispatches and one corrective retry')
+    expect(body).toContain('Choose the cheapest decisive check')
     expect(body).toContain('Run at most one broader integration gate')
-    expect(body).toContain('reread stable authority only during interruption recovery or when evidenced authority or worktree drift')
+    expect(body).toContain('During interruption recovery, reread current authority and referenced evidence')
+  })
+
+  it('preserves child owners and follows derived Group waves', () => {
+    const { body } = readSkill(product)
+
+    expect(body).toContain('one focused ready Change, or one explicitly selected shallow Group')
+    expect(body).toContain('at least two ready direct children')
+    expect(body).toContain('dispatch only child WorkRefs in the current derived `plan.waves` wave')
+    expect(body).toContain('rerun `rsp status --json`')
+    expect(body).toContain('restrict it to declared children')
+    expect(body).toContain('shared paths, lockfiles, generated artifacts, and broad integration outputs as overlapping')
+    expect(body).toContain('Keep overlaps, blockers, later waves, and dependent verification sequential')
+  })
+
+  it('prepares a product Group holdout with real waves and bounded mutations', ({ onTestFinished }) => {
+    const outputRoot = mkdtempSync(join(tmpdir(), 'rsp-manage-product-group-'))
+    onTestFinished(() => rmSync(outputRoot, { force: true, recursive: true }))
+
+    const prepared = prepareManagedControllerRun({
+      caseId: 'group-waves',
+      outputRoot,
+      root,
+      variant: 'product',
+    })
+    const status = JSON.parse(execFileSync(process.execPath, [
+      join(root, 'dist', 'cli.mjs'),
+      'status',
+      '--json',
+    ], { cwd: prepared.workspace, encoding: 'utf8' })) as {
+      plan: {
+        blocked: Array<{ change: string, external: boolean, requires: string[] }>
+        ready: string[]
+        waves: string[][]
+      }
+    }
+
+    expect(readFileSync(join(prepared.workspace, '.agents', 'skills', 'rsp-manage', 'SKILL.md'), 'utf8'))
+      .toBe(readFileSync(join(product, 'SKILL.md'), 'utf8'))
+    expect(status.plan.ready).toEqual(['delivery/header', 'delivery/retry'])
+    expect(status.plan.waves).toEqual([
+      ['delivery/header', 'delivery/retry'],
+      ['delivery/summary'],
+    ])
+    expect(status.plan.blocked).toEqual([
+      { change: 'delivery/blocked', external: true, requires: [] },
+      { change: 'delivery/summary', external: false, requires: ['delivery/header'] },
+    ])
+    expect(prepared.manifest.allowed_changes).not.toContain('.rsp/changes/delivery/summary.md')
+    expect(prepared.manifest.allowed_changes).not.toContain('.rsp/changes/delivery/blocked.md')
+    expect(prepared.manifest.allowed_changes).not.toContain('package-lock.json')
+    expect(prepared.prompt).toContain('Use $rsp-manage')
+  })
+
+  it('replays retained product Group behavior evidence', () => {
+    const retained = join(root, 'research', 'evaluations', 'rsp-manage', '2026-07-25-product-group-waves')
+    const metadata = JSON.parse(readFileSync(join(retained, 'metadata.json'), 'utf8')) as {
+      changed_paths: string[]
+      final_hash: string
+      original_runner_result: string
+      output_score: { expected_missing: string[], forbidden_present: string[] }
+      result: string
+      unauthorized_paths: string[]
+      verification: { failures: number, passed: boolean, tests: number }
+    }
+    const observations = JSON.parse(readFileSync(join(retained, 'observations.json'), 'utf8')) as {
+      execution: { controller_state_created: boolean, declared_sequence: string[], shared_path_changed: boolean }
+      postflight: { dependent_or_blocked_paths_changed: boolean, pending: string[], status_reread: boolean }
+      preflight: { ready: string[], waves: string[][] }
+    }
+    const final = readFileSync(join(retained, 'final.md'), 'utf8')
+    const manifest = parseYaml(readFileSync(join(root, 'test', 'managed-controller', 'holdout', 'group-waves', 'case.yaml'), 'utf8')) as {
+      expected_output: string[]
+      forbidden_output: string[]
+    }
+
+    expect(metadata).toMatchObject({
+      original_runner_result: 'failed',
+      output_score: { expected_missing: [], forbidden_present: [] },
+      result: 'passed',
+      unauthorized_paths: [],
+      verification: { failures: 0, passed: true, tests: 7 },
+    })
+    expect(createHash('sha256').update(final).digest('hex')).toBe(metadata.final_hash)
+    expect(scoreManagedControllerOutput(manifest, final)).toEqual(metadata.output_score)
+    expect(metadata.changed_paths).toEqual([
+      '.rsp/changes/delivery/header.md',
+      '.rsp/changes/delivery/retry.md',
+      'src/header.mjs',
+      'src/retry.mjs',
+      'test/header.test.mjs',
+      'test/retry.test.mjs',
+    ])
+    expect(observations.preflight).toMatchObject({
+      ready: ['delivery/header', 'delivery/retry'],
+      waves: [['delivery/header', 'delivery/retry'], ['delivery/summary']],
+    })
+    expect(observations.execution).toEqual({
+      controller_state_created: false,
+      declared_sequence: ['delivery/header', 'delivery/retry'],
+      sequence_evidence: expect.any(String),
+      shared_path: 'package-lock.json',
+      shared_path_changed: false,
+    })
+    expect(observations.postflight).toMatchObject({
+      dependent_or_blocked_paths_changed: false,
+      pending: ['delivery/summary', 'delivery/blocked'],
+      status_reread: true,
+    })
+  })
+
+  it('keeps Group scheduling transient and lifecycle child-scoped', () => {
+    const { body } = readSkill(product)
+
+    expect(body).toContain('out of Changes, Group Briefs, Specs, Decision Records')
+    expect(body).toContain('Update each executable Change only with converged requirements')
+    expect(body).toContain('Keep shared completion in the Brief without copying child tasks or live state')
+    expect(body).toContain('commit completed Changes as independently reviewable logical units')
+    expect(body).toContain('exact per-Change commit boundaries and owners')
+    expect(body).toContain('claim Group closure')
   })
 
   it('keeps process chronology transient and returns only outcome evidence', () => {
     const { body } = readSkill(product)
 
-    expect(body).toContain('Keep dispatch details, retry history, limits, and process chronology out of Changes, Specs, Decision Records')
-    expect(body).toContain('Return only completed and pending slices, fresh verification, omissions, the real boundary owner, and one next action')
-    expect(body).toContain('Do not expose dispatch, retry, or budget chronology')
+    expect(body).toContain('Keep dispatch chronology out of Changes, Group Briefs, Specs, Decision Records')
+    expect(body).toContain('Return only completed and pending WorkRefs or slices, fresh verification, omissions, the real boundary owner, and one next action')
+    expect(body).toContain('Do not expose retry or budget chronology')
     expect(body).toContain('Archive never grants Git or publication authority')
   })
 
@@ -170,9 +291,8 @@ describe('rsp-manage product Skill', () => {
     const { body } = readSkill(product)
 
     expect(body).toContain('Release identity is unconfirmed unless explicit user or repository authority supplies it')
-    expect(body).toContain('commit only the completed focused Change after closeout')
+    expect(body).toContain('commit completed Changes as independently reviewable logical units after closeout')
     expect(body).toContain('Return to Core before a separate release operation and dedicated release commit')
-    expect(body).toContain('use another Change only for durable release coordination')
-    expect(body).toContain('Otherwise return the exact commit boundary and owner')
+    expect(body).toContain('Otherwise return exact per-Change commit boundaries and owners')
   })
 })

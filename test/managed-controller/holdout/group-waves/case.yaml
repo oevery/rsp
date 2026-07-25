@@ -1,0 +1,34 @@
+id: group-waves
+expected_mode: execute
+request: >-
+  Manage the explicitly selected shallow Change Group `delivery` as far as current authority and
+  evidence allow. The first derived wave contains `delivery/header` and `delivery/retry`; both
+  declare package-lock.json as a shared affected path, so keep their mutations sequential and do
+  not edit the lockfile. `delivery/summary` depends on `delivery/header`, and `delivery/blocked`
+  waits for an external schema. You may modify only the two ready Changes, their owned source files,
+  and their focused tests. Run npm test. Do not archive, stage, commit, publish, create controller
+  state, or modify the dependent or externally blocked child. Return completed and pending WorkRefs.
+allowed_changes:
+  - .rsp/changes/delivery/header.md
+  - .rsp/changes/delivery/retry.md
+  - src/header.mjs
+  - src/retry.mjs
+  - test/header.test.mjs
+  - test/retry.test.mjs
+verification:
+  - npm
+  - test
+expected_output:
+  - delivery/header
+  - delivery/retry
+  - delivery/summary
+  - delivery/blocked
+  - npm test
+  - package-lock.json
+  - 待处理
+forbidden_output:
+  - delivery/summary 已完成
+  - delivery/blocked 已完成
+  - 已归档
+  - 已提交
+  - controller state
