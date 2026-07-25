@@ -1,10 +1,10 @@
 ---
 name: rsp-address-review
-description: Resolve one fixed rsp-review report for an RSP-tracked change. Use when the user authorizes disposition of review findings, bounded fixes for accepted findings, fresh verification, re-review, or a recoverable artifact-scoped handoff; keep the reviewer report-only and never infer Git or publication authority.
+description: Resolve one fixed rsp-review report for an RSP-tracked change. Use when the user or a qualified managed goal authorizes disposition, bounded fixes, fresh verification, re-review, or recovery; keep the reviewer report-only and never infer Git or publication authority.
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.22.1"
+  version: "2026.07.25.1"
 ---
 
 # RSP Address Review
@@ -15,7 +15,7 @@ Render headings, field labels, explanations, and conclusion prose in the languag
 
 ## Fix scope and authority
 
-Require the review report, its fixed comparison or file set, the selected Change and sibling Group Brief when applicable, relevant project authority, and explicit permission for any proposed mutation. Read the current worktree and the smallest behavior chain needed to verify each Finding. Preserve unrelated modified, staged, and untracked work.
+Require the review report, its fixed comparison or file set, the selected Change and sibling Group Brief when applicable, relevant project authority, and either explicit user permission or Core-confirmed original managed authority for proposed mutation. Read the current worktree and the smallest behavior chain needed to verify each Finding. Preserve unrelated modified, staged, and untracked work.
 
 Identify a Finding by its report order plus severity, title, and location. Stop if the report, comparison, Change, or Finding identity is missing or conflicting. A report grants investigation only: correction, verification, re-review, Git delivery, publication, deployment, approval, and external actions retain their own authority. Never infer Git or publication authority.
 
@@ -35,7 +35,7 @@ In one resolution pass, implement the smallest complete correction for accepted 
 
 After the last relevant edit, run fresh verification for the affected behavior and the selected Change. A failed, unavailable, stale, or omitted check cannot close an accepted Finding. If a check exposes another defect, return it as evidence; do not begin an automatic retry loop.
 
-Require a fresh fixed-scope re-review before claiming resolution. Return a re-review request containing the original comparison, selected authority, post-fix file set or immutable comparison, implementation summary, dispositions, and verification evidence. The re-review remains report-only. On resume with its report, correlate original Findings as resolved or remaining and treat any new Finding as unresolved input for a later authorized pass.
+Require a fresh fixed-scope re-review before claiming resolution. Return a re-review request containing the original comparison, selected authority, post-fix file set or immutable comparison, implementation summary, dispositions, and verification evidence. The re-review remains report-only. On resume with its report, correlate original Findings as resolved or remaining and return any new Finding as unresolved input to Core. Address Review never self-loops. Only qualified Manage may classify an in-scope `accepted` Finding as `correction-needed` and re-enter another bounded pass under the original managed authority and its separate convergence limit; standalone work requires new authority.
 
 ## Handoff and recovery
 
@@ -58,4 +58,4 @@ To recover, reopen every authority pointer, confirm the WorkRef and comparison s
 
 ## Return ownership
 
-Report the disposition table, changed artifacts, preserved unrelated work, fresh verification, re-review status, and the handoff when anything remains. Resolution is complete only when every Finding has a supported disposition, every accepted Finding has a verified correction, the fresh fixed-scope re-review is clean, and no `needs-clarification` input remains. Never claim archive, commit, push, publication, deployment, or approval.
+Report the disposition table, changed artifacts, preserved unrelated work, fresh verification, re-review status, and the handoff when anything remains. Name `correction-needed` only when Core supplied a qualified managed continuation; it is not an external blocker or durable Change state. Resolution is complete only when every Finding has a supported disposition, every accepted Finding has a verified correction, the fresh fixed-scope re-review is clean, and no `needs-clarification` input remains. Never claim archive, commit, push, publication, deployment, or approval.

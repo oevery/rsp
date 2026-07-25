@@ -34,7 +34,7 @@ describe('rsp-address-review Skill contract', () => {
     expect(body).toContain('`accepted`')
     expect(body).toContain('`rejected`')
     expect(body).toContain('`needs-clarification`')
-    expect(body).toContain('explicit permission for any proposed mutation')
+    expect(body).toContain('either explicit user permission or Core-confirmed original managed authority')
     expect(body).toContain('accepted Findings only')
     expect(body).toContain('do not edit for it')
     expect(body).toContain('do not begin an automatic retry loop')
@@ -49,6 +49,18 @@ describe('rsp-address-review Skill contract', () => {
     expect(body).toContain('Do not modify `rsp-review`, the original report')
     expect(body).toContain('every accepted Finding has a verified correction')
     expect(body).toContain('Never infer Git or publication authority')
+  })
+
+  it('returns managed correction-needed to Core without self-looping', () => {
+    const { body } = readSkill()
+
+    expect(body).toContain('return any new Finding as unresolved input to Core')
+    expect(body).toContain('Address Review never self-loops')
+    expect(body).toContain('Only qualified Manage may classify an in-scope `accepted` Finding as `correction-needed`')
+    expect(body).toContain('original managed authority and its separate convergence limit')
+    expect(body).toContain('standalone work requires new authority')
+    expect(body).toContain('it is not an external blocker or durable Change state')
+    expect(body).toContain('do not begin an automatic retry loop')
   })
 
   it('returns a recoverable artifact-scoped handoff without hidden state', () => {

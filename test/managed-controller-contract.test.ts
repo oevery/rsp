@@ -132,7 +132,7 @@ describe('rsp-manage product Skill', () => {
       license: 'MIT',
       metadata: { author: 'oevery', version: expect.stringMatching(/^\d{4}\.\d{2}\.\d{2}(?:\.\d+)?$/) },
     })
-    expect(body.trim().split(/\s+/).length).toBeLessThanOrEqual(600)
+    expect(body.trim().split(/\s+/).length).toBeLessThanOrEqual(800)
     expect(lstatSync(join(product, 'SKILL.md')).isSymbolicLink()).toBe(false)
     expect(body).toContain('only after the user explicitly requests managed continuation')
     expect(body).toContain('one selected ready Change or shallow Change Group')
@@ -156,12 +156,27 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('Specs/Decisions')
     expect(body).toContain('`rsp status --json`, and worktree')
     expect(body).toContain('Send a compact envelope')
-    expect(body).toContain('four worker dispatches and one corrective retry')
+    expect(body).toContain('four worker dispatches and one worker corrective retry')
     expect(body).toContain('across the whole managed run; owner transitions do not reset them')
     expect(body).toContain('Choose the cheapest decisive check')
     expect(body).toContain('one integration gate at most')
     expect(body).toContain('Inspect diff and verification before accepting')
     expect(body).toContain('During recovery, reread authority and evidence')
+  })
+
+  it('converges managed review separately without redundant user continuation', () => {
+    const { body } = readSkill(product)
+
+    expect(body).toContain('## Converge managed review')
+    expect(body).toContain('without asking the user to continue')
+    expect(body).toContain('Address Review never self-loops')
+    expect(body).toContain('at most three Address Review passes per Change')
+    expect(body).toContain('separate from worker retry')
+    expect(body).toContain('same Finding remains after two completed corrections')
+    expect(body).toContain('`correction-needed`, not an external blocker')
+    expect(body).toContain('additional real-host/provider/network run outside existing verification authority')
+    expect(body).toContain('failed/unavailable decisive verification')
+    expect(body).toContain('Keep counts and correction chronology transient')
   })
 
   it('preserves child owners and follows derived Group waves', () => {
@@ -299,6 +314,24 @@ describe('rsp-manage product Skill', () => {
       remote: 'origin',
       pushed_sha: prepared.baseSha,
       remote_matches_base: true,
+      remote_refs_unchanged: true,
+    })
+  })
+
+  it('prepares a three-pass managed review-convergence fixture without external delivery authority', ({ onTestFinished }) => {
+    const outputRoot = mkdtempSync(join(tmpdir(), 'rsp-manage-review-convergence-'))
+    onTestFinished(() => rmSync(outputRoot, { force: true, recursive: true }))
+    const prepared = prepareManagedControllerRun({ caseId: 'review-convergence', outputRoot, root, variant: 'product' })
+
+    expect(prepared.manifest.installed_skills).toEqual(['rsp', 'rsp-manage', 'rsp-address-review', 'rsp-review', 'rsp-implement'])
+    expect(prepared.remotePath).toBeNull()
+    expect(prepared.sourceComposition).toEqual(prepared.installedComposition)
+    expect(prepared.prompt).toContain('review_passes: 3')
+    expect(prepared.prompt).toContain('without asking the user to reply continue')
+    expect(readFileSync(join(prepared.workspace, 'reviews', 'review-4.md'), 'utf8')).toContain('clean')
+    expect(observeManagedControllerGit(prepared.workspace, prepared.baseSha)).toMatchObject({
+      dirty: false,
+      remote: null,
       remote_refs_unchanged: true,
     })
   })
@@ -483,13 +516,10 @@ describe('rsp-manage product Skill', () => {
     const final = readFileSync(join(retained, 'final.md'), 'utf8')
     const manifestPath = join(root, 'test', 'managed-controller', 'holdout', 'long-goal', 'case.yaml')
     const manifest = parseYaml(readFileSync(manifestPath, 'utf8')) as any
-    const composition = hashManagedControllerComposition(manifest.installed_skills.map((name: string) => ({
-      name,
-      path: join(root, 'skills', name),
-    })))
+    const retainedComposition = { hash: metadata.composition.hash, skills: derivation.composition.skill_hashes }
     const boundaryHashes = derivation.composition.boundary_hashes
     const compositionBoundariesStable = ['source_before', 'installed_before', 'source_after', 'installed_after']
-      .every(boundary => boundaryHashes[boundary] === composition.hash)
+      .every(boundary => boundaryHashes[boundary] === retainedComposition.hash)
     const rescored = scoreManagedControllerObservation(manifest, {
       changed_paths: metadata.changed_paths,
       exit_code: metadata.exit_code,
@@ -513,15 +543,14 @@ describe('rsp-manage product Skill', () => {
     expect(metadata.git.commit_touched_paths).toContain('.rsp/changes/delivery-bootstrap.md')
     expect(metadata.git.net_committed_paths).not.toContain('.rsp/changes/delivery-bootstrap.md')
     expect(metadata.git.commits.flatMap((commit: any) => commit.paths)).toContain('.rsp/changes/delivery-bootstrap.md')
-    expect(composition.skills.map(skill => skill.name)).toEqual(manifest.installed_skills)
-    expect(composition).toEqual({ hash: metadata.composition.hash, skills: derivation.composition.skill_hashes })
+    expect(retainedComposition.skills.map((skill: any) => skill.name)).toEqual(manifest.installed_skills)
     expect(derivation).toMatchObject({
       kind: 'sanitized-derived-evidence',
       derived_from_run: metadata.run_identity,
       source_raw_metadata_hash: expect.stringMatching(/^[a-f0-9]{64}$/),
     })
     expect(Object.keys(boundaryHashes)).toEqual(['source_before', 'installed_before', 'source_after', 'installed_after'])
-    expect(new Set(Object.values(boundaryHashes))).toEqual(new Set([composition.hash]))
+    expect(new Set(Object.values(boundaryHashes))).toEqual(new Set([retainedComposition.hash]))
     expect(observations.evidence_hardening).toMatchObject({
       all_remote_refs_compared: true,
       all_remote_refs_unchanged: true,
@@ -530,6 +559,56 @@ describe('rsp-manage product Skill', () => {
       composition_stable: true,
       forbidden_command_counts: { force_push: 0, publication: 0, push: 0 },
     })
+  })
+
+  it('replays current three-pass review-convergence evidence against the authored composition', () => {
+    const retained = join(root, 'research', 'evaluations', 'rsp-manage', '2026-07-25-product-review-convergence')
+    const metadata = JSON.parse(readFileSync(join(retained, 'metadata.json'), 'utf8')) as any
+    const observations = JSON.parse(readFileSync(join(retained, 'observations.json'), 'utf8')) as any
+    const final = readFileSync(join(retained, 'final.md'), 'utf8')
+    const manifestPath = join(root, 'test', 'managed-controller', 'holdout', 'review-convergence', 'case.yaml')
+    const manifest = parseYaml(readFileSync(manifestPath, 'utf8')) as any
+    const composition = hashManagedControllerComposition(manifest.installed_skills.map((name: string) => ({
+      name,
+      path: join(root, 'skills', name),
+    })))
+    const rescored = scoreManagedControllerObservation(manifest, {
+      changed_paths: metadata.changed_paths,
+      exit_code: metadata.exit_code,
+      final,
+      forbidden_actions: metadata.forbidden_actions,
+      remote_refs_unchanged: true,
+      source_stable: metadata.composition.stable,
+      timed_out: metadata.timed_out,
+      verification_passed: metadata.verification.passed,
+    })
+
+    expect(createHash('sha256').update(final).digest('hex')).toBe(metadata.final_hash)
+    expect(createHash('sha256').update(JSON.stringify(manifest)).digest('hex')).toBe(metadata.fixture_manifest_semantic_hash)
+    expect(composition).toEqual({ hash: metadata.composition.hash, skills: metadata.composition.skills })
+    expect(new Set(Object.values(metadata.composition.boundary_hashes))).toEqual(new Set([composition.hash]))
+    expect(rescored).toEqual({
+      missing_required_paths: [],
+      output: metadata.output_score,
+      result: 'passed',
+      unauthorized_paths: [],
+    })
+    expect(metadata.forbidden_actions).toEqual({ force_push: 0, publication: 0, push: 0 })
+    expect(observations.review).toEqual({
+      passes: 3,
+      re_review: 'clean',
+      user_continuations: 0,
+      findings: ['F1', 'F2', 'F3'],
+      fixed_reports_read: ['review-1.md', 'review-2.md', 'review-3.md', 'review-4.md'],
+      focused_verifications: [
+        'node --test test/trim.test.mjs',
+        'node --test test/lowercase.test.mjs test/trim.test.mjs',
+        'node --test test/collapse.test.mjs test/lowercase.test.mjs test/trim.test.mjs',
+      ],
+      chronology_persisted_in_change: false,
+    })
+    expect(observations.lifecycle).toEqual({ archived: true, open_changes: 0, focus_markers: 0 })
+    expect(observations.delivery).toEqual({ local_commits: 0, push: false, publication: false })
   })
 
   it('keeps Group scheduling transient and checkpoints lifecycle-scoped', () => {

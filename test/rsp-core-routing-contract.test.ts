@@ -40,7 +40,7 @@ describe('rsp core routing contract', () => {
       expect(skill).toContain(`](${path})`)
       expect(read(`skills/rsp/${path}`)).toMatch(/Load this reference only|Load this reference before/)
     }
-    expect(skill.trim().split(/\s+/).length).toBeLessThanOrEqual(1800)
+    expect(skill.trim().split(/\s+/).length).toBeLessThanOrEqual(1900)
   })
 
   it('derives one evidence-backed action with capability and owner boundaries', () => {
@@ -133,7 +133,34 @@ describe('rsp core routing contract', () => {
         ['external-action'],
       ])
     }
-    expect(fallback).toContain('Never persist the goal envelope, WorkSet, waves, or discovered-work classification')
+    expectSemanticGroup(fallback, [
+      ['Never persist the goal envelope, WorkSet, waves'],
+      ['discovered-work classification'],
+      ['convergence count'],
+      ['correction chronology'],
+    ])
+  })
+
+  it('returns in-scope managed review findings to bounded convergence', () => {
+    for (const body of [skill, fallback]) {
+      expectSemanticGroup(body, [
+        ['managed fixed-scope re-review'],
+        ['selected Change'],
+        ['original authority'],
+        ['fresh verification'],
+        ['transient convergence count'],
+        ['in-scope `accepted` remaining or new Finding', 'in-scope accepted Finding'],
+        ['`correction-needed`'],
+        ['without asking the user to continue', 'without another user prompt'],
+        ['Address Review never self-loops', 'Address Review itself never self-loops'],
+        ['`needs-clarification`'],
+        ['verification-budget expansion', 'outside existing verification authority'],
+        ['repeated non-convergence'],
+      ])
+    }
+    expect(fallback).toContain('three passes per Change')
+    expect(fallback).toContain('same Finding remains after two completed corrections')
+    expect(fallback).toContain('convergence count, or correction chronology')
   })
 
   it('keeps persistent artifacts convergent and domain-owned', () => {

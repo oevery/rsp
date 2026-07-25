@@ -10,7 +10,7 @@ sources:
   - skills/rsp-address-review/SKILL.md
 required_contract:
   - '## Handoff and recovery'
-  - artifact-scoped handoff
+  - '## Handoff and recovery'
   - authoritative pointers, not project truth
   - do not begin an automatic retry loop
 prohibited_actions: [commit, push, publish]

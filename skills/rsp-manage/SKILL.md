@@ -4,7 +4,7 @@ description: Continue one explicitly requested bounded managed goal across ready
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.25.7"
+  version: "2026.07.25.8"
 ---
 
 # RSP Manage
@@ -17,7 +17,7 @@ Before dispatch, read each qualified WorkRef—including successors—complete C
 
 Eligible Change needs independent scopes, long continuation, or recovery; Group needs two ready children or long/recovery. Small, coupled, or worker-only work is ineligible. Decline without mutation/controller artifact; return Core/Discipline action.
 
-Preserve unrelated work. Release identity needs explicit authority. Allow four worker dispatches and one corrective retry across the whole managed run; owner transitions do not reset them.
+Preserve unrelated work. Release identity needs explicit authority. Allow four worker dispatches and one worker corrective retry across the whole managed run; owner transitions do not reset them. Review convergence has a separate limit below.
 
 ## Dispatch owned work
 
@@ -30,6 +30,12 @@ Inspect diff and verification before accepting results. After progress, rerun `r
 At owner boundaries, Core re-derives from goal. Continue a clear in-scope ready successor. Stop only when neither a ready successor nor clearly missing ownership remains. Otherwise suspend dispatch and return evidence to Core; Core routes Shape and requalifies without another authorization round. Manage neither classifies discovery nor changes topology.
 
 Stop when discovery changes behavior, acceptance, public interfaces, scope, mutation, or external authority. Ignore unrelated improvements. Retry only evidenced corrections. During recovery, reread authority and evidence. Never create controller status, retry graphs, receipts, or parallel lifecycle state.
+
+## Converge managed review
+
+After Address Review returns a fixed-scope re-review, Core correlates its report, selected Change, original authority, fresh verification, and transient pass count. When a remaining or new Finding is `accepted` and stays inside the original behavior, acceptance, affected paths, mutation authority, and verification budget, start another bounded Address Review pass without asking the user to continue. Address Review never self-loops.
+
+Allow at most three Address Review passes per Change, separate from worker retry, and stop earlier when the same Finding remains after two completed corrections. Also stop for `needs-clarification`, material product/interface/scope change, new mutation or external authority, an additional real-host/provider/network run outside existing verification authority, or failed/unavailable decisive verification. Return the single required owner input. Treat an eligible in-scope Finding as `correction-needed`, not an external blocker. Keep counts and correction chronology transient; Changes retain converged dispositions, evidence, omissions, and real blockers only.
 
 ## Preserve boundaries
 
