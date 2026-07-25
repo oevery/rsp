@@ -10,7 +10,7 @@ sources:
   - skills/rsp-implement/SKILL.md
   - skills/rsp-tdd/SKILL.md
 required_contract:
-  - Diagnosis takes precedence over TDD
+  - diagnosis takes precedence over TDD
   - returns to diagnosis
   - same selected Change
 prohibited_actions: [guessed-regression-test, production-mutation, recursive-skill-invocation, commit, push, publish]

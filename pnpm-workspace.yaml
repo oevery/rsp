@@ -4,5 +4,8 @@ trustPolicy: no-downgrade
 
 trustPolicyIgnoreAfter: 10080
 
+overrides:
+  postcss: 8.5.18
+
 allowBuilds:
   esbuild: false

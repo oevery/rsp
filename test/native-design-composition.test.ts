@@ -19,7 +19,7 @@ const root = fileURLToPath(new URL('..', import.meta.url))
 const skills = ['rsp', 'rsp-shape', 'rsp-design', 'rsp-implement', 'rsp-review']
 const publishedSkills = ['rsp', 'rsp-address-review', 'rsp-design', 'rsp-diagnose', 'rsp-implement', 'rsp-manage', 'rsp-release-docs', 'rsp-review', 'rsp-shape', 'rsp-tdd']
 const realRuns = join(root, 'research', 'evaluations', 'rsp-native-design-composition', '2026-07-22', 'real-runs')
-const retainedRun = join(realRuns, 'device-discovery-boundary-simplify-release-operation-tracking')
+const retainedRun = join(realRuns, 'device-discovery-boundary-pre-dogfood-maintenance-hardening-final-metadata')
 const correctedAttempt = join(realRuns, 'device-discovery-boundary-layer-archive-closeout', 'invalid-attempts', 'failed-1784788188154')
 
 function copiedRetainedRun(onTestFinished: (callback: () => void) => void) {
@@ -89,13 +89,17 @@ describe('native-design composition terminal evaluator', () => {
     expect(readFileSync(join(correctedAttempt, 'metadata.json'), 'utf8')).toBe(sourceBefore)
   })
 
-  it('binds retained execution evidence to the assisted-engineering Skill suite', () => {
+  it('binds current compatibility to executed Skills while retaining full package provenance', () => {
     const metadata = JSON.parse(readFileSync(join(retainedRun, 'metadata.json'), 'utf8')) as { package: Record<string, any> }
     const accepted = validateCurrentNativeDesignArtifact(root, metadata.package)
     const driftedExecutedSkill = structuredClone(metadata.package)
     driftedExecutedSkill.installed_skill_hashes.rsp = '0'.repeat(64)
     const driftedExecutedReference = structuredClone(metadata.package)
     driftedExecutedReference.installed_skill_tree_hashes['rsp-design'] = '0'.repeat(64)
+    const driftedUnexecutedSkill = structuredClone(metadata.package)
+    driftedUnexecutedSkill.published_skill_hashes['rsp-release-docs'] = '0'.repeat(64)
+    const driftedUnexecutedReference = structuredClone(metadata.package)
+    driftedUnexecutedReference.published_skill_tree_hashes['rsp-manage'] = '0'.repeat(64)
     const incompleteInventory = structuredClone(metadata.package)
     incompleteInventory.skill_inventory = skills
 
@@ -103,7 +107,18 @@ describe('native-design composition terminal evaluator', () => {
     expect(accepted.current.skill_inventory).toEqual(publishedSkills)
     expect(validateCurrentNativeDesignArtifact(root, driftedExecutedSkill).passed).toBe(false)
     expect(validateCurrentNativeDesignArtifact(root, driftedExecutedReference).passed).toBe(false)
-    expect(validateCurrentNativeDesignArtifact(root, incompleteInventory).passed).toBe(false)
+    expect(validateCurrentNativeDesignArtifact(root, driftedUnexecutedSkill)).toMatchObject({
+      passed: true,
+      published_skills_match: false,
+    })
+    expect(validateCurrentNativeDesignArtifact(root, driftedUnexecutedReference)).toMatchObject({
+      passed: true,
+      published_skills_match: false,
+    })
+    expect(validateCurrentNativeDesignArtifact(root, incompleteInventory)).toMatchObject({
+      inventory_matches: false,
+      passed: true,
+    })
   })
 
   it('keeps retained behavior evidence valid across release-only version changes', () => {

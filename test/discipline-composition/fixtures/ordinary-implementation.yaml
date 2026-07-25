@@ -10,9 +10,9 @@ sources:
   - skills/rsp/SKILL.md
   - skills/rsp-implement/SKILL.md
 required_contract:
-  - ordinary `rsp-implement`
-  - this is the default when diagnosis does not apply
-  - Behavior being testable, a test being possible, or the work being a fix is not sufficient by itself
+  - use `rsp-implement`
+  - Ordinary implementation by default
+  - mere testability or being a fix does not
   - Fresh verification is required, but a new test is only one evidence option
-  - same selected Change
+  - same Change
 prohibited_actions: [unnecessary-diagnosis, unnecessary-tdd, recursive-skill-invocation, commit, push, publish]

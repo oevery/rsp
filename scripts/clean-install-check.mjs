@@ -26,9 +26,17 @@ const EXPECTED_DESIGN_REFERENCES = [
   'module-seams.md',
   'reversible-exploration.md',
 ]
+const EXPECTED_CORE_REFERENCES = [
+  'conflict-handling.md',
+  'durable-review.md',
+  'groups-dependencies.md',
+  'setup-repair.md',
+]
 const EXPECTED_RELEASE_REFERENCES = [
   'convention-discovery.md',
+  'evidence-and-surfaces.md',
   'output-contracts.md',
+  'publication-lifecycle.md',
 ]
 const FORBIDDEN_PACKAGE_ROOTS = ['.agents', '.cache', '.codex', '.rsp', 'research', 'scripts']
 const PORTABLE_FRONTMATTER_KEYS = new Set(['description', 'license', 'metadata', 'name'])
@@ -220,6 +228,10 @@ function main() {
     if (JSON.stringify(designReferences) !== JSON.stringify(EXPECTED_DESIGN_REFERENCES))
       fail(`rsp-design reference inventory mismatch: ${designReferences.join(', ')}`)
 
+    const coreReferences = readdirSync(join(skillRoot, 'rsp', 'references')).sort()
+    if (JSON.stringify(coreReferences) !== JSON.stringify(EXPECTED_CORE_REFERENCES))
+      fail(`rsp core reference inventory mismatch: ${coreReferences.join(', ')}`)
+
     const releaseReferences = readdirSync(join(skillRoot, 'rsp-release-docs', 'references')).sort()
     if (JSON.stringify(releaseReferences) !== JSON.stringify(EXPECTED_RELEASE_REFERENCES))
       fail(`rsp-release-docs reference inventory mismatch: ${releaseReferences.join(', ')}`)
@@ -247,6 +259,7 @@ function main() {
         invalidLocale: { exitCode: invalidLocale.status, stderr: invalidLocale.stderr.trim() },
       },
       prepareReleaseNotesReferences: releaseReferences,
+      rspCoreReferences: coreReferences,
       rspDesignReferences: designReferences,
       tarballSha256: createHash('sha256').update(readFileSync(tarball)).digest('hex'),
     }

@@ -10,8 +10,8 @@ sources:
   - skills/rsp/SKILL.md
   - skills/rsp-implement/SKILL.md
 required_contract:
-  - '### Route implementation evidence'
-  - unexplained failure
+  - '### Implementation evidence'
+  - unexplained
   - rsp-diagnose
   - '## Classify implementation evidence'
   - Do not invoke another Skill from inside this Skill

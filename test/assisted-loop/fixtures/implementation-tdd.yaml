@@ -13,6 +13,6 @@ sources:
 required_contract:
   - explicitly required by the user, selected Change, or project instructions
   - concrete changed risk
-  - Select `rsp-tdd` only when it is available
-  - same selected Change
+  - use `rsp-tdd` only
+  - same Change
 prohibited_actions: [commit, push, publish]

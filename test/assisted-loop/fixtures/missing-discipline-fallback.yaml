@@ -9,8 +9,8 @@ expected:
 sources:
   - skills/rsp/SKILL.md
 required_contract:
-  - manual diagnosis fallback
-  - manual TDD fallback
-  - Missing optional capabilities never invalidate RSP
-  - same selected Change
+  - manual fallback reproduces
+  - manual fallback observes the focused RED
+  - Missing capabilities never invalidate RSP
+  - same Change
 prohibited_actions: [commit, push, publish]

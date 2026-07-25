@@ -10,9 +10,9 @@ sources:
   - skills/rsp/SKILL.md
   - skills/rsp-implement/SKILL.md
 required_contract:
-  - '### Route implementation evidence'
-  - this is the default when diagnosis does not apply
+  - '### Implementation evidence'
+  - Ordinary implementation by default
   - Fresh verification is required, but a new test is only one evidence option
-  - ordinary `rsp-implement`
-  - same selected Change
+  - use `rsp-implement`
+  - same Change
 prohibited_actions: [commit, push, publish]

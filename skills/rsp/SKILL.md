@@ -4,225 +4,91 @@ description: Use this skill when initializing RSP, operating an existing .rsp pr
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.25.3"
+  version: "2026.07.25.4"
 ---
 
 # RSP Skill
 
-Load this skill when you need to initialize RSP, operate `.rsp/`, audit or repair RSP state, or make a durable-update decision before archive.
+Use RSP to derive one current action from project authority and durable work artifacts. This Skill is the preferred operational guide; `.rsp/rsp-rules.md` is the runtime fallback when the Skill is unavailable.
 
-This skill is the preferred operational guide. `.rsp/rsp-rules.md` is the only runtime fallback protocol when this skill is unavailable; old projects migrate to it with `rsp update`.
+Nearest project instructions and relevant `CONTEXT.md` remain authoritative. Choose response and artifact languages independently: localize human-facing response prose, but preserve canonical RSP headings, WorkRefs, paths, commands, identifiers, and machine values. Write persistent artifacts in domain, system, user, or operator language; mention AI or agents only when they are actual product actors or constraints.
 
-Prefer exact file paths, exact commands, and exact durable facts over vague summaries.
+## Scope
 
-Choose response language and artifact language independently. Render human-facing response headings, field labels, explanations, and conclusions in the language explicitly requested for the response; otherwise follow response-specific project instructions, then the conversation language. Write artifact prose in the language explicitly requested for that artifact; otherwise follow artifact-specific project instructions, then the existing artifact's language, then the conversation language. Preserve canonical RSP artifact headings, keywords, identifiers, paths, commands, and machine-consumed values unchanged. Response-only Continuation and Durable Decision headings and labels are not canonical artifact headings and must be localized.
-
-Write persistent artifacts in domain, system, user, or operator language. Mention AI or agents only when they are actual product actors, consumers, interface participants, or constraints; using AI to perform the work is not itself a durable fact.
-
-## When to use
-
-- Use for RSP setup, repair, focused RSP work, and pre-archive durable decisions.
-- Use when a user explicitly asks to adopt, inspect, or operate the RSP workflow.
-
-## When not to use
-
-- Do not load for general coding tasks unrelated to `.rsp/`.
-- Do not load when the repository does not use RSP and the user did not ask to adopt it.
-- Do not create an RSP change for a simple current-session task unless the user explicitly wants RSP tracking.
-- Do not treat this skill or the fallback protocol as a replacement for nearest project `AGENTS.md` instructions or relevant module `CONTEXT.md`.
+Use this Skill for RSP setup or repair, focused `.rsp/` work, and the durable-update decision before archive. Do not use it for unrelated coding or create a Change for a simple session task unless the user explicitly requests tracking.
 
 ## Derive one next action
 
-Before operating the workflow, derive the current stage from user intent, nearest project authority, `rsp status --json`, the selected Change's readiness, fresh verification evidence, and blockers. Stages are derived guidance, never persisted state.
+Read user intent, nearest authority, `rsp status --json`, the selected Change and its readiness, fresh verification evidence, and blockers. Stages are derived guidance, never persisted state.
 
-### Route implementation evidence
+Apply these routes in order:
 
-When work has reached implementation, classify the decisive evidence before selecting a capability:
+1. Stop for ambiguous authority, selection, or material owner decisions; return the one required input and its owner.
+2. On an explicit managed-continuation request, select `rsp-manage` only for one focused ready Change with genuinely independent slices, long authorized continuation, or interruption recovery. An ineligible request returns the ordinary Core or Discipline action without mutation or controller artifacts. Managed routing is never implicit and grants no lifecycle, Git, publication, deployment, approval, or human-acceptance authority.
+3. Route an explicit report-only review with fixed scope to `rsp-review` when available, otherwise perform the same read-only review manually.
+4. Route an explicit release-documentation, finalization, publication, or reconciliation operation through [Release operations](#release-operations) before ordinary Change routing.
+5. With no selected Change, name one ready WorkRef and direct focus action. For tiny settled work, return the direct engineering action. For unclear non-trivial work, use `rsp-shape` when available and Change mutation is authorized; otherwise manually create or refine one Change to the same ready boundary.
+6. Route one isolated material domain, module/seam, or evidence-seeking design question to `rsp-design` when available. Its manual fallback inspects authority and the live path, compares credible alternatives, separates evidence from owner choice, and returns the result to the same WorkRef without implementation or durable-truth mutation.
+7. If the Change is not shape-ready, route to Shape under the same authority rule.
+8. For incomplete implementation or stale, missing, or failed verification, use [Implementation evidence](#implementation-evidence).
+9. When Tasks and required verification pass without blockers, perform the durable decision. Do not infer a release operation from Change completion.
 
-- **Diagnosis:** an observed failure is reproducible or materially evidenced, but its cause or owning layer remains unexplained. Conflicting, intermittent, or multi-layer symptoms also take this branch. Select `rsp-diagnose` only when it is available; otherwise use the manual diagnosis fallback: reproduce, locate, test the smallest discriminating hypothesis, and return the evidenced cause without speculative production edits.
-- **TDD:** there is no unexplained failure, the required or corrected behavior is clear, and test-first work is explicitly required by the user, selected Change, or project instructions, or a concrete changed risk makes an observed pre-mutation RED materially safer. Concrete risks include public APIs or protocols, persisted data, security or money, concurrency or cancellation, complex state transitions, and defects that escaped to production. Select `rsp-tdd` only when it is available; otherwise use the manual TDD fallback: observe the focused RED, make the minimum GREEN change, optionally REFACTOR while green, then rerun required checks. Behavior being testable, a test being possible, or the work being a fix is not sufficient by itself.
-- **Ordinary implementation:** this is the default when diagnosis does not apply and no TDD gate above is met. Continue with ordinary `rsp-implement` when the required behavior, cause, or edit is sufficiently evidenced, or use the single manual implementation/verification action when that Skill is unavailable.
+State the derived stage, one next action, required input, returned owner, and decisive evidence. Name at most one optional capability, only when it is the next action and appears in the host's loaded Skill inventory. Missing capabilities never invalidate RSP: give the manual fallback against the same owner. Do not preload, enumerate, or recursively invoke optional capabilities.
 
-Diagnosis takes precedence over TDD: do not encode an unexplained symptom as a guessed regression test. Fresh verification is required, but a new test is only one evidence option; prefer the cheapest decisive existing test, static check, build, or acceptance evidence that covers the changed risk. Each branch returns its evidence, Tasks, Verify updates, and unresolved Blockers to the same selected Change. Capability availability changes execution assistance, not the owner or required outcome.
+### Implementation evidence
 
-### Route release documentation
+- **Diagnosis first:** diagnosis takes precedence over TDD for an evidenced but unexplained, conflicting, intermittent, or multi-layer failure. Use `rsp-diagnose` when available; its manual fallback reproduces, locates, and tests the smallest discriminating hypothesis. Do not encode an unexplained symptom as a guessed regression test.
+- **TDD when justified:** use `rsp-tdd` only when test-first is explicitly required by the user, Change, or project instructions, or when a concrete changed risk makes a pre-mutation RED materially safer. Public contracts, persisted data, security or money, concurrency, complex transitions, and escaped defects qualify; mere testability or being a fix does not. Its manual fallback observes the focused RED, makes the minimum GREEN change, and refactors only while green.
+- **Ordinary implementation by default:** use `rsp-implement`, or the equivalent bounded edit and verification, once the behavior, cause, and owner are sufficiently evidenced.
 
-Use the release-documentation branch only when the user explicitly requests release documentation, finalization, publication, or reconciliation and the release operation has a confirmed identity or range with unfinished release-surface work. A selected Change is not required. Lifecycle stage, completed implementation, or archive readiness alone is insufficient; ordinary Changes continue to the Core durable decision.
+All branches return evidence, Tasks, Verify updates, and blockers to the same Change. Fresh verification is required, but a new test is only one option; use the cheapest decisive check that covers the changed risk.
 
-Treat release identity as an owner decision. It is confirmed only by an explicit user instruction or authoritative repository release configuration; never infer it from version ordering, a previous prerelease, commit contents, or planned prose. Until confirmation, keep any release ledger version-neutral and leave version manifests, target changelog headings, exact-version README commands, versioned release notes, and tag comparisons unchanged.
+### Release operations
 
-When both conditions hold, select `rsp-release-docs` when available. Otherwise use the manual release-documentation fallback against the same explicit release operation: confirm the release range and audience, build one transient net-release evidence ledger, and project it into the repository-owned changelog, release notes, and applicable migration guidance. Use an optional Release Change only when material decisions, cross-stage coordination, recovery, blockers, or acceptance need a persistent owner; never create one merely to retain a mechanical checklist or verification transcript. This route prepares or audits documentation only; it does not grant commit, tag, push, release creation, publication, deployment, or approval authority.
+Route here only when the user explicitly requests release documentation, finalization, publication, or reconciliation and the operation has a confirmed identity or range with unfinished release-surface work. A selected Change is not required, and lifecycle stage or archive readiness alone is insufficient.
 
-An explicit request to create a release tag, hosted release, registry publication, or equivalent public release has an additional mandatory finalization gate. Before any external action, require confirmed identity and range, authorized release surfaces, a clean exact candidate, and the intended external actions; do not require or create an RSP Change by default. Select the `rsp-release-docs` **Finalize for publication** branch even if the prose was already reviewed. Finish required implementation Change lifecycle closeout and commits first, create a separate release commit, and rerun exact finalization checks against it; only that immutable candidate may receive `ready`. The gate inspects public tag/package release surfaces, rejects transient publication-state prose in shipped artifacts, and returns a credential-free `ready` or `not ready` handoff. If the Skill is unavailable, perform the same checks with the manual fallback. Neither result executes or grants authority for the external action.
+Release identity is an owner decision confirmed only by explicit user instruction or authoritative repository release configuration. Never infer it from version order, a previous prerelease, commits, or planned prose. Until confirmation, keep ledgers version-neutral and leave manifests, target changelog headings, exact-version commands, versioned notes, and tag comparisons unchanged.
 
-After an observed publication, use the `rsp-release-docs` **Reconcile published release** branch when the explicit release operation has unfinished external verification or mutable public-surface corrections. Keep immutable discrepancies historical and assign a corrective version or owner instead of moving tags or rewriting packages.
+Select `rsp-release-docs` when available or use its manual evidence-led fallback. An explicit tag, hosted release, registry publication, or equivalent public action must pass its **Finalize for publication** branch against a clean exact candidate after implementation Change closeout. Finalize versioned shipped surfaces in a separate release commit when Git delivery is authorized. The credential-free `ready` or `not ready` handoff never executes or grants commit, tag, push, release creation, publication, deployment, or approval authority.
 
-Apply these gates in order:
+Use an optional Release Change only for material decisions, cross-stage coordination, recovery, blockers, or acceptance needing a persistent owner—never for a mechanical checklist. After observed publication, use **Reconcile published release** for unfinished verification or authorized mutable-surface corrections; preserve immutable history and assign drift to a corrective version or owner.
 
-1. If authority, selection, or a material owner decision is ambiguous, return the one decision or evidence needed to proceed. If a declared blocker prevents the next operation, return its owning artifact or person; do not route around it.
-2. If the user explicitly requests managed continuation, select `rsp-manage` only when it is available. Its eligibility gate activates only for one focused ready Change with genuinely independent slices, long authorized continuation, or interruption recovery; an ineligible request returns the exact ordinary Core or Discipline next action without mutation or controller artifacts. Managed routing is never implicit and grants no lifecycle, Git, publication, deployment, approval, or human-acceptance authority.
-3. If the user requests a report-only review against a fixed scope, select `rsp-review` only when it is available; otherwise name the manual read-only review and return its findings to the selected Change's Tasks, Verify, or Blockers.
-4. If the user explicitly requests release documentation, a tag, hosted release, registry publication, or published-release reconciliation, resolve the confirmed identity/range, exact candidate or observed external identity, allowed release surfaces, and external-action authority, then run the `rsp-release-docs` draft, finalization, or reconciliation branch without creating a Change by default. Leave any unrelated focus untouched and fail a candidate contaminated by uncommitted work. Missing operation evidence returns the exact owner input; the gate never infers or grants an external action.
-5. If no Change is selected, use the status plan to name one ready WorkRef and the direct focus action. For tiny settled work, return the direct engineering action without creating RSP state. For unclear non-trivial work, select `rsp-shape` only when it is available and the user authorized its Change mutation; otherwise give the manual fallback of creating or refining one Change.
-6. If the user or Shape has isolated one material domain, module/seam, or evidence-seeking design question for the selected Change, select `rsp-design` when available; otherwise return the compact manual design fallback: inspect project authority and the live path, compare credible alternatives, separate evidence from owner choice, and return the result to the same WorkRef without implementation or durable-truth mutation.
-7. If the selected Change is not shape-ready and no bounded design question has been isolated, select `rsp-shape` under the same authority rule or give the manual fallback of completing its Proposal, Spec, Design, Tasks, Verify, and Blockers.
-8. If a shape-ready Change has incomplete implementation tasks, or its required verification is missing, stale, or failed, apply the implementation-evidence routing above. Select only its resulting available capability when authorized; otherwise name its manual fallback owned by that Change.
-9. If implementation Tasks and required verification pass with no blocker, continue that Change to the durable decision; do not infer a release operation from its completion.
-10. Otherwise, when required Tasks and verification pass with no blocker, perform the Core durable decision. Archive only after required current facts and rationale are written or explicitly judged unnecessary. Recommend explicit archive as the next action before final Git delivery; Core does not execute archive or grant authority to stage, commit, push, or publish. Keep each completed Change independently reviewable. If later Git authority is granted, deliver it as one logical commit; a separately authorized release operation may then finalize versioned shipped surfaces in a dedicated release commit without creating another Change.
+## Operate the selected Change
 
-State the derived stage, one next action, required input, returned owner, and decisive evidence. Name at most one available optional capability. Only name an optional capability when it is the one next action, and treat it as available only when it appears in the host's loaded skill inventory. Missing optional capabilities never invalidate RSP; always provide the manual fallback against the same owner.
+Read the focused Change, its sibling Group Brief when grouped, and only the relevant Specs and Decision Records before implementation. Run `npx -y @oevery/rsp check --focused` before treating it as ready. Only `focus.d/` markers select current work; open filenames do not. Preserve one explicit `kind` and the canonical Proposal, Spec, Design, Tasks, Verify, and Blockers sections.
 
-Do not preload, enumerate, or recursively invoke optional capabilities. Do not infer implementation, review, Git, publication, or approval authority from routing, readiness, or capability availability.
+Keep the Change a convergent snapshot of the current plan and final decisive evidence. Replace superseded content; keep routine attempts, RED/GREEN chronology, temporary probes, and command transcripts in the response. Update Tasks, Verify, and any invalidated Proposal, Spec, or Design in the same session.
 
-## Workflows
+Persist only `open` and `archived`; derive readiness, blockers, stage, and next actions. Do not infer implementation, review, Git, publication, or approval authority from focus, readiness, routing, or capability availability.
 
-### Setup or repair
+Load detailed procedures only when their path is active:
 
-1. Initialize with `npx -y @oevery/rsp init [--agents-mode managed|print] [--with-project-setup]`.
-2. `--with-project-setup` creates and focuses `changes/project-setup.md`; otherwise create it with `npx -y @oevery/rsp create project-setup` only when explicit bootstrap tracking is still needed.
-3. Fill the bootstrap change if it exists, write durable architecture facts to `.rsp/specs/design.md`, and keep stable scoped operating instructions in the nearest project-owned `AGENTS.md`.
-4. For diagnostics, run `npx -y @oevery/rsp doctor`.
-5. For safe deterministic repairs, run `npx -y @oevery/rsp doctor --fix` or `npx -y @oevery/rsp update`.
-6. When auditing manually, verify `.rsp/`, managed roots, and nested Spec parents are real directories; the project `AGENTS.md`, managed markers, fallback/config files, indexes, and placeholders are regular files; `AGENTS.md` has the managed block; `specs/design.md` and the configured Decision Record directory exist; every group has one valid brief with matching direct children; work and archive trees are flat or one group level; and `focus.d/` markers match executable Changes.
-7. Treat `doctor --fix` `fixed` entries as actual filesystem changes. An empty `fixed` array or `No safe fixes needed.` means the repair pass changed nothing.
-8. Do not use repair commands for semantic decisions such as stale focus removal, durable updates, or archive readiness.
+- Read [setup and repair](references/setup-repair.md) before initializing, auditing, migrating, or repairing RSP state.
+- Read [groups and dependencies](references/groups-dependencies.md) before creating, focusing, planning, or closing grouped/dependent work.
+- Read [conflict handling](references/conflict-handling.md) only when an active merge, rebase, or cherry-pick conflict intersects authorized work.
+- Read [durable review](references/durable-review.md) only after required Tasks and verification pass, or when auditing archive readiness.
 
-### Focused work
+## Ownership and safety
 
-1. Follow the managed `AGENTS.md` read order: nearest instructions, relevant context, this skill or fallback protocol, focus, optional sibling Group Brief, selected Change, then relevant Specs and Decision Records.
-2. Treat only `focus.d/` markers as current RSP work; do not treat unfocused files in `changes/` as current work unless the user explicitly asks or you run `npx -y @oevery/rsp focus <name>`.
-3. Resolve executable Change names as either `<change>` or one direct `<group>/<change>` child. Require a real `changes/` root and real existing `focus.d/`, `archives/`, and group prefixes; reject symlinks, incomplete inspection, deeper paths, and file/directory identity collisions.
-4. Use a Change Group only for at least two independently executable Changes sharing one goal or completion contract. Create it with `npx -y @oevery/rsp group create <group> [goal]`, then replace the brief placeholders and declare every direct child identity and boundary under `Slices` before creating children.
-5. Treat logical `<group>/brief`, physically stored as `<group>/00-brief.md`, as non-executable and non-focusable. For grouped work, read it before the selected child Change. Its `Slices` declaration order guides navigation; a Brief blocker is inherited as an external blocker by every direct child without creating edges. Archive children independently, then close only the brief with `npx -y @oevery/rsp group close <group>` when all group gates pass.
-6. Declare an exact prerequisite only as `- requires \`<change-work-ref>\`: <reason>` under the dependent Change's `Blockers`. Targets must be executable Changes, not Group Briefs. Keep external blockers as ordinary prose and never infer an edge from them.
-7. Use `npx -y @oevery/rsp status --json` as the derived dependency view. Read `plan.nodes`, `plan.ready`, `plan.edges`, `plan.blocked`, and `plan.waves`; nodes distinguish selected Changes from prerequisite context, and each edge reads as “`change` requires `requires`” with `reason` and `state`. Filtered plans retain the transitive prerequisite closure needed to explain the selection. Human status renders the same flat graph as a dependency forest; do not infer nested JSON ownership from that presentation. Do not create or maintain a separate graph or copy live delivery state into a Group Brief. Archived prerequisites resolve without rewriting the dependent Change, while incomplete archive inspection produces no ready plan.
-8. Read the focused change before editing code.
-9. If a focused change is missing an explicit `kind`, repair the frontmatter before continuing.
-10. Run `npx -y @oevery/rsp check --focused` before treating focused work as ready; resolve dependency errors, placeholders, or clarification warnings when they represent real unfinished content.
-11. Treat `rsp check` warnings as deterministic hygiene signals, not as the durable-update decision.
-12. Use `npx -y @oevery/rsp create <name> --lite` only when the user explicitly wants RSP tracking for a small, straightforward change.
-13. Convert actionable `## Tasks` checkboxes into your agent-local task tracker when one is available.
-14. Keep implementation sequential by default; parallelize only independent read-only discovery or mechanical checks.
-15. Update `## Tasks`, `## Verify`, and any invalidated `## Proposal`, `## Spec`, or `## Design` content in the same working session as implementation facts change.
-16. Keep the selected Change as a convergent snapshot of the current plan and final decisive evidence. Replace stale or superseded content; keep routine attempts, RED/GREEN loops, command transcripts, and correction chronology in the response, then compress any material history to final outcomes, coverage, omissions, and unresolved risks before archive.
-17. Keep temporary debugging notes, task history, and command transcripts out of `specs/` and project-owned `AGENTS.md` instructions.
+Route planned design to the selected Change; stable implemented facts to the smallest relevant Spec or authorized scoped instruction; lasting rationale to one exact Decision Record; stable navigation to project-owned `CONTEXT.md`; stable operating rules to project-owned `AGENTS.md`; and temporary continuation to the response. Never write planned state as current truth or duplicate facts into rationale.
 
-### Route artifacts by owner
+Use RSP commands for managed setup, focus, repair, indexes, and archive. Do not directly create command-owned files, edit generated indexes or `.rsp/rsp-rules.md` as durable truth, or modify the managed RSP block. Preserve unrelated work. Core recommends explicit archive only after the durable decision; it does not execute archive or grant staging, commit, push, publication, deletion, deployment, approval, or human-acceptance authority.
 
-Use one semantic routing matrix throughout shaping, execution, and pre-archive review:
+When accepted work remains, return a localized continuation with these semantic fields in order: `WorkRef`, `Authority`, `Current state`, `Changed artifacts`, `Fresh verification`, `Blockers`, `Next action`. Preserve technical values. The continuation points to existing owners, is not a second state store, and must not be persisted without explicit path authority. On resume, reopen its pointers, inspect drift, and refresh decisive evidence.
 
-| Content | Owner | Boundary |
-| --- | --- | --- |
-| Planned future design | selected Change `## Design` | Never write planned state as current truth. |
-| Implemented stable current facts | smallest relevant Spec, usually `.rsp/specs/design.md` or an existing domain Spec | Write only observed stable facts under authority. |
-| Lasting rationale and tradeoffs | one exact file under `durableReview.decisionRecordsPath` | Judge independently from current facts; do not duplicate them. |
-| Stable scoped navigation or current context | project-owned `CONTEXT.md`, when that convention exists | Preserve project ownership and edit only with explicit authority. |
-| Stable operating instructions | nearest project-owned `AGENTS.md` outside the managed RSP block | Preserve project ownership and edit only with explicit authority. |
-| Temporary execution state | response continuation | Not durable truth; write a file only when explicitly authorized. |
+## Durable decision output
 
-When accepted work remains, return this compact artifact-scoped continuation in the response:
-
-```md
-## <localized RSP Continuation heading>
-- <localized WorkRef label>: <selected Change>
-- <localized Authority label>: <project, Change, Spec, decision, or report pointers>
-- <localized Current state label>: <completed, partial, failed, unavailable, or blocked plus decisive state>
-- <localized Changed artifacts label>: <paths or none>
-- <localized Fresh verification label>: <command and result, or pending reason>
-- <localized Blockers label>: <exact blocker and owner, or none>
-- <localized Next action label>: <smallest bounded action and owner>
-```
-
-Treat this continuation shape as semantic field order rather than fixed English wording. Localize its human-facing title and labels to the response language while preserving WorkRefs, paths, commands, identifiers, and machine-consumed values. A localized label may retain a technical token in parentheses but must not use that English token alone; for example, use `工作引用（WorkRef）` in a Chinese response. Do not use the response language to rewrite referenced project artifact prose.
-
-The continuation points to existing owners; it is not a second state store. On resume, reopen every authority pointer, inspect worktree and artifact drift, and refresh any verification supporting the next action. Never create hidden handoff/controller state or persist the continuation without explicit path authority.
-
-### Handle an active Git conflict
-
-When a merge, rebase, or cherry-pick conflict intersects authorized implementation:
-
-1. Inspect the exact Git operation, conflicted paths, current index/worktree, and pre-existing user changes.
-2. Interpret base, ours, and theirs in that operation; trace the relevant behavior and authority instead of choosing a side mechanically.
-3. Resolve only evidenced content inside the WorkRef and mutation authority. Preserve unrelated work and do not stage the resolution unless separately authorized.
-4. Stop when the conflict includes unrelated user work, an unresolved product decision, incomplete side/base evidence, or out-of-scope content. Return the exact conflict and required owner input in the continuation.
-5. After an authorized working-tree resolution, rerun affected checks and return their fresh result.
-
-Do not continue or abort the Git operation, commit, push, or infer Git delivery authority from implementation or conflict-resolution authority. RSP does not need a separate merge-conflict Skill for this fallback.
-
-### Pre-archive durable decision
-
-1. Run `npx -y @oevery/rsp check --focused` for focused work, or `npx -y @oevery/rsp check` when reviewing all open changes.
-2. Run `npx -y @oevery/rsp show --focused --json` or `npx -y @oevery/rsp ready <name> --json` to collect readiness, warnings, context paths, and `durableReview` guidance.
-3. Treat `durableReview.factCandidateTargets` and `durableReview.decisionRecordsPath` as advisory routing context, not as permission to edit generated indexes or invent a Decision Record filename.
-4. Treat `Spec` delta markers (`### ADDED`, `### MODIFIED`, `### REMOVED`) as planning aids only; do not merge them automatically.
-5. Read only the current Change, relevant Specs and Decision Records, nearest project-owned `AGENTS.md`, and code files needed for the semantic decision.
-6. Produce the durable decision output before archiving.
-
-## Durable decision
-
-Choose one current-fact decision and one rationale decision independently.
-
-Current facts:
-
-- `No current-fact update needed`
-- `Update existing spec or scoped instruction`
-- `Create a new durable spec` only when the knowledge is project-level, reusable, and does not fit `specs/design.md`, an existing spec, or a scoped project instruction
-
-Rationale:
-
-- `No Decision Record needed`
-- `Create or update a Decision Record`
-
-Prefer no update on either axis when there is no concrete stable fact or lasting rationale worth rereading.
-
-Write a durable update only when one of these is true:
-
-- the change altered stable system behavior
-- the change changed a project boundary, default, or constraint
-- future agents or developers would likely make mistakes without the fact
-- the fact is worth rereading in later sessions as durable project knowledge
-
-Create or update a Decision Record only when the choice is hard to reverse, would be surprising without context, and reflects a real tradeoff. Decision Records own rationale, alternatives, tradeoffs, and consequences; Specs own what is currently true.
-
-Apply the artifact-routing matrix and choose the smallest correct target:
-
-- project-wide design, boundaries, defaults, and durable context -> `.rsp/specs/design.md`
-- stable project or module operating instructions -> nearest project-owned `AGENTS.md`, only with authority to edit its non-managed content
-- stable navigation or scoped current context -> project-owned `CONTEXT.md`, only when the project uses it and authority permits the edit
-- an additional reusable project-level spec -> `.rsp/specs/<name>.md`
-- lasting rationale -> one exact Markdown file under `durableReview.decisionRecordsPath`
-
-Do not choose generated indexes, `.rsp/rsp-rules.md`, or the managed RSP block in `AGENTS.md` as ordinary durable writeback targets.
-
-Prefer `.rsp/specs/design.md` or an existing durable file before creating a new spec file.
-
-Write stable facts or lasting rationale, not narrative history, task-by-task notes, temporary debugging history, or archive-only detail. Do not duplicate current facts into a Decision Record or rationale into a Spec. If you cannot identify concrete durable content, do not invent it.
-
-## Output template
-
-Use these semantic fields in this exact order. Localize the heading and human-facing labels to the response language; preserve the decision values shown in angle brackets as canonical values.
+After loading [durable review](references/durable-review.md), choose current facts and rationale independently. Localize headings and labels, but preserve the canonical values below:
 
 ```md
 ## <localized Durable Decision heading>
 - <localized Current facts label>: <No current-fact update needed | Update existing spec or scoped instruction | Create a new durable spec>
 - <localized Current-fact target label>: <exact file path or N/A>
-- <localized Facts to write label>:
-  - <durable fact or none>
+- <localized Facts to write label>: <durable facts or none>
 - <localized Decision Record label>: <No Decision Record needed | Create or update a Decision Record>
 - <localized Decision Record target label>: <exact file path or N/A>
-- <localized Rationale to write label>:
-  - <lasting rationale or none>
+- <localized Rationale to write label>: <lasting rationale or none>
 - <localized Archive ready label>: <yes | no>
 ```
 
-These are response labels, not canonical RSP artifact headings. A localized label may retain its technical field identity in parentheses; for example, a Chinese response may use `## 持久化决策`, `决策记录（Decision Record）`, and `可归档（Archive ready）`, but not their English labels alone.
-
-Rules for the output:
-
-- Each target must be an exact file path when its decision requires an update; `durableReview.decisionRecordsPath` is a directory, not the final target.
-- `Facts to write` must contain durable facts, not task history or debugging notes.
-- `Rationale to write` must contain lasting rationale, alternatives, tradeoffs, or consequences, not a duplicate of current facts.
-- If real blockers remain or a required fact or rationale update is not yet written, `Archive ready` must be `no`.
-- If neither axis has a missing update and remaining verify risk is consciously accepted, `Archive ready` may be `yes`.
-- Do not use CLI warning text as a substitute for semantic durable-update judgment.
-- CLI `archiveReady: judgment` means the skill or a human must decide; it is not automatic approval.
+Response-only Continuation and Durable Decision labels are not canonical artifact headings. In Chinese, for example, use `## 持久化决策`, `决策记录（Decision Record）`, and `可归档（Archive ready）`, not English labels alone. A required unwritten update or real blocker makes archive readiness `no`; CLI `archiveReady: judgment` is advisory, not approval.

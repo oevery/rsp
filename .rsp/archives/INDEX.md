@@ -4,7 +4,7 @@ summary: Completed RSP changes.
 kind: generated-index
 index_type: archives
 source_dir: .rsp/archives
-entry_count: 86
+entry_count: 87
 ---
 
 # Archive Index
@@ -55,6 +55,7 @@ entry_count: 86
 | 2026-07-25 | decouple-retained-evidence-release-identity | fix | Retained native-composition evidence remains reusable across release-only version changes while continuing to fail closed on evaluated behavior drift. |
 | 2026-07-25 | defer-release-identity-finalization | fix | Keep implementation Changes and commits independent from release identity, and finalize versioned package surfaces only in a separately owned Release Change after the target identity is confirmed. |
 | 2026-07-25 | harden-release-finalization-boundary | fix | Prevent pre-publication state and transient credentials from leaking into public release documentation, and correct the published beta.0 repository surfaces without rewriting its immutable artifacts. |
+| 2026-07-25 | pre-dogfood-maintenance-hardening | fix | Make the pre-dogfood release, retained-evidence, dependency, and Skill gates fail only for relevant risk while preserving package safety and explicit authority boundaries. |
 | 2026-07-25 | release-3-1-0-beta-1 | ops | Produce one internally consistent, independently committed `@oevery/rsp@3.1.0-beta.1` publication candidate without performing external release actions. |
 | 2026-07-25 | simplify-release-operation-tracking | fix | Make a confirmed mechanical release a direct, transiently coordinated operation instead of requiring a redundant RSP Change, while retaining optional durable tracking for materially complex releases. |
 | 2026-07-21 | 3-0-skill-readiness/brief | group | — |

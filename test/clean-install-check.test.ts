@@ -51,14 +51,30 @@ describe('clean install package check', () => {
         'module-seams.md',
         'reversible-exploration.md',
       ])
+      expect(report.rspCoreReferences).toEqual([
+        'conflict-handling.md',
+        'durable-review.md',
+        'groups-dependencies.md',
+        'setup-repair.md',
+      ])
       expect(report.prepareReleaseNotesReferences).toEqual([
         'convention-discovery.md',
+        'evidence-and-surfaces.md',
         'output-contracts.md',
+        'publication-lifecycle.md',
       ])
       expect(report.inventory.files).toContain('skills/rsp-design/SKILL.md')
       expect(report.inventory.files).toContain('skills/rsp-manage/SKILL.md')
       expect(report.inventory.files).toContain('skills/rsp-release-docs/SKILL.md')
-      expect(report.inventory.files).toContain('skills/rsp-release-docs/references/output-contracts.md')
+      for (const path of [
+        'skills/rsp/references/conflict-handling.md',
+        'skills/rsp/references/durable-review.md',
+        'skills/rsp/references/groups-dependencies.md',
+        'skills/rsp/references/setup-repair.md',
+        'skills/rsp-release-docs/references/evidence-and-surfaces.md',
+        'skills/rsp-release-docs/references/publication-lifecycle.md',
+      ])
+        expect(report.inventory.files).toContain(path)
       expect(report.inventory.files.some((path: string) => /^(?:research|\.rsp|\.agents|\.codex|scripts|\.cache)(?:\/|$)/u.test(path))).toBe(false)
       expect(readdirSync(temporaryRoot)).toEqual([])
     }

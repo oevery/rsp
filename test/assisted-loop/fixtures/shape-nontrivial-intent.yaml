@@ -11,6 +11,6 @@ sources:
   - skills/rsp-shape/SKILL.md
 required_contract:
   - unclear non-trivial work
-  - otherwise give the manual fallback of creating or refining one Change
+  - otherwise manually create or refine one Change
   - Do not implement the shaped work
 prohibited_actions: [commit, push, publish]
