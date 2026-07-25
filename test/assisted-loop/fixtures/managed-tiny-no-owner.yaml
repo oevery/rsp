@@ -1,0 +1,16 @@
+id: managed-tiny-no-owner
+stage: implementation
+evidence:
+  - the user explicitly requests managed completion
+  - the work is tiny and settled
+  - no sufficient ready owner exists
+expected:
+  next_action: return to direct engineering
+  returned_owner: the concrete session task
+sources:
+  - skills/rsp/SKILL.md
+required_contract:
+  - resolve the smallest sufficient owner before testing Manage eligibility
+  - return tiny settled work to direct engineering
+  - without a synthetic Change or controller artifact
+prohibited_actions: [shape, dispatch, commit, push, publish]

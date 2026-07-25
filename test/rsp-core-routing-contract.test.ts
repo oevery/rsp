@@ -78,7 +78,7 @@ describe('rsp core routing contract', () => {
     expectSemanticGroup(skill, [
       ['one isolated material domain, module/seam, or evidence-seeking design question'],
       ['`rsp-design`'],
-      ['explicit managed-continuation request'],
+      ['explicit managed-completion', 'managed-continuation request'],
       ['one focused ready Change'],
       ['genuinely independent slices'],
       ['Managed routing is never implicit'],
@@ -91,6 +91,30 @@ describe('rsp core routing contract', () => {
     ])
     expect(skill).toMatch(/never executes or grants commit, tag, push, release creation, publication, deployment, or approval authority/)
     expect(fallback).toMatch(/Route release documentation only for an explicit release operation with a confirmed identity or range/)
+  })
+
+  it('resolves an explicit managed owner before Manage qualification', () => {
+    for (const body of [skill, fallback]) {
+      const resolveOwner = body.indexOf('resolve the smallest sufficient owner before testing Manage eligibility')
+      const qualifyManage = body.indexOf('Only after that preflight')
+
+      expect(resolveOwner).toBeGreaterThanOrEqual(0)
+      expect(qualifyManage).toBeGreaterThan(resolveOwner)
+      expectSemanticGroup(body, [
+        ['Reuse one unambiguous selected ready owner'],
+        ['tiny settled work'],
+        ['without a synthetic Change or controller artifact'],
+        ['clear non-trivial work'],
+        ['in-scope RSP planning artifacts'],
+        ['unless the user requests no edits'],
+        ['re-evaluate', 're-evaluate this route'],
+        ['without another authorization round'],
+        ['single highest-impact owner decision'],
+        ['no implementation or controller artifact'],
+        ['explicit report-only review or release operation'],
+      ])
+    }
+    expect(skill).toContain('For a material owner decision inside an explicit managed request, continue to the Shape preflight')
   })
 
   it('keeps persistent artifacts convergent and domain-owned', () => {

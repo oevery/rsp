@@ -5,7 +5,7 @@ import { evaluateAssistedLoop, loadAssistedLoopCases } from '../scripts/assisted
 const root = fileURLToPath(new URL('..', import.meta.url))
 
 describe('rsp assisted engineering loop', () => {
-  it('covers the tightened 3.0 gate with eight host-neutral scenarios', () => {
+  it('covers the tightened 3.0 gate with eleven host-neutral scenarios', () => {
     const cases = loadAssistedLoopCases(root)
 
     expect(cases.map(item => item.id)).toEqual([
@@ -14,6 +14,9 @@ describe('rsp assisted engineering loop', () => {
       'implementation-diagnosis',
       'implementation-known-cause',
       'implementation-tdd',
+      'managed-ambiguous-no-owner',
+      'managed-clear-no-owner',
+      'managed-tiny-no-owner',
       'missing-discipline-fallback',
       'review-fix-rereview',
       'shape-nontrivial-intent',

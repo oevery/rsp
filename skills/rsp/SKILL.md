@@ -4,7 +4,7 @@ description: Use this skill when initializing RSP, operating an existing .rsp pr
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.25.4"
+  version: "2026.07.25.5"
 ---
 
 # RSP Skill
@@ -23,8 +23,8 @@ Read user intent, nearest authority, `rsp status --json`, the selected Change an
 
 Apply these routes in order:
 
-1. Stop for ambiguous authority, selection, or material owner decisions; return the one required input and its owner.
-2. On an explicit managed-continuation request, select `rsp-manage` only for one focused ready Change with genuinely independent slices, long authorized continuation, or interruption recovery. An ineligible request returns the ordinary Core or Discipline action without mutation or controller artifacts. Managed routing is never implicit and grants no lifecycle, Git, publication, deployment, approval, or human-acceptance authority.
+1. Stop for ambiguous authority or selection and return the one required input and its owner. For a material owner decision inside an explicit managed request, continue to the Shape preflight in route 2 so repository inspection precedes the single owner question; otherwise stop here.
+2. On an explicit managed-completion or managed-continuation request that is not an explicit report-only review or release operation, resolve the smallest sufficient owner before testing Manage eligibility. Reuse one unambiguous selected ready owner. With no sufficient ready owner, return tiny settled work to direct engineering without a synthetic Change or controller artifact. For clear non-trivial work, the managed request grants authority to create or refine only its in-scope RSP planning artifacts unless the user requests no edits; use `rsp-shape` when available, otherwise its manual fallback, then re-read status and readiness and re-evaluate this route without another authorization round. When a material product, acceptance, scope, or owner choice remains after repository inspection, route to Shape for the single highest-impact owner decision and create no implementation or controller artifact. Only after that preflight, select `rsp-manage` for one focused ready Change or one explicitly selected ready shallow Group with genuinely independent slices, long authorized continuation, or interruption recovery. An ineligible request returns the ordinary Core or Discipline action. Managed routing is never implicit and grants no lifecycle, Git, publication, deployment, approval, or human-acceptance authority.
 3. Route an explicit report-only review with fixed scope to `rsp-review` when available, otherwise perform the same read-only review manually.
 4. Route an explicit release-documentation, finalization, publication, or reconciliation operation through [Release operations](#release-operations) before ordinary Change routing.
 5. With no selected Change, name one ready WorkRef and direct focus action. For tiny settled work, return the direct engineering action. For unclear non-trivial work, use `rsp-shape` when available and Change mutation is authorized; otherwise manually create or refine one Change to the same ready boundary.

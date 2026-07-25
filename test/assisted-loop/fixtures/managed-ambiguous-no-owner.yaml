@@ -1,0 +1,17 @@
+id: managed-ambiguous-no-owner
+stage: shaping
+evidence:
+  - the user explicitly requests managed completion
+  - no sufficient ready owner exists
+  - repository inspection cannot settle a material acceptance choice
+expected:
+  next_action: route to Shape for the single highest-impact owner decision
+  returned_owner: the user decision required by Shape
+sources:
+  - skills/rsp/SKILL.md
+required_contract:
+  - resolve the smallest sufficient owner before testing Manage eligibility
+  - material product, acceptance, scope, or owner choice
+  - single highest-impact owner decision
+  - create no implementation or controller artifact
+prohibited_actions: [implement, dispatch, commit, push, publish]

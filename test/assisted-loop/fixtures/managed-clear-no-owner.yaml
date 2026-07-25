@@ -1,0 +1,18 @@
+id: managed-clear-no-owner
+stage: shaping
+evidence:
+  - the user explicitly requests managed completion
+  - the non-trivial outcome, scope, authority, and acceptance are clear
+  - no sufficient ready owner exists
+expected:
+  next_action: create the smallest sufficient owner through Shape and re-evaluate Manage
+  returned_owner: the newly ready Change or shallow Group
+sources:
+  - skills/rsp/SKILL.md
+required_contract:
+  - resolve the smallest sufficient owner before testing Manage eligibility
+  - clear non-trivial work
+  - in-scope RSP planning artifacts
+  - unless the user requests no edits
+  - re-evaluate this route without another authorization round
+prohibited_actions: [commit, push, publish]
