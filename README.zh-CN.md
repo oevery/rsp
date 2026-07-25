@@ -34,17 +34,17 @@ RSP 根据 selected Change、仓库证据、验证结果和 blockers 推导下�
 ## 快速开始
 
 ```bash
-npx -y @oevery/rsp@3.1.0-beta.0 init
-npx -y @oevery/rsp@3.1.0-beta.0 doctor
+npx -y @oevery/rsp@3.1.0-beta.1 init
+npx -y @oevery/rsp@3.1.0-beta.1 doctor
 ```
 
 推荐启动流程：
 
 ```bash
-npx -y @oevery/rsp@3.1.0-beta.0 init --with-project-setup
+npx -y @oevery/rsp@3.1.0-beta.1 init --with-project-setup
 # 填写 .rsp/changes/project-setup.md
 # 填写 .rsp/specs/design.md
-npx -y @oevery/rsp@3.1.0-beta.0 doctor
+npx -y @oevery/rsp@3.1.0-beta.1 doctor
 ```
 
 ## Artifact foundation
@@ -190,7 +190,7 @@ RSP 发布十个宿主无关、按需加载的 Skills：
 
 通常应由人先读 `README.md`；agent 应遵循 nearest `AGENTS.md`，可用时加载 `rsp` skill，仅在 skill 不可用时读取 `.rsp/rsp-rules.md`。
 
-如果文档中写的是 `rsp <command>`，默认前提是你的环境里已经能直接运行 `rsp`。进行 opt-in beta 评估时，应固定精确 prerelease 身份，例如 `npx -y @oevery/rsp@3.1.0-beta.0 <command>`；stable 用户仍可使用不带版本的入口获取 npm `latest`。
+如果文档中写的是 `rsp <command>`，默认前提是你的环境里已经能直接运行 `rsp`。进行 opt-in beta 评估时，应固定精确 prerelease 身份，例如 `npx -y @oevery/rsp@3.1.0-beta.1 <command>`；stable 用户仍可使用不带版本的入口获取 npm `latest`。
 
 将当前精确包内置的完整 Skill 套件安装到当前项目：
 
@@ -202,8 +202,8 @@ rsp skills install
 该命令会预检全部十个 package-owned targets，保留无关的 `.agents/skills` 条目，并且只有显式传入 `--force` 才会替换内容不同的 package-owned 目录。它从调用 `rsp` 的同一个包安装，因此 beta 评估可以固定精确 npm 身份：
 
 ```bash
-npx -y @oevery/rsp@3.1.0-beta.0 skills install --dry-run
-npx -y @oevery/rsp@3.1.0-beta.0 skills install
+npx -y @oevery/rsp@3.1.0-beta.1 skills install --dry-run
+npx -y @oevery/rsp@3.1.0-beta.1 skills install
 ```
 
 精确 prerelease 身份可以避免依赖持续移动的 dist-tag。`rsp update` 只刷新由 RSP 管理的项目文件；刷新 package-owned Skill 套件需要单独运行 `rsp skills install`。
@@ -257,8 +257,8 @@ durable review 包含两个独立语义判断：是否更新当前事实或作�
 
 新项目：
 
-1. `npx -y @oevery/rsp@3.1.0-beta.0 init`
-2. 优先使用 `npx -y @oevery/rsp@3.1.0-beta.0 init --with-project-setup`，或手动执行 `rsp create project-setup`
+1. `npx -y @oevery/rsp@3.1.0-beta.1 init`
+2. 优先使用 `npx -y @oevery/rsp@3.1.0-beta.1 init --with-project-setup`，或手动执行 `rsp create project-setup`
 3. 填写 `.rsp/specs/design.md`
 4. 仅在需要新的长期项目文档时使用 `rsp add spec <name>`
 5. 将长期理由写入配置的 Decision Record 目录，将稳定的作用域操作指令写入 nearest project-owned `AGENTS.md`
@@ -271,14 +271,14 @@ durable review 包含两个独立语义判断：是否更新当前事实或作�
 
 已有复杂 `AGENTS.md` 的项目：
 
-1. `npx -y @oevery/rsp@3.1.0-beta.0 init`
+1. `npx -y @oevery/rsp@3.1.0-beta.1 init`
 2. 保持受管块尽量薄
 3. 将长期设计收敛到 `.rsp/specs/design.md`
 4. 只有需要额外的 durable current-fact 文档时才使用 `rsp add spec <name>`
 
 AI 协助接入：
 
-1. `npx -y @oevery/rsp@3.1.0-beta.0 init --agents-mode print --with-project-setup`
+1. `npx -y @oevery/rsp@3.1.0-beta.1 init --agents-mode print --with-project-setup`
 2. 保持受管块原样，只在需要时调整周围由人维护的内容
 3. 让 AI 审阅并填写 `.rsp/changes/project-setup.md`
 4. 让 AI 填写 `.rsp/specs/design.md`

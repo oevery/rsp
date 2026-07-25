@@ -34,17 +34,17 @@ RSP derives the next action from the selected Change, repository evidence, verif
 ## Quick start
 
 ```bash
-npx -y @oevery/rsp@3.1.0-beta.0 init
-npx -y @oevery/rsp@3.1.0-beta.0 doctor
+npx -y @oevery/rsp@3.1.0-beta.1 init
+npx -y @oevery/rsp@3.1.0-beta.1 doctor
 ```
 
 Recommended bootstrap flow:
 
 ```bash
-npx -y @oevery/rsp@3.1.0-beta.0 init --with-project-setup
+npx -y @oevery/rsp@3.1.0-beta.1 init --with-project-setup
 # fill .rsp/changes/project-setup.md
 # fill .rsp/specs/design.md
-npx -y @oevery/rsp@3.1.0-beta.0 doctor
+npx -y @oevery/rsp@3.1.0-beta.1 doctor
 ```
 
 ## Artifact foundation
@@ -205,7 +205,7 @@ Surface matrix:
 
 Humans should usually start with `README.md`; agents should follow nearest `AGENTS.md`, load the `rsp` skill when available, and use `.rsp/rsp-rules.md` only as fallback.
 
-When this README shows `rsp <command>`, it assumes the command is already available in your environment. For opt-in beta evaluation, pin the exact prerelease identity, such as `npx -y @oevery/rsp@3.1.0-beta.0 <command>`; stable users can keep using the unversioned package entrypoint for npm `latest`.
+When this README shows `rsp <command>`, it assumes the command is already available in your environment. For opt-in beta evaluation, pin the exact prerelease identity, such as `npx -y @oevery/rsp@3.1.0-beta.1 <command>`; stable users can keep using the unversioned package entrypoint for npm `latest`.
 
 Install the exact package-bundled suite into the current project:
 
@@ -217,8 +217,8 @@ rsp skills install
 The command preflights all ten package-owned targets, leaves unrelated `.agents/skills` entries untouched, and requires explicit `--force` before replacing a divergent package-owned directory. It installs from the package that invoked `rsp`, so prerelease dogfooding can pin one exact npm identity:
 
 ```bash
-npx -y @oevery/rsp@3.1.0-beta.0 skills install --dry-run
-npx -y @oevery/rsp@3.1.0-beta.0 skills install
+npx -y @oevery/rsp@3.1.0-beta.1 skills install --dry-run
+npx -y @oevery/rsp@3.1.0-beta.1 skills install
 ```
 
 Exact prerelease identities avoid depending on a moving dist-tag. `rsp update` refreshes RSP-managed project files only; run `rsp skills install` separately to refresh the package-owned Skill suite.
@@ -272,8 +272,8 @@ Durable review makes two independent semantic choices: whether current facts or 
 
 New project:
 
-1. `npx -y @oevery/rsp@3.1.0-beta.0 init`
-2. Prefer `npx -y @oevery/rsp@3.1.0-beta.0 init --with-project-setup`, or run `rsp create project-setup` manually
+1. `npx -y @oevery/rsp@3.1.0-beta.1 init`
+2. Prefer `npx -y @oevery/rsp@3.1.0-beta.1 init --with-project-setup`, or run `rsp create project-setup` manually
 3. Fill `.rsp/specs/design.md`
 4. Use `rsp add spec <name>` only when a new durable project doc is needed
 5. Keep lasting rationale in the configured Decision Record directory and stable scoped operating instructions in the nearest project-owned `AGENTS.md`
@@ -286,14 +286,14 @@ New project:
 
 Existing project with a rich `AGENTS.md`:
 
-1. `npx -y @oevery/rsp@3.1.0-beta.0 init`
+1. `npx -y @oevery/rsp@3.1.0-beta.1 init`
 2. Keep the managed block thin
 3. Move durable design into `.rsp/specs/design.md`
 4. Use `rsp add spec <name>` only when another durable current-fact document is needed
 
 AI-assisted setup:
 
-1. `npx -y @oevery/rsp@3.1.0-beta.0 init --agents-mode print --with-project-setup`
+1. `npx -y @oevery/rsp@3.1.0-beta.1 init --agents-mode print --with-project-setup`
 2. Keep the managed block as generated and adapt only the surrounding human-owned content if needed
 3. Have the AI review and fill `.rsp/changes/project-setup.md`
 4. Have the AI fill `.rsp/specs/design.md`

@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.1.0-beta.1 (2026-07-25)
+
+- Decouple retained native-composition behavior evidence from release-only version identity while preserving exact-package provenance and fail-closed Skill, inventory, behavior-file, input, and integrity checks.
+- Harden release finalization so package-bound documentation uses publication-invariant wording, rejects stale identity and comparison surfaces, and keeps temporary publication or authentication state out of durable artifacts.
+- Defer version manifests, changelog targets, exact-version documentation, and versioned release notes until an explicit user or authoritative repository source confirms the release identity.
+- Keep completed implementation Changes independently reviewable and deliverable before a separate Release Change and dedicated release commit finalize versioned shipped surfaces.
+
+This prerelease remains an opt-in beta and does not promote npm `latest`. Real-project acceptance in boats-cloud remains unverified. Users upgrading directly from 2.x must first follow the [3.0 migration guide](docs/migrations/3.0.md).
+
+See the [3.1.0-beta.1 release notes](docs/releases/3.1.0-beta.1.md).
+
 ## 3.1.0-beta.0 (2026-07-25)
 
 - **Breaking:** Raise the minimum runtime from Node.js 18 to Node.js 22.
