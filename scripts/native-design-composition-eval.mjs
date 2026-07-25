@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 import { parse as parseYaml } from 'yaml'
 
 const CASE_ID = 'device-discovery-boundary'
-const RETAINED_RUN_ID = `${CASE_ID}-pre-dogfood-maintenance-hardening-final-metadata`
+const RETAINED_RUN_ID = `${CASE_ID}-managed-goal-composition-final`
 const PHASES = ['design', 'implement', 'review', 'durable']
 const SKILLS = ['rsp', 'rsp-shape', 'rsp-design', 'rsp-implement', 'rsp-review']
 const PUBLISHED_SKILLS = ['rsp', 'rsp-address-review', 'rsp-design', 'rsp-diagnose', 'rsp-implement', 'rsp-manage', 'rsp-release-docs', 'rsp-review', 'rsp-shape', 'rsp-tdd']

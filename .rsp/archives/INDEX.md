@@ -4,7 +4,7 @@ summary: Completed RSP changes.
 kind: generated-index
 index_type: archives
 source_dir: .rsp/archives
-entry_count: 87
+entry_count: 91
 ---
 
 # Archive Index
@@ -77,6 +77,10 @@ entry_count: 87
 | 2026-07-22 | lightweight-rsp-manage/brief | group | — |
 | 2026-07-22 | lightweight-rsp-manage/refine-explicit-controller | research | Revise `rsp-manage` into an explicit-only lightweight controller for genuine long continuation, independent bounded delegation, and interruption recovery. |
 | 2026-07-22 | lightweight-rsp-manage/validate-managed-orchestration | research | Decide whether the revised lightweight `rsp-manage` demonstrates enough autonomous continuation and task-orchestration value to justify optional product promotion. |
+| 2026-07-25 | managed-goal-composition/brief | group | — |
+| 2026-07-25 | managed-goal-composition/enforce-shape-owner-boundaries | fix | Keep independently closable outcomes in separate Changes. |
+| 2026-07-25 | managed-goal-composition/manage-change-groups | feature | Manage shallow Change Groups by derived waves. |
+| 2026-07-25 | managed-goal-composition/route-managed-preflight | fix | Route unshaped managed goals through owner resolution. |
 | 2026-07-20 | minimum-skill-suite/build-rsp-implement | feature | Build and promote a bounded RSP implementation Discipline Skill. |
 | 2026-07-20 | minimum-skill-suite/build-rsp-shape | feature | Build and promote the host-neutral RSP shaping/slicing Discipline Skill. |
 | 2026-07-21 | minimum-skill-suite/brief | group | — |

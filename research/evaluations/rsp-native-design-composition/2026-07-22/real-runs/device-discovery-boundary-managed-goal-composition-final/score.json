@@ -1,0 +1,25 @@
+{
+  "blockers": [],
+  "expected_missing": [],
+  "forbidden_present": [],
+  "gates": {
+    "design_returns_workref": true,
+    "design_section_only": true,
+    "durable_current_fact": true,
+    "exact_package": true,
+    "external_verification": true,
+    "git_head_unchanged": true,
+    "hardware_unavailable": true,
+    "human_output_language": true,
+    "implementation_rereads_change": true,
+    "implementation_runs_exact_verification": true,
+    "output_contract": true,
+    "phase_boundaries": true,
+    "phase_runs": true,
+    "review_inspects_fixed_scope": true,
+    "review_read_only_sandbox": true,
+    "runtime_isolation": true
+  },
+  "passed": true,
+  "evidence_sha256": "89073e9b4add7ab89e4950496bf40deb7d5869d82fa45960df2718be5046ea59"
+}

@@ -19,7 +19,7 @@ const root = fileURLToPath(new URL('..', import.meta.url))
 const skills = ['rsp', 'rsp-shape', 'rsp-design', 'rsp-implement', 'rsp-review']
 const publishedSkills = ['rsp', 'rsp-address-review', 'rsp-design', 'rsp-diagnose', 'rsp-implement', 'rsp-manage', 'rsp-release-docs', 'rsp-review', 'rsp-shape', 'rsp-tdd']
 const realRuns = join(root, 'research', 'evaluations', 'rsp-native-design-composition', '2026-07-22', 'real-runs')
-const retainedRun = join(realRuns, 'device-discovery-boundary-pre-dogfood-maintenance-hardening-final-metadata')
+const retainedRun = join(realRuns, 'device-discovery-boundary-managed-goal-composition-final')
 const correctedAttempt = join(realRuns, 'device-discovery-boundary-layer-archive-closeout', 'invalid-attempts', 'failed-1784788188154')
 
 function copiedRetainedRun(onTestFinished: (callback: () => void) => void) {
