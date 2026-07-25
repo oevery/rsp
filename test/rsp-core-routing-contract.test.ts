@@ -82,7 +82,8 @@ describe('rsp core routing contract', () => {
     expect(body).toContain('Lifecycle stage, completed implementation, or archive readiness alone is insufficient')
     expect(body).toContain('manual release-documentation fallback')
     expect(body).toContain('does not grant commit, tag, push, release creation, publication, deployment, or approval authority')
-    expect(fallback).toContain('Route release documentation only when the selected Change explicitly owns a confirmed release identity or range')
+    expect(fallback).toContain('Route release documentation only when a dedicated Release Change explicitly owns a confirmed release identity or range')
+    expect(fallback).toContain('never infer it from version order, prior prereleases, commits, or planned prose')
     expect(fallback).toContain('Select `rsp-release-docs` when available')
     expect(fallback).toContain('lifecycle stage, completed implementation, and archive readiness alone are insufficient')
   })
@@ -101,6 +102,16 @@ describe('rsp core routing contract', () => {
     expect(body).toContain('Neither result executes or grants authority for the external action')
     expect(body).toContain('This gate precedes ordinary no-focus and implementation routing')
     expect(body.indexOf('If the user explicitly requests a tag, hosted release, registry publication, or published-release reconciliation')).toBeLessThan(body.indexOf('If no Change is selected'))
+  })
+
+  it('keeps ordinary Change delivery separate from late release identity', () => {
+    const body = readFileSync(skillPath, 'utf8')
+
+    expect(body).toContain('Treat release identity as an owner decision')
+    expect(body).toContain('never infer it from version ordering, a previous prerelease, commit contents, or planned prose')
+    expect(body).toContain('leave version manifests, target changelog headings, exact-version README commands, versioned release notes, and tag comparisons unchanged')
+    expect(body).toContain('Keep each completed Change independently reviewable')
+    expect(body).toContain('before a separately owned Release Change finalizes versioned shipped surfaces in a dedicated release commit')
   })
 
   it('reconciles published surfaces without rewriting immutable history', () => {

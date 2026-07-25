@@ -4,7 +4,7 @@ description: Use this skill when initializing RSP, operating an existing .rsp pr
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.25.1"
+  version: "2026.07.25.2"
 ---
 
 # RSP Skill
@@ -49,6 +49,8 @@ Diagnosis takes precedence over TDD: do not encode an unexplained symptom as a g
 
 Use the release-documentation branch only when the selected Change explicitly owns a confirmed release identity or range and still has unfinished changelog, release-note, or migration work. Lifecycle stage, completed implementation, or archive readiness alone is insufficient; ordinary Changes continue to the Core durable decision.
 
+Treat release identity as an owner decision. It is confirmed only by an explicit user instruction or authoritative repository release configuration; never infer it from version ordering, a previous prerelease, commit contents, or planned prose. Until confirmation, keep any release ledger version-neutral and leave version manifests, target changelog headings, exact-version README commands, versioned release notes, and tag comparisons unchanged.
+
 When both conditions hold, select `rsp-release-docs` when available. Otherwise use the manual release-documentation fallback against the same Change: confirm the release range and audience, build one net-release evidence ledger, and project it into the repository-owned changelog, release notes, and applicable migration guidance. This route prepares or audits documentation only; it does not grant commit, tag, push, release creation, publication, deployment, or approval authority.
 
 An explicit request to create a release tag, hosted release, registry publication, or equivalent public release has an additional mandatory finalization gate. Before any external action, require either one selected Change or one explicitly named archived release Change to own the confirmed release identity and range, then select the `rsp-release-docs` **Finalize for publication** branch even if the prose was already reviewed. When project authority requires archive before final Git delivery, finish the durable decision and lifecycle closeout first, commit that closeout, and rerun the exact finalization checks against the post-archive candidate ref; only that immutable candidate may receive `ready`. The gate inspects the public tag/package release surfaces, rejects transient publication-state prose in shipped artifacts, and returns a credential-free `ready` or `not ready` handoff. If the Skill is unavailable, perform the same checks with the manual fallback. Neither result executes or grants authority for the external action.
@@ -66,7 +68,7 @@ Apply these gates in order:
 7. If the selected Change is not shape-ready and no bounded design question has been isolated, select `rsp-shape` under the same authority rule or give the manual fallback of completing its Proposal, Spec, Design, Tasks, Verify, and Blockers.
 8. If a shape-ready Change has incomplete implementation tasks, or its required verification is missing, stale, or failed, apply the implementation-evidence routing above. Select only its resulting available capability when authorized; otherwise name its manual fallback owned by that Change.
 9. If implementation Tasks and required verification pass with no blocker, and the selected Change meets both ordinary release-documentation conditions above, select `rsp-release-docs` under the same availability rule or use its manual fallback. Return its evidence and surface dispositions to the same Change.
-10. Otherwise, when required Tasks and verification pass with no blocker, perform the Core durable decision. Archive only after required current facts and rationale are written or explicitly judged unnecessary. Recommend explicit archive as the next action before final Git delivery; Core does not execute archive or grant authority to stage, commit, push, or publish.
+10. Otherwise, when required Tasks and verification pass with no blocker, perform the Core durable decision. Archive only after required current facts and rationale are written or explicitly judged unnecessary. Recommend explicit archive as the next action before final Git delivery; Core does not execute archive or grant authority to stage, commit, push, or publish. Keep each completed Change independently reviewable. If later Git authority is granted, deliver that Change as its own logical commit before a separately owned Release Change finalizes versioned shipped surfaces in a dedicated release commit.
 
 State the derived stage, one next action, required input, returned owner, and decisive evidence. Name at most one available optional capability. Only name an optional capability when it is the one next action, and treat it as available only when it appears in the host's loaded skill inventory. Missing optional capabilities never invalidate RSP; always provide the manual fallback against the same owner.
 

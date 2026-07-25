@@ -165,4 +165,13 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('Do not expose dispatch, retry, or budget chronology')
     expect(body).toContain('Archive never grants Git or publication authority')
   })
+
+  it('keeps Change commits separate from late release finalization', () => {
+    const { body } = readSkill(product)
+
+    expect(body).toContain('Release identity is unconfirmed unless explicit user or repository authority supplies it')
+    expect(body).toContain('commit only the completed focused Change after closeout')
+    expect(body).toContain('Keep later versioned surfaces in a separate Release Change and dedicated release commit')
+    expect(body).toContain('Otherwise return the exact commit boundary and owner')
+  })
 })

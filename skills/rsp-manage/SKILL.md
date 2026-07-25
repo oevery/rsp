@@ -4,7 +4,7 @@ description: Continue one explicitly requested focused RSP Change through genuin
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.24.1"
+  version: "2026.07.25.2"
 ---
 
 # RSP Manage
@@ -17,7 +17,7 @@ Require one focused, ready Change and sufficient mutation authority. Snapshot th
 
 Activate only for at least two non-overlapping mutation scopes with independent verification, genuinely long authorized continuation, or interruption recovery whose stale-evidence cost justifies orchestration. A small single slice, tightly coupled scopes, or host worker availability alone is ineligible. On decline, make no mutation, create no dispatch envelope, receipt, budget, or controller state, and return the exact Core or Discipline next action without executing it.
 
-Identify allowed mutations, required verification, unavailable acceptance, and lifecycle, Git, publication, deployment, approval, or other external-action boundaries. Preserve unrelated work. Unless the user sets a tighter limit, allow at most four worker dispatches and one corrective retry for the whole run.
+Identify allowed mutations, required verification, unavailable acceptance, and lifecycle, Git, publication, deployment, approval, or other external-action boundaries. Release identity is unconfirmed unless explicit user or repository authority supplies it; never infer it from versions or plans. Preserve unrelated work. Unless the user sets a tighter limit, allow at most four worker dispatches and one corrective retry.
 
 ## Dispatch only real work
 
@@ -36,7 +36,7 @@ For each slice choose the cheapest decisive focused check. Run at most one broad
 
 ## Continue from current evidence
 
-After each return inspect the actual diff and freshly observed verification. Accept a slice only when the owned output exists, decisive checks pass, omissions are named, and the Change still owns the result. Continue only after positive progress.
+After each return inspect the diff and fresh verification. Accept only owned output with passing decisive checks and named omissions. Continue only after progress.
 
 Use the one corrective retry only when new evidence identifies an in-scope correction. Otherwise stop at the failure. Inspect current worktree and evidence after returns, but reread stable authority only during interruption recovery or when evidenced authority or worktree drift could invalidate the snapshot.
 
@@ -48,6 +48,8 @@ Keep dispatch details, retry history, limits, and process chronology out of Chan
 
 Treat archive guidance as advisory unless the run has explicit lifecycle-closeout authority and Core has completed its durable decision. Archive never grants Git or publication authority.
 
-Stop at an unresolved owner decision, unavailable service, credential, device, environment, or human acceptance; missing external-action authority; verification without an evidenced in-scope correction; drift; or exhausted limits. Do not route around the boundary.
+With explicit Git authority, commit only the completed focused Change after closeout. Keep later versioned surfaces in a separate Release Change and dedicated release commit. Otherwise return the exact commit boundary and owner.
+
+Stop at unresolved owner decisions, unavailable dependencies or acceptance, missing external-action authority, uncorrectable verification, drift, or exhausted limits. Do not bypass the boundary.
 
 Return only completed and pending slices, fresh verification, omissions, the real boundary owner, and one next action. Do not expose dispatch, retry, or budget chronology and do not claim archive, Git, publication, deployment, approval, or human acceptance that was not completed under explicit authority.

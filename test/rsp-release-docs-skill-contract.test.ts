@@ -58,6 +58,15 @@ describe('rsp-release-docs Skill contract', () => {
     expect(skill).toContain('Never rewrite a published package or move an existing tag')
   })
 
+  it('defers identity-bearing surfaces until the release owner confirms them', () => {
+    expect(skill).toContain('A release identity is confirmed only when the user states it or an authoritative repository release configuration already selects it')
+    expect(skill).toContain('Never infer the next version from semantic-version ordering, a previous prerelease, commit contents, a planned changelog, or package-manager convention')
+    expect(skill).toContain('build a version-neutral ledger while the release identity may still change')
+    expect(skill).toContain('do not mutate version manifests, target changelog headings, exact-version README commands, versioned release-note paths, or tag comparisons before identity is confirmed')
+    expect(skill).toContain('owned by a dedicated Release Change')
+    expect(skill).toContain('finalize version manifests and versioned shipped surfaces in a separate release commit')
+  })
+
   it('keeps shipped prose publication-invariant and transient state with its owner', () => {
     expect(skill).toContain('## Assign surface lifetime')
     expect(skill).toContain('**publication-invariant**')

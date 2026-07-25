@@ -4,7 +4,7 @@ description: Prepare, finalize, reconcile, and audit evidence-based changelogs, 
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.25.1"
+  version: "2026.07.25.2"
 ---
 
 # RSP Release Docs
@@ -26,10 +26,12 @@ Use the higher-precedence source when two sources conflict. Ask one focused ques
 
 Completion criterion: name the release range, target version or draft state, audience, output surfaces, language, link style, and allowed mutations from observed authority.
 
+A release identity is confirmed only when the user states it or an authoritative repository release configuration already selects it. Never infer the next version from semantic-version ordering, a previous prerelease, commit contents, a planned changelog, or package-manager convention. When identity or range remains undecided, return that exact owner decision instead of choosing it.
+
 ## Select the branch
 
 - **Audit:** inspect existing release prose and return findings without editing.
-- **Draft:** draft requested artifacts while the release identity may still change; for a formal release, always include release notes. Update a changelog only when the repository owns one or the user requests one. Include migration guidance whenever users must act.
+- **Draft:** build a version-neutral ledger while the release identity may still change. Keep it in the response, temporary work, or an existing release-fragment system; do not mutate version manifests, target changelog headings, exact-version README commands, versioned release-note paths, or tag comparisons before identity is confirmed. Once confirmed, draft the requested release surfaces; for a formal release, always include release notes. Update a changelog only when the repository owns one or the user requests one. Include migration guidance whenever users must act.
 - **Finalize for publication:** with a confirmed release identity and range, make every shipped surface true both immediately before and after publication, then produce a checkable publication handoff. An explicit request to create a tag, GitHub release, registry version, or equivalent public release must pass this branch even when earlier drafts were reviewed. Use the selected release Change before lifecycle closeout or one explicitly named archived release Change afterward; when project authority requires archive before final Git delivery, only the post-archive candidate may receive the final `ready` handoff.
 - **Reconcile published release:** verify the external release against the confirmed identity, repair only authorized mutable public surfaces, and record immutable discrepancies and their remediation owner. Never rewrite a published package or move an existing tag to make evidence appear consistent.
 
@@ -103,7 +105,7 @@ Completion criterion: every statement maps to the ledger, each surface serves it
 
 ## Finalize for publication
 
-Enter this gate only with a confirmed target version and release range. Inspect the exact public release surfaces and package inventory, not every internal workflow record present in the source tag. When project authority requires archive before final Git delivery, an open Change may prepare these surfaces but the final handoff must rerun against the post-archive candidate ref using the explicitly named archived release Change as authority.
+Enter this gate only with a confirmed target version and release range owned by a dedicated Release Change. Inspect the exact public release surfaces and package inventory, not every internal workflow record present in the source tag. Ordinary implementation Changes must complete their own review and lifecycle closeout first. When Git delivery is authorized, keep their commits independently reviewable and finalize version manifests and versioned shipped surfaces in a separate release commit. When project authority requires archive before final Git delivery, an open Release Change may prepare these surfaces but the final handoff must rerun against the post-archive candidate ref using the explicitly named archived Release Change as authority.
 
 Require all of the following before returning a publication handoff:
 
