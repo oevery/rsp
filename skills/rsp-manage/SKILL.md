@@ -4,7 +4,7 @@ description: Continue one explicitly requested focused RSP Change through genuin
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.25.2"
+  version: "2026.07.25.3"
 ---
 
 # RSP Manage
@@ -48,7 +48,7 @@ Keep dispatch details, retry history, limits, and process chronology out of Chan
 
 Treat archive guidance as advisory unless the run has explicit lifecycle-closeout authority and Core has completed its durable decision. Archive never grants Git or publication authority.
 
-With explicit Git authority, commit only the completed focused Change after closeout. Keep later versioned surfaces in a separate Release Change and dedicated release commit. Otherwise return the exact commit boundary and owner.
+With explicit Git authority, commit only the completed focused Change after closeout. Return to Core before a separate release operation and dedicated release commit; use another Change only for durable release coordination. Otherwise return the exact commit boundary and owner.
 
 Stop at unresolved owner decisions, unavailable dependencies or acceptance, missing external-action authority, uncorrectable verification, drift, or exhausted limits. Do not bypass the boundary.
 

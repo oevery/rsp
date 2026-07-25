@@ -53,18 +53,24 @@ describe('rsp-release-docs Skill contract', () => {
     expect(skill).toContain('**Finalize for publication:**')
     expect(skill).toContain('**Reconcile published release:**')
     expect(skill).toContain('An explicit request to create a tag, GitHub release, registry version, or equivalent public release must pass this branch')
-    expect(skill).toContain('one explicitly named archived release Change afterward')
-    expect(skill).toContain('only the post-archive candidate may receive the final `ready` handoff')
+    expect(skill).toContain('Bind `ready` to the exact release commit')
     expect(skill).toContain('Never rewrite a published package or move an existing tag')
   })
 
-  it('defers identity-bearing surfaces until the release owner confirms them', () => {
+  it('defers identity-bearing surfaces until release operation authority confirms them', () => {
     expect(skill).toContain('A release identity is confirmed only when the user states it or an authoritative repository release configuration already selects it')
     expect(skill).toContain('Never infer the next version from semantic-version ordering, a previous prerelease, commit contents, a planned changelog, or package-manager convention')
     expect(skill).toContain('build a version-neutral ledger while the release identity may still change')
     expect(skill).toContain('do not mutate version manifests, target changelog headings, exact-version README commands, versioned release-note paths, or tag comparisons before identity is confirmed')
-    expect(skill).toContain('owned by a dedicated Release Change')
     expect(skill).toContain('finalize version manifests and versioned shipped surfaces in a separate release commit')
+  })
+
+  it('uses transient release ownership by default and Changes only for durable coordination', () => {
+    expect(skill).toContain('## Choose transient or durable ownership')
+    expect(skill).toContain('A confirmed mechanical release does not require an RSP Change')
+    expect(skill).toContain('keep the ledger, command progress, authentication state, and publication handoff transient')
+    expect(skill).toContain('Use an optional Release Change only when material version/range, migration, rollback, security, compatibility, cross-repository/team, multi-stage handoff, recovery, blocker, or acceptance decisions need a persistent owner')
+    expect(skill).toContain('Do not create one merely to repeat the release checklist, verification output, or prose already owned by release surfaces')
   })
 
   it('keeps shipped prose publication-invariant and transient state with its owner', () => {

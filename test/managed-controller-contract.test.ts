@@ -171,7 +171,8 @@ describe('rsp-manage product Skill', () => {
 
     expect(body).toContain('Release identity is unconfirmed unless explicit user or repository authority supplies it')
     expect(body).toContain('commit only the completed focused Change after closeout')
-    expect(body).toContain('Keep later versioned surfaces in a separate Release Change and dedicated release commit')
+    expect(body).toContain('Return to Core before a separate release operation and dedicated release commit')
+    expect(body).toContain('use another Change only for durable release coordination')
     expect(body).toContain('Otherwise return the exact commit boundary and owner')
   })
 })

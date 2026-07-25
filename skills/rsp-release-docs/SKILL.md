@@ -4,7 +4,7 @@ description: Prepare, finalize, reconcile, and audit evidence-based changelogs, 
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.25.2"
+  version: "2026.07.25.3"
 ---
 
 # RSP Release Docs
@@ -32,12 +32,20 @@ A release identity is confirmed only when the user states it or an authoritative
 
 - **Audit:** inspect existing release prose and return findings without editing.
 - **Draft:** build a version-neutral ledger while the release identity may still change. Keep it in the response, temporary work, or an existing release-fragment system; do not mutate version manifests, target changelog headings, exact-version README commands, versioned release-note paths, or tag comparisons before identity is confirmed. Once confirmed, draft the requested release surfaces; for a formal release, always include release notes. Update a changelog only when the repository owns one or the user requests one. Include migration guidance whenever users must act.
-- **Finalize for publication:** with a confirmed release identity and range, make every shipped surface true both immediately before and after publication, then produce a checkable publication handoff. An explicit request to create a tag, GitHub release, registry version, or equivalent public release must pass this branch even when earlier drafts were reviewed. Use the selected release Change before lifecycle closeout or one explicitly named archived release Change afterward; when project authority requires archive before final Git delivery, only the post-archive candidate may receive the final `ready` handoff.
+- **Finalize for publication:** with a confirmed release identity and range, make every shipped surface true both immediately before and after publication, then produce a checkable publication handoff. An explicit request to create a tag, GitHub release, registry version, or equivalent public release must pass this branch even when earlier drafts were reviewed. Bind `ready` to the exact release commit after all required implementation Changes and lifecycle closeout are already represented in its committed range.
 - **Reconcile published release:** verify the external release against the confirmed identity, repair only authorized mutable public surfaces, and record immutable discrepancies and their remediation owner. Never rewrite a published package or move an existing tag to make evidence appear consistent.
 
 Publication remains an external action. This Skill never executes commit, tag, push, release creation, registry publication, deployment, deletion, or approval; finalization returns a handoff to the separately authorized operator.
 
 Completion criterion: exactly one branch is selected, and every requested surface has one disposition: draft, finalize, reconcile, audit only, not applicable, or blocked by a named decision.
+
+## Choose transient or durable ownership
+
+A confirmed mechanical release does not require an RSP Change. Use the explicit user request or authoritative release configuration for identity and range, keep the ledger, command progress, authentication state, and publication handoff transient, and rely on manifests, changelog, release commit, tag, hosted release, and registry record as durable release history.
+
+Use an optional Release Change only when material version/range, migration, rollback, security, compatibility, cross-repository/team, multi-stage handoff, recovery, blocker, or acceptance decisions need a persistent owner. Do not create one merely to repeat the release checklist, verification output, or prose already owned by release surfaces.
+
+Completion criterion: ownership is transient by default, or one concrete durable coordination need justifies the optional Release Change.
 
 ## Collect evidence
 
@@ -105,7 +113,7 @@ Completion criterion: every statement maps to the ledger, each surface serves it
 
 ## Finalize for publication
 
-Enter this gate only with a confirmed target version and release range owned by a dedicated Release Change. Inspect the exact public release surfaces and package inventory, not every internal workflow record present in the source tag. Ordinary implementation Changes must complete their own review and lifecycle closeout first. When Git delivery is authorized, keep their commits independently reviewable and finalize version manifests and versioned shipped surfaces in a separate release commit. When project authority requires archive before final Git delivery, an open Release Change may prepare these surfaces but the final handoff must rerun against the post-archive candidate ref using the explicitly named archived Release Change as authority.
+Enter this gate only with a confirmed target version and release range from explicit user or authoritative repository release operation authority. Inspect the exact public release surfaces and package inventory, not every internal workflow record present in the source tag. Ordinary implementation Changes must complete their own review and lifecycle closeout first. When Git delivery is authorized, keep their commits independently reviewable and finalize version manifests and versioned shipped surfaces in a separate release commit. An optional Release Change may supplement authority when durable coordination was justified, but its archive is not required for a mechanical release. The final handoff must rerun against the exact release commit.
 
 Require all of the following before returning a publication handoff:
 

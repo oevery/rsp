@@ -76,16 +76,17 @@ describe('rsp core routing contract', () => {
     const fallback = readFileSync(fallbackPath, 'utf8')
 
     expect(body).toContain('### Route release documentation')
-    expect(body).toContain('explicitly owns a confirmed release identity or range')
-    expect(body).toContain('unfinished changelog, release-note, or migration work')
+    expect(body).toContain('user explicitly requests release documentation, finalization, publication, or reconciliation')
+    expect(body).toContain('release operation has a confirmed identity or range')
+    expect(body).toContain('A selected Change is not required')
     expect(body).toContain('select `rsp-release-docs` when available')
     expect(body).toContain('Lifecycle stage, completed implementation, or archive readiness alone is insufficient')
     expect(body).toContain('manual release-documentation fallback')
     expect(body).toContain('does not grant commit, tag, push, release creation, publication, deployment, or approval authority')
-    expect(fallback).toContain('Route release documentation only when a dedicated Release Change explicitly owns a confirmed release identity or range')
+    expect(fallback).toContain('Route release documentation only for an explicit release operation with a confirmed identity or range')
+    expect(fallback).toContain('no Release Change is required')
     expect(fallback).toContain('never infer it from version order, prior prereleases, commits, or planned prose')
     expect(fallback).toContain('Select `rsp-release-docs` when available')
-    expect(fallback).toContain('lifecycle stage, completed implementation, and archive readiness alone are insufficient')
   })
 
   it('requires a credential-free finalization gate before explicit publication', () => {
@@ -94,14 +95,14 @@ describe('rsp core routing contract', () => {
     expect(body).toContain('explicit request to create a release tag, hosted release, registry publication, or equivalent public release')
     expect(body).toContain('additional mandatory finalization gate')
     expect(body).toContain('`rsp-release-docs` **Finalize for publication** branch')
-    expect(body).toContain('either one selected Change or one explicitly named archived release Change')
-    expect(body).toContain('rerun the exact finalization checks against the post-archive candidate ref')
+    expect(body).toContain('do not require or create an RSP Change by default')
+    expect(body).toContain('create a separate release commit, and rerun exact finalization checks against it')
     expect(body).toContain('public tag/package release surfaces')
     expect(body).toContain('rejects transient publication-state prose in shipped artifacts')
     expect(body).toContain('credential-free `ready` or `not ready` handoff')
     expect(body).toContain('Neither result executes or grants authority for the external action')
-    expect(body).toContain('This gate precedes ordinary no-focus and implementation routing')
-    expect(body.indexOf('If the user explicitly requests a tag, hosted release, registry publication, or published-release reconciliation')).toBeLessThan(body.indexOf('If no Change is selected'))
+    expect(body).toContain('without creating a Change by default')
+    expect(body.indexOf('If the user explicitly requests release documentation, a tag, hosted release, registry publication, or published-release reconciliation')).toBeLessThan(body.indexOf('If no Change is selected'))
   })
 
   it('keeps ordinary Change delivery separate from late release identity', () => {
@@ -111,7 +112,15 @@ describe('rsp core routing contract', () => {
     expect(body).toContain('never infer it from version ordering, a previous prerelease, commit contents, or planned prose')
     expect(body).toContain('leave version manifests, target changelog headings, exact-version README commands, versioned release notes, and tag comparisons unchanged')
     expect(body).toContain('Keep each completed Change independently reviewable')
-    expect(body).toContain('before a separately owned Release Change finalizes versioned shipped surfaces in a dedicated release commit')
+    expect(body).toContain('a separately authorized release operation may then finalize versioned shipped surfaces in a dedicated release commit without creating another Change')
+  })
+
+  it('creates a Release Change only for durable coordination needs', () => {
+    const body = readFileSync(skillPath, 'utf8')
+
+    expect(body).toContain('Use an optional Release Change only when material decisions, cross-stage coordination, recovery, blockers, or acceptance need a persistent owner')
+    expect(body).toContain('never create one merely to retain a mechanical checklist or verification transcript')
+    expect(body).toContain('do not infer a release operation from its completion')
   })
 
   it('reconciles published surfaces without rewriting immutable history', () => {
