@@ -1,0 +1,68 @@
+id: long-goal
+expected_mode: execute
+installed_skills:
+  - rsp
+  - rsp-manage
+  - rsp-shape
+  - rsp-implement
+  - rsp-review
+local_bare_remote: true
+initialize_rsp: true
+branch: eval/managed-goal
+sandbox: danger-full-access
+request: >-
+  Manage the explicit goal `normalize the complete delivery envelope` to completion. Start from
+  focused Change `delivery-bootstrap`. You may implement, verify, durable-review, archive, and make
+  exact-path local recovery checkpoint commits. The goal and `requirements.md` also authorize
+  planning-artifact mutation: after bootstrap, Shape the missing independently closable header,
+  retry, and dependent summary outcomes into the smallest shallow Group `delivery-envelope`, then
+  re-check and continue without another authorization round. Header and retry own disjoint paths
+  and are a real parallel opportunity; summary depends on accepted header and must remain later.
+  Create an exact-path local recovery checkpoint after bootstrap and another after the independent
+  header/retry wave before continuing to summary. Use no more than four worker dispatches and one
+  corrective retry across the run. Run npm test as
+  the aggregate gate. Do not push: push authority is intentionally withheld even though `origin`
+  is a local bare remote. Never force-push, publish, create nested Groups or controller state, or
+  modify requirements.md and unrelated.txt. Stop naturally after the goal and lifecycle are complete.
+allowed_changes:
+  - .rsp/archives/INDEX.md
+  - .rsp/archives/2026-07-25_delivery-bootstrap.md
+  - .rsp/archives/delivery-envelope/2026-07-25_header.md
+  - .rsp/archives/delivery-envelope/2026-07-25_retry.md
+  - .rsp/archives/delivery-envelope/2026-07-25_summary.md
+  - .rsp/archives/delivery-envelope/2026-07-25_brief.md
+  - .rsp/changes/delivery-envelope/00-brief.md
+  - .rsp/changes/delivery-envelope/summary.md
+  - .rsp/changes/delivery-bootstrap.md
+  - .rsp/focus.d/delivery-bootstrap
+  - .rsp/focus.d/delivery-envelope/summary
+  - .rsp/specs/design.md
+  - src/bootstrap.mjs
+  - src/header.mjs
+  - src/retry.mjs
+  - src/summary.mjs
+  - test/bootstrap.test.mjs
+  - test/header.test.mjs
+  - test/retry.test.mjs
+  - test/summary.test.mjs
+required_changes:
+  - .rsp/archives/2026-07-25_delivery-bootstrap.md
+  - .rsp/archives/delivery-envelope/2026-07-25_brief.md
+  - .rsp/archives/delivery-envelope/2026-07-25_header.md
+  - .rsp/archives/delivery-envelope/2026-07-25_retry.md
+  - .rsp/archives/delivery-envelope/2026-07-25_summary.md
+  - src/bootstrap.mjs
+  - src/header.mjs
+  - src/retry.mjs
+  - src/summary.mjs
+verification:
+  - npm
+  - test
+expected_output:
+  - npm test
+  - 未推
+forbidden_output:
+  - 已 push
+  - force-push
+  - 已发布
+  - controller state

@@ -9,6 +9,7 @@ import {
   loadNativeDesignContract,
   masksOnlyDesign,
   rescoreNativeDesignAttempt,
+  sanitizeNativeDesignOutput,
   scoreNativeDesignEvidence,
   validateCurrentNativeDesignArtifact,
   validateNativeDesignPhaseChanges,
@@ -19,7 +20,7 @@ const root = fileURLToPath(new URL('..', import.meta.url))
 const skills = ['rsp', 'rsp-shape', 'rsp-design', 'rsp-implement', 'rsp-review']
 const publishedSkills = ['rsp', 'rsp-address-review', 'rsp-design', 'rsp-diagnose', 'rsp-implement', 'rsp-manage', 'rsp-release-docs', 'rsp-review', 'rsp-shape', 'rsp-tdd']
 const realRuns = join(root, 'research', 'evaluations', 'rsp-native-design-composition', '2026-07-22', 'real-runs')
-const retainedRun = join(realRuns, 'device-discovery-boundary-dependency-refresh-final')
+const retainedRun = join(realRuns, 'device-discovery-boundary-managed-goal-continuation-sanitized-v2-final')
 const correctedAttempt = join(realRuns, 'device-discovery-boundary-layer-archive-closeout', 'invalid-attempts', 'failed-1784788188154')
 
 function copiedRetainedRun(onTestFinished: (callback: () => void) => void) {
@@ -30,6 +31,19 @@ function copiedRetainedRun(onTestFinished: (callback: () => void) => void) {
 }
 
 describe('native-design composition terminal evaluator', () => {
+  it('redacts the exact disposable workspace before retaining host output', () => {
+    const workspace = '/Users/person/project/.cache/rsp-native-design-composition/device-discovery-boundary-a1B2c3'
+    const output = [
+      `Changed [artifact](${workspace}/docs/architecture/device-discovery-boundary.md:1).`,
+      'Changed [relative](docs/architecture/device-discovery-boundary-a1B2c3/docs/architecture/device-discovery-boundary.md).',
+    ].join('\n')
+
+    expect(sanitizeNativeDesignOutput(output, workspace)).toBe([
+      'Changed [artifact](<workspace>/docs/architecture/device-discovery-boundary.md:1).',
+      'Changed [relative](docs/architecture/<workspace>/docs/architecture/device-discovery-boundary.md).',
+    ].join('\n'))
+  })
+
   it('freezes one real-derived four-phase exact-package contract', () => {
     const { manifest, oracle } = loadNativeDesignContract(root)
 

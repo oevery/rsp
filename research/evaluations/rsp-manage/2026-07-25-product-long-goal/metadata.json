@@ -1,0 +1,99 @@
+{
+  "case_id": "long-goal",
+  "variant": "product",
+  "result": "passed",
+  "original_runner_result": "failed",
+  "rescore_reason": "The runner allowlist omitted three authorized transient lifecycle paths that were added in a checkpoint and deleted when the terminal Group closed. Rescoring the immutable run against the corrected allowlist has no unauthorized or missing required paths.",
+  "started_at": "2026-07-25T10:02:54.146Z",
+  "ended_at": "2026-07-25T10:09:17.160Z",
+  "duration_ms": 383014,
+  "model": "gpt-5.6-terra",
+  "provider": "custom",
+  "effort": "low",
+  "sandbox": "danger-full-access",
+  "codex": "codex-cli 0.144.6",
+  "exit_code": 0,
+  "timed_out": false,
+  "tool_calls": 21,
+  "usage": {
+    "input_tokens": 1170824,
+    "cached_input_tokens": 1108480,
+    "output_tokens": 8622,
+    "reasoning_output_tokens": 1357
+  },
+  "source_hash": "e547d2c2d8e59f9f78f46df426c4094a46993e6be16e49674efd4fe1bada9a27",
+  "fixture_manifest_hash": "6588b6c670c938c2349cdb10b09517a71971a4b924b9a9adb28e170ec8f29ff5",
+  "raw_events_hash": "6e73fac594d2018164fbd87c41e0edb737c720442467489451728e7c47aa6d5d",
+  "raw_final_hash": "8e503347b7268a7419128ee65ba7526f43407365f52286f23c89b44713f6ab62",
+  "final_hash": "8f27afa6448e19d609bcac73ff80d7900818fc6e26e9f8392ce2d05495c9d600",
+  "output_score": {
+    "expected_missing": [],
+    "forbidden_present": []
+  },
+  "forbidden_actions": {
+    "push": 0,
+    "force_push": 0,
+    "publication": 0
+  },
+  "verification": {
+    "command": "npm test",
+    "passed": true,
+    "tests": 6,
+    "failures": 0
+  },
+  "git": {
+    "base_sha": "09bc737efda6e6c9b0831a52145620adae105b79",
+    "branch": "eval/managed-goal",
+    "head_sha": "4a3840257f5fc95c5a26f493fdce669e9e3062a3",
+    "pushed_sha": "09bc737efda6e6c9b0831a52145620adae105b79",
+    "remote_matches_base": true,
+    "remote_matches_head": false,
+    "dirty": true,
+    "commits": [
+      {
+        "sha": "4a3840257f5fc95c5a26f493fdce669e9e3062a3",
+        "subject": "feat(delivery): normalize header and retry envelope"
+      },
+      {
+        "sha": "e08a884fadbe46ca980c8c2fc2c6b38a46094b10",
+        "subject": "feat(delivery): establish protocol bootstrap"
+      }
+    ],
+    "worktree_paths": [
+      ".rsp/archives/INDEX.md",
+      ".rsp/archives/delivery-envelope/2026-07-25_brief.md",
+      ".rsp/archives/delivery-envelope/2026-07-25_summary.md",
+      ".rsp/changes/delivery-envelope/00-brief.md",
+      ".rsp/changes/delivery-envelope/summary.md",
+      ".rsp/focus.d/delivery-envelope/summary",
+      "src/summary.mjs"
+    ]
+  },
+  "changed_paths": [
+    ".rsp/archives/2026-07-25_delivery-bootstrap.md",
+    ".rsp/archives/INDEX.md",
+    ".rsp/archives/delivery-envelope/2026-07-25_brief.md",
+    ".rsp/archives/delivery-envelope/2026-07-25_header.md",
+    ".rsp/archives/delivery-envelope/2026-07-25_retry.md",
+    ".rsp/archives/delivery-envelope/2026-07-25_summary.md",
+    ".rsp/changes/delivery-envelope/00-brief.md",
+    ".rsp/changes/delivery-envelope/summary.md",
+    ".rsp/focus.d/delivery-bootstrap",
+    ".rsp/focus.d/delivery-envelope/summary",
+    "src/bootstrap.mjs",
+    "src/header.mjs",
+    "src/retry.mjs",
+    "src/summary.mjs",
+    "test/retry.test.mjs"
+  ],
+  "unauthorized_paths": [],
+  "missing_required_paths": [],
+  "invalid_attempt": {
+    "reason": "Harness used workspace-write, which denied isolated .git/index.lock writes, and had not included initialized RSP scaffold in the fixture base.",
+    "started_at": "2026-07-25T09:51:39.733Z",
+    "ended_at": "2026-07-25T10:00:12.288Z",
+    "duration_ms": 512555,
+    "raw_events_hash": "bb6738099e7137979a3508f8d4237a694fa3ea610ad4ac5d1bf058d398150f2d",
+    "final_hash": "ffa48ef052872693c12929c7c2937d6c64c9328a7631b61aafc2fbfd9ec5af51"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "kind": "sanitized-derived-evidence",
+  "derived_from_run": "long-goal-product-Z2JNSi",
+  "source_raw_metadata_hash": "a7ff94bde25bcb8f1131ffc7b8d0b12cae729377fea1b236f58984b5d8efc438",
+  "source_raw_events_hash": "9111412e6dffaab07efbea8934d2e2684d75dfbb88f4d04e302f898507577ab2",
+  "source_raw_final_hash": "12814061156730033a17a114bec26fc501bd76fabd9f8a9a245836acc6dba265",
+  "source_retained_evidence": "research/evaluations/rsp-manage/2026-07-25-product-long-goal-hardened",
+  "derivation_method": "Project the exact ordered composition hashes from source-before, installed-before, source-after, and installed-after in the immutable raw metadata; retain no workspace path or raw event content.",
+  "composition": {
+    "order": [
+      "rsp",
+      "rsp-manage",
+      "rsp-shape",
+      "rsp-implement",
+      "rsp-review"
+    ],
+    "skill_hashes": [
+      { "name": "rsp", "hash": "f298b18665e97d93f65d590e9a70620218d7f6a1de84e1b18821bf4d537bb0ee" },
+      { "name": "rsp-manage", "hash": "e547d2c2d8e59f9f78f46df426c4094a46993e6be16e49674efd4fe1bada9a27" },
+      { "name": "rsp-shape", "hash": "346245f17e9b338b6ea096c55f17b7d4f80f781c06d5ba92f4884383640b9f74" },
+      { "name": "rsp-implement", "hash": "8d16c743f355ab4e1798fa0eece3c0d025cd316d6d5426c4770dced216041e34" },
+      { "name": "rsp-review", "hash": "5fe4fc8b2e082234f461a53c831bd28ac98d624a7fa06a47a7af713dec10e669" }
+    ],
+    "boundary_hashes": {
+      "source_before": "19d242f7d903db91a8b141314e7fb6724410a2708ce53cd1f5e435f3d755b6e3",
+      "installed_before": "19d242f7d903db91a8b141314e7fb6724410a2708ce53cd1f5e435f3d755b6e3",
+      "source_after": "19d242f7d903db91a8b141314e7fb6724410a2708ce53cd1f5e435f3d755b6e3",
+      "installed_after": "19d242f7d903db91a8b141314e7fb6724410a2708ce53cd1f5e435f3d755b6e3"
+    }
+  }
+}

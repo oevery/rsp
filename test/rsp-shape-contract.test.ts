@@ -43,6 +43,17 @@ describe('rsp-shape Skill contract', () => {
     expect(body).not.toMatch(/Outcome:|research\/|\.cache\/|provider matrix|resolver/i)
   })
 
+  it('classifies in-run managed discoveries under the original planning authority', () => {
+    const { body } = readSkill()
+
+    expect(body).toContain('original planning-artifact authority remains valid for clear in-scope discovery')
+    expect(body).toContain('Keep a cohesive correction in the current Change')
+    expect(body).toContain('one Change for an independently closable result')
+    expect(body).toContain('one shallow Group for at least two such results sharing the goal')
+    expect(body).toContain('fresh qualification without another authorization round')
+    expect(body).toContain('Stop on changed behavior, acceptance, public interfaces, goal scope, mutation authority, or external action')
+  })
+
   it('plans retained tests only when they provide distinct durable value', () => {
     const { body } = readSkill()
 

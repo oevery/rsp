@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 import { parse as parseYaml } from 'yaml'
 
 const CASE_ID = 'device-discovery-boundary'
-const RETAINED_RUN_ID = `${CASE_ID}-dependency-refresh-final`
+const RETAINED_RUN_ID = `${CASE_ID}-managed-goal-continuation-sanitized-v2-final`
 const PHASES = ['design', 'implement', 'review', 'durable']
 const SKILLS = ['rsp', 'rsp-shape', 'rsp-design', 'rsp-implement', 'rsp-review']
 const PUBLISHED_SKILLS = ['rsp', 'rsp-address-review', 'rsp-design', 'rsp-diagnose', 'rsp-implement', 'rsp-manage', 'rsp-release-docs', 'rsp-review', 'rsp-shape', 'rsp-tdd']
@@ -136,8 +136,11 @@ export function masksOnlyDesign(before, after) {
   return readSection(before, 'Design') !== readSection(after, 'Design') && mask(before) === mask(after)
 }
 
-function sanitize(content) {
-  return content
+export function sanitizeNativeDesignOutput(content, workspace) {
+  const sanitized = workspace
+    ? content.replaceAll(workspace, '<workspace>').replaceAll(basename(workspace), '<workspace>')
+    : content
+  return sanitized
     .replaceAll(/\/Users\/[^/\s"']+/g, '<home>')
     .replaceAll(/\/private\/tmp\/[^/\s"']+/g, '<tmp>')
     .replaceAll(/\/tmp\/[^/\s"']+/g, '<tmp>')
@@ -265,7 +268,7 @@ function parseHostEvents(raw, workspace) {
       const event = JSON.parse(line)
       if (event.type === 'item.completed' && event.item?.type === 'command_execution') {
         observations.push({
-          command: sanitize(String(event.item.command ?? '').replaceAll(workspace, '<workspace>')),
+          command: sanitizeNativeDesignOutput(String(event.item.command ?? ''), workspace),
           exit_code: event.item.exit_code,
           kind: 'command',
           output_hash: hashContent(event.item.aggregated_output ?? ''),
@@ -335,7 +338,7 @@ async function runHostPhase({ effort, model, phase, provider, timeoutMs, workspa
   ]
   const started = Date.now()
   const run = await runProcess({ args, command: 'codex', cwd: workspace, input: phase.text, sandbox: phase.sandbox, timeoutMs })
-  const final = sanitize(existsSync(finalPath) ? readFileSync(finalPath, 'utf8') : '')
+  const final = sanitizeNativeDesignOutput(existsSync(finalPath) ? readFileSync(finalPath, 'utf8') : '', workspace)
   const parsed = parseHostEvents(run.stdout, workspace)
   return {
     duration_ms: Date.now() - started,
@@ -575,7 +578,7 @@ export async function runRealNativeDesignComposition({ effort = 'low', model = '
     design_section_only: designSectionOnly,
     durable_artifact: {
       path: DURABLE_ARTIFACT,
-      sha256: hashContent(sanitize(durableBody)),
+      sha256: hashContent(sanitizeNativeDesignOutput(durableBody, prepared.workspace)),
     },
     events_sha256: hashContent(`${JSON.stringify(events, null, 2)}\n`),
     exact_commands: [...prepared.setupCommands, prepared.manifest.verification.join(' ')],
@@ -601,10 +604,10 @@ export async function runRealNativeDesignComposition({ effort = 'low', model = '
   const retainedScore = { ...score, evidence_sha256: evidenceSha }
   mkdirSync(persistRoot, { recursive: true })
   archivePreviousAttempt(persistRoot)
-  writeFileSync(join(persistRoot, 'metadata.json'), `${sanitize(JSON.stringify(metadata, null, 2))}\n`)
-  writeFileSync(join(persistRoot, DURABLE_ARTIFACT), sanitize(durableBody))
-  phases.forEach(phase => writeFileSync(join(persistRoot, `phase-${phase.name}-final.md`), sanitize(phase.final)))
-  writeFileSync(join(persistRoot, 'events.json'), `${sanitize(JSON.stringify(events, null, 2))}\n`)
+  writeFileSync(join(persistRoot, 'metadata.json'), `${sanitizeNativeDesignOutput(JSON.stringify(metadata, null, 2), prepared.workspace)}\n`)
+  writeFileSync(join(persistRoot, DURABLE_ARTIFACT), sanitizeNativeDesignOutput(durableBody, prepared.workspace))
+  phases.forEach(phase => writeFileSync(join(persistRoot, `phase-${phase.name}-final.md`), sanitizeNativeDesignOutput(phase.final, prepared.workspace)))
+  writeFileSync(join(persistRoot, 'events.json'), `${sanitizeNativeDesignOutput(JSON.stringify(events, null, 2), prepared.workspace)}\n`)
   writeFileSync(join(persistRoot, 'score.json'), `${JSON.stringify(retainedScore, null, 2)}\n`)
   return { metadata, score: retainedScore }
 }
@@ -667,7 +670,7 @@ export function rescoreNativeDesignAttempt({ attemptRoot, persistRoot, reason, r
   cpSync(join(attemptRoot, 'events.json'), join(persistRoot, 'events.json'))
   for (const phase of PHASES)
     cpSync(join(attemptRoot, `phase-${phase}-final.md`), join(persistRoot, `phase-${phase}-final.md`))
-  writeFileSync(join(persistRoot, 'metadata.json'), `${sanitize(JSON.stringify(metadata, null, 2))}\n`)
+  writeFileSync(join(persistRoot, 'metadata.json'), `${sanitizeNativeDesignOutput(JSON.stringify(metadata, null, 2))}\n`)
   writeFileSync(join(persistRoot, 'score.json'), `${JSON.stringify(retainedScore, null, 2)}\n`)
   return { metadata, score: retainedScore }
 }

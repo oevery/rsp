@@ -4,7 +4,7 @@ summary: Completed RSP changes.
 kind: generated-index
 index_type: archives
 source_dir: .rsp/archives
-entry_count: 91
+entry_count: 96
 ---
 
 # Archive Index
@@ -81,6 +81,11 @@ entry_count: 91
 | 2026-07-25 | managed-goal-composition/enforce-shape-owner-boundaries | fix | Keep independently closable outcomes in separate Changes. |
 | 2026-07-25 | managed-goal-composition/manage-change-groups | feature | Manage shallow Change Groups by derived waves. |
 | 2026-07-25 | managed-goal-composition/route-managed-preflight | fix | Route unshaped managed goals through owner resolution. |
+| 2026-07-25 | managed-goal-continuation/brief | group | — |
+| 2026-07-25 | managed-goal-continuation/checkpoint-delivery | feature | Checkpoint locally by policy and keep push explicit |
+| 2026-07-25 | managed-goal-continuation/continue-across-owners | feature | Continue a managed goal through successive owners and in-run Shape |
+| 2026-07-25 | managed-goal-continuation/refresh-native-composition-evidence | research | Refresh final exact-package native composition evidence |
+| 2026-07-25 | managed-goal-continuation/validate-long-goal | research | Validate layered long-running managed behavior |
 | 2026-07-20 | minimum-skill-suite/build-rsp-implement | feature | Build and promote a bounded RSP implementation Discipline Skill. |
 | 2026-07-20 | minimum-skill-suite/build-rsp-shape | feature | Build and promote the host-neutral RSP shaping/slicing Discipline Skill. |
 | 2026-07-21 | minimum-skill-suite/brief | group | — |

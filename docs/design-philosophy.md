@@ -368,11 +368,17 @@ Continuation 必须包含 WorkRef、authority pointers、current state、changed
 
 普通 Git conflict 不需要独立 RSP Skill。Core 只保留 compact fallback：识别当前 Git operation，理解 base/ours/theirs 语义，保护无关工作，仅解决有证据且在 WorkRef authority 内的内容，并重新验证。缺少证据、涉及无关工作或 owner decision 时停止；resolve authority 不自动包含 stage、continue、abort、commit、push 或 delivery authority。
 
-`rsp-manage` 是这一边界上的可选产品能力，而不是默认 controller。它只在用户显式请求、selected Change ready，且存在真正独立的 mutation/verification slices、长时 continuation 或中断恢复时运行；小型或紧耦合任务直接返回 Core 或对应 Discipline，不创建 envelope、receipt、budget 或 controller state。
+`rsp-manage` 是这一边界上的可选产品能力，而不是默认 controller。它只在用户显式请求、初始 selected Change 或 shallow Group ready，且存在真正独立的 mutation/verification slices、长时 continuation 或中断恢复时运行；小型或紧耦合任务直接返回 Core 或对应 Discipline，不创建 envelope、receipt、budget 或 controller state。
 
-符合条件的 managed run 只对实际 worker 发送紧凑内部 envelope，稳定 authority 默认只读取一次，每个 slice 运行 cheapest decisive check，仅在 integration risk 需要时运行一次更宽门禁。dispatch、retry、budget 和过程 chronology 都是 transient state，不进入 Changes、Specs 或最终面向用户的结果；恢复只在 evidence 或 authority drift 时重新读取，并以有限 correction budget fail closed。
+符合条件的 managed run 只对实际 worker 发送紧凑内部 envelope。每个 qualified WorkRef（包括 Core 返回的新 successor）在 dispatch 前各读取一次完整 owner、相关 Specs/Decisions、authority、status 与 worktree；四次 dispatch 和一次 corrective retry 是整个 managed run 的上限，不随 owner transition 重置。每个 slice 运行 cheapest decisive check，仅在 integration risk 需要时运行一次更宽门禁。dispatch、retry、budget 和过程 chronology 都是 transient state，不进入 Changes、Specs 或最终面向用户的结果。
 
-长时任务选择、代理调度、worktree/PR lifecycle 与平台交付仍由 host 提供。`rsp-manage` 可以使用这些能力，但不能成为新的 RSP truth owner，也不会授予 mutation、archive、Git、publication、deployment、environment 或 human-acceptance authority。
+显式 managed goal 及其允许的 planning/product mutation 构成 transient authority envelope。每个 Change 或 Group 仍是唯一 durable owner；每次 accepted progress 后由 Core 重新派生 status。明确且在目标内的 ready successor 可以继续；明确缺失 owner 时 Manage 暂停 dispatch 并把 evidence/authority 返回 Core；只有既无 ready successor、也无 clearly missing ownership 时才自然停止。Core 路由 Shape 和重新 qualification；只有 Shape 分类这些证据：cohesive correction 留在当前 Change，independently closable result 建成一个 Change，至少两个共享目标的结果才建成 shallow Group。改变产品行为、acceptance、public interface、目标 scope、mutation 或 external-action authority 时仍停在单一最高影响的 owner decision。
+
+长时任务选择、代理调度与 worktree/PR lifecycle 仍由 host 提供。`rsp-manage` 可以使用这些能力，但不能成为新的 RSP truth owner。Lifecycle closeout 与 Git checkpoint 是两个独立判断。只要用户及近层规则没有保留或禁止 lifecycle authority：Change owner 通过 Core durable review 后执行 `rsp archive <change-work-ref>`；shallow Group 对每个 child 独立完成 durable review 和 archive，重新派生 completion，只有全部 children 与 Group gate 通过后才执行 `rsp group close <group>`。两条路径在每次 mutation 后都检查完整 lifecycle diff，也适用于 terminal 或明确不提交的 owner。
+
+之后才判断 commit。若仍有 accepted downstream work，显式 managed request 可在近层规则未保留或禁止 commit 时，为一个独立 Change 或 integration-coupled wave 精确 staging、检查 cached diff 并建立本地 recovery checkpoint，随后重新派生 status。Terminal small owner 默认不提交；terminal non-small owner 仅在明确 Git delivery 或有证据的恢复价值成立且近层规则允许时提交。无法证明 clean exact boundary 时不 staging 或 commit。
+
+Push 始终是独立的 opt-in authority：只有用户明确提及 push，且当前 remote、branch 与 Group/goal milestone 明确或已被接受时，Manage 才能在该里程碑正常 push；仅为必需的 remote CI、恢复或协作时提前。不得 force-push，也不得 push protected 或 ambiguous branch；push 失败保留本地 commits 并停在 remote boundary。Managed continuation 不授予 publication、deployment、environment 或 human-acceptance authority。
 
 发布包通过 `rsp skills install` 把调用它的精确包内十个 Skills 复制到项目 `.agents/skills`。安装会先完整预检 package-owned targets，拒绝 symlink 和不支持的 entry，对相同内容保持 no-op，仅在显式 `--force` 时替换内容不同的精确目标，并始终保留无关 Skills；它不创建 manifest 或另一套 durable workflow state。
 

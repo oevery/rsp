@@ -1,0 +1,38 @@
+{
+  "lifecycle": {
+    "archived_changes": [
+      "delivery-bootstrap",
+      "delivery-envelope/header",
+      "delivery-envelope/retry",
+      "delivery-envelope/summary"
+    ],
+    "closed_groups": ["delivery-envelope"],
+    "terminal_status": { "open_changes": 0, "open_groups": 0, "ready": [], "waves": [] },
+    "controller_state_created": false,
+    "nested_group_created": false
+  },
+  "execution": {
+    "parallel_opportunity": ["delivery-envelope/header", "delivery-envelope/retry"],
+    "sequential_transition": "delivery-envelope/summary executed only after delivery-envelope/header archive.",
+    "checkpoint_subjects": [
+      "feat(delivery): bootstrap delivery protocol",
+      "feat(delivery): validate envelope fields"
+    ],
+    "terminal_small_owner_committed": false
+  },
+  "evidence_hardening": {
+    "all_remote_refs_compared": true,
+    "all_remote_refs_unchanged": true,
+    "commit_touched_union_used_for_authority": true,
+    "net_diff_retained": true,
+    "composition_order": ["rsp", "rsp-manage", "rsp-shape", "rsp-implement", "rsp-review"],
+    "composition_stable": true,
+    "forbidden_command_counts": { "push": 0, "force_push": 0, "publication": 0 }
+  },
+  "postflight": {
+    "verification": "npm test passed 6/6",
+    "requirements_changed": false,
+    "unrelated_path_changed": false,
+    "terminal_worktree_preserved": true
+  }
+}

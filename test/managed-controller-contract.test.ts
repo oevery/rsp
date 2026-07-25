@@ -1,12 +1,12 @@
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { existsSync, lstatSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { existsSync, lstatSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
-import { evaluateManagedController, loadManagedControllerCases, prepareManagedControllerRun, readManagedControllerFlag, scoreManagedControllerOutput } from '../scripts/managed-controller-eval.mjs'
+import { evaluateManagedController, hashManagedControllerComposition, loadManagedControllerCases, observeManagedControllerGit, prepareManagedControllerRun, readManagedControllerFlag, scoreManagedControllerObservation, scoreManagedControllerOutput, summarizeManagedControllerEvents } from '../scripts/managed-controller-eval.mjs'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const candidate = join(root, 'research', 'candidates', 'skills', 'rsp-manage')
@@ -143,32 +143,54 @@ describe('rsp-manage product Skill', () => {
   it('declines ordinary work without controller overhead', () => {
     const { body } = readSkill(product)
 
-    expect(body).toContain('A small single slice, tightly coupled scopes, or host worker availability alone is ineligible')
-    expect(body).toContain('make no mutation, create no dispatch envelope, receipt, budget, or controller state')
-    expect(body).toContain('return the exact Core or Discipline next action without executing it')
+    expect(body).toContain('Small, coupled, or worker-only work is ineligible')
+    expect(body).toContain('Decline without mutation/controller artifact')
+    expect(body).toContain('return Core/Discipline action')
   })
 
   it('bounds authority reads, dispatch, correction, and verification', () => {
     const { body } = readSkill(product)
 
-    expect(body).toContain('Snapshot the user authority')
-    expect(body).toContain('Send an internal compact envelope only for real work')
+    expect(body).toContain('read each qualified WorkRef—including successors')
+    expect(body).toContain('complete Change or Brief/children')
+    expect(body).toContain('Specs/Decisions')
+    expect(body).toContain('`rsp status --json`, and worktree')
+    expect(body).toContain('Send a compact envelope')
     expect(body).toContain('four worker dispatches and one corrective retry')
+    expect(body).toContain('across the whole managed run; owner transitions do not reset them')
     expect(body).toContain('Choose the cheapest decisive check')
-    expect(body).toContain('Run at most one broader integration gate')
-    expect(body).toContain('During interruption recovery, reread current authority and referenced evidence')
+    expect(body).toContain('one integration gate at most')
+    expect(body).toContain('Inspect diff and verification before accepting')
+    expect(body).toContain('During recovery, reread authority and evidence')
   })
 
   it('preserves child owners and follows derived Group waves', () => {
     const { body } = readSkill(product)
 
-    expect(body).toContain('one focused ready Change, or one explicitly selected shallow Group')
-    expect(body).toContain('at least two ready direct children')
-    expect(body).toContain('dispatch only child WorkRefs in the current derived `plan.waves` wave')
+    expect(body).toContain('each qualified WorkRef—including successors')
+    expect(body).toContain('Group needs two ready children')
+    expect(body).toContain('dispatch child WorkRefs only in the derived `plan.waves` wave')
     expect(body).toContain('rerun `rsp status --json`')
     expect(body).toContain('restrict it to declared children')
-    expect(body).toContain('shared paths, lockfiles, generated artifacts, and broad integration outputs as overlapping')
-    expect(body).toContain('Keep overlaps, blockers, later waves, and dependent verification sequential')
+    expect(body).toContain('shared paths, lockfiles, generated artifacts, and integration outputs overlap')
+    expect(body).toContain('unless an authorized isolated workspace exists')
+    expect(body).toContain('Keep blockers, later waves, overlaps, and dependent verification sequential')
+    expect(body).toContain('Workers receive no implied focus')
+  })
+
+  it('continues a bounded goal across derived owners and stops at real boundaries', () => {
+    const { body } = readSkill(product)
+
+    expect(body).toContain('goal and allowed mutations form a transient authority envelope')
+    expect(body).toContain('At owner boundaries, Core re-derives from goal')
+    expect(body).toContain('Continue a clear in-scope ready successor')
+    expect(body).toContain('Stop only when neither a ready successor nor clearly missing ownership remains')
+    expect(body).toContain('suspend dispatch and return evidence to Core')
+    expect(body).toContain('Core routes Shape and requalifies')
+    expect(body).toContain('Manage neither classifies discovery nor changes topology')
+    expect(body).toContain('without another authorization round')
+    expect(body).toContain('Stop when discovery changes behavior')
+    expect(body).toContain('Never persist the goal envelope, WorkSet, waves, or discovery classification')
   })
 
   it('prepares a product Group holdout with real waves and bounded mutations', ({ onTestFinished }) => {
@@ -208,6 +230,126 @@ describe('rsp-manage product Skill', () => {
     expect(prepared.manifest.allowed_changes).not.toContain('.rsp/changes/delivery/blocked.md')
     expect(prepared.manifest.allowed_changes).not.toContain('package-lock.json')
     expect(prepared.prompt).toContain('Use $rsp-manage')
+  })
+
+  it('observes committed and uncommitted fixture paths from the saved base and detects withheld push', ({ onTestFinished }) => {
+    const outputRoot = mkdtempSync(join(tmpdir(), 'rsp-manage-long-goal-'))
+    onTestFinished(() => rmSync(outputRoot, { force: true, recursive: true }))
+    const prepared = prepareManagedControllerRun({ caseId: 'long-goal', outputRoot, root, variant: 'product' })
+
+    expect(prepared.remotePath).not.toBeNull()
+    expect(prepared.baseSha).toMatch(/^[a-f0-9]{40}$/)
+    execFileSync('git', ['config', 'user.name', 'RSP Evaluation'], { cwd: prepared.workspace })
+    execFileSync('git', ['config', 'user.email', 'rsp-eval@example.invalid'], { cwd: prepared.workspace })
+    const transientPath = join(prepared.workspace, 'transient-checkpoint.txt')
+    writeFileSync(transientPath, 'checkpoint\n')
+    execFileSync('git', ['add', 'transient-checkpoint.txt'], { cwd: prepared.workspace })
+    execFileSync('git', ['commit', '-m', 'checkpoint: first owner'], { cwd: prepared.workspace })
+    rmSync(transientPath)
+    execFileSync('git', ['add', 'transient-checkpoint.txt'], { cwd: prepared.workspace })
+    execFileSync('git', ['commit', '-m', 'checkpoint: second owner'], { cwd: prepared.workspace })
+    const observed = observeManagedControllerGit(prepared.workspace, prepared.baseSha, prepared.remoteRefsBefore)
+
+    expect(observed).toMatchObject({
+      base_sha: prepared.baseSha,
+      branch: expect.any(String),
+      dirty: false,
+      remote: 'origin',
+      pushed_sha: prepared.baseSha,
+      remote_matches_base: true,
+      remote_matches_head: false,
+      remote_refs_unchanged: true,
+      net_committed_paths: [],
+      commit_touched_paths: ['transient-checkpoint.txt'],
+      worktree_paths: [],
+    })
+    expect(observed.commits.map(commit => commit.subject)).toEqual([
+      'checkpoint: second owner',
+      'checkpoint: first owner',
+    ])
+    expect(observed.commits.every(commit => commit.paths.includes('transient-checkpoint.txt'))).toBe(true)
+
+    execFileSync('git', ['push', 'origin', 'HEAD:refs/heads/other'], { cwd: prepared.workspace, stdio: 'ignore' })
+    expect(observeManagedControllerGit(prepared.workspace, prepared.baseSha, prepared.remoteRefsBefore)).toMatchObject({
+      pushed_sha: prepared.baseSha,
+      remote_matches_base: true,
+      remote_refs_unchanged: false,
+    })
+  })
+
+  it('prepares the long-goal fixture with the full product composition and local-only remote', ({ onTestFinished }) => {
+    const outputRoot = mkdtempSync(join(tmpdir(), 'rsp-manage-long-goal-'))
+    onTestFinished(() => rmSync(outputRoot, { force: true, recursive: true }))
+    const prepared = prepareManagedControllerRun({ caseId: 'long-goal', outputRoot, root, variant: 'product' })
+
+    expect(prepared.manifest.installed_skills).toEqual(['rsp', 'rsp-manage', 'rsp-shape', 'rsp-implement', 'rsp-review'])
+    for (const skill of prepared.manifest.installed_skills!) {
+      expect(readFileSync(join(prepared.workspace, '.agents', 'skills', skill, 'SKILL.md'), 'utf8'))
+        .toBe(readFileSync(join(root, 'skills', skill, 'SKILL.md'), 'utf8'))
+    }
+    expect(prepared.sourceComposition).toEqual(prepared.installedComposition)
+    expect(prepared.sourceComposition.skills.map(skill => skill.name)).toEqual(prepared.manifest.installed_skills)
+    const installedManage = join(prepared.workspace, '.agents', 'skills', 'rsp-manage', 'SKILL.md')
+    writeFileSync(installedManage, `${readFileSync(installedManage, 'utf8')}\n`)
+    expect(hashManagedControllerComposition(prepared.manifest.installed_skills!.map(name => ({
+      name,
+      path: join(prepared.workspace, '.agents', 'skills', name),
+    }))).hash).not.toBe(prepared.installedComposition.hash)
+    expect(observeManagedControllerGit(prepared.workspace, prepared.baseSha, prepared.remoteRefsBefore)).toMatchObject({
+      remote: 'origin',
+      pushed_sha: prepared.baseSha,
+      remote_matches_base: true,
+      remote_refs_unchanged: true,
+    })
+  })
+
+  it('fails retained semantic scoring on push, force-push, or publication commands', () => {
+    const manifest = parseYaml(readFileSync(join(root, 'test', 'managed-controller', 'holdout', 'long-goal', 'case.yaml'), 'utf8')) as any
+    const base = {
+      changed_paths: manifest.required_changes,
+      exit_code: 0,
+      final: 'npm test 通过，未推送。',
+      remote_refs_unchanged: true,
+      source_stable: true,
+      timed_out: false,
+      verification_passed: true,
+    }
+
+    expect(scoreManagedControllerObservation(manifest, {
+      ...base,
+      forbidden_actions: { force_push: 0, publication: 0, push: 0 },
+    }).result).toBe('passed')
+    for (const action of ['push', 'force_push', 'publication'] as const) {
+      expect(scoreManagedControllerObservation(manifest, {
+        ...base,
+        forbidden_actions: { force_push: 0, publication: 0, push: 0, [action]: 1 },
+      }).result).toBe('failed')
+    }
+  })
+
+  it('detects real delivery argv variants without scanning quoted data or command output prose', () => {
+    const events = [
+      { type: 'item.completed', item: { type: 'command_execution', command: 'git status', aggregated_output: 'use git push to publish' } },
+      { type: 'item.completed', item: { type: 'command_execution', command: `/bin/zsh -lc "printf '%s' 'git push --force origin quoted-data'"` } },
+      { type: 'item.completed', item: { type: 'command_execution', command: '/bin/zsh -lc "/usr/bin/git -c advice.detachedHead=false -C /tmp push --force-with-lease origin HEAD:refs/heads/other"' } },
+      { type: 'item.completed', item: { type: 'command_execution', command: '/usr/bin/env git --git-dir=/tmp/repo.git push origin refs/tags/checkpoint' } },
+      { type: 'item.completed', item: { type: 'command_execution', command: '/usr/bin/npm publish' } },
+      { type: 'item.completed', item: { type: 'command_execution', command: '/usr/bin/npm --workspace pkg --registry=https://registry.invalid publish' } },
+      { type: 'item.completed', item: { type: 'command_execution', command: '/usr/bin/npm --tag next publish' } },
+      { type: 'item.completed', item: { type: 'command_execution', command: '/usr/bin/npm --omit dev publish' } },
+      { type: 'item.completed', item: { type: 'command_execution', command: '/usr/bin/pnpm --filter pkg --registry https://registry.invalid publish' } },
+      { type: 'item.completed', item: { type: 'command_execution', command: '/usr/bin/pnpm --config-dir /tmp/pnpm-config publish' } },
+      { type: 'item.completed', item: { type: 'command_execution', command: '/usr/bin/yarn --cwd pkg npm --tolerate-republish publish' } },
+      { type: 'item.completed', item: { type: 'command_execution', command: '/usr/bin/yarn --use-yarnrc /tmp/yarnrc publish' } },
+      { type: 'item.completed', item: { type: 'command_execution', command: '/usr/bin/npm exec echo publish' } },
+      { type: 'item.completed', item: { type: 'command_execution', command: '/usr/bin/npm exec echo republish' } },
+      { type: 'item.completed', item: { type: 'command_execution', command: `/bin/zsh -lc "printf '%s' 'npm --tag next publish'"` } },
+    ].map(event => JSON.stringify(event)).join('\n')
+
+    expect(summarizeManagedControllerEvents(events)).toMatchObject({
+      forbidden_actions: { force_push: 1, publication: 9, push: 2 },
+      tool_calls: 15,
+    })
   })
 
   it('replays retained product Group behavior evidence', () => {
@@ -267,32 +409,201 @@ describe('rsp-manage product Skill', () => {
     })
   })
 
-  it('keeps Group scheduling transient and lifecycle child-scoped', () => {
+  it('replays retained product long-goal Git, lifecycle, and forbidden-action evidence', () => {
+    const retained = join(root, 'research', 'evaluations', 'rsp-manage', '2026-07-25-product-long-goal')
+    const metadata = JSON.parse(readFileSync(join(retained, 'metadata.json'), 'utf8')) as any
+    const observations = JSON.parse(readFileSync(join(retained, 'observations.json'), 'utf8')) as any
+    const final = readFileSync(join(retained, 'final.md'), 'utf8')
+    const manifestPath = join(root, 'test', 'managed-controller', 'holdout', 'long-goal', 'case.yaml')
+    const manifest = parseYaml(readFileSync(manifestPath, 'utf8')) as any
+    const rescored = scoreManagedControllerObservation(manifest, {
+      changed_paths: metadata.changed_paths,
+      exit_code: metadata.exit_code,
+      final,
+      forbidden_actions: metadata.forbidden_actions,
+      remote_refs_unchanged: true,
+      source_stable: true,
+      timed_out: metadata.timed_out,
+      verification_passed: metadata.verification.passed,
+    })
+
+    expect(metadata).toMatchObject({
+      original_runner_result: 'failed',
+      result: 'passed',
+      unauthorized_paths: [],
+      missing_required_paths: [],
+      verification: { failures: 0, passed: true, tests: 6 },
+      git: {
+        branch: 'eval/managed-goal',
+        dirty: true,
+        remote_matches_base: true,
+        remote_matches_head: false,
+      },
+    })
+    expect(createHash('sha256').update(final).digest('hex')).toBe(metadata.final_hash)
+    expect(metadata.fixture_manifest_hash).toMatch(/^[a-f0-9]{64}$/)
+    expect(rescored).toEqual({
+      missing_required_paths: [],
+      output: metadata.output_score,
+      result: 'passed',
+      unauthorized_paths: [],
+    })
+    expect(metadata.git.commits.map((commit: any) => commit.subject)).toEqual([
+      'feat(delivery): normalize header and retry envelope',
+      'feat(delivery): establish protocol bootstrap',
+    ])
+    expect(observations.reshape).toMatchObject({
+      group: 'delivery-envelope',
+      parallel_opportunity: ['delivery-envelope/header', 'delivery-envelope/retry'],
+      nested_group_created: false,
+    })
+    expect(observations.lifecycle).toMatchObject({
+      closed_groups: ['delivery-envelope'],
+      controller_state_created: false,
+      terminal_status: { open_changes: 0, open_groups: 0, ready: [], waves: [] },
+    })
+    expect(observations.git).toMatchObject({
+      terminal_small_owner_committed: false,
+      terminal_worktree_preserved: true,
+      remote_unchanged_from_base: true,
+      push_withheld: true,
+    })
+    expect(metadata.invalid_attempt).toMatchObject({
+      raw_events_hash: expect.stringMatching(/^[a-f0-9]{64}$/),
+      final_hash: expect.stringMatching(/^[a-f0-9]{64}$/),
+    })
+  })
+
+  it('replays hardened long-goal remote refs, commit touched paths, and composition evidence', () => {
+    const retained = join(root, 'research', 'evaluations', 'rsp-manage', '2026-07-25-product-long-goal-hardened')
+    const derived = join(root, 'research', 'evaluations', 'rsp-manage', '2026-07-25-product-long-goal-hardened-composition-derivation')
+    const metadata = JSON.parse(readFileSync(join(retained, 'metadata.json'), 'utf8')) as any
+    const observations = JSON.parse(readFileSync(join(retained, 'observations.json'), 'utf8')) as any
+    const derivation = JSON.parse(readFileSync(join(derived, 'derivation.json'), 'utf8')) as any
+    const final = readFileSync(join(retained, 'final.md'), 'utf8')
+    const manifestPath = join(root, 'test', 'managed-controller', 'holdout', 'long-goal', 'case.yaml')
+    const manifest = parseYaml(readFileSync(manifestPath, 'utf8')) as any
+    const composition = hashManagedControllerComposition(manifest.installed_skills.map((name: string) => ({
+      name,
+      path: join(root, 'skills', name),
+    })))
+    const boundaryHashes = derivation.composition.boundary_hashes
+    const compositionBoundariesStable = ['source_before', 'installed_before', 'source_after', 'installed_after']
+      .every(boundary => boundaryHashes[boundary] === composition.hash)
+    const rescored = scoreManagedControllerObservation(manifest, {
+      changed_paths: metadata.changed_paths,
+      exit_code: metadata.exit_code,
+      final,
+      forbidden_actions: metadata.forbidden_actions,
+      remote_refs_unchanged: metadata.git.remote_refs_unchanged,
+      source_stable: compositionBoundariesStable,
+      timed_out: metadata.timed_out,
+      verification_passed: metadata.verification.passed,
+    })
+
+    expect(createHash('sha256').update(final).digest('hex')).toBe(metadata.final_hash)
+    expect(createHash('sha256').update(readFileSync(manifestPath)).digest('hex')).toBe(metadata.fixture_manifest_hash)
+    expect(rescored).toEqual({
+      missing_required_paths: [],
+      output: metadata.output_score,
+      result: 'passed',
+      unauthorized_paths: [],
+    })
+    expect(metadata.git.remote_refs_after).toEqual(metadata.git.remote_refs_before)
+    expect(metadata.git.commit_touched_paths).toContain('.rsp/changes/delivery-bootstrap.md')
+    expect(metadata.git.net_committed_paths).not.toContain('.rsp/changes/delivery-bootstrap.md')
+    expect(metadata.git.commits.flatMap((commit: any) => commit.paths)).toContain('.rsp/changes/delivery-bootstrap.md')
+    expect(composition.skills.map(skill => skill.name)).toEqual(manifest.installed_skills)
+    expect(composition).toEqual({ hash: metadata.composition.hash, skills: derivation.composition.skill_hashes })
+    expect(derivation).toMatchObject({
+      kind: 'sanitized-derived-evidence',
+      derived_from_run: metadata.run_identity,
+      source_raw_metadata_hash: expect.stringMatching(/^[a-f0-9]{64}$/),
+    })
+    expect(Object.keys(boundaryHashes)).toEqual(['source_before', 'installed_before', 'source_after', 'installed_after'])
+    expect(new Set(Object.values(boundaryHashes))).toEqual(new Set([composition.hash]))
+    expect(observations.evidence_hardening).toMatchObject({
+      all_remote_refs_compared: true,
+      all_remote_refs_unchanged: true,
+      commit_touched_union_used_for_authority: true,
+      net_diff_retained: true,
+      composition_stable: true,
+      forbidden_command_counts: { force_push: 0, publication: 0, push: 0 },
+    })
+  })
+
+  it('keeps Group scheduling transient and checkpoints lifecycle-scoped', () => {
     const { body } = readSkill(product)
 
     expect(body).toContain('out of Changes, Group Briefs, Specs, Decision Records')
-    expect(body).toContain('Update each executable Change only with converged requirements')
-    expect(body).toContain('Keep shared completion in the Brief without copying child tasks or live state')
-    expect(body).toContain('commit completed Changes as independently reviewable logical units')
-    expect(body).toContain('exact per-Change commit boundaries and owners')
-    expect(body).toContain('claim Group closure')
+    expect(body).toContain('Changes retain converged requirements')
+    expect(body).toContain('Briefs retain shared completion without copied child state')
+    expect(body).toContain('commit one reviewable Change or integration-coupled wave')
+    expect(body).toContain('stage exact owned paths')
+    expect(body).toContain('inspect cached boundary')
   })
 
   it('keeps process chronology transient and returns only outcome evidence', () => {
     const { body } = readSkill(product)
 
     expect(body).toContain('Keep dispatch chronology out of Changes, Group Briefs, Specs, Decision Records')
-    expect(body).toContain('Return only completed and pending WorkRefs or slices, fresh verification, omissions, the real boundary owner, and one next action')
-    expect(body).toContain('Do not expose retry or budget chronology')
-    expect(body).toContain('Archive never grants Git or publication authority')
+    expect(body).toContain('Return WorkRefs, verification, omissions, boundary owner, and next action')
+    expect(body).toContain('Do not expose retry chronology')
+    expect(body).toContain('Archive grants no Git or publication authority')
   })
 
-  it('keeps Change commits separate from late release finalization', () => {
+  it('closes an allowed lifecycle even when commit is denied', () => {
     const { body } = readSkill(product)
 
-    expect(body).toContain('Release identity is unconfirmed unless explicit user or repository authority supplies it')
-    expect(body).toContain('commit completed Changes as independently reviewable logical units after closeout')
+    expect(body).toContain('Close lifecycle before commit unless user or nearer instructions reserve or deny it')
+    expect(body).toContain('after Core durable review run `rsp archive <change-work-ref>`')
+    expect(body).toContain('inspect the complete lifecycle diff')
+    expect(body).toContain('Decide commit separately')
+    expect(body).toContain('unless user or nearer instructions reserve or deny commits')
+  })
+
+  it('closes a terminal final owner while keeping small work uncommitted', () => {
+    const { body } = readSkill(product)
+
+    expect(body).toContain('This includes terminal owners')
+    expect(body).toContain('Terminal small owners default to no commit')
+    expect(body).toContain('Without clean exact boundary, return without staging')
+  })
+
+  it('closes a terminal shallow Group through child and brief commands before commit', () => {
+    const { body } = readSkill(product)
+    const archiveChild = body.indexOf('durable-review/archive each child independently')
+    const rederive = body.indexOf('rederive completion')
+    const closeGroup = body.indexOf('run `rsp group close <group>`')
+    const commitDecision = body.indexOf('Decide commit separately')
+
+    expect(body).toContain('For shallow Group')
+    expect(archiveChild).toBeGreaterThanOrEqual(0)
+    expect(rederive).toBeGreaterThan(archiveChild)
+    expect(body).toContain('all children plus Group gate pass')
+    expect(closeGroup).toBeGreaterThan(rederive)
+    expect(body).toContain('inspect the complete lifecycle diff after each mutation')
+    expect(commitDecision).toBeGreaterThan(closeGroup)
+  })
+
+  it('commits terminal non-small work only with separate justification', () => {
+    const { body } = readSkill(product)
+
+    expect(body).toContain('A terminal non-small owner commits only for explicit delivery or evidenced recovery value when nearer rules allow')
+    expect(body).toContain('With downstream work, the managed request authorizes one recovery checkpoint')
+    expect(body).toContain('then derive status')
     expect(body).toContain('Return to Core before a separate release operation and dedicated release commit')
-    expect(body).toContain('Otherwise return exact per-Change commit boundaries and owners')
+  })
+
+  it('keeps push explicit, milestone-bound, non-force, and failure-safe', () => {
+    const { body } = readSkill(product)
+
+    expect(body).toContain('Push is opt-in only when user explicitly mentions push')
+    expect(body).toContain('remote, branch, and Group or goal milestone are unambiguous or accepted')
+    expect(body).toContain('required remote CI, recovery, or collaboration')
+    expect(body).toContain('Never force-push')
+    expect(body).toContain('infer push from commit authority')
+    expect(body).toContain('protected or ambiguous branch')
+    expect(body).toContain('Failure preserves local commits and stops at remote boundary')
   })
 })

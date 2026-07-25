@@ -1,0 +1,65 @@
+{
+  "preflight": {
+    "initial_ready": [
+      "delivery-bootstrap"
+    ],
+    "initial_waves": [
+      [
+        "delivery-bootstrap"
+      ]
+    ],
+    "push_authority": false,
+    "checkpoint_authority": true
+  },
+  "reshape": {
+    "group": "delivery-envelope",
+    "children": [
+      "delivery-envelope/header",
+      "delivery-envelope/retry",
+      "delivery-envelope/summary"
+    ],
+    "parallel_opportunity": [
+      "delivery-envelope/header",
+      "delivery-envelope/retry"
+    ],
+    "parallel_basis": "Header and Retry owned disjoint source and test paths with no dependency.",
+    "sequential_transition": "delivery-envelope/summary required archived delivery-envelope/header behavior before execution.",
+    "nested_group_created": false
+  },
+  "lifecycle": {
+    "archived_changes": [
+      "delivery-bootstrap",
+      "delivery-envelope/header",
+      "delivery-envelope/retry",
+      "delivery-envelope/summary"
+    ],
+    "closed_groups": [
+      "delivery-envelope"
+    ],
+    "terminal_status": {
+      "open_changes": 0,
+      "open_groups": 0,
+      "ready": [],
+      "waves": []
+    },
+    "controller_state_created": false
+  },
+  "git": {
+    "checkpoint_subjects": [
+      "feat(delivery): establish protocol bootstrap",
+      "feat(delivery): normalize header and retry envelope"
+    ],
+    "terminal_small_owner_committed": false,
+    "terminal_worktree_preserved": true,
+    "branch": "eval/managed-goal",
+    "remote_unchanged_from_base": true,
+    "push_withheld": true
+  },
+  "postflight": {
+    "verification": "npm test passed 6/6",
+    "requirements_changed": false,
+    "unrelated_path_changed": false,
+    "publication_performed": false,
+    "force_push_performed": false
+  }
+}

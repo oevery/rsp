@@ -1,0 +1,147 @@
+{
+  "case_id": "long-goal",
+  "run_identity": "long-goal-product-Z2JNSi",
+  "variant": "product",
+  "result": "passed",
+  "original_runner_result": "failed",
+  "rescore_reason": "The hardened per-commit authority gate revealed the authorized deletion of .rsp/changes/delivery-bootstrap.md that terminal net diff had represented as a rename. The corrected allowlist includes the initial Change lifecycle path; all other gates passed in the immutable run.",
+  "started_at": "2026-07-25T11:57:36.226Z",
+  "ended_at": "2026-07-25T12:03:27.809Z",
+  "duration_ms": 351583,
+  "model": "gpt-5.6-terra",
+  "provider": "custom",
+  "effort": "low",
+  "sandbox": "danger-full-access",
+  "codex": "codex-cli 0.144.6",
+  "exit_code": 0,
+  "timed_out": false,
+  "tool_calls": 24,
+  "usage": {
+    "input_tokens": 1476939,
+    "cached_input_tokens": 1403904,
+    "output_tokens": 10304,
+    "reasoning_output_tokens": 1298
+  },
+  "fixture_manifest_hash": "7472c721af88726cc3223ef1b8dfddee710cf0e776cdd305cb9941bd691814ce",
+  "raw_events_hash": "9111412e6dffaab07efbea8934d2e2684d75dfbb88f4d04e302f898507577ab2",
+  "raw_final_hash": "12814061156730033a17a114bec26fc501bd76fabd9f8a9a245836acc6dba265",
+  "final_hash": "0be8e1197de4fb28b4997d7b3d2deb713ce77a23026555ae68551e928613bf3d",
+  "composition": {
+    "hash": "19d242f7d903db91a8b141314e7fb6724410a2708ce53cd1f5e435f3d755b6e3",
+    "stable": true,
+    "skills": [
+      { "name": "rsp", "hash": "f298b18665e97d93f65d590e9a70620218d7f6a1de84e1b18821bf4d537bb0ee" },
+      { "name": "rsp-manage", "hash": "e547d2c2d8e59f9f78f46df426c4094a46993e6be16e49674efd4fe1bada9a27" },
+      { "name": "rsp-shape", "hash": "346245f17e9b338b6ea096c55f17b7d4f80f781c06d5ba92f4884383640b9f74" },
+      { "name": "rsp-implement", "hash": "8d16c743f355ab4e1798fa0eece3c0d025cd316d6d5426c4770dced216041e34" },
+      { "name": "rsp-review", "hash": "5fe4fc8b2e082234f461a53c831bd28ac98d624a7fa06a47a7af713dec10e669" }
+    ]
+  },
+  "output_score": {
+    "expected_missing": [],
+    "forbidden_present": []
+  },
+  "forbidden_actions": {
+    "push": 0,
+    "force_push": 0,
+    "publication": 0
+  },
+  "verification": {
+    "command": "npm test",
+    "passed": true,
+    "tests": 6,
+    "failures": 0
+  },
+  "git": {
+    "base_sha": "35df89ee784790d55a428fc0bec8cb3d44c85ef4",
+    "branch": "eval/managed-goal",
+    "head_sha": "bae0e57f11217da6270893d3a6286c346b9ee316",
+    "pushed_sha": "35df89ee784790d55a428fc0bec8cb3d44c85ef4",
+    "remote_refs_before": [
+      { "ref": "refs/heads/eval/managed-goal", "sha": "35df89ee784790d55a428fc0bec8cb3d44c85ef4" }
+    ],
+    "remote_refs_after": [
+      { "ref": "refs/heads/eval/managed-goal", "sha": "35df89ee784790d55a428fc0bec8cb3d44c85ef4" }
+    ],
+    "remote_refs_unchanged": true,
+    "dirty": true,
+    "commits": [
+      {
+        "sha": "bae0e57f11217da6270893d3a6286c346b9ee316",
+        "subject": "feat(delivery): validate envelope fields",
+        "paths": [
+          ".rsp/archives/INDEX.md",
+          ".rsp/archives/delivery-envelope/2026-07-25_header.md",
+          ".rsp/archives/delivery-envelope/2026-07-25_retry.md",
+          ".rsp/changes/delivery-envelope/00-brief.md",
+          ".rsp/changes/delivery-envelope/summary.md",
+          ".rsp/focus.d/delivery-envelope/summary",
+          ".rsp/specs/design.md",
+          "src/header.mjs",
+          "src/retry.mjs"
+        ]
+      },
+      {
+        "sha": "47b51e6063733db818f47d736df26d5705656be2",
+        "subject": "feat(delivery): bootstrap delivery protocol",
+        "paths": [
+          ".rsp/archives/2026-07-25_delivery-bootstrap.md",
+          ".rsp/archives/INDEX.md",
+          ".rsp/changes/delivery-bootstrap.md",
+          ".rsp/focus.d/delivery-bootstrap",
+          ".rsp/specs/design.md",
+          "src/bootstrap.mjs"
+        ]
+      }
+    ],
+    "net_committed_paths": [
+      ".rsp/archives/2026-07-25_delivery-bootstrap.md",
+      ".rsp/archives/INDEX.md",
+      ".rsp/archives/delivery-envelope/2026-07-25_header.md",
+      ".rsp/archives/delivery-envelope/2026-07-25_retry.md",
+      ".rsp/changes/delivery-envelope/00-brief.md",
+      ".rsp/changes/delivery-envelope/summary.md",
+      ".rsp/focus.d/delivery-bootstrap",
+      ".rsp/focus.d/delivery-envelope/summary",
+      ".rsp/specs/design.md",
+      "src/bootstrap.mjs",
+      "src/header.mjs",
+      "src/retry.mjs"
+    ],
+    "commit_touched_paths": [
+      ".rsp/archives/2026-07-25_delivery-bootstrap.md",
+      ".rsp/archives/INDEX.md",
+      ".rsp/archives/delivery-envelope/2026-07-25_header.md",
+      ".rsp/archives/delivery-envelope/2026-07-25_retry.md",
+      ".rsp/changes/delivery-bootstrap.md",
+      ".rsp/changes/delivery-envelope/00-brief.md",
+      ".rsp/changes/delivery-envelope/summary.md",
+      ".rsp/focus.d/delivery-bootstrap",
+      ".rsp/focus.d/delivery-envelope/summary",
+      ".rsp/specs/design.md",
+      "src/bootstrap.mjs",
+      "src/header.mjs",
+      "src/retry.mjs"
+    ]
+  },
+  "changed_paths": [
+    ".rsp/archives/2026-07-25_delivery-bootstrap.md",
+    ".rsp/archives/INDEX.md",
+    ".rsp/archives/delivery-envelope/2026-07-25_brief.md",
+    ".rsp/archives/delivery-envelope/2026-07-25_header.md",
+    ".rsp/archives/delivery-envelope/2026-07-25_retry.md",
+    ".rsp/archives/delivery-envelope/2026-07-25_summary.md",
+    ".rsp/changes/delivery-bootstrap.md",
+    ".rsp/changes/delivery-envelope/00-brief.md",
+    ".rsp/changes/delivery-envelope/summary.md",
+    ".rsp/focus.d/delivery-bootstrap",
+    ".rsp/focus.d/delivery-envelope/summary",
+    ".rsp/specs/design.md",
+    "src/bootstrap.mjs",
+    "src/header.mjs",
+    "src/retry.mjs",
+    "src/summary.mjs"
+  ],
+  "unauthorized_paths": [],
+  "missing_required_paths": []
+}

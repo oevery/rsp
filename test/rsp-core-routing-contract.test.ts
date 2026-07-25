@@ -117,6 +117,25 @@ describe('rsp core routing contract', () => {
     expect(skill).toContain('For a material owner decision inside an explicit managed request, continue to the Shape preflight')
   })
 
+  it('reuses the managed preflight after progress without persisting orchestration state', () => {
+    for (const body of [skill, fallback]) {
+      expectSemanticGroup(body, [
+        ['transient authority envelope'],
+        ['After accepted managed progress', 'After accepted progress'],
+        ['continue a clear in-scope ready successor'],
+        ['stop naturally'],
+        ['neither a ready successor nor clearly missing ownership remains'],
+        ['suspend dispatch'],
+        ['independently verifiable and archivable result'],
+        ['at least two such results sharing one goal', 'at least two such results sharing the goal'],
+        ['without another authorization round'],
+        ['public-interface'],
+        ['external-action'],
+      ])
+    }
+    expect(fallback).toContain('Never persist the goal envelope, WorkSet, waves, or discovered-work classification')
+  })
+
   it('keeps persistent artifacts convergent and domain-owned', () => {
     expectSemanticGroup(skill, [
       ['sibling Group Brief when grouped'],
@@ -151,6 +170,14 @@ describe('rsp core routing contract', () => {
   it('prohibits inferred delivery and lifecycle actions', () => {
     expect(skill).toContain('Do not infer implementation, review, Git, publication, or approval authority')
     expect(skill).toMatch(/does not execute archive or grant staging, commit, push, publication, deletion, deployment, approval, or human-acceptance authority/)
+    expect(skill).toContain('The qualified Manage lifecycle and checkpoint rules above are the sole scoped exceptions')
+    expect(skill).toContain('Both inspect complete lifecycle diff before commit, including terminal owners')
+    expect(skill).toContain('`rsp archive <change-work-ref>`')
+    expect(skill).toContain('`rsp group close <group>` only after children and gate pass')
+    expect(skill).toContain('terminal small work defaults to no commit')
+    expect(skill).toContain('terminal non-small work needs explicit delivery or evidenced recovery value plus nearer-rule permission')
+    expect(skill).toContain('Push always requires an explicit user mention plus an unambiguous remote, branch, and milestone')
+    expect(skill).toContain('No managed request grants force-push')
     expect(skill).not.toMatch(/automatically (?:commit|push|publish|archive)/i)
   })
 })
