@@ -552,7 +552,7 @@ export async function runCli(rawArgs = process.argv.slice(2)) {
     }
     else {
       const { resolveUiLocale } = await import('./tui/i18n/locale.js')
-      const locale = resolveUiLocale(lang, process.env.RSP_UI_LANG, process.env.LC_ALL ?? process.env.LC_MESSAGES ?? process.env.LANG ?? Intl.DateTimeFormat().resolvedOptions().locale)
+      const locale = resolveUiLocale(lang, process.env.RSP_UI_LANG, process.env.LC_ALL ?? process.env.LC_MESSAGES ?? process.env.LANG ?? new Intl.DateTimeFormat().resolvedOptions().locale)
       const { runTui } = await import('./tui/entry.js')
       const exitCode = await runTui(locale)
       if (exitCode !== 0)
