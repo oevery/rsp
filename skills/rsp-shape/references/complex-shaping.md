@@ -10,9 +10,9 @@ Use an installed interview or grilling capability only when the work boundary is
 
 ## Choose a complex owner
 
-Keep cohesive work in one Change when it has one consistency and verification boundary.
+Keep cohesive work in one Change only when it delivers one observable outcome and its tasks must converge across the same consistency, focused-verification, review, archive, and rollback boundary. A shared file, module, deadline, or integration check does not establish that cohesion by itself.
 
-Use a shallow Group when at least two direct children are independently implementable, verifiable, focusable, and archivable. The Brief explains the shared goal, constraints, slices, aggregate completion, and durable outcomes. Child Changes own implementation tasks, verification, and exact `requires` edges. Group completion gates closing the Brief; it does not prevent a child from archiving unless that child declares the dependency.
+Use a shallow Group when at least two observable outcomes can be independently implemented, focused, verified, reviewed, archived, and rolled back. Preserve those outcomes as direct child Changes even when they share one broad integration, release, or acceptance gate. The Brief owns that aggregate gate plus the shared goal, constraints, slices, completion, and durable outcomes. Child Changes own their outcome, implementation tasks, focused verification, lifecycle, and exact `requires` edges. Group completion gates closing the Brief; it does not prevent a child from archiving unless that child declares the dependency.
 
 Use an Overall Delivery Change when independently closable semantic owners converge on terminal versioning, packaging, migration, authorization, or publication. It remains an ordinary six-section Change:
 

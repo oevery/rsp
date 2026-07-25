@@ -66,4 +66,23 @@ describe('rsp-shape Skill contract', () => {
     expect(reference).toContain('Do not add a nested Group')
     expect(reference.trim().split(/\s+/).length).toBeLessThanOrEqual(600)
   })
+
+  it('keeps independent observable outcomes as child Changes despite one broad gate', () => {
+    const { body } = readSkill()
+    const reference = readFileSync(join(skill, 'references', 'complex-shaping.md'), 'utf8')
+
+    expect(body).toContain('an integration gate never merges them')
+    expect(reference).toContain('at least two observable outcomes can be independently implemented, focused, verified, reviewed, archived, and rolled back')
+    expect(reference).toContain('even when they share one broad integration, release, or acceptance gate')
+    expect(reference).toContain('The Brief owns that aggregate gate')
+  })
+
+  it('keeps a cohesive single outcome under one complete owner boundary', () => {
+    const { body } = readSkill()
+    const reference = readFileSync(join(skill, 'references', 'complex-shaping.md'), 'utf8')
+
+    expect(body).toContain('one observable outcome sharing a consistency, focused-verification, review, archive, and rollback boundary')
+    expect(reference).toContain('its tasks must converge across the same consistency, focused-verification, review, archive, and rollback boundary')
+    expect(reference).toContain('A shared file, module, deadline, or integration check does not establish that cohesion by itself')
+  })
 })
