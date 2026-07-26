@@ -4,16 +4,6 @@ Use these as fallbacks. Preserve an established repository format whenever it ex
 
 The generic baseline is Keep a Changelog 1.1.0 for cumulative structure and Semantic Versioning 2.0.0 for version meaning. Treat Conventional Commits, forge-generated notes, and label-based categorization as evidence inventories rather than finished prose.
 
-## Release evidence ledger
-
-Maintain a temporary table or equivalent structured notes:
-
-| Evidence | Net outcome | Audience | Risk/action | Changelog | Release notes | Reference | Exclusion/uncertainty |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| PR, issue, Change, commits, diff, docs, verification | What users receive | Users, developers, operators, maintainers | Breaking, migration, security, compatibility, none | Section or omit | Section or omit | PR, issue, work item, commit, compare | Reason or owner decision |
-
-The ledger is an analysis device, not a new project state store. Persist it only when the repository already owns release fragments or the user authorizes a destination.
-
 ## Default changelog shape
 
 ```markdown
@@ -84,14 +74,6 @@ For each required action, answer:
 6. What rollback, recovery, or support path exists?
 
 Keep a short summary in release notes and link a dedicated guide when the procedure is long, conditional, or operationally risky.
-
-## Reference rules
-
-- Add one compare or tag link for the release range when the forge supports it.
-- Prefer PR links for reviewable implementation context.
-- Prefer issue or tracked-work links for rationale and migration context.
-- Prefer commit links for exact fixes, backports, audit provenance, projects without PRs, or explicit user policy.
-- Keep references optional per bullet; a link must earn its visual cost.
 
 ## Net-release examples
 

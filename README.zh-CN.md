@@ -15,7 +15,7 @@ RSP 将模糊意图逐步转化为边界明确、经过实现、审查和验证�
 - 将原因不明的失败交给 diagnosis，将普通且证据充分的修改交给 implementation，仅将明确要求或具有具体风险的 test-first 工作交给 TDD。
 - 按明确范围审查变更、处理已接受的 findings，并重新运行 fresh verification。
 - 将稳定事实、作用域指令、长期理由和完成历史分别保存在正确的 owner 中。
-- 当 Change 明确拥有已确认的 release 时，准备对应的发布文档。
+- 为显式且已确认的 release operation 准备或校准发布文档；只有重大协调需要持久 owner 时才使用 Release Change。
 
 ## 工作流如何组合
 
@@ -25,7 +25,7 @@ RSP 将模糊意图逐步转化为边界明确、经过实现、审查和验证�
   → 按需 Design
   → Diagnose | TDD | Implement
   → Review → Address accepted findings
-  → 按需准备 Release Docs
+  → 显式且确认后的 Release Docs
   → Durable Review → Archive
 ```
 
@@ -105,7 +105,7 @@ npx -y @oevery/rsp@3.1.0-beta.1 doctor
 - `.rsp/specs/design.md`：由 `rsp init` 创建，之后由项目维护。
 - `.rsp/specs/decisions/`：默认的权威 Decision Record 目录；只有 Host Project 已有外部 ADR 目录时才配置 `decisions.path`。
 - `.rsp/rsp-rules.md`：生成的最小 fallback protocol；可用时优先加载 `rsp` skill。
-- 将长期架构、边界和跨模块技术约束放在 `.rsp/specs/design.md`。
+- 将项目级边界与导航放在 `.rsp/specs/design.md`；把成组且可复用的事实放入 `.rsp/specs/INDEX.md` 所列的最小领域 Spec。
 - 将 `.rsp/specs/INDEX.md` 视为附加 spec 的目录；它不列出 `design.md`。
 - 将稳定且有作用域的工作流、验证和本地运行指令放在 nearest project-owned `AGENTS.md` 的非受管区域。
 
@@ -151,44 +151,26 @@ Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENT
 
 RSP 发布十个宿主无关、按需加载的 Skills：
 
-- `rsp`：setup、workflow、durable review 和 archive 指导。
-- `rsp-shape`：在不实现代码的前提下，将不清晰的非平凡工作塑造成一个 ready Change 或合理的 shallow Group；当用户明确要求严格质询或高风险决策仍未解决时，渐进加载 deep clarification，并让关键设计问题通过同一个 WorkRef 返回。
-- `rsp-design`：根据项目证据解决一个受跟踪的 domain model、module/seam 或 reversible exploration 问题，只把已授权的 planned design 写回 selected Change。
-- `rsp-implement`：在显式 mutation authority 内实现一个 selected、ready Change，并如实回写 Tasks、Blockers 和 fresh verification evidence。
-- `rsp-diagnose`：在生产修复前确认原因，或如实返回 unresolved diagnosis。
-- `rsp-tdd`：让一个清晰行为经过 observed RED、minimal GREEN、可选 safe REFACTOR 与 fresh verification。
-- `rsp-review`：基于固定范围与项目权威，对 Code、Document 或 mixed Change 进行只读审查。
-- `rsp-address-review`：处置固定 review findings，仅修复已授权且 accepted 的 finding，并要求 fresh verification 与 report-only re-review。
-- `rsp-release-docs`：根据证据准备或审计 Changelog、Release Notes 和 Migration Notes，并适配用户要求与仓库现有约定。
-- `rsp-manage`：仅在用户显式请求后，跨真正独立的 slices 或中断恢复继续一个 focused Change；普通工作保持直接执行，编排状态保持临时。
+| Skill | 职责 |
+|---|---|
+| `rsp` | 派生下一动作，指导 setup、durable review 与 archive 判断。 |
+| `rsp-shape` | 在不实现的前提下塑造一个可执行 Change 或合理的 shallow Group。 |
+| `rsp-design` | 解决一个受跟踪的 domain、module/seam 或 reversible-exploration 问题。 |
+| `rsp-implement` | 实现一个 selected ready Change，并提供 fresh verification。 |
+| `rsp-diagnose` | 修正前确认原因，或如实返回 unresolved diagnosis。 |
+| `rsp-tdd` | 让一个清晰行为经过 RED、GREEN 与安全的 REFACTOR。 |
+| `rsp-review` | 对固定的 Code、Document 或 mixed comparison 做只读审查。 |
+| `rsp-address-review` | 处置固定 findings，修正 accepted 项，验证并请求复审。 |
+| `rsp-release-docs` | 起草、审计、定稿或校准基于证据的发布表面。 |
+| `rsp-manage` | 继续一个显式请求且符合条件的 ready Change 或 shallow Group。 |
 
-每个 Skill 都可以独立调用，并把结果返回现有项目或 RSP artifact owner。套件不引入隐藏 workflow state 或递归 Skill 编排，也不会由任何 Skill 推断 commit、push 或 publication 权限。
+每个 Skill 都把结果返回现有项目或 RSP owner。套件不引入隐藏 workflow state 或递归 Skill 编排。任何 Skill 都不会推断 commit、push、publication、deployment、approval 或 human-acceptance 权限。
 
 响应语言与产物语言相互独立。面向人的响应标题、标签、解释和结论依次遵循明确指定的响应语言、项目中针对响应的指令和会话语言；已授权写入的产物正文依次遵循明确指定的产物语言、项目中针对产物的指令、目标产物的现有语言，最后才回退到会话语言。RSP 的 canonical artifact headings、WorkRef 值、路径、命令、标识符和机器消费值保持不变；响应标签可以在括号中保留技术 token，但不能直接使用未翻译的 token 作为标签。
 
-3.1 beta 产品面包含这十个 Skills。可选的 `rsp-manage` 仅在显式请求后启用，并要求 focused ready Change 具有真正独立的 slices、长时 continuation 或中断恢复需求。小型或紧耦合工作直接返回 Core 或对应 Discipline，不产生 dispatch envelope。managed run 以当前项目和 RSP artifacts 为 authority，过程 chronology 不持久化，验证保持有界，并在 mutation、lifecycle、Git、publication、environment 或 human-decision authority 边界停止。
+按证据组合套件：Shape 确定 owner；Design 返回一个关键问题；Core 在 Diagnose、TDD 与 Implement 之间选择；Review 保持只读；Address Review 修正 accepted findings 并请求复审；Core 在 archive 前执行 durable decision。显式 release operation 在 identity 或 range 已确认时，可以不创建 Release Change 就进入 Release Docs；只有重大决策、协调、恢复、blocker 或 acceptance 需要持久 owner 时才创建。Manage 是可选且仅显式启用的能力：它接受一个 selected ready Change 或 shallow Group，并要求独立调度、长时 continuation 或恢复需求；小型或紧耦合工作保持直接执行。
 
-完成一个 tracked Change 时，应按证据组合套件：`rsp-shape` 返回可执行 Change，并把一个关键设计问题交给 `rsp-design`；`rsp-design` 把证据、建议、备选方案和已授权的 planned-design 更新返回同一个 WorkRef；Core 把 unexplained failure 路由到 `rsp-diagnose`，仅把明确要求或具有具体风险的 test-first 工作路由到 `rsp-tdd`，把普通且证据充分的修改路由到 `rsp-implement`；`rsp-review` 返回只读报告；`rsp-address-review` 处置 finding；当 selected Change 明确拥有已确认的 release identity 或 range，且发布文档尚未完成时，Core 才把工作路由到 `rsp-release-docs`；最后由 `rsp` 在 archive 前把 stable facts、lasting rationale 与 temporary continuation 路由到各自 owner。只有用户显式要求 managed continuation 且工作满足有界独立调度条件时才使用 `rsp-manage`。遇到歧义、失败门禁、缺失权限或越界 Git conflict 时停止；任何 Skill 都不会推断 Git continuation、commit、delivery 权限或自动重试。
-
-文档分层矩阵：
-
-| Surface | 主要受众 | 职责 |
-|---|---|---|
-| `README.md` | 人类 | 概览、入门、示例 |
-| `.rsp/rsp-rules.md` | 未安装 skill 的 agent | 最小 tool-agnostic fallback protocol |
-| `skills/rsp/SKILL.md` | agent | 首选操作指南 |
-| `skills/rsp-shape/SKILL.md` | agent | 塑造一个可执行 Change 或合理的 shallow Group |
-| `skills/rsp-design/SKILL.md` | agent | 解决一个受跟踪的设计问题并返回同一个 WorkRef |
-| `skills/rsp-implement/SKILL.md` | agent | 用 fresh verification evidence 实现一个 ready Change |
-| `skills/rsp-diagnose/SKILL.md` | agent | 在生产修复前确认原因 |
-| `skills/rsp-tdd/SKILL.md` | agent | 以 test-first 方式实现一个清晰行为 |
-| `skills/rsp-review/SKILL.md` | agent | Code 与 Document 只读审查 |
-| `skills/rsp-address-review/SKILL.md` | agent | 处置 review findings 并返回可恢复 continuation |
-| `skills/rsp-release-docs/SKILL.md` | agent | 准备或审计符合项目约定的发布文档 |
-| `skills/rsp-manage/SKILL.md` | agent | 仅在显式调用后继续符合条件的独立 slices |
-| `AGENTS.md` | 人类与 agent | 有作用域的项目指令与 RSP 导航入口 |
-
-通常应由人先读 `README.md`；agent 应遵循 nearest `AGENTS.md`，可用时加载 `rsp` skill，仅在 skill 不可用时读取 `.rsp/rsp-rules.md`。
+人类应从本 README 开始；agent 应遵循 nearest `AGENTS.md`，优先加载 `skills/rsp/SKILL.md`，仅在 Skill 不可用时读取 `.rsp/rsp-rules.md`。
 
 如果文档中写的是 `rsp <command>`，默认前提是你的环境里已经能直接运行 `rsp`。进行 opt-in beta 评估时，应固定精确 prerelease 身份，例如 `npx -y @oevery/rsp@3.1.0-beta.1 <command>`；stable 用户仍可使用不带版本的入口获取 npm `latest`。
 
@@ -273,7 +255,7 @@ durable review 包含两个独立语义判断：是否更新当前事实或作�
 
 1. `npx -y @oevery/rsp@3.1.0-beta.1 init`
 2. 保持受管块尽量薄
-3. 将长期设计收敛到 `.rsp/specs/design.md`
+3. 将项目级边界与导航放在 `.rsp/specs/design.md`，把成组的长期事实放入最小领域 Spec
 4. 只有需要额外的 durable current-fact 文档时才使用 `rsp add spec <name>`
 
 AI 协助接入：

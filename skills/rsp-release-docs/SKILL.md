@@ -1,10 +1,10 @@
 ---
 name: rsp-release-docs
-description: Prepare, finalize, reconcile, and audit evidence-based changelogs, release notes, and migration notes. Use when drafting or updating release documentation, reviewing an Unreleased section, summarizing a version range, deciding references or omissions, checking that release prose matches shipped behavior, finalizing artifacts before an explicit tag or publication request, or reconciling public release surfaces afterward.
+description: Draft, audit, finalize, or reconcile evidence-based changelogs, release notes, and migration notes for an explicit release operation.
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.25.4"
+  version: "2026.07.26.1"
 ---
 
 # RSP Release Docs

@@ -47,9 +47,11 @@ describe('rsp-release-docs Skill contract', () => {
     expect(skill).toContain('Every relevant commit and work item must map to a net outcome or explicit exclusion')
     expect(evidence).toContain('## Evidence ledger')
     expect(evidence).toContain('## Surface lifetime')
+    expect(evidence).toContain('## References')
     expect(includesAny(evidence, ['publication-invariant'])).toBe(true)
     expect(evidence).toMatch(/Transient release state[\s\S]+never shipped prose/)
-    expect(outputs).toContain('## Release evidence ledger')
+    expect(outputs).not.toContain('## Release evidence ledger')
+    expect(outputs).not.toContain('## Reference rules')
     expect(outputs).toContain('## Migration contract')
   })
 

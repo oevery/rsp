@@ -15,7 +15,7 @@ The workflow rests on a lightweight artifact foundation of **Rules, Specs, and P
 - Route unexplained failures to diagnosis, ordinary evidenced edits to implementation, and only explicit or concrete-risk test-first work to TDD.
 - Review changes against explicit scope, address accepted findings, and rerun fresh verification.
 - Preserve stable facts, scoped instructions, lasting rationale, and completed history in their proper owners.
-- Prepare release documentation when a Change explicitly owns a confirmed release.
+- Prepare or reconcile release documentation for an explicit confirmed release operation; use a Release Change only when material coordination needs a persistent owner.
 
 ## How the workflow fits together
 
@@ -25,7 +25,7 @@ intent
   → design when needed
   → diagnose | TDD | implement
   → review → address accepted findings
-  → release docs when owned
+  → release docs for an explicit confirmed operation
   → durable review → archive
 ```
 
@@ -105,7 +105,7 @@ npx -y @oevery/rsp@3.1.0-beta.1 doctor
 - `.rsp/specs/design.md`: created by `rsp init`, then owned by the project.
 - `.rsp/specs/decisions/`: the default authoritative Decision Record directory; configure `decisions.path` only when the Host Project already owns one external ADR directory.
 - `.rsp/rsp-rules.md`: generated minimal fallback protocol; use the `rsp` skill when available.
-- Keep durable architecture, boundaries, and cross-cutting technical constraints in `.rsp/specs/design.md`.
+- Keep project-wide boundaries and navigation in `.rsp/specs/design.md`; move cohesive reusable facts to the smallest domain Spec listed by `.rsp/specs/INDEX.md`.
 - Treat `.rsp/specs/INDEX.md` as a directory for additional spec files; it does not list `design.md`.
 - Keep stable scoped workflow and validation instructions in the nearest project-owned `AGENTS.md`, outside the managed RSP block.
 
@@ -151,59 +151,26 @@ Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENT
 
 RSP publishes ten host-neutral Skills for on-demand loading:
 
-- `rsp`: setup, workflow, durable review, and archive guidance.
-- `rsp-shape`: shape unclear non-trivial work into one ready Change or justified shallow Group without implementing it; progressively load deep clarification for an explicit rigorous challenge or unresolved high-risk decision, and return material design questions to the same WorkRef.
-- `rsp-design`: resolve one tracked domain-model, module/seam, or reversible-exploration question from project evidence, writing only authorized planned design back to the selected Change.
-- `rsp-implement`: implement one selected, ready Change within explicit mutation authority and return truthful Tasks, Blockers, and fresh verification evidence.
-- `rsp-diagnose`: establish a confirmed cause or truthful unresolved diagnosis before production correction.
-- `rsp-tdd`: drive one clear behavior through observed RED, minimal GREEN, optional safe REFACTOR, and fresh verification.
-- `rsp-review`: read-only review of code, document, or mixed Changes against fixed scope and project authority.
-- `rsp-address-review`: dispose fixed review findings, apply only authorized accepted corrections, require fresh verification and report-only re-review, and return a recoverable artifact-scoped continuation when work remains.
-- `rsp-release-docs`: prepare or audit evidence-based changelogs, release notes, and migration notes while adapting to user requirements and repository conventions.
-- `rsp-manage`: continue one explicitly requested focused Change across genuinely independent slices or interruption recovery, while keeping ordinary work direct and orchestration state transient.
+| Skill | Role |
+|---|---|
+| `rsp` | Derive the next action; guide setup, durable review, and archive decisions. |
+| `rsp-shape` | Shape one executable Change or justified shallow Group without implementation. |
+| `rsp-design` | Resolve one tracked domain, module/seam, or reversible-exploration question. |
+| `rsp-implement` | Implement one selected ready Change with fresh verification. |
+| `rsp-diagnose` | Confirm a cause, or return a truthful unresolved diagnosis, before correction. |
+| `rsp-tdd` | Drive one clear behavior through RED, GREEN, and safe REFACTOR. |
+| `rsp-review` | Review a fixed code, document, or mixed comparison without mutation. |
+| `rsp-address-review` | Dispose fixed findings, correct accepted ones, verify, and request re-review. |
+| `rsp-release-docs` | Draft, audit, finalize, or reconcile evidence-based release surfaces. |
+| `rsp-manage` | Continue one explicitly requested eligible ready Change or shallow Group. |
 
-Each Skill is independently invocable and returns results to existing project or RSP artifact owners. The suite adds no hidden workflow state or recursive Skill orchestration, and no Skill infers commit, push, or publication authority.
+Each Skill returns to an existing project or RSP owner. The suite adds no hidden workflow state or recursive Skill orchestration. No Skill infers commit, push, publication, deployment, approval, or human-acceptance authority.
 
 Response language and artifact language are independent. Human-facing response headings, labels, explanations, and conclusions follow the requested response language, response-specific project instructions, then the conversation language. Authorized artifact prose follows the requested artifact language, artifact-specific project instructions, then the existing artifact language, and only then the conversation language. Canonical RSP artifact headings, WorkRef values, paths, commands, identifiers, and machine-consumed values remain unchanged; response labels may retain technical tokens in parentheses but never use them as untranslated labels.
 
-The 3.1 beta product surface contains these ten Skills. The optional `rsp-manage` capability activates only on explicit request and only for a focused ready Change with genuinely independent slices, long continuation, or interruption recovery. Small or coupled work returns directly to Core or the selected Discipline without a dispatch envelope. Managed runs keep authority in current project and RSP artifacts, keep process chronology transient, use bounded verification, and stop at mutation, lifecycle, Git, publication, environment, or human-decision boundaries.
+Compose the suite from evidence: Shape settles the owner; Design returns one material question; Core chooses Diagnose, TDD, or Implement; Review stays report-only; Address Review corrects accepted findings and requests re-review; Core performs the durable decision before archive. An explicit release operation with a confirmed identity or range may enter Release Docs without a Release Change; create one only for material decisions, coordination, recovery, blockers, or acceptance. Manage is optional and explicit-only: it accepts one selected ready Change or shallow Group that needs independent dispatch, long continuation, or recovery, while small or coupled work stays direct.
 
-For a complete tracked change, compose the suite as evidence requires: `rsp-shape` returns an executable Change and sends one material design question to `rsp-design`; `rsp-design` returns its evidence, recommendation, alternatives, and any authorized planned-design update to the same WorkRef; Core routes unexplained failures to `rsp-diagnose`, explicit or concrete-risk test-first work to `rsp-tdd`, and ordinary evidenced edits to `rsp-implement`; `rsp-review` returns a read-only report; `rsp-address-review` disposes findings and returns accepted corrections through fresh verification and re-review; when a selected Change explicitly owns a confirmed release identity or range and unfinished release documentation, Core routes that work to `rsp-release-docs`, which turns one evidence ledger into distinct changelog, release-note, and migration surfaces without inferring publication authority; and `rsp` routes implemented current facts, lasting rationale, project-owned context or instructions, and temporary continuation to their existing semantic owners before archive. Use `rsp-manage` only when the user explicitly requests managed continuation and the work qualifies for bounded independent dispatch. Each discipline returns to its existing owner. Ambiguity, failed gates, missing authority, and out-of-scope Git conflicts stop at that owner; no Skill infers Git continuation, commit, delivery, or an automatic retry loop.
-
-Reading guidance:
-
-- `README.md`: human-oriented overview and examples
-- `.rsp/rsp-rules.md`: minimal fallback protocol when the skill is unavailable
-- `skills/rsp/SKILL.md`: preferred operational guide for agents
-- `skills/rsp-shape/SKILL.md`: bounded shaping and slicing guidance
-- `skills/rsp-design/SKILL.md`: tracked domain, module/seam, and reversible-exploration design guidance
-- `skills/rsp-implement/SKILL.md`: bounded implementation and fresh verification guidance
-- `skills/rsp-diagnose/SKILL.md`: evidence-backed cause isolation before correction
-- `skills/rsp-tdd/SKILL.md`: bounded red-green-refactor guidance
-- `skills/rsp-review/SKILL.md`: read-only review guidance
-- `skills/rsp-address-review/SKILL.md`: review finding disposition, correction, re-review, and recovery guidance
-- `skills/rsp-release-docs/SKILL.md`: evidence-based changelog, release-note, and migration guidance
-- `skills/rsp-manage/SKILL.md`: explicit bounded continuation across independent slices
-
-Surface matrix:
-
-| Surface | Primary audience | Role |
-|---|---|---|
-| `README.md` | Humans | Overview, onboarding, examples |
-| `.rsp/rsp-rules.md` | Agents without the skill | Minimal tool-agnostic fallback protocol |
-| `skills/rsp/SKILL.md` | Agents | Preferred operational guide |
-| `skills/rsp-shape/SKILL.md` | Agents | Shape one executable Change or justified shallow Group |
-| `skills/rsp-design/SKILL.md` | Agents | Resolve one tracked design question and return it to the same WorkRef |
-| `skills/rsp-implement/SKILL.md` | Agents | Implement one ready Change with fresh verification evidence |
-| `skills/rsp-diagnose/SKILL.md` | Agents | Confirm a cause before production correction |
-| `skills/rsp-tdd/SKILL.md` | Agents | Implement one clear behavior test-first |
-| `skills/rsp-review/SKILL.md` | Agents | Read-only Code and Document review |
-| `skills/rsp-address-review/SKILL.md` | Agents | Resolve review findings and return a recoverable continuation |
-| `skills/rsp-release-docs/SKILL.md` | Agents | Prepare or audit convention-compatible release documentation |
-| `skills/rsp-manage/SKILL.md` | Agents | Continue eligible independent slices only after explicit invocation |
-| `AGENTS.md` | Humans and agents | Scoped project instructions and RSP navigation |
-
-Humans should usually start with `README.md`; agents should follow nearest `AGENTS.md`, load the `rsp` skill when available, and use `.rsp/rsp-rules.md` only as fallback.
+Humans should start with this README. Agents should follow the nearest `AGENTS.md`, prefer `skills/rsp/SKILL.md`, and use `.rsp/rsp-rules.md` only when the Skill is unavailable.
 
 When this README shows `rsp <command>`, it assumes the command is already available in your environment. For opt-in beta evaluation, pin the exact prerelease identity, such as `npx -y @oevery/rsp@3.1.0-beta.1 <command>`; stable users can keep using the unversioned package entrypoint for npm `latest`.
 
@@ -288,7 +255,7 @@ Existing project with a rich `AGENTS.md`:
 
 1. `npx -y @oevery/rsp@3.1.0-beta.1 init`
 2. Keep the managed block thin
-3. Move durable design into `.rsp/specs/design.md`
+3. Keep project-wide boundaries and navigation in `.rsp/specs/design.md`, and route cohesive durable facts to the smallest domain Spec
 4. Use `rsp add spec <name>` only when another durable current-fact document is needed
 
 AI-assisted setup:
