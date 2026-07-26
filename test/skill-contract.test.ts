@@ -13,6 +13,7 @@ const tddSkill = join(root, 'skills', 'rsp-tdd')
 const designSkill = join(root, 'skills', 'rsp-design')
 const manageSkill = join(root, 'skills', 'rsp-manage')
 const releaseNotesSkill = join(root, 'skills', 'rsp-release-docs')
+const codebaseAuditSkill = join(root, 'skills', 'rsp-codebase-audit')
 const portableKeys = new Set([
   'description',
   'license',
@@ -137,6 +138,10 @@ describe('rsp Skill contract', () => {
     expectPortableSkill(releaseNotesSkill)
   })
 
+  it('publishes a portable optional codebase audit Skill', () => {
+    expectPortableSkill(codebaseAuditSkill)
+  })
+
   it('publishes the complete assisted suite while keeping research outside package roots', () => {
     const packageJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as { files: string[] }
     const publishedSkills = readdirSync(join(root, 'skills'))
@@ -152,5 +157,6 @@ describe('rsp Skill contract', () => {
     expect(publishedSkills).toContain('rsp-design')
     expect(publishedSkills).toContain('rsp-manage')
     expect(publishedSkills).toContain('rsp-release-docs')
+    expect(publishedSkills).toContain('rsp-codebase-audit')
   })
 })

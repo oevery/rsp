@@ -149,7 +149,7 @@ Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENT
 
 ## Skills
 
-RSP 发布十个宿主无关、按需加载的 Skills：
+RSP 发布十个默认、宿主无关、按需加载的生命周期 Skills，以及一个需要显式安装的项目级审计 Skill：
 
 | Skill | 职责 |
 |---|---|
@@ -163,8 +163,9 @@ RSP 发布十个宿主无关、按需加载的 Skills：
 | `rsp-address-review` | 处置固定 findings，修正 accepted 项，验证并请求复审。 |
 | `rsp-release-docs` | 起草、审计、定稿或校准基于证据的发布表面。 |
 | `rsp-manage` | 继续一个显式请求或项目启用且符合条件的 ready Change 或 shallow Group。 |
+| `rsp-codebase-audit`（可选） | 只读审计一个有界仓库或子树，发现有证据支撑的结构风险。 |
 
-每个 Skill 都把结果返回现有项目或 RSP owner。套件不引入隐藏 workflow state 或递归 Skill 编排。任何 Skill 都不会推断 commit、push、publication、deployment、approval 或 human-acceptance 权限。
+每个生命周期 Skill 都把结果返回现有项目或 RSP owner。只读的 Pre-Change Design 与 `rsp-codebase-audit` 可以把一个有界结果直接返回用户，而不虚构 artifact owner。套件不引入隐藏 workflow state 或递归 Skill 编排。任何 Skill 都不会推断 commit、push、publication、deployment、approval 或 human-acceptance 权限。
 
 响应语言与产物语言相互独立。面向人的响应标题、标签、解释和结论依次遵循明确指定的响应语言、项目中针对响应的指令和会话语言；已授权写入的产物正文依次遵循明确指定的产物语言、项目中针对产物的指令、目标产物的现有语言，最后才回退到会话语言。RSP 的 canonical artifact headings、WorkRef 值、路径、命令、标识符和机器消费值保持不变；响应标签可以在括号中保留技术 token，但不能直接使用未翻译的 token 作为标签。
 
@@ -192,14 +193,21 @@ manage:
 
 如果文档中写的是 `rsp <command>`，默认前提是你的环境里已经能直接运行 `rsp`。进行 opt-in beta 评估时，应固定精确 prerelease 身份，例如 `npx -y @oevery/rsp@3.1.0-beta.1 <command>`；stable 用户仍可使用不带版本的入口获取 npm `latest`。
 
-将当前精确包内置的完整 Skill 套件安装到当前项目：
+将当前精确包内置的默认生命周期 Skill 套件安装到当前项目：
 
 ```bash
 rsp skills install --dry-run
 rsp skills install
 ```
 
-该命令会预检全部十个 package-owned targets，保留无关的 `.agents/skills` 条目，并且只有显式传入 `--force` 才会替换内容不同的 package-owned 目录。它从调用 `rsp` 的同一个包安装，因此 beta 评估可以固定精确 npm 身份：
+该命令会预检十个默认 package-owned targets，保留无关的 `.agents/skills` 条目（包括可选 Skills），并且只有显式传入 `--force` 才会替换内容不同的已选目录。按精确名称安装可选的项目级审计 Skill：
+
+```bash
+rsp skills install rsp-codebase-audit --dry-run
+rsp skills install rsp-codebase-audit
+```
+
+两种形式都从调用 `rsp` 的同一个包安装，因此 beta 评估可以固定精确 npm 身份：
 
 ```bash
 npx -y @oevery/rsp@3.1.0-beta.1 skills install --dry-run
@@ -291,8 +299,8 @@ rsp init --agents-mode <mode>   搭建 .rsp/，并确保 AGENTS.md 含有 RSP �
 rsp init --with-project-setup   同时创建 .rsp/changes/project-setup.md
 rsp update                      刷新 fallback protocol、修复 AGENTS 受管块并重建索引
 rsp ui [--lang auto|en|zh-CN]   打开只读交互式仪表盘
-rsp skills install [--dry-run] [--force]
-                                  将当前包的十个 Skills 安装到 .agents/skills
+rsp skills install [name] [--dry-run] [--force]
+                                  将默认十个 Skills 或一个精确可选 Skill 安装到 .agents/skills
 rsp add spec <name>             创建 .rsp/specs/<name>.md 并重建 specs 索引
 rsp create <name> [summary]     创建 .rsp/changes/<name>.md；可加 --lite 使用更短模板
 rsp group create <name> [goal] 创建不进入 focus 的 .rsp/changes/<name>/00-brief.md

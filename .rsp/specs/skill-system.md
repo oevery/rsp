@@ -1,11 +1,12 @@
 # Skill System
 
 ## Purpose
-- Define composition, ownership, authority, progressive-disclosure, and completion contracts for the ten published RSP Skills.
+- Define composition, ownership, authority, progressive-disclosure, and completion contracts for the ten default lifecycle Skills and explicitly selected optional project Skills.
 
 ## Stable Facts
 - The published suite contains `rsp`, `rsp-shape`, `rsp-design`, `rsp-implement`, `rsp-diagnose`, `rsp-tdd`, `rsp-review`, `rsp-address-review`, `rsp-release-docs`, and optional `rsp-manage`.
-- Skills are independently invocable and return to an existing project, Change, Spec, Decision Record, archive, or release-artifact owner. Report-only Pre-Change Design may instead return one bounded result to the user without creating an artifact owner. The suite adds no manifest, runtime overlay, hidden state, recursive Skill orchestration, or implicit Git/publication authority.
+- `rsp-codebase-audit` is an independently invoked, report-only project Skill. It audits one explicit repository or subtree boundary for evidenced ownership, dependency, production-path, change-amplification, or verification risks; it neither requires nor creates a Change and never enters implementation or lifecycle routing.
+- Skills are independently invocable and lifecycle Skills return to an existing project, Change, Spec, Decision Record, archive, or release-artifact owner. Report-only Pre-Change Design and Codebase Audit may instead return one bounded result to the user without creating an artifact owner. The suite adds no manifest, runtime overlay, hidden state, recursive Skill orchestration, or implicit Git/publication authority.
 - Response and artifact language are separate. Response prose follows explicit response language, scoped instructions, then conversation language. Authorized artifact prose follows explicit artifact language, scoped instructions, existing artifact language, then conversation language. Canonical headings, WorkRefs, paths, commands, identifiers, severity labels, and machine values remain unchanged.
 - Core `rsp` derives one stage and one next action from intent, nearest authority, deterministic status, Change readiness, fresh verification, and blockers. Stages are not persisted.
 - Core keeps selection, routing, ownership, safety, and output contracts eager. It conditionally loads setup/repair, Groups/dependencies, conflict handling, durable review, and detailed managed routing only when those paths are active.

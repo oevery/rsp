@@ -10,7 +10,7 @@
 - The canonical domain Specs are:
   - [Core Model](./core-model.md): artifacts, WorkRefs, Change Groups, lifecycle, dependencies, focus, and durable writeback.
   - [CLI Contracts](./cli-contracts.md): deterministic commands, filesystem safety, inspection, JSON, history, indexes, and repair.
-  - [Skill System](./skill-system.md): the ten Skills, composition, progressive disclosure, managed continuation, and authority boundaries.
+  - [Skill System](./skill-system.md): the ten default lifecycle Skills, optional project Skills, composition, progressive disclosure, managed continuation, and authority boundaries.
   - [Interactive TUI](./tui.md): dashboard routing, state, presentation, localization, history, layout, and terminal lifecycle.
   - [Distribution and Maintainer Research](./distribution.md): package inventory, Skill installation, releases, evaluation provenance, repository layering, and upstream research.
 - Decision Records under the configured authoritative path own lasting rationale for hard-to-reverse choices; Specs own current facts.
@@ -27,7 +27,7 @@
 | Layer | Directories | Ownership |
 | --- | --- | --- |
 | Product runtime | `src/`, `bin/` | CLI registration, commands, domain interpretation, status/history inspection, filesystem safety, diagnostics, and interactive UI |
-| Product distribution | `rules/`, `skills/` | Bundled fallback source and ten published RSP Skills |
+| Product distribution | `rules/`, `skills/` | Bundled fallback source, ten default lifecycle Skills, and independently installed optional project Skills |
 | Project host integration | `.agents/skills/` | Live published-Skill projections and maintainer-only research capability |
 | Maintainer tooling | `scripts/` | Deterministic repository and upstream maintenance workflows |
 | Maintainer knowledge | `docs/`, `research/` | Explanatory design material, source distillations, cross-source models, and recommendations |

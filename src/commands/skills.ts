@@ -8,7 +8,21 @@ import { inspectManagedDirectory, inspectManagedFileTree, ManagedPathError, reso
 export interface InstallPackagedSkillsArgs {
   dryRun?: boolean
   force?: boolean
+  names?: string[]
 }
+
+export const DEFAULT_PACKAGED_SKILL_NAMES = [
+  'rsp',
+  'rsp-address-review',
+  'rsp-design',
+  'rsp-diagnose',
+  'rsp-implement',
+  'rsp-manage',
+  'rsp-release-docs',
+  'rsp-review',
+  'rsp-shape',
+  'rsp-tdd',
+] as const
 
 export interface SkillInstallResult {
   installed: string[]
@@ -167,7 +181,18 @@ export async function installPackagedSkills(
   const packageRoot = options.packageRoot ?? PKG_ROOT
   const projectRoot = options.projectRoot ?? process.cwd()
   const renamePath = options.renamePath ?? rename
-  const skills = await inspectPackagedSkills(packageRoot)
+  const packagedSkills = await inspectPackagedSkills(packageRoot)
+  const requestedNames = args.names?.length
+    ? [...new Set(args.names)]
+    : [...DEFAULT_PACKAGED_SKILL_NAMES]
+  const packagedSkillsByName = new Map(packagedSkills.map(skill => [skill.name, skill]))
+  for (const name of requestedNames) {
+    if (!packagedSkillsByName.has(name))
+      throw new Error(`unknown packaged Skill: ${name}`)
+  }
+  const skills = requestedNames
+    .map(name => packagedSkillsByName.get(name)!)
+    .sort((a, b) => a.name.localeCompare(b.name))
   const targetRoot = resolveManagedDirectoryChain(projectRoot, ['.agents', 'skills'], 'project Skills root')
 
   const result: SkillInstallResult = { installed: [], unchanged: [], replaced: [] }

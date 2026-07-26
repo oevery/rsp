@@ -7,6 +7,7 @@ const root = fileURLToPath(new URL('..', import.meta.url))
 const publishedSkills = [
   'rsp',
   'rsp-address-review',
+  'rsp-codebase-audit',
   'rsp-design',
   'rsp-diagnose',
   'rsp-implement',

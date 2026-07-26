@@ -341,9 +341,14 @@ const skillsInstallCommand = defineCommand({
     description: 'Install this package\'s bundled Skills into .agents/skills',
   },
   args: {
+    'name': {
+      type: 'positional',
+      description: 'Exact packaged Skill name (default: lifecycle suite)',
+      required: false,
+    },
     'dry-run': {
       type: 'boolean',
-      description: 'Preflight all packaged Skills without changing files',
+      description: 'Preflight selected packaged Skills without changing files',
       default: false,
     },
     'force': {
@@ -352,10 +357,13 @@ const skillsInstallCommand = defineCommand({
       default: false,
     },
   },
-  async run({ args }: { args: { 'dry-run': boolean, 'force': boolean } }) {
+  async run({ args }: { args: { '_': string[], 'dry-run': boolean, 'force': boolean, 'name'?: string } }) {
+    if (args._.length > 1)
+      throw new Error('rsp skills install accepts at most one Skill name')
     const result = await installPackagedSkills({
       dryRun: Boolean(args['dry-run']),
       force: Boolean(args.force),
+      names: args.name ? [args.name] : undefined,
     })
     printSkillInstallResult(result, Boolean(args['dry-run']))
   },

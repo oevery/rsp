@@ -10,6 +10,7 @@ const packageVersion = (JSON.parse(readFileSync(join(root, 'package.json'), 'utf
 const expectedSkills = [
   'rsp',
   'rsp-address-review',
+  'rsp-codebase-audit',
   'rsp-design',
   'rsp-diagnose',
   'rsp-implement',
@@ -40,12 +41,16 @@ describe('clean install package check', () => {
         init: true,
         skillsInstall: true,
         skillsInstallIdempotent: true,
+        optionalSkillInstall: true,
+        optionalSkillInstallIdempotent: true,
         statusJson: true,
         nonTtyUi: { exitCode: 1, stderr: 'Error: rsp ui requires an interactive terminal; use rsp status or rsp status --json instead' },
         invalidLocale: { exitCode: 1, stderr: 'Error: --lang must be auto, en, or zh-CN' },
       })
       expect(report.tarballSha256).toMatch(/^[a-f0-9]{64}$/)
       expect(report.inventory.skills).toEqual(expectedSkills)
+      expect(report.inventory.defaultProjectSkills).toEqual(expectedSkills.filter(name => name !== 'rsp-codebase-audit'))
+      expect(report.inventory.projectSkills).toEqual(expectedSkills)
       expect(report.rspDesignReferences).toEqual([
         'domain-modeling.md',
         'module-seams.md',
@@ -67,6 +72,8 @@ describe('clean install package check', () => {
       expect(report.inventory.files).toContain('skills/rsp-design/SKILL.md')
       expect(report.inventory.files).toContain('skills/rsp-manage/SKILL.md')
       expect(report.inventory.files).toContain('skills/rsp-release-docs/SKILL.md')
+      expect(report.inventory.files).toContain('skills/rsp-codebase-audit/SKILL.md')
+      expect(report.inventory.files).toContain('skills/rsp-codebase-audit/references/structural-lenses.md')
       for (const path of [
         'skills/rsp/references/conflict-handling.md',
         'skills/rsp/references/durable-review.md',

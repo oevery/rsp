@@ -9,7 +9,7 @@ import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { parse as parseYaml } from 'yaml'
 
-const EXPECTED_SKILLS = [
+const EXPECTED_DEFAULT_SKILLS = [
   'rsp',
   'rsp-address-review',
   'rsp-design',
@@ -21,6 +21,8 @@ const EXPECTED_SKILLS = [
   'rsp-shape',
   'rsp-tdd',
 ]
+const OPTIONAL_SKILL = 'rsp-codebase-audit'
+const EXPECTED_PACKAGED_SKILLS = [...EXPECTED_DEFAULT_SKILLS, OPTIONAL_SKILL].sort()
 const EXPECTED_DESIGN_REFERENCES = [
   'domain-modeling.md',
   'module-seams.md',
@@ -194,6 +196,18 @@ function main() {
     const skillInstallRepeat = runResult(process.execPath, [installedBin, 'skills', 'install'], { cwd: projectRoot })
     if (skillInstallRepeat.status !== 0 || !skillInstallRepeat.stdout.includes('unchanged:'))
       fail('Installed rsp skills install was not idempotent')
+    const defaultProjectSkills = readdirSync(join(projectRoot, '.agents', 'skills'), { withFileTypes: true })
+      .filter(entry => entry.isDirectory())
+      .map(entry => entry.name)
+      .sort()
+    if (JSON.stringify(defaultProjectSkills) !== JSON.stringify(EXPECTED_DEFAULT_SKILLS))
+      fail(`Default project Skill inventory mismatch: ${defaultProjectSkills.join(', ')}`)
+    const optionalSkillInstall = runResult(process.execPath, [installedBin, 'skills', 'install', OPTIONAL_SKILL], { cwd: projectRoot })
+    if (optionalSkillInstall.status !== 0 || !optionalSkillInstall.stdout.includes(`installed: ${OPTIONAL_SKILL}`))
+      fail(`Installed rsp optional Skill install failed: ${optionalSkillInstall.stderr.trim()}`)
+    const optionalSkillInstallRepeat = runResult(process.execPath, [installedBin, 'skills', 'install', OPTIONAL_SKILL], { cwd: projectRoot })
+    if (optionalSkillInstallRepeat.status !== 0 || !optionalSkillInstallRepeat.stdout.includes(`unchanged: ${OPTIONAL_SKILL}`))
+      fail('Installed rsp optional Skill install was not idempotent')
     const status = runResult(process.execPath, [installedBin, 'status', '--json'], { cwd: projectRoot })
     if (status.status !== 0 || JSON.parse(status.stdout).command !== 'status')
       fail('Installed rsp executable did not return normal status JSON')
@@ -214,7 +228,7 @@ function main() {
       .filter(entry => entry.isDirectory())
       .map(entry => entry.name)
       .sort()
-    if (JSON.stringify(installedSkills) !== JSON.stringify(EXPECTED_SKILLS))
+    if (JSON.stringify(installedSkills) !== JSON.stringify(EXPECTED_PACKAGED_SKILLS))
       fail(`Installed Skill inventory mismatch: ${installedSkills.join(', ')}`)
     for (const skill of installedSkills)
       validateSkill(skillRoot, skill)
@@ -222,7 +236,7 @@ function main() {
       .filter(entry => entry.isDirectory())
       .map(entry => entry.name)
       .sort()
-    if (JSON.stringify(projectSkills) !== JSON.stringify(EXPECTED_SKILLS))
+    if (JSON.stringify(projectSkills) !== JSON.stringify(EXPECTED_PACKAGED_SKILLS))
       fail(`Installed project Skill inventory mismatch: ${projectSkills.join(', ')}`)
 
     const designReferences = readdirSync(join(skillRoot, 'rsp-design', 'references')).sort()
@@ -245,6 +259,8 @@ function main() {
         files: packageFiles,
         installedFiles,
         skills: installedSkills,
+        defaultProjectSkills,
+        projectSkills,
       },
       package: `${packResult.name}@${packResult.version}`,
       runtime: { node: process.version, npm: runNpm(['--version']) },
@@ -255,6 +271,8 @@ function main() {
         init: true,
         skillsInstall: true,
         skillsInstallIdempotent: true,
+        optionalSkillInstall: true,
+        optionalSkillInstallIdempotent: true,
         statusJson: true,
         nonTtyUi: { exitCode: nonTtyUi.status, stderr: nonTtyUi.stderr.trim() },
         invalidLocale: { exitCode: invalidLocale.status, stderr: invalidLocale.stderr.trim() },

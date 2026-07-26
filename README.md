@@ -149,7 +149,7 @@ Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENT
 
 ## Skills
 
-RSP publishes ten host-neutral Skills for on-demand loading:
+RSP publishes ten default host-neutral lifecycle Skills for on-demand loading, plus one explicitly installed project-level audit Skill:
 
 | Skill | Role |
 |---|---|
@@ -163,8 +163,9 @@ RSP publishes ten host-neutral Skills for on-demand loading:
 | `rsp-address-review` | Dispose fixed findings, correct accepted ones, verify, and request re-review. |
 | `rsp-release-docs` | Draft, audit, finalize, or reconcile evidence-based release surfaces. |
 | `rsp-manage` | Continue one explicitly requested or project-enabled eligible ready Change or shallow Group. |
+| `rsp-codebase-audit` (optional) | Audit one bounded repository or subtree for evidence-backed structural risks without mutation. |
 
-Each Skill returns to an existing project or RSP owner, except report-only Pre-Change Design may return one bounded result directly to the user without inventing an artifact owner. The suite adds no hidden workflow state or recursive Skill orchestration. No Skill infers commit, push, publication, deployment, approval, or human-acceptance authority.
+Each lifecycle Skill returns to an existing project or RSP owner. Report-only Pre-Change Design and `rsp-codebase-audit` may return one bounded result directly to the user without inventing an artifact owner. The suite adds no hidden workflow state or recursive Skill orchestration. No Skill infers commit, push, publication, deployment, approval, or human-acceptance authority.
 
 Response language and artifact language are independent. Human-facing response headings, labels, explanations, and conclusions follow the requested response language, response-specific project instructions, then the conversation language. Authorized artifact prose follows the requested artifact language, artifact-specific project instructions, then the existing artifact language, and only then the conversation language. Canonical RSP artifact headings, WorkRef values, paths, commands, identifiers, and machine-consumed values remain unchanged; response labels may retain technical tokens in parentheses but never use them as untranslated labels.
 
@@ -192,14 +193,21 @@ Humans should start with this README. Agents should follow the nearest `AGENTS.m
 
 When this README shows `rsp <command>`, it assumes the command is already available in your environment. For opt-in beta evaluation, pin the exact prerelease identity, such as `npx -y @oevery/rsp@3.1.0-beta.1 <command>`; stable users can keep using the unversioned package entrypoint for npm `latest`.
 
-Install the exact package-bundled suite into the current project:
+Install the exact package's default lifecycle suite into the current project:
 
 ```bash
 rsp skills install --dry-run
 rsp skills install
 ```
 
-The command preflights all ten package-owned targets, leaves unrelated `.agents/skills` entries untouched, and requires explicit `--force` before replacing a divergent package-owned directory. It installs from the package that invoked `rsp`, so prerelease dogfooding can pin one exact npm identity:
+The command preflights the ten default package-owned targets, leaves unrelated `.agents/skills` entries (including optional Skills) untouched, and requires explicit `--force` before replacing a divergent selected directory. Install the optional project-level audit Skill by exact name:
+
+```bash
+rsp skills install rsp-codebase-audit --dry-run
+rsp skills install rsp-codebase-audit
+```
+
+Both forms install from the package that invoked `rsp`, so prerelease dogfooding can pin one exact npm identity:
 
 ```bash
 npx -y @oevery/rsp@3.1.0-beta.1 skills install --dry-run
@@ -291,8 +299,8 @@ rsp init --agents-mode <mode>   Scaffold .rsp/ and ensure AGENTS.md contains the
 rsp init --with-project-setup   Also create .rsp/changes/project-setup.md
 rsp update                      Refresh the fallback protocol, repair the AGENTS block, and rebuild indices
 rsp ui [--lang auto|en|zh-CN]   Open the read-only interactive dashboard
-rsp skills install [--dry-run] [--force]
-                                  Install the invoking package's ten Skills into .agents/skills
+rsp skills install [name] [--dry-run] [--force]
+                                  Install the default ten Skills or one exact optional Skill into .agents/skills
 rsp add spec <name>             Create .rsp/specs/<name>.md and rebuild specs index
 rsp create <name> [summary]     Create .rsp/changes/<name>.md; add --lite for a shorter template
 rsp group create <name> [goal] Create an unfocused .rsp/changes/<name>/00-brief.md
