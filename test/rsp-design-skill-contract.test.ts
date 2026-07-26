@@ -32,11 +32,14 @@ describe('rsp-design Skill contract', () => {
     expect(body).toContain('Load only the reference matching the question')
   })
 
-  it('requires one owned question and preserves the RSP artifact boundary', () => {
+  it('supports pre-change and tracked ownership without weakening the artifact boundary', () => {
     const { body } = readSkill()
 
+    expect(body).toContain('Pre-Change Design')
+    expect(body).toContain('Tracked Design')
+    expect(body).toContain('one explicit bounded design question')
+    expect(body).toContain('Do not invent a WorkRef')
     expect(body).toContain('explicit WorkRef or exactly one unambiguous focus marker')
-    expect(body).toContain('State the single material question')
     expect(body).toContain('Never invent product intent')
     expect(body).toContain('write settled planned design only under its `Design` section')
     expect(body).toContain('Do not write Specs, Decision Records, `CONTEXT.md`, `AGENTS.md`, production code')
@@ -53,6 +56,19 @@ describe('rsp-design Skill contract', () => {
     expect(body).toContain('unresolved owner decisions')
     expect(body).toContain('artifact routing')
     expect(body).toContain('smallest next action')
+    expect(body).toContain('return to the user')
     expect(body).toContain('recursively invoke another Skill')
+  })
+
+  it('routes a bounded design inquiry before generic no-change shaping', () => {
+    const core = readFileSync(join(root, 'skills', 'rsp', 'SKILL.md'), 'utf8')
+    const fallback = readFileSync(join(root, 'rules', 'rsp-rules.md'), 'utf8')
+    const designRoute = core.indexOf('Without a selected Change, use report-only Pre-Change Design')
+    const noChangeRoute = core.indexOf('With no selected Change, name one ready WorkRef')
+
+    expect(designRoute).toBeGreaterThan(-1)
+    expect(noChangeRoute).toBeGreaterThan(designRoute)
+    expect(fallback).toContain('report-only Pre-Change Design without inventing a WorkRef')
+    expect(fallback).toContain('outcome, scope, non-goals, acceptance, or decomposition')
   })
 })

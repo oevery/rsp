@@ -1,0 +1,25 @@
+name: pre-change-module-seam
+question: Should normalization happen before or after the existing adapter boundary?
+authority:
+  work_ref: null
+  artifact_mutation: false
+evidence:
+  - direct-production-consumer
+  - complete-call-path
+  - interface-obligations
+expect:
+  reference: module-seams
+  result: report-only
+  owner: user
+  output:
+    - exact-question
+    - recommendation
+    - alternatives-and-tradeoffs
+    - unresolved-owner-decisions
+    - artifact-routing-candidates
+    - smallest-next-action
+  forbidden:
+    - production-implementation
+    - artifact-mutation
+    - invented-work-ref
+    - continuation

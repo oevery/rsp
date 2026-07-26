@@ -355,7 +355,7 @@ Spec 不是 archive summary。
 
 设计问题会直接改变 Change 的可执行性与后续 durable writeback，因此 RSP 内置一个精简的 `rsp-design` discipline，而不是要求每个项目另外安装完整的 design suite。
 
-它只解决 selected Change 上的一个 material question：按需选择 domain modeling、module/seam design 或 reversible exploration，从最小权威证据链得出结论，并把 recommendation、alternatives、unresolved owner decisions 和 artifact routing 返回同一个 WorkRef。默认 report-only；只有显式授权时才更新 selected Change 的 `## Design`，并且不得把 planned design 提前写入 Specs、Decision Records、`CONTEXT.md` 或 `AGENTS.md`。
+它只解决一个边界明确的 material question：按需选择 domain modeling、module/seam design 或 reversible exploration，从最小权威证据链得出结论。Pre-Change Design 不要求 WorkRef，严格 report-only 并将结果返回用户；若 outcome、scope、non-goals、acceptance 或 decomposition 仍不明确，则返回 Shape。Tracked Design 将 recommendation、alternatives、unresolved owner decisions 和 artifact routing 返回同一个 WorkRef；只有显式授权时才更新 selected Change 的 `## Design`，并且不得把 planned design 提前写入 Specs、Decision Records、`CONTEXT.md` 或 `AGENTS.md`。
 
 RSP 内置的是写入判断与所有权路由，不是对项目文档的接管：
 

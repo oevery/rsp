@@ -50,7 +50,7 @@ Evidence depth is `deep` when the source report analyzes the exact path and mech
 | G7 | Disposition fixed review findings, correct accepted findings under explicit authority, require fresh verification and re-review, and recover one bounded pass without hidden state. | `rsp-address-review` |
 | G8 | Establish a confirmed cause or truthful unresolved diagnosis before production correction while preserving one selected Change and read-only investigation authority. | `rsp-diagnose` |
 | G9 | Drive one clear behavior through observed RED, minimal GREEN, optional safe REFACTOR, and fresh verification without taking review or delivery authority. | `rsp-tdd` |
-| G10 | Resolve one tracked domain-model, module/seam, or reversible-exploration question from project evidence without implementing it or creating a second artifact owner. | `rsp-design` |
+| G10 | Resolve one bounded domain-model, module/seam, or reversible-exploration question before or within tracked work from project evidence without implementing it or creating a second artifact owner. | `rsp-design` |
 
 The 3.0 readiness review demonstrated RSP-specific diagnosis, TDD, and tracked design gaps: external capability names were not installed with the package, while inline fallbacks duplicated partial discipline behavior. RSP now owns one bounded design question, semantic artifact routing, response continuation, and a compact in-scope conflict fallback. Broad architecture audits, teaching, generic Git delivery, browser, platform, product, knowledge capture, managed orchestration, and specialized diagnosis/testing branches remain external unless later evidence establishes another RSP owner.
 

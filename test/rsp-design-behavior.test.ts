@@ -18,9 +18,11 @@ describe('rsp-design behavior fixtures', () => {
 
     expect(Object.keys(cases).sort()).toEqual([
       'authorized-reversible-probe',
+      'broad-pre-change-needs-shape',
       'domain-ownership',
       'missing-authority',
       'module-seam',
+      'pre-change-module-seam',
     ])
     expect(cases['domain-ownership'].expect.reference).toBe('domain-modeling')
     expect(cases['domain-ownership'].evidence).toContain('existing-production-consumer')
@@ -34,6 +36,11 @@ describe('rsp-design behavior fixtures', () => {
       'remove-disposable-artifacts',
       'verify-cleanup',
     ])
+    expect(cases['pre-change-module-seam'].expect.result).toBe('report-only')
+    expect(cases['pre-change-module-seam'].expect.owner).toBe('user')
+    expect(cases['pre-change-module-seam'].expect.forbidden).toContain('invented-work-ref')
+    expect(cases['broad-pre-change-needs-shape'].expect.result).toBe('shape-required')
+    expect(cases['broad-pre-change-needs-shape'].expect.forbidden).toContain('implicit-planning-owner')
     expect(cases['missing-authority'].expect.result).toBe('blocked')
     expect(cases['missing-authority'].expect.owner).toBe('unresolved')
     expect(cases['missing-authority'].expect.forbidden).toContain('artifact-mutation')

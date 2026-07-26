@@ -1,0 +1,18 @@
+name: broad-pre-change-needs-shape
+question: Design the new collaboration feature and decide how to deliver it.
+authority:
+  work_ref: null
+  artifact_mutation: false
+evidence:
+  - outcome-is-unclear
+  - acceptance-is-unclear
+  - decomposition-is-unclear
+expect:
+  result: shape-required
+  owner: user
+  blocker: executable-owner-boundary-unresolved
+  forbidden:
+    - production-implementation
+    - implicit-planning-owner
+    - invented-work-ref
+    - artifact-mutation

@@ -81,7 +81,7 @@ describe('rsp core routing contract', () => {
 
   it('routes design, managed work, and release operations without granting authority', () => {
     expectSemanticGroup(coreContract, [
-      ['one isolated material domain, module/seam, or evidence-seeking design question'],
+      ['one explicit isolated material domain, module/seam, or evidence-seeking design question'],
       ['`rsp-design`'],
       ['explicitly managed'],
       ['effective status policy'],

@@ -1,0 +1,69 @@
+{
+  "kind": "sanitized-real-host-evidence",
+  "run_identity": "auto-lifecycle-product-jaCUUu",
+  "case_id": "auto-lifecycle",
+  "variant": "product",
+  "result": "passed",
+  "exit_code": 0,
+  "timed_out": false,
+  "duration_ms": 143638,
+  "settings": {
+    "codex": "codex-cli 0.144.6",
+    "model": "gpt-5.6-terra",
+    "effort": "medium",
+    "sandbox": "danger-full-access"
+  },
+  "usage": {
+    "input_tokens": 555533,
+    "cached_input_tokens": 509952,
+    "output_tokens": 3954,
+    "reasoning_output_tokens": 872,
+    "tool_calls": 12
+  },
+  "composition": {
+    "hash": "de5bf8479764652eeee3cb4717a32db62e6afbfb0b6bcbe2622af334affba3fd",
+    "stable": true,
+    "skills": [
+      { "name": "rsp", "hash": "fc5c32ff48dd6b20b17ec9a88def22e926e7e80ecb734e5fd4cc951e09d34120" },
+      { "name": "rsp-manage", "hash": "06b4ca55b33990114f45429fb11c8b254787ec6cf36d6b10a6ee6e20b5bdfea6" },
+      { "name": "rsp-address-review", "hash": "ce136fb3a45125b122ba7ca5dbda7d67d76d7010671f4b48ac201e31faaa6923" },
+      { "name": "rsp-review", "hash": "5fe4fc8b2e082234f461a53c831bd28ac98d624a7fa06a47a7af713dec10e669" },
+      { "name": "rsp-implement", "hash": "8d16c743f355ab4e1798fa0eece3c0d025cd316d6d5426c4770dced216041e34" }
+    ],
+    "boundary_hashes": {
+      "source_before": "de5bf8479764652eeee3cb4717a32db62e6afbfb0b6bcbe2622af334affba3fd",
+      "installed_before": "de5bf8479764652eeee3cb4717a32db62e6afbfb0b6bcbe2622af334affba3fd",
+      "source_after": "de5bf8479764652eeee3cb4717a32db62e6afbfb0b6bcbe2622af334affba3fd",
+      "installed_after": "de5bf8479764652eeee3cb4717a32db62e6afbfb0b6bcbe2622af334affba3fd"
+    }
+  },
+  "verification": {
+    "command": "npm test",
+    "passed": true,
+    "tests": 3,
+    "failures": 0
+  },
+  "output_score": {
+    "expected_missing": [],
+    "forbidden_present": []
+  },
+  "forbidden_actions": {
+    "push": 0,
+    "force_push": 0,
+    "publication": 0
+  },
+  "changed_paths": [
+    ".rsp/archives/2026-07-26_normalize-label.md",
+    ".rsp/archives/INDEX.md",
+    ".rsp/changes/normalize-label.md",
+    ".rsp/focus.d/normalize-label",
+    "src/normalize.mjs"
+  ],
+  "required_paths_missing": [],
+  "unauthorized_paths": [],
+  "final_hash": "94240cb583d25d5ea1b60fc1c205f0882c7e2b05c90f33b8c7373ba811d66c0f",
+  "raw_final_hash": "cfe8dc28c0612f50bec4e00bb20e36482dbd55728d3e52e3e29d4f9e722964a9",
+  "raw_events_hash": "c0b94c4f6540ae9730685850b72ff83df3ca6231b37aa1ed96d867f8c5ed4271",
+  "raw_metadata_hash": "b0224e931f9e2ec5209c922356e38ddcc12ed407a435bc8d864035946a6c353b",
+  "fixture_manifest_semantic_hash": "b6dd841e0c5b289ac61f4a2a90550e6052be14022a6a4e60ce3a973e577c86be"
+}

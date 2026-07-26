@@ -4,7 +4,7 @@ summary: Completed RSP changes.
 kind: generated-index
 index_type: archives
 source_dir: .rsp/archives
-entry_count: 102
+entry_count: 103
 ---
 
 # Archive Index
@@ -60,6 +60,7 @@ entry_count: 102
 | 2026-07-25 | release-3-1-0-beta-1 | ops | Produce one internally consistent, independently committed `@oevery/rsp@3.1.0-beta.1` publication candidate without performing external release actions. |
 | 2026-07-25 | simplify-release-operation-tracking | fix | Make a confirmed mechanical release a direct, transiently coordinated operation instead of requiring a redundant RSP Change, while retaining optional durable tracking for materially complex releases. |
 | 2026-07-26 | configurable-managed-automation | feature | Add project-configured automatic Manage routing and bounded local closeout presets without turning routing into authority. |
+| 2026-07-26 | support-pre-change-design | feature | Let `rsp-design` answer one explicit bounded design question before a Change exists while preserving the existing tracked-Change path and Shape ownership boundary. |
 | 2026-07-21 | 3-0-skill-readiness/brief | group | — |
 | 2026-07-21 | 3-0-skill-readiness/close-review-resolution-handoff | feature | Add a host-neutral review-resolution capability that disposes fixed findings, corrects accepted findings under explicit authority, requires verification and re-review, and returns a recoverable handoff when interrupted. |
 | 2026-07-21 | 3-0-skill-readiness/integrate-diagnosis-tdd-routing | feature | Add deterministic, host-neutral routing from implementation evidence to diagnosis, TDD, or ordinary implementation. |

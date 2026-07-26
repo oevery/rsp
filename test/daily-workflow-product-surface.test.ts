@@ -30,7 +30,7 @@ describe('daily-workflow product surface', () => {
     const rspDesign = read('skills/rsp-design/SKILL.md')
     expect(shape).toContain('references/deep-clarification.md')
     expect(deepClarification).toContain('the same returning WorkRef')
-    expect(rspDesign).toContain('Return to Shape or the user against the same WorkRef')
+    expect(rspDesign).toContain('Tracked results return to Shape or the user against the same WorkRef')
 
     expect(read('skills/rsp-manage/SKILL.md')).toContain('Keep RSP artifacts as durable truth and process data transient')
   })

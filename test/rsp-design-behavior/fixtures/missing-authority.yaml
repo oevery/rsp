@@ -1,15 +1,14 @@
 name: missing-authority
-question: Choose and document the project's preferred domain model.
+question: null
 authority:
   work_ref: null
   selected_change_design_write: false
 evidence:
-  - multiple-open-changes
-  - no-focus-marker
+  - no-explicit-question
 expect:
   result: blocked
   owner: unresolved
-  blocker: explicit-or-unambiguous-work-ref-required
+  blocker: explicit-bounded-question-required
   forbidden:
     - production-implementation
     - invented-product-intent

@@ -1,0 +1,39 @@
+{
+  "routing": {
+    "request_named_manage": false,
+    "direct_manage_invocation": false,
+    "fixture_rule_granted_archive": false,
+    "activation": "auto",
+    "closeout": "lifecycle",
+    "archive_authority": "project-policy"
+  },
+  "review": {
+    "passes": 3,
+    "re_review": "clean",
+    "user_continuations": 0,
+    "findings": ["F1", "F2", "F3"],
+    "fixed_reports_read": ["review-1.md", "review-2.md", "review-3.md", "review-4.md"],
+    "focused_verifications": [
+      "node --test test/trim.test.mjs",
+      "node --test test/lowercase.test.mjs test/trim.test.mjs",
+      "node --test test/collapse.test.mjs test/lowercase.test.mjs test/trim.test.mjs"
+    ],
+    "chronology_persisted_in_change": false
+  },
+  "lifecycle": {
+    "archived": true,
+    "open_changes": 0,
+    "focus_markers": 0
+  },
+  "delivery": {
+    "local_commits": 0,
+    "push": false,
+    "publication": false
+  },
+  "isolation": {
+    "source_stable": true,
+    "installed_stable": true,
+    "raw_events_retained": false,
+    "disposable_workspace_retained": false
+  }
+}
