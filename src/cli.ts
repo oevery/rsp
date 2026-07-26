@@ -14,13 +14,13 @@ import { showHistory } from './commands/history.js'
 import { initProject } from './commands/init.js'
 import { showReady } from './commands/ready.js'
 import { showChange } from './commands/show.js'
-import { installPackagedSkills, printSkillInstallResult } from './commands/skills.js'
+import { inspectPackagedSkillInventory, installPackagedSkills, printPackagedSkillInventory, printSkillInstallResult } from './commands/skills.js'
 import { showStatus } from './commands/status.js'
 import { updateProject } from './commands/update.js'
 import { getVersion } from './core/config.js'
 import { emitJson } from './core/output.js'
 import { toStatusJsonError } from './status/v3-json.js'
-import { isInteractiveTerminal, shouldAutoLaunchUi, validateUiArgs } from './tui/route.js'
+import { isInteractiveTerminal, shouldAutoLaunchUi, shouldLaunchSkillsUi, validateUiArgs } from './tui/route.js'
 
 const COMPACT_JSON_COMMANDS = new Set(['status', 'show', 'ready', 'check', 'doctor', 'history'])
 
@@ -369,6 +369,27 @@ const skillsInstallCommand = defineCommand({
   },
 })
 
+const skillsListCommand = defineCommand({
+  meta: {
+    name: 'list',
+    description: 'List package-bundled Skills and their project status',
+  },
+  args: {
+    json: {
+      type: 'boolean',
+      description: 'Print machine-readable JSON output',
+      default: false,
+    },
+  },
+  async run({ args }) {
+    const inventory = await inspectPackagedSkillInventory()
+    if (args.json)
+      emitJson(inventory)
+    else
+      printPackagedSkillInventory(inventory)
+  },
+})
+
 const skillsCommand = defineCommand({
   meta: {
     name: 'skills',
@@ -376,6 +397,7 @@ const skillsCommand = defineCommand({
   },
   subCommands: {
     install: skillsInstallCommand,
+    list: skillsListCommand,
   },
 })
 
@@ -552,6 +574,20 @@ export async function runCli(rawArgs = process.argv.slice(2)) {
     ci: process.env.CI,
   }
   const explicitUi = rawArgs[0] === 'ui'
+  if (shouldLaunchSkillsUi(rawArgs, terminalEnvironment)) {
+    const { resolveUiLocale } = await import('./tui/i18n/locale.js')
+    const locale = resolveUiLocale('auto', process.env.RSP_UI_LANG, process.env.LC_ALL ?? process.env.LC_MESSAGES ?? process.env.LANG ?? new Intl.DateTimeFormat().resolvedOptions().locale)
+    const { runSkillsTui } = await import('./skills-tui/entry.js')
+    const selection = await runSkillsTui(locale)
+    if (selection.kind === 'confirmed') {
+      const result = await installPackagedSkills({ names: selection.names, force: selection.force })
+      printSkillInstallResult(result)
+    }
+    else if (selection.kind === 'error') {
+      process.exitCode = 1
+    }
+    return
+  }
   if (explicitUi || shouldAutoLaunchUi(rawArgs, terminalEnvironment)) {
     const { lang } = validateUiArgs(explicitUi ? rawArgs.slice(1) : [])
     if (!isInteractiveTerminal(terminalEnvironment)) {

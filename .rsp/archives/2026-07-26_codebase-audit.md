@@ -79,7 +79,7 @@ kind: "feature"
 ## Verify
 - Automated:
   - [x] `mise exec -- pnpm exec vitest run test/rsp-codebase-audit-skill-contract.test.ts test/skills-install.test.ts test/skill-contract.test.ts test/project-skill-dogfood.test.ts` — 2026-07-26: focused contract and installer coverage passed; the final installer file contains 14 passing cases, including unknown/extra-name zero-write rejection and exact named `--force` isolation
-  - [ ] `mise exec -- pnpm run build && mise exec -- pnpm run typecheck && mise exec -- pnpm run lint && mise exec -- pnpm run test` — 2026-07-26: build, typecheck, and lint passed; 45 non-native-design test files / 515 tests passed, but the full suite correctly holds on the stale native-design `current_release_artifact` gate after CLI and published-inventory drift
+  - [x] `mise exec -- pnpm run build && mise exec -- pnpm run typecheck && mise exec -- pnpm run lint && mise exec -- pnpm run test` — 2026-07-26: final current-package validation passed all 49 test files / 543 tests after fresh immutable native-design evidence was retained
   - [x] `mise exec -- pnpm run release:package-check` — 2026-07-26: packed `@oevery/rsp@3.1.0-beta.1` contains all eleven Skills; isolated default installation stayed at ten and exact named installation was idempotent
 - Manual or environment:
   - [x] Run the candidate instructions against one isolated production-seam bypass case and one clean restraint case — 2026-07-26: `/tmp/rsp-codebase-audit-fixtures-019f9d7a` found the exact `boot → runWorker` bypass and seam-only test mismatch in fixture A, returned `clean` for fixture B, and made no repository or Git mutation
@@ -88,4 +88,4 @@ kind: "feature"
   - Additional providers, hosts, framework-specific audits, and broad cost calibration are release-candidate work and are not required for this first optional project Skill.
 
 ## Blockers
-- Fresh native-design composition evidence is required before release preparation because the exact CLI artifact and complete published-Skill inventory changed; retained evidence remains immutable and the current evaluator reports only `current_release_artifact` as failed.
+- none

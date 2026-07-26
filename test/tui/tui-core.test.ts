@@ -6,7 +6,7 @@ import { displayWidth, truncateDisplay } from '../../src/tui/display.js'
 import { resolveUiLocale } from '../../src/tui/i18n/locale.js'
 import { catalogs } from '../../src/tui/i18n/messages.js'
 import { projectItemDependencyForest, projectItemState, projectNextAction } from '../../src/tui/projection.js'
-import { shouldAutoLaunchUi, validateUiArgs } from '../../src/tui/route.js'
+import { shouldAutoLaunchUi, shouldLaunchSkillsUi, validateUiArgs } from '../../src/tui/route.js'
 import { dashboardListWidth, initialDashboardState, reduceDashboard, visibleItems } from '../../src/tui/state.js'
 import { openTerminalSession } from '../../src/tui/terminal.js'
 
@@ -52,6 +52,14 @@ function snapshot(names: string[]): ProjectStatusSnapshot {
 }
 
 describe('tUI routing', () => {
+  it('launches Skills UI only for exact bare Skills on a dual TTY outside CI', () => {
+    const terminal = { stdinTty: true, stdoutTty: true, term: 'xterm-256color' }
+    expect(shouldLaunchSkillsUi(['skills'], terminal)).toBe(true)
+    expect(shouldLaunchSkillsUi(['skills', 'install'], terminal)).toBe(false)
+    expect(shouldLaunchSkillsUi(['skills'], { ...terminal, ci: 'true' })).toBe(false)
+    expect(shouldLaunchSkillsUi(['skills'], { ...terminal, stdoutTty: false })).toBe(false)
+    expect(shouldLaunchSkillsUi(['skills'], { ...terminal, term: 'dumb' })).toBe(false)
+  })
   it('auto-launches only for an empty safe dual-TTY invocation', () => {
     expect(shouldAutoLaunchUi([], { stdinTty: true, stdoutTty: true, term: 'xterm-256color' })).toBe(true)
     expect(shouldAutoLaunchUi([], { stdinTty: false, stdoutTty: true, term: 'xterm-256color' })).toBe(false)

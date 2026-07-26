@@ -200,6 +200,13 @@ rsp skills install --dry-run
 rsp skills install
 ```
 
+On a dual TTY, `rsp skills` opens the interactive manager: the default suite is selected and locked, while optional project Skills can be selected before one confirmed atomic install. For scripts, redirected terminals, and CI, use the deterministic discovery and install commands:
+
+```bash
+rsp skills list
+rsp skills list --json
+```
+
 The command preflights the ten default package-owned targets, leaves unrelated `.agents/skills` entries (including optional Skills) untouched, and requires explicit `--force` before replacing a divergent selected directory. Install the optional project-level audit Skill by exact name:
 
 ```bash
@@ -299,6 +306,8 @@ rsp init --agents-mode <mode>   Scaffold .rsp/ and ensure AGENTS.md contains the
 rsp init --with-project-setup   Also create .rsp/changes/project-setup.md
 rsp update                      Refresh the fallback protocol, repair the AGENTS block, and rebuild indices
 rsp ui [--lang auto|en|zh-CN]   Open the read-only interactive dashboard
+rsp skills                      Open the interactive project Skill manager on a dual TTY
+rsp skills list [--json]        List bundled Skills and exact project installation status
 rsp skills install [name] [--dry-run] [--force]
                                   Install the default ten Skills or one exact optional Skill into .agents/skills
 rsp add spec <name>             Create .rsp/specs/<name>.md and rebuild specs index

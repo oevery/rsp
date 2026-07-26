@@ -200,6 +200,13 @@ rsp skills install --dry-run
 rsp skills install
 ```
 
+在 dual TTY 中，`rsp skills` 会打开交互式管理器：默认套件保持选中并锁定，可在确认一次原子安装前选择可选的项目级 Skill。脚本、重定向终端和 CI 使用确定性的发现与安装命令：
+
+```bash
+rsp skills list
+rsp skills list --json
+```
+
 该命令会预检十个默认 package-owned targets，保留无关的 `.agents/skills` 条目（包括可选 Skills），并且只有显式传入 `--force` 才会替换内容不同的已选目录。按精确名称安装可选的项目级审计 Skill：
 
 ```bash
@@ -299,6 +306,8 @@ rsp init --agents-mode <mode>   搭建 .rsp/，并确保 AGENTS.md 含有 RSP �
 rsp init --with-project-setup   同时创建 .rsp/changes/project-setup.md
 rsp update                      刷新 fallback protocol、修复 AGENTS 受管块并重建索引
 rsp ui [--lang auto|en|zh-CN]   打开只读交互式仪表盘
+rsp skills                      在 dual TTY 中打开交互式项目 Skill 管理器
+rsp skills list [--json]        列出内置 Skills 及其精确项目安装状态
 rsp skills install [name] [--dry-run] [--force]
                                   将默认十个 Skills 或一个精确可选 Skill 安装到 .agents/skills
 rsp add spec <name>             创建 .rsp/specs/<name>.md 并重建 specs 索引

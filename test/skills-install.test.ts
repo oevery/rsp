@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
-import { copyFileSync, cpSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs'
+import { copyFileSync, cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { rename as fsRename, mkdir, readdir, readFile, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
@@ -9,6 +9,7 @@ import { afterAll, afterEach, describe, expect, it } from 'vitest'
 import { installPackagedSkills } from '../src/commands/skills.js'
 
 const repoRoot = fileURLToPath(new URL('..', import.meta.url))
+const packageVersion = (JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8')) as { version: string }).version
 const cliCacheRoot = join(repoRoot, '.cache')
 mkdirSync(cliCacheRoot, { recursive: true })
 const cliPackageRoot = mkdtempSync(join(cliCacheRoot, 'rsp-skills-package-'))
@@ -45,6 +46,13 @@ function runInstall(projectRoot: string, ...args: string[]) {
   })
 }
 
+function runList(projectRoot: string, ...args: string[]) {
+  return spawnSync('node', [cli, 'skills', 'list', ...args], {
+    cwd: projectRoot,
+    encoding: 'utf-8',
+  })
+}
+
 async function packagedSkillNames(): Promise<string[]> {
   const entries = await readdir(join(repoRoot, 'skills'), { withFileTypes: true })
   return entries.filter(entry => entry.isDirectory() && !entry.name.startsWith('.')).map(entry => entry.name).sort()
@@ -71,6 +79,18 @@ afterAll(() => {
 })
 
 describe('rsp skills install', () => {
+  it('lists an exact machine-readable inventory without creating project paths', async () => {
+    const projectRoot = await temporaryRoot('rsp-skills-list')
+    const result = runList(projectRoot, '--json')
+    expect(result.status, result.stderr).toBe(0)
+    expect(JSON.parse(result.stdout)).toEqual({
+      package: { name: '@oevery/rsp', version: packageVersion },
+      target: '.agents/skills',
+      skills: [...expectedSkills.map(name => ({ name, kind: 'default', status: 'missing' })), { name: optionalSkill, kind: 'optional', status: 'missing' }].sort((a, b) => a.name.localeCompare(b.name)),
+    })
+    expect(await readdir(projectRoot)).toEqual([])
+  })
+
   it('installs the default lifecycle inventory and is idempotent', async () => {
     const projectRoot = await temporaryRoot('rsp-skills-install')
     const unrelated = join(projectRoot, '.agents', 'skills', 'local-tool', 'SKILL.md')

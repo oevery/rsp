@@ -30,6 +30,26 @@ export interface SkillInstallResult {
   replaced: string[]
 }
 
+export type PackagedSkillKind = 'default' | 'optional'
+export type PackagedSkillStatus = 'missing' | 'unchanged' | 'divergent'
+
+export interface PackagedSkillInventoryItem {
+  name: string
+  kind: PackagedSkillKind
+  status: PackagedSkillStatus
+}
+
+export interface PackagedSkillInventory {
+  package: { name: string, version: string }
+  target: string
+  skills: PackagedSkillInventoryItem[]
+}
+
+export interface InspectPackagedSkillsOptions {
+  packageRoot?: string
+  projectRoot?: string
+}
+
 interface InstallPackagedSkillsOptions {
   packageRoot?: string
   projectRoot?: string
@@ -137,6 +157,17 @@ function inspectTarget(path: string, name: string): 'missing' | 'directory' {
   }
 }
 
+function inspectInventoryTarget(path: string): 'missing' | 'directory' | 'divergent' {
+  try {
+    return lstatSync(path).isDirectory() ? 'directory' : 'divergent'
+  }
+  catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT')
+      return 'missing'
+    throw error
+  }
+}
+
 async function treesEqual(source: SkillTree, targetRoot: string): Promise<boolean> {
   const target = await inspectManagedFileTree(targetRoot, `installed Skill ${source.name}`)
   if (target.issues.length > 0)
@@ -158,6 +189,59 @@ async function treesEqual(source: SkillTree, targetRoot: string): Promise<boolea
       return false
   }
   return true
+}
+
+export async function inspectPackagedSkillInventory(
+  options: InspectPackagedSkillsOptions = {},
+): Promise<PackagedSkillInventory> {
+  const packageRoot = options.packageRoot ?? PKG_ROOT
+  const projectRoot = options.projectRoot ?? process.cwd()
+  const packagedSkills = await inspectPackagedSkills(packageRoot)
+  const packagedNames = new Set(packagedSkills.map(skill => skill.name))
+  const missingDefaults = DEFAULT_PACKAGED_SKILL_NAMES.filter(name => !packagedNames.has(name))
+  if (missingDefaults.length > 0)
+    throw new Error(`packaged Skills missing default Skills: ${missingDefaults.join(', ')}`)
+  const manifest = JSON.parse(await readFile(join(packageRoot, 'package.json'), 'utf8')) as { name?: unknown, version?: unknown }
+  if (typeof manifest.name !== 'string' || typeof manifest.version !== 'string')
+    throw new Error('package.json must contain string name and version fields')
+  const targetRoot = resolveManagedDirectoryChain(projectRoot, ['.agents', 'skills'], 'project Skills root')
+  const defaults = new Set<string>(DEFAULT_PACKAGED_SKILL_NAMES)
+  const skills: PackagedSkillInventoryItem[] = []
+  for (const skill of packagedSkills) {
+    const target = join(targetRoot, skill.name)
+    const targetStatus = inspectInventoryTarget(target)
+    skills.push({
+      name: skill.name,
+      kind: defaults.has(skill.name) ? 'default' : 'optional',
+      status: targetStatus === 'missing'
+        ? 'missing'
+        : targetStatus === 'divergent'
+          ? 'divergent'
+          : await treesEqual(skill, target) ? 'unchanged' : 'divergent',
+    })
+  }
+  return {
+    package: { name: manifest.name, version: manifest.version },
+    target: relative(projectRoot, targetRoot) || '.',
+    skills,
+  }
+}
+
+export function printPackagedSkillInventory(inventory: PackagedSkillInventory): void {
+  console.log(`  ${inventory.package.name}@${inventory.package.version}`)
+  console.log(`  target: ${inventory.target}`)
+  for (const group of [
+    { heading: 'Default lifecycle Skills', kind: 'default' },
+    { heading: 'Optional project Skills', kind: 'optional' },
+  ] as const) {
+    console.log('')
+    console.log(`  ${group.heading}`)
+    const skills = inventory.skills.filter(skill => skill.kind === group.kind)
+    if (skills.length === 0)
+      console.log('    none')
+    for (const skill of skills)
+      console.log(`    ${skill.name}  ${skill.status}`)
+  }
 }
 
 async function copySkillTree(source: SkillTree, targetRoot: string): Promise<void> {

@@ -39,12 +39,23 @@ describe('cLI TUI routing and isolation', () => {
       ['--help'],
       ['--version'],
       ['--not-a-command'],
-      ...['init', 'add', 'create', 'group', 'focus', 'unfocus', 'archive', 'ready', 'show', 'status', 'history', 'check', 'update', 'doctor'].map(command => [command, '--help']),
+      ['skills', 'install', '--help'],
+      ['skills', 'list', '--help'],
+      ['skills', 'list', '--json'],
+      ...['init', 'add', 'create', 'group', 'focus', 'unfocus', 'archive', 'ready', 'show', 'status', 'history', 'check', 'update', 'doctor', 'skills'].map(command => [command, '--help']),
     ]
     for (const args of invocations) {
       const result = run(args)
       expect(result.stderr, args.join(' ')).not.toContain('interactive dependency loaded')
     }
+  })
+
+  it('keeps bare Skills non-TTY invocation on static help without loading interactive dependencies', () => {
+    const result = run(['skills'])
+    expect(result.status).not.toBe(0)
+    expect(result.stdout).toContain('Manage package-bundled project Skills')
+    expect(result.stdout).toContain('list')
+    expect(result.stderr).not.toContain('interactive dependency loaded')
   })
 
   it('accepts the exact command forms projected for Change and ready Group actions', () => {
