@@ -4,7 +4,7 @@
 
 **面向人类与 AI Agent 的仓库原生工程工作流。**
 
-RSP 将模糊意图逐步转化为边界明确、经过实现、审查和验证的软件变更，同时让项目知识可以长期维护、让未完成工作可以可靠恢复。十个可组合 Skills 共同覆盖工程旅程，但不引入隐藏 workflow state，也不取代项目自己的文件、工具和权限边界。
+RSP 将模糊意图逐步转化为边界明确、经过实现、审查和验证的软件变更，同时让项目知识可以长期维护、让未完成工作可以可靠恢复。十一个可组合 Skills 共同覆盖工程旅程，但不引入隐藏 workflow state，也不取代项目自己的文件、工具和权限边界。
 
 这套工作流建立在轻量的 **Rules、Specs、Plans** artifact foundation 之上。
 
@@ -149,7 +149,7 @@ Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENT
 
 ## Skills
 
-RSP 发布十个默认、宿主无关、按需加载的生命周期 Skills，以及一个需要显式安装的项目级审计 Skill：
+RSP 发布十一个默认、宿主无关、按需加载的生命周期 Skills，以及一个需要显式安装的项目级审计 Skill：
 
 | Skill | 职责 |
 |---|---|
@@ -161,6 +161,7 @@ RSP 发布十个默认、宿主无关、按需加载的生命周期 Skills，以
 | `rsp-tdd` | 让一个清晰行为经过 RED、GREEN 与安全的 REFACTOR。 |
 | `rsp-review` | 对固定的 Code、Document 或 mixed comparison 做只读审查。 |
 | `rsp-address-review` | 处置固定 findings，修正 accepted 项，验证并请求复审。 |
+| `rsp-commit` | 使用与仓库一致的结构化消息创建一个已授权、精确范围的本地提交。 |
 | `rsp-release-docs` | 起草、审计、定稿或校准基于证据的发布表面。 |
 | `rsp-manage` | 继续一个显式请求或项目启用且符合条件的 ready Change 或 shallow Group。 |
 | `rsp-codebase-audit`（可选） | 只读审计一个有界仓库或子树，发现有证据支撑的结构风险。 |
@@ -207,7 +208,7 @@ rsp skills list
 rsp skills list --json
 ```
 
-该命令会预检十个默认 package-owned targets，保留无关的 `.agents/skills` 条目（包括可选 Skills），并且只有显式传入 `--force` 才会替换内容不同的已选目录。按精确名称安装可选的项目级审计 Skill：
+该命令会预检十一个默认 package-owned targets，保留无关的 `.agents/skills` 条目（包括可选 Skills），并且只有显式传入 `--force` 才会替换内容不同的已选目录。按精确名称安装可选的项目级审计 Skill：
 
 ```bash
 rsp skills install rsp-codebase-audit --dry-run
@@ -309,7 +310,7 @@ rsp ui [--lang auto|en|zh-CN]   打开只读交互式仪表盘
 rsp skills                      在 dual TTY 中打开交互式项目 Skill 管理器
 rsp skills list [--json]        列出内置 Skills 及其精确项目安装状态
 rsp skills install [name] [--dry-run] [--force]
-                                  将默认十个 Skills 或一个精确可选 Skill 安装到 .agents/skills
+                                  将默认十一个 Skills 或一个精确可选 Skill 安装到 .agents/skills
 rsp add spec <name>             创建 .rsp/specs/<name>.md 并重建 specs 索引
 rsp create <name> [summary]     创建 .rsp/changes/<name>.md；可加 --lite 使用更短模板
 rsp group create <name> [goal] 创建不进入 focus 的 .rsp/changes/<name>/00-brief.md

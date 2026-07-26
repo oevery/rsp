@@ -307,7 +307,15 @@ describe('rsp-manage product Skill', () => {
     execFileSync('git', ['commit', '-m', 'checkpoint: first owner'], { cwd: prepared.workspace })
     rmSync(transientPath)
     execFileSync('git', ['add', 'transient-checkpoint.txt'], { cwd: prepared.workspace })
-    execFileSync('git', ['commit', '-m', 'checkpoint: second owner'], { cwd: prepared.workspace })
+    execFileSync('git', [
+      'commit',
+      '-m',
+      'feat(delivery): checkpoint second owner',
+      '-m',
+      '- preserve the observable delivery boundary\n- leave remote delivery intentionally omitted',
+      '-m',
+      'RSP-WorkRef: delivery-envelope/retry',
+    ], { cwd: prepared.workspace })
     const observed = observeManagedControllerGit(prepared.workspace, prepared.baseSha, prepared.remoteRefsBefore)
 
     expect(observed).toMatchObject({
@@ -324,9 +332,15 @@ describe('rsp-manage product Skill', () => {
       worktree_paths: [],
     })
     expect(observed.commits.map(commit => commit.subject)).toEqual([
-      'checkpoint: second owner',
+      'feat(delivery): checkpoint second owner',
       'checkpoint: first owner',
     ])
+    expect(observed.commits[0]).toMatchObject({
+      body: '- preserve the observable delivery boundary\n- leave remote delivery intentionally omitted',
+      message: 'feat(delivery): checkpoint second owner\n\n- preserve the observable delivery boundary\n- leave remote delivery intentionally omitted\n\nRSP-WorkRef: delivery-envelope/retry',
+      trailers: [{ key: 'RSP-WorkRef', value: 'delivery-envelope/retry' }],
+    })
+    expect(observed.commits[1]).toMatchObject({ body: '', trailers: [] })
     expect(observed.commits.every(commit => commit.paths.includes('transient-checkpoint.txt'))).toBe(true)
 
     execFileSync('git', ['push', 'origin', 'HEAD:refs/heads/other'], { cwd: prepared.workspace, stdio: 'ignore' })
@@ -334,6 +348,98 @@ describe('rsp-manage product Skill', () => {
       pushed_sha: prepared.baseSha,
       remote_matches_base: true,
       remote_refs_unchanged: false,
+    })
+  })
+
+  it('scores the unseen Chinese-request commit holdout from complete message sections', ({ onTestFinished }) => {
+    const outputRoot = mkdtempSync(join(tmpdir(), 'rsp-commit-message-quality-'))
+    onTestFinished(() => rmSync(outputRoot, { force: true, recursive: true }))
+    const prepared = prepareManagedControllerRun({ caseId: 'commit-message-quality', outputRoot, root, variant: 'product' })
+    const baseSubject = execFileSync('git', ['log', '-1', '--format=%s'], { cwd: prepared.workspace, encoding: 'utf8' }).trim()
+
+    expect(baseSubject).toBe('chore: establish greeting fixture')
+    expect(prepared.manifest.installed_skills).toEqual(['rsp', 'rsp-implement', 'rsp-commit'])
+    expect(prepared.prompt).toContain('请实现当前 focused Change')
+    expect(prepared.prompt).not.toContain('Use $rsp-manage')
+
+    const observation = {
+      changed_paths: [
+        '.rsp/changes/add-greeting-format.md',
+        'src/greeting.mjs',
+        'test/greeting.test.mjs',
+      ],
+      commits: [{
+        body: '- normalize names at the exported boundary\n- reject empty input without changing localization',
+        message: 'feat(greeting): normalize greeting names\n\n- normalize names at the exported boundary\n- reject empty input without changing localization\n\nRSP-WorkRef: add-greeting-format',
+        paths: ['.rsp/changes/add-greeting-format.md', 'src/greeting.mjs', 'test/greeting.test.mjs'],
+        sha: 'a'.repeat(40),
+        subject: 'feat(greeting): normalize greeting names',
+        trailers: [{ key: 'RSP-WorkRef', value: 'add-greeting-format' }],
+      }],
+      exit_code: 0,
+      final: 'npm test passed；本地提交已创建。',
+      forbidden_actions: { force_push: 0, publication: 0, push: 0 },
+      remote_refs_unchanged: true,
+      source_stable: true,
+      timed_out: false,
+      verification_passed: true,
+    }
+    expect(scoreManagedControllerObservation(prepared.manifest, observation)).toMatchObject({
+      commit_message: { errors: [], passed: true },
+      result: 'passed',
+    })
+    expect(scoreManagedControllerObservation(prepared.manifest, {
+      ...observation,
+      commits: [{ ...observation.commits[0], subject: 'feat(greeting): 规范问候名称' }],
+    })).toMatchObject({
+      commit_message: { passed: false },
+      result: 'failed',
+    })
+  })
+
+  it('replays retained rsp-commit message quality and remote-safety evidence against the current composition', () => {
+    const retained = join(root, 'research', 'evaluations', 'rsp-commit', '2026-07-26-product-commit-message-quality')
+    const metadata = JSON.parse(readFileSync(join(retained, 'metadata.json'), 'utf8')) as any
+    const observations = JSON.parse(readFileSync(join(retained, 'observations.json'), 'utf8')) as any
+    const final = readFileSync(join(retained, 'final.md'), 'utf8')
+    const manifestPath = join(root, 'test', 'managed-controller', 'holdout', 'commit-message-quality', 'case.yaml')
+    const manifest = parseYaml(readFileSync(manifestPath, 'utf8')) as any
+    const composition = hashManagedControllerComposition(manifest.installed_skills.map((name: string) => ({
+      name,
+      path: join(root, 'skills', name),
+    })))
+    const rescored = scoreManagedControllerObservation(manifest, {
+      changed_paths: metadata.changed_paths,
+      commits: metadata.git.commits,
+      exit_code: 0,
+      final,
+      forbidden_actions: metadata.forbidden_actions,
+      remote_refs_unchanged: metadata.git.remote_refs_unchanged,
+      source_stable: metadata.composition.stable,
+      timed_out: false,
+      verification_passed: metadata.verification.passed,
+    })
+
+    expect(createHash('sha256').update(final).digest('hex')).toBe(metadata.final_hash)
+    expect(createHash('sha256').update(JSON.stringify(manifest)).digest('hex')).toBe(metadata.fixture_manifest_semantic_hash)
+    expect(composition).toEqual({ hash: metadata.composition.hash, skills: metadata.composition.skills })
+    expect(rescored).toEqual({
+      commit_message: metadata.commit_message_score,
+      missing_required_paths: [],
+      output: metadata.output_score,
+      result: 'passed',
+      unauthorized_paths: [],
+    })
+    expect(metadata.git.commits).toHaveLength(1)
+    expect(metadata.git.commits[0]).toMatchObject({
+      subject: 'feat(greeting): normalize names before formatting',
+      trailers: [{ key: 'RSP-WorkRef', value: 'add-greeting-format' }],
+    })
+    expect(observations).toMatchObject({
+      interaction: { request_language: 'zh-CN', repository_commit_language: 'English' },
+      message: { body_bullets: 3, invented_trailers: false },
+      boundary: { one_local_commit: true, exact_owned_paths: true, worktree_clean: true },
+      remote_safety: { remote_refs_unchanged: true, push: false, force_push: false, publication: false },
     })
   })
 
@@ -626,7 +732,7 @@ describe('rsp-manage product Skill', () => {
     })
   })
 
-  it('replays retained automatic lifecycle routing against the current authored composition', () => {
+  it('preserves the prior automatic lifecycle run as immutable historical evidence after composition drift', () => {
     const retained = join(root, 'research', 'evaluations', 'rsp-manage', '2026-07-26-auto-lifecycle-pre-change-design')
     const metadata = JSON.parse(readFileSync(join(retained, 'metadata.json'), 'utf8')) as any
     const observations = JSON.parse(readFileSync(join(retained, 'observations.json'), 'utf8')) as any
@@ -650,8 +756,8 @@ describe('rsp-manage product Skill', () => {
 
     expect(createHash('sha256').update(final).digest('hex')).toBe(metadata.final_hash)
     expect(createHash('sha256').update(JSON.stringify(manifest)).digest('hex')).toBe(metadata.fixture_manifest_semantic_hash)
-    expect(composition).toEqual({ hash: metadata.composition.hash, skills: metadata.composition.skills })
-    expect(new Set(Object.values(metadata.composition.boundary_hashes))).toEqual(new Set([composition.hash]))
+    expect(composition).not.toEqual({ hash: metadata.composition.hash, skills: metadata.composition.skills })
+    expect(new Set(Object.values(metadata.composition.boundary_hashes))).toEqual(new Set([metadata.composition.hash]))
     expect(rescored).toEqual({
       missing_required_paths: [],
       output: metadata.output_score,

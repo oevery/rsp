@@ -16,5 +16,5 @@ _Additional project-level specs beyond `design.md`._
 | cli-contracts.md | CLI Contracts | Define deterministic command, filesystem-safety, inspection, JSON, history, index, and repair behavior outside the interactive TUI. |
 | core-model.md | Core Model | Define RSP artifact ownership, WorkRef identity, lifecycle, dependencies, Groups, focus, and durable-writeback semantics. |
 | distribution.md | Distribution and Maintainer Research | Define package identity, published artifacts, Skill installation, release-candidate checks, repository layering, and upstream-research promotion boundaries. |
-| skill-system.md | Skill System | Define composition, ownership, authority, progressive-disclosure, and completion contracts for the ten published RSP Skills. |
-| tui.md | Interactive TUI | Define the read-only Ink dashboard's routing, state, localization, archive-history, layout, and terminal-lifecycle contracts. |
+| skill-system.md | Skill System | Define composition, ownership, authority, progressive-disclosure, and completion contracts for the eleven default lifecycle Skills and explicitly selected optional project Skills. |
+| tui.md | Interactive TUI | Define Ink dashboard and Skill-manager routing, state, localization, layout, and terminal-lifecycle contracts while keeping their mutation boundaries distinct. |

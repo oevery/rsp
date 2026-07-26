@@ -4,7 +4,7 @@ English | [简体中文](./README.zh-CN.md)
 
 **A repository-native engineering workflow for humans and AI agents.**
 
-RSP helps turn unclear intent into shaped, implemented, reviewed, and verified software changes while keeping project knowledge durable and work recoverable. Its ten composable Skills guide the engineering journey without introducing hidden workflow state or replacing the project's own files, tools, and authority.
+RSP helps turn unclear intent into shaped, implemented, reviewed, and verified software changes while keeping project knowledge durable and work recoverable. Its eleven composable Skills guide the engineering journey without introducing hidden workflow state or replacing the project's own files, tools, and authority.
 
 The workflow rests on a lightweight artifact foundation of **Rules, Specs, and Plans**.
 
@@ -149,7 +149,7 @@ Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENT
 
 ## Skills
 
-RSP publishes ten default host-neutral lifecycle Skills for on-demand loading, plus one explicitly installed project-level audit Skill:
+RSP publishes eleven default host-neutral lifecycle Skills for on-demand loading, plus one explicitly installed project-level audit Skill:
 
 | Skill | Role |
 |---|---|
@@ -161,6 +161,7 @@ RSP publishes ten default host-neutral lifecycle Skills for on-demand loading, p
 | `rsp-tdd` | Drive one clear behavior through RED, GREEN, and safe REFACTOR. |
 | `rsp-review` | Review a fixed code, document, or mixed comparison without mutation. |
 | `rsp-address-review` | Dispose fixed findings, correct accepted ones, verify, and request re-review. |
+| `rsp-commit` | Create one authorized exact-scope local commit with a repository-consistent structured message. |
 | `rsp-release-docs` | Draft, audit, finalize, or reconcile evidence-based release surfaces. |
 | `rsp-manage` | Continue one explicitly requested or project-enabled eligible ready Change or shallow Group. |
 | `rsp-codebase-audit` (optional) | Audit one bounded repository or subtree for evidence-backed structural risks without mutation. |
@@ -207,7 +208,7 @@ rsp skills list
 rsp skills list --json
 ```
 
-The command preflights the ten default package-owned targets, leaves unrelated `.agents/skills` entries (including optional Skills) untouched, and requires explicit `--force` before replacing a divergent selected directory. Install the optional project-level audit Skill by exact name:
+The command preflights the eleven default package-owned targets, leaves unrelated `.agents/skills` entries (including optional Skills) untouched, and requires explicit `--force` before replacing a divergent selected directory. Install the optional project-level audit Skill by exact name:
 
 ```bash
 rsp skills install rsp-codebase-audit --dry-run
@@ -309,7 +310,7 @@ rsp ui [--lang auto|en|zh-CN]   Open the read-only interactive dashboard
 rsp skills                      Open the interactive project Skill manager on a dual TTY
 rsp skills list [--json]        List bundled Skills and exact project installation status
 rsp skills install [name] [--dry-run] [--force]
-                                  Install the default ten Skills or one exact optional Skill into .agents/skills
+                                  Install the default eleven Skills or one exact optional Skill into .agents/skills
 rsp add spec <name>             Create .rsp/specs/<name>.md and rebuild specs index
 rsp create <name> [summary]     Create .rsp/changes/<name>.md; add --lite for a shorter template
 rsp group create <name> [goal] Create an unfocused .rsp/changes/<name>/00-brief.md

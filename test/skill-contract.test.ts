@@ -12,6 +12,7 @@ const diagnoseSkill = join(root, 'skills', 'rsp-diagnose')
 const tddSkill = join(root, 'skills', 'rsp-tdd')
 const designSkill = join(root, 'skills', 'rsp-design')
 const manageSkill = join(root, 'skills', 'rsp-manage')
+const commitSkill = join(root, 'skills', 'rsp-commit')
 const releaseNotesSkill = join(root, 'skills', 'rsp-release-docs')
 const codebaseAuditSkill = join(root, 'skills', 'rsp-codebase-audit')
 const portableKeys = new Set([
@@ -134,6 +135,10 @@ describe('rsp Skill contract', () => {
     expectPortableSkill(manageSkill)
   })
 
+  it('publishes a portable canonical local-commit Skill', () => {
+    expectPortableSkill(commitSkill)
+  })
+
   it('publishes a portable canonical release-documentation Skill', () => {
     expectPortableSkill(releaseNotesSkill)
   })
@@ -156,6 +161,7 @@ describe('rsp Skill contract', () => {
     expect(publishedSkills).toContain('rsp-tdd')
     expect(publishedSkills).toContain('rsp-design')
     expect(publishedSkills).toContain('rsp-manage')
+    expect(publishedSkills).toContain('rsp-commit')
     expect(publishedSkills).toContain('rsp-release-docs')
     expect(publishedSkills).toContain('rsp-codebase-audit')
   })

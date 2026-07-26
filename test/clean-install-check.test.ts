@@ -11,6 +11,7 @@ const expectedSkills = [
   'rsp',
   'rsp-address-review',
   'rsp-codebase-audit',
+  'rsp-commit',
   'rsp-design',
   'rsp-diagnose',
   'rsp-implement',
@@ -70,6 +71,7 @@ describe('clean install package check', () => {
         'publication-lifecycle.md',
       ])
       expect(report.inventory.files).toContain('skills/rsp-design/SKILL.md')
+      expect(report.inventory.files).toContain('skills/rsp-commit/SKILL.md')
       expect(report.inventory.files).toContain('skills/rsp-manage/SKILL.md')
       expect(report.inventory.files).toContain('skills/rsp-release-docs/SKILL.md')
       expect(report.inventory.files).toContain('skills/rsp-codebase-audit/SKILL.md')

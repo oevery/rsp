@@ -47,6 +47,7 @@ This file is the minimal fallback protocol for agents that cannot load the `rsp`
 - Before archive, decide independently whether current facts need a Spec or scoped-instruction update and whether lasting rationale needs a Decision Record.
 - Before archive, compress the Change to its final outcome, current design, completed delivery tasks, final decisive verification, and unresolved risks. Keep RED/GREEN/REFACTOR cycles, temporary probes, command transcripts, and step-by-step review corrections in the response instead of the Change or Archive.
 - After required durable updates, Core recommends explicit archive before final Git delivery. Ordinary work requires separate Git and release authority; fallback Core never executes archive, stage, commit, push, or publication.
+- When loaded Core or qualified Manage has already derived one authorized RSP-owned commit boundary, prefer the `rsp-commit` Skill for exact staging, repository-consistent structured message construction, one local commit, and complete post-commit observation. If that Skill alone is unavailable, loaded Core may provide its equivalent bounded manual action against the same owner; this minimal fallback still grants and executes no Git action.
 - Decision Records are for hard-to-reverse choices with real tradeoffs; they do not duplicate current facts.
 - Change Spec deltas are planning aids and are never promoted automatically into Specs or Decision Records.
 - Keep task history, debugging notes, and transient execution state out of Specs and Decision Records.

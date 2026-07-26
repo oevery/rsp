@@ -14,6 +14,7 @@ export interface InstallPackagedSkillsArgs {
 export const DEFAULT_PACKAGED_SKILL_NAMES = [
   'rsp',
   'rsp-address-review',
+  'rsp-commit',
   'rsp-design',
   'rsp-diagnose',
   'rsp-implement',

@@ -8,6 +8,7 @@ const currentSkills = [
   'rsp',
   'rsp-address-review',
   'rsp-codebase-audit',
+  'rsp-commit',
   'rsp-design',
   'rsp-diagnose',
   'rsp-implement',

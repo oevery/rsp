@@ -4,7 +4,7 @@ summary: Completed RSP changes.
 kind: generated-index
 index_type: archives
 source_dir: .rsp/archives
-entry_count: 105
+entry_count: 106
 ---
 
 # Archive Index
@@ -59,6 +59,7 @@ entry_count: 105
 | 2026-07-25 | pre-dogfood-maintenance-hardening | fix | Make the pre-dogfood release, retained-evidence, dependency, and Skill gates fail only for relevant risk while preserving package safety and explicit authority boundaries. |
 | 2026-07-25 | release-3-1-0-beta-1 | ops | Produce one internally consistent, independently committed `@oevery/rsp@3.1.0-beta.1` publication candidate without performing external release actions. |
 | 2026-07-25 | simplify-release-operation-tracking | fix | Make a confirmed mechanical release a direct, transiently coordinated operation instead of requiring a redundant RSP Change, while retaining optional durable tracking for materially complex releases. |
+| 2026-07-26 | add-rsp-commit | feature | Add `rsp-commit` as the default RSP capability for creating one authorized, reviewable local commit with a repository-consistent structured message. |
 | 2026-07-26 | codebase-audit | feature | Add a curated optional codebase audit Skill with evidence-driven structural findings |
 | 2026-07-26 | configurable-managed-automation | feature | Add project-configured automatic Manage routing and bounded local closeout presets without turning routing into authority. |
 | 2026-07-26 | interactive-skill-manager | feature | Add an interactive Skill manager while preserving deterministic install commands |

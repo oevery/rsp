@@ -233,4 +233,15 @@ describe('rsp core routing contract', () => {
     expect(durable).toContain('`manual` and `lifecycle` grant no commit')
     expect(skill).not.toMatch(/automatically (?:commit|push|publish|archive)/i)
   })
+
+  it('routes an authorized RSP-owned local boundary to Commit with an equivalent manual fallback', () => {
+    expect(skill).toContain('route exact staging, structured message construction, local commit execution, and post-commit observation to `rsp-commit`')
+    expect(durable).toContain('one envelope containing the Change, Group/wave, or confirmed release owner')
+    expect(durable).toContain('stage only allowed paths')
+    expect(durable).toContain('repository-consistent Conventional subject plus a proportionate body and truthful RSP trailers')
+    expect(durable).toContain('observe its complete message, paths, remaining worktree, and remote safety')
+    expect(managed).toContain('hand staging, structured message construction, one local commit, and post-commit observation to `rsp-commit`')
+    expect(managed).toContain('equivalent bounded Core manual action against the same owner')
+    expect(fallback).toContain('this minimal fallback still grants and executes no Git action')
+  })
 })

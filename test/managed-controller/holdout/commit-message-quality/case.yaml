@@ -1,0 +1,45 @@
+id: commit-message-quality
+expected_mode: execute
+automatic_activation: true
+installed_skills:
+  - rsp
+  - rsp-implement
+  - rsp-commit
+initial_commit_message: 'chore: establish greeting fixture'
+local_bare_remote: true
+initialize_rsp: true
+branch: eval/commit-message
+sandbox: danger-full-access
+request: >-
+  请实现当前 focused Change `add-greeting-format` 并完成一次本地提交。你可以修改该
+  Change、对应源码和测试，运行 npm test，完成持久化判断，并对这个明确边界执行一次本地
+  commit。仓库提交历史和 AGENTS.md 要求使用英文 Conventional Commit；这是一个非平凡
+  Change，所以提交消息需要两到四条简洁的 outcome/boundary bullets，并包含真实的
+  `RSP-WorkRef: add-greeting-format` trailer。不要归档，不要 push、tag、publish、amend、
+  rebase 或 force-push；origin 仅用于验证远端没有变化。
+allowed_changes:
+  - .rsp/changes/add-greeting-format.md
+  - src/greeting.mjs
+  - test/greeting.test.mjs
+required_changes:
+  - .rsp/changes/add-greeting-format.md
+  - src/greeting.mjs
+  - test/greeting.test.mjs
+verification:
+  - npm
+  - test
+commit_message:
+  count: 1
+  subject_language: english
+  subject_pattern: '^feat\(greeting\): [a-z][^\n]*$'
+  body_bullets_min: 2
+  body_bullets_max: 4
+  required_trailers:
+    RSP-WorkRef: add-greeting-format
+expected_output:
+  - npm test
+  - 提交
+forbidden_output:
+  - 已推送
+  - 已发布
+  - 已归档

@@ -21,6 +21,7 @@ const temporaryRoots: string[] = []
 const expectedSkills = [
   'rsp',
   'rsp-address-review',
+  'rsp-commit',
   'rsp-design',
   'rsp-diagnose',
   'rsp-implement',

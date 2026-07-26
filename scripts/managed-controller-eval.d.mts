@@ -17,6 +17,7 @@ export interface ManagedControllerHoldoutManifest extends ManagedControllerOutpu
   branch?: string
   expected_mode?: 'decline' | 'execute'
   id: string
+  initial_commit_message?: string
   initialize_rsp?: boolean
   installed_skills?: string[]
   local_bare_remote?: boolean
@@ -24,6 +25,14 @@ export interface ManagedControllerHoldoutManifest extends ManagedControllerOutpu
   required_changes?: string[]
   sandbox?: 'workspace-write' | 'danger-full-access'
   verification: string[]
+  commit_message?: {
+    body_bullets_max: number
+    body_bullets_min: number
+    count: number
+    required_trailers: Record<string, string>
+    subject_language: 'english'
+    subject_pattern: string
+  }
 }
 
 export interface PreparedManagedControllerRun {
@@ -47,7 +56,14 @@ export interface ManagedControllerGitObservation {
   branch: string
   commit_touched_paths: string[]
   committed_paths: string[]
-  commits: Array<{ paths: string[], sha: string, subject: string }>
+  commits: Array<{
+    body: string
+    message: string
+    paths: string[]
+    sha: string
+    subject: string
+    trailers: Array<{ key: string, value: string }>
+  }>
   dirty: boolean
   head_sha: string
   net_committed_paths: string[]
@@ -68,6 +84,7 @@ export interface ManagedControllerOutputScore {
 
 export interface ManagedControllerObservation {
   changed_paths: string[]
+  commits?: ManagedControllerGitObservation['commits']
   exit_code: number | null
   final: string
   forbidden_actions: { force_push: number, publication: number, push: number }
@@ -88,6 +105,7 @@ export function prepareManagedControllerRun(options: {
 export function hashManagedControllerComposition(entries: Array<{ name: string, path: string }>): ManagedControllerComposition
 export function observeManagedControllerGit(workspace: string, baseSha: string, remoteRefsBefore?: Array<{ ref: string, sha: string }> | null): ManagedControllerGitObservation
 export function scoreManagedControllerObservation(manifest: ManagedControllerHoldoutManifest, observation: ManagedControllerObservation): {
+  commit_message?: { errors: string[], passed: boolean }
   missing_required_paths: string[]
   output: ManagedControllerOutputScore
   result: 'passed' | 'failed'

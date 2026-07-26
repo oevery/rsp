@@ -9,10 +9,10 @@ import { fileURLToPath } from 'node:url'
 import { parse as parseYaml } from 'yaml'
 
 const CASE_ID = 'device-discovery-boundary'
-const RETAINED_RUN_ID = `${CASE_ID}-interactive-skill-manager-grouped-inventory-2026-07-26`
+const RETAINED_RUN_ID = `${CASE_ID}-rsp-commit-inventory-2026-07-26`
 const PHASES = ['design', 'implement', 'review', 'durable']
 const SKILLS = ['rsp', 'rsp-shape', 'rsp-design', 'rsp-implement', 'rsp-review']
-const PUBLISHED_SKILLS = ['rsp', 'rsp-address-review', 'rsp-codebase-audit', 'rsp-design', 'rsp-diagnose', 'rsp-implement', 'rsp-manage', 'rsp-release-docs', 'rsp-review', 'rsp-shape', 'rsp-tdd']
+const PUBLISHED_SKILLS = ['rsp', 'rsp-address-review', 'rsp-codebase-audit', 'rsp-commit', 'rsp-design', 'rsp-diagnose', 'rsp-implement', 'rsp-manage', 'rsp-release-docs', 'rsp-review', 'rsp-shape', 'rsp-tdd']
 const PACKAGE_BEHAVIOR_FILES = ['bin/rsp.mjs', 'dist/cli.mjs', 'rules/rsp-rules.md']
 const EVALUATION_PATH = ['research', 'evaluations', 'rsp-native-design-composition', '2026-07-22']
 const DURABLE_ARTIFACT = 'durable-artifact.md'

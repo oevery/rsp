@@ -1,0 +1,90 @@
+{
+  "run_identity": "commit-message-quality-product-gpt-5-6-sol-high-2026-07-26T13-44-44Z",
+  "case_id": "commit-message-quality",
+  "result": "passed",
+  "started_at": "2026-07-26T13:44:44.023Z",
+  "ended_at": "2026-07-26T13:49:00.464Z",
+  "duration_ms": 256441,
+  "settings": {
+    "codex": "codex-cli 0.144.6",
+    "model": "gpt-5.6-sol",
+    "effort": "high",
+    "sandbox": "danger-full-access"
+  },
+  "fixture_manifest_semantic_hash": "e289fb77b84d68c0c744e64cdf5a9deef80524edb8a08c3ce0c4492931390c38",
+  "source_final_hash": "b580203328c68871fd7fc5dbf502dba707af152086ebbce2727c9c2022a4db2c",
+  "final_hash": "6764644dd23bdf7c7ca145b6a58455a2f5185cd9c3033afacc9c6b5f3dedce0f",
+  "composition": {
+    "hash": "6d77f73f8d795cb27549fdc5fcfe224c7a1fe0e94a1b42c4a63190f6f1ba498b",
+    "skills": [
+      {
+        "name": "rsp",
+        "hash": "b3022ac41cc9576995e406d409b8a18bb4acfbe5c34ebf812d3374a61c64d835"
+      },
+      {
+        "name": "rsp-implement",
+        "hash": "8d16c743f355ab4e1798fa0eece3c0d025cd316d6d5426c4770dced216041e34"
+      },
+      {
+        "name": "rsp-commit",
+        "hash": "a76bdc5779bec808cafcdb72a3e4aa5636c8bf5e77c6e91b8ed3c5bc3590d00a"
+      }
+    ],
+    "stable": true
+  },
+  "verification": {
+    "command": "npm test",
+    "passed": true,
+    "tests": 3,
+    "failures": 0
+  },
+  "output_score": {
+    "expected_missing": [],
+    "forbidden_present": []
+  },
+  "commit_message_score": {
+    "errors": [],
+    "passed": true
+  },
+  "forbidden_actions": {
+    "force_push": 0,
+    "publication": 0,
+    "push": 0
+  },
+  "changed_paths": [
+    ".rsp/changes/add-greeting-format.md",
+    "src/greeting.mjs",
+    "test/greeting.test.mjs"
+  ],
+  "missing_required_paths": [],
+  "unauthorized_paths": [],
+  "git": {
+    "base_sha": "83baeb480aaeac804dca6f95a954193178ce5954",
+    "head_sha": "c2a89cf85b05e6a3c6214779c46051790c01caf0",
+    "branch": "eval/commit-message",
+    "dirty": false,
+    "remote_matches_base": true,
+    "remote_matches_head": false,
+    "remote_refs_unchanged": true,
+    "worktree_paths": [],
+    "commits": [
+      {
+        "sha": "c2a89cf85b05e6a3c6214779c46051790c01caf0",
+        "subject": "feat(greeting): normalize names before formatting",
+        "body": "- Trim surrounding whitespace before building the greeting.\n- Reject empty and whitespace-only names with TypeError.\n- Keep localization, persistence, and remote delivery outside this change.",
+        "message": "feat(greeting): normalize names before formatting\n\n- Trim surrounding whitespace before building the greeting.\n- Reject empty and whitespace-only names with TypeError.\n- Keep localization, persistence, and remote delivery outside this change.\n\nRSP-WorkRef: add-greeting-format",
+        "trailers": [
+          {
+            "key": "RSP-WorkRef",
+            "value": "add-greeting-format"
+          }
+        ],
+        "paths": [
+          ".rsp/changes/add-greeting-format.md",
+          "src/greeting.mjs",
+          "test/greeting.test.mjs"
+        ]
+      }
+    ]
+  }
+}

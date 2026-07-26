@@ -33,7 +33,7 @@ Apply these routes in order:
 8. For incomplete implementation or stale, missing, or failed verification, use [Implementation evidence](#implementation-evidence).
 9. When Tasks and required verification pass without blockers, perform the durable decision. Do not infer a release operation from Change completion.
 
-State the derived stage, one next action, required input, returned owner, and decisive evidence. Name at most one optional capability, only when it is the next action and appears in the host's loaded Skill inventory. Missing capabilities never invalidate RSP: give the manual fallback against the same owner. Do not preload, enumerate, or recursively invoke optional capabilities.
+State the derived stage, one next action, required input, returned owner, and decisive evidence. Name at most one optional capability, only when it is the next action and appears in the host's loaded Skill inventory. Missing capabilities never invalidate RSP: give the manual fallback against the same owner. When Core or qualified Manage has derived one authorized RSP-owned local commit boundary, route exact staging, structured message construction, local commit execution, and post-commit observation to `rsp-commit`; if unavailable, use the bounded manual action in durable review against the same owner. Do not preload, enumerate, or recursively invoke optional capabilities.
 
 ### Implementation evidence
 
