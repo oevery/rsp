@@ -4,7 +4,7 @@ Load this reference only before initializing, auditing, migrating, or repairing 
 
 1. Initialize with `npx -y @oevery/rsp init [--agents-mode managed|print] [--with-project-setup]`.
 2. `--with-project-setup` creates and focuses `changes/project-setup.md`. Without it, create that Change only when explicit bootstrap tracking is still needed.
-3. Put durable architecture facts in `.rsp/specs/design.md` and stable operating instructions in the nearest project-owned `AGENTS.md` outside its managed block.
+3. Put project-wide boundaries and Spec navigation in `.rsp/specs/design.md`, cohesive reusable facts in the smallest domain Spec, and stable operating instructions in the nearest project-owned `AGENTS.md` outside its managed block.
 4. Diagnose with `npx -y @oevery/rsp doctor`. Apply only deterministic repairs with `doctor --fix` or `rsp update`; `fixed` entries are real filesystem mutations, while an empty list means nothing changed.
 5. Do not use repair commands to decide stale focus, semantic durable updates, or archive readiness.
 

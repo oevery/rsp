@@ -1,0 +1,49 @@
+# Skill System
+
+## Purpose
+- Define composition, ownership, authority, progressive-disclosure, and completion contracts for the ten published RSP Skills.
+
+## Stable Facts
+- The published suite contains `rsp`, `rsp-shape`, `rsp-design`, `rsp-implement`, `rsp-diagnose`, `rsp-tdd`, `rsp-review`, `rsp-address-review`, `rsp-release-docs`, and explicit-only `rsp-manage`.
+- Skills are independently invocable and always return to an existing project, Change, Spec, Decision Record, archive, or release-artifact owner. The suite adds no manifest, runtime overlay, hidden state, recursive Skill orchestration, or implicit Git/publication authority.
+- Response and artifact language are separate. Response prose follows explicit response language, scoped instructions, then conversation language. Authorized artifact prose follows explicit artifact language, scoped instructions, existing artifact language, then conversation language. Canonical headings, WorkRefs, paths, commands, identifiers, severity labels, and machine values remain unchanged.
+- Core `rsp` derives one stage and one next action from intent, nearest authority, deterministic status, Change readiness, fresh verification, and blockers. Stages are not persisted.
+- Core keeps selection, routing, ownership, safety, and output contracts eager. It conditionally loads setup/repair, Groups/dependencies, conflict handling, durable review, and detailed managed routing only when those paths are active.
+- Core routes unexplained failures to Diagnose before TDD. Ordinary evidenced work uses Implement; TDD applies only when authority requires test-first or a concrete risk makes pre-mutation RED materially safer.
+- Core names an optional capability only when that installed capability is the next action; otherwise it returns the equivalent manual action to the same owner. Routing never grants mutation, review, Git, release, publication, deployment, approval, or human-acceptance authority.
+- Shape inspects evidence before asking, applies an objective ready gate, mutates only authorized planning artifacts, and never implements. It keeps one observable outcome per Change and uses a shallow Group only for independently closable direct children sharing an aggregate goal or gate.
+- Shape progressively loads complex and deep clarification only for multi-owner shaping, explicit rigorous challenge, or unresolved high-risk decisions. It returns one material domain, module, or evidence-seeking question to Design against the same WorkRef.
+- Design resolves exactly one tracked domain-model, module/seam, or reversible-exploration question from the smallest authoritative evidence chain. It separates evidence from owner choice and is report-only by default; authorized writes are limited to planned design in the selected Change.
+- Implement executes exactly one selected ready Change, discovers the owning code/test path, preserves unrelated work, records truthful Tasks/Blockers, and uses the cheapest decisive fresh verification. New failures are reclassified without recursively invoking another Skill.
+- Diagnose is non-corrective. It reproduces or bounds the symptom, finds the live owner, discriminates hypotheses, and returns a confirmed cause or truthful unresolved result without inferring production mutation.
+- TDD drives one clear behavior through observed RED, minimal GREEN, optional safe REFACTOR, and fresh checks. It returns unexplained failures to diagnosis and retains a new test only when it protects an observable boundary with distinct proportionate value.
+- Review is report-only for fixed Code, Document, or mixed comparisons. It keeps pipeline verdicts separate, traces seam-dependent findings to a direct production caller, deduplicates findings, and cannot implement, commit, publish, or approve.
+- Address Review resolves one fixed report. Every Finding receives `accepted`, `rejected`, or `needs-clarification` with evidence. Only accepted findings inside explicit mutation authority are corrected, followed by fresh verification and fixed-scope report-only re-review.
+- Address Review never self-loops and stores no hidden receipt. It returns artifact-scoped continuation pointers when incomplete. Only qualified Manage may classify an in-scope accepted remaining/new Finding as transient `correction-needed` for another bounded pass.
+- Release Docs confirms identity only from explicit instruction or authoritative release configuration, never version ordering, prior prereleases, commits, or planned prose. Before confirmation, work remains version-neutral and does not mutate versioned release surfaces.
+- A confirmed mechanical release needs no RSP Change. Use an optional Release Change only for material version/range, migration, rollback, security, compatibility, cross-team/repository, multi-stage, recovery, blocker, or acceptance decisions.
+- Release Docs requires finalization against an exact clean candidate before explicit tag, hosted release, or registry handoff. Its evidence ledger and publication/authentication progress remain transient; shipped surfaces stay publication-invariant; published immutable history is not rewritten.
+- Release Docs keeps authority and lifecycle boundaries eager and conditionally loads convention discovery, evidence/surface ownership, output formats, and publication/reconciliation procedures. It never executes or infers Git, publication, deployment, deletion, or approval authority.
+- Artifact routing is Core behavior: planned design stays in the selected Change; implemented facts go to the smallest fact owner; rationale goes to one Decision Record; temporary execution state stays in a response continuation unless an exact path is authorized.
+- An intersecting Git conflict uses Core's compact fallback: inspect operation and base/ours/theirs semantics, preserve unrelated work, resolve only evidenced in-scope content, rerun checks, and stop on missing evidence or owner decisions. Conflict resolution grants no stage/continue/abort/commit/push/delivery authority.
+- Manage is an optional controller for an explicitly requested bounded goal beginning at one selected ready Change or shallow Group. A Change requires independent mutation/verification slices, genuinely long continuation, or recovery; a Group requires at least two ready children or a long/recovery path. Small and coupled work stays direct.
+- The managed goal and allowed planning/product mutations form transient authority. Every qualified WorkRef, including successors, is freshly read with its complete owner, relevant Specs/Decisions, status, authority, and worktree before dispatch.
+- Group dispatch follows CLI-derived waves. Overlapping paths, lockfiles, generated artifacts, broad integration outputs, blockers, and dependent verification remain sequential unless an authorized isolated workspace makes them independent.
+- Manage inspects the actual owned diff and decisive checks before acceptance. After progress, Core re-derives status: continue a clear in-scope ready successor; return clearly missing ownership to Shape; stop only when neither remains. Product, acceptance, interface, scope, mutation, external-action, or human decisions stop at their owner.
+- Managed dispatch, retries, discovery classification, convergence counts, goal envelope, WorkSet, waves, checkpoint chronology, and push chronology stay transient. Changes retain converged evidence; Briefs retain shared completion without copied child state.
+- Managed review convergence is bounded separately from worker retry. Address Review remains one pass; Core may re-enter only for an accepted finding within original behavior, paths, authority, and verification budget. Owner decisions, scope/authority change, failed evidence, extra external verification, or repeated non-convergence stop.
+- Lifecycle closeout and Git delivery are separate. Unless nearer authority reserves or denies lifecycle, qualified Manage archives each reviewed Change and closes a Group Brief only after all children and the Group gate pass, inspecting the complete lifecycle diff after every mutation.
+- Recovery checkpoints require an exact clean boundary and applicable commit authority. Terminal small owners default to no commit; terminal non-small owners require explicit delivery or evidenced recovery value allowed by nearer rules.
+- Push is opt-in only after explicit user mention plus an unambiguous remote, branch, and milestone. Manage never force-pushes or pushes protected/ambiguous branches; failure preserves local commits. Publication, deployment, environment, approval, and human acceptance remain external.
+
+## Boundaries
+- In scope:
+  - Skill selection, discipline behavior, artifact return paths, conditional references, managed qualification/convergence, and authority separation.
+- Out of scope:
+  - Host scheduling/worktree implementation, hidden runtime orchestration, automatic retry, persisted controller state, Git/publication authority, and project-specific product decisions.
+
+## Constraints
+- Keep safety, authority, readiness, verification, and completion criteria checkable even when compacting prompts.
+- Prefer progressive disclosure and one semantic owner over duplicated eager rules.
+- Keep agent-distributed normative prose in English for cross-agent stability.
+- Retained evaluation evidence is immutable; prompt-content changes require a new identity and fresh run rather than overwriting prior results.
