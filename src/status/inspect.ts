@@ -5,7 +5,7 @@ import { readFile, stat } from 'node:fs/promises'
 import { join } from 'node:path'
 
 import { inspectChangeGroups } from '../core/change-group.js'
-import { ARCHIVES_DIR } from '../core/config.js'
+import { ARCHIVES_DIR, CONFIG_PATH, inspectRspConfig, resolveManagePolicy } from '../core/config.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
 import { collectArchiveReadiness, countCheckboxes, extractSection, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter } from '../core/helpers.js'
 import { toErrorMessage } from '../core/output.js'
@@ -14,6 +14,29 @@ import { inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from 
 export async function inspectProjectStatus(options: { nowMs?: number } = {}): Promise<ProjectStatusSnapshot> {
   const runtime: RuntimeDiagnostic[] = []
   const diagnostics: CommandDiagnostic[] = []
+  let manage = resolveManagePolicy({})
+  try {
+    const configInspection = await inspectRspConfig()
+    const configValid = configInspection.issues.length === 0
+    manage = resolveManagePolicy(configInspection.config, { configValid })
+    if (!configValid) {
+      diagnostics.push({
+        severity: 'error',
+        code: 'invalid_config',
+        path: CONFIG_PATH,
+        message: configInspection.issues.join('; '),
+      })
+    }
+  }
+  catch (error) {
+    manage = resolveManagePolicy({}, { configValid: false })
+    diagnostics.push({
+      severity: 'error',
+      code: 'invalid_config',
+      path: CONFIG_PATH,
+      message: toErrorMessage(error),
+    })
+  }
   const focusTree = await inspectFocusTree()
   for (const diagnostic of focusTree.diagnostics) {
     diagnostics.push({
@@ -188,6 +211,7 @@ export async function inspectProjectStatus(options: { nowMs?: number } = {}): Pr
   }
 
   return {
+    manage,
     focused: [...focusedSet].sort(),
     records,
     groups: groupInspection.groups,

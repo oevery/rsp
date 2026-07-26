@@ -1,0 +1,44 @@
+id: auto-lifecycle
+base_case: review-convergence
+automatic_activation: true
+expected_mode: execute
+installed_skills:
+  - rsp
+  - rsp-manage
+  - rsp-address-review
+  - rsp-review
+  - rsp-implement
+initialize_rsp: true
+branch: eval/auto-lifecycle
+sandbox: danger-full-access
+request: >-
+  Complete selected Change `normalize-label`. The goal authorizes implementation and the three bounded
+  corrections described by the fixed reports under `reviews/`, fresh verification, fixed-scope re-review,
+  and completion under the project's configured routing and closeout policy. Process `review-1.md` first.
+  After each accepted correction, treat the next numbered report as the independent fixed-scope re-review
+  result. `review-2.md` and `review-3.md` intentionally expose new in-scope findings owned by the same Change;
+  continue automatically under the original authority without asking the user to reply continue. `review-4.md`
+  is clean. Modify only the finding accepted in the current pass, run its named focused test after each
+  correction, and run npm test as the aggregate gate. Do not commit, push, publish, create controller state,
+  or modify reviews, tests, AGENTS.md, or unrelated.txt. In the final response include the exact semantic
+  fields `review_passes: 3`, `re_review: clean`, `user_continuations: 0`, and `npm test: passed`.
+allowed_changes:
+  - .rsp/archives/INDEX.md
+  - .rsp/archives/{date}_normalize-label.md
+  - .rsp/changes/normalize-label.md
+  - .rsp/focus.d/normalize-label
+  - src/normalize.mjs
+required_changes:
+  - .rsp/archives/{date}_normalize-label.md
+  - src/normalize.mjs
+verification:
+  - npm
+  - test
+expected_output:
+  - 'review_passes: 3'
+  - 're_review: clean'
+  - 'user_continuations: 0'
+  - 'npm test: passed'
+forbidden_output:
+  - needs user continuation
+  - requires another authorization

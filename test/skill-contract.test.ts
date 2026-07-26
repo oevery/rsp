@@ -129,7 +129,7 @@ describe('rsp Skill contract', () => {
     expectPortableSkill(designSkill)
   })
 
-  it('publishes a portable explicit managed-continuation Skill', () => {
+  it('publishes a portable policy-selectable managed-continuation Skill', () => {
     expectPortableSkill(manageSkill)
   })
 

@@ -23,7 +23,14 @@ function generateConfigTemplate(): string {
 #   kinds:               ${VALID_KINDS.join(', ')}
 #
 # kinds:
-${fmtList(VALID_KINDS, 2)}
+${fmtList(VALID_KINDS, 0)}
+
+# New projects default to automatic Manage routing with lifecycle-only closeout.
+# Use activation: explicit to require a named managed request.
+# closeout accepts manual, lifecycle, or local; local may authorize an eligible local commit but never push or publication.
+manage:
+  activation: auto
+  closeout: lifecycle
 
 # Decision Records default to .rsp/specs/decisions.
 # Set exactly one project-relative authoritative directory when the Host Project already owns Decision Records elsewhere.

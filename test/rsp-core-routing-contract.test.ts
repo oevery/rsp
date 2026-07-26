@@ -7,6 +7,7 @@ const root = fileURLToPath(new URL('..', import.meta.url))
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
 const skill = read('skills/rsp/SKILL.md')
 const managed = read('skills/rsp/references/managed-routing.md')
+const durable = read('skills/rsp/references/durable-review.md')
 const fallback = read('rules/rsp-rules.md')
 const coreContract = `${skill}\n${managed}`
 
@@ -82,10 +83,12 @@ describe('rsp core routing contract', () => {
     expectSemanticGroup(coreContract, [
       ['one isolated material domain, module/seam, or evidence-seeking design question'],
       ['`rsp-design`'],
-      ['explicit managed-completion', 'managed-continuation request'],
+      ['explicitly managed'],
+      ['effective status policy'],
+      ['`manage.activation: auto`'],
       ['one selected ready Change'],
       ['genuinely independent slices'],
-      ['Managed routing is never implicit'],
+      ['Automatic activation grants controller selection only'],
       ['explicitly requests release documentation, finalization, publication, or reconciliation'],
       ['confirmed identity or range'],
       ['A selected Change is not required'],
@@ -97,7 +100,7 @@ describe('rsp core routing contract', () => {
     expect(fallback).toMatch(/Route release documentation only for an explicit release operation with a confirmed identity or range/)
   })
 
-  it('resolves an explicit managed owner before Manage qualification', () => {
+  it('resolves an explicitly or automatically managed owner before Manage qualification', () => {
     for (const body of [managed]) {
       const lowered = body.toLowerCase()
       const resolveOwner = lowered.indexOf('resolve the smallest sufficient owner before testing manage eligibility')
@@ -120,8 +123,13 @@ describe('rsp core routing contract', () => {
       ])
     }
     expect(skill).toContain('For a material owner decision inside an explicit managed request, continue to the Shape preflight')
+    expect(managed).toContain('Automatic activation grants controller selection only')
+    expect(managed).toContain('configuration alone never does')
     expect(skill).toContain('](references/managed-routing.md)')
     expect(fallback).toContain('This fallback does not emulate `rsp-manage`')
+    expect(fallback).toContain('even when project configuration selects automatic activation or local closeout')
+    expect(fallback).toContain('Invalid configuration grants nothing and remains visible')
+    expect(fallback).toContain('Configuration grants no planning or product-mutation authority')
   })
 
   it('reuses the managed preflight after progress without persisting orchestration state', () => {
@@ -208,12 +216,21 @@ describe('rsp core routing contract', () => {
     expect(skill).toMatch(/does not execute archive or grant staging, commit, push, publication, deletion, deployment, approval, or human-acceptance authority/)
     expect(skill).toContain('The qualified Manage rules in [managed routing]')
     expect(managed).toContain('Inspect the complete lifecycle diff after each mutation, including terminal owners')
-    expect(managed).toContain('archives a Change after Core durable review')
+    expect(managed).toContain('archive a Change after Core durable review')
     expect(managed).toContain('`rsp group close <group>` only after every child and the Group gate pass')
     expect(managed).toContain('Terminal small work defaults to no commit')
     expect(managed).toContain('terminal non-small work needs explicit delivery or evidenced recovery value plus nearer-rule permission')
     expect(managed).toContain('Push requires an explicit user mention plus an unambiguous remote, branch, and milestone')
     expect(managed).toContain('Never force-push')
+    expect(managed).toContain('`manual` grants neither automatic archive nor commit')
+    expect(managed).toContain('`lifecycle` grants lifecycle closeout after Core durable review but no Git action')
+    expect(managed).toContain('`local` adds the existing exact-path local checkpoint or terminal-commit eligibility')
+    expect(managed).toContain('Missing configuration preserves `explicit` activation with `local` closeout compatibility')
+    expect(managed).toContain('Invalid configuration fails closed as `explicit` plus `manual`')
+    expect(durable).toContain('`manual` leaves archive advisory')
+    expect(durable).toContain('`lifecycle` or `local` permits `rsp archive <change-work-ref>`')
+    expect(durable).toContain('Only `local` or explicit current-turn Git authority')
+    expect(durable).toContain('`manual` and `lifecycle` grant no commit')
     expect(skill).not.toMatch(/automatically (?:commit|push|publish|archive)/i)
   })
 })

@@ -162,13 +162,31 @@ RSP 发布十个宿主无关、按需加载的 Skills：
 | `rsp-review` | 对固定的 Code、Document 或 mixed comparison 做只读审查。 |
 | `rsp-address-review` | 处置固定 findings，修正 accepted 项，验证并请求复审。 |
 | `rsp-release-docs` | 起草、审计、定稿或校准基于证据的发布表面。 |
-| `rsp-manage` | 继续一个显式请求且符合条件的 ready Change 或 shallow Group。 |
+| `rsp-manage` | 继续一个显式请求或项目启用且符合条件的 ready Change 或 shallow Group。 |
 
 每个 Skill 都把结果返回现有项目或 RSP owner。套件不引入隐藏 workflow state 或递归 Skill 编排。任何 Skill 都不会推断 commit、push、publication、deployment、approval 或 human-acceptance 权限。
 
 响应语言与产物语言相互独立。面向人的响应标题、标签、解释和结论依次遵循明确指定的响应语言、项目中针对响应的指令和会话语言；已授权写入的产物正文依次遵循明确指定的产物语言、项目中针对产物的指令、目标产物的现有语言，最后才回退到会话语言。RSP 的 canonical artifact headings、WorkRef 值、路径、命令、标识符和机器消费值保持不变；响应标签可以在括号中保留技术 token，但不能直接使用未翻译的 token 作为标签。
 
-按证据组合套件：Shape 确定 owner；Design 返回一个关键问题；Core 在 Diagnose、TDD 与 Implement 之间选择；Review 保持只读；Address Review 修正 accepted findings 并请求复审；Core 在 archive 前执行 durable decision。显式 release operation 在 identity 或 range 已确认时，可以不创建 Release Change 就进入 Release Docs；只有重大决策、协调、恢复、blocker 或 acceptance 需要持久 owner 时才创建。Manage 是可选且仅显式启用的能力：它接受一个 selected ready Change 或 shallow Group，并要求独立调度、长时 continuation 或恢复需求；小型或紧耦合工作保持直接执行。
+按证据组合套件：Shape 确定 owner；Design 返回一个关键问题；Core 在 Diagnose、TDD 与 Implement 之间选择；Review 保持只读；Address Review 修正 accepted findings 并请求复审；Core 在 archive 前执行 durable decision。显式 release operation 在 identity 或 range 已确认时，可以不创建 Release Change 就进入 Release Docs；只有重大决策、协调、恢复、blocker 或 acceptance 需要持久 owner 时才创建。Manage 是可选能力：它接受一个 selected ready Change 或 shallow Group，并要求独立调度、长时 continuation 或恢复需求；小型或紧耦合工作保持直接执行。项目可以保持显式启用，也可以让 Core 自动选择符合条件的 managed work。
+
+### Managed automation policy
+
+在 `.rsp/config.yaml` 中分别配置自动选择与本地收尾：
+
+```yaml
+manage:
+  activation: auto
+  closeout: lifecycle
+```
+
+`activation` 可取 `explicit` 或 `auto`。`auto` 只授权 Core 为符合条件且已经请求完成或继续的工作选择 Manage；它不授予 planning、product mutation、lifecycle、Git 或外部权限。`closeout` 可取：
+
+- `manual`：archive 与 commit 都不会自动执行。
+- `lifecycle`：durable review 后可以 archive，但 commit 仍需要独立权限。
+- `local`：允许 lifecycle closeout，并仅在 exact-path、clean-boundary、verification 和 delivery-value gate 通过后进入已有的有界本地 checkpoint 或 terminal commit 路径。
+
+新的 `rsp init` config template 使用上面的 `auto` 加 `lifecycle` policy。如果省略 `manage`，RSP 则为兼容既有显式 Manage 行为解析为 `activation: explicit` 与 `closeout: local`。普通 `rsp status` 和 `rsp status --json` 顶层的 `manage` 对象都会显示解析后的值。nearest scoped restriction 与 host enforcement 可以缩小该配置上限。RSP 有意不提供 `full` preset：push、tag、publication、deployment、approval 与 human acceptance 始终保持显式且属于外部边界。
 
 人类应从本 README 开始；agent 应遵循 nearest `AGENTS.md`，优先加载 `skills/rsp/SKILL.md`，仅在 Skill 不可用时读取 `.rsp/rsp-rules.md`。
 

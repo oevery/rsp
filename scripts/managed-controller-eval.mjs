@@ -375,6 +375,15 @@ function readHoldout(root, caseId) {
   const manifest = parseYaml(readFileSync(join(directory, 'case.yaml'), 'utf8'))
   if (!manifest || manifest.id !== caseId || typeof manifest.request !== 'string')
     throw new Error(`invalid holdout manifest: ${caseId}`)
+  if ('automatic_activation' in manifest && typeof manifest.automatic_activation !== 'boolean')
+    throw new Error(`${caseId}.automatic_activation must be a boolean`)
+  const baseCase = manifest.base_case ?? caseId
+  if (!CASE_ID.test(baseCase))
+    throw new Error(`${caseId}.base_case must be a valid case id`)
+  const baseDirectory = join(fixtures, baseCase, 'base')
+  assertContained(fixtures, baseDirectory, `${caseId}.base_case`)
+  if (!existsSync(baseDirectory))
+    throw new Error(`${caseId}.base_case does not contain a base fixture`)
   assertArray(manifest.allowed_changes, `${caseId}.allowed_changes`)
   if (manifest.required_changes)
     assertStringArray(manifest.required_changes, `${caseId}.required_changes`)
@@ -386,7 +395,7 @@ function readHoldout(root, caseId) {
     assertStringArray(manifest[field], `${caseId}.${field}`)
   if (!['decline', 'execute'].includes(manifest.expected_mode ?? 'execute'))
     throw new Error(`${caseId}.expected_mode must be decline or execute`)
-  return { directory, manifest }
+  return { baseDirectory, directory, manifest }
 }
 
 function readRetainedScoringManifest(root, matrixPath, caseId) {
@@ -410,9 +419,17 @@ export function scoreManagedControllerOutput(manifest, final) {
   }
 }
 
+function matchesAuthorizedPath(pattern, path) {
+  const escaped = pattern
+    .split('{date}')
+    .map(fragment => fragment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('\\d{4}-\\d{2}-\\d{2}')
+  return new RegExp(`^${escaped}$`).test(path)
+}
+
 export function scoreManagedControllerObservation(manifest, observation) {
-  const unauthorizedPaths = observation.changed_paths.filter(path => !manifest.allowed_changes.includes(path))
-  const missingRequiredPaths = (manifest.required_changes ?? []).filter(path => !observation.changed_paths.includes(path))
+  const unauthorizedPaths = observation.changed_paths.filter(path => !manifest.allowed_changes.some(pattern => matchesAuthorizedPath(pattern, path)))
+  const missingRequiredPaths = (manifest.required_changes ?? []).filter(pattern => !observation.changed_paths.some(path => matchesAuthorizedPath(pattern, path)))
   const output = scoreManagedControllerOutput(manifest, observation.final)
   const verificationAccepted = (manifest.expected_mode ?? 'execute') === 'decline'
     ? observation.changed_paths.length === 0
@@ -438,10 +455,15 @@ export function scoreManagedControllerObservation(manifest, observation) {
 export function prepareManagedControllerRun({ caseId, outputRoot, root, variant }) {
   if (!VARIANTS.has(variant))
     throw new Error(`invalid variant: ${variant}`)
-  const { directory, manifest } = readHoldout(root, caseId)
+  const { baseDirectory, directory, manifest } = readHoldout(root, caseId)
   mkdirSync(outputRoot, { recursive: true })
   const workspace = mkdtempSync(join(outputRoot, `${caseId}-${variant}-`))
-  cpSync(join(directory, 'base'), workspace, { recursive: true })
+  cpSync(baseDirectory, workspace, { recursive: true })
+  const caseAgentsPath = join(directory, 'AGENTS.md')
+  if (existsSync(caseAgentsPath)) {
+    assertSafeFile(directory, caseAgentsPath, `${caseId} AGENTS.md`)
+    cpSync(caseAgentsPath, join(workspace, 'AGENTS.md'))
+  }
   const agentsPath = join(workspace, 'AGENTS.md')
   if (existsSync(agentsPath)) {
     writeFileSync(
@@ -484,7 +506,9 @@ export function prepareManagedControllerRun({ caseId, outputRoot, root, variant 
   const remoteRefsBefore = remoteRefs(workspace, manifest.local_bare_remote ? 'origin' : null)
   const prompt = [
     variant === 'candidate' || variant === 'product'
-      ? 'Use $rsp-manage installed in this workspace to carry out the request.'
+      ? manifest.automatic_activation
+        ? 'Carry out the requested completion using the project-installed skills and project workflow.'
+        : 'Use $rsp-manage installed in this workspace to carry out the request.'
       : 'Carry out the request using your normal repository workflow; no managed-controller skill is installed.',
     manifest.request,
     'Return a concise final status with completed work, fresh verification, remaining boundary, and next action.',

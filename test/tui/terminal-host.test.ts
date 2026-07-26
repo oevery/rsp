@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { runTui } from '../../src/tui/entry.js'
 
 const emptySnapshot: ProjectStatusSnapshot = {
+  manage: { activation: 'explicit', closeout: 'local' },
   focused: [],
   records: [],
   groups: [],

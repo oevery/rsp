@@ -162,13 +162,31 @@ RSP publishes ten host-neutral Skills for on-demand loading:
 | `rsp-review` | Review a fixed code, document, or mixed comparison without mutation. |
 | `rsp-address-review` | Dispose fixed findings, correct accepted ones, verify, and request re-review. |
 | `rsp-release-docs` | Draft, audit, finalize, or reconcile evidence-based release surfaces. |
-| `rsp-manage` | Continue one explicitly requested eligible ready Change or shallow Group. |
+| `rsp-manage` | Continue one explicitly requested or project-enabled eligible ready Change or shallow Group. |
 
 Each Skill returns to an existing project or RSP owner. The suite adds no hidden workflow state or recursive Skill orchestration. No Skill infers commit, push, publication, deployment, approval, or human-acceptance authority.
 
 Response language and artifact language are independent. Human-facing response headings, labels, explanations, and conclusions follow the requested response language, response-specific project instructions, then the conversation language. Authorized artifact prose follows the requested artifact language, artifact-specific project instructions, then the existing artifact language, and only then the conversation language. Canonical RSP artifact headings, WorkRef values, paths, commands, identifiers, and machine-consumed values remain unchanged; response labels may retain technical tokens in parentheses but never use them as untranslated labels.
 
-Compose the suite from evidence: Shape settles the owner; Design returns one material question; Core chooses Diagnose, TDD, or Implement; Review stays report-only; Address Review corrects accepted findings and requests re-review; Core performs the durable decision before archive. An explicit release operation with a confirmed identity or range may enter Release Docs without a Release Change; create one only for material decisions, coordination, recovery, blockers, or acceptance. Manage is optional and explicit-only: it accepts one selected ready Change or shallow Group that needs independent dispatch, long continuation, or recovery, while small or coupled work stays direct.
+Compose the suite from evidence: Shape settles the owner; Design returns one material question; Core chooses Diagnose, TDD, or Implement; Review stays report-only; Address Review corrects accepted findings and requests re-review; Core performs the durable decision before archive. An explicit release operation with a confirmed identity or range may enter Release Docs without a Release Change; create one only for material decisions, coordination, recovery, blockers, or acceptance. Manage is optional: it accepts one selected ready Change or shallow Group that needs independent dispatch, long continuation, or recovery, while small or coupled work stays direct. Projects may keep explicit activation or let Core select eligible managed work automatically.
+
+### Managed automation policy
+
+Configure automatic selection and local closeout independently in `.rsp/config.yaml`:
+
+```yaml
+manage:
+  activation: auto
+  closeout: lifecycle
+```
+
+`activation` is `explicit` or `auto`. `auto` authorizes Core to select Manage for an eligible requested completion or continuation; it does not grant planning, product-mutation, lifecycle, Git, or external authority. `closeout` is one of:
+
+- `manual`: neither archive nor commit is automatic.
+- `lifecycle`: archive may follow durable review, but commit still needs separate authority.
+- `local`: lifecycle closeout plus the existing bounded local checkpoint or terminal-commit path may run only after its exact-path, clean-boundary, verification, and delivery-value gates.
+
+New `rsp init` config templates use the shown `auto` plus `lifecycle` policy. If `manage` is absent, RSP instead resolves `activation: explicit` and `closeout: local` for compatibility with the previous explicitly requested Manage behavior. Plain `rsp status` and the top-level `manage` object in `rsp status --json` show the resolved values. Nearest scoped restrictions and host enforcement can narrow the configured ceiling. RSP intentionally has no `full` preset: push, tag, publication, deployment, approval, and human acceptance remain explicit and external.
 
 Humans should start with this README. Agents should follow the nearest `AGENTS.md`, prefer `skills/rsp/SKILL.md`, and use `.rsp/rsp-rules.md` only when the Skill is unavailable.
 

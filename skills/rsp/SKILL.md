@@ -4,7 +4,7 @@ description: Use this skill when initializing RSP, operating an existing .rsp pr
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.26.1"
+  version: "2026.07.26.3"
 ---
 
 # RSP Skill
@@ -24,7 +24,7 @@ Read user intent, nearest authority, `rsp status --json`, the selected Change an
 Apply these routes in order:
 
 1. Stop for ambiguous authority or selection and return the one required input and its owner. For a material owner decision inside an explicit managed request, continue to the Shape preflight in route 2 so repository inspection precedes the single owner question; otherwise stop here.
-2. For an explicit managed-completion or managed-continuation request that is not a report-only review or release operation, read [managed routing](references/managed-routing.md) before deciding. It owns owner preflight, qualification, successor discovery, bounded review convergence, and lifecycle/Git separation. Select `rsp-manage` only after that preflight for an eligible selected ready Change or shallow Group; otherwise return the ordinary Core or Discipline action. Managed routing is never implicit.
+2. For a requested completion or continuation that is not a report-only review or release operation, read [managed routing](references/managed-routing.md) when the request is explicitly managed or the effective status policy has `manage.activation: auto`. It owns owner preflight, qualification, successor discovery, bounded review convergence, and lifecycle/Git separation. Select `rsp-manage` only after that preflight for an eligible selected ready Change or shallow Group; otherwise return the ordinary Core or Discipline action. Automatic activation grants controller selection only; planning, product mutation, lifecycle, Git, and external authority remain separately derived.
 3. Route an explicit report-only review with fixed scope to `rsp-review` when available, otherwise perform the same read-only review manually.
 4. Route an explicit release-documentation, finalization, publication, or reconciliation operation through [Release operations](#release-operations) before ordinary Change routing.
 5. With no selected Change, name one ready WorkRef and direct focus action. For tiny settled work, return the direct engineering action. For unclear non-trivial work, use `rsp-shape` when available and Change mutation is authorized; otherwise manually create or refine one Change to the same ready boundary.

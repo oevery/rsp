@@ -11,7 +11,9 @@ export interface ManagedControllerOutputManifest {
 }
 
 export interface ManagedControllerHoldoutManifest extends ManagedControllerOutputManifest {
+  automatic_activation?: boolean
   allowed_changes: string[]
+  base_case?: string
   branch?: string
   expected_mode?: 'decline' | 'execute'
   id: string

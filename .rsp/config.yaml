@@ -7,12 +7,17 @@
 #   kinds:               feature, fix, refactor, docs, ops, research
 #
 # kinds:
-  # - feature
-  # - fix
-  # - refactor
-  # - docs
-  # - ops
-  # - research
+# - feature
+# - fix
+# - refactor
+# - docs
+# - ops
+# - research
+
+# Self-host automatic Manage routing while keeping Git delivery explicit.
+manage:
+  activation: auto
+  closeout: local
 
 # Decision Records default to .rsp/specs/decisions.
 # Set exactly one project-relative authoritative directory when the Host Project already owns Decision Records elsewhere.

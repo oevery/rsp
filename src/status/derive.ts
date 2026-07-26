@@ -23,6 +23,7 @@ export function deriveStatusView(snapshot: ProjectStatusSnapshot, options: Statu
     : ['Run: rsp doctor']
 
   return {
+    manage: snapshot.manage,
     query,
     focused: snapshot.focused,
     records,

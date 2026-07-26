@@ -26,7 +26,7 @@ RSP 是 **Reliable Software Practice**：面向人类与 AI agent 的仓库原�
 它采用三层产品模型：
 
 - **Practice**：以可靠、可恢复、证据驱动的软件工程结果作为产品承诺。
-- **Workflow**：通过可组合 Skills 覆盖 shaping、design、diagnosis、TDD、implementation、review、release documentation 与 durable review，并以显式可选的 managed continuation 处理真正独立的长时 slices；所有结果仍返回已有 owner。
+- **Workflow**：通过可组合 Skills 覆盖 shaping、design、diagnosis、TDD、implementation、review、release documentation 与 durable review，并以可显式选择或由项目启用的 managed continuation 处理真正独立的长时 slices；所有结果仍返回已有 owner。
 - **Protocol**：以 Rules、Specs、Plans 为轻量 artifact foundation，提供确定性的项目内文件约定、检查和路由事实。
 
 `Reliable Software Practice` 回答 RSP 是什么；`Rules, Specs, Plans` 解释 RSP 如何在仓库中落地。工作流层不会把派生阶段或 controller state 持久化成第二套权威。
@@ -368,11 +368,13 @@ Continuation 必须包含 WorkRef、authority pointers、current state、changed
 
 普通 Git conflict 不需要独立 RSP Skill。Core 只保留 compact fallback：识别当前 Git operation，理解 base/ours/theirs 语义，保护无关工作，仅解决有证据且在 WorkRef authority 内的内容，并重新验证。缺少证据、涉及无关工作或 owner decision 时停止；resolve authority 不自动包含 stage、continue、abort、commit、push 或 delivery authority。
 
-`rsp-manage` 是可选能力，不是默认 controller。它只接受显式 managed continuation，并要求 ready owner、真正独立的工作、长时 continuation 或中断恢复；小型或紧耦合任务保持直接执行。
+`rsp-manage` 是可选能力，不是无条件 controller。项目可以保留显式激活，也可以允许 Core 为已经请求完成或继续、且通过资格判断的工作自动选择它；小型或紧耦合任务保持直接执行。自动路由只改变 capability selection，不从配置推导 planning、product mutation 或外部 authority。
 
 Managed goal、dispatch、重试、预算和 convergence count 都是 transient process state。Change、Group、Spec、Decision Record 与项目指令继续拥有 durable truth；每次进展后重新从这些 owner 和当前证据派生下一动作。缺少 owner 时返回 Shape，涉及产品、接口、scope 或 authority 决策时停止。
 
-Managed review 必须有界，且 Address Review 不自行循环。Lifecycle closeout 与 Git delivery 是独立判断；archive、commit、push、publication、deployment 和 human acceptance 各自保留明确 authority。具体资格、预算、命令和停止条件由 `rsp` 与 `rsp-manage` Skills 拥有，不在设计哲学中复制。
+Managed review 必须有界，且 Address Review 不自行循环。Lifecycle closeout 与 Git delivery 仍是独立能力，但项目可以用 `manual`、`lifecycle`、`local` 三个小型 preset 选择本地收尾上限：不自动收尾、仅 archive，或 archive 加既有 gate 约束下的本地 checkpoint/commit。省略配置保持 explicit activation 与既有 local closeout 兼容；nearest restriction 和 host boundary 只能缩小上限。
+
+RSP 不建立通用权限系统，也不提供容易误解为宿主完全授权的 `full` 模式。Push、tag、publication、deployment、approval 和 human acceptance 始终保持显式且在项目配置之外。具体资格、预算、命令和停止条件由 `rsp` 与 `rsp-manage` Skills 拥有，不在设计哲学中复制。
 
 ## 输出与可观测性
 

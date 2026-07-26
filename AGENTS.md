@@ -25,7 +25,7 @@ Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENT
 
 ## Project Skill Dogfooding
 
-- Use the repository-discovered `rsp`, `rsp-shape`, `rsp-design`, `rsp-implement`, `rsp-diagnose`, `rsp-tdd`, `rsp-review`, `rsp-address-review`, `rsp-release-docs`, and explicit-only `rsp-manage` Skills for matching work in this checkout.
+- Use the repository-discovered `rsp`, `rsp-shape`, `rsp-design`, `rsp-implement`, `rsp-diagnose`, `rsp-tdd`, `rsp-review`, `rsp-address-review`, `rsp-release-docs`, and policy-selected `rsp-manage` Skills for matching work in this checkout. This self-host uses `.rsp/config.yaml` for Manage activation and closeout ceilings; configuration never expands planning, product-mutation, remote, publication, approval, or human-acceptance authority.
 - These entries are live projections of the authored package sources under `skills/`; edit the authored source, not `.agents/skills/`.
 - Keep overlapping global engineering workflow Skills disabled in the maintainer environment while dogfooding so RSP capability gaps remain visible. Codex currently supports Skill disablement in user config, not project `.codex/config.toml`; do not add a misleading project-local disable list.
 

@@ -10,6 +10,9 @@
 - Archive discovery accepts only flat files or one real Group directory. Specs may recurse through real directories and regular files; symlinked or special entries are invalid.
 - Final managed files—including project `AGENTS.md`, focus markers, fallback/config, indexes, placeholders, and generated project files—must be missing or regular files. Initialization and update preflight `AGENTS.md` before other managed mutations.
 - `rsp status` fails visibly when current work is invalid, a focus target is missing, or open work cannot be read. It derives exact dependency edges and reasons, minimal graph nodes, blockers, ready Changes, and stable waves from authoritative artifacts.
+- `.rsp/config.yaml` accepts strict `manage.activation` values `explicit | auto` and `manage.closeout` values `manual | lifecycle | local`. Missing Manage config resolves compatibly to `explicit` plus `local`; wrong shapes, unknown keys, and invalid enum values fail closed before they can activate Manage or local closeout.
+- New `rsp init` config templates select `auto` plus `lifecycle`; projects that remove or never received the block retain the missing-config compatibility behavior.
+- Plain `rsp status` shows both resolved Manage policy values, and JSON status exposes the same effective `manage.activation` and `manage.closeout` values. This is inspectable configuration, not persisted run or controller state.
 - Filtered status retains the selected Changes' transitive prerequisites and distinguishes selected nodes from prerequisite context. Plain output renders the same graph as a deterministic dependency forest; JSON remains the canonical flat projection.
 - CLI commands own deterministic filesystem operations, structural checks, generated indexes, and warnings. Semantic durable-writeback decisions remain outside the CLI.
 - `status`, `show`, `ready`, `check`, `doctor`, and `history` preserve pretty `--json` output and accept `--json --compact` for the same value on one LF-terminated line. `--compact` without `--json`, or on another command, fails before command behavior.
@@ -27,7 +30,7 @@
 
 ## Boundaries
 - In scope:
-  - Command registration, deterministic inspection/mutation, filesystem safety, status/check/doctor projections, archive queries, and machine output.
+  - Command registration, deterministic config inspection, filesystem safety, status/check/doctor projections, archive queries, and machine output.
 - Out of scope:
   - Semantic completion judgment, hidden scheduling, automatic durable writeback, release authority, and interactive dashboard presentation.
 

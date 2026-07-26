@@ -8,6 +8,7 @@ import { displayWidth } from '../../src/tui/display.js'
 import { catalogs } from '../../src/tui/i18n/messages.js'
 
 const snapshot: ProjectStatusSnapshot = {
+  manage: { activation: 'explicit', closeout: 'local' },
   focused: ['alpha', 'beta'],
   records: ['alpha', 'beta'].map((name, index) => ({
     output: { name, kind: 'feature', progress: { done: index, total: 2 }, ageDays: 0, isFocused: true, isBlocked: index === 1, path: `.rsp/changes/${name}.md` },
@@ -382,6 +383,7 @@ describe('dashboardApp', () => {
 
   it('does not suppress a current-scope empty state while History loads in the background', async () => {
     const emptySnapshot: ProjectStatusSnapshot = {
+      manage: { activation: 'explicit', closeout: 'local' },
       focused: [],
       records: [],
       groups: [],

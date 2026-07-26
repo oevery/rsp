@@ -23,12 +23,12 @@ request: >-
   semantic fields `review_passes: 3`, `re_review: clean`, `user_continuations: 0`, and `npm test: passed`.
 allowed_changes:
   - .rsp/archives/INDEX.md
-  - .rsp/archives/2026-07-25_normalize-label.md
+  - .rsp/archives/{date}_normalize-label.md
   - .rsp/changes/normalize-label.md
   - .rsp/focus.d/normalize-label
   - src/normalize.mjs
 required_changes:
-  - .rsp/archives/2026-07-25_normalize-label.md
+  - .rsp/archives/{date}_normalize-label.md
   - src/normalize.mjs
 verification:
   - npm

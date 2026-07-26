@@ -1,11 +1,16 @@
 import type { ProjectStatusSnapshot } from '../../src/status/model.js'
 import type { ChangeDependencyPlanOutput, StatusRecordOutput } from '../../src/types.js'
+import { randomUUID } from 'node:crypto'
 import { readFileSync } from 'node:fs'
+import { mkdir, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it, vi } from 'vitest'
 
+import { clearConfigCache } from '../../src/core/config.js'
 import { deriveStatusView } from '../../src/status/derive.js'
+import { inspectProjectStatus } from '../../src/status/inspect.js'
 import { printStatusPlain } from '../../src/status/plain.js'
 import { toStatusJson, toStatusJsonError } from '../../src/status/v3-json.js'
 
@@ -39,6 +44,7 @@ function record(overrides: Partial<StatusRecordOutput> & Pick<StatusRecordOutput
 
 function snapshot(records: ProjectStatusSnapshot['records'] = [], plan: ChangeDependencyPlanOutput = { nodes: [], ready: [], edges: [], blocked: [], waves: [] }): ProjectStatusSnapshot {
   return {
+    manage: { activation: 'explicit', closeout: 'local' },
     focused: records.filter(item => item.output.isFocused).map(item => item.output.name),
     records,
     groups: [],
@@ -84,6 +90,7 @@ describe('project status boundary', () => {
     expect(toStatusJson(view)).toEqual({
       command: 'status',
       ok: true,
+      manage: { activation: 'explicit', closeout: 'local' },
       filters: { focused: false, blocked: false, stale: null },
       focused: [],
       records: [record({ name: 'alpha' }).output],
@@ -98,6 +105,7 @@ describe('project status boundary', () => {
     expect(toStatusJsonError({ code: 'invalid_stale_filter', message: 'invalid' }, { focused: true, blocked: false })).toEqual({
       command: 'status',
       ok: false,
+      manage: { activation: 'explicit', closeout: 'manual' },
       filters: { focused: true, blocked: false, stale: null },
       focused: [],
       records: [],
@@ -126,6 +134,8 @@ describe('project status boundary', () => {
       '',
       '  RSP status',
       '',
+      '  Manage: activation explicit · closeout local',
+      '',
       '  No focused change.',
       '    Run: rsp create <name>',
       '',
@@ -137,6 +147,52 @@ describe('project status boundary', () => {
       '',
       '  No executable changes found. Run: rsp create <name>\n',
     ])
+  })
+
+  it('inspects configured Manage policy and fails closed visibly for invalid config', async () => {
+    const projectDir = join(tmpdir(), 'rsp-status-manage-policy-test', randomUUID())
+    await mkdir(join(projectDir, '.rsp', 'changes'), { recursive: true })
+    await mkdir(join(projectDir, '.rsp', 'focus.d'), { recursive: true })
+    await mkdir(join(projectDir, '.rsp', 'archives'), { recursive: true })
+    const configPath = join(projectDir, '.rsp', 'config.yaml')
+    const cwd = process.cwd()
+    process.chdir(projectDir)
+
+    try {
+      await writeFile(configPath, 'manage:\n  activation: auto\n  closeout: lifecycle\n')
+      clearConfigCache()
+      const configured = await inspectProjectStatus()
+      expect(configured.manage).toEqual({ activation: 'auto', closeout: 'lifecycle' })
+      expect(configured.diagnostics).not.toContainEqual(expect.objectContaining({ code: 'invalid_config' }))
+
+      await writeFile(configPath, 'manage:\n  activation: always\n  closeout: local\n')
+      clearConfigCache()
+      const invalid = await inspectProjectStatus()
+      expect(invalid.manage).toEqual({ activation: 'explicit', closeout: 'manual' })
+      expect(invalid.diagnostics).toContainEqual(expect.objectContaining({
+        code: 'invalid_config',
+        path: '.rsp/config.yaml',
+      }))
+      const output: string[] = []
+      const log = vi.spyOn(console, 'log').mockImplementation((value = '') => output.push(String(value)))
+      try {
+        printStatusPlain(deriveStatusView(invalid))
+      }
+      finally {
+        log.mockRestore()
+      }
+      expect(output).toContain('  Manage: activation explicit · closeout manual')
+
+      await writeFile(configPath, 'manage: [\n')
+      clearConfigCache()
+      const malformed = await inspectProjectStatus()
+      expect(malformed.manage).toEqual({ activation: 'explicit', closeout: 'manual' })
+      expect(malformed.diagnostics).toContainEqual(expect.objectContaining({ code: 'invalid_config' }))
+    }
+    finally {
+      process.chdir(cwd)
+      clearConfigCache()
+    }
   })
 
   it('enforces one-way imports for status modules', () => {

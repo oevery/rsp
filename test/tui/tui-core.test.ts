@@ -12,6 +12,7 @@ import { openTerminalSession } from '../../src/tui/terminal.js'
 
 function snapshot(names: string[]): ProjectStatusSnapshot {
   return {
+    manage: { activation: 'explicit', closeout: 'local' },
     focused: names.slice(0, 1),
     records: names.map((name, index) => ({
       output: {

@@ -1,21 +1,21 @@
 # Managed routing
 
-Load this reference only for an explicit managed-completion or managed-continuation request that is not a report-only review or release operation.
+Load this reference only for a requested completion or continuation that is not a report-only review or release operation and is either explicitly managed or has effective `manage.activation: auto` in status. Missing configuration preserves `explicit` activation with `local` closeout compatibility. Invalid configuration fails closed as `explicit` plus `manual` and must remain visible.
 
 ## PREFLIGHT — resolve the owner
 
-Treat the goal and allowed planning and product mutations as a transient authority envelope. Resolve the smallest sufficient owner before testing Manage eligibility.
+Treat the requested goal and independently allowed planning and product mutations as a transient authority envelope. Automatic activation grants controller selection only and never adds planning or product-mutation authority. Resolve the smallest sufficient owner before testing Manage eligibility.
 
 - Reuse one unambiguous selected ready owner.
 - Return tiny settled work to direct engineering without a synthetic Change or controller artifact.
-- For clear non-trivial work with no sufficient ready owner, the managed request authorizes only in-scope RSP planning artifacts unless the user requests no edits. Route to Shape, then re-read status/readiness and re-evaluate without another authorization round.
+- For clear non-trivial work with no sufficient ready owner, an explicit managed request authorizes only in-scope RSP planning artifacts unless the user requests no edits. Under automatic activation, route to Shape only when the current request or nearer authority independently permits those artifacts; configuration alone never does. Then re-read status/readiness and re-evaluate without another authorization round.
 - If repository evidence leaves a material product, acceptance, public-interface, scope, mutation-authority, external-action, or human choice, Shape returns the single highest-impact owner decision and creates no implementation or controller artifact.
 
 PREFLIGHT is complete only when one selected ready Change or shallow Group owns the requested outcome and no material decision remains.
 
 ## QUALIFY — select or decline Manage
 
-Select `rsp-manage` only for one selected ready Change or shallow Group with genuinely independent slices, long authorized continuation, or interruption recovery. Ineligible work returns to ordinary Core or Discipline action. Managed routing is never implicit.
+Select `rsp-manage` only for one selected ready Change or shallow Group with genuinely independent slices, long authorized continuation, or interruption recovery. Ineligible work returns to ordinary Core or Discipline action. Automatic routing is policy-selected, bounded by the requested goal, and not inferred from readiness alone.
 
 ## CONTINUE — rederive from evidence
 
@@ -34,10 +34,12 @@ After a managed fixed-scope re-review, correlate the report, selected Change, or
 
 Allow at most three Address Review passes per Change and stop earlier when the same Finding remains after two completed corrections. Stop for `needs-clarification`, material behavior/interface/scope or authority change, verification-budget expansion, an additional real-host/provider/network run outside existing authority, failed or unavailable decisive verification, or repeated non-convergence. Never persist the convergence count or correction chronology.
 
-## CLOSE — separate lifecycle and Git
+## CLOSE — apply the bounded preset
 
-Unless the user or nearer rules reserve or deny lifecycle authority, qualified Manage archives a Change after Core durable review. A shallow Group independently reviews and archives each child, re-derives completion, then runs `rsp group close <group>` only after every child and the Group gate pass. Inspect the complete lifecycle diff after each mutation, including terminal owners.
+Use effective `manage.closeout` as an automatic grant ceiling, narrowed by nearer restrictions and host enforcement. `manual` grants neither automatic archive nor commit. `lifecycle` grants lifecycle closeout after Core durable review but no Git action. `local` adds the existing exact-path local checkpoint or terminal-commit eligibility. Explicit current-turn authority may allow a named local action that the preset does not automate; denial still wins.
 
-Decide Git delivery separately. Accepted downstream work may justify an exact-path recovery checkpoint unless commits are reserved or denied. Terminal small work defaults to no commit; terminal non-small work needs explicit delivery or evidenced recovery value plus nearer-rule permission.
+When lifecycle closeout is granted, archive a Change after Core durable review. A shallow Group independently reviews and archives each child, re-derives completion, then runs `rsp group close <group>` only after every child and the Group gate pass. Inspect the complete lifecycle diff after each mutation, including terminal owners.
+
+Decide Git delivery separately. Under `local` or explicit commit authority, accepted downstream work may justify an exact-path recovery checkpoint unless commits are reserved or denied. Terminal small work defaults to no commit; terminal non-small work needs explicit delivery or evidenced recovery value plus nearer-rule permission.
 
 Push requires an explicit user mention plus an unambiguous remote, branch, and milestone. Never force-push; preserve local commits on failure. Managed authority never includes publication, deployment, approval, or human acceptance.

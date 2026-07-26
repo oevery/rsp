@@ -92,6 +92,37 @@ describe('rsp-manage research candidate', () => {
     })
   })
 
+  it('accepts a bounded archive-date token without broadening unrelated paths', () => {
+    const manifest = {
+      id: 'archive-date-token',
+      allowed_changes: ['.rsp/archives/{date}_normalize-label.md'],
+      required_changes: ['.rsp/archives/{date}_normalize-label.md'],
+      expected_output: [],
+      forbidden_output: [],
+      expected_mode: 'execute' as const,
+      request: 'archive the selected Change',
+      verification: ['npm', 'test'],
+    }
+    const base = {
+      exit_code: 0,
+      final: '',
+      forbidden_actions: { force_push: 0, publication: 0, push: 0 },
+      remote_refs_unchanged: true,
+      source_stable: true,
+      timed_out: false,
+      verification_passed: true,
+    }
+
+    expect(scoreManagedControllerObservation(manifest, {
+      ...base,
+      changed_paths: ['.rsp/archives/2026-07-26_normalize-label.md'],
+    })).toMatchObject({ result: 'passed', unauthorized_paths: [], missing_required_paths: [] })
+    expect(scoreManagedControllerObservation(manifest, {
+      ...base,
+      changed_paths: ['.rsp/archives/nested/2026-07-26_normalize-label.md'],
+    })).toMatchObject({ result: 'failed' })
+  })
+
   it('scores a declined managed request by its boundary and direct next path', () => {
     const manifest = {
       expected_output: ['rsp-manage', '普通'],
@@ -124,7 +155,7 @@ describe('rsp-manage research candidate', () => {
 })
 
 describe('rsp-manage product Skill', () => {
-  it('is compact, portable, explicit-only, and distinct from retained research', () => {
+  it('is compact, portable, policy-selectable, and distinct from retained research', () => {
     const { body, frontmatter } = readSkill(product)
 
     expect(frontmatter).toMatchObject({
@@ -134,7 +165,8 @@ describe('rsp-manage product Skill', () => {
     })
     expect(body.trim().split(/\s+/).length).toBeLessThanOrEqual(800)
     expect(lstatSync(join(product, 'SKILL.md')).isSymbolicLink()).toBe(false)
-    expect(body).toContain('only after the user explicitly requests managed continuation')
+    expect(body).toContain('explicit managed request or effective `manage.activation: auto` policy')
+    expect(body).toContain('automatic activation grants selection only')
     expect(body).toContain('one selected ready Change or shallow Change Group')
     expect(body).toContain('Keep RSP artifacts as durable truth and process data transient')
     expect(readFileSync(join(candidate, 'SKILL.md'), 'utf8')).not.toBe(readFileSync(join(product, 'SKILL.md'), 'utf8'))
@@ -146,6 +178,18 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('Small, coupled, or worker-only work is ineligible')
     expect(body).toContain('Decline without mutation/controller artifact')
     expect(body).toContain('return Core/Discipline action')
+  })
+
+  it('applies bounded closeout presets without inferring remote authority', () => {
+    const { body } = readSkill(product)
+
+    expect(body).toContain('`manual` grants neither automatic archive nor commit')
+    expect(body).toContain('`lifecycle` grants lifecycle closeout after Core durable review but no Git action')
+    expect(body).toContain('`local` grants lifecycle closeout plus the existing exact-path local checkpoint or terminal-commit eligibility')
+    expect(body).toContain('Missing configuration preserves `explicit` activation with `local` closeout compatibility')
+    expect(body).toContain('invalid configuration fails closed as `explicit` plus `manual`')
+    expect(body).toContain('Push is opt-in only when user explicitly mentions push')
+    expect(body).toContain('Never force-push')
   })
 
   it('bounds authority reads, dispatch, correction, and verification', () => {
@@ -196,7 +240,8 @@ describe('rsp-manage product Skill', () => {
   it('continues a bounded goal across derived owners and stops at real boundaries', () => {
     const { body } = readSkill(product)
 
-    expect(body).toContain('goal and allowed mutations form a transient authority envelope')
+    expect(body).toContain('requested goal defines the authority envelope')
+    expect(body).toContain('automatic activation grants selection only, not mutation authority')
     expect(body).toContain('At owner boundaries, Core re-derives from goal')
     expect(body).toContain('Continue a clear in-scope ready successor')
     expect(body).toContain('Stop only when neither a ready successor nor clearly missing ownership remains')
@@ -334,6 +379,26 @@ describe('rsp-manage product Skill', () => {
       remote: null,
       remote_refs_unchanged: true,
     })
+  })
+
+  it('prepares automatic lifecycle routing without naming or directly invoking Manage', ({ onTestFinished }) => {
+    const outputRoot = mkdtempSync(join(tmpdir(), 'rsp-manage-auto-lifecycle-'))
+    onTestFinished(() => rmSync(outputRoot, { force: true, recursive: true }))
+    const prepared = prepareManagedControllerRun({ caseId: 'auto-lifecycle', outputRoot, root, variant: 'product' })
+    const status = JSON.parse(execFileSync(process.execPath, [
+      join(root, 'dist', 'cli.mjs'),
+      'status',
+      '--json',
+    ], { cwd: prepared.workspace, encoding: 'utf8' })) as { manage: { activation: string, closeout: string } }
+
+    expect(prepared.manifest).toMatchObject({ automatic_activation: true, base_case: 'review-convergence' })
+    expect(prepared.prompt).not.toContain('Use $rsp-manage')
+    expect(prepared.prompt).not.toMatch(/\bManage selected Change\b/)
+    const fixtureRules = readFileSync(join(prepared.workspace, 'AGENTS.md'), 'utf8')
+    expect(fixtureRules).toContain('come only from the effective project configuration')
+    expect(fixtureRules).toContain('does not grant archive or Git actions independently')
+    expect(fixtureRules).not.toMatch(/authorizes[^\n]*lifecycle archive/i)
+    expect(status.manage).toEqual({ activation: 'auto', closeout: 'lifecycle' })
   })
 
   it('fails retained semantic scoring on push, force-push, or publication commands', () => {
@@ -561,12 +626,12 @@ describe('rsp-manage product Skill', () => {
     })
   })
 
-  it('replays current three-pass review-convergence evidence against the authored composition', () => {
-    const retained = join(root, 'research', 'evaluations', 'rsp-manage', '2026-07-26-product-review-convergence')
+  it('replays retained automatic lifecycle routing against the current authored composition', () => {
+    const retained = join(root, 'research', 'evaluations', 'rsp-manage', '2026-07-26-auto-lifecycle')
     const metadata = JSON.parse(readFileSync(join(retained, 'metadata.json'), 'utf8')) as any
     const observations = JSON.parse(readFileSync(join(retained, 'observations.json'), 'utf8')) as any
     const final = readFileSync(join(retained, 'final.md'), 'utf8')
-    const manifestPath = join(root, 'test', 'managed-controller', 'holdout', 'review-convergence', 'case.yaml')
+    const manifestPath = join(root, 'test', 'managed-controller', 'holdout', 'auto-lifecycle', 'case.yaml')
     const manifest = parseYaml(readFileSync(manifestPath, 'utf8')) as any
     const composition = hashManagedControllerComposition(manifest.installed_skills.map((name: string) => ({
       name,
@@ -594,6 +659,14 @@ describe('rsp-manage product Skill', () => {
       unauthorized_paths: [],
     })
     expect(metadata.forbidden_actions).toEqual({ force_push: 0, publication: 0, push: 0 })
+    expect(observations.routing).toEqual({
+      request_named_manage: false,
+      direct_manage_invocation: false,
+      fixture_rule_granted_archive: false,
+      activation: 'auto',
+      closeout: 'lifecycle',
+      archive_authority: 'project-policy',
+    })
     expect(observations.review).toEqual({
       passes: 3,
       re_review: 'clean',
@@ -634,11 +707,12 @@ describe('rsp-manage product Skill', () => {
   it('closes an allowed lifecycle even when commit is denied', () => {
     const { body } = readSkill(product)
 
-    expect(body).toContain('Close lifecycle before commit unless user or nearer instructions reserve or deny it')
+    expect(body).toContain('`lifecycle` grants lifecycle closeout after Core durable review but no Git action')
+    expect(body).toContain('When granted, close lifecycle before any commit')
     expect(body).toContain('after Core durable review run `rsp archive <change-work-ref>`')
     expect(body).toContain('inspect the complete lifecycle diff')
     expect(body).toContain('Decide commit separately')
-    expect(body).toContain('unless user or nearer instructions reserve or deny commits')
+    expect(body).toContain('narrowed by nearer restrictions and host enforcement')
   })
 
   it('closes a terminal final owner while keeping small work uncommitted', () => {
@@ -669,7 +743,7 @@ describe('rsp-manage product Skill', () => {
     const { body } = readSkill(product)
 
     expect(body).toContain('A terminal non-small owner commits only for explicit delivery or evidenced recovery value when nearer rules allow')
-    expect(body).toContain('With downstream work, the managed request authorizes one recovery checkpoint')
+    expect(body).toContain('Under `local` or explicit commit authority, downstream work may justify one recovery checkpoint')
     expect(body).toContain('then derive status')
     expect(body).toContain('Return to Core before a separate release operation and dedicated release commit')
   })

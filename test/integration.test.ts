@@ -2664,6 +2664,8 @@ describe('change groups', () => {
     const config = await readFile(join(initDir, '.rsp', 'config.yaml'), 'utf-8')
     expect(config).toContain('A non-empty kinds list replaces the built-in defaults; it does not extend them.')
     expect(config).toContain('Every entry must be a unique non-empty string.')
+    expect(config).toContain('manage:\n  activation: auto\n  closeout: lifecycle')
+    expect(config).toContain('local may authorize an eligible local commit but never push or publication')
     expect(config).toContain('Set exactly one project-relative authoritative directory')
   })
 

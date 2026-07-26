@@ -18,6 +18,8 @@ export function printStatusPlain(view: ProjectStatusView): void {
   console.log()
   console.log(`  ${pc.bold('RSP status')}`)
   console.log()
+  console.log(`  ${pc.bold('Manage:')} activation ${view.manage.activation} · closeout ${view.manage.closeout}`)
+  console.log()
 
   for (const diagnostic of view.diagnostics) {
     const label = diagnostic.change ?? diagnostic.path

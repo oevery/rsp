@@ -12,6 +12,7 @@ describe('dense plain status', () => {
     Object.defineProperty(process.stdout, 'columns', { configurable: true, value: 60 })
     const longName = 'cli-machine-output/a-very-long-work-reference-that-does-not-fit'
     const view: ProjectStatusView = {
+      manage: { activation: 'auto', closeout: 'lifecycle' },
       query: { focused: false, blocked: false, stale: null },
       focused: [longName],
       records: [{

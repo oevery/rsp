@@ -33,6 +33,14 @@ export interface InitArgs {
   agentsMode?: 'managed' | 'print'
 }
 
+export type ManageActivation = 'explicit' | 'auto'
+export type ManageCloseout = 'manual' | 'lifecycle' | 'local'
+
+export interface ManagePolicy {
+  activation: ManageActivation
+  closeout: ManageCloseout
+}
+
 /** User-customizable project configuration from .rsp/config.yaml. */
 export interface RspConfig {
   /** Custom kind values (override built-in defaults when present). */
@@ -40,6 +48,11 @@ export interface RspConfig {
   /** One authoritative Decision Record directory. */
   decisions?: {
     path?: string
+  }
+  /** Project policy for Manage routing and bounded local closeout. */
+  manage?: {
+    activation?: ManageActivation
+    closeout?: ManageCloseout
   }
 }
 
@@ -163,6 +176,7 @@ export interface ChangeGroupStatusOutput {
 export interface StatusJsonShape {
   command: 'status'
   ok: boolean
+  manage: ManagePolicy
   filters: {
     focused: boolean
     blocked: boolean

@@ -1,4 +1,4 @@
-import type { ChangeKind, RspConfig } from '../types.js'
+import type { ChangeKind, ManageActivation, ManageCloseout, ManagePolicy, RspConfig } from '../types.js'
 import { readFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -35,6 +35,11 @@ export { pc }
 export const VALID_KINDS: ChangeKind[] = ['feature', 'fix', 'refactor', 'docs', 'ops', 'research']
 /** Built-in required sections in change files. */
 export const DEFAULT_REQUIRED_SECTIONS = ['Proposal', 'Spec', 'Design', 'Tasks', 'Verify', 'Blockers']
+export const DEFAULT_MANAGE_POLICY: ManagePolicy = { activation: 'explicit', closeout: 'local' }
+export const FAILED_CLOSED_MANAGE_POLICY: ManagePolicy = { activation: 'explicit', closeout: 'manual' }
+
+const MANAGE_ACTIVATIONS: ManageActivation[] = ['explicit', 'auto']
+const MANAGE_CLOSEOUTS: ManageCloseout[] = ['manual', 'lifecycle', 'local']
 
 export interface RspConfigInspection {
   config: RspConfig
@@ -77,6 +82,15 @@ export async function inspectRspConfig(): Promise<RspConfigInspection> {
     ? parsed.decisions as Record<string, unknown>
     : undefined
   const decisionPath = decisions?.path
+  const manageValue = parsed.manage && typeof parsed.manage === 'object' && !Array.isArray(parsed.manage)
+    ? parsed.manage as Record<string, unknown>
+    : undefined
+  const activation = MANAGE_ACTIVATIONS.includes(manageValue?.activation as ManageActivation)
+    ? manageValue?.activation as ManageActivation
+    : undefined
+  const closeout = MANAGE_CLOSEOUTS.includes(manageValue?.closeout as ManageCloseout)
+    ? manageValue?.closeout as ManageCloseout
+    : undefined
   const kinds = Array.isArray(parsed.kinds) && parsed.kinds.every(value => typeof value === 'string' && value.trim() !== '')
     ? parsed.kinds.map(value => value.trim())
     : undefined
@@ -88,6 +102,7 @@ export async function inspectRspConfig(): Promise<RspConfigInspection> {
       decisions: decisionRecordsIssue === null && validateDecisionRecordsPath(decisionPath) === null
         ? { path: normalizeDecisionRecordsPath(String(decisionPath)) }
         : undefined,
+      manage: manageValue ? { activation, closeout } : undefined,
     },
     issues,
   }
@@ -99,7 +114,7 @@ export async function inspectRspConfig(): Promise<RspConfigInspection> {
 /** Validate the complete supported .rsp/config.yaml contract without coercing invalid input. */
 export function validateRspConfig(parsed: Record<string, unknown>): string[] {
   const issues: string[] = []
-  const supported = new Set(['kinds', 'decisions'])
+  const supported = new Set(['kinds', 'decisions', 'manage'])
 
   for (const key of Object.keys(parsed)) {
     if (key === 'required_sections') {
@@ -129,6 +144,24 @@ export function validateRspConfig(parsed: Record<string, unknown>): string[] {
   if (decisionRecordsIssue)
     issues.push(decisionRecordsIssue)
 
+  if ('manage' in parsed) {
+    if (!parsed.manage || typeof parsed.manage !== 'object' || Array.isArray(parsed.manage)) {
+      issues.push('config.yaml field "manage" must be a YAML mapping')
+    }
+    else {
+      const manage = parsed.manage as Record<string, unknown>
+      const supportedManageFields = new Set(['activation', 'closeout'])
+      for (const key of Object.keys(manage)) {
+        if (!supportedManageFields.has(key))
+          issues.push(`config.yaml field "manage.${key}" is not supported`)
+      }
+      if ('activation' in manage && !MANAGE_ACTIVATIONS.includes(manage.activation as ManageActivation))
+        issues.push('config.yaml field "manage.activation" must be one of: explicit, auto')
+      if ('closeout' in manage && !MANAGE_CLOSEOUTS.includes(manage.closeout as ManageCloseout))
+        issues.push('config.yaml field "manage.closeout" must be one of: manual, lifecycle, local')
+    }
+  }
+
   return issues
 }
 
@@ -145,6 +178,16 @@ export function resolveKinds(config: RspConfig): string[] {
 /** Resolve effective required sections: fixed by the RSP core model. */
 export function resolveRequiredSections(_config: RspConfig): string[] {
   return [...DEFAULT_REQUIRED_SECTIONS]
+}
+
+/** Resolve effective Manage policy, using the strict fail-closed policy for invalid config. */
+export function resolveManagePolicy(config: RspConfig, options: { configValid?: boolean } = {}): ManagePolicy {
+  if (options.configValid === false)
+    return { ...FAILED_CLOSED_MANAGE_POLICY }
+  return {
+    activation: config.manage?.activation ?? DEFAULT_MANAGE_POLICY.activation,
+    closeout: config.manage?.closeout ?? DEFAULT_MANAGE_POLICY.closeout,
+  }
 }
 
 /** Read package.json version at runtime. */
