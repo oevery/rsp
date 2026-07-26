@@ -24,6 +24,7 @@ export interface NativeDesignCompositionResult {
 
 export function loadNativeDesignContract(root: string): { manifest: Record<string, any>, oracle: Record<string, any>, paths: Record<string, string> }
 export function masksOnlyDesign(before: string, after: string): boolean
+export function sanitizeNativeDesignOutput(content: string, workspace?: string): string
 export function validateNativeDesignRuntimeIsolation(phases: Array<{ observations?: Array<{ command: string, kind: string }> }>): NativeDesignRuntimeIsolation
 export function validateNativeDesignPhaseChanges(manifest: Record<string, any>, phaseChanges: Record<string, string[]>): { passed: boolean, phases: NativeDesignPhaseBoundary[] }
 export function validateCurrentNativeDesignArtifact(root: string, packageEvidence: Record<string, any>): { behavior_files_match: boolean, current: Record<string, any>, executed_skills_match: boolean, inventory_matches: boolean, passed: boolean, published_skills_match: boolean }

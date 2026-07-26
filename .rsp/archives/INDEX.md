@@ -4,7 +4,7 @@ summary: Completed RSP changes.
 kind: generated-index
 index_type: archives
 source_dir: .rsp/archives
-entry_count: 97
+entry_count: 101
 ---
 
 # Archive Index
@@ -108,3 +108,7 @@ entry_count: 97
 | 2026-07-20 | skill-capability-research/reconcile-skill-system | research | Reconcile the frozen Skill System model with completed capability-level research. |
 | 2026-07-20 | skill-capability-research/synthesize-implementation-capability | research | Define a standalone RSP implementation capability with fresh verification evidence. |
 | 2026-07-20 | skill-capability-research/synthesize-shaping-capability | research | Define the smallest RSP-native shaping and slicing capability from selected cross-source evidence. |
+| 2026-07-26 | streamline-docs-and-skills/align-user-docs | docs | Align user-facing and explanatory documentation with current release, managed-continuation, archive, and release-ledger contracts while removing repeated routing prose. |
+| 2026-07-26 | streamline-docs-and-skills/brief | group | — |
+| 2026-07-26 | streamline-docs-and-skills/modularize-specs | refactor | Turn `.rsp/specs/design.md` into a compact product-boundary map backed by smaller domain Specs without changing any stable fact. |
+| 2026-07-26 | streamline-docs-and-skills/slim-runtime-routing | refactor | Keep Manage details out of default Core and fallback context while preserving safe qualification, delegation, convergence, lifecycle, and authority behavior. |

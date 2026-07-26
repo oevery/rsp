@@ -6,7 +6,9 @@ import { describe, expect, it } from 'vitest'
 const root = fileURLToPath(new URL('..', import.meta.url))
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
 const skill = read('skills/rsp/SKILL.md')
+const managed = read('skills/rsp/references/managed-routing.md')
 const fallback = read('rules/rsp-rules.md')
+const coreContract = `${skill}\n${managed}`
 
 function headings(markdown: string): string[] {
   const prose = markdown.replace(/```[\s\S]*?```/g, '')
@@ -36,15 +38,17 @@ describe('rsp core routing contract', () => {
       'references/groups-dependencies.md',
       'references/conflict-handling.md',
       'references/durable-review.md',
+      'references/managed-routing.md',
     ]) {
       expect(skill).toContain(`](${path})`)
       expect(read(`skills/rsp/${path}`)).toMatch(/Load this reference only|Load this reference before/)
     }
     expect(skill.trim().split(/\s+/).length).toBeLessThanOrEqual(1900)
+    expect(fallback.trim().split(/\s+/).length).toBeLessThan(skill.trim().split(/\s+/).length)
   })
 
   it('derives one evidence-backed action with capability and owner boundaries', () => {
-    expectSemanticGroup(skill, [
+    expectSemanticGroup(coreContract, [
       ['user intent'],
       ['`rsp status --json`'],
       ['readiness'],
@@ -61,7 +65,7 @@ describe('rsp core routing contract', () => {
 
   it('routes implementation by explained risk instead of by fix labels', () => {
     expect(headings(skill)).toContain('Implementation evidence')
-    expectSemanticGroup(skill, [
+    expectSemanticGroup(coreContract, [
       ['`rsp-diagnose`'],
       ['unexplained'],
       ['`rsp-tdd`'],
@@ -75,11 +79,11 @@ describe('rsp core routing contract', () => {
   })
 
   it('routes design, managed work, and release operations without granting authority', () => {
-    expectSemanticGroup(skill, [
+    expectSemanticGroup(coreContract, [
       ['one isolated material domain, module/seam, or evidence-seeking design question'],
       ['`rsp-design`'],
       ['explicit managed-completion', 'managed-continuation request'],
-      ['one focused ready Change'],
+      ['one selected ready Change'],
       ['genuinely independent slices'],
       ['Managed routing is never implicit'],
       ['explicitly requests release documentation, finalization, publication, or reconciliation'],
@@ -94,9 +98,10 @@ describe('rsp core routing contract', () => {
   })
 
   it('resolves an explicit managed owner before Manage qualification', () => {
-    for (const body of [skill, fallback]) {
-      const resolveOwner = body.indexOf('resolve the smallest sufficient owner before testing Manage eligibility')
-      const qualifyManage = body.indexOf('Only after that preflight')
+    for (const body of [managed]) {
+      const lowered = body.toLowerCase()
+      const resolveOwner = lowered.indexOf('resolve the smallest sufficient owner before testing manage eligibility')
+      const qualifyManage = lowered.indexOf('select `rsp-manage` only')
 
       expect(resolveOwner).toBeGreaterThanOrEqual(0)
       expect(qualifyManage).toBeGreaterThan(resolveOwner)
@@ -111,21 +116,23 @@ describe('rsp core routing contract', () => {
         ['without another authorization round'],
         ['single highest-impact owner decision'],
         ['no implementation or controller artifact'],
-        ['explicit report-only review or release operation'],
+        ['report-only review or release operation'],
       ])
     }
     expect(skill).toContain('For a material owner decision inside an explicit managed request, continue to the Shape preflight')
+    expect(skill).toContain('](references/managed-routing.md)')
+    expect(fallback).toContain('This fallback does not emulate `rsp-manage`')
   })
 
   it('reuses the managed preflight after progress without persisting orchestration state', () => {
-    for (const body of [skill, fallback]) {
+    for (const body of [managed]) {
       expectSemanticGroup(body, [
         ['transient authority envelope'],
         ['After accepted managed progress', 'After accepted progress'],
-        ['continue a clear in-scope ready successor'],
-        ['stop naturally'],
+        ['Continue a clear in-scope ready successor', 'continue a clear in-scope ready successor'],
+        ['Stop naturally', 'stop naturally'],
         ['neither a ready successor nor clearly missing ownership remains'],
-        ['suspend dispatch'],
+        ['suspends dispatch', 'suspend dispatch'],
         ['independently verifiable and archivable result'],
         ['at least two such results sharing one goal', 'at least two such results sharing the goal'],
         ['without another authorization round'],
@@ -133,16 +140,16 @@ describe('rsp core routing contract', () => {
         ['external-action'],
       ])
     }
-    expectSemanticGroup(fallback, [
+    expectSemanticGroup(managed, [
       ['Never persist the goal envelope, WorkSet, waves'],
-      ['discovered-work classification'],
+      ['discovery classification', 'discovered-work classification'],
       ['convergence count'],
       ['correction chronology'],
     ])
   })
 
   it('returns in-scope managed review findings to bounded convergence', () => {
-    for (const body of [skill, fallback]) {
+    for (const body of [managed]) {
       expectSemanticGroup(body, [
         ['managed fixed-scope re-review'],
         ['selected Change'],
@@ -158,9 +165,11 @@ describe('rsp core routing contract', () => {
         ['repeated non-convergence'],
       ])
     }
-    expect(fallback).toContain('three passes per Change')
-    expect(fallback).toContain('same Finding remains after two completed corrections')
-    expect(fallback).toContain('convergence count, or correction chronology')
+    expect(managed).toContain('three Address Review passes per Change')
+    expect(managed).toContain('same Finding remains after two completed corrections')
+    expect(managed).toContain('convergence count or correction chronology')
+    expect(fallback).not.toContain('three Address Review passes per Change')
+    expect(fallback).toContain('never dispatch, auto-continue successors, loop review corrections')
   })
 
   it('keeps persistent artifacts convergent and domain-owned', () => {
@@ -197,14 +206,14 @@ describe('rsp core routing contract', () => {
   it('prohibits inferred delivery and lifecycle actions', () => {
     expect(skill).toContain('Do not infer implementation, review, Git, publication, or approval authority')
     expect(skill).toMatch(/does not execute archive or grant staging, commit, push, publication, deletion, deployment, approval, or human-acceptance authority/)
-    expect(skill).toContain('The qualified Manage lifecycle and checkpoint rules above are the sole scoped exceptions')
-    expect(skill).toContain('Both inspect complete lifecycle diff before commit, including terminal owners')
-    expect(skill).toContain('`rsp archive <change-work-ref>`')
-    expect(skill).toContain('`rsp group close <group>` only after children and gate pass')
-    expect(skill).toContain('terminal small work defaults to no commit')
-    expect(skill).toContain('terminal non-small work needs explicit delivery or evidenced recovery value plus nearer-rule permission')
-    expect(skill).toContain('Push always requires an explicit user mention plus an unambiguous remote, branch, and milestone')
-    expect(skill).toContain('No managed request grants force-push')
+    expect(skill).toContain('The qualified Manage rules in [managed routing]')
+    expect(managed).toContain('Inspect the complete lifecycle diff after each mutation, including terminal owners')
+    expect(managed).toContain('archives a Change after Core durable review')
+    expect(managed).toContain('`rsp group close <group>` only after every child and the Group gate pass')
+    expect(managed).toContain('Terminal small work defaults to no commit')
+    expect(managed).toContain('terminal non-small work needs explicit delivery or evidenced recovery value plus nearer-rule permission')
+    expect(managed).toContain('Push requires an explicit user mention plus an unambiguous remote, branch, and milestone')
+    expect(managed).toContain('Never force-push')
     expect(skill).not.toMatch(/automatically (?:commit|push|publish|archive)/i)
   })
 })

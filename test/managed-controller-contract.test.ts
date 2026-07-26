@@ -562,7 +562,7 @@ describe('rsp-manage product Skill', () => {
   })
 
   it('replays current three-pass review-convergence evidence against the authored composition', () => {
-    const retained = join(root, 'research', 'evaluations', 'rsp-manage', '2026-07-25-product-review-convergence')
+    const retained = join(root, 'research', 'evaluations', 'rsp-manage', '2026-07-26-product-review-convergence')
     const metadata = JSON.parse(readFileSync(join(retained, 'metadata.json'), 'utf8')) as any
     const observations = JSON.parse(readFileSync(join(retained, 'observations.json'), 'utf8')) as any
     const final = readFileSync(join(retained, 'final.md'), 'utf8')

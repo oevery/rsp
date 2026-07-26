@@ -287,7 +287,7 @@ describe('documentation command examples', () => {
 
     const custom = metadata.metadata as Record<string, unknown>
     expect(custom.author).toBe('oevery')
-    expect(custom.version).toBe('2026.07.25.8')
+    expect(custom.version).toBe('2026.07.26.1')
     expect(Object.values(custom).every(value => typeof value === 'string')).toBe(true)
     expect(custom.version).toMatch(/^\d{4}\.\d{2}\.\d{2}(?:\.\d+)?$/)
   })
@@ -335,6 +335,7 @@ describe('documentation command examples', () => {
       'conflict-handling.md',
       'durable-review.md',
       'groups-dependencies.md',
+      'managed-routing.md',
       'setup-repair.md',
     ].map(name => readFileSync(join(root, 'skills', 'rsp', 'references', name), 'utf-8')).join('\n')
     const contract = `${skill}\n${coreReferences}`
@@ -348,7 +349,7 @@ describe('documentation command examples', () => {
     expect(skill).toMatch(/Do not use it for unrelated coding or create a Change for a simple session task/)
     expect(skill).toContain('metadata:')
     expect(skill).toContain('author: oevery')
-    expect(skill).toContain('version: "2026.07.25.8"')
+    expect(skill).toContain('version: "2026.07.26.1"')
     expect(contract).toContain('Executable WorkRefs are `<change>` or one direct `<group>/<change>` child.')
     expect(contract).toContain('`<group>/brief`, stored as `<group>/00-brief.md`, is not executable or focusable.')
     expect(contract).toContain('`plan.nodes`, `ready`, `edges`, `blocked`, and `waves`')
@@ -359,13 +360,20 @@ describe('documentation command examples', () => {
     expect(skill).not.toContain('Minimal example:')
   })
 
-  it('documents the localized durable decision contract and surface matrix', () => {
+  it('documents the localized durable decision contract and consolidated Skill guidance', () => {
     const root = fileURLToPath(new URL('..', import.meta.url))
     const skill = readFileSync(join(root, 'skills', 'rsp', 'SKILL.md'), 'utf-8')
     const setup = readFileSync(join(root, 'skills', 'rsp', 'references', 'setup-repair.md'), 'utf-8')
     const readme = readFileSync(join(root, 'README.md'), 'utf-8')
     const zhReadme = readFileSync(join(root, 'README.zh-CN.md'), 'utf-8')
     const projectDesign = readFileSync(join(root, '.rsp', 'specs', 'design.md'), 'utf-8')
+    const projectSpecs = [
+      'cli-contracts.md',
+      'core-model.md',
+      'distribution.md',
+      'skill-system.md',
+      'tui.md',
+    ].map(name => readFileSync(join(root, '.rsp', 'specs', name), 'utf-8')).join('\n')
 
     expect(skill).toContain('localized continuation with these semantic fields in order')
     expect(skill).toContain('Localize headings and labels')
@@ -373,22 +381,23 @@ describe('documentation command examples', () => {
     expect(skill).not.toContain('Short example:')
     expect(setup).toContain('`fixed` entries are real filesystem mutations')
     expect(setup).toContain('an empty list means nothing changed')
-    expect(readme).toContain('Surface matrix:')
-    expect(readme).toContain('compose the suite as evidence requires')
-    expect(readme).toContain('no Skill infers Git continuation, commit, delivery, or an automatic retry loop')
+    expect(readme).not.toContain('Surface matrix:')
+    expect(readme).toContain('Compose the suite from evidence')
+    expect(readme).toContain('No Skill infers commit, push, publication, deployment, approval, or human-acceptance authority')
     expect(readme).toContain('a healthy project returns `fixed: []`')
     expect(readme).toContain('simple current-session tasks should not create RSP changes unless tracking is intentionally needed')
     expect(zhReadme).toContain('健康项目会返回 `fixed: []`')
-    expect(zhReadme).toContain('应按证据组合套件')
-    expect(zhReadme).toContain('任何 Skill 都不会推断 Git continuation、commit、delivery 权限或自动重试')
+    expect(zhReadme).toContain('按证据组合套件')
+    expect(zhReadme).toContain('任何 Skill 都不会推断 commit、push、publication、deployment、approval 或 human-acceptance 权限')
     expect(zhReadme).toContain('简单的当前会话任务默认不应创建 RSP change')
-    expect(projectDesign).toContain('Generated index builders avoid rewriting unchanged `INDEX.md` files.')
-    expect(projectDesign).toContain('`rsp doctor --fix` reports only actual filesystem changes in its `fixed` output')
-    expect(projectDesign).toContain('`rsp create --lite` is a short template for explicitly tracked small changes')
-    expect(projectDesign).toContain('`.rsp/rsp-rules.md` is the minimal tool-agnostic fallback protocol')
-    expect(projectDesign).toContain('The `rsp` skill is the preferred detailed operational guide')
-    expect(projectDesign).toContain('Skill compactness must not remove guidance about change creation, durable writeback, archive readiness')
-    expect(readme).toContain('| `.rsp/rsp-rules.md` | Agents without the skill | Minimal tool-agnostic fallback protocol |')
+    expect(projectDesign).toContain('[CLI Contracts](./cli-contracts.md)')
+    expect(projectDesign).toContain('[Skill System](./skill-system.md)')
+    expect(projectSpecs).toContain('Builders do not rewrite unchanged indexes')
+    expect(projectSpecs).toContain('`rsp doctor --fix` reports only real filesystem mutations')
+    expect(projectSpecs).toContain('`rsp create --lite` is for intentionally tracked small Changes')
+    expect(projectSpecs).toContain('`.rsp/rsp-rules.md` is the minimal fallback')
+    expect(projectSpecs).toContain('Keep safety, authority, readiness, verification, and completion criteria checkable')
+    expect(readme).toContain('use `.rsp/rsp-rules.md` only when the Skill is unavailable')
     expect(readme).not.toContain('## JSON output')
     expect(readme).not.toContain('## Single-file change template')
   })

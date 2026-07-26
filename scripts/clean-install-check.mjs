@@ -30,6 +30,7 @@ const EXPECTED_CORE_REFERENCES = [
   'conflict-handling.md',
   'durable-review.md',
   'groups-dependencies.md',
+  'managed-routing.md',
   'setup-repair.md',
 ]
 const EXPECTED_RELEASE_REFERENCES = [

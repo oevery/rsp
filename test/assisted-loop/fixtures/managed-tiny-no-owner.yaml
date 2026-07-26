@@ -9,8 +9,9 @@ expected:
   returned_owner: the concrete session task
 sources:
   - skills/rsp/SKILL.md
+  - skills/rsp/references/managed-routing.md
 required_contract:
-  - resolve the smallest sufficient owner before testing Manage eligibility
-  - return tiny settled work to direct engineering
+  - Resolve the smallest sufficient owner before testing Manage eligibility
+  - Return tiny settled work to direct engineering
   - without a synthetic Change or controller artifact
 prohibited_actions: [shape, dispatch, commit, push, publish]

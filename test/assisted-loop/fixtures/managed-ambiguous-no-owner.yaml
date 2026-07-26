@@ -9,9 +9,10 @@ expected:
   returned_owner: the user decision required by Shape
 sources:
   - skills/rsp/SKILL.md
+  - skills/rsp/references/managed-routing.md
 required_contract:
-  - resolve the smallest sufficient owner before testing Manage eligibility
-  - material product, acceptance, scope, or owner choice
+  - Resolve the smallest sufficient owner before testing Manage eligibility
+  - material product, acceptance, public-interface, scope, mutation-authority, external-action, or human choice
   - single highest-impact owner decision
-  - create no implementation or controller artifact
+  - creates no implementation or controller artifact
 prohibited_actions: [implement, dispatch, commit, push, publish]
