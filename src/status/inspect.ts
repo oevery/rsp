@@ -1,15 +1,14 @@
 import type { CommandDiagnostic, RuntimeDiagnostic } from '../types.js'
 import type { ProjectStatusRecord, ProjectStatusSnapshot } from './model.js'
-import { existsSync } from 'node:fs'
 import { readFile, stat } from 'node:fs/promises'
-import { join } from 'node:path'
 
 import { inspectChangeGroups } from '../core/change-group.js'
-import { ARCHIVES_DIR, CONFIG_PATH, inspectRspConfig, resolveManagePolicy } from '../core/config.js'
+import { CONFIG_PATH, inspectRspConfig, resolveManagePolicy } from '../core/config.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
 import { collectArchiveReadiness, countCheckboxes, extractSection, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter } from '../core/helpers.js'
 import { toErrorMessage } from '../core/output.js'
-import { inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
+import { inspectArchiveTree, inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
+import { historyInspectionComplete, inspectArchiveHistory } from '../history/query.js'
 
 export async function inspectProjectStatus(options: { nowMs?: number } = {}): Promise<ProjectStatusSnapshot> {
   const runtime: RuntimeDiagnostic[] = []
@@ -70,6 +69,8 @@ export async function inspectProjectStatus(options: { nowMs?: number } = {}): Pr
   }
 
   const workTree = await inspectWorkTree()
+  const archiveTree = await inspectArchiveTree()
+  const historyInspection = await inspectArchiveHistory({ archiveTree })
   diagnostics.push(...workTree.diagnostics.map(diagnostic => ({
     severity: 'error' as const,
     code: diagnostic.code,
@@ -77,10 +78,11 @@ export async function inspectProjectStatus(options: { nowMs?: number } = {}): Pr
     path: diagnostic.path,
     message: diagnostic.message,
   })))
-  const groupInspection = await inspectChangeGroups({ workTree, focusTree })
+  const groupInspection = await inspectChangeGroups({ workTree, focusTree, archiveTree })
   diagnostics.push(...groupInspection.diagnostics)
   const dependencyInspection = await inspectChangeDependencies({
     workTree,
+    archiveTree,
     preferredOrder: groupInspection.groups.flatMap(group => group.slices.map(slice => slice.name)),
   })
   diagnostics.push(...dependencyInspection.diagnostics)
@@ -216,9 +218,9 @@ export async function inspectProjectStatus(options: { nowMs?: number } = {}): Pr
     records,
     groups: groupInspection.groups,
     plan: dependencyInspection.plan,
-    archiveTrend: await readArchiveTrend(runtime),
-    diagnostics,
-    runtime,
+    archiveTrend: historyInspectionComplete(historyInspection) ? deriveArchiveTrend(historyInspection.records) : [],
+    diagnostics: [...diagnostics, ...(historyInspection.rootExists ? historyInspection.diagnostics : [])],
+    runtime: [...runtime, ...historyInspection.runtime],
   }
 }
 
@@ -248,30 +250,11 @@ function extractBlockerEntries(content: string): string[] {
     .filter(line => line.toLowerCase() !== 'none')
 }
 
-async function readArchiveTrend(runtime: RuntimeDiagnostic[]): Promise<Array<{ month: string, count: number }>> {
-  const indexPath = join(ARCHIVES_DIR, 'INDEX.md')
-  if (!existsSync(indexPath))
-    return []
-
-  try {
-    const content = await readFile(indexPath, 'utf-8')
-    const dateRe = /^\| (\d{4}-\d{2})-\d{2} \|/gm
-    const counts: Record<string, number> = {}
-    let match
-    // eslint-disable-next-line no-cond-assign
-    while ((match = dateRe.exec(content)) !== null) {
-      const month = match[1]
-      counts[month] = (counts[month] || 0) + 1
-    }
-    return Object.keys(counts).sort().map(month => ({ month, count: counts[month] }))
+function deriveArchiveTrend(records: Array<{ date: string }>): Array<{ month: string, count: number }> {
+  const counts = new Map<string, number>()
+  for (const record of records) {
+    const month = record.date.slice(0, 7)
+    counts.set(month, (counts.get(month) ?? 0) + 1)
   }
-  catch (error) {
-    runtime.push({
-      code: 'archive_index_read_failed',
-      operation: 'readFile',
-      path: indexPath,
-      message: toErrorMessage(error),
-    })
-    return []
-  }
+  return [...counts].sort(([left], [right]) => left.localeCompare(right)).map(([month, count]) => ({ month, count }))
 }

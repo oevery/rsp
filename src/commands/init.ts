@@ -9,7 +9,7 @@ import { detectProjectName, generateChangeContent, generateDesignContent, upsert
 import { withRspLock } from '../core/lock.js'
 import { ensureManagedFile, inspectManagedFile, requireManagedDirectory, writeManagedFile } from '../core/managed-path.js'
 import { resolveFocusMarkerPath, resolveWorkRef } from '../core/work-ref.js'
-import { buildArchiveIndex } from './archive-index.js'
+import { removeLegacyArchiveIndex } from './archive-index-migration.js'
 import { buildSpecsIndex } from './specs-index.js'
 
 function generateConfigTemplate(): string {
@@ -101,12 +101,9 @@ export async function initProject(args: InitArgs = {}) {
       throw new Error(configInspection.issues.join('; '))
     const decisionRecordsPath = resolveDecisionRecordsPath(configInspection.config)
     created = (await ensureDecisionRecordsDirectory(decisionRecordsPath)) || created
-    const createdSpecsIndex = await ensureFile(join(RSP_DIR, 'specs', 'INDEX.md'), '# Specs Index\n\n_Additional project-level specs beyond `design.md`._\n')
-    created = createdSpecsIndex || created
     const createdDesign = await ensureFile(join(RSP_DIR, 'specs', 'design.md'), generateDesignContent(projectName))
     created = createdDesign || created
-    const createdArchivesIndex = await ensureFile(join(RSP_DIR, 'archives', 'INDEX.md'), '# Archive Index\n')
-    created = createdArchivesIndex || created
+    created = (await removeLegacyArchiveIndex()) || created
     created = (await ensureFile(join(CHANGES_DIR, '.gitkeep'), '')) || created
     created = (await ensureFile(join(FOCUS_DIR, '.gitkeep'), '')) || created
     created = (await ensureFile(join(RSP_DIR, '.gitignore'), '# Transient files that should not be committed\n.lock\n')) || created
@@ -119,11 +116,7 @@ export async function initProject(args: InitArgs = {}) {
       created = (await ensureFile(focusMarker, '')) || created
     }
 
-    if (createdSpecsIndex || createdDesign)
-      await buildSpecsIndex({ acquireLock: false })
-    if (createdArchivesIndex)
-      await buildArchiveIndex({ acquireLock: false })
-
+    created = (await buildSpecsIndex({ acquireLock: false })) || created
     const title = toTitle(projectName)
     let agentsUpdated = false
 

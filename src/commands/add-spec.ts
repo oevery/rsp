@@ -17,6 +17,10 @@ export async function addSpec(name: string, projectName = 'project') {
     console.error(`  ${pc.red('Error:')} .rsp/specs/decisions/ is reserved for Decision Records`)
     process.exit(1)
   }
+  if (['index', '00-index'].includes(name.split('/').at(-1) || '')) {
+    console.error(`  ${pc.red('Error:')} spec name "index" is reserved for generated local navigation`)
+    process.exit(1)
+  }
   guardRspInitialized()
 
   try {
@@ -47,7 +51,7 @@ export async function addSpec(name: string, projectName = 'project') {
     try {
       await writeFile(path, content, { flag: 'wx' })
       created = true
-      await buildSpecsIndex({ acquireLock: false })
+      await buildSpecsIndex({ acquireLock: false, affectedDirectory: parent })
     }
     catch (error) {
       if (created) {

@@ -62,9 +62,12 @@ npx -y @oevery/rsp@3.1.0-beta.2 doctor
 .rsp/
 ├── rsp-rules.md              # minimal fallback protocol
 ├── specs/
-│   ├── INDEX.md              # auto-generated
+│   ├── 00-index.md           # auto-generated direct-child navigation
 │   ├── design.md
-│   └── decisions/            # authoritative Decision Records by default
+│   ├── decisions/            # authoritative Decision Records by default; excluded from Specs indexes
+│   └── <domain>/
+│       ├── 00-index.md       # auto-generated direct-child navigation
+│       └── <spec>.md
 ├── changes/
 │   ├── <name>.md
 │   └── <group>/
@@ -73,7 +76,7 @@ npx -y @oevery/rsp@3.1.0-beta.2 doctor
 ├── focus.d/
 │   └── <name>
 └── archives/
-    └── INDEX.md              # auto-generated
+    └── YYYY-MM-DD_<change>.md
 ```
 
 ## Concepts
@@ -90,8 +93,8 @@ npx -y @oevery/rsp@3.1.0-beta.2 doctor
 - A Group Brief blocker is inherited by its direct children as an external blocker in the derived execution plan; it does not create guessed dependency edges.
 - A Markdown file and directory cannot claim the same work identity.
 - `rsp status`, `rsp check`, and `rsp doctor` inspect the same complete work tree and dependency facts. `status` derives exact edges with their reasons, ready work, blockers, and stable waves without a graph file; `check` and `doctor` reject incomplete archive inspection, malformed or missing targets, self-dependencies, and cycles. The `changes/` root must exist as a real directory, and existing focus/archive roots and group prefixes must also be real directories. Unsupported directories, non-Markdown entries, symlinks, missing or unreadable current work, incomplete reads, and identity collisions are visible errors. `status` exits non-zero instead of hiding invalid work.
-- `rsp init`, `rsp update`, `rsp add spec`, and generated index builders apply the same no-follow managed-path checks. Archive discovery accepts only flat archive files or one real group directory; recursively organized Specs accept only real directories and regular files.
-- Final managed files—such as the project `AGENTS.md`, focus markers, fallback/config files, generated indexes, and placeholders—must also be regular files; RSP rejects static symlink targets before reading or writing them.
+- `rsp init`, `rsp update`, `rsp add spec`, and the generated Specs index builder apply the same no-follow managed-path checks. Archive discovery accepts only flat archive files or one real group directory; recursively organized Specs accept only real directories and regular files.
+- Final managed files—such as the project `AGENTS.md`, focus markers, fallback/config files, the generated Specs index, and placeholders—must also be regular files; RSP rejects static symlink targets before reading or writing them.
 - Completed changes move to `archives/`. Stable current facts belong in Specs; lasting rationale belongs in Decision Records; stable scoped operating instructions belong in nearest project-owned `AGENTS.md`.
 - Do not promote task history, debugging notes, or one-off implementation context into Specs, Decision Records, or project instructions.
 - Change `Spec` delta markers (`### ADDED`, `### MODIFIED`, `### REMOVED`) are planning aids only. `rsp archive` does not automatically promote them into Specs or Decision Records. Durable writeback remains an explicit semantic decision.
@@ -100,13 +103,12 @@ npx -y @oevery/rsp@3.1.0-beta.2 doctor
 ## File ownership
 
 - `AGENTS.md`: only the `<!-- rsp:begin --> ... <!-- rsp:end -->` block is managed by RSP.
-- `.rsp/specs/INDEX.md`: auto-generated index of additional spec files beyond `design.md`. Rebuild with `rsp update`.
-- `.rsp/archives/INDEX.md`: auto-generated. Rebuild with `rsp update`.
+- `.rsp/specs/**/00-index.md`: fully generated direct-child navigation for the root and populated Spec directories. Reconcile all local indexes with `rsp update`; `rsp add spec` refreshes only the affected directory chain.
 - `.rsp/specs/design.md`: created by `rsp init`, then owned by the project.
 - `.rsp/specs/decisions/`: the default authoritative Decision Record directory; configure `decisions.path` only when the Host Project already owns one external ADR directory.
 - `.rsp/rsp-rules.md`: generated minimal fallback protocol; use the `rsp` skill when available.
-- Keep project-wide boundaries and navigation in `.rsp/specs/design.md`; move cohesive reusable facts to the smallest domain Spec listed by `.rsp/specs/INDEX.md`.
-- Treat `.rsp/specs/INDEX.md` as a directory for additional spec files; it does not list `design.md`.
+- Keep project-wide boundaries in `.rsp/specs/design.md`; use the nearest `00-index.md` to discover cohesive reusable facts in the smallest domain Spec.
+- Treat every `00-index.md` as generated navigation, never as an editable current-fact or rationale owner. Each index lists only direct child Specs and populated child Spec directories; Decision Records are excluded.
 - Keep stable scoped workflow and validation instructions in the nearest project-owned `AGENTS.md`, outside the managed RSP block.
 
 ## Decision Record path
@@ -305,7 +307,7 @@ AI-assisted setup:
 ```text
 rsp init --agents-mode <mode>   Scaffold .rsp/ and ensure AGENTS.md contains the RSP entry block
 rsp init --with-project-setup   Also create .rsp/changes/project-setup.md
-rsp update                      Refresh the fallback protocol, repair the AGENTS block, and rebuild indices
+rsp update                      Refresh managed files, rebuild the Specs index, and migrate legacy state
 rsp ui [--lang auto|en|zh-CN]   Open the read-only interactive dashboard
 rsp skills                      Open the interactive project Skill manager on a dual TTY
 rsp skills list [--json]        List bundled Skills and exact project installation status
@@ -317,13 +319,13 @@ rsp group create <name> [goal] Create an unfocused .rsp/changes/<name>/00-brief.
 rsp group close <name>         Archive a completed Group Brief after every child is archived
 rsp focus <name>                Mark an open change as currently focused
 rsp unfocus <name>              Remove an open change from the current focus set
-rsp archive <name>              Archive to .rsp/archives/ + update archive index
+rsp archive <name>              Archive to .rsp/archives/
 rsp archive --dry-run <name>    Preview archive readiness without moving the change
 rsp ready <name> [--json [--compact]] [--verbose]
                                   Preview archive readiness (same as archive --dry-run)
 rsp show <name|--focused> [--json [--compact]] [--verbose]
                                   Show change context with readiness signals and context paths
-rsp history [--limit <n>] [--since <date>] [--until <date>] [--kind <kind>] [--group <group>] [--json [--compact]]
+rsp history [--limit <n>] [--since <date>] [--until <date>] [--kind <kind>] [--group <group>] [--search <text>] [--json [--compact]]
                                   List bounded archived Change summaries (default 20, maximum 100)
 rsp history <work-ref> [--json [--compact]]
                                   Show bounded evidence detail for one exact archived Change
@@ -347,12 +349,13 @@ Human-readable `rsp status` renders its execution guidance as a dependency fores
 
 `rsp status --json` returns the same dependency graph under `plan.nodes`, `plan.ready`, `plan.edges`, `plan.blocked`, and `plan.waves`. Nodes distinguish filter-selected Changes from prerequisite context, while filtered plans retain the transitive prerequisite closure needed to explain the result. JSON stays flat rather than nesting children because prerequisites may be shared by multiple Changes. Each edge reads as “`change` requires `requires`”. These are derived navigation facts, not execution authority or persisted workflow state.
 
-`rsp history` inspects authoritative archive files directly instead of trusting the generated archive index. List results are ordered by archive date descending, WorkRef, then source path; inclusive date, exact kind, and exact Group filters are applied before the 1–100 record bound. Each record includes its project-relative archive path as a stable identity. `rsp history <work-ref>` returns bounded summary, scenario and checkbox counts, and bounded Tasks/Verify/Blockers evidence. It never returns raw Markdown; duplicate generations of one WorkRef fail with candidate archive paths instead of choosing implicitly. Unreadable, malformed, path-inconsistent, missing-root, or reserved executable Group Brief identities fail the complete query even when filters would exclude them. Archived Group Briefs are validated but are not list records. The command accepts at most one positional WorkRef. Diagnostics and ambiguous candidates are capped at 20 entries with total/returned/`hasMore` metadata, and human errors report how many entries were omitted.
+`rsp history` inspects authoritative archive files directly; no generated Archive Index is created or read. List results are ordered by archive date descending, WorkRef, then source path; inclusive date, exact kind, exact Group, and case-insensitive literal WorkRef/summary search filters are applied before the 1–100 record bound. Each record includes its project-relative archive path as a stable identity. `rsp history <work-ref>` returns bounded summary, scenario and checkbox counts, and bounded Tasks/Verify/Blockers evidence. It never returns raw Markdown; duplicate generations of one WorkRef fail with candidate archive paths instead of choosing implicitly. Unreadable, malformed, path-inconsistent, missing-root, or reserved executable Group Brief identities fail the complete query even when filters would exclude them. Archived Group Briefs are validated but are not list records. The command accepts at most one positional WorkRef. Diagnostics and ambiguous candidates are capped at 20 entries with total/returned/`hasMore` metadata, and human errors report how many entries were omitted. `status` archive trends and TUI History use the same validated inspection.
 
 Examples:
 
 ```sh
 rsp history --since 2026-07-01 --kind fix --limit 10 --json
+rsp history --search migration --limit 10 --json
 rsp history cli-machine-output/add-bounded-history-query --json --compact
 ```
 

@@ -62,9 +62,12 @@ npx -y @oevery/rsp@3.1.0-beta.2 doctor
 .rsp/
 ├── rsp-rules.md              # 最小 fallback protocol
 ├── specs/
-│   ├── INDEX.md              # 自动生成
+│   ├── 00-index.md           # 自动生成的直接子项导航
 │   ├── design.md
-│   └── decisions/            # 默认的权威 Decision Records
+│   ├── decisions/            # 默认的权威 Decision Records；不进入 Specs 索引
+│   └── <domain>/
+│       ├── 00-index.md       # 自动生成的直接子项导航
+│       └── <spec>.md
 ├── changes/
 │   ├── <name>.md
 │   └── <group>/
@@ -73,7 +76,7 @@ npx -y @oevery/rsp@3.1.0-beta.2 doctor
 ├── focus.d/
 │   └── <name>
 └── archives/
-    └── INDEX.md              # 自动生成
+    └── YYYY-MM-DD_<change>.md
 ```
 
 ## 概念
@@ -100,13 +103,12 @@ npx -y @oevery/rsp@3.1.0-beta.2 doctor
 ## 文件所有权
 
 - `AGENTS.md`：只有 `<!-- rsp:begin --> ... <!-- rsp:end -->` 受管块由 RSP 维护。
-- `.rsp/specs/INDEX.md`：自动生成，用于索引 `design.md` 之外的附加 spec 文件；使用 `rsp update` 重建。
-- `.rsp/archives/INDEX.md`：自动生成，使用 `rsp update` 重建。
+- `.rsp/specs/**/00-index.md`：为根目录及含内容的 Spec 目录生成直接子项导航。使用 `rsp update` 对齐全部本地索引；`rsp add spec` 只刷新受影响的目录链。
 - `.rsp/specs/design.md`：由 `rsp init` 创建，之后由项目维护。
 - `.rsp/specs/decisions/`：默认的权威 Decision Record 目录；只有 Host Project 已有外部 ADR 目录时才配置 `decisions.path`。
 - `.rsp/rsp-rules.md`：生成的最小 fallback protocol；可用时优先加载 `rsp` skill。
-- 将项目级边界与导航放在 `.rsp/specs/design.md`；把成组且可复用的事实放入 `.rsp/specs/INDEX.md` 所列的最小领域 Spec。
-- 将 `.rsp/specs/INDEX.md` 视为附加 spec 的目录；它不列出 `design.md`。
+- 将项目级边界放在 `.rsp/specs/design.md`；通过最近的 `00-index.md` 发现归属于最小领域 Spec 的成组、可复用事实。
+- 所有 `00-index.md` 都只是生成导航，不能作为可编辑的当前事实或理由 owner。每个索引只列直接子 Spec 与含内容的直接子目录，并排除 Decision Records。
 - 将稳定且有作用域的工作流、验证和本地运行指令放在 nearest project-owned `AGENTS.md` 的非受管区域。
 
 ## Decision Record 路径
@@ -305,7 +307,7 @@ AI 协助接入：
 ```text
 rsp init --agents-mode <mode>   搭建 .rsp/，并确保 AGENTS.md 含有 RSP 入口块
 rsp init --with-project-setup   同时创建 .rsp/changes/project-setup.md
-rsp update                      刷新 fallback protocol、修复 AGENTS 受管块并重建索引
+rsp update                      刷新受管文件、重建 Specs 索引并迁移旧状态
 rsp ui [--lang auto|en|zh-CN]   打开只读交互式仪表盘
 rsp skills                      在 dual TTY 中打开交互式项目 Skill 管理器
 rsp skills list [--json]        列出内置 Skills 及其精确项目安装状态
@@ -317,13 +319,13 @@ rsp group create <name> [goal] 创建不进入 focus 的 .rsp/changes/<name>/00-
 rsp group close <name>         所有子 Change 归档后关闭并归档 Group Brief
 rsp focus <name>                将一个 open change 标记为当前聚焦
 rsp unfocus <name>              将一个 open change 移出当前聚焦集合
-rsp archive <name>              归档到 .rsp/archives/ 并更新 archive index
+rsp archive <name>              归档到 .rsp/archives/
 rsp archive --dry-run <name>    预览归档就绪状态，不移动 change
 rsp ready <name> [--json [--compact]] [--verbose]
                                    预览归档就绪状态（与 archive --dry-run 相同）
 rsp show <name|--focused> [--json [--compact]] [--verbose]
                                    显示 change 上下文，带就绪信号和上下文路径
-rsp history [--limit <n>] [--since <date>] [--until <date>] [--kind <kind>] [--group <group>] [--json [--compact]]
+rsp history [--limit <n>] [--since <date>] [--until <date>] [--kind <kind>] [--group <group>] [--search <text>] [--json [--compact]]
                                    列出有界的已归档 Change 摘要（默认 20，最大 100）
 rsp history <work-ref> [--json [--compact]]
                                    显示一个精确已归档 Change 的有界证据详情
@@ -347,7 +349,7 @@ rsp doctor [--fix] [--json [--compact]] [--verbose]
 
 `rsp status --json` 会在 `plan.nodes`、`plan.ready`、`plan.edges`、`plan.blocked` 和 `plan.waves` 中返回同一份依赖图。节点会区分过滤器选中的 Change 与仅用于解释的前置依赖上下文；过滤后的计划会保留解释结果所需的传递前置依赖闭包。由于同一个前置依赖可能被多个 Change 共享，JSON 保持扁平图结构而不嵌套 children。每条边都读作“`change` requires `requires`”。这些内容是派生的导航事实，不是执行授权或持久化 workflow state。
 
-`rsp history` 直接检查权威 archive 文件，而不信任生成的 archive index。列表按 archive date 降序、WorkRef、source path 排序，在 1–100 的结果上限前应用 inclusive date、精确 kind 和精确 Group 过滤。详情只返回有界 summary、scenario/checkbox counts 与结构化 Tasks/Verify/Blockers evidence，不返回 raw Markdown；重复 WorkRef、不可读或格式错误的 archive 会 fail closed。
+`rsp history` 直接检查权威 archive 文件；系统不再生成或读取 Archive Index。列表按 archive date 降序、WorkRef、source path 排序，在 1–100 的结果上限前应用 inclusive date、精确 kind、精确 Group 以及 WorkRef/summary 的大小写不敏感字面搜索。详情只返回有界 summary、scenario/checkbox counts 与结构化 Tasks/Verify/Blockers evidence，不返回 raw Markdown；重复 WorkRef、不可读或格式错误的 archive 会 fail closed。`status` archive trend 与 TUI History 使用同一份已验证 inspection。
 
 产生 JSON 的 `status`、`show`、`ready`、`check`、`doctor` 和 `history` 都支持 `--json --compact`：内容与普通 `--json` 解析结果相同，但序列化为一行并以 LF 结尾。`--compact` 必须与 `--json` 同时使用，其他命令会在执行行为前拒绝它。
 

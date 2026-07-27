@@ -118,7 +118,9 @@ async function completedLongFixture(root: string): Promise<void> {
 
 async function archiveTrendFixture(root: string): Promise<void> {
   await writeChange(root, 'current')
-  await writeFile(join(root, '.rsp', 'archives', 'INDEX.md'), `| Archived | Kind | Summary |\n| --- | --- | --- |\n| 2026-05-01 | feature | one |\n| 2026-05-03 | fix | two |\n| 2026-06-01 | docs | three |\n`)
+  await writeFile(join(root, '.rsp', 'archives', '2026-05-01_one.md'), renderChange('one'))
+  await writeFile(join(root, '.rsp', 'archives', '2026-05-03_two.md'), renderChange('two'))
+  await writeFile(join(root, '.rsp', 'archives', '2026-06-01_three.md'), renderChange('three'))
 }
 
 async function malformedFrontmatterFixture(root: string): Promise<void> {

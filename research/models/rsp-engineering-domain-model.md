@@ -58,7 +58,7 @@ The RSP Workspace is the protocol boundary rooted at `.rsp/`. It is not one tran
 
 - **Work Coordination:** Change, Change Group, FocusSet, verification evidence references, and derived next actions.
 - **Durable Knowledge:** Spec, Decision Record, Durable Review, and explicit promotion of lasting outcomes.
-- **History:** archived Changes, archived Group Briefs, and generated indexes.
+- **History:** authoritative archived Changes and archived Group Briefs, with bounded query projections derived on demand.
 - **Protocol Operations:** Protocol Config, Fallback Protocol, deterministic checks, path resolution, locking, repair, and archive coordination.
 
 ### Engineering Orchestration
@@ -200,9 +200,12 @@ Host Project/
     ├── config.yaml
     ├── rsp-rules.md               # minimal fallback protocol
     ├── specs/
-    │   ├── INDEX.md
+    │   ├── 00-index.md            # generated direct-child navigation
     │   ├── design.md
-    │   └── decisions/             # default; one configured path may be external
+    │   ├── decisions/             # default; excluded from Specs indexes
+    │   └── <domain>/
+    │       ├── 00-index.md
+    │       └── <spec>.md
     ├── changes/
     │   ├── <change>.md
     │   └── <group>/

@@ -9,7 +9,6 @@ import { cleanupEmptyParentDirs, collectArchiveChecklist, guardRspInitialized } 
 import { withRspLock } from '../core/lock.js'
 import { toErrorMessage } from '../core/output.js'
 import { resolveArchiveDirectory, resolveFocusMarkerPath, WorkRefError } from '../core/work-ref.js'
-import { buildArchiveIndex } from './archive-index.js'
 
 export interface ArchiveOptions {
   dryRun?: boolean
@@ -92,13 +91,6 @@ export async function archiveChange(name: string, options: ArchiveOptions = {}) 
 
       const clearedMsg = focusCleared ? `  ${pc.dim('focus marker cleared')}\n` : ''
       console.log(`  ${pc.green('Archived:')} ${archiveName}\n${clearedMsg}`)
-
-      try {
-        await buildArchiveIndex({ acquireLock: false })
-      }
-      catch (error) {
-        postArchiveWarnings.push(`archive index rebuild failed: ${toErrorMessage(error)}`)
-      }
 
       for (const warning of postArchiveWarnings)
         console.log(`  ${pc.yellow('⚠')} ${warning}`)

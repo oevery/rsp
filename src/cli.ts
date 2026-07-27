@@ -136,7 +136,7 @@ const groupCommand = defineCommand({
 const addSpecCommand = defineCommand({
   meta: {
     name: 'spec',
-    description: 'Create .rsp/specs/<name>.md and rebuild specs index',
+    description: 'Create .rsp/specs/<name>.md and refresh local Specs indexes',
   },
   args: {
     name: {
@@ -540,6 +540,10 @@ const historyCommand = defineCommand({
       type: 'string',
       description: 'Match one exact Change Group',
     },
+    search: {
+      type: 'string',
+      description: 'Case-insensitive literal match over WorkRef and summary',
+    },
     json: {
       type: 'boolean',
       description: 'Print machine-readable JSON output',
@@ -551,7 +555,7 @@ const historyCommand = defineCommand({
       default: false,
     },
   },
-  async run({ args }: { args: { name?: string, limit?: string, since?: string, until?: string, kind?: string, group?: string, json: boolean, compact: boolean, _?: string[] } }) {
+  async run({ args }: { args: { name?: string, limit?: string, since?: string, until?: string, kind?: string, group?: string, search?: string, json: boolean, compact: boolean, _?: string[] } }) {
     const result = await showHistory({
       workRef: args.name,
       limit: args.limit,
@@ -559,6 +563,7 @@ const historyCommand = defineCommand({
       until: args.until,
       kind: args.kind,
       group: args.group,
+      search: args.search,
       positionalCount: args._?.length ?? (args.name ? 1 : 0),
     }, { json: Boolean(args.json), compact: Boolean(args.compact) })
     if (!result.ok)

@@ -15,6 +15,7 @@ export interface BoundedCollectionSummary {
 
 export interface ArchiveHistoryRecord extends HistoryRecordOutput {
   sourcePath: string
+  searchSummary?: string
 }
 
 export interface ArchiveHistoryInspection {
@@ -31,6 +32,7 @@ export interface ArchiveHistoryQuery {
   until?: string
   kind?: string
   group?: string
+  search?: string
 }
 
 export interface ArchiveHistoryListResult {

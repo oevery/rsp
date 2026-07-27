@@ -18,6 +18,7 @@ export interface HistoryCliQuery {
   until?: string
   kind?: string
   group?: string
+  search?: string
   positionalCount?: number
 }
 
@@ -25,7 +26,7 @@ interface HistoryListResult {
   command: 'history'
   ok: true
   mode: 'list'
-  query: Required<Pick<ArchiveHistoryQuery, 'limit'>> & { since: string | null, until: string | null, kind: string | null, group: string | null }
+  query: Required<Pick<ArchiveHistoryQuery, 'limit'>> & { since: string | null, until: string | null, kind: string | null, group: string | null, search: string | null }
   records: HistoryRecordOutput[]
   summary: { matched: number, returned: number, hasMore: boolean }
   diagnostics: CommandDiagnostic[]
@@ -119,6 +120,7 @@ export async function showHistory(input: HistoryCliQuery = {}, options: CommandR
       until: query.until ?? null,
       kind: query.kind ?? null,
       group: query.group ?? null,
+      search: query.search ?? null,
     },
     records: listed.records,
     summary: listed.summary,
@@ -139,7 +141,7 @@ function validateHistoryQuery(input: HistoryCliQuery): { ok: true, query: Archiv
   if (input.workRef) {
     if (!WORK_REF_RE.test(input.workRef) || input.workRef.endsWith('/brief') || input.workRef.endsWith('/00-brief'))
       return invalid('invalid_history_work_ref', 'history WorkRef must be a flat or one-Group-level executable Change identity')
-    if (input.limit !== undefined || input.since !== undefined || input.until !== undefined || input.kind !== undefined || input.group !== undefined)
+    if (input.limit !== undefined || input.since !== undefined || input.until !== undefined || input.kind !== undefined || input.group !== undefined || input.search !== undefined)
       return invalid('history_detail_filters_unsupported', 'list filters cannot be combined with an exact history detail lookup')
     return { ok: true, query: {} }
   }
@@ -157,6 +159,8 @@ function validateHistoryQuery(input: HistoryCliQuery): { ok: true, query: Archiv
     return invalid('invalid_history_kind', '--kind must be a non-empty exact historical kind')
   if (input.group !== undefined && !GROUP_RE.test(input.group))
     return invalid('invalid_history_group', '--group must be one lowercase kebab-case Group name')
+  if (input.search !== undefined && input.search.trim() === '')
+    return invalid('invalid_history_search', '--search must be non-empty')
 
   return {
     ok: true,
@@ -166,6 +170,7 @@ function validateHistoryQuery(input: HistoryCliQuery): { ok: true, query: Archiv
       until: input.until,
       kind: input.kind?.trim(),
       group: input.group,
+      search: input.search?.trim(),
     },
   }
 }

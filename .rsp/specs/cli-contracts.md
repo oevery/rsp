@@ -1,12 +1,12 @@
 # CLI Contracts
 
 ## Purpose
-- Define deterministic command, filesystem-safety, inspection, JSON, history, index, and repair behavior outside the interactive TUI.
+- Define deterministic command, filesystem-safety, inspection, JSON, history, Specs-index, and repair behavior outside the interactive TUI.
 
 ## Stable Facts
 - One WorkRef-tree inspection owns open-work discovery for `check`, `status`, and `doctor`; unsupported directories, non-Markdown entries, symlinks, file/directory collisions, and incomplete reads are reported consistently.
 - `.rsp/changes/` and existing `focus.d/`, `archives/`, and direct Group prefixes must be real directories. Invalid roots and prefixes fail closed before reads or mutations; `rsp update` and `rsp doctor --fix` may restore a missing changes root.
-- One managed-path module owns no-follow inspection, safe parent-chain resolution, and regular-file discovery for the RSP root, WorkRefs, initialization, repair, Spec creation, archive discovery, and generated indexes.
+- One managed-path module owns no-follow inspection, safe parent-chain resolution, and regular-file discovery for the RSP root, WorkRefs, initialization, repair, Spec creation, archive discovery, and the generated Specs index.
 - Archive discovery accepts only flat files or one real Group directory. Specs may recurse through real directories and regular files; symlinked or special entries are invalid.
 - Final managed files—including project `AGENTS.md`, focus markers, fallback/config, indexes, placeholders, and generated project files—must be missing or regular files. Initialization and update preflight `AGENTS.md` before other managed mutations.
 - `rsp status` fails visibly when current work is invalid, a focus target is missing, or open work cannot be read. It derives exact dependency edges and reasons, minimal graph nodes, blockers, ready Changes, and stable waves from authoritative artifacts.
@@ -14,17 +14,20 @@
 - New `rsp init` config templates select `auto` plus `lifecycle`; projects that remove or never received the block retain the missing-config compatibility behavior.
 - Plain `rsp status` shows both resolved Manage policy values, and JSON status exposes the same effective `manage.activation` and `manage.closeout` values. This is inspectable configuration, not persisted run or controller state.
 - Filtered status retains the selected Changes' transitive prerequisites and distinguishes selected nodes from prerequisite context. Plain output renders the same graph as a deterministic dependency forest; JSON remains the canonical flat projection.
-- CLI commands own deterministic filesystem operations, structural checks, generated indexes, and warnings. Semantic durable-writeback decisions remain outside the CLI.
+- CLI commands own deterministic filesystem operations, structural checks, generated local Specs indexes, and warnings. Semantic durable-writeback decisions remain outside the CLI.
 - `status`, `show`, `ready`, `check`, `doctor`, and `history` preserve pretty `--json` output and accept `--json --compact` for the same value on one LF-terminated line. `--compact` without `--json`, or on another command, fails before command behavior.
 - `rsp history` is a bounded archive query independent from the current-work status snapshot. It reads the complete authoritative archive tree, validates identity and metadata fail closed, recognizes but omits Group Brief records, and orders Change records by archive date descending, WorkRef, then project-relative archive path.
 - History requires a real archive root and rejects archived executable headings claiming reserved `brief` or `00-brief` identities. At most one positional history WorkRef is accepted, before archive inspection in every output mode.
-- History lists default to 20 results and accept 1–100 after inclusive date, exact historical kind, and exact Group filters. Results expose matched/returned counts and `hasMore`; the first release has no cursor or offset.
+- History lists default to 20 results and accept 1–100 after inclusive date, exact historical kind, exact Group, and case-insensitive literal WorkRef/summary search filters. Empty search fails before archive inspection. Results expose matched/returned counts and `hasMore`; the first release has no cursor or offset.
 - Exact history detail accepts a WorkRef or internal stable archive path. It returns bounded summary, scenario/checkbox counts, and bounded Tasks/Verify/Blockers evidence without raw Markdown. Duplicate generations of one WorkRef are ambiguous and return candidate paths.
 - History diagnostics and ambiguous candidates are each capped at 20 with total, returned, and `hasMore`. Human errors use the same bound and omitted count; archive read failures remain diagnostics rather than duplicate runtime output.
-- Generated `INDEX.md` files use YAML frontmatter with `kind: generated-index` and `index_type`. Builders do not rewrite unchanged indexes; doctor identifies them from metadata rather than body text.
-- The generated Specs index excludes `design.md` and the authoritative Decision Record subtree.
+- `.rsp/archives/**/*.md` files are the sole authoritative archive records. CLI history, TUI History, and status archive trends share the complete fail-closed history inspection; no Archive Index is created, required, read, repaired, or diagnosed.
+- `rsp init`, `rsp update`, and `rsp doctor --fix` remove a legacy regular `.rsp/archives/INDEX.md` only when its YAML metadata is `kind: generated-index` plus `index_type: archives`; an unrecognized entry at that path is preserved.
+- Every managed Specs directory containing Specs or populated child Spec directories has one reserved generated `00-index.md` with `kind: generated-index` and `index_type: specs`. It lists only direct child Specs and direct child directory indexes; the root includes `design.md`.
+- The builder inspects the complete no-follow Specs tree before mutation. `rsp add spec` rewrites only changed indexes in the affected directory chain, while `rsp update` reconciles the complete set and removes only metadata-recognized obsolete generated indexes.
+- `rsp update` migrates a legacy root `.rsp/specs/INDEX.md` only when its metadata proves generated Specs-index ownership. Unrecognized reserved index paths fail closed, and the default or configured Decision Record subtree is excluded from projection.
 - `rsp doctor --fix` reports only real filesystem mutations in `fixed`; an empty array means no safe repair changed files.
-- `durableReview.factCandidateTargets` reports likely writable fact owners and `durableReview.decisionRecordsPath` reports the authoritative rationale directory. Generated indexes and bundled rules are excluded from ordinary writeback targets.
+- `durableReview.factCandidateTargets` reports likely writable fact owners and `durableReview.decisionRecordsPath` reports the authoritative rationale directory. Generated `00-index.md` files and bundled rules are excluded from ordinary writeback targets.
 - `ready --json` and `show --json` expose deterministic readiness and semantic durable-review guidance without deriving archive actions.
 - `.rsp/rsp-rules.md` is the only runtime fallback path. `rsp update` migrates and removes the obsolete generated `.rsp/rules/rsp-rules.md`; residual `.rsp/rules/` content is not authority and requires explicit semantic migration before removal.
 

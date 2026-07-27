@@ -66,6 +66,20 @@ describe('archive history query', () => {
     expect(byPath.workRef).toBe('release/api')
   })
 
+  it('searches WorkRef and the complete summary case-insensitively before applying the limit', async () => {
+    const root = await fixture()
+    const longPrefix = 'x'.repeat(500)
+    await writeFile(join(root, '.rsp', 'archives', '2026-07-25_searchable.md'), archivedChange('searchable', 'feature', `${longPrefix} HiddenNeedle`))
+    const inspection = await inspectArchiveHistory({ archivesDir: join(root, '.rsp', 'archives') })
+
+    expect(queryArchiveHistory(inspection.records, { search: 'RELEASE/', limit: 1 })).toEqual(expect.objectContaining({
+      records: [expect.objectContaining({ workRef: 'release/api' })],
+      summary: { matched: 2, returned: 1, hasMore: true },
+    }))
+    expect(queryArchiveHistory(inspection.records, { search: 'hiddenneedle' }).records.map(record => record.workRef)).toEqual(['searchable'])
+    expect(() => queryArchiveHistory(inspection.records, { search: '   ' })).toThrowError(expect.objectContaining({ code: 'invalid_history_search' }))
+  })
+
   it('selects exact detail and bounds every evidence field', async () => {
     const root = await fixture()
     const path = join(root, '.rsp', 'archives', '2026-07-25_bounded.md')

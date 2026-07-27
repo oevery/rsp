@@ -27,7 +27,7 @@ This file is the minimal fallback protocol for agents that cannot load the `rsp`
 - Executable Change identities are either `<change>` or `<group>/<change>`. Recursive work paths are unsupported.
 - A Change Group is the only composite shape and requires at least two independent direct children. Its non-executable, non-focusable `<group>/brief` at `<group>/00-brief.md` owns shared scope, constraints, declared Slices, completion, durable outcomes, and blockers. Read it before a child; archive children independently and close only a derived-complete Group.
 - A file and directory cannot claim the same work identity.
-- Managed roots, Group prefixes, recursive Spec paths, and final managed files must be real directories or regular files as applicable. Initialization, repair, inspection, Spec/index work, and mutations use shared no-follow checks; symlinks, special entries, missing roots, and incomplete inspection fail closed.
+- Managed roots, Group prefixes, recursive Spec paths, and final managed files must be real directories or regular files as applicable. Initialization, repair, inspection, Spec-index work, and mutations use shared no-follow checks; symlinks, special entries, missing roots, and incomplete inspection fail closed.
 - `status`, `check`, and `doctor` share work-tree, Change Group, and dependency inspection. They fail visibly on unsupported structure, membership mismatches, malformed or missing dependency targets, self-dependencies, and cycles. With no focus, status uses Group Brief declaration order and derived blockers to recommend the first executable slice.
 - `status` derives blockers, exact edges and reasons, ready Changes, and stable waves without persisted graph or delivery state. Filtered views retain prerequisite context. Archived prerequisites resolve; invalid or incompletely inspected graphs fail closed.
 - Parallel Changes in one Group follow the Brief `Slices` declaration order in plan output; unrelated work uses stable lexical ordering.
@@ -38,7 +38,7 @@ This file is the minimal fallback protocol for agents that cannot load the `rsp`
 - Route one explicit isolated domain, module/seam, or evidence-seeking question to `rsp-design` when available, or use a compact manual design pass. Without a selected Change, use report-only Pre-Change Design without inventing a WorkRef only when the question is already bounded; when outcome, scope, non-goals, acceptance, or decomposition remains materially unclear, route to Shape. With a selected Change, return evidence, alternatives, owner decisions, and any authorized planned-design update to the same WorkRef. Do not implement or write durable current truth from either mode.
 - Route release documentation only for an explicit release operation with a confirmed identity or range and unfinished surfaces; no Release Change is required. Confirm identity only from explicit instruction or authoritative configuration. Until then stay version-neutral and do not mutate versioned surfaces. Keep ledgers transient; use an optional Release Change only for material decisions, coordination, recovery, blockers, or acceptance. This route grants no Git, publication, deployment, or approval authority.
 - Do not infer current work from open Changes or filenames.
-- Prefer RSP commands for deterministic setup, status, validation, repair, focus, index, and archive operations.
+- Prefer RSP commands for deterministic setup, status, validation, repair, focus, Specs-index, history, and archive operations.
 
 ## Durable review
 
@@ -51,7 +51,7 @@ This file is the minimal fallback protocol for agents that cannot load the `rsp`
 - Decision Records are for hard-to-reverse choices with real tradeoffs; they do not duplicate current facts.
 - Change Spec deltas are planning aids and are never promoted automatically into Specs or Decision Records.
 - Keep task history, debugging notes, and transient execution state out of Specs and Decision Records.
-- Generated indexes and archives are not current-truth owners.
+- Generated local Specs `00-index.md` files and archives are not current-truth owners. Use each index only to discover direct child Specs and child Spec directories; authoritative Archive Markdown is queried directly without a generated Archive Index.
 
 ## Continuation and conflicts
 

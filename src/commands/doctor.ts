@@ -7,10 +7,11 @@ import { inspectChangeGroups } from '../core/change-group.js'
 import { clearConfigCache, inspectRspConfig, loadRspConfig, OBSOLETE_RSP_RULES_PATH, pc, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
 import { DEFAULT_DECISION_RECORDS_PATH, resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
-import { hasRspAgentsBlock, inspectUnsupportedRules, normalizeLogicalPath, parseFrontmatter, walkMarkdownFiles } from '../core/helpers.js'
+import { hasRspAgentsBlock, inspectUnsupportedRules, normalizeLogicalPath, walkMarkdownFiles } from '../core/helpers.js'
 import { inspectManagedFile } from '../core/managed-path.js'
 import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
 import { GROUP_BRIEF_FILENAME, inspectArchiveTree, inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
+import { inspectSpecsIndexHealth } from './specs-index.js'
 import { updateProject } from './update.js'
 
 interface DoctorCheck {
@@ -63,19 +64,13 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
   const reportRuntime = (diagnostic: RuntimeDiagnostic) => recordRuntimeDiagnostic(runtime, diagnostic, Boolean(options.verbose) && !options.json)
 
   const designPath = join(RSP_DIR, 'specs', 'design.md')
-  const specsIndexPath = join(RSP_DIR, 'specs', 'INDEX.md')
-  const archivesIndexPath = join(RSP_DIR, 'archives', 'INDEX.md')
-
   reportCheck(checks, '.rsp exists', existsSync(RSP_DIR), 'Run: rsp init')
   reportFallbackProtocol(checks)
   await reportUnsupportedRules(checks, reportRuntime)
   reportCheck(checks, 'specs/design.md exists', existsSync(designPath), 'Run: rsp init')
-  reportCheck(checks, 'specs/INDEX.md exists', existsSync(specsIndexPath), 'Run: rsp update')
-  reportCheck(checks, 'archives/INDEX.md exists', existsSync(archivesIndexPath), 'Run: rsp update')
 
   await checkAgents(checks, reportRuntime)
-  await checkGeneratedIndex(checks, reportRuntime, specsIndexPath, 'specs', 'specs/INDEX.md has generated-index metadata', 'Run: rsp update')
-  await checkGeneratedIndex(checks, reportRuntime, archivesIndexPath, 'archives', 'archives/INDEX.md has generated-index metadata', 'Run: rsp update')
+  await checkSpecsIndexes(checks, reportRuntime)
   await checkArchiveNaming(checks)
   const decisionRecordsConfigValid = await checkConfigSemantics(checks, reportRuntime)
   if (decisionRecordsConfigValid) {
@@ -249,49 +244,32 @@ async function checkAgents(checks: DoctorCheck[], reportRuntime: (diagnostic: Ru
   checks.push({ status: 'issue', label: 'AGENTS.md contains managed RSP block', message: 'AGENTS.md missing managed RSP block', hint: 'Run: rsp init' })
 }
 
-async function checkGeneratedIndex(checks: DoctorCheck[], reportRuntime: (diagnostic: RuntimeDiagnostic) => void, path: string, expectedIndexType: 'specs' | 'archives', label: string, fixHint: string): Promise<void> {
-  const indexFile = inspectManagedFile(path, label, { allowMissing: true })
-  if (indexFile.issue) {
-    checks.push({ status: 'issue', label, message: indexFile.issue.message, hint: fixHint })
+async function checkSpecsIndexes(checks: DoctorCheck[], reportRuntime: (diagnostic: RuntimeDiagnostic) => void): Promise<void> {
+  const health = await inspectSpecsIndexHealth()
+  if (health.ok) {
+    checks.push({ status: 'ok', label: 'hierarchical Specs indexes are current generated files' })
     return
   }
-  if (!indexFile.exists)
-    return
 
-  let content: string
-  try {
-    content = await readFile(path, 'utf-8')
-  }
-  catch (error) {
+  for (const message of health.issues) {
     reportRuntime({
-      code: 'generated_index_read_failed',
-      operation: 'readFile',
-      path,
-      message: toErrorMessage(error),
+      code: 'specs_index_inspection_failed',
+      operation: 'inspectSpecsIndexHealth',
+      path: '.rsp/specs',
+      message,
     })
-    checks.push({ status: 'issue', label, message: `${label} could not be read`, hint: fixHint })
-    return
   }
-
-  try {
-    const fm = parseFrontmatter(content)
-    if (fm?.kind === 'generated-index' && fm.index_type === expectedIndexType) {
-      checks.push({ status: 'ok', label })
-      return
-    }
-  }
-  catch (error) {
-    reportRuntime({
-      code: 'generated_index_frontmatter_parse_failed',
-      operation: 'parseFrontmatter',
-      path,
-      message: toErrorMessage(error),
-    })
-    checks.push({ status: 'issue', label, message: `${label} could not parse metadata`, hint: fixHint })
-    return
-  }
-
-  checks.push({ status: 'issue', label, hint: fixHint })
+  const details = [
+    ...health.issues,
+    health.stalePaths.length > 0 ? `missing or stale: ${health.stalePaths.join(', ')}` : '',
+    health.obsoletePaths.length > 0 ? `recognized obsolete indexes: ${health.obsoletePaths.join(', ')}` : '',
+  ].filter(Boolean)
+  checks.push({
+    status: 'issue',
+    label: 'hierarchical Specs indexes are current generated files',
+    message: details.join('; '),
+    hint: 'Run: rsp update',
+  })
 }
 
 async function checkArchiveNaming(checks: DoctorCheck[]): Promise<void> {

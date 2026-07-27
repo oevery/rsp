@@ -19,6 +19,7 @@ export function queryArchiveHistory(records: ArchiveHistoryRecord[], query: Arch
       && (!query.until || record.date <= query.until)
       && (!query.kind || record.kind === query.kind)
       && (!query.group || record.group === query.group)
+      && (!query.search || `${record.workRef}\n${record.searchSummary ?? record.summary}`.toLowerCase().includes(query.search.toLowerCase()))
     ))
     .sort(compareHistoryRecords)
   const selected = matched.slice(0, limit)
@@ -46,6 +47,8 @@ export function validateArchiveHistoryQuery(query: ArchiveHistoryQuery): void {
     throw new ArchiveHistoryError('invalid_history_kind', 'history kind must be non-empty')
   if (query.group !== undefined && !/^[a-z0-9-]+$/.test(query.group))
     throw new ArchiveHistoryError('invalid_history_group', 'history group must be one lowercase kebab-case segment')
+  if (query.search !== undefined && query.search.trim() === '')
+    throw new ArchiveHistoryError('invalid_history_search', 'history search must be non-empty')
 }
 
 export function selectArchiveHistoryRecord(records: ArchiveHistoryRecord[], selector: { workRef: string } | { path: string }): ArchiveHistoryRecord {
@@ -94,7 +97,7 @@ export function historyInspectionComplete(inspection: ArchiveHistoryInspection):
 }
 
 function toOutputRecord(record: ArchiveHistoryRecord): HistoryRecordOutput {
-  const { sourcePath: _sourcePath, ...output } = record
+  const { searchSummary: _searchSummary, sourcePath: _sourcePath, ...output } = record
   return output
 }
 

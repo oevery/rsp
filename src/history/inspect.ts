@@ -1,3 +1,4 @@
+import type { ArchiveTreeInspection } from '../core/work-ref.js'
 import type { CommandDiagnostic, RuntimeDiagnostic } from '../types.js'
 import type { ArchiveHistoryInspection, ArchiveHistoryRecord } from './model.js'
 import { readFile } from 'node:fs/promises'
@@ -13,9 +14,9 @@ const EXECUTABLE_WORK_REF_RE = /^[a-z0-9-]+(?:\/[a-z0-9-]+)?$/
 const GROUP_NAME_RE = /^[a-z0-9-]+$/
 const ARCHIVE_NAME_RE = /^(\d{4}-\d{2}-\d{2})_(.+)\.md$/
 
-export async function inspectArchiveHistory(options: { archivesDir?: string } = {}): Promise<ArchiveHistoryInspection> {
+export async function inspectArchiveHistory(options: { archivesDir?: string, archiveTree?: ArchiveTreeInspection } = {}): Promise<ArchiveHistoryInspection> {
   const archivesDir = options.archivesDir ?? ARCHIVES_DIR
-  const tree = await inspectArchiveTree({ archivesDir })
+  const tree = options.archiveTree ?? await inspectArchiveTree({ archivesDir })
   const diagnostics: CommandDiagnostic[] = tree.diagnostics.map(diagnostic => ({
     severity: 'error',
     code: diagnostic.code,
@@ -131,6 +132,7 @@ function parseArchiveEntry(sourcePath: string, path: string, archivesDir: string
       summaryTruncated: summary.truncated,
       path,
       sourcePath,
+      searchSummary: rawSummary,
     },
   }
 }

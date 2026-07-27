@@ -392,7 +392,7 @@ describe('documentation command examples', () => {
     expect(zhReadme).toContain('简单的当前会话任务默认不应创建 RSP change')
     expect(projectDesign).toContain('[CLI Contracts](./cli-contracts.md)')
     expect(projectDesign).toContain('[Skill System](./skill-system.md)')
-    expect(projectSpecs).toContain('Builders do not rewrite unchanged indexes')
+    expect(projectSpecs).toContain('`rsp add spec` rewrites only changed indexes in the affected directory chain')
     expect(projectSpecs).toContain('`rsp doctor --fix` reports only real filesystem mutations')
     expect(projectSpecs).toContain('`rsp create --lite` is for intentionally tracked small Changes')
     expect(projectSpecs).toContain('`.rsp/rsp-rules.md` is the minimal fallback')

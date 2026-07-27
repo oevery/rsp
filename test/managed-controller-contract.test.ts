@@ -398,7 +398,7 @@ describe('rsp-manage product Skill', () => {
   })
 
   it('replays retained rsp-commit message quality and remote-safety evidence against the current composition', () => {
-    const retained = join(root, 'research', 'evaluations', 'rsp-commit', '2026-07-26-product-commit-message-quality')
+    const retained = join(root, 'research', 'evaluations', 'rsp-commit', '2026-07-27-product-commit-message-quality')
     const metadata = JSON.parse(readFileSync(join(retained, 'metadata.json'), 'utf8')) as any
     const observations = JSON.parse(readFileSync(join(retained, 'observations.json'), 'utf8')) as any
     const final = readFileSync(join(retained, 'final.md'), 'utf8')
@@ -432,7 +432,7 @@ describe('rsp-manage product Skill', () => {
     })
     expect(metadata.git.commits).toHaveLength(1)
     expect(metadata.git.commits[0]).toMatchObject({
-      subject: 'feat(greeting): normalize names before formatting',
+      subject: 'feat(greeting): normalize greeting names',
       trailers: [{ key: 'RSP-WorkRef', value: 'add-greeting-format' }],
     })
     expect(observations).toMatchObject({

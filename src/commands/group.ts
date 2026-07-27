@@ -8,7 +8,6 @@ import { withRspLock } from '../core/lock.js'
 import { resolveManagedDirectoryChain } from '../core/managed-path.js'
 import { toErrorMessage } from '../core/output.js'
 import { resolveArchiveDirectory, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
-import { buildArchiveIndex } from './archive-index.js'
 import { resolveArchiveName } from './archive.js'
 
 class ChangeGroupError extends Error {
@@ -88,13 +87,6 @@ export async function closeChangeGroup(name: string): Promise<void> {
       catch (error) {
         warnings.push(`changes directory cleanup failed: ${toErrorMessage(error)}`)
       }
-      try {
-        await buildArchiveIndex({ acquireLock: false })
-      }
-      catch (error) {
-        warnings.push(`archive index rebuild failed: ${toErrorMessage(error)}`)
-      }
-
       console.log(`  ${pc.green('Closed Change Group:')} ${name}`)
       console.log(`  ${pc.dim('Archived Group Brief:')} ${join(archiveDirectory, archiveName)}\n`)
       for (const warning of warnings)

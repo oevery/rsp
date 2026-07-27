@@ -8,7 +8,7 @@ import { ensureDecisionRecordsDirectory, resolveDecisionRecordsPath, validateDec
 import { detectProjectName, inspectUnsupportedRules, upsertRspAgentsBlock } from '../core/helpers.js'
 import { withRspLock } from '../core/lock.js'
 import { ensureManagedFile, inspectManagedDirectory, inspectManagedFile, writeManagedFile } from '../core/managed-path.js'
-import { buildArchiveIndex } from './archive-index.js'
+import { removeLegacyArchiveIndex } from './archive-index-migration.js'
 import { buildSpecsIndex } from './specs-index.js'
 
 const SKILL_REFRESH_HINT = '  Note: if you use package-bundled RSP Skills, refresh them too:\n    rsp skills install --dry-run\n    rsp skills install --force\n'
@@ -31,7 +31,7 @@ export interface UpdateResult {
  * Refresh RSP project structure after upgrade:
  * - Update bundled rsp-rules.md
  * - Refresh AGENTS.md managed block
- * - Regenerate INDEX files
+ * - Reconcile hierarchical Specs indexes and remove recognized legacy indexes
  */
 export async function updateProject(options: UpdateOptions = {}): Promise<UpdateResult> {
   if (!existsSync(RSP_DIR)) {
@@ -69,6 +69,9 @@ export async function updateProject(options: UpdateOptions = {}): Promise<Update
         console.log(`  ${pc.green('✓')} changes/ directory restored`)
       updated = true
     }
+    const archivesInspection = inspectManagedDirectory(join(RSP_DIR, 'archives'), 'archive root', { allowMissing: true })
+    if (archivesInspection.issue)
+      throw archivesInspection.issue
 
     const bundledRules = await readFile(join(PKG_ROOT, 'rules', 'rsp-rules.md'), 'utf-8')
     const rulesInspection = inspectManagedFile(RSP_RULES_PATH, 'fallback protocol', { allowMissing: true })
@@ -156,9 +159,14 @@ export async function updateProject(options: UpdateOptions = {}): Promise<Update
     }
 
     const specsIndexChanged = await buildSpecsIndex({ acquireLock: false, quiet: options.quiet })
-    const archiveIndexChanged = await buildArchiveIndex({ acquireLock: false, quiet: options.quiet })
-    if (specsIndexChanged || archiveIndexChanged) {
-      actions.push('generated indexes rebuilt')
+    if (specsIndexChanged) {
+      actions.push('generated Specs indexes reconciled')
+      updated = true
+    }
+    if (await removeLegacyArchiveIndex()) {
+      actions.push('legacy Archive Index removed')
+      if (!options.quiet)
+        console.log(`  ${pc.green('✓')} legacy Archive Index removed`)
       updated = true
     }
 
