@@ -2483,6 +2483,204 @@ describe('archive name collisions', () => {
   })
 })
 
+describe('reopen command', () => {
+  const today = new Date().toISOString().slice(0, 10)
+
+  it('restores one archived Change under the same WorkRef while retaining history', async () => {
+    const root = await createReopenProject('success')
+    runReopen(root, ['create', 'recover-me', 'Recover this work'])
+    const originalPath = join(root, '.rsp', 'changes', 'recover-me.md')
+    await writeFile(originalPath, completeReopenChange(await readFile(originalPath, 'utf-8')))
+    runReopen(root, ['archive', 'recover-me'])
+    const archive = join(root, '.rsp', 'archives', `${today}_recover-me.md`)
+    const archived = await readFile(archive, 'utf-8')
+
+    const output = runReopen(root, ['reopen', 'recover-me', '--reason', 'real run still fails'])
+
+    expect(output).toContain('Reopened: recover-me')
+    expect(await readFile(archive, 'utf-8')).toBe(archived)
+    const reopened = await readFile(originalPath, 'utf-8')
+    expect(reopened).toContain('- [ ] Resolve reopened concern: real run still fails')
+    expect(reopened).toContain('- [ ] Verify reopened concern: real run still fails')
+    expect(existsSync(join(root, '.rsp', 'focus.d', 'recover-me'))).toBe(true)
+
+    await writeFile(originalPath, completeReopenChange(reopened))
+    runReopen(root, ['archive', 'recover-me'])
+    expect((await readdir(join(root, '.rsp', 'archives'))).filter(name => name.includes('recover-me'))).toHaveLength(2)
+    expect(existsSync(join(root, '.rsp', 'focus.d', 'recover-me'))).toBe(false)
+  })
+
+  it('fails on ambiguous history and accepts one exact matching archive path', async () => {
+    const root = await createReopenProject('ambiguous')
+    await createReopenArchive(root, 'repeat', 'first pass')
+    await createReopenArchive(root, 'repeat', 'second pass')
+
+    const ambiguous = failReopen(root, ['reopen', 'repeat', '--reason', 'needs correction'])
+    expect(ambiguous.stderr).toContain('multiple archives match WorkRef repeat')
+    expect(ambiguous.stderr).toContain(`.rsp/archives/${today}_repeat.md`)
+    expect(ambiguous.stderr).toContain(`.rsp/archives/${today}_repeat-2.md`)
+    expect(existsSync(join(root, '.rsp', 'changes', 'repeat.md'))).toBe(false)
+
+    runReopen(root, ['reopen', 'repeat', '--from', `.rsp/archives/${today}_repeat-2.md`, '--reason', 'needs correction'])
+    expect(await readFile(join(root, '.rsp', 'changes', 'repeat.md'), 'utf-8')).toContain('- Outcome: second pass')
+    expect((await readdir(join(root, '.rsp', 'archives'))).filter(name => name.includes('repeat'))).toHaveLength(2)
+  })
+
+  it('rejects identity mismatch and never overwrites existing open work', async () => {
+    const root = await createReopenProject('identity-and-collision')
+    await createReopenArchive(root, 'first', 'archived version')
+
+    const mismatch = failReopen(root, ['reopen', 'other', '--from', `.rsp/archives/${today}_first.md`, '--reason', 'wrong target'])
+    expect(mismatch.stderr).toContain('selected archive belongs to first, not other')
+
+    runReopen(root, ['create', 'first', 'current open version'])
+    const openPath = join(root, '.rsp', 'changes', 'first.md')
+    const current = await readFile(openPath, 'utf-8')
+    const collision = failReopen(root, ['reopen', 'first', '--reason', 'must not overwrite'])
+    expect(collision.stderr).toContain('open Change already exists: first')
+    expect(await readFile(openPath, 'utf-8')).toBe(current)
+  })
+
+  it('treats reopened work as an open dependency rather than archived history', async () => {
+    const root = await createReopenProject('dependency')
+    await createReopenArchive(root, 'foundation', 'foundation pass')
+    runReopen(root, ['create', 'consumer', 'consumer pass'])
+    const consumerPath = join(root, '.rsp', 'changes', 'consumer.md')
+    await writeFile(consumerPath, (await readFile(consumerPath, 'utf-8')).replace(
+      '## Blockers\n- none',
+      '## Blockers\n- requires `foundation`: foundation must be complete',
+    ))
+
+    runReopen(root, ['reopen', 'foundation', '--reason', 'foundation is incomplete'])
+    const status = JSON.parse(runReopen(root, ['status', '--json']))
+    expect(status.plan.edges).toContainEqual(expect.objectContaining({ change: 'consumer', requires: 'foundation', state: 'open' }))
+    expect(status.plan.nodes).toContainEqual(expect.objectContaining({ name: 'foundation', selection: 'selected', state: 'ready' }))
+    expect(status.plan.blocked).toContainEqual(expect.objectContaining({ change: 'consumer', requires: ['foundation'] }))
+  })
+
+  it('reopens a declared child only while its Change Group remains open', async () => {
+    const root = await createReopenProject('open-group')
+    runReopen(root, ['group', 'create', 'delivery', 'Deliver two slices'])
+    await writeFile(join(root, '.rsp', 'changes', 'delivery', '00-brief.md'), renderReopenGroupBrief('delivery', false))
+    await createReopenArchive(root, 'delivery/api', 'api pass')
+
+    runReopen(root, ['reopen', 'delivery/api', '--reason', 'api still fails'])
+    expect(existsSync(join(root, '.rsp', 'changes', 'delivery', 'api.md'))).toBe(true)
+    expect(existsSync(join(root, '.rsp', 'focus.d', 'delivery', 'api'))).toBe(true)
+  })
+
+  it('does not implicitly reopen a closed Change Group', async () => {
+    const root = await createReopenProject('closed-group')
+    runReopen(root, ['group', 'create', 'delivery', 'Deliver two slices'])
+    await writeFile(join(root, '.rsp', 'changes', 'delivery', '00-brief.md'), renderReopenGroupBrief('delivery', true))
+    await createReopenArchive(root, 'delivery/api', 'api pass')
+    await createReopenArchive(root, 'delivery/ui', 'ui pass')
+    runReopen(root, ['group', 'close', 'delivery'])
+
+    const result = failReopen(root, ['reopen', 'delivery/api', '--reason', 'api still fails'])
+    expect(result.stderr).toContain('cannot reopen delivery/api because its Change Group is closed')
+    expect(existsSync(join(root, '.rsp', 'changes', 'delivery', 'api.md'))).toBe(false)
+  })
+
+  it('fails before mutation when archive inspection is incomplete', async () => {
+    const root = await createReopenProject('invalid-history')
+    await createReopenArchive(root, 'valid', 'valid pass')
+    await writeFile(join(root, '.rsp', 'archives', 'bad-name.md'), '# invalid archive\n')
+
+    const result = failReopen(root, ['reopen', 'valid', '--reason', 'must inspect first'])
+    expect(result.stderr).toContain('archive history inspection is incomplete')
+    expect(existsSync(join(root, '.rsp', 'changes', 'valid.md'))).toBe(false)
+    expect(existsSync(join(root, '.rsp', 'focus.d', 'valid'))).toBe(false)
+  })
+
+  it('rejects non-canonical required section headings before mutation', async () => {
+    const root = await createReopenProject('invalid-sections')
+    await writeFile(join(root, '.rsp', 'archives', `${today}_invalid-sections.md`), `---
+kind: feature
+---
+
+# Change: invalid-sections
+
+## Proposal
+- Outcome: malformed archived sections
+
+## Tasks notes
+- [x] old task
+
+## Verify notes
+- [x] old verification
+
+## Blockers
+- none
+`)
+
+    const result = failReopen(root, ['reopen', 'invalid-sections', '--reason', 'must remain atomic'])
+    expect(result.stderr).toContain('must contain exactly one required section: Tasks')
+    expect(existsSync(join(root, '.rsp', 'changes', 'invalid-sections.md'))).toBe(false)
+    expect(existsSync(join(root, '.rsp', 'focus.d', 'invalid-sections'))).toBe(false)
+  })
+})
+
+async function createReopenProject(label: string): Promise<string> {
+  const root = join(tmpdir(), `rsp-reopen-${label}`, randomUUID())
+  await mkdir(root, { recursive: true })
+  runReopen(root, ['init'])
+  return root
+}
+
+function runReopen(root: string, args: string[]): string {
+  return execFileSync('node', [cliPath(), ...args], { cwd: root, encoding: 'utf-8' })
+}
+
+function failReopen(root: string, args: string[]) {
+  const result = spawnSync('node', [cliPath(), ...args], { cwd: root, encoding: 'utf-8' })
+  expect(result.status).toBe(1)
+  return result
+}
+
+async function createReopenArchive(root: string, name: string, summary: string): Promise<void> {
+  runReopen(root, ['create', name, summary])
+  const segments = name.split('/')
+  const path = join(root, '.rsp', 'changes', ...segments.slice(0, -1), `${segments.at(-1)}.md`)
+  await writeFile(path, completeReopenChange(await readFile(path, 'utf-8')))
+  runReopen(root, ['archive', name])
+}
+
+function completeReopenChange(content: string): string {
+  return content.replaceAll('- [ ]', '- [x]')
+}
+
+function renderReopenGroupBrief(group: string, complete: boolean): string {
+  return `---
+kind: group
+---
+
+# Change Group: ${group}
+
+## Goal
+- Deliver two slices
+
+## Scope
+- Coordinate delivery
+
+## Shared Constraints
+- Keep slices independent
+
+## Slices
+- \`${group}/api\`: API slice
+- \`${group}/ui\`: UI slice
+
+## Completion Conditions
+- [${complete ? 'x' : ' '}] Both slices work together
+
+## Durable Outcomes
+- none
+
+## Blockers
+- none
+`
+}
+
 describe('ready command', () => {
   it('reports archive readiness without moving the change', async () => {
     const readyDir = await createRspFixture('rsp-ready-test')

@@ -96,6 +96,7 @@ npx -y @oevery/rsp@3.1.0-beta.2 doctor
 - `rsp init`, `rsp update`, `rsp add spec`, and the generated Specs index builder apply the same no-follow managed-path checks. Archive discovery accepts only flat archive files or one real group directory; recursively organized Specs accept only real directories and regular files.
 - Final managed files—such as the project `AGENTS.md`, focus markers, fallback/config files, the generated Specs index, and placeholders—must also be regular files; RSP rejects static symlink targets before reading or writing them.
 - Completed changes move to `archives/`. Stable current facts belong in Specs; lasting rationale belongs in Decision Records; stable scoped operating instructions belong in nearest project-owned `AGENTS.md`.
+- When later evidence shows that the original acceptance was not actually met, `rsp reopen <work-ref> --reason <text>` restores the same executable WorkRef as focused open work and retains the selected archive as history. Multiple archives require an exact `--from .rsp/archives/...` path. Use a new corrective Change for genuinely new scope or an independently delivered correction; reopening never rewrites Git or published history.
 - Do not promote task history, debugging notes, or one-off implementation context into Specs, Decision Records, or project instructions.
 - Change `Spec` delta markers (`### ADDED`, `### MODIFIED`, `### REMOVED`) are planning aids only. `rsp archive` does not automatically promote them into Specs or Decision Records. Durable writeback remains an explicit semantic decision.
 - `rsp check` performs deterministic hygiene checks. It warns about unfinished template placeholders and unresolved clarification markers, but those warnings do not replace the semantic durable-update decision.
@@ -286,6 +287,7 @@ New project:
 9. Edit the change file directly to implement the work and mark tasks complete
 10. Use the RSP skill or a human review to decide whether durable updates are needed
 11. After Core recommends archive, run `rsp archive <name>` before final Git delivery; inspect the complete resulting worktree and obtain Git authority separately
+12. If later evidence invalidates the original completion, run `rsp reopen <name> --reason <text>` and resolve the restored unfinished Task and Verify evidence under the same WorkRef
 
 Existing project with a rich `AGENTS.md`:
 
@@ -321,6 +323,8 @@ rsp focus <name>                Mark an open change as currently focused
 rsp unfocus <name>              Remove an open change from the current focus set
 rsp archive <name>              Archive to .rsp/archives/
 rsp archive --dry-run <name>    Preview archive readiness without moving the change
+rsp reopen <name> --reason <text> [--from <archive-path>]
+                                  Restore the same WorkRef as focused open work and retain archive history
 rsp ready <name> [--json [--compact]] [--verbose]
                                   Preview archive readiness (same as archive --dry-run)
 rsp show <name|--focused> [--json [--compact]] [--verbose]

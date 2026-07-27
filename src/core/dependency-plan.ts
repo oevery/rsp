@@ -166,7 +166,7 @@ export async function inspectChangeDependencies(options: { workTree?: WorkTreeIn
     .sort()
     .map((name) => {
       let state: ChangeDependencyPlanOutput['nodes'][number]['state']
-      if (archivedNames.has(name))
+      if (!openNames.has(name) && archivedNames.has(name))
         state = 'archived'
       else if (!openNames.has(name))
         state = 'missing'

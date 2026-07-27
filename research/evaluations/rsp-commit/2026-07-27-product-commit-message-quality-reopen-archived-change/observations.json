@@ -1,0 +1,28 @@
+{
+  "interaction": {
+    "request_language": "zh-CN",
+    "repository_commit_language": "English",
+    "base_subject": "chore: establish greeting fixture",
+    "selected_work_ref": "add-greeting-format"
+  },
+  "message": {
+    "conventional_subject": true,
+    "subject_language": "English",
+    "body_bullets": 3,
+    "work_ref_trailer": "add-greeting-format",
+    "invented_trailers": false
+  },
+  "boundary": {
+    "one_local_commit": true,
+    "exact_owned_paths": true,
+    "worktree_clean": true,
+    "change_remained_open_and_focused": true
+  },
+  "remote_safety": {
+    "remote_refs_unchanged": true,
+    "push": false,
+    "force_push": false,
+    "publication": false,
+    "history_rewrite": false
+  }
+}

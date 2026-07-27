@@ -1,4 +1,4 @@
-import type { ArchiveChangeArgs, CreateChangeArgs } from './types.js'
+import type { ArchiveChangeArgs, CreateChangeArgs, ReopenChangeArgs } from './types.js'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -13,6 +13,7 @@ import { closeChangeGroup, createChangeGroup } from './commands/group.js'
 import { showHistory } from './commands/history.js'
 import { initProject } from './commands/init.js'
 import { showReady } from './commands/ready.js'
+import { reopenChange } from './commands/reopen.js'
 import { showChange } from './commands/show.js'
 import { inspectPackagedSkillInventory, installPackagedSkills, printPackagedSkillInventory, printSkillInstallResult } from './commands/skills.js'
 import { showStatus } from './commands/status.js'
@@ -179,6 +180,32 @@ const archiveCommand = defineCommand({
   },
   async run({ args }: { args: ArchiveChangeArgs & { 'dry-run': boolean } }) {
     await archiveChange(args.name, { dryRun: Boolean(args['dry-run']) })
+  },
+})
+
+const reopenCommand = defineCommand({
+  meta: {
+    name: 'reopen',
+    description: 'Restore one archived Change as focused open work while retaining history',
+  },
+  args: {
+    name: {
+      type: 'positional',
+      description: 'Archived Change WorkRef',
+      required: true,
+    },
+    from: {
+      type: 'string',
+      description: 'Exact .rsp/archives/... path when the WorkRef has multiple archives',
+    },
+    reason: {
+      type: 'string',
+      description: 'One-line concern that makes the restored Change unfinished',
+      required: true,
+    },
+  },
+  async run({ args }: { args: ReopenChangeArgs }) {
+    await reopenChange(args.name, { from: args.from, reason: args.reason })
   },
 })
 
@@ -626,6 +653,7 @@ export async function runCli(rawArgs = process.argv.slice(2)) {
       focus: focusCommand,
       unfocus: unfocusCommand,
       archive: archiveCommand,
+      reopen: reopenCommand,
       ready: readyCommand,
       show: showCommand,
       history: historyCommand,

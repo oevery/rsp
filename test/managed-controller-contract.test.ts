@@ -398,7 +398,7 @@ describe('rsp-manage product Skill', () => {
   })
 
   it('replays retained rsp-commit message quality and remote-safety evidence against the current composition', () => {
-    const retained = join(root, 'research', 'evaluations', 'rsp-commit', '2026-07-27-product-commit-message-quality')
+    const retained = join(root, 'research', 'evaluations', 'rsp-commit', '2026-07-27-product-commit-message-quality-reopen-archived-change')
     const metadata = JSON.parse(readFileSync(join(retained, 'metadata.json'), 'utf8')) as any
     const observations = JSON.parse(readFileSync(join(retained, 'observations.json'), 'utf8')) as any
     const final = readFileSync(join(retained, 'final.md'), 'utf8')

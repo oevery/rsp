@@ -27,6 +27,12 @@ export interface ArchiveChangeArgs {
   name: string
 }
 
+export interface ReopenChangeArgs {
+  name: string
+  from?: string
+  reason: string
+}
+
 /** Options for `rsp init`. */
 export interface InitArgs {
   withProjectSetup?: boolean

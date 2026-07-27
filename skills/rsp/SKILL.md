@@ -61,6 +61,8 @@ Keep the Change a convergent snapshot of the current plan and final decisive evi
 
 Persist only `open` and `archived`; derive readiness, blockers, stage, and next actions. Do not infer implementation, review, Git, publication, or approval authority from focus, readiness, routing, or capability availability.
 
+When fresh evidence shows that an archived executable Change did not meet its original acceptance, keep the correction under the same WorkRef by explicitly running `rsp reopen <work-ref> --reason <text>`. Reopen retains the selected archive as history, restores and focuses open work, and adds unfinished Task and Verify evidence. If multiple archives share the WorkRef, require exact `--from .rsp/archives/...` selection rather than choosing the newest. Treat the open WorkRef as current dependency state; do not cascade into archived dependents or implicitly reopen a closed Change Group. Use a new corrective Change for genuinely new scope or an independently delivered correction. Reopen is lifecycle mutation only and grants no Git, release, publication, deployment, or approval authority.
+
 Load detailed procedures only when their path is active:
 
 - Read [setup and repair](references/setup-repair.md) before initializing, auditing, migrating, or repairing RSP state.
@@ -72,7 +74,7 @@ Load detailed procedures only when their path is active:
 
 Route planned design to the selected Change; stable implemented facts to the smallest relevant Spec or authorized scoped instruction; lasting rationale to one exact Decision Record; stable navigation to project-owned `CONTEXT.md`; stable operating rules to project-owned `AGENTS.md`; and temporary continuation to the response. Never write planned state as current truth or duplicate facts into rationale.
 
-Use RSP commands for managed setup, focus, repair, indexes, and archive. Do not directly create command-owned files, edit generated indexes or `.rsp/rsp-rules.md` as durable truth, or modify the managed RSP block. Preserve unrelated work. Core recommends explicit archive only after the durable decision; it does not execute archive or grant staging, commit, push, publication, deletion, deployment, approval, or human-acceptance authority. The qualified Manage rules in [managed routing](references/managed-routing.md) are the sole scoped exceptions.
+Use RSP commands for managed setup, focus, repair, indexes, archive, and reopen. Do not directly create command-owned files, edit generated indexes or `.rsp/rsp-rules.md` as durable truth, or modify the managed RSP block. Preserve unrelated work. Core recommends explicit archive only after the durable decision; it does not execute archive or grant staging, commit, push, publication, deletion, deployment, approval, or human-acceptance authority. Core also does not execute reopen without explicit lifecycle authority. The qualified Manage rules in [managed routing](references/managed-routing.md) are the sole scoped exceptions.
 
 When accepted work remains, return a localized continuation with these semantic fields in order: `WorkRef`, `Authority`, `Current state`, `Changed artifacts`, `Fresh verification`, `Blockers`, `Next action`. Preserve technical values. The continuation points to existing owners, is not a second state store, and must not be persisted without explicit path authority. On resume, reopen its pointers, inspect drift, and refresh decisive evidence.
 
