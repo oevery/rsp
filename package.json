@@ -1,7 +1,7 @@
 {
   "name": "@oevery/rsp",
   "type": "module",
-  "version": "3.1.0-beta.1",
+  "version": "3.1.0-beta.2",
   "description": "RSP (Reliable Software Practice), a repository-native engineering workflow for humans and AI agents",
   "author": "oevery",
   "license": "MIT",

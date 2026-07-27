@@ -1,5 +1,19 @@
 # Changelog
 
+## 3.1.0-beta.2 (2026-07-27)
+
+- Add policy-controlled managed execution: projects can opt into automatic Manage routing and choose manual, lifecycle, or eligible local-commit closeout while invalid configuration fails closed and effective policy remains visible in status output.
+- Extend managed goals across shallow Group waves, interruption-safe long-running continuation, and bounded review-correction convergence without broadening mutation, lifecycle, Git, publication, deployment, approval, or human-acceptance authority.
+- Add an interactive project Skill manager for dual-TTY use, deterministic `rsp skills list [--json]` discovery for scripts, eleven default lifecycle Skills, and exact-name installation for optional project Skills.
+- Add report-only Pre-Change Design for already-bounded questions and an optional evidence-backed codebase-audit Skill for discovering structural risks before work is shaped.
+- Add `rsp-commit` as a bounded local-commit capability that requires an already-derived owner, exact paths, fresh verification, lifecycle state, and explicit commit authority.
+- Harden release preparation with exact candidate identity checks, publication-invariant release surfaces, smaller release-operation ownership, and stricter package maintenance gates.
+- Split the self-hosted project model into focused domain Specs and progressively loaded Core references while preserving the generated fallback protocol and runtime behavior.
+
+This prerelease remains opt-in and does not promote npm `latest`. The exact package is validated against the RSP self-host; packaged CLI startup, Skill inventory, and installation preflight were also smoke-tested from boats-cloud, which is not RSP-initialized. Real-project RSP lifecycle acceptance and productivity claims remain unverified. Users upgrading directly from 2.x must first follow the [3.0 migration guide](docs/migrations/3.0.md).
+
+See the [3.1.0-beta.2 release notes](docs/releases/3.1.0-beta.2.md).
+
 ## 3.1.0-beta.1 (2026-07-25)
 
 - Decouple retained native-composition behavior evidence from release-only version identity while preserving exact-package provenance and fail-closed Skill, inventory, behavior-file, input, and integrity checks.
