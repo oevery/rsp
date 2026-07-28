@@ -2,7 +2,8 @@ import type { HistoryDetailOutput, HistoryEvidenceListOutput, HistoryRecordOutpu
 import type { ArchiveHistoryInspection, ArchiveHistoryListResult, ArchiveHistoryQuery, ArchiveHistoryRecord } from './model.js'
 import { readFile } from 'node:fs/promises'
 
-import { countCheckboxes, extractSection, parseScenarios } from '../core/helpers.js'
+import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionBody, parseRspDocument } from '../core/document-model.js'
+import { countCheckboxes, parseScenarios } from '../core/helpers.js'
 import { normalizeWorkRefSegment } from '../core/work-ref.js'
 import { boundText } from './inspect.js'
 import { ArchiveHistoryError, HISTORY_DEFAULT_LIMIT, HISTORY_MAX_EVIDENCE_ITEMS, HISTORY_MAX_LIMIT } from './model.js'
@@ -82,9 +83,10 @@ export async function readArchiveHistoryDetail(record: ArchiveHistoryRecord): Pr
     throw new ArchiveHistoryError('archive_read_failed', `unable to read archived Change ${record.path}: ${error instanceof Error ? error.message : String(error)}`)
   }
 
-  const tasks = extractSection(content, 'Tasks')
-  const verify = extractSection(content, 'Verify')
-  const blockers = extractSection(content, 'Blockers')
+  const document = parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA)
+  const tasks = getDocumentSectionBody(document, 'tasks')
+  const verify = getDocumentSectionBody(document, 'verify')
+  const blockers = getDocumentSectionBody(document, 'blockers')
   return {
     ...toOutputRecord(record),
     scenarioCount: parseScenarios(content).length,

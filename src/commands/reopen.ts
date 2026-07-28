@@ -1,8 +1,10 @@
+import type { ChangeSectionId } from '../core/document-model.js'
 import { existsSync } from 'node:fs'
 import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 
 import { CHANGES_DIR, FOCUS_DIR, pc } from '../core/config.js'
+import { appendDocumentSectionItem, CHANGE_DOCUMENT_SCHEMA, DocumentSectionCardinalityError, parseRspDocument } from '../core/document-model.js'
 import { cleanupEmptyParentDirs, guardRspInitialized } from '../core/helpers.js'
 import { withRspLock } from '../core/lock.js'
 import { writeManagedFile } from '../core/managed-path.js'
@@ -69,8 +71,8 @@ export async function reopenChange(name: string, options: ReopenOptions): Promis
 
       const archivedContent = await readFile(record.sourcePath, 'utf-8')
       const reopenedContent = appendChecklistItem(
-        appendChecklistItem(archivedContent, 'Tasks', `- [ ] Resolve reopened concern: ${reason}`),
-        'Verify',
+        appendChecklistItem(archivedContent, 'tasks', `- [ ] Resolve reopened concern: ${reason}`),
+        'verify',
         `- [ ] Verify reopened concern: ${reason}`,
       )
 
@@ -124,18 +126,17 @@ export async function reopenChange(name: string, options: ReopenOptions): Promis
   }
 }
 
-function appendChecklistItem(content: string, heading: 'Tasks' | 'Verify', item: string): string {
-  const headings = [...content.matchAll(new RegExp(`^## ${heading}[ \\t]*\\r?$`, 'gm'))]
-  if (headings.length !== 1) {
+function appendChecklistItem(content: string, sectionId: Extract<ChangeSectionId, 'tasks' | 'verify'>, item: string): string {
+  try {
+    return appendDocumentSectionItem(parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA), sectionId, item)
+  }
+  catch (error) {
+    if (!(error instanceof DocumentSectionCardinalityError))
+      throw error
+    const heading = CHANGE_DOCUMENT_SCHEMA.sections.find(section => section.id === sectionId)!.heading
     throw new ArchiveHistoryError(
       'archive_section_invalid',
       `archived Change must contain exactly one required section: ${heading}`,
     )
   }
-  const sectionBodyStart = headings[0].index + headings[0][0].length
-  const nextHeading = content.indexOf('\n## ', sectionBodyStart)
-  const insertAt = nextHeading < 0 ? content.length : nextHeading
-  const before = content.slice(0, insertAt)
-  const separator = before.endsWith('\n\n') ? '' : before.endsWith('\n') ? '\n' : '\n\n'
-  return `${before}${separator}${item}\n${content.slice(insertAt)}`
 }

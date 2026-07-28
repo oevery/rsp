@@ -5,7 +5,8 @@ import { readFile, stat } from 'node:fs/promises'
 import { inspectChangeGroups } from '../core/change-group.js'
 import { CONFIG_PATH, inspectRspConfig, resolveLanguagePolicy, resolveManagePolicy } from '../core/config.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
-import { collectArchiveReadiness, countCheckboxes, extractSection, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter } from '../core/helpers.js'
+import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionBody, getDocumentTitle, parseRspDocument } from '../core/document-model.js'
+import { collectArchiveReadiness, countCheckboxes, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter } from '../core/helpers.js'
 import { toErrorMessage } from '../core/output.js'
 import { inspectArchiveTree, inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 import { historyInspectionComplete, inspectArchiveHistory } from '../history/query.js'
@@ -242,12 +243,12 @@ function emptyReadiness(activeBlockers: boolean): ProjectStatusRecord['readiness
 }
 
 function extractChangeTitle(content: string): string | null {
-  const heading = content.split(/\r?\n/).find(line => line.startsWith('# Change: '))
-  return heading?.slice('# Change: '.length).trim() || null
+  return getDocumentTitle(parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA), 'spaced')
 }
 
 function extractBlockerEntries(content: string): string[] {
-  return extractSection(content, 'Blockers')
+  const document = parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA)
+  return getDocumentSectionBody(document, 'blockers')
     .split('\n')
     .map(line => line.trim())
     .filter(line => /^[-*]\s+/.test(line))

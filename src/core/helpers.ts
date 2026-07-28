@@ -5,6 +5,7 @@ import { readdir, readFile, rmdir } from 'node:fs/promises'
 import { basename, dirname, join, relative, sep } from 'node:path'
 import { parse } from 'yaml'
 import { OBSOLETE_RSP_RULES_PATH, pc, RSP_DIR, RSP_RULES_PATH } from './config.js'
+import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionBody, parseRspDocument, renderDocumentSectionHeading, renderDocumentTitle } from './document-model.js'
 import { inspectManagedFile } from './managed-path.js'
 import { toErrorMessage } from './output.js'
 
@@ -158,9 +159,9 @@ export function generateChangeContent(name: string, summary = '', kind?: string,
 kind: ops
 ---
 
-# Change: project-setup
+${renderDocumentTitle(CHANGE_DOCUMENT_SCHEMA, 'project-setup')}
 
-## Proposal
+${changeSectionHeading('proposal')}
 - Outcome: ${proposalSummary}
 - Why:
   - ${placeholder}
@@ -169,7 +170,7 @@ kind: ops
 - Non-goals:
   - ${placeholder}
 
-## Spec
+${changeSectionHeading('spec')}
 ### ADDED
 - Requirement: ${placeholder}
   - ${placeholder}
@@ -180,7 +181,7 @@ kind: ops
 - WHEN ${placeholder}
 - THEN ${placeholder}
 
-## Design
+${changeSectionHeading('design')}
 - Approach:
   - ${placeholder}
 - Boundaries:
@@ -195,12 +196,12 @@ kind: ops
 - Constraints:
   - ${placeholder}
 
-## Tasks
+${changeSectionHeading('tasks')}
 - [ ] .rsp/specs/design.md: ${placeholder}
 - [ ] CONTEXT.md: ${placeholder}
 - [ ] AGENTS.md: ${placeholder}
 
-## Verify
+${changeSectionHeading('verify')}
 - Automated:
   - [ ] rsp doctor — proves: ${placeholder}
 - Manual or environment:
@@ -208,7 +209,7 @@ kind: ops
 - Coverage:
   - ${placeholder}
 
-## Blockers
+${changeSectionHeading('blockers')}
 - none
 `
   }
@@ -223,9 +224,9 @@ kind: ops
 kind: "${frontmatterKind}"
 ---
 
-# Change: ${name}
+${renderDocumentTitle(CHANGE_DOCUMENT_SCHEMA, name)}
 
-## Proposal
+${changeSectionHeading('proposal')}
 - Outcome: ${proposalSummary}
 - Why:
   - ${template.why}
@@ -234,13 +235,13 @@ kind: "${frontmatterKind}"
 - Non-goals:
   - ${template.nonGoals}
 
-## Spec
+${changeSectionHeading('spec')}
 ${template.specSection}
 
 ### Acceptance
 ${template.acceptanceSection}
 
-## Design
+${changeSectionHeading('design')}
 - Approach:
   - ${template.approach}
 - Boundaries:
@@ -251,10 +252,10 @@ ${template.acceptanceSection}
 - Constraints:
   - ${template.constraints}
 
-## Tasks
+${changeSectionHeading('tasks')}
 - [ ] ${template.task}
 
-## Verify
+${changeSectionHeading('verify')}
 - Automated:
   - [ ] ${template.automatedVerify} — proves: ${placeholder}
 - Manual or environment:
@@ -262,7 +263,7 @@ ${template.acceptanceSection}
 - Coverage:
   - ${placeholder}
 
-## Blockers
+${changeSectionHeading('blockers')}
 - none
 `
 }
@@ -273,9 +274,9 @@ function generateLiteChangeContent(name: string, proposalSummary: string, frontm
 kind: "${frontmatterKind}"
 ---
 
-# Change: ${name}
+${renderDocumentTitle(CHANGE_DOCUMENT_SCHEMA, name)}
 
-## Proposal
+${changeSectionHeading('proposal')}
 - Outcome: ${proposalSummary}
 - Why:
   - ${placeholder}
@@ -284,7 +285,7 @@ kind: "${frontmatterKind}"
 - Non-goals:
   - none
 
-## Spec
+${changeSectionHeading('spec')}
 ### MODIFIED
 - Requirement: ${placeholder}
   - ${placeholder}
@@ -295,7 +296,7 @@ kind: "${frontmatterKind}"
 - WHEN ${placeholder}
 - THEN ${placeholder}
 
-## Design
+${changeSectionHeading('design')}
 - Approach:
   - ${placeholder}
 - Boundaries:
@@ -305,10 +306,10 @@ kind: "${frontmatterKind}"
 - Constraints:
   - ${placeholder}
 
-## Tasks
+${changeSectionHeading('tasks')}
 - [ ] ${placeholder}
 
-## Verify
+${changeSectionHeading('verify')}
 - Automated:
   - [ ] ${placeholder} — proves: ${placeholder}
 - Manual or environment:
@@ -316,7 +317,7 @@ kind: "${frontmatterKind}"
 - Coverage:
   - ${placeholder}
 
-## Blockers
+${changeSectionHeading('blockers')}
 - none
 `
 }
@@ -338,6 +339,10 @@ function getChangeTemplateByKind(kind?: string) {
     automatedVerify: placeholder,
     manualVerify: placeholder,
   }
+}
+
+function changeSectionHeading(sectionId: typeof CHANGE_DOCUMENT_SCHEMA.sections[number]['id']): string {
+  return renderDocumentSectionHeading(CHANGE_DOCUMENT_SCHEMA, sectionId)
 }
 
 /** Render the managed RSP block for AGENTS.md. */
@@ -495,28 +500,19 @@ function toTitleCase(value: string): string {
     .join(' ')
 }
 
-/** Extract the raw body of a `## <heading>` section. */
-export function extractSection(content: string, heading: string): string {
-  const lines = content.split('\n')
-  const start = lines.findIndex(line => line.trim() === `## ${heading}`)
-  if (start === -1)
-    return ''
-
-  const body: string[] = []
-  for (let index = start + 1; index < lines.length; index++) {
-    const line = lines[index]
-    if (line.startsWith('## '))
-      break
-    body.push(line)
-  }
-
-  return body.join('\n').trim()
-}
-
 /** Extract normalized semantic lines from Blockers, excluding well-formed Markdown HTML comments. */
 export function extractBlockerLines(content: string): string[] {
-  const uncommented = content.replace(/<!--[\s\S]*?-->/g, '')
-  return extractSection(uncommented, 'Blockers')
+  const document = parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA)
+  return normalizeBlockerBody(getDocumentSectionBody(document, 'blockers'))
+}
+
+/** Return true when one already-indexed Blockers body contains a real blocker entry. */
+export function hasMeaningfulBlockerBody(body: string): boolean {
+  return hasMeaningfulBlockerLines(normalizeBlockerBody(body))
+}
+
+function normalizeBlockerBody(body: string): string[] {
+  return body.replace(/<!--[\s\S]*?-->/g, '')
     .split('\n')
     .map(line => line.trim())
     .filter(Boolean)
@@ -524,8 +520,11 @@ export function extractBlockerLines(content: string): string[] {
 
 /** Return true when the Blockers section contains a real blocker entry. */
 export function hasMeaningfulBlockers(content: string): boolean {
-  const lines = extractBlockerLines(content)
+  return hasMeaningfulBlockerLines(extractBlockerLines(content))
+}
 
+/** Return true when normalized Blockers-section lines contain a real blocker entry. */
+export function hasMeaningfulBlockerLines(lines: string[]): boolean {
   if (lines.length === 0)
     return false
 
@@ -537,7 +536,8 @@ export function hasMeaningfulBlockers(content: string): boolean {
  * Matches `### ADDED`, `### MODIFIED`, `### REMOVED` sub-headings under `## Spec`.
  */
 export function detectDeltaSections(content: string): DeltaSections {
-  const body = extractSection(content, 'Spec')
+  const document = parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA)
+  const body = getDocumentSectionBody(document, 'spec')
   return {
     added: /^###\s*ADDED/im.test(body),
     modified: /^###\s*MODIFIED/im.test(body),
@@ -572,8 +572,9 @@ export interface DurableReviewGuidance {
  */
 export function collectArchiveReadiness(content: string, options: { activeBlockers?: boolean } = {}): ArchiveReadiness {
   const warnings: string[] = []
-  const tasksSection = extractSection(content, 'Tasks')
-  const verifySection = extractSection(content, 'Verify')
+  const document = parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA)
+  const tasksSection = getDocumentSectionBody(document, 'tasks')
+  const verifySection = getDocumentSectionBody(document, 'verify')
 
   const taskTodos = getOpenCheckboxes(tasksSection)
   if (taskTodos.length > 0)

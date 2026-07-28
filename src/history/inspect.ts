@@ -5,7 +5,8 @@ import { readFile } from 'node:fs/promises'
 import { basename, dirname, relative } from 'node:path'
 
 import { ARCHIVES_DIR } from '../core/config.js'
-import { extractSection, normalizeLogicalPath, parseFrontmatter } from '../core/helpers.js'
+import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionBody, getDocumentTitles, GROUP_BRIEF_DOCUMENT_SCHEMA, parseRspDocument } from '../core/document-model.js'
+import { normalizeLogicalPath, parseFrontmatter } from '../core/helpers.js'
 import { toErrorMessage } from '../core/output.js'
 import { inspectArchiveTree, isCanonicalExecutableWorkRef, isCanonicalWorkRefSegment } from '../core/work-ref.js'
 import { HISTORY_MAX_DIAGNOSTICS, HISTORY_MAX_TEXT_CODE_POINTS } from './model.js'
@@ -81,8 +82,10 @@ function parseArchiveEntry(sourcePath: string, path: string, archivesDir: string
   if (archiveGroup && !isCanonicalWorkRefSegment(archiveGroup))
     return { diagnostic: errorDiagnostic('archive_identity_mismatch', path, 'archive group path is not a valid one-segment Group identity') }
 
-  const changeHeadings = [...content.matchAll(/^# Change:\s+(\S+)\s*$/gm)].map(match => match[1])
-  const groupHeadings = [...content.matchAll(/^# Change Group:\s+(\S+)\s*$/gm)].map(match => match[1])
+  const changeDocument = parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA)
+  const groupDocument = parseRspDocument(content, GROUP_BRIEF_DOCUMENT_SCHEMA)
+  const changeHeadings = getDocumentTitles(changeDocument, 'identity')
+  const groupHeadings = getDocumentTitles(groupDocument, 'identity')
   if (changeHeadings.length + groupHeadings.length !== 1) {
     return { diagnostic: errorDiagnostic('archive_heading_invalid', path, 'archive must contain exactly one Change or Change Group identity heading') }
   }
@@ -116,7 +119,7 @@ function parseArchiveEntry(sourcePath: string, path: string, archivesDir: string
     return { diagnostic: errorDiagnostic('archive_identity_mismatch', path, `archived Change identity ${workRef} does not match its archive path`) }
   }
 
-  const rawSummary = extractSummary(content)
+  const rawSummary = extractSummary(content, changeDocument)
   if (!rawSummary)
     return { diagnostic: errorDiagnostic('archive_summary_missing', path, 'archived Change must contain frontmatter summary, Proposal Outcome, or Proposal Summary') }
   const summary = boundText(rawSummary)
@@ -135,11 +138,11 @@ function parseArchiveEntry(sourcePath: string, path: string, archivesDir: string
   }
 }
 
-function extractSummary(content: string): string {
+function extractSummary(content: string, document = parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA)): string {
   const frontmatter = parseFrontmatter(content)
   if (typeof frontmatter?.summary === 'string' && frontmatter.summary.trim())
     return frontmatter.summary.trim()
-  const proposalLines = extractSection(content, 'Proposal').split('\n').map(line => line.trim())
+  const proposalLines = getDocumentSectionBody(document, 'proposal').split('\n').map(line => line.trim())
   for (const prefix of ['- Outcome:', '- Summary:']) {
     const line = proposalLines.find(candidate => candidate.startsWith(prefix))
     if (line && line.slice(prefix.length).trim())

@@ -4,10 +4,11 @@ import { readFile } from 'node:fs/promises'
 import { dirname, join, relative } from 'node:path'
 
 import { ARCHIVES_DIR } from './config.js'
-import { countCheckboxes, extractSection, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter } from './helpers.js'
+import { CHANGE_DOCUMENT_SCHEMA, getCanonicalSectionHeadings, getDocumentSectionBody, getDocumentTitle, GROUP_BRIEF_DOCUMENT_SCHEMA, parseRspDocument, renderDocumentSectionHeading, renderDocumentTitle } from './document-model.js'
+import { countCheckboxes, hasMeaningfulBlockerBody, normalizeLogicalPath, parseFrontmatter } from './helpers.js'
 import { GROUP_BRIEF_FILENAME, inspectArchiveTree, inspectFocusTree, inspectWorkTree, isCanonicalExecutableWorkRef, resolveWorkRef, WorkRefError } from './work-ref.js'
 
-export const GROUP_BRIEF_SECTIONS = ['Goal', 'Scope', 'Shared Constraints', 'Slices', 'Completion Conditions', 'Durable Outcomes', 'Blockers'] as const
+export const GROUP_BRIEF_SECTIONS = getCanonicalSectionHeadings(GROUP_BRIEF_DOCUMENT_SCHEMA)
 
 export interface ChangeGroupInspection {
   groups: ChangeGroupStatusOutput[]
@@ -29,28 +30,28 @@ export function generateGroupBriefContent(name: string, goal = ''): string {
 kind: group
 ---
 
-# Change Group: ${name}
+${renderDocumentTitle(GROUP_BRIEF_DOCUMENT_SCHEMA, name)}
 
-## Goal
+${groupSectionHeading('goal')}
 - ${goal || placeholder}
 
-## Scope
+${groupSectionHeading('scope')}
 - ${placeholder}
 
-## Shared Constraints
+${groupSectionHeading('sharedConstraints')}
 - ${placeholder}
 
-## Slices
+${groupSectionHeading('slices')}
 - \`${name}/<change>\`: ${placeholder}
 
-## Completion Conditions
+${groupSectionHeading('completionConditions')}
 - [ ] ${placeholder}
 
-## Durable Outcomes
+${groupSectionHeading('durableOutcomes')}
 - Current facts: ${placeholder}
 - Lasting rationale: ${placeholder}
 
-## Blockers
+${groupSectionHeading('blockers')}
 - none
 `
 }
@@ -73,9 +74,9 @@ export async function inspectChangeGroups(options: { workTree?: WorkTreeInspecti
       continue
     try {
       const content = await readFile(path, 'utf-8')
-      const heading = content.match(/^# Change:\s+(\S+)\s*$/m)
-      if (heading?.[1]?.includes('/')) {
-        const identity = heading[1]
+      const archivedChange = parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA)
+      const identity = getDocumentTitle(archivedChange, 'identity')
+      if (identity?.includes('/')) {
         if (!isCanonicalExecutableWorkRef(identity) || !identity.startsWith(`${archiveGroup}/`)) {
           diagnostics.push({
             severity: 'error',
@@ -91,7 +92,7 @@ export async function inspectChangeGroups(options: { workTree?: WorkTreeInspecti
           archivedSlicesByGroup.set(archiveGroup, groupSlices)
         }
       }
-      if (new RegExp(`^# Change Group:\\s+${escapeRegExp(archiveGroup)}\\s*$`, 'm').test(content))
+      if (getDocumentTitle(parseRspDocument(content, GROUP_BRIEF_DOCUMENT_SCHEMA), 'identity') === archiveGroup)
         archivedGroups.add(archiveGroup)
     }
     catch (error) {
@@ -275,7 +276,7 @@ export async function hasArchivedGroupBrief(group: string): Promise<boolean> {
       const message = error instanceof Error ? error.message : String(error)
       throw new WorkRefError('work_tree_read_failed', `unable to inspect archived Change Group identity at ${path}: ${message}`, group)
     }
-    if (new RegExp(`^# Change Group:\\s+${escapeRegExp(group)}\\s*$`, 'm').test(content))
+    if (getDocumentTitle(parseRspDocument(content, GROUP_BRIEF_DOCUMENT_SCHEMA), 'identity') === group)
       return true
   }
   return false
@@ -288,6 +289,7 @@ function parseGroupBrief(group: string, content: string): {
   diagnostics: CommandDiagnostic[]
 } {
   const diagnostics: CommandDiagnostic[] = []
+  const document = parseRspDocument(content, GROUP_BRIEF_DOCUMENT_SCHEMA)
   let frontmatter
   try {
     frontmatter = parseFrontmatter(content)
@@ -297,17 +299,17 @@ function parseGroupBrief(group: string, content: string): {
   }
   if (frontmatter?.kind !== 'group')
     diagnostics.push({ severity: 'error', code: 'group_kind_invalid', change: group, message: 'Group Brief frontmatter must declare kind: group' })
-  if (!new RegExp(`^# Change Group:\\s+${escapeRegExp(group)}\\s*$`, 'm').test(content))
+  if (getDocumentTitle(document, 'identity') !== group)
     diagnostics.push({ severity: 'error', code: 'group_heading_mismatch', change: group, message: `Group Brief heading must be: # Change Group: ${group}` })
 
-  for (const section of GROUP_BRIEF_SECTIONS) {
-    if (!extractSection(content, section))
-      diagnostics.push({ severity: 'error', code: 'group_section_missing', change: group, message: `Group Brief missing required section: ${section}` })
+  for (const definition of GROUP_BRIEF_DOCUMENT_SCHEMA.sections) {
+    if (!getDocumentSectionBody(document, definition.id))
+      diagnostics.push({ severity: 'error', code: 'group_section_missing', change: group, message: `Group Brief missing required section: ${definition.heading}` })
   }
 
   const slices: Array<{ name: string, boundary: string }> = []
   const seen = new Set<string>()
-  for (const line of extractSection(content, 'Slices').split('\n')) {
+  for (const line of getDocumentSectionBody(document, 'slices').split('\n')) {
     const trimmed = line.trim()
     const identity = trimmed.match(/^-\s+`(\S+)`/)
     if (!identity || identity[1].includes('<'))
@@ -337,18 +339,18 @@ function parseGroupBrief(group: string, content: string): {
   if (slices.length < 2)
     diagnostics.push({ severity: 'warning', code: 'group_slices_incomplete', change: group, message: 'Change Group must declare at least two direct child slices' })
 
-  const completion = countCheckboxes(extractSection(content, 'Completion Conditions'))
+  const completion = countCheckboxes(getDocumentSectionBody(document, 'completionConditions'))
   if (completion.total === 0)
     diagnostics.push({ severity: 'warning', code: 'group_completion_missing', change: group, message: 'Change Group must declare at least one completion condition' })
 
   return {
     slices,
     completion: { done: completion.done + completion.dropped, total: completion.total },
-    blockers: hasMeaningfulBlockers(content),
+    blockers: hasMeaningfulBlockerBody(getDocumentSectionBody(document, 'blockers')),
     diagnostics,
   }
 }
 
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+function groupSectionHeading(sectionId: typeof GROUP_BRIEF_DOCUMENT_SCHEMA.sections[number]['id']): string {
+  return renderDocumentSectionHeading(GROUP_BRIEF_DOCUMENT_SCHEMA, sectionId)
 }

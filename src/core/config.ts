@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import pc from 'picocolors'
 import { getDecisionRecordsConfigIssue, normalizeDecisionRecordsPath, validateDecisionRecordsPath } from './decisions.js'
+import { CHANGE_DOCUMENT_SCHEMA, getCanonicalSectionHeadings } from './document-model.js'
 import { parseYamlText } from './helpers.js'
 import { inspectManagedFile } from './managed-path.js'
 
@@ -34,7 +35,7 @@ export { pc }
 /** Built-in valid change kinds. */
 export const VALID_KINDS: ChangeKind[] = ['feature', 'fix', 'refactor', 'docs', 'ops', 'research']
 /** Built-in required sections in change files. */
-export const DEFAULT_REQUIRED_SECTIONS = ['Proposal', 'Spec', 'Design', 'Tasks', 'Verify', 'Blockers']
+export const DEFAULT_REQUIRED_SECTIONS = getCanonicalSectionHeadings(CHANGE_DOCUMENT_SCHEMA)
 export const DEFAULT_MANAGE_POLICY: ManagePolicy = { activation: 'explicit', closeout: 'local' }
 export const FAILED_CLOSED_MANAGE_POLICY: ManagePolicy = { activation: 'explicit', closeout: 'manual' }
 

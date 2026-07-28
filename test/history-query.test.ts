@@ -96,6 +96,21 @@ describe('archive history query', () => {
     expect(inspection.records.map(record => record.workRef)).not.toContain(nonCanonical)
   })
 
+  it('preserves the archive-heading diagnostic for identities containing spaces', async () => {
+    const root = await fixture()
+    await writeFile(
+      join(root, '.rsp', 'archives', '2026-07-26_invalid-title.md'),
+      archivedChange('invalid title'),
+    )
+
+    const inspection = await inspectArchiveHistory({ archivesDir: join(root, '.rsp', 'archives') })
+
+    expect(inspection.diagnostics).toContainEqual(expect.objectContaining({
+      code: 'archive_heading_invalid',
+      path: '.rsp/archives/2026-07-26_invalid-title.md',
+    }))
+  })
+
   it('searches WorkRef and the complete summary case-insensitively before applying the limit', async () => {
     const root = await fixture()
     const longPrefix = 'x'.repeat(500)

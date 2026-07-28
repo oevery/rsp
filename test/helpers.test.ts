@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
-import { collectArchiveChecklist, collectArchiveReadiness, countCheckboxes, detectDeltaSections, extractSection, generateChangeContent, generateDesignContent, generateSpecContent, getDurableReviewCandidateTargets, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, parseScenarios, parseYamlLines, renderRspAgentsBlock } from '../src/core/helpers.js'
+import { collectArchiveChecklist, collectArchiveReadiness, countCheckboxes, detectDeltaSections, generateChangeContent, generateDesignContent, generateSpecContent, getDurableReviewCandidateTargets, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, parseScenarios, parseYamlLines, renderRspAgentsBlock } from '../src/core/helpers.js'
 
 describe('parseYamlLines', () => {
   it('parses key-value pairs', () => {
@@ -48,17 +48,6 @@ describe('countCheckboxes', () => {
 - [x] done
 - [-] dropped`
     expect(countCheckboxes(content)).toEqual({ todo: 1, progress: 1, done: 1, dropped: 1, total: 4 })
-  })
-})
-
-describe('extractSection', () => {
-  it('extracts a named section body', () => {
-    const content = `## Proposal
-- Summary: hello
-
-## Spec
-### ADDED`
-    expect(extractSection(content, 'Proposal')).toContain('Summary: hello')
   })
 })
 

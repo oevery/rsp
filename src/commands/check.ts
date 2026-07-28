@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises'
 import { inspectChangeGroups } from '../core/change-group.js'
 import { loadRspConfig, pc, resolveKinds, resolveRequiredSections } from '../core/config.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
+import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionDefinitionByHeading, getDocumentSections, parseRspDocument } from '../core/document-model.js'
 import { detectDeltaSections, parseFrontmatter, parseScenarios } from '../core/helpers.js'
 import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
 import { inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
@@ -244,8 +245,10 @@ export async function runCheck(options: CheckOptions = {}): Promise<CheckResult>
       })
     }
 
+    const document = parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA)
     for (const section of requiredSections) {
-      if (!(new RegExp(`^## ${section}$`, 'm').test(content))) {
+      const definition = getDocumentSectionDefinitionByHeading(CHANGE_DOCUMENT_SCHEMA, section)
+      if (!definition || !getDocumentSections(document, definition.id).some(candidate => candidate.canonical)) {
         addDiagnostic({
           severity: 'error',
           code: 'missing_section',
@@ -286,19 +289,14 @@ export async function runCheck(options: CheckOptions = {}): Promise<CheckResult>
       }
     }
 
-    const headingLine = content
-      .split('\n')
-      .map(line => line.trim())
-      .find(line => line.startsWith('# Change:'))
-    if (headingLine) {
-      const heading = headingLine.slice('# Change:'.length).trim()
-      if (heading !== name) {
+    if (document.title !== null) {
+      if (document.title !== name) {
         addDiagnostic({
           severity: 'error',
           code: 'heading_mismatch',
           change: name,
           path: fp,
-          message: `# Change: heading "${heading}" differs from change name`,
+          message: `# Change: heading "${document.title}" differs from change name`,
         })
       }
     }
