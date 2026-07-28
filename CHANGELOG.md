@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.1.0-beta.3 (2026-07-28)
+
+- Replace the generated global Archive Index with bounded `rsp history` queries and the recursive Specs index with generated per-directory `00-index.md` navigation. `rsp update` migrates only recognized generated files and preserves unrecognized paths for owner review.
+- Add `rsp reopen <work-ref> --reason <text>` to restore incomplete archived work under the same WorkRef while retaining exact archive snapshots, requiring explicit selection when history is ambiguous, and keeping new scope in a separate corrective Change.
+- Harden Manage routing for long-running and recovery continuations, rederive materially expanded direct work, and make eligible clean local closeout deterministic without broadening lifecycle, Git, publication, deployment, approval, or human-acceptance authority.
+- Rename the review-resolution Skill to `rsp-resolve-findings` and the optional audit Skill to `rsp-structural-audit`; package installation migrates obsolete real directories only with explicit `--force` and transactional rollback.
+- Make `rsp ready` the canonical read-only archive-readiness projection while retaining `rsp archive --dry-run` as a deprecated compatibility route, and strengthen structural-audit restraint with deterministic behavior holdouts.
+- Replace mechanical Skill body word caps with shared portable metadata and semantic-contract coverage so concise instructions retain their trigger, authority, action, stop, return, and conditional-loading behavior.
+
+This prerelease remains opt-in and does not promote npm `latest`. The exact package is validated by the complete self-host release gate and clean-install package check. Broader real-project lifecycle acceptance, provider-backed structural-audit evaluation, and comparative productivity claims remain unverified. Users upgrading within 3.1 should follow the [3.1 migration guide](docs/migrations/3.1.md); users upgrading directly from 2.x must first follow the [3.0 migration guide](docs/migrations/3.0.md).
+
+See the [3.1.0-beta.3 release notes](docs/releases/3.1.0-beta.3.md).
+
 ## 3.1.0-beta.2 (2026-07-27)
 
 - Add policy-controlled managed execution: projects can opt into automatic Manage routing and choose manual, lifecycle, or eligible local-commit closeout while invalid configuration fails closed and effective policy remains visible in status output.
