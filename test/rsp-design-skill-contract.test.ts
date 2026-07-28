@@ -68,6 +68,12 @@ describe('rsp-design Skill contract', () => {
 
     expect(designRoute).toBeGreaterThan(-1)
     expect(noChangeRoute).toBeGreaterThan(designRoute)
+    expect(core).toContain('installed `rsp-design`; never manually emulate it')
+    expect(core).toContain('Only when unavailable, its manual fallback')
+    expect(core).toContain('without inventing a WorkRef or artifact')
+    expect(readSkill().body).toContain('the manual fallback is only for an unavailable Skill')
+    expect(fallback).toContain('installed `rsp-design`')
+    expect(fallback).toContain('manual design pass only when that Skill is unavailable')
     expect(fallback).toContain('report-only Pre-Change Design without inventing a WorkRef')
     expect(fallback).toContain('outcome, scope, non-goals, acceptance, or decomposition')
   })

@@ -30,6 +30,21 @@ function copiedRetainedRun(onTestFinished: (callback: () => void) => void) {
   return runRoot
 }
 
+function currentCompatiblePackage(packageEvidence: Record<string, any>) {
+  const current = validateCurrentNativeDesignArtifact(root, packageEvidence).current
+  return {
+    ...packageEvidence,
+    behavior_file_hashes: current.behavior_file_hashes,
+    installed_skill_hashes: Object.fromEntries(skills.map(name => [name, current.skill_hashes[name]])),
+    installed_skill_tree_hashes: Object.fromEntries(skills.map(name => [name, current.skill_tree_hashes[name]])),
+    name: current.name,
+    published_skill_hashes: current.skill_hashes,
+    published_skill_tree_hashes: current.skill_tree_hashes,
+    skill_inventory: current.skill_inventory,
+    version: current.version,
+  }
+}
+
 describe('native-design composition terminal evaluator', () => {
   it('redacts the exact disposable workspace before retaining host output', () => {
     const workspace = '/Users/person/project/.cache/rsp-native-design-composition/device-discovery-boundary-a1B2c3'
@@ -57,23 +72,19 @@ describe('native-design composition terminal evaluator', () => {
     expect(manifest.phase_changes.durable).toEqual(['docs/architecture/device-discovery-boundary.md'])
   })
 
-  it('accepts retained evidence only after the real host gate passes', () => {
+  it('preserves passed retained evidence without treating a drifted composition as current', () => {
     const result = evaluateNativeDesignComposition(root)
 
     if (existsSync(join(retainedRun, 'metadata.json'))) {
       const metadata = JSON.parse(readFileSync(join(retainedRun, 'metadata.json'), 'utf8')) as { result?: string }
 
-      expect(result.passed).toBe(metadata.result === 'passed')
-      expect(result.recommendation).toBe(metadata.result === 'passed'
-        ? 'resume-release-preparation'
-        : 'hold-release-preparation')
+      expect(metadata.result).toBe('passed')
+      expect(result.passed).toBe(false)
+      expect(result.recommendation).toBe('hold-release-preparation')
+      expect(result.blockers).toContain('current_release_artifact')
       if (metadata.result === 'passed') {
         expect(result.exact_package_sha256).toMatch(/^[a-f0-9]{64}$/)
-        expect(result.blockers).toEqual([])
         expect(result.published_skill_inventory).toEqual(publishedSkills)
-      }
-      else {
-        expect(result.blockers).not.toEqual([])
       }
     }
     else {
@@ -105,16 +116,17 @@ describe('native-design composition terminal evaluator', () => {
 
   it('binds current compatibility to executed Skills while retaining full package provenance', () => {
     const metadata = JSON.parse(readFileSync(join(retainedRun, 'metadata.json'), 'utf8')) as { package: Record<string, any> }
-    const accepted = validateCurrentNativeDesignArtifact(root, metadata.package)
-    const driftedExecutedSkill = structuredClone(metadata.package)
+    const compatiblePackage = currentCompatiblePackage(metadata.package)
+    const accepted = validateCurrentNativeDesignArtifact(root, compatiblePackage)
+    const driftedExecutedSkill = structuredClone(compatiblePackage)
     driftedExecutedSkill.installed_skill_hashes.rsp = '0'.repeat(64)
-    const driftedExecutedReference = structuredClone(metadata.package)
+    const driftedExecutedReference = structuredClone(compatiblePackage)
     driftedExecutedReference.installed_skill_tree_hashes['rsp-design'] = '0'.repeat(64)
-    const driftedUnexecutedSkill = structuredClone(metadata.package)
+    const driftedUnexecutedSkill = structuredClone(compatiblePackage)
     driftedUnexecutedSkill.published_skill_hashes['rsp-release-docs'] = '0'.repeat(64)
-    const driftedUnexecutedReference = structuredClone(metadata.package)
+    const driftedUnexecutedReference = structuredClone(compatiblePackage)
     driftedUnexecutedReference.published_skill_tree_hashes['rsp-manage'] = '0'.repeat(64)
-    const incompleteInventory = structuredClone(metadata.package)
+    const incompleteInventory = structuredClone(compatiblePackage)
     incompleteInventory.skill_inventory = skills
 
     expect(accepted.passed).toBe(true)
@@ -135,9 +147,9 @@ describe('native-design composition terminal evaluator', () => {
     })
   })
 
-  it('keeps retained behavior evidence valid across release-only version changes', () => {
+  it('keeps current behavior compatibility insensitive to release-only version changes', () => {
     const metadata = JSON.parse(readFileSync(join(retainedRun, 'metadata.json'), 'utf8')) as { package: Record<string, any> }
-    const differentReleaseIdentity = structuredClone(metadata.package)
+    const differentReleaseIdentity = currentCompatiblePackage(metadata.package)
     differentReleaseIdentity.version = '999.0.0-release-only'
 
     const accepted = validateCurrentNativeDesignArtifact(root, differentReleaseIdentity)

@@ -4,7 +4,7 @@ description: Continue one bounded managed goal selected explicitly or by effecti
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.26.1"
+  version: "2026.07.27.2"
 ---
 
 # RSP Manage
@@ -13,15 +13,15 @@ Manage one selected ready Change or shallow Change Group after Core selects it f
 
 ## Qualify before mutation
 
-Before dispatch, read each qualified WorkRef—including successors—complete Change or Brief/children, Specs/Decisions, authority, `rsp status --json`, and worktree. Missing configuration preserves `explicit` activation with `local` closeout compatibility; invalid configuration fails closed as `explicit` plus `manual` and remains an error.
+Before dispatch, read each qualified WorkRef—including successors—complete Change or Brief/children, Specs/Decisions, authority, `rsp status --json`, and worktree. Missing configuration preserves `explicit` activation with `local` closeout compatibility; invalid configuration fails closed as `explicit` plus `manual`.
 
-Eligible Change needs independent scopes or long/recovery; Group needs two ready children or long/recovery. Small, coupled, or worker-only work is ineligible. Decline without mutation/controller artifact; return Core/Discipline action.
+Eligible-Change any-of: independent-slices; prospectively-long-authorized-continuation; recovery. No-parallelism cannot reject long/recovery. Long: pre-dispatch authorized-objective/expected-phases, never elapsed-minutes. Group any-of: two-ready-children; long/recovery. Ineligible: small-coupled-one-step; worker-only. Decline without mutation/controller artifact; return Core/Discipline action.
 
-Preserve unrelated work; release identity needs explicit authority. Allow four worker dispatches and one worker corrective retry across the whole managed run; owner transitions do not reset them.
+Preserve unrelated work; require explicit release identity. Allow four worker dispatches and one worker corrective retry across the whole managed run; owner transitions do not reset them.
 
 ## Dispatch owned work
 
-Send a compact envelope: WorkRef, objective, authority, evidence, stop boundary. For a Group, dispatch child WorkRefs only in the derived `plan.waves` wave. Parallelize independent mutations; shared paths, lockfiles, generated artifacts, and integration outputs overlap unless an authorized isolated workspace exists. Keep blockers, later waves, overlaps, and dependent verification sequential. Workers receive no implied focus, lifecycle, Git, publication, deployment, or approval authority. Choose the cheapest decisive check and one integration gate at most.
+Send a compact envelope: WorkRef/objective/authority/evidence/stop-boundary. For a Group, dispatch child WorkRefs only in the derived `plan.waves` wave. Assume shared paths, lockfiles, generated artifacts, and integration outputs overlap unless an authorized isolated workspace exists. Keep blockers, later waves, overlaps, and dependent verification sequential. Workers receive no implied focus, lifecycle, Git, publication, deployment, or approval authority. Choose the cheapest decisive check and one integration gate at most.
 
 ## Continue from evidence
 
@@ -33,17 +33,19 @@ Stop when discovery changes behavior, acceptance, interfaces, scope, mutation, o
 
 ## Converge managed review
 
-After fixed-scope re-review, Core correlates the report, Change, original authority, verification, and transient pass count. When an `accepted` Finding stays inside original behavior, acceptance, paths, mutation authority, and verification budget, start another Address Review pass without asking the user to continue. Address Review never self-loops.
+After fixed-scope re-review, Core correlates report/Change/original-authority/verification/transient-pass-count. An `accepted` Finding inside original behavior/acceptance/paths/mutation-authority/verification-budget starts another Address Review pass without asking the user to continue. Address Review never self-loops.
 
-Allow at most three Address Review passes per Change, separate from worker retry, and stop when the same Finding remains after two completed corrections. Also stop for `needs-clarification`, material product/interface/scope change, new mutation or external authority, an additional real-host/provider/network run outside existing verification authority, or failed/unavailable decisive verification. Return the single required owner input. Treat an eligible in-scope Finding as `correction-needed`, not an external blocker. Keep counts and correction chronology transient.
+Allow at most three Address Review passes per Change, separate from worker retry; stop when the same Finding remains after two completed corrections. Also stop for `needs-clarification`, material product/interface/scope change, new mutation/external authority, an additional real-host/provider/network run outside existing verification authority, or failed/unavailable decisive verification. Return one owner input. Treat eligible in-scope Finding as `correction-needed`, not an external blocker. Keep counts and correction chronology transient.
 
 ## Preserve boundaries
 
 Keep dispatch chronology out of Changes, Group Briefs, Specs, Decision Records. Changes retain converged requirements, outcomes, evidence, omissions, and blockers; Briefs retain shared completion without copied child state. Never persist the goal envelope, WorkSet, waves, or discovery classification.
 
-Effective `manage.closeout` is an automatic grant ceiling narrowed by nearer restrictions and host enforcement. `manual` grants neither automatic archive nor commit. `lifecycle` grants lifecycle closeout after Core durable review but no Git action. `local` grants lifecycle closeout plus the existing exact-path local checkpoint or terminal-commit eligibility. Explicit current-turn authority may allow a local action not automated by the preset; denial wins.
+Closeout requires Core-selected, currently-qualified Manage. For declined, unavailable, or unselected Manage, every `manage.closeout` preset is dormant; Core may report readiness/next action, but configuration executes neither archive nor commit. Earlier qualification does not carry forward.
 
-When granted, close lifecycle before any commit. For Change, after Core durable review run `rsp archive <change-work-ref>` and inspect the complete lifecycle diff. For shallow Group, durable-review/archive each child independently, rederive completion, then when all children plus Group gate pass run `rsp group close <group>`; inspect the complete lifecycle diff after each mutation. This includes terminal owners. Stop unless review and clean boundaries are proven.
+Qualified only: effective `manage.closeout` is an automatic grant ceiling narrowed by nearer restrictions and host enforcement. `manual` grants neither automatic archive nor commit. `lifecycle` grants lifecycle closeout after Core durable review but no Git action. `local` grants lifecycle closeout plus the existing exact-path local checkpoint or terminal-commit eligibility. Explicit current-turn authority may allow a local action not automated by the preset; denial wins.
+
+When granted, close lifecycle before any commit. Change: after Core durable review run `rsp archive <change-work-ref>` and inspect the complete lifecycle diff. For shallow Group: durable-review/archive each child independently, rederive completion, then when all children plus Group gate pass run `rsp group close <group>`; inspect the complete lifecycle diff after each mutation. This includes terminal owners. Require proven review/clean-boundaries.
 
 Decide commit separately. Under `local` or explicit commit authority, downstream work may justify one recovery checkpoint: give `rsp-commit` owner, paths, evidence, lifecycle, and authority to stage exact owned paths, inspect cached boundary, commit one reviewable Change or integration-coupled wave, then derive status. Apply to Group/release owners; use Core fallback if unavailable. Terminal small owners default to no commit. A terminal non-small owner commits only for explicit delivery or evidenced recovery value when nearer rules allow. Without clean exact boundary, return without staging. Archive grants no Git or publication authority.
 

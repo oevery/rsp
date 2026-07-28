@@ -132,6 +132,52 @@ describe('rsp core routing contract', () => {
     expect(fallback).toContain('Configuration grants no planning or product-mutation authority')
   })
 
+  it('rederives a direct route when later authorized scope materially expands', () => {
+    for (const body of [skill, managed, fallback]) {
+      expectSemanticGroup(body, [
+        ['Before later-turn mutation'],
+        ['direct report', 'direct report, tiny, or small route'],
+        ['now-authorized objective', 'newly authorized objective'],
+        ['prospective work'],
+        ['cross-module implementation', 'Cross-module implementation'],
+        ['multiple acceptance surfaces'],
+        ['repeated production-path correction'],
+        ['real-host validation'],
+        ['lifecycle delivery'],
+        ['smallest sufficient WorkRef'],
+        ['fresh Manage qualification', 'fresh qualification', 'smallest sufficient WorkRef before mutation'],
+        ['before mutation'],
+        ['remain tiny/small', 'Unchanged tiny/small follow-ups remain direct', 'unchanged tiny/small follow-ups stay direct'],
+        ['Elapsed time and message count', 'elapsed time and message count alone'],
+      ])
+    }
+
+    const rederive = skill.indexOf('Before later-turn mutation')
+    const routes = skill.indexOf('1. Stop for ambiguous authority')
+    expect(rederive).toBeGreaterThanOrEqual(0)
+    expect(routes).toBeGreaterThan(rederive)
+  })
+
+  it('blocks implicit dirty-path ownership transfer between WorkRefs', () => {
+    for (const body of [skill, managed, fallback]) {
+      expectSemanticGroup(body, [
+        ['Before focusing or mutating a different WorkRef', 'Before focusing, dispatching, or mutating a different WorkRef'],
+        ['dirty paths', 'dirty product or durable-truth paths'],
+        ['prior owner'],
+        ['product or durable-truth paths'],
+        ['continue the same open WorkRef', 'continuation of the same open WorkRef'],
+        ['reopen its archived acceptance', 'reopen archived acceptance', 'explicitly authorized reopen', 'authorized reopen'],
+        ['explicitly authorized integration owner'],
+        ['stop for boundary resolution'],
+        ['Disjoint authorized work may proceed'],
+        ['without staging or forcing a commit', 'without staging or a forced commit'],
+      ])
+    }
+    expect(skill).toContain('insufficient evidence stops the transition')
+    expect(managed).toContain('insufficient ownership evidence stops the transition')
+    expect(fallback).toContain('insufficient ownership evidence stops the transition')
+  })
+
   it('reuses the managed preflight after progress without persisting orchestration state', () => {
     for (const body of [managed]) {
       expectSemanticGroup(body, [
@@ -232,6 +278,16 @@ describe('rsp core routing contract', () => {
     expect(durable).toContain('Only `local` or explicit current-turn Git authority')
     expect(durable).toContain('`manual` and `lifecycle` grant no commit')
     expect(skill).not.toMatch(/automatically (?:commit|push|publish|archive)/i)
+  })
+
+  it('keeps configured closeout dormant outside the currently qualified Manage route', () => {
+    expect(skill).toContain('A configured `manage.closeout` preset remains dormant unless Core selected and qualified Manage for the current continuation')
+    expect(managed).toContain('If Manage was declined, unavailable, or unselected, every `manage.closeout` preset is dormant')
+    expect(managed).toContain('ordinary Core may report readiness and the explicit next lifecycle or Git action')
+    expect(managed).toContain('Do not infer the current-continuation gate from readiness, an earlier managed run, or project policy alone')
+    expect(durable).toContain('declined, unavailable, or unselected Manage leaves Core advisory')
+    expect(durable).toContain('In a qualified managed continuation')
+    expect(fallback).toContain('Every `manage.closeout` preset stays advisory because fallback Core never selects or qualifies Manage')
   })
 
   it('routes an authorized RSP-owned local boundary to Commit with an equivalent manual fallback', () => {

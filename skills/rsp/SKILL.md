@@ -4,7 +4,7 @@ description: Use this skill when initializing RSP, operating an existing .rsp pr
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.26.3"
+  version: "2026.07.27.1"
 ---
 
 # RSP Skill
@@ -23,11 +23,13 @@ Read user intent, nearest authority, `rsp status --json`, the selected Change an
 
 Apply these routes in order:
 
+Before later-turn mutation under a direct report, tiny, or small route, rederive routing from the now-authorized objective and prospective work. If it materially expands into cross-module implementation, multiple acceptance surfaces, repeated production-path correction, real-host validation, or lifecycle delivery, establish or reuse the smallest sufficient WorkRef, then apply managed preflight and fresh qualification before mutation. Follow-ups that remain tiny/small stay direct. Elapsed time and message count are never escalation evidence.
+
 1. Stop for ambiguous authority or selection and return the one required input and its owner. For a material owner decision inside an explicit managed request, continue to the Shape preflight in route 2 so repository inspection precedes the single owner question; otherwise stop here.
 2. For a requested completion or continuation that is not a report-only review or release operation, read [managed routing](references/managed-routing.md) when the request is explicitly managed or the effective status policy has `manage.activation: auto`. It owns owner preflight, qualification, successor discovery, bounded review convergence, and lifecycle/Git separation. Select `rsp-manage` only after that preflight for an eligible selected ready Change or shallow Group; otherwise return the ordinary Core or Discipline action. Automatic activation grants controller selection only; planning, product mutation, lifecycle, Git, and external authority remain separately derived.
 3. Route an explicit report-only review with fixed scope to `rsp-review` when available, otherwise perform the same read-only review manually.
 4. Route an explicit release-documentation, finalization, publication, or reconciliation operation through [Release operations](#release-operations) before ordinary Change routing.
-5. Route one explicit isolated material domain, module/seam, or evidence-seeking design question to `rsp-design` when available. Without a selected Change, use report-only Pre-Change Design only when the question is already bounded; return its result to the user without inventing a WorkRef or artifact. With a selected Change, return the result to the same WorkRef. Its manual fallback inspects authority and the live path, compares credible alternatives, and separates evidence from owner choice without implementation or durable-truth mutation.
+5. Route one explicit isolated material domain, module/seam, or evidence-seeking design question to installed `rsp-design`; never manually emulate it. Without a selected Change, use report-only Pre-Change Design only for an already bounded question; return its result without inventing a WorkRef or artifact. With a selected Change, return to that WorkRef. Only when unavailable, its manual fallback inspects authority and the live path, compares credible alternatives, and separates evidence from owner choice without implementation or durable-truth mutation.
 6. With no selected Change, name one ready WorkRef and direct focus action. For tiny settled work, return the direct engineering action. When outcome, scope, non-goals, acceptance, or decomposition is materially unclear, use `rsp-shape` when available and Change mutation is authorized; otherwise manually create or refine one Change to the same ready boundary.
 7. If the Change is not shape-ready, route to Shape under the same authority rule.
 8. For incomplete implementation or stale, missing, or failed verification, use [Implementation evidence](#implementation-evidence).
@@ -55,6 +57,8 @@ Use an optional Release Change only for material decisions, cross-stage coordina
 
 ## Operate the selected Change
 
+Before focusing or mutating a different WorkRef, compare dirty product or durable-truth paths with the prior owner's declared or observed paths. Overlap never transfers ownership: continue the same open WorkRef, explicitly reopen archived acceptance when authorized and applicable, use an explicitly authorized integration owner, or stop for boundary resolution. Disjoint authorized work may proceed without staging or forcing a commit; insufficient evidence stops the transition.
+
 Read the focused Change, its sibling Group Brief when grouped, and only the relevant Specs and Decision Records before implementation. Use generated local `.rsp/specs/**/00-index.md` files only as direct-child navigation; never treat them as durable owners. Run `npx -y @oevery/rsp check --focused` before treating it as ready. Only `focus.d/` markers select current work; open filenames do not. Preserve one explicit `kind` and the canonical Proposal, Spec, Design, Tasks, Verify, and Blockers sections.
 
 Keep the Change a convergent snapshot of the current plan and final decisive evidence. Replace superseded content; keep routine attempts, RED/GREEN chronology, temporary probes, and command transcripts in the response. Update Tasks, Verify, and any invalidated Proposal, Spec, or Design in the same session.
@@ -74,7 +78,7 @@ Load detailed procedures only when their path is active:
 
 Route planned design to the selected Change; stable implemented facts to the smallest relevant Spec or authorized scoped instruction; lasting rationale to one exact Decision Record; stable navigation to project-owned `CONTEXT.md`; stable operating rules to project-owned `AGENTS.md`; and temporary continuation to the response. Never write planned state as current truth or duplicate facts into rationale.
 
-Use RSP commands for managed setup, focus, repair, indexes, archive, and reopen. Do not directly create command-owned files, edit generated indexes or `.rsp/rsp-rules.md` as durable truth, or modify the managed RSP block. Preserve unrelated work. Core recommends explicit archive only after the durable decision; it does not execute archive or grant staging, commit, push, publication, deletion, deployment, approval, or human-acceptance authority. Core also does not execute reopen without explicit lifecycle authority. The qualified Manage rules in [managed routing](references/managed-routing.md) are the sole scoped exceptions.
+Use RSP commands for managed setup, focus, repair, indexes, archive, and reopen. Do not directly create command-owned files, edit generated indexes or `.rsp/rsp-rules.md` as durable truth, or modify the managed RSP block. Preserve unrelated work. Core recommends explicit archive only after the durable decision; it does not execute archive or grant staging, commit, push, publication, deletion, deployment, approval, or human-acceptance authority. A configured `manage.closeout` preset remains dormant unless Core selected and qualified Manage for the current continuation; declined, unavailable, or unselected Manage leaves Core advisory even under `lifecycle` or `local`. Core also does not execute reopen without explicit lifecycle authority. The qualified Manage rules in [managed routing](references/managed-routing.md) are the sole scoped exceptions.
 
 When accepted work remains, return a localized continuation with these semantic fields in order: `WorkRef`, `Authority`, `Current state`, `Changed artifacts`, `Fresh verification`, `Blockers`, `Next action`. Preserve technical values. The continuation points to existing owners, is not a second state store, and must not be persisted without explicit path authority. On resume, reopen its pointers, inspect drift, and refresh decisive evidence.
 

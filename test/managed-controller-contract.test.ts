@@ -11,6 +11,9 @@ import { evaluateManagedController, hashManagedControllerComposition, loadManage
 const root = fileURLToPath(new URL('..', import.meta.url))
 const candidate = join(root, 'research', 'candidates', 'skills', 'rsp-manage')
 const product = join(root, 'skills', 'rsp-manage')
+const managedRouting = readFileSync(join(root, 'skills', 'rsp', 'references', 'managed-routing.md'), 'utf8')
+const durableReview = readFileSync(join(root, 'skills', 'rsp', 'references', 'durable-review.md'), 'utf8')
+const coreSkill = readFileSync(join(root, 'skills', 'rsp', 'SKILL.md'), 'utf8')
 
 function readSkill(directory = candidate): { body: string, frontmatter: Record<string, any> } {
   const content = readFileSync(join(directory, 'SKILL.md'), 'utf8')
@@ -172,10 +175,18 @@ describe('rsp-manage product Skill', () => {
     expect(readFileSync(join(candidate, 'SKILL.md'), 'utf8')).not.toBe(readFileSync(join(product, 'SKILL.md'), 'utf8'))
   })
 
-  it('declines ordinary work without controller overhead', () => {
+  it('uses independent qualification paths without elapsed-time inference', () => {
     const { body } = readSkill(product)
 
-    expect(body).toContain('Small, coupled, or worker-only work is ineligible')
+    expect(managedRouting).toContain('qualifies through at least one independent path')
+    expect(managedRouting).toContain('prospectively long authorized continuation')
+    expect(managedRouting).toContain('long/recovery work does not also need independent or parallelizable slices')
+    expect(managedRouting).toContain('elapsed wall-clock minutes are never qualification evidence')
+    expect(managedRouting).toContain('Small coupled one-step work and worker-only work remain ineligible')
+    expect(body).toContain('Eligible-Change any-of: independent-slices; prospectively-long-authorized-continuation; recovery')
+    expect(body).toContain('No-parallelism cannot reject long/recovery')
+    expect(body).toContain('Long: pre-dispatch authorized-objective/expected-phases, never elapsed-minutes')
+    expect(body).toContain('Ineligible: small-coupled-one-step; worker-only')
     expect(body).toContain('Decline without mutation/controller artifact')
     expect(body).toContain('return Core/Discipline action')
   })
@@ -192,6 +203,21 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('Never force-push')
   })
 
+  it('keeps closeout presets dormant until Manage qualifies for the current continuation', () => {
+    const { body } = readSkill(product)
+
+    expect(managedRouting).toContain('Enter CLOSE only when Core selected and QUALIFY accepted Manage for the current continuation')
+    expect(managedRouting).toContain('If Manage was declined, unavailable, or unselected, every `manage.closeout` preset is dormant')
+    expect(managedRouting).toContain('configuration executes neither archive nor commit')
+    expect(managedRouting).toContain('After that gate passes, use effective `manage.closeout` as an automatic grant ceiling')
+    expect(durableReview).toContain('A `manage.closeout` preset applies only when Core selected and qualified Manage for the current continuation')
+    expect(coreSkill).toContain('declined, unavailable, or unselected Manage leaves Core advisory even under `lifecycle` or `local`')
+    expect(body).toContain('Closeout requires Core-selected, currently-qualified Manage')
+    expect(body).toContain('For declined, unavailable, or unselected Manage, every `manage.closeout` preset is dormant')
+    expect(body).toContain('Earlier qualification does not carry forward')
+    expect(body).toContain('Qualified only: effective `manage.closeout` is an automatic grant ceiling')
+  })
+
   it('bounds authority reads, dispatch, correction, and verification', () => {
     const { body } = readSkill(product)
 
@@ -206,6 +232,17 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('one integration gate at most')
     expect(body).toContain('Inspect diff and verification before accepting')
     expect(body).toContain('During recovery, reread authority and evidence')
+  })
+
+  it('keeps dirty product and durable-truth paths with an explicit owner across transitions', () => {
+    expect(managedRouting).toContain('Before focusing, dispatching, or mutating a different WorkRef')
+    expect(managedRouting).toContain('prior owner\'s declared and observed product or durable-truth paths')
+    expect(managedRouting).toContain('Overlap never changes owner implicitly')
+    expect(managedRouting).toContain('continue the same open WorkRef')
+    expect(managedRouting).toContain('explicitly reopen its archived acceptance')
+    expect(managedRouting).toContain('explicitly authorized integration owner')
+    expect(managedRouting).toContain('Disjoint authorized work may proceed without staging or a forced commit')
+    expect(managedRouting).toContain('insufficient ownership evidence stops the transition')
   })
 
   it('converges managed review separately without redundant user continuation', () => {
@@ -227,7 +264,7 @@ describe('rsp-manage product Skill', () => {
     const { body } = readSkill(product)
 
     expect(body).toContain('each qualified WorkRef—including successors')
-    expect(body).toContain('Group needs two ready children')
+    expect(body).toContain('Group any-of: two-ready-children; long/recovery')
     expect(body).toContain('dispatch child WorkRefs only in the derived `plan.waves` wave')
     expect(body).toContain('rerun `rsp status --json`')
     expect(body).toContain('restrict it to declared children')
@@ -397,7 +434,7 @@ describe('rsp-manage product Skill', () => {
     })
   })
 
-  it('replays retained rsp-commit message quality and remote-safety evidence against the current composition', () => {
+  it('preserves retained rsp-commit evidence after current composition drift', () => {
     const retained = join(root, 'research', 'evaluations', 'rsp-commit', '2026-07-27-product-commit-message-quality-reopen-archived-change')
     const metadata = JSON.parse(readFileSync(join(retained, 'metadata.json'), 'utf8')) as any
     const observations = JSON.parse(readFileSync(join(retained, 'observations.json'), 'utf8')) as any
@@ -422,7 +459,8 @@ describe('rsp-manage product Skill', () => {
 
     expect(createHash('sha256').update(final).digest('hex')).toBe(metadata.final_hash)
     expect(createHash('sha256').update(JSON.stringify(manifest)).digest('hex')).toBe(metadata.fixture_manifest_semantic_hash)
-    expect(composition).toEqual({ hash: metadata.composition.hash, skills: metadata.composition.skills })
+    expect(composition).not.toEqual({ hash: metadata.composition.hash, skills: metadata.composition.skills })
+    expect(metadata.composition.stable).toBe(true)
     expect(rescored).toEqual({
       commit_message: metadata.commit_message_score,
       missing_required_paths: [],

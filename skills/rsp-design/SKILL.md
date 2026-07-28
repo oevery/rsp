@@ -4,7 +4,7 @@ description: Resolve one material domain-model, module/seam, or evidence-seeking
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.26.1"
+  version: "2026.07.27.1"
 ---
 
 # RSP Design
@@ -17,7 +17,7 @@ State one explicit bounded design question. Read project authority and the small
 
 Choose one ownership mode:
 
-- **Pre-Change Design:** use when no Change is selected and the request already contains one bounded design question. Remain report-only and return to the user. If outcome, scope, non-goals, acceptance, or decomposition remains materially unclear, return the request to Shape instead of creating an implicit planning owner. Do not invent a WorkRef, continuation, or artifact.
+- **Pre-Change Design:** use when no Change is selected and the request already contains one bounded design question. When this Skill is installed, Core selects it instead of manually emulating the discipline; the manual fallback is only for an unavailable Skill. Remain report-only and return to the user. If outcome, scope, non-goals, acceptance, or decomposition remains materially unclear, return the request to Shape instead of creating an implicit planning owner. Do not invent a WorkRef, continuation, or artifact.
 - **Tracked Design:** require an explicit WorkRef or exactly one unambiguous focus marker. Read the selected Change and sibling Group Brief, then return the result to the same WorkRef.
 
 Stop on an ambiguous question, evidence boundary, owner intent, authorized-write owner, or required mutation authority. Never invent product intent.
