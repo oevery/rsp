@@ -66,6 +66,36 @@ describe('archive history query', () => {
     expect(byPath.workRef).toBe('release/api')
   })
 
+  it('preserves canonical Chinese Group identities and normalizes query input', async () => {
+    const root = await fixture()
+    await mkdir(join(root, '.rsp', 'archives', '听说训练'), { recursive: true })
+    await writeFile(
+      join(root, '.rsp', 'archives', '听说训练', '2026-07-26_模拟朗读.md'),
+      archivedChange('听说训练/模拟朗读', 'feature', '保留中文身份'),
+    )
+    await mkdir(join(root, '.rsp', 'archives', 'café'), { recursive: true })
+    await writeFile(join(root, '.rsp', 'archives', 'café', '2026-07-26_验证.md'), archivedChange('café/验证'))
+
+    const inspection = await inspectArchiveHistory({ archivesDir: join(root, '.rsp', 'archives') })
+
+    expect(inspection.diagnostics).toEqual([])
+    expect(inspection.records).toEqual(expect.arrayContaining([
+      expect.objectContaining({ workRef: '听说训练/模拟朗读', group: '听说训练', path: '.rsp/archives/听说训练/2026-07-26_模拟朗读.md' }),
+    ]))
+    expect(queryArchiveHistory(inspection.records, { group: 'cafe\u0301' }).records.map(record => record.workRef)).toEqual(['café/验证'])
+  })
+
+  it('rejects non-canonical Unicode archive headings and paths', async () => {
+    const root = await fixture()
+    const nonCanonical = 'cafe\u0301'
+    await writeFile(join(root, '.rsp', 'archives', `2026-07-26_${nonCanonical}.md`), archivedChange(nonCanonical))
+
+    const inspection = await inspectArchiveHistory({ archivesDir: join(root, '.rsp', 'archives') })
+
+    expect(inspection.diagnostics).toContainEqual(expect.objectContaining({ code: 'archive_identity_mismatch' }))
+    expect(inspection.records.map(record => record.workRef)).not.toContain(nonCanonical)
+  })
+
   it('searches WorkRef and the complete summary case-insensitively before applying the limit', async () => {
     const root = await fixture()
     const longPrefix = 'x'.repeat(500)

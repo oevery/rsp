@@ -6,7 +6,7 @@ import { CHANGES_DIR, FOCUS_DIR, pc } from '../core/config.js'
 import { cleanupEmptyParentDirs, guardRspInitialized } from '../core/helpers.js'
 import { withRspLock } from '../core/lock.js'
 import { writeManagedFile } from '../core/managed-path.js'
-import { resolveFocusMarkerPath, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
+import { normalizeExecutableWorkRef, resolveFocusMarkerPath, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 import { ArchiveHistoryError, historyInspectionComplete, inspectArchiveHistory, selectArchiveHistoryRecord } from '../history/query.js'
 
 export interface ReopenOptions {
@@ -28,6 +28,7 @@ export async function reopenChange(name: string, options: ReopenOptions): Promis
 
   try {
     await withRspLock('reopen-change', async () => {
+      const normalizedName = normalizeExecutableWorkRef(name)
       const inspection = await inspectArchiveHistory()
       if (!historyInspectionComplete(inspection)) {
         throw new ArchiveHistoryError(
@@ -37,18 +38,18 @@ export async function reopenChange(name: string, options: ReopenOptions): Promis
       }
       const record = selectArchiveHistoryRecord(
         inspection.records,
-        options.from ? { path: options.from } : { workRef: name },
+        options.from ? { path: options.from } : { workRef: normalizedName },
       )
-      if (record.workRef !== name) {
+      if (record.workRef !== normalizedName) {
         throw new ArchiveHistoryError(
           'archive_identity_mismatch',
-          `selected archive belongs to ${record.workRef}, not ${name}`,
+          `selected archive belongs to ${record.workRef}, not ${normalizedName}`,
         )
       }
 
       let workRef
       try {
-        workRef = resolveWorkRef(name, { executable: true })
+        workRef = resolveWorkRef(normalizedName, { executable: true })
       }
       catch (error) {
         if (error instanceof WorkRefError && error.code === 'group_brief_missing') {
@@ -95,9 +96,9 @@ export async function reopenChange(name: string, options: ReopenOptions): Promis
         throw error
       }
 
-      console.log(`  ${pc.green('Reopened:')} ${name}`)
+      console.log(`  ${pc.green('Reopened:')} ${workRef.name}`)
       console.log(`  ${pc.dim('retained archive')} → ${record.path}`)
-      console.log(`  ${pc.dim('focused via focus.d')} → ${name}`)
+      console.log(`  ${pc.dim('focused via focus.d')} → ${workRef.name}`)
       console.log(`  ${pc.cyan('Next:')} refine the reopened Task and Verify evidence, then resolve the concern\n`)
 
       if (existsSync('.git')) {

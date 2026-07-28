@@ -11,6 +11,7 @@ export function toStatusJson(view: ProjectStatusView): StatusJsonShape {
     command: 'status',
     ok: view.ok,
     manage: view.manage,
+    language: view.language,
     filters: view.query,
     focused: view.focused,
     records: view.records.map(record => record.output),
@@ -29,6 +30,7 @@ export function toStatusJsonError(error: { code: string, message: string }, opti
     command: 'status',
     ok: false,
     manage: { activation: 'explicit', closeout: 'manual' },
+    language: { artifacts: null, commit: null },
     filters: {
       focused: options.focused,
       blocked: options.blocked,

@@ -24,6 +24,7 @@ export function deriveStatusView(snapshot: ProjectStatusSnapshot, options: Statu
 
   return {
     manage: snapshot.manage,
+    language: snapshot.language,
     query,
     focused: snapshot.focused,
     records,

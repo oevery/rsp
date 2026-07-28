@@ -58,7 +58,8 @@ describe('rsp-release-docs Skill contract', () => {
     expect(skill).toMatch(/user scope, audience, language, format, references, and mutation authority/)
     expect(conventions).toContain('Discover; do not introduce a new configuration file')
     expect(conventions).toContain('Personal preferences refine the project format where compatible')
-    expect(conventions).toContain('| Language | Explicit request, nearest project instruction, target artifact, prior published releases, conversation |')
+    expect(conventions).toContain('| Language | Explicit request, established target artifact, configured effective artifact language, nearest project instruction, prior published releases, conversation |')
+    expect(conventions).toContain('Configuration changes never translate an existing release surface by themselves.')
   })
 
   it('makes finalization checkable and credential-safe', () => {

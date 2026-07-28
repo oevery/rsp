@@ -150,9 +150,8 @@ export function normalizeLogicalPath(pathValue: string): string {
 
 /** Generate a change file content from the built-in single-file template. */
 export function generateChangeContent(name: string, summary = '', kind?: string, options: { lite?: boolean } = {}): string {
-  const proposalSummary = summary || (name === 'project-setup'
-    ? 'Capture the project model, boundaries, and stable local constraints'
-    : '<one-line summary>')
+  const placeholder = '<…>'
+  const proposalSummary = summary || placeholder
 
   if (name === 'project-setup') {
     return `---
@@ -164,58 +163,50 @@ kind: ops
 ## Proposal
 - Outcome: ${proposalSummary}
 - Why:
-  - Establish a durable project model before normal implementation work starts
+  - ${placeholder}
 - Scope:
-  - Review the repository structure, entrypoints, and primary outputs
-  - Fill .rsp/specs/design.md with durable architecture facts
-  - Add stable navigation, context, instructions, or validation steps to project-owned CONTEXT.md or the nearest AGENTS.md when those conventions exist
+  - ${placeholder}
 - Non-goals:
-  - Do not duplicate durable project facts across this change, specs, and AGENTS.md
+  - ${placeholder}
 
 ## Spec
 ### ADDED
-- Requirement: project bootstrap capture
-  - The repository's purpose, scope, and structure are reflected in .rsp/specs/design.md
-
-### MODIFIED
-- Requirement: stable project-owned context and instructions
-  - Stable navigation and context are reflected in project-owned CONTEXT.md when that convention exists
-  - Stable agent instructions are reflected in the nearest project-owned AGENTS.md when needed
+- Requirement: ${placeholder}
+  - ${placeholder}
 
 ### Acceptance
-#### Scenario: project model captured
-- GIVEN an initialized RSP project
-- WHEN project setup is completed
-- THEN .rsp/specs/design.md reflects durable project facts
-- AND project-owned CONTEXT.md and the nearest AGENTS.md contain only the stable context and instructions assigned to them by Host Project conventions
+#### Scenario: ${placeholder}
+- GIVEN ${placeholder}
+- WHEN ${placeholder}
+- THEN ${placeholder}
 
 ## Design
 - Approach:
-  - Keep bootstrap work in this single Change while returning durable outcomes to their existing project owners
+  - ${placeholder}
 - Boundaries:
-  - Specs own stable current facts; project-owned CONTEXT.md and AGENTS.md retain their navigation, context, and instruction roles
+  - ${placeholder}
 - Affected areas:
   - .rsp/specs/design.md
-  - Project-owned CONTEXT.md or AGENTS.md when applicable
+  - CONTEXT.md
+  - AGENTS.md
 - Durable outcome targets:
-  - Current facts: .rsp/specs/design.md, existing scoped Specs, CONTEXT.md, or AGENTS.md as applicable
-  - Lasting rationale: one Decision Record under the configured authoritative path, only when a hard-to-reverse tradeoff exists
+  - Current facts: ${placeholder}
+  - Lasting rationale: ${placeholder}
 - Constraints:
-  - Keep the setup lightweight and avoid duplicating durable project facts
+  - ${placeholder}
 
 ## Tasks
-- [ ] Review the repository structure, entrypoints, and primary outputs
-- [ ] Review project-owned CONTEXT.md and AGENTS.md and confirm the RSP entry points to the right project files
-- [ ] Fill .rsp/specs/design.md with durable architecture facts
-- [ ] Add stable project-owned context, instructions, or validation steps only where the Host Project convention requires them
+- [ ] .rsp/specs/design.md: ${placeholder}
+- [ ] CONTEXT.md: ${placeholder}
+- [ ] AGENTS.md: ${placeholder}
 
 ## Verify
 - Automated:
-  - [ ] Run rsp doctor — proves: the initialized RSP workspace is structurally valid
+  - [ ] rsp doctor — proves: ${placeholder}
 - Manual or environment:
-  - [ ] Review .rsp/specs/design.md and project-owned context or instructions and confirm they match the repository
+  - [ ] ${placeholder}
 - Coverage:
-  - none
+  - ${placeholder}
 
 ## Blockers
 - none
@@ -253,7 +244,7 @@ ${template.acceptanceSection}
 - Approach:
   - ${template.approach}
 - Boundaries:
-  - <module, interface, data, document, or ownership boundary affected>
+  - ${placeholder}
 - Affected areas:
   - ${template.affectedArea1}
   - ${template.affectedArea2}
@@ -265,11 +256,11 @@ ${template.acceptanceSection}
 
 ## Verify
 - Automated:
-  - [ ] ${template.automatedVerify} — proves: <behavior or scope covered>
+  - [ ] ${template.automatedVerify} — proves: ${placeholder}
 - Manual or environment:
   - [ ] ${template.manualVerify}
 - Coverage:
-  - <omitted or unavailable relevant coverage and reason, or none>
+  - ${placeholder}
 
 ## Blockers
 - none
@@ -277,6 +268,7 @@ ${template.acceptanceSection}
 }
 
 function generateLiteChangeContent(name: string, proposalSummary: string, frontmatterKind: string): string {
+  const placeholder = '<…>'
   return `---
 kind: "${frontmatterKind}"
 ---
@@ -286,43 +278,43 @@ kind: "${frontmatterKind}"
 ## Proposal
 - Outcome: ${proposalSummary}
 - Why:
-  - <why this small change matters>
+  - ${placeholder}
 - Scope:
-  - <what will change>
+  - ${placeholder}
 - Non-goals:
   - none
 
 ## Spec
 ### MODIFIED
-- Requirement: <observable outcome>
-  - <what should be true after this change>
+- Requirement: ${placeholder}
+  - ${placeholder}
 
 ### Acceptance
-#### Scenario: change is complete
-- GIVEN <current context>
-- WHEN <the change is applied>
-- THEN <expected outcome>
+#### Scenario: ${placeholder}
+- GIVEN ${placeholder}
+- WHEN ${placeholder}
+- THEN ${placeholder}
 
 ## Design
 - Approach:
-  - <minimal implementation approach>
+  - ${placeholder}
 - Boundaries:
-  - <primary ownership or interface boundary>
+  - ${placeholder}
 - Affected areas:
-  - <primary file, directory, or doc path>
+  - ${placeholder}
 - Constraints:
-  - <important constraint, or none>
+  - ${placeholder}
 
 ## Tasks
-- [ ] Implement the small change
+- [ ] ${placeholder}
 
 ## Verify
 - Automated:
-  - [ ] <cheapest decisive check; retain a new test only when justified, or not applicable: reason> — proves: <behavior or scope covered>
+  - [ ] ${placeholder} — proves: ${placeholder}
 - Manual or environment:
-  - [ ] <exact acceptance scenario, or unavailable/not applicable: owner and reason>
+  - [ ] ${placeholder}
 - Coverage:
-  - <omitted or unavailable relevant coverage and reason, or none>
+  - ${placeholder}
 
 ## Blockers
 - none
@@ -330,114 +322,21 @@ kind: "${frontmatterKind}"
 }
 
 function getChangeTemplateByKind(kind?: string) {
-  const automatedVerify = '<cheapest decisive check; retain a new test only when justified, or not applicable: reason>'
-
-  switch (kind) {
-    case 'feature':
-      return {
-        why: '<what user need or capability gap this addresses>',
-        scope: '<what new behavior or capability will be delivered>',
-        nonGoals: '<what related capabilities are explicitly out of scope>',
-        specSection: '<!-- Describe observable behavior and requirements. Implementation notes belong in ## Design. -->\n### ADDED\n- Requirement: <new user-facing behavior>\n  - <verifiable requirement for the new capability>',
-        acceptanceSection: '#### Scenario: user exercises the new capability\n- GIVEN <context>\n- WHEN <user action>\n- THEN <expected new behavior>',
-        approach: '<how the new capability will be implemented>',
-        affectedArea1: '<concrete file path, directory, module, or subsystem 1>',
-        affectedArea2: '<concrete file path, directory, module, or subsystem 2 if needed>',
-        constraints: '<behavior, compatibility, performance, safety, or scope constraint that must hold>',
-        task: '<implement the new behavior and its acceptance scenario in the affected areas>',
-        automatedVerify,
-        manualVerify: '<exact end-to-end user scenario to validate the new capability, or unavailable/not applicable: owner and reason>',
-      }
-    case 'fix':
-      return {
-        why: '<what current behavior is wrong or broken>',
-        scope: '<what specific defect is being corrected>',
-        nonGoals: '<what related but separate issues are out of scope>',
-        specSection: '<!-- Describe expected correct behavior. Implementation notes belong in ## Design. -->\n### MODIFIED\n- Requirement: correct behavior\n  - <expected correct behavior after the fix>',
-        acceptanceSection: '#### Scenario: defect is resolved\n- GIVEN <conditions that trigger the defect>\n- WHEN <action that previously failed>\n- THEN <expected correct outcome>\n- AND the original broken outcome no longer occurs',
-        approach: '<confirmed cause and correction strategy, or exact evidence needed to establish the cause>',
-        affectedArea1: '<concrete file path, directory, module, or subsystem containing the defect>',
-        affectedArea2: '<secondary path, dependency, or test file if needed>',
-        constraints: '<regression, backward-compatibility, safety, or scope constraint that must hold>',
-        task: '<identify the root cause and apply the minimal fix>',
-        automatedVerify,
-        manualVerify: '<exact steps to reproduce the original issue and confirm it no longer occurs, or unavailable/not applicable: owner and reason>',
-      }
-    case 'refactor':
-      return {
-        why: '<what maintainability, readability, or structural issue motivates this>',
-        scope: '<what code areas are being restructured>',
-        nonGoals: '<no behavior change is expected or intended>',
-        specSection: '<!-- Describe the desired structural outcome. Implementation notes belong in ## Design. -->\n### MODIFIED\n- Requirement: internal structure improvement\n  - <desired structural outcome without observable behavior change>',
-        acceptanceSection: '#### Scenario: behavior is preserved after restructuring\n- GIVEN the existing codebase before the refactor\n- WHEN the refactored code runs against existing tests\n- THEN all existing tests pass unchanged',
-        approach: '<how the code will be restructured (rename, extract, move, etc.)>',
-        affectedArea1: '<concrete file path, directory, module, or subsystem being refactored>',
-        affectedArea2: '<secondary path, dependency, or test file if needed>',
-        constraints: '<observable behavior must remain unchanged; compatibility, performance, and safety constraints must still hold>',
-        task: '<restructure the code while keeping behavior identical>',
-        automatedVerify,
-        manualVerify: '<exact scenario to spot-check that behavior is unchanged after the refactor, or unavailable/not applicable: owner and reason>',
-      }
-    case 'docs':
-      return {
-        why: '<why the documentation change matters>',
-        scope: '<which docs, readers, or workflows will be updated>',
-        nonGoals: '<what documentation behavior or audience is out of scope>',
-        specSection: '<!-- Describe what the reader should see or experience. Implementation notes belong in ## Design. -->\n### MODIFIED\n- Requirement: documentation accuracy\n  - <what durable reader-facing behavior or explanation changes>',
-        acceptanceSection: '#### Scenario: reader follows the updated guidance\n- GIVEN the updated documentation\n- WHEN a reader follows the documented workflow\n- THEN the steps are accurate and sufficient',
-        approach: '<how the documentation will be updated and organized>',
-        affectedArea1: '<concrete doc path, directory, module doc, or documentation surface 1>',
-        affectedArea2: '<secondary doc path or reference file if needed>',
-        constraints: '<durable wording, consistency, scope, or audience constraint that must hold>',
-        task: '<update the target documentation and supporting references>',
-        automatedVerify,
-        manualVerify: '<exact reader or operator scenario to confirm the updated guidance is accurate, or unavailable/not applicable: owner and reason>',
-      }
-    case 'research':
-      return {
-        why: '<what question or uncertainty this research resolves>',
-        scope: '<what system area, option set, or hypothesis is being examined>',
-        nonGoals: '<what implementation work is explicitly out of scope>',
-        specSection: '<!-- Describe what finding or decision must be captured. Implementation notes belong in ## Design. -->\n### ADDED\n- Requirement: research outcome recording\n  - <what finding, option, or decision must be captured clearly>',
-        acceptanceSection: '#### Scenario: research question is resolved\n- GIVEN the current uncertainty or open question\n- WHEN the investigation is completed\n- THEN the result is recorded clearly enough to guide follow-up work',
-        approach: '<how the investigation will be performed and what evidence will be gathered>',
-        affectedArea1: '<concrete file path, directory, module, subsystem, or source under investigation>',
-        affectedArea2: '<secondary path, dependency, environment, or evidence source if needed>',
-        constraints: '<time, evidence, safety, or scope constraint for the investigation>',
-        task: '<gather evidence, record the recommendation or finding, and note any follow-up implementation work if needed>',
-        automatedVerify,
-        manualVerify: '<exact review of the findings to confirm they answer the original question and identify follow-up work if needed, or unavailable/not applicable: owner and reason>',
-      }
-    case 'ops':
-      return {
-        why: '<why this operational or environment change matters>',
-        scope: '<what environment, workflow, or operational path changes>',
-        nonGoals: '<what product or feature behavior will not change>',
-        specSection: '<!-- Describe the reliable operational outcome. Implementation notes belong in ## Design. -->\n### MODIFIED\n- Requirement: operational behavior\n  - <what reliable operational outcome should change or stay true>',
-        acceptanceSection: '#### Scenario: operational path succeeds\n- GIVEN the target environment or workflow\n- WHEN the operational change is applied\n- THEN the expected operational outcome is reliable',
-        approach: '<how the operational change will be applied safely>',
-        affectedArea1: '<concrete script, config path, workflow, environment path, or operational surface 1>',
-        affectedArea2: '<secondary script, config path, dependency, or environment surface if needed>',
-        constraints: '<rollback, safety, reliability, environment, or scope constraint that must hold>',
-        task: '<apply and verify the operational change>',
-        automatedVerify,
-        manualVerify: '<exact operator workflow or environment scenario to confirm the operational result, or unavailable/not applicable: owner and reason>',
-      }
-    default:
-      return {
-        why: '<why this change matters>',
-        scope: '<what this change will do>',
-        nonGoals: '<what this change will not do>',
-        specSection: '<!-- Describe observable behavior and requirements. Implementation notes belong in ## Design. -->\n### ADDED\n- Requirement: <new or updated behavior>\n  - <verifiable requirement>',
-        acceptanceSection: '#### Scenario: <name>\n- GIVEN <context>\n- WHEN <action>\n- THEN <expected outcome>',
-        approach: '<how the change will be implemented>',
-        affectedArea1: '<concrete file path, directory, module, or subsystem 1>',
-        affectedArea2: '<concrete file path, directory, module, or subsystem 2 if needed>',
-        constraints: '<behavior, compatibility, performance, safety, or scope constraint that must hold>',
-        task: '<implement the core change in the affected areas>',
-        automatedVerify,
-        manualVerify: '<exact acceptance scenario, or unavailable/not applicable: owner and reason>',
-      }
+  const placeholder = '<…>'
+  const delta = kind === 'feature' || kind === 'research' || kind === undefined ? 'ADDED' : 'MODIFIED'
+  return {
+    why: placeholder,
+    scope: placeholder,
+    nonGoals: placeholder,
+    specSection: `<!-- ${placeholder} -->\n### ${delta}\n- Requirement: ${placeholder}\n  - ${placeholder}`,
+    acceptanceSection: `#### Scenario: ${placeholder}\n- GIVEN ${placeholder}\n- WHEN ${placeholder}\n- THEN ${placeholder}`,
+    approach: placeholder,
+    affectedArea1: placeholder,
+    affectedArea2: placeholder,
+    constraints: placeholder,
+    task: placeholder,
+    automatedVerify: placeholder,
+    manualVerify: placeholder,
   }
 }
 
@@ -542,49 +441,49 @@ export async function detectProjectName(): Promise<string> {
 
 /** Generate the default project design spec template. */
 export function generateDesignContent(projectName: string): string {
+  const placeholder = '<…>'
   return `# Project Design: ${projectName}
 
 ## Purpose
-- <what this project is responsible for>
-- <who or what it serves>
+- ${placeholder}
 
 ## Stable Facts
-- <durable fact that future agents or developers must know>
-- <key architectural invariant>
+- ${placeholder}
 
 ## Boundaries
 - In scope:
-  - <major capability or boundary>
+  - ${placeholder}
 - Out of scope:
-  - <intentional non-goal>
+  - ${placeholder}
 
 ## Structure
-- <important directory or subsystem> — <responsibility>
+- ${placeholder}
 
 ## Constraints
-- <cross-cutting technical or operational constraint, when it affects architecture>
+- ${placeholder}
 `
 }
 
 /** Generate a generic project spec template. */
 export function generateSpecContent(name: string): string {
   const title = toTitleCase(name)
+  const placeholder = '<…>'
   return `# ${title}
 
 ## Purpose
-- <why this project-level spec exists>
+- ${placeholder}
 
 ## Stable Facts
-- <durable fact that future work must know>
+- ${placeholder}
 
 ## Boundaries
 - In scope:
-  - <what this spec covers>
+  - ${placeholder}
 - Out of scope:
-  - <what this spec does not cover>
+  - ${placeholder}
 
 ## Constraints
-- <stable constraint, if any>
+- ${placeholder}
 `
 }
 

@@ -7,6 +7,7 @@ import { runTui } from '../../src/tui/entry.js'
 
 const emptySnapshot: ProjectStatusSnapshot = {
   manage: { activation: 'explicit', closeout: 'local' },
+  language: { artifacts: null, commit: null },
   focused: [],
   records: [],
   groups: [],

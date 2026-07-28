@@ -1,4 +1,4 @@
-import type { ChangeKind, ManageActivation, ManageCloseout, ManagePolicy, RspConfig } from '../types.js'
+import type { ChangeKind, EffectiveLanguagePolicy, ManageActivation, ManageCloseout, ManagePolicy, ProjectLanguageConfig, RspConfig } from '../types.js'
 import { readFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -85,6 +85,9 @@ export async function inspectRspConfig(): Promise<RspConfigInspection> {
   const manageValue = parsed.manage && typeof parsed.manage === 'object' && !Array.isArray(parsed.manage)
     ? parsed.manage as Record<string, unknown>
     : undefined
+  const languageValue = parsed.language && typeof parsed.language === 'object' && !Array.isArray(parsed.language)
+    ? parsed.language as Record<string, unknown>
+    : undefined
   const activation = MANAGE_ACTIVATIONS.includes(manageValue?.activation as ManageActivation)
     ? manageValue?.activation as ManageActivation
     : undefined
@@ -103,6 +106,7 @@ export async function inspectRspConfig(): Promise<RspConfigInspection> {
         ? { path: normalizeDecisionRecordsPath(String(decisionPath)) }
         : undefined,
       manage: manageValue ? { activation, closeout } : undefined,
+      language: parseLanguageConfig(languageValue),
     },
     issues,
   }
@@ -114,7 +118,7 @@ export async function inspectRspConfig(): Promise<RspConfigInspection> {
 /** Validate the complete supported .rsp/config.yaml contract without coercing invalid input. */
 export function validateRspConfig(parsed: Record<string, unknown>): string[] {
   const issues: string[] = []
-  const supported = new Set(['kinds', 'decisions', 'manage'])
+  const supported = new Set(['kinds', 'decisions', 'manage', 'language'])
 
   for (const key of Object.keys(parsed)) {
     if (key === 'required_sections') {
@@ -162,6 +166,26 @@ export function validateRspConfig(parsed: Record<string, unknown>): string[] {
     }
   }
 
+  if ('language' in parsed) {
+    if (!parsed.language || typeof parsed.language !== 'object' || Array.isArray(parsed.language)) {
+      issues.push('config.yaml field "language" must be a YAML mapping')
+    }
+    else {
+      const language = parsed.language as Record<string, unknown>
+      const supportedLanguageFields = new Set(['default', 'artifacts', 'commit'])
+      for (const key of Object.keys(language)) {
+        if (!supportedLanguageFields.has(key))
+          issues.push(`config.yaml field "language.${key}" is not supported`)
+      }
+      if (!('default' in language))
+        issues.push('config.yaml field "language.default" is required when language is configured')
+      for (const key of supportedLanguageFields) {
+        if (key in language && canonicalizeLanguageTag(language[key]) === null)
+          issues.push(`config.yaml field "language.${key}" must be a non-empty valid BCP 47 language tag`)
+      }
+    }
+  }
+
   return issues
 }
 
@@ -187,6 +211,42 @@ export function resolveManagePolicy(config: RspConfig, options: { configValid?: 
   return {
     activation: config.manage?.activation ?? DEFAULT_MANAGE_POLICY.activation,
     closeout: config.manage?.closeout ?? DEFAULT_MANAGE_POLICY.closeout,
+  }
+}
+
+/** Resolve configured durable artifact and commit languages without selecting conversation language. */
+export function resolveLanguagePolicy(config: RspConfig, options: { configValid?: boolean } = {}): EffectiveLanguagePolicy {
+  if (options.configValid === false || !config.language)
+    return { artifacts: null, commit: null }
+  return {
+    artifacts: config.language.artifacts ?? config.language.default,
+    commit: config.language.commit ?? config.language.default,
+  }
+}
+
+function parseLanguageConfig(value: Record<string, unknown> | undefined): ProjectLanguageConfig | undefined {
+  if (!value)
+    return undefined
+  const defaultLanguage = canonicalizeLanguageTag(value.default)
+  if (defaultLanguage === null)
+    return undefined
+  const artifacts = canonicalizeLanguageTag(value.artifacts)
+  const commit = canonicalizeLanguageTag(value.commit)
+  return {
+    default: defaultLanguage,
+    artifacts: artifacts ?? undefined,
+    commit: commit ?? undefined,
+  }
+}
+
+function canonicalizeLanguageTag(value: unknown): string | null {
+  if (typeof value !== 'string' || value.trim() === '')
+    return null
+  try {
+    return Intl.getCanonicalLocales(value.trim())[0] ?? null
+  }
+  catch {
+    return null
   }
 }
 

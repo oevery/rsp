@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs'
+import { existsSync, readdirSync } from 'node:fs'
 import { mkdir, readFile, rename, unlink } from 'node:fs/promises'
 import { basename, join } from 'node:path'
 
@@ -27,7 +27,7 @@ export async function archiveChange(name: string) {
       const content = await readFile(srcPath, 'utf-8')
       const dependencyInspection = await inspectChangeDependencies()
       const checklist = collectArchiveChecklist(content, {
-        activeBlockers: dependencyInspection.activeBlockers.get(name),
+        activeBlockers: dependencyInspection.activeBlockers.get(workRef.name),
       })
 
       for (const line of checklist)
@@ -90,13 +90,13 @@ export async function archiveChange(name: string) {
 /** Resolve a unique archive filename. First collision gets a "-2" suffix to keep "-1" unambiguous. */
 export function resolveArchiveName(archiveSubdir: string, date: string, base: string): string {
   const initialName = `${date}_${base}.md`
-  if (!existsSync(join(archiveSubdir, initialName)))
+  if (!archiveNameExists(archiveSubdir, initialName))
     return initialName
 
   const MAX_SUFFIX = 9999
   for (let index = 2; index <= MAX_SUFFIX; index++) {
     const candidate = `${date}_${base}-${index}.md`
-    if (!existsSync(join(archiveSubdir, candidate)))
+    if (!archiveNameExists(archiveSubdir, candidate))
       return candidate
   }
 
@@ -105,4 +105,21 @@ export function resolveArchiveName(archiveSubdir: string, date: string, base: st
     `archive name collision exceeded ${MAX_SUFFIX} attempts for ${base}`,
     base,
   )
+}
+
+function archiveNameExists(archiveSubdir: string, name: string): boolean {
+  if (!existsSync(archiveSubdir))
+    return false
+  return readdirSync(archiveSubdir).some((entry) => {
+    if (entry.normalize('NFC') !== name)
+      return false
+    if (entry !== name) {
+      throw new WorkRefError(
+        'work_ref_collision',
+        `archive name has a Unicode normalization collision: ${entry} and ${name}`,
+        name,
+      )
+    }
+    return true
+  })
 }

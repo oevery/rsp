@@ -34,10 +34,12 @@ describe('rsp-commit Skill contract', () => {
 
   it('derives repository-consistent structured messages without invented relationships', () => {
     for (const fragment of [
-      'explicit current instruction',
-      'nearest repository authority',
+      'explicit current commit-language instruction',
+      'configured effective commit language',
+      'nearest repository commit authority',
       'clear style of recent non-merge commits',
       'Response language',
+      'Conventional Commit types/scopes and trailers',
       'Conventional Commit',
       'two to four concise bullets',
       '`RSP-WorkRef:`',

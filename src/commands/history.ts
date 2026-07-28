@@ -5,11 +5,10 @@ import type { CommandDiagnostic, CommandRunOptions, HistoryDetailOutput, History
 import { pc } from '../core/config.js'
 import { guardRspInitialized } from '../core/helpers.js'
 import { emitJson } from '../core/output.js'
+import { normalizeExecutableWorkRef, normalizeWorkRefSegment } from '../core/work-ref.js'
 import { ArchiveHistoryError, HISTORY_DEFAULT_LIMIT, HISTORY_MAX_LIMIT, historyInspectionComplete, inspectArchiveHistory, queryArchiveHistory, readArchiveHistoryDetail, selectArchiveHistoryRecord } from '../history/query.js'
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
-const GROUP_RE = /^[a-z0-9-]+$/
-const WORK_REF_RE = /^[a-z0-9-]+(?:\/[a-z0-9-]+)?$/
 
 export interface HistoryCliQuery {
   workRef?: string
@@ -73,15 +72,15 @@ export async function showHistory(input: HistoryCliQuery = {}, options: CommandR
     }, inspection.diagnostics, inspection.diagnosticSummary, inspection.runtime, options)
   }
 
-  if (input.workRef) {
+  if (validation.workRef) {
     try {
-      const selected = selectArchiveHistoryRecord(inspection.records, { workRef: input.workRef })
+      const selected = selectArchiveHistoryRecord(inspection.records, { workRef: validation.workRef })
       const record = await readArchiveHistoryDetail(selected)
       const result: HistoryDetailResult = {
         command: 'history',
         ok: true,
         mode: 'detail',
-        query: { workRef: input.workRef },
+        query: { workRef: validation.workRef },
         record,
         diagnostics: [],
         diagnosticSummary: emptyCollectionSummary(),
@@ -135,15 +134,20 @@ export async function showHistory(input: HistoryCliQuery = {}, options: CommandR
   return result
 }
 
-function validateHistoryQuery(input: HistoryCliQuery): { ok: true, query: ArchiveHistoryQuery } | { ok: false, error: { code: string, message: string } } {
+function validateHistoryQuery(input: HistoryCliQuery): { ok: true, query: ArchiveHistoryQuery, workRef?: string } | { ok: false, error: { code: string, message: string } } {
   if ((input.positionalCount ?? (input.workRef ? 1 : 0)) > 1)
     return invalid('history_positional_args_unsupported', 'history accepts at most one positional WorkRef')
   if (input.workRef) {
-    if (!WORK_REF_RE.test(input.workRef) || input.workRef.endsWith('/brief') || input.workRef.endsWith('/00-brief'))
+    let workRef
+    try {
+      workRef = normalizeExecutableWorkRef(input.workRef)
+    }
+    catch {
       return invalid('invalid_history_work_ref', 'history WorkRef must be a flat or one-Group-level executable Change identity')
+    }
     if (input.limit !== undefined || input.since !== undefined || input.until !== undefined || input.kind !== undefined || input.group !== undefined || input.search !== undefined)
       return invalid('history_detail_filters_unsupported', 'list filters cannot be combined with an exact history detail lookup')
-    return { ok: true, query: {} }
+    return { ok: true, query: {}, workRef }
   }
 
   const limit = input.limit === undefined ? HISTORY_DEFAULT_LIMIT : Number(input.limit)
@@ -157,8 +161,15 @@ function validateHistoryQuery(input: HistoryCliQuery): { ok: true, query: Archiv
     return invalid('invalid_history_date_range', '--since must be on or before --until')
   if (input.kind !== undefined && input.kind.trim() === '')
     return invalid('invalid_history_kind', '--kind must be a non-empty exact historical kind')
-  if (input.group !== undefined && !GROUP_RE.test(input.group))
-    return invalid('invalid_history_group', '--group must be one lowercase kebab-case Group name')
+  let group = input.group
+  if (group !== undefined) {
+    try {
+      group = normalizeWorkRefSegment(group)
+    }
+    catch {
+      return invalid('invalid_history_group', '--group must be one safe Unicode Group name')
+    }
+  }
   if (input.search !== undefined && input.search.trim() === '')
     return invalid('invalid_history_search', '--search must be non-empty')
 
@@ -169,7 +180,7 @@ function validateHistoryQuery(input: HistoryCliQuery): { ok: true, query: Archiv
       since: input.since,
       until: input.until,
       kind: input.kind?.trim(),
-      group: input.group,
+      group,
       search: input.search?.trim(),
     },
   }

@@ -14,6 +14,9 @@
 # - ops
 # - research
 
+language:
+  default: en
+
 # Self-host automatic Manage routing with bounded deterministic local commits; push and publication stay explicit.
 manage:
   activation: auto

@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { inspectWorkTree, resolveArchiveDirectory, resolveFocusMarkerPath, resolveWorkRef, resolveWorkRefPath, WorkRefError } from '../src/core/work-ref.js'
+import { inspectArchiveTree, inspectFocusTree, inspectWorkTree, isCanonicalExecutableWorkRef, normalizeExecutableWorkRef, resolveArchiveDirectory, resolveFocusMarkerPath, resolveWorkRef, resolveWorkRefPath, WorkRefError } from '../src/core/work-ref.js'
 
 const roots: string[] = []
 
@@ -14,6 +14,29 @@ afterEach(async () => {
 })
 
 describe('work ref resolution', () => {
+  it('normalizes safe Unicode command input and preserves Chinese identities', () => {
+    const changesDir = createChangesDirPath()
+    createGroupBrief(changesDir, '听说训练')
+
+    expect(resolveWorkRef('听说训练/模拟朗读', { changesDir })).toMatchObject({
+      kind: 'group-change',
+      name: '听说训练/模拟朗读',
+      path: join(changesDir, '听说训练', '模拟朗读.md'),
+      group: '听说训练',
+    })
+    expect(normalizeExecutableWorkRef('cafe\u0301/验证')).toBe('café/验证')
+    expect(isCanonicalExecutableWorkRef('café/验证')).toBe(true)
+    expect(isCanonicalExecutableWorkRef('cafe\u0301/验证')).toBe(false)
+  })
+
+  it('rejects unsafe Unicode identity boundaries', () => {
+    const changesDir = createChangesDirPath()
+
+    for (const name of ['ASCII-Upper', 'Éclair', '带 空格', '前-', '-后', '含.点', '越界\\路径'])
+      expectWorkRefError(() => resolveWorkRef(name, { changesDir }), 'invalid_work_ref')
+    expectWorkRefError(() => resolveWorkRef('组/00-brief', { changesDir }), 'invalid_work_ref')
+  })
+
   it('classifies each supported work identity explicitly', () => {
     const changesDir = createChangesDirPath()
     createGroupBrief(changesDir, 'release')
@@ -222,6 +245,27 @@ describe('work ref resolution', () => {
       expect.objectContaining({ code: 'unsupported_work_depth', input: 'release/backend' }),
       expect.objectContaining({ code: 'invalid_work_ref_path', input: 'release/notes.txt' }),
     ]))
+  })
+
+  it('fails closed on non-NFC stored work, focus, and archive identities', async () => {
+    const changesDir = createChangesDirPath()
+    const root = join(changesDir, '..', '..')
+    const nonCanonical = 'cafe\u0301'
+    await writeFile(join(changesDir, `${nonCanonical}.md`), '')
+    await mkdir(join(root, '.rsp', 'focus.d'), { recursive: true })
+    await writeFile(join(root, '.rsp', 'focus.d', nonCanonical), '')
+    await mkdir(join(root, '.rsp', 'archives', nonCanonical), { recursive: true })
+
+    await expect(inspectWorkTree({ changesDir })).resolves.toMatchObject({
+      diagnostics: [expect.objectContaining({ code: 'invalid_work_ref', input: nonCanonical })],
+    })
+    await expect(inspectFocusTree({ changesDir, focusDir: join(root, '.rsp', 'focus.d') })).resolves.toMatchObject({
+      diagnostics: [expect.objectContaining({ code: 'invalid_work_ref', input: nonCanonical })],
+    })
+    await expect(inspectArchiveTree({ archivesDir: join(root, '.rsp', 'archives') })).resolves.toMatchObject({
+      diagnostics: [expect.objectContaining({ code: 'invalid_archive_path', input: nonCanonical })],
+    })
+    expectWorkRefError(() => resolveWorkRef('café', { changesDir }), 'work_ref_collision')
   })
 })
 

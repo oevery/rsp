@@ -5,7 +5,7 @@ import { dirname, join, relative } from 'node:path'
 
 import { ARCHIVES_DIR } from './config.js'
 import { countCheckboxes, extractSection, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter } from './helpers.js'
-import { GROUP_BRIEF_FILENAME, inspectArchiveTree, inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from './work-ref.js'
+import { GROUP_BRIEF_FILENAME, inspectArchiveTree, inspectFocusTree, inspectWorkTree, isCanonicalExecutableWorkRef, resolveWorkRef, WorkRefError } from './work-ref.js'
 
 export const GROUP_BRIEF_SECTIONS = ['Goal', 'Scope', 'Shared Constraints', 'Slices', 'Completion Conditions', 'Durable Outcomes', 'Blockers'] as const
 
@@ -24,6 +24,7 @@ export async function resolveExecutableChange(name: string, options: Omit<Resolv
 
 /** Render the fixed single-file contract for one shallow Change Group. */
 export function generateGroupBriefContent(name: string, goal = ''): string {
+  const placeholder = '<…>'
   return `---
 kind: group
 ---
@@ -31,23 +32,23 @@ kind: group
 # Change Group: ${name}
 
 ## Goal
-- ${goal || '<what shared outcome this group must deliver>'}
+- ${goal || placeholder}
 
 ## Scope
-- <what is coordinated by this group>
+- ${placeholder}
 
 ## Shared Constraints
-- <constraint shared by every child Change>
+- ${placeholder}
 
 ## Slices
-- \`${name}/<change>\`: <independently executable boundary>
+- \`${name}/<change>\`: ${placeholder}
 
 ## Completion Conditions
-- [ ] <end-to-end condition beyond individual child verification>
+- [ ] ${placeholder}
 
 ## Durable Outcomes
-- Current facts: <Spec, CONTEXT.md, scoped instruction target, or none>
-- Lasting rationale: <Decision Record target, or none>
+- Current facts: ${placeholder}
+- Lasting rationale: ${placeholder}
 
 ## Blockers
 - none
@@ -75,7 +76,7 @@ export async function inspectChangeGroups(options: { workTree?: WorkTreeInspecti
       const heading = content.match(/^# Change:\s+(\S+)\s*$/m)
       if (heading?.[1]?.includes('/')) {
         const identity = heading[1]
-        if (!new RegExp(`^${escapeRegExp(archiveGroup)}/[a-z0-9-]+$`).test(identity)) {
+        if (!isCanonicalExecutableWorkRef(identity) || !identity.startsWith(`${archiveGroup}/`)) {
           diagnostics.push({
             severity: 'error',
             code: 'group_archive_identity_mismatch',
@@ -322,7 +323,7 @@ function parseGroupBrief(group: string, content: string): {
       diagnostics.push({ severity: 'error', code: 'group_slice_invalid', change: group, message: `group slice requires a boundary: ${name}` })
       continue
     }
-    if (!new RegExp(`^${escapeRegExp(group)}/[a-z0-9-]+$`).test(name) || name === `${group}/brief`) {
+    if (!isCanonicalExecutableWorkRef(name) || !name.startsWith(`${group}/`)) {
       diagnostics.push({ severity: 'error', code: 'group_slice_invalid', change: group, message: `invalid direct child identity in Group Brief: ${name}` })
       continue
     }

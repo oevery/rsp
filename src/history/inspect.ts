@@ -7,11 +7,9 @@ import { basename, dirname, relative } from 'node:path'
 import { ARCHIVES_DIR } from '../core/config.js'
 import { extractSection, normalizeLogicalPath, parseFrontmatter } from '../core/helpers.js'
 import { toErrorMessage } from '../core/output.js'
-import { inspectArchiveTree } from '../core/work-ref.js'
+import { inspectArchiveTree, isCanonicalExecutableWorkRef, isCanonicalWorkRefSegment } from '../core/work-ref.js'
 import { HISTORY_MAX_DIAGNOSTICS, HISTORY_MAX_TEXT_CODE_POINTS } from './model.js'
 
-const EXECUTABLE_WORK_REF_RE = /^[a-z0-9-]+(?:\/[a-z0-9-]+)?$/
-const GROUP_NAME_RE = /^[a-z0-9-]+$/
 const ARCHIVE_NAME_RE = /^(\d{4}-\d{2}-\d{2})_(.+)\.md$/
 
 export async function inspectArchiveHistory(options: { archivesDir?: string, archiveTree?: ArchiveTreeInspection } = {}): Promise<ArchiveHistoryInspection> {
@@ -80,7 +78,7 @@ function parseArchiveEntry(sourcePath: string, path: string, archivesDir: string
   const archiveStem = nameMatch[2]
   const relativeDirectory = normalizeLogicalPath(relative(archivesDir, dirname(sourcePath)))
   const archiveGroup = relativeDirectory === '.' || relativeDirectory === '' ? null : relativeDirectory
-  if (archiveGroup && !GROUP_NAME_RE.test(archiveGroup))
+  if (archiveGroup && !isCanonicalWorkRefSegment(archiveGroup))
     return { diagnostic: errorDiagnostic('archive_identity_mismatch', path, 'archive group path is not a valid one-segment Group identity') }
 
   const changeHeadings = [...content.matchAll(/^# Change:\s+(\S+)\s*$/gm)].map(match => match[1])
@@ -114,7 +112,7 @@ function parseArchiveEntry(sourcePath: string, path: string, archivesDir: string
   }
   const expectedGroup = segments.length === 2 ? segments[0] : null
   const expectedBase = segments.at(-1)!
-  if (!EXECUTABLE_WORK_REF_RE.test(workRef) || expectedGroup !== archiveGroup || !matchesArchiveStem(archiveStem, expectedBase)) {
+  if (!isCanonicalExecutableWorkRef(workRef) || expectedGroup !== archiveGroup || !matchesArchiveStem(archiveStem, expectedBase)) {
     return { diagnostic: errorDiagnostic('archive_identity_mismatch', path, `archived Change identity ${workRef} does not match its archive path`) }
   }
 

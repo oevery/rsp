@@ -2,6 +2,7 @@ import type {
   ChangeDependencyPlanOutput,
   ChangeGroupStatusOutput,
   CommandDiagnostic,
+  EffectiveLanguagePolicy,
   ManagePolicy,
   RuntimeDiagnostic,
   StatusRecordOutput,
@@ -31,6 +32,7 @@ export interface ProjectStatusRecord {
 
 export interface ProjectStatusSnapshot {
   manage: ManagePolicy
+  language: EffectiveLanguagePolicy
   focused: string[]
   records: ProjectStatusRecord[]
   groups: ChangeGroupStatusOutput[]
@@ -42,6 +44,7 @@ export interface ProjectStatusSnapshot {
 
 export interface ProjectStatusView {
   manage: ManagePolicy
+  language: EffectiveLanguagePolicy
   query: Required<Pick<StatusOptions, 'focused' | 'blocked'>> & { stale: number | null }
   focused: string[]
   records: ProjectStatusRecord[]

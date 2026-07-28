@@ -3,7 +3,7 @@ import type { ProjectStatusRecord, ProjectStatusSnapshot } from './model.js'
 import { readFile, stat } from 'node:fs/promises'
 
 import { inspectChangeGroups } from '../core/change-group.js'
-import { CONFIG_PATH, inspectRspConfig, resolveManagePolicy } from '../core/config.js'
+import { CONFIG_PATH, inspectRspConfig, resolveLanguagePolicy, resolveManagePolicy } from '../core/config.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
 import { collectArchiveReadiness, countCheckboxes, extractSection, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter } from '../core/helpers.js'
 import { toErrorMessage } from '../core/output.js'
@@ -14,10 +14,12 @@ export async function inspectProjectStatus(options: { nowMs?: number } = {}): Pr
   const runtime: RuntimeDiagnostic[] = []
   const diagnostics: CommandDiagnostic[] = []
   let manage = resolveManagePolicy({})
+  let language = resolveLanguagePolicy({})
   try {
     const configInspection = await inspectRspConfig()
     const configValid = configInspection.issues.length === 0
     manage = resolveManagePolicy(configInspection.config, { configValid })
+    language = resolveLanguagePolicy(configInspection.config, { configValid })
     if (!configValid) {
       diagnostics.push({
         severity: 'error',
@@ -29,6 +31,7 @@ export async function inspectProjectStatus(options: { nowMs?: number } = {}): Pr
   }
   catch (error) {
     manage = resolveManagePolicy({}, { configValid: false })
+    language = resolveLanguagePolicy({}, { configValid: false })
     diagnostics.push({
       severity: 'error',
       code: 'invalid_config',
@@ -83,6 +86,7 @@ export async function inspectProjectStatus(options: { nowMs?: number } = {}): Pr
   const dependencyInspection = await inspectChangeDependencies({
     workTree,
     archiveTree,
+    archiveHistory: historyInspection,
     preferredOrder: groupInspection.groups.flatMap(group => group.slices.map(slice => slice.name)),
   })
   diagnostics.push(...dependencyInspection.diagnostics)
@@ -214,6 +218,7 @@ export async function inspectProjectStatus(options: { nowMs?: number } = {}): Pr
 
   return {
     manage,
+    language,
     focused: [...focusedSet].sort(),
     records,
     groups: groupInspection.groups,

@@ -19,6 +19,8 @@ export function printStatusPlain(view: ProjectStatusView): void {
   console.log(`  ${pc.bold('RSP status')}`)
   console.log()
   console.log(`  ${pc.bold('Manage:')} activation ${view.manage.activation} · closeout ${view.manage.closeout}`)
+  if (view.language.artifacts !== null || view.language.commit !== null)
+    console.log(`  ${pc.bold('Language:')} artifacts ${view.language.artifacts ?? 'unset'} · commit ${view.language.commit ?? 'unset'}`)
   console.log()
 
   for (const diagnostic of view.diagnostics) {

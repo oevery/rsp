@@ -37,7 +37,7 @@ Resolve these dimensions independently:
 | Dimension | Evidence to prefer |
 | --- | --- |
 | Audience | Explicit request, established release surface, prior releases |
-| Language | Explicit request, nearest project instruction, target artifact, prior published releases, conversation |
+| Language | Explicit request, established target artifact, configured effective artifact language, nearest project instruction, prior published releases, conversation |
 | Voice | Existing artifact and product terminology |
 | Categories | Existing artifact/config; Keep a Changelog only as fallback |
 | Version and tags | Confirmed target, manifests, release config, prior tags |
@@ -47,7 +47,7 @@ Resolve these dimensions independently:
 
 Personal preferences refine the project format where compatible. Project-owned parsers, schemas, and release contracts win when a stylistic preference would break them. Report the conflict when the user must choose.
 
-For language specifically, apply the table order without reordering it: an explicit surface-specific request wins; otherwise follow the nearest project instruction, then that target artifact's established language, then prior published releases, and finally the conversation language.
+For language specifically, follow Core's response-versus-artifact boundary. An explicit surface-specific request wins. Otherwise preserve an existing target artifact's established language. For a new release artifact, use the configured effective artifact language, then the nearest project or release instruction, prior published releases, and finally the conversation language. Configuration changes never translate an existing release surface by themselves.
 
 ## Repository shapes
 

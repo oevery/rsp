@@ -4,7 +4,7 @@ description: Create one authorized, exact-scope local commit for an RSP-owned Ch
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.26.1"
+  version: "2026.07.28.2"
 ---
 
 # RSP Commit
@@ -19,7 +19,7 @@ Stop without staging when the owner, allowed paths, commit authority, verificati
 
 ## Derive the message
 
-Choose subject language from explicit current instruction, then nearest repository authority, then the clear style of recent non-merge commits. Response language, RSP artifact language, and preferences remembered from another repository do not select it. When recent history is materially mixed and no nearer rule resolves it, return the single language decision to its owner.
+Choose subject and body prose language from explicit current commit-language instruction, then the configured effective commit language, nearest repository commit authority, and finally the clear style of recent non-merge commits. Response language and preferences remembered from another repository do not select it. Preserve Conventional Commit types/scopes and trailers as technical values. When recent history is materially mixed and no nearer rule resolves it, return the single language decision to its owner.
 
 Use the repository's established Conventional Commit form when present. Derive type and scope from the owned outcome and repository history, not from the conversation. Keep the subject concise and imperative or otherwise repository-consistent.
 

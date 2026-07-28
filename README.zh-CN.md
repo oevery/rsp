@@ -170,7 +170,14 @@ RSP 发布十一个默认、宿主无关、按需加载的生命周期 Skills，
 
 每个生命周期 Skill 都把结果返回现有项目或 RSP owner。只读的 Pre-Change Design 与 `rsp-structural-audit` 可以把一个有界结果直接返回用户，而不虚构 artifact owner。套件不引入隐藏 workflow state 或递归 Skill 编排。任何 Skill 都不会推断 commit、push、publication、deployment、approval 或 human-acceptance 权限。
 
-响应语言与产物语言相互独立。面向人的响应标题、标签、解释和结论依次遵循明确指定的响应语言、项目中针对响应的指令和会话语言；已授权写入的产物正文依次遵循明确指定的产物语言、项目中针对产物的指令、目标产物的现有语言，最后才回退到会话语言。RSP 的 canonical artifact headings、WorkRef 值、路径、命令、标识符和机器消费值保持不变；响应标签可以在括号中保留技术 token，但不能直接使用未翻译的 token 作为标签。
+响应语言归用户和会话所有；产物与 commit message 语言才是项目持久表面。项目 `.rsp/config.yaml` 绝不选择响应语言：响应正文依次遵循当前明确请求、用户/宿主个人指令和会话语言。项目可以设置共享的 `language.default`，并通过 `language.artifacts` 或 `language.commit` 分别覆盖。新产物正文依次遵循明确产物语言、有效产物语言、项目产物指令和会话语言；已有产物除非明确授权翻译，否则保持现有语言。Commit 正文依次遵循当前明确的 commit 语言、有效 commit 语言、仓库 commit 规则和清晰的近期非 merge 历史。配置变化不会重写历史。CLI 生成的脚手架只包含 canonical 结构 token、中立的 `<…>` 占位符和用户原样输入，不维护 locale 字典，也不会静默回退为英文正文；Core 与 discipline Skills 再按授权语言填写自然语言内容。RSP 的 canonical headings、路径、命令、标识符、Conventional Commit type/scope、trailers 和机器消费值保持不变；WorkRef 遵循安全 Unicode 身份契约。
+
+```yaml
+language:
+  default: en
+```
+
+配置了 `language` mapping 时，`default` 必填并同时为产物和 commit 提供持久默认值；可选的 `artifacts` 与 `commit` 只覆盖对应表面。`response` 被明确禁止，因为共享仓库不应限制每位协作者的会话语言。完全省略 `language` 时，两项持久有效值都保持未设置。普通 status 显示持久语言值，status JSON 则始终把 `language.artifacts` 与 `language.commit` 投影为规范化语言标签或 `null`。语言配置不会授予 stage、commit、push 或 publication 权限。
 
 按证据组合套件：Shape 确定 owner；Design 返回一个关键问题；Core 在 Diagnose、TDD 与 Implement 之间选择；Review 保持只读；Resolve Findings 修正 accepted findings 并请求复审；Core 在 archive 前执行 durable decision。显式 release operation 在 identity 或 range 已确认时，可以不创建 Release Change 就进入 Release Docs；只有重大决策、协调、恢复、blocker 或 acceptance 需要持久 owner 时才创建。Manage 是可选能力：它接受一个 selected ready Change 或 shallow Group，并要求独立调度、长时 continuation 或恢复需求；小型或紧耦合工作保持直接执行。项目可以保持显式启用，也可以让 Core 自动选择符合条件的 managed work。
 
@@ -345,7 +352,7 @@ rsp doctor [--fix] [--json [--compact]] [--verbose]
 
 在真实交互式终端中，裸 `rsp` 会打开与 `rsp ui` 相同的只读仪表盘。CI、管道、重定向流和 `TERM=dumb` 继续使用静态命令输出；人类快照使用 `rsp status`，自动化使用 `rsp status --json`。仪表盘不会创建、聚焦或归档工作。
 
-仪表盘快捷键：`Tab` 按 Changes/Groups/History 顺序切换，方向键或 `j`/`k` 移动，`/` 筛选当前 scope，`Enter` 打开全宽详情，`r` 刷新当前 scope，`?` 显示帮助，`q`、`Ctrl-C` 或顶层 `Esc` 退出。History 首次进入时才加载默认有界的近期结果，只有选中记录并按 `Enter` 后才按唯一 archive path 加载结构化详情；更早的记录使用 `rsp history` 过滤查询。可设置 `RSP_UI_LANG=en|zh-CN` 或传入 `rsp ui --lang`；只有仪表盘自有标签会本地化。现有 CLI help、纯文本输出、JSON、WorkRef、路径、命令、Skills 和 RSP artifacts 仍保持英文。
+仪表盘快捷键：`Tab` 按 Changes/Groups/History 顺序切换，方向键或 `j`/`k` 移动，`/` 筛选当前 scope，`Enter` 打开全宽详情，`r` 刷新当前 scope，`?` 显示帮助，`q`、`Ctrl-C` 或顶层 `Esc` 退出。History 首次进入时才加载默认有界的近期结果，只有选中记录并按 `Enter` 后才按唯一 archive path 加载结构化详情；更早的记录使用 `rsp history` 过滤查询。可设置 `RSP_UI_LANG=en|zh-CN` 或传入 `rsp ui --lang`；只有仪表盘自有标签会本地化。该 UI 设置不会本地化 CLI help、纯文本输出、JSON、路径、命令、Skills 或已有产物。WorkRef 可使用安全 Unicode 身份契约，新产物正文则遵循上文的项目语言策略。
 
 当没有 focused change 时，`rsp status` 和 `rsp show --focused --json` 会输出 `nextActions`，但不会自动猜测哪个 open change 是当前工作。
 

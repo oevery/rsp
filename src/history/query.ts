@@ -3,6 +3,7 @@ import type { ArchiveHistoryInspection, ArchiveHistoryListResult, ArchiveHistory
 import { readFile } from 'node:fs/promises'
 
 import { countCheckboxes, extractSection, parseScenarios } from '../core/helpers.js'
+import { normalizeWorkRefSegment } from '../core/work-ref.js'
 import { boundText } from './inspect.js'
 import { ArchiveHistoryError, HISTORY_DEFAULT_LIMIT, HISTORY_MAX_EVIDENCE_ITEMS, HISTORY_MAX_LIMIT } from './model.js'
 
@@ -12,13 +13,14 @@ export { ArchiveHistoryError, HISTORY_DEFAULT_LIMIT, HISTORY_MAX_LIMIT } from '.
 
 export function queryArchiveHistory(records: ArchiveHistoryRecord[], query: ArchiveHistoryQuery = {}): ArchiveHistoryListResult {
   validateArchiveHistoryQuery(query)
+  const group = query.group === undefined ? undefined : normalizeWorkRefSegment(query.group)
   const limit = query.limit ?? HISTORY_DEFAULT_LIMIT
   const matched = records
     .filter(record => (
       (!query.since || record.date >= query.since)
       && (!query.until || record.date <= query.until)
       && (!query.kind || record.kind === query.kind)
-      && (!query.group || record.group === query.group)
+      && (!group || record.group === group)
       && (!query.search || `${record.workRef}\n${record.searchSummary ?? record.summary}`.toLowerCase().includes(query.search.toLowerCase()))
     ))
     .sort(compareHistoryRecords)
@@ -45,8 +47,14 @@ export function validateArchiveHistoryQuery(query: ArchiveHistoryQuery): void {
     throw new ArchiveHistoryError('invalid_history_date_range', 'history since must be on or before until')
   if (query.kind !== undefined && query.kind.trim() === '')
     throw new ArchiveHistoryError('invalid_history_kind', 'history kind must be non-empty')
-  if (query.group !== undefined && !/^[a-z0-9-]+$/.test(query.group))
-    throw new ArchiveHistoryError('invalid_history_group', 'history group must be one lowercase kebab-case segment')
+  if (query.group !== undefined) {
+    try {
+      normalizeWorkRefSegment(query.group)
+    }
+    catch {
+      throw new ArchiveHistoryError('invalid_history_group', 'history group must be one safe Unicode segment')
+    }
+  }
   if (query.search !== undefined && query.search.trim() === '')
     throw new ArchiveHistoryError('invalid_history_search', 'history search must be non-empty')
 }

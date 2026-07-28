@@ -26,23 +26,24 @@ export async function createChangeGroup(name: string, goal = ''): Promise<void> 
       const ref = resolveWorkRef(`${name}/brief`)
       if (ref.kind !== 'group-brief')
         throw new WorkRefError('invalid_work_ref', `invalid Change Group name: ${name}`, name)
-      if (await hasArchivedGroupBrief(name))
-        throw new ChangeGroupError(`archived Change Group cannot be reopened: ${name}`)
+      const groupName = ref.group
+      if (await hasArchivedGroupBrief(groupName))
+        throw new ChangeGroupError(`archived Change Group cannot be reopened: ${groupName}`)
 
-      const groupDirectory = resolveManagedDirectoryChain(CHANGES_DIR, [name], 'Change Group path')
+      const groupDirectory = resolveManagedDirectoryChain(CHANGES_DIR, [groupName], 'Change Group path')
       await mkdir(groupDirectory, { recursive: true })
       try {
-        await writeFile(ref.path, generateGroupBriefContent(name, goal), { flag: 'wx' })
+        await writeFile(ref.path, generateGroupBriefContent(groupName, goal), { flag: 'wx' })
       }
       catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'EEXIST')
-          throw new ChangeGroupError(`Change Group already exists: ${name}`)
+          throw new ChangeGroupError(`Change Group already exists: ${groupName}`)
         throw error
       }
 
-      console.log(`  ${pc.green('Created Change Group:')} ${name}`)
+      console.log(`  ${pc.green('Created Change Group:')} ${groupName}`)
       console.log(`  ${pc.dim('Unfocused Group Brief:')} ${ref.path}`)
-      console.log(`  ${pc.cyan('Next:')} fill the brief, then create direct child Changes with rsp create ${name}/<change>\n`)
+      console.log(`  ${pc.cyan('Next:')} fill the brief, then create direct child Changes with rsp create ${groupName}/<change>\n`)
     })
   }
   catch (error) {
@@ -68,12 +69,13 @@ export async function closeChangeGroup(name: string): Promise<void> {
         throw new ChangeGroupError(`invalid Change Group name: ${name}`)
 
       const inspection = await inspectChangeGroups()
-      const group = inspection.groups.find(candidate => candidate.name === name)
+      const groupName = ref.group
+      const group = inspection.groups.find(candidate => candidate.name === groupName)
       if (!group)
-        throw new ChangeGroupError(`Change Group not found: ${name}`)
-      const reasons = collectCloseReasons(group, inspection.diagnostics.filter(diagnostic => diagnostic.change === name && diagnostic.severity === 'error').map(diagnostic => diagnostic.message))
+        throw new ChangeGroupError(`Change Group not found: ${groupName}`)
+      const reasons = collectCloseReasons(group, inspection.diagnostics.filter(diagnostic => diagnostic.change === groupName && diagnostic.severity === 'error').map(diagnostic => diagnostic.message))
       if (reasons.length > 0)
-        throw new ChangeGroupError(`Change Group "${name}" is not ready to close: ${reasons.join('; ')}`)
+        throw new ChangeGroupError(`Change Group "${groupName}" is not ready to close: ${reasons.join('; ')}`)
 
       const archiveDirectory = resolveArchiveDirectory(ref)
       const date = new Date().toISOString().slice(0, 10)
@@ -87,7 +89,7 @@ export async function closeChangeGroup(name: string): Promise<void> {
       catch (error) {
         warnings.push(`changes directory cleanup failed: ${toErrorMessage(error)}`)
       }
-      console.log(`  ${pc.green('Closed Change Group:')} ${name}`)
+      console.log(`  ${pc.green('Closed Change Group:')} ${groupName}`)
       console.log(`  ${pc.dim('Archived Group Brief:')} ${join(archiveDirectory, archiveName)}\n`)
       for (const warning of warnings)
         console.log(`  ${pc.yellow('⚠')} ${warning}`)

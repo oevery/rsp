@@ -1,11 +1,14 @@
-import { lstatSync } from 'node:fs'
+import { Buffer } from 'node:buffer'
+import { lstatSync, readdirSync } from 'node:fs'
 import { readdir } from 'node:fs/promises'
 import { isAbsolute, join, relative } from 'node:path'
 
 import { ARCHIVES_DIR, CHANGES_DIR, FOCUS_DIR } from './config.js'
 import { inspectManagedDirectory, ManagedPathError, requireManagedDirectory, requireManagedFile } from './managed-path.js'
 
-const WORK_SEGMENT_RE = /^[a-z0-9-]+$/
+const WORK_SEGMENT_RE = /^[\p{Ll}\p{Lo}\p{Lm}\p{M}\p{Nd}]+(?:-[\p{Ll}\p{Lo}\p{Lm}\p{M}\p{Nd}]+)*$/u
+const WORK_SEGMENT_MAX_CODE_POINTS = 100
+const WORK_SEGMENT_MAX_UTF8_BYTES = 200
 export const GROUP_BRIEF_FILENAME = '00-brief.md'
 
 export type WorkRef = FlatChangeRef | GroupedChangeRef | GroupBriefRef
@@ -52,6 +55,7 @@ export interface GroupBriefRef extends WorkRefBase {
 
 export interface ResolveWorkRefOptions {
   changesDir?: string
+  canonical?: boolean
   executable?: boolean
   mustExist?: boolean
 }
@@ -100,45 +104,74 @@ export class WorkRefError extends Error {
   }
 }
 
+/** Normalize and validate one safe Unicode WorkRef segment at command ingress. */
+export function normalizeWorkRefSegment(segment: string): string {
+  const normalized = segment.normalize('NFC')
+  if (
+    !WORK_SEGMENT_RE.test(normalized)
+    || [...normalized].length > WORK_SEGMENT_MAX_CODE_POINTS
+    || Buffer.byteLength(normalized, 'utf8') > WORK_SEGMENT_MAX_UTF8_BYTES
+  ) {
+    throw new WorkRefError(
+      'invalid_work_ref',
+      `work identity segment "${segment}" must contain at most ${WORK_SEGMENT_MAX_CODE_POINTS} lowercase or caseless Unicode letters, marks, or decimal numbers separated only by internal hyphens and fit within ${WORK_SEGMENT_MAX_UTF8_BYTES} UTF-8 bytes`,
+      segment,
+    )
+  }
+  return normalized
+}
+
+/** Normalize one executable flat or direct Group-child identity. */
+export function normalizeExecutableWorkRef(name: string): string {
+  return normalizeWorkRefName(name, false)
+}
+
+/** Check a stored executable identity without silently normalizing it. */
+export function isCanonicalExecutableWorkRef(name: string): boolean {
+  try {
+    return normalizeExecutableWorkRef(name) === name
+  }
+  catch {
+    return false
+  }
+}
+
+/** Check a stored Group segment without silently normalizing it. */
+export function isCanonicalWorkRefSegment(segment: string): boolean {
+  try {
+    return normalizeWorkRefSegment(segment) === segment
+  }
+  catch {
+    return false
+  }
+}
+
 /** Resolve one logical open-work identity through the bounded RSP work model. */
 export function resolveWorkRef(name: string, options: ResolveWorkRefOptions & { executable: true }): ExecutableWorkRef
 export function resolveWorkRef(name: string, options?: ResolveWorkRefOptions): WorkRef
 export function resolveWorkRef(name: string, options: ResolveWorkRefOptions = {}): WorkRef {
   const changesDir = options.changesDir ?? CHANGES_DIR
-  const segments = name.split('/')
+  const normalizedName = normalizeWorkRefName(name, true)
+  if (options.canonical && normalizedName !== name) {
+    throw new WorkRefError(
+      'invalid_work_ref',
+      `stored work identity "${name}" must use Unicode NFC normalization`,
+      name,
+    )
+  }
+  const segments = normalizedName.split('/')
   const isGroupBrief = segments.length === 2 && segments[1] === 'brief'
 
-  if (segments.length > 2) {
-    throw new WorkRefError(
-      'unsupported_work_depth',
-      `work identity "${name}" exceeds the supported one-level Change Group depth`,
-      name,
-    )
-  }
-  if (!name || segments.some(segment => !WORK_SEGMENT_RE.test(segment))) {
-    throw new WorkRefError(
-      'invalid_work_ref',
-      `work identity "${name}" must contain one or two lowercase kebab-case segments`,
-      name,
-    )
-  }
-  if (segments.length === 2 && segments[1] === GROUP_BRIEF_FILENAME.slice(0, -3)) {
-    throw new WorkRefError(
-      'invalid_work_ref',
-      `work identity "${name}" uses the reserved Group Brief filename`,
-      name,
-    )
-  }
-
-  assertValidWorkRoot(changesDir, name)
-  assertNoIdentityCollision(changesDir, segments, name, isGroupBrief ? GROUP_BRIEF_FILENAME : undefined)
+  assertValidWorkRoot(changesDir, normalizedName)
+  assertNoNormalizationCollision(changesDir, segments, normalizedName, isGroupBrief)
+  assertNoIdentityCollision(changesDir, segments, normalizedName, isGroupBrief ? GROUP_BRIEF_FILENAME : undefined)
 
   const path = join(changesDir, ...segments.slice(0, -1), isGroupBrief ? GROUP_BRIEF_FILENAME : `${segments.at(-1)}.md`)
   const ref: WorkRef = segments.length === 1
-    ? { kind: 'change', name, path, group: null }
+    ? { kind: 'change', name: normalizedName, path, group: null }
     : isGroupBrief
-      ? { kind: 'group-brief', name, path, group: segments[0]! }
-      : { kind: 'group-change', name, path, group: segments[0]! }
+      ? { kind: 'group-brief', name: normalizedName, path, group: segments[0]! }
+      : { kind: 'group-change', name: normalizedName, path, group: segments[0]! }
 
   if (ref.kind === 'group-change' && options.executable !== false)
     assertGroupBrief(changesDir, ref)
@@ -231,7 +264,7 @@ export function resolveWorkRefPath(path: string, options: ResolveWorkRefOptions 
   const name = segments.length === 2 && segments[1] === GROUP_BRIEF_FILENAME
     ? `${segments[0]}/brief`
     : logicalPath.slice(0, -3)
-  return resolveWorkRef(name, options)
+  return resolveWorkRef(name, { ...options, canonical: true })
 }
 
 /** Narrow a WorkRef to the only shapes executable before Change Group lifecycle support. */
@@ -243,6 +276,7 @@ function isExecutableWorkRef(ref: WorkRef): ref is ExecutableWorkRef {
 export function resolveFocusMarkerPath(ref: WorkRef, options: { focusDir?: string } = {}): string {
   const focusDir = options.focusDir ?? FOCUS_DIR
   assertManagedRoot(focusDir, ref.name, 'invalid_focus_root', 'focus root', true)
+  assertNoManagedNormalizationCollision(focusDir, ref.name.split('/'), ref.name, 'invalid_focus_path')
   if (ref.group) {
     assertOptionalManagedDirectory(
       join(focusDir, ref.group),
@@ -269,6 +303,8 @@ export function resolveArchiveDirectory(ref: WorkRef, options: { archivesDir?: s
   assertManagedRoot(archivesDir, ref.name, 'invalid_archive_root', 'archive root', true)
   if (!ref.group)
     return archivesDir
+
+  assertNoManagedNormalizationCollision(archivesDir, [ref.group], ref.name, 'invalid_archive_path')
 
   const groupPath = join(archivesDir, ref.group)
   assertOptionalManagedDirectory(groupPath, ref.name, 'invalid_archive_path', 'archive path')
@@ -297,10 +333,10 @@ export async function inspectFocusTree(options: { changesDir?: string, focusDir?
     if (entry.name === '.gitkeep' && entry.isFile())
       continue
     if (entry.isDirectory()) {
-      if (!WORK_SEGMENT_RE.test(entry.name)) {
+      if (!isCanonicalWorkRefSegment(entry.name)) {
         addDiagnostic(result, new WorkRefError(
           'invalid_work_ref',
-          `work identity "${entry.name}" must contain one or two lowercase kebab-case segments`,
+          `stored work identity "${entry.name}" must be a safe Unicode NFC segment`,
           entry.name,
         ), path)
         continue
@@ -345,7 +381,7 @@ export async function inspectArchiveTree(options: { archivesDir?: string } = {})
     if (entry.name === 'INDEX.md' && entry.isFile())
       continue
     if (entry.isDirectory()) {
-      if (!WORK_SEGMENT_RE.test(entry.name)) {
+      if (!isCanonicalWorkRefSegment(entry.name)) {
         addArchivePathDiagnostic(result, entry.name, path)
         continue
       }
@@ -393,10 +429,10 @@ export async function inspectWorkTree(options: { changesDir?: string } = {}): Pr
       continue
 
     if (entry.isDirectory()) {
-      if (!WORK_SEGMENT_RE.test(entry.name)) {
+      if (!isCanonicalWorkRefSegment(entry.name)) {
         addDiagnostic(result, new WorkRefError(
           'invalid_work_ref',
-          `work identity "${entry.name}" must contain one or two lowercase kebab-case segments`,
+          `stored work identity "${entry.name}" must be a safe Unicode NFC segment`,
           entry.name,
         ), path)
         continue
@@ -521,7 +557,7 @@ async function inspectArchiveGroup(group: string, groupPath: string, result: Arc
 
 function collectFocusMarker(input: string, path: string, changesDir: string, result: FocusTreeInspection): void {
   try {
-    const ref = resolveWorkRef(input, { changesDir, executable: true })
+    const ref = resolveWorkRef(input, { changesDir, canonical: true, executable: true })
     result.markers.push({ name: ref.name, path })
   }
   catch (error) {
@@ -576,6 +612,108 @@ function addDiagnostic(result: DiagnosticCollector, error: WorkRefError, path: s
   if (result.diagnostics.some(item => item.code === error.code && item.input === error.input))
     return
   result.diagnostics.push({ code: error.code, input: error.input, path, message: error.message })
+}
+
+function normalizeWorkRefName(name: string, allowGroupBrief: boolean): string {
+  const segments = name.split('/')
+  if (segments.length > 2) {
+    throw new WorkRefError(
+      'unsupported_work_depth',
+      `work identity "${name}" exceeds the supported one-level Change Group depth`,
+      name,
+    )
+  }
+  if (!name || segments.some(segment => !segment)) {
+    throw new WorkRefError(
+      'invalid_work_ref',
+      `work identity "${name}" must contain one or two safe Unicode segments`,
+      name,
+    )
+  }
+  const normalizedSegments = segments.map(normalizeWorkRefSegment)
+  const child = normalizedSegments[1]
+  if (segments.length === 2 && child === GROUP_BRIEF_FILENAME.slice(0, -3)) {
+    throw new WorkRefError(
+      'invalid_work_ref',
+      `work identity "${name}" uses the reserved Group Brief filename`,
+      name,
+    )
+  }
+  if (segments.length === 2 && child === 'brief' && !allowGroupBrief) {
+    throw new WorkRefError(
+      'non_executable_work_ref',
+      `work identity "${name}" is a Group Brief and cannot be used as an executable Change`,
+      name,
+    )
+  }
+  return normalizedSegments.join('/')
+}
+
+function assertNoNormalizationCollision(changesDir: string, segments: string[], input: string, isGroupBrief: boolean): void {
+  for (let depth = 0; depth < segments.length; depth++) {
+    const parent = join(changesDir, ...segments.slice(0, depth))
+    const parentKind = getPathKind(parent, input)
+    if (parentKind === 'missing')
+      return
+    if (parentKind !== 'directory')
+      continue
+    let entries
+    try {
+      entries = readdirSync(parent, { withFileTypes: true })
+    }
+    catch (error) {
+      throw asReadFailure(parent, input, error)
+    }
+    const expected = segments[depth]
+    for (const entry of entries) {
+      let candidate: string | null = null
+      if (entry.isDirectory())
+        candidate = entry.name
+      else if (entry.isFile() && entry.name.endsWith('.md'))
+        candidate = entry.name.slice(0, -3)
+      if (depth === segments.length - 1 && isGroupBrief && entry.name === GROUP_BRIEF_FILENAME)
+        candidate = 'brief'
+      if (candidate && candidate !== expected && candidate.normalize('NFC') === expected) {
+        throw new WorkRefError(
+          'work_ref_collision',
+          `work identity "${input}" collides with non-canonical stored identity "${candidate}" after Unicode NFC normalization`,
+          input,
+        )
+      }
+    }
+  }
+}
+
+function assertNoManagedNormalizationCollision(
+  root: string,
+  segments: string[],
+  input: string,
+  code: 'invalid_focus_path' | 'invalid_archive_path',
+): void {
+  for (let depth = 0; depth < segments.length; depth++) {
+    const parent = join(root, ...segments.slice(0, depth))
+    const parentKind = getPathKind(parent, input)
+    if (parentKind === 'missing')
+      return
+    if (parentKind !== 'directory')
+      continue
+    let entries
+    try {
+      entries = readdirSync(parent, { withFileTypes: true })
+    }
+    catch (error) {
+      throw asReadFailure(parent, input, error)
+    }
+    const expected = segments[depth]
+    const alias = entries.find(entry => entry.name !== expected && entry.name.normalize('NFC') === expected)
+    if (alias) {
+      throw new WorkRefError(
+        code,
+        `managed identity "${input}" collides with non-canonical stored entry "${alias.name}" after Unicode NFC normalization`,
+        input,
+      )
+    }
+  }
 }
 
 function assertNoIdentityCollision(changesDir: string, segments: string[], input: string, finalFilename?: string): void {

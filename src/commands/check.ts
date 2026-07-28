@@ -435,7 +435,7 @@ export async function runCheck(options: CheckOptions = {}): Promise<CheckResult>
 }
 
 function findUnfinishedTemplateLines(content: string): string[] {
-  const placeholderRe = /<[^>\n]*(?:choose:|one-line|what |why |which |who |how |new |updated |expected |actual |specific |concrete |exact |verifiable |user |capability |behavior |context |action |path|directory|module|subsystem|command|scenario|constraint|requirement|question|uncertainty|implementation)[^>\n]*>/i
+  const placeholderRe = /<(?:…|[^>\n]*(?:choose:|one-line|what |why |which |who |how |new |updated |expected |actual |specific |concrete |exact |verifiable |user |capability |behavior |context |action|path|directory|module|subsystem|command|scenario|constraint|requirement|question|uncertainty|implementation)[^>\n]*)>/i
   return collectMatchingLines(content, (line) => {
     const trimmed = stripInlineCodeSpans(line).trim()
     return trimmed.startsWith('<!--') === false && placeholderRe.test(trimmed)

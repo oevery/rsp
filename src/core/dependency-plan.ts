@@ -1,9 +1,11 @@
+import type { ArchiveHistoryInspection } from '../history/model.js'
 import type { ChangeDependencyEdgeOutput, ChangeDependencyPlanOutput, CommandDiagnostic } from '../types.js'
 import type { ArchiveTreeInspection, WorkTreeInspection } from './work-ref.js'
 import { readFile } from 'node:fs/promises'
 
+import { historyInspectionComplete, inspectArchiveHistory } from '../history/query.js'
 import { extractBlockerLines, hasMeaningfulBlockers } from './helpers.js'
-import { inspectArchiveTree, inspectWorkTree } from './work-ref.js'
+import { inspectArchiveTree, inspectWorkTree, isCanonicalExecutableWorkRef } from './work-ref.js'
 
 interface ParsedBlockers {
   requires: ParsedDependency[]
@@ -24,14 +26,20 @@ export interface ChangeDependencyInspection {
 
 const NONE_BLOCKER_RE = /^[-*]\s*(?:none)?$/i
 const REQUIRES_RE = /^[-*]\s+requires\s+`([^`]+)`:[ \t]*(\S.*)$/i
-const EXECUTABLE_WORK_REF_RE = /^[a-z0-9-]+(?:\/(?!(?:brief|00-brief)$)[a-z0-9-]+)?$/
 
 /** Derive the current dependency projection from authoritative open Change files. */
-export async function inspectChangeDependencies(options: { workTree?: WorkTreeInspection, archiveTree?: ArchiveTreeInspection, preferredOrder?: string[] } = {}): Promise<ChangeDependencyInspection> {
+export async function inspectChangeDependencies(options: { workTree?: WorkTreeInspection, archiveTree?: ArchiveTreeInspection, archiveHistory?: ArchiveHistoryInspection, preferredOrder?: string[] } = {}): Promise<ChangeDependencyInspection> {
   const workTree = options.workTree ?? await inspectWorkTree()
   const archiveTree = options.archiveTree ?? await inspectArchiveTree()
+  const archiveHistory = archiveTree.rootExists
+    ? options.archiveHistory ?? await inspectArchiveHistory({ archiveTree })
+    : null
   const openNames = new Set(workTree.changes.map(ref => ref.name))
-  const archivedNames = new Set<string>()
+  const archivedNames = new Set(
+    archiveHistory && historyInspectionComplete(archiveHistory)
+      ? archiveHistory.records.map(record => record.workRef)
+      : [],
+  )
   const parsedByName = new Map<string, ParsedBlockers>()
   const blockedGroups = new Set<string>()
   const diagnostics: CommandDiagnostic[] = archiveTree.diagnostics.map(diagnostic => ({
@@ -40,22 +48,8 @@ export async function inspectChangeDependencies(options: { workTree?: WorkTreeIn
     path: diagnostic.path,
     message: diagnostic.message,
   }))
-
-  for (const path of archiveTree.files) {
-    try {
-      const heading = (await readFile(path, 'utf-8')).match(/^# Change:\s+(\S+)\s*$/m)
-      if (heading)
-        archivedNames.add(heading[1])
-    }
-    catch (error) {
-      diagnostics.push({
-        severity: 'error',
-        code: 'dependency_archive_read_failed',
-        path,
-        message: error instanceof Error ? error.message : String(error),
-      })
-    }
-  }
+  if (archiveHistory)
+    diagnostics.push(...archiveHistory.diagnostics)
 
   for (const brief of workTree.briefs) {
     try {
@@ -112,7 +106,7 @@ export async function inspectChangeDependencies(options: { workTree?: WorkTreeIn
         state: openNames.has(required) ? 'open' : archivedNames.has(required) ? 'archived' : 'missing',
       }
       edges.push(edge)
-      if (!EXECUTABLE_WORK_REF_RE.test(required)) {
+      if (!isCanonicalExecutableWorkRef(required)) {
         diagnostics.push({
           severity: 'error',
           code: 'dependency_target_invalid',

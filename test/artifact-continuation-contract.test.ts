@@ -126,11 +126,19 @@ describe('rsp artifact routing and continuation contract', () => {
 
     const core = readFileSync(join(root, 'skills', 'rsp', 'SKILL.md'), 'utf8')
     const fallback = readFileSync(join(root, 'rules', 'rsp-rules.md'), 'utf8')
-    expect(core).toMatch(/Choose response and artifact languages independently/)
+    expect(core).toContain('Keep response language user/session-owned and durable project language repository-owned')
+    expect(core).toContain('project `.rsp/config.yaml` never selects it')
+    expect(core).toContain('configured effective artifact language')
+    expect(core).toContain('configured effective commit language')
+    expect(core).toContain('Configuration changes never rewrite existing artifacts')
     expect(core).toMatch(/localized continuation with these semantic fields in order/)
     expect(core).toMatch(/Localize headings and labels|localized continuation/)
     expect(core).toMatch(/Preserve technical values/)
-    expect(fallback).toContain('Choose response language and artifact language independently')
+    expect(fallback).toContain('Keep response language user/session-owned and durable project language repository-owned')
+    expect(fallback).toContain('project `.rsp/config.yaml` never selects it')
+    expect(fallback).toContain('configured effective artifact language')
+    expect(fallback).toContain('configured effective commit language')
+    expect(fallback).toContain('changing configuration never rewrites it')
 
     for (const source of [
       'skills/rsp-shape/SKILL.md',

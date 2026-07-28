@@ -4,14 +4,14 @@ description: Use this skill when initializing RSP, operating an existing .rsp pr
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.28.1"
+  version: "2026.07.28.4"
 ---
 
 # RSP Skill
 
 Use RSP to derive one current action from project authority and durable work artifacts. This Skill is the preferred operational guide; `.rsp/rsp-rules.md` is the runtime fallback when the Skill is unavailable.
 
-Nearest project instructions and relevant `CONTEXT.md` remain authoritative. Choose response and artifact languages independently: localize human-facing response prose, but preserve canonical RSP headings, WorkRefs, paths, commands, identifiers, and machine values. Write persistent artifacts in domain, system, user, or operator language; mention AI or agents only when they are actual product actors or constraints.
+Nearest project instructions and relevant `CONTEXT.md` remain authoritative. Keep response language user/session-owned and durable project language repository-owned. Response prose follows an explicit current response language, user/host personal instructions, then conversation language; project `.rsp/config.yaml` never selects it. A new authorized artifact follows an explicit artifact language, then the configured effective artifact language, artifact-scoped project instructions, and conversation language; an existing artifact keeps its established language unless translation is explicitly authorized. Configuration changes never rewrite existing artifacts. Commit-message prose follows an explicit current commit-language instruction, configured effective commit language, nearest repository commit authority, then clear recent non-merge history. Preserve canonical headings, paths, commands, identifiers, Conventional Commit types/scopes, trailers, and machine values; WorkRefs follow the Unicode identity contract rather than the natural-language fallback chain. Write persistent artifacts in domain, system, user, or operator language; mention AI or agents only when they are actual product actors or constraints.
 
 ## Scope
 

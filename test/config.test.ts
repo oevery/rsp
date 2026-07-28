@@ -3,7 +3,8 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { clearConfigCache, DEFAULT_REQUIRED_SECTIONS, inspectRspConfig, loadRspConfig, resolveKinds, resolveManagePolicy, resolveRequiredSections, VALID_KINDS } from '../src/core/config.js'
+import { generateConfigTemplate } from '../src/commands/init.js'
+import { clearConfigCache, DEFAULT_REQUIRED_SECTIONS, inspectRspConfig, loadRspConfig, resolveKinds, resolveLanguagePolicy, resolveManagePolicy, resolveRequiredSections, VALID_KINDS } from '../src/core/config.js'
 
 afterEach(() => {
   clearConfigCache()
@@ -46,6 +47,29 @@ describe('resolveManagePolicy', () => {
   })
 })
 
+describe('resolveLanguagePolicy', () => {
+  it('leaves every surface unset when project language is absent or config is invalid', () => {
+    expect(resolveLanguagePolicy({})).toEqual({ artifacts: null, commit: null })
+    expect(resolveLanguagePolicy({ language: { default: 'zh-CN' } }, { configValid: false }))
+      .toEqual({ artifacts: null, commit: null })
+  })
+
+  it('uses the project default for both durable surfaces unless one overrides it', () => {
+    expect(resolveLanguagePolicy({ language: { default: 'zh-CN' } }))
+      .toEqual({ artifacts: 'zh-CN', commit: 'zh-CN' })
+    expect(resolveLanguagePolicy({ language: { default: 'zh-CN', artifacts: 'en', commit: 'zh-CN' } }))
+      .toEqual({ artifacts: 'en', commit: 'zh-CN' })
+  })
+})
+
+describe('generated config language guidance', () => {
+  it('documents one default and an independent artifact override without forcing a language', () => {
+    const template = generateConfigTemplate()
+    expect(template).toContain('# language:\n#   default: en')
+    expect(template).not.toMatch(/^language:/m)
+  })
+})
+
 describe('loadRspConfig', () => {
   it('reads .rsp/config.yaml from disk', async () => {
     const configDir = join(tmpdir(), 'rsp-config-read-test', randomUUID())
@@ -58,6 +82,10 @@ decisions:
 manage:
   activation: auto
   closeout: lifecycle
+language:
+  default: zh-cn
+  artifacts: EN
+  commit: zh-cn
 `)
 
     const cwd = process.cwd()
@@ -69,6 +97,7 @@ manage:
         kinds: ['fix', 'docs'],
         decisions: { path: 'docs/adr' },
         manage: { activation: 'auto', closeout: 'lifecycle' },
+        language: { default: 'zh-CN', artifacts: 'en', commit: 'zh-CN' },
       })
     }
     finally {
@@ -162,6 +191,49 @@ manage:
       ])
       expect(resolveManagePolicy(inspection.config, { configValid: inspection.issues.length === 0 }))
         .toEqual({ activation: 'explicit', closeout: 'manual' })
+    }
+    finally {
+      process.chdir(cwd)
+    }
+  })
+
+  it('strictly validates and canonicalizes project language configuration', async () => {
+    const configDir = join(tmpdir(), 'rsp-config-invalid-language-test', randomUUID())
+    await mkdir(join(configDir, '.rsp'), { recursive: true })
+    const configPath = join(configDir, '.rsp', 'config.yaml')
+    const cwd = process.cwd()
+    process.chdir(configDir)
+
+    try {
+      await writeFile(configPath, 'language: zh-CN\n')
+      await expect(loadRspConfig()).rejects.toThrow('config.yaml field "language" must be a YAML mapping')
+
+      clearConfigCache()
+      await writeFile(configPath, 'language:\n  artifacts: zh-CN\n')
+      await expect(loadRspConfig()).rejects.toThrow('config.yaml field "language.default" is required')
+
+      clearConfigCache()
+      await writeFile(configPath, 'language:\n  default: en\n  response: zh-CN\n')
+      await expect(loadRspConfig()).rejects.toThrow('config.yaml field "language.response" is not supported')
+
+      clearConfigCache()
+      await writeFile(configPath, 'language:\n  default: zh_CN\n  locale: zh-CN\n')
+      const inspection = await inspectRspConfig()
+      expect(inspection.issues).toEqual([
+        'config.yaml field "language.locale" is not supported',
+        'config.yaml field "language.default" must be a non-empty valid BCP 47 language tag',
+      ])
+      expect(resolveLanguagePolicy(inspection.config, { configValid: false }))
+        .toEqual({ artifacts: null, commit: null })
+
+      clearConfigCache()
+      await writeFile(configPath, 'language:\n  default: ""\n  artifacts: []\n')
+      await expect(loadRspConfig()).rejects.toThrow('config.yaml field "language.default" must be a non-empty valid BCP 47 language tag')
+      await expect(loadRspConfig()).rejects.toThrow('config.yaml field "language.artifacts" must be a non-empty valid BCP 47 language tag')
+
+      clearConfigCache()
+      await writeFile(configPath, 'language:\n  default: zh-CN\n  commit: zh_CN\n')
+      await expect(loadRspConfig()).rejects.toThrow('config.yaml field "language.commit" must be a non-empty valid BCP 47 language tag')
     }
     finally {
       process.chdir(cwd)

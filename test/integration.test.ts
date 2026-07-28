@@ -227,6 +227,73 @@ describe('change lifecycle integration', () => {
     expect(existsSync(join(groupDir, '.rsp', 'focus.d', 'release', 'api'))).toBe(false)
   })
 
+  it('preserves one flat Chinese WorkRef across create, focus, archive, history, and reopen', async () => {
+    const root = join(tmpdir(), 'rsp-unicode-flat-lifecycle-test', randomUUID())
+    const workRef = '中文标题'
+    await mkdir(root, { recursive: true })
+    execFileSync('node', [cliPath(), 'init'], { cwd: root })
+    execFileSync('node', [cliPath(), 'create', workRef, '保留中文文件名'], { cwd: root })
+    const changePath = join(root, '.rsp', 'changes', `${workRef}.md`)
+    expect(existsSync(changePath)).toBe(true)
+    expect(existsSync(join(root, '.rsp', 'focus.d', workRef))).toBe(true)
+
+    await writeFile(changePath, completeReopenChange(await readFile(changePath, 'utf-8')))
+    execFileSync('node', [cliPath(), 'archive', workRef], { cwd: root })
+    const history = JSON.parse(execFileSync('node', [cliPath(), 'history', workRef, '--json'], { cwd: root, encoding: 'utf-8' }))
+    expect(history.record).toEqual(expect.objectContaining({ workRef, group: null }))
+    expect(history.record.path).toMatch(/_中文标题\.md$/)
+
+    execFileSync('node', [cliPath(), 'reopen', workRef, '--reason', '需要补充验证'], { cwd: root })
+    expect(existsSync(changePath)).toBe(true)
+    expect(await readFile(changePath, 'utf-8')).toContain('需要补充验证')
+  })
+
+  it('preserves Chinese grouped WorkRefs across dependency, archive, history, and reopen', async () => {
+    const groupDir = join(tmpdir(), 'rsp-unicode-grouped-lifecycle-test', randomUUID())
+    const group = '听说训练'
+    const foundation = `${group}/基础`
+    const simulation = `${group}/模拟朗读`
+    await mkdir(groupDir, { recursive: true })
+    execFileSync('node', [cliPath(), 'init'], { cwd: groupDir })
+    execFileSync('node', [cliPath(), 'group', 'create', group, '提供听说训练'], { cwd: groupDir })
+    await writeFile(
+      join(groupDir, '.rsp', 'changes', group, '00-brief.md'),
+      renderGroupBrief(group, [foundation, simulation]),
+    )
+
+    execFileSync('node', [cliPath(), 'create', foundation, '完成基础训练'], { cwd: groupDir })
+    execFileSync('node', [cliPath(), 'create', simulation, '完成模拟朗读'], { cwd: groupDir })
+    const foundationPath = join(groupDir, '.rsp', 'changes', group, '基础.md')
+    const simulationPath = join(groupDir, '.rsp', 'changes', group, '模拟朗读.md')
+    await writeFile(simulationPath, (await readFile(simulationPath, 'utf-8')).replace(
+      '## Blockers\n- none',
+      `## Blockers\n- requires \`${foundation}\`: 需要先完成基础训练`,
+    ))
+
+    const blocked = JSON.parse(execFileSync('node', [cliPath(), 'status', '--json'], { cwd: groupDir, encoding: 'utf-8' }))
+    expect(blocked.plan.edges).toContainEqual({
+      change: simulation,
+      requires: foundation,
+      reason: '需要先完成基础训练',
+      state: 'open',
+    })
+
+    await writeFile(foundationPath, completeReopenChange(await readFile(foundationPath, 'utf-8')))
+    execFileSync('node', [cliPath(), 'archive', foundation], { cwd: groupDir })
+    const unblocked = JSON.parse(execFileSync('node', [cliPath(), 'status', '--json'], { cwd: groupDir, encoding: 'utf-8' }))
+    expect(unblocked.plan.edges).toContainEqual(expect.objectContaining({ change: simulation, requires: foundation, state: 'archived' }))
+
+    await writeFile(simulationPath, completeReopenChange(await readFile(simulationPath, 'utf-8')))
+    execFileSync('node', [cliPath(), 'archive', simulation], { cwd: groupDir })
+    const history = JSON.parse(execFileSync('node', [cliPath(), 'history', simulation, '--json'], { cwd: groupDir, encoding: 'utf-8' }))
+    expect(history.record).toEqual(expect.objectContaining({ workRef: simulation, group }))
+
+    execFileSync('node', [cliPath(), 'reopen', simulation, '--reason', '需要补充一次人工验证'], { cwd: groupDir })
+    expect(existsSync(simulationPath)).toBe(true)
+    expect(existsSync(join(groupDir, '.rsp', 'focus.d', group, '模拟朗读'))).toBe(true)
+    expect(await readFile(simulationPath, 'utf-8')).toContain('需要补充一次人工验证')
+  })
+
   it('releases the mutation lock when an unfocus marker is missing', async () => {
     const focusDir = join(tmpdir(), 'rsp-unfocus-missing-marker-lock-test', randomUUID())
     await mkdir(focusDir, { recursive: true })
@@ -322,7 +389,7 @@ describe('change lifecycle integration', () => {
     expect(existsSync(join(createDir, '.rsp', '.lock'))).toBe(false)
   })
 
-  it('creates a kind-aware docs template when requested', () => {
+  it('creates a kind-aware neutral docs scaffold when requested', () => {
     const createDir = join(tmpdir(), 'rsp-create-kind-test', randomUUID())
     return (async () => {
       await mkdir(createDir, { recursive: true })
@@ -331,8 +398,9 @@ describe('change lifecycle integration', () => {
 
       const content = await readFile(join(createDir, '.rsp', 'changes', 'docs-guide.md'), 'utf-8')
       expect(content).toContain('kind: "docs"')
-      expect(content).toContain('Requirement: documentation accuracy')
-      expect(content).toContain('reader follows the updated guidance')
+      expect(content).toContain('### MODIFIED')
+      expect(content).toContain('- Requirement: <…>')
+      expect(content).not.toContain('documentation accuracy')
       expect(content).not.toContain('Exact prerequisite:')
     })()
   })
@@ -348,10 +416,41 @@ describe('change lifecycle integration', () => {
       expect(output).toContain('fill the lite change details')
       expect(content).toContain('kind: "fix"')
       expect(content).toContain('- Outcome: Fix tiny issue')
-      expect(content).toContain('- [ ] Implement the small change')
+      expect(content).toContain('- [ ] <…>')
       expect(content).not.toContain('Finalize the proposal, spec, and design details')
       expect(content).not.toContain('Exact prerequisite:')
     })()
+  })
+
+  it('keeps every CLI-created artifact scaffold neutral under a non-English artifact policy', async () => {
+    const scaffoldDir = join(tmpdir(), 'rsp-neutral-scaffold-test', randomUUID())
+    await mkdir(scaffoldDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: scaffoldDir })
+    await writeFile(join(scaffoldDir, '.rsp', 'config.yaml'), `language:
+  default: zh-CN
+manage:
+  activation: auto
+  closeout: lifecycle
+`)
+
+    execFileSync('node', [cliPath(), 'create', 'language-policy', '中文摘要', '--kind', 'feature'], { cwd: scaffoldDir })
+    execFileSync('node', [cliPath(), 'group', 'create', 'delivery', '中文目标'], { cwd: scaffoldDir })
+    execFileSync('node', [cliPath(), 'add', 'spec', 'language-surface'], { cwd: scaffoldDir })
+    execFileSync('node', [cliPath(), 'init', '--with-project-setup'], { cwd: scaffoldDir })
+
+    const artifacts = await Promise.all([
+      readFile(join(scaffoldDir, '.rsp', 'changes', 'language-policy.md'), 'utf-8'),
+      readFile(join(scaffoldDir, '.rsp', 'changes', 'delivery', '00-brief.md'), 'utf-8'),
+      readFile(join(scaffoldDir, '.rsp', 'changes', 'project-setup.md'), 'utf-8'),
+      readFile(join(scaffoldDir, '.rsp', 'specs', 'language-surface.md'), 'utf-8'),
+    ])
+
+    expect(artifacts[0]).toContain('- Outcome: 中文摘要')
+    expect(artifacts[1]).toContain('## Goal\n- 中文目标')
+    for (const content of artifacts) {
+      expect(content).toContain('<…>')
+      expect(content).not.toMatch(/Capture the project model|what shared outcome|why this project-level spec exists|Describe observable behavior/)
+    }
   })
 
   it('does not change focus when reusing an existing change', async () => {
@@ -1315,6 +1414,24 @@ describe('status commands', () => {
     expect(status.plan.blocked).toEqual([])
     expect(status.records[0].isBlocked).toBe(false)
     expect(ready.readiness.activeBlockers).toBe(false)
+  })
+
+  it('does not resolve a dependency from an archive whose path and WorkRef disagree', async () => {
+    const statusDir = await createRspFixture('rsp-status-invalid-archived-dependency-test', ['specs', 'changes', 'archives', 'focus.d'])
+    await writeFile(join(statusDir, '.rsp', 'changes', 'implement.md'), renderChange('implement').replace(
+      '## Blockers\n- none',
+      '## Blockers\n- requires `research`: needs the accepted research model',
+    ))
+    await writeFile(join(statusDir, '.rsp', 'archives', '2026-07-20_wrong-name.md'), renderChange('research'))
+
+    const result = spawnSync('node', [cliPath(), 'status', '--json'], { cwd: statusDir, encoding: 'utf-8' })
+    const status = JSON.parse(result.stdout)
+
+    expect(result.status).toBe(1)
+    expect(status.diagnostics).toContainEqual(expect.objectContaining({ code: 'archive_identity_mismatch' }))
+    expect(status.plan.edges).toContainEqual(expect.objectContaining({ change: 'implement', requires: 'research', state: 'missing' }))
+    expect(status.plan.ready).toEqual([])
+    expect(status.records[0].isBlocked).toBe(true)
   })
 
   it('renders a shared prerequisite once and references repeated graph nodes', async () => {
@@ -2455,6 +2572,27 @@ describe('pseudo-real fixture workflow', () => {
 })
 
 describe('archive name collisions', () => {
+  it('fails closed on a normalization-equivalent archive filename', async () => {
+    const archiveDir = join(tmpdir(), 'rsp-archive-normalization-collision-test', randomUUID())
+    await mkdir(archiveDir, { recursive: true })
+    execFileSync('node', [cliPath(), 'init'], { cwd: archiveDir })
+    const workRef = '听说训练-é'
+    execFileSync('node', [cliPath(), 'create', workRef, '验证中文归档'], { cwd: archiveDir })
+
+    const today = new Date().toISOString().slice(0, 10)
+    const canonicalName = `${today}_${workRef}.md`
+    const decomposedName = canonicalName.normalize('NFD')
+    expect(decomposedName).not.toBe(canonicalName)
+    await writeFile(join(archiveDir, '.rsp', 'archives', decomposedName), '# normalization alias\n')
+
+    const result = spawnSync('node', [cliPath(), 'archive', workRef], { cwd: archiveDir, encoding: 'utf-8' })
+
+    expect(result.status).toBe(1)
+    expect(result.stderr).toContain('Unicode normalization collision')
+    expect(existsSync(join(archiveDir, '.rsp', 'changes', `${workRef}.md`))).toBe(true)
+    expect(await readdir(join(archiveDir, '.rsp', 'archives'))).toContain(decomposedName)
+  })
+
   it('does not archive through a symlinked group destination', async () => {
     const archiveDir = join(tmpdir(), 'rsp-archive-group-symlink-test', randomUUID())
     const externalDir = join(tmpdir(), 'rsp-archive-group-external-test', randomUUID())

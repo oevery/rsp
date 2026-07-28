@@ -12,7 +12,7 @@ import { resolveFocusMarkerPath, resolveWorkRef } from '../core/work-ref.js'
 import { removeLegacyArchiveIndex } from './archive-index-migration.js'
 import { buildSpecsIndex } from './specs-index.js'
 
-function generateConfigTemplate(): string {
+export function generateConfigTemplate(): string {
   const fmtList = (items: string[], indent: number) => items.map(i => `${' '.repeat(indent)}# - ${i}`).join('\n')
   return `# RSP project configuration
 # Omit kinds or use [] to retain the built-in defaults.
@@ -24,6 +24,13 @@ function generateConfigTemplate(): string {
 #
 # kinds:
 ${fmtList(VALID_KINDS, 0)}
+
+# Set one shared project default for durable artifact and commit prose.
+# Optional artifacts or commit values override that durable surface independently.
+# Response language remains user/session-owned and is never read from this project mapping.
+# Omit this mapping to keep durable language selection under scoped project authority.
+# language:
+#   default: en
 
 # New projects default to automatic Manage routing with lifecycle-only closeout.
 # Use activation: explicit to require a named managed request.

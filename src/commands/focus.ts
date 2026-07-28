@@ -24,8 +24,8 @@ export async function focusChange(name: string) {
       await mkdir(dirname(focusEntry), { recursive: true })
       await writeManagedFile(focusEntry, '', 'focus marker')
 
-      console.log(`  ${pc.green('Focused:')} ${name}`)
-      console.log(`  ${pc.dim('focus.d')} → ${name}`)
+      console.log(`  ${pc.green('Focused:')} ${workRef.name}`)
+      console.log(`  ${pc.dim('focus.d')} → ${workRef.name}`)
       console.log()
     })
   }
@@ -50,8 +50,8 @@ export async function unfocusChange(name: string) {
       await unlink(focusEntry)
       await cleanupEmptyParentDirs(focusEntry, FOCUS_DIR)
 
-      console.log(`  ${pc.green('Unfocused:')} ${name}`)
-      console.log(`  ${pc.dim('focus.d cleared')} → ${name}`)
+      console.log(`  ${pc.green('Unfocused:')} ${workRef.name}`)
+      console.log(`  ${pc.dim('focus.d cleared')} → ${workRef.name}`)
       console.log()
     })
   }

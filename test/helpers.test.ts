@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
-import { collectArchiveChecklist, collectArchiveReadiness, countCheckboxes, detectDeltaSections, extractSection, generateChangeContent, generateSpecContent, getDurableReviewCandidateTargets, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, parseScenarios, parseYamlLines, renderRspAgentsBlock } from '../src/core/helpers.js'
+import { collectArchiveChecklist, collectArchiveReadiness, countCheckboxes, detectDeltaSections, extractSection, generateChangeContent, generateDesignContent, generateSpecContent, getDurableReviewCandidateTargets, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, parseScenarios, parseYamlLines, renderRspAgentsBlock } from '../src/core/helpers.js'
 
 describe('parseYamlLines', () => {
   it('parses key-value pairs', () => {
@@ -163,11 +163,11 @@ describe('generateChangeContent', () => {
     expect(content).toContain('## Tasks')
     expect(content).toContain('## Verify')
     expect(content).toContain('## Blockers')
-    expect(content).toContain('- [ ] Implement the small change')
+    expect(content).toContain('- [ ] <…>')
     expect(content).not.toContain('Finalize the proposal, spec, and design details')
     expect(content).toContain('- Coverage:')
     expect(content).not.toContain('Durable updates:')
-    expect(content).toContain('<cheapest decisive check; retain a new test only when justified, or not applicable: reason>')
+    expect(content).toContain('- [ ] <…> — proves: <…>')
     expect(content).not.toContain('Exact prerequisite:')
   })
 
@@ -176,79 +176,63 @@ describe('generateChangeContent', () => {
     expect(content).toContain('kind: "<choose: feature | fix | refactor | docs | ops | research>"')
   })
 
-  it('uses a bootstrap-oriented template for project-setup', () => {
+  it('uses a neutral bootstrap scaffold for project-setup', () => {
     const content = generateChangeContent('project-setup')
     expect(content).toContain('# Change: project-setup')
     expect(content).toContain('.rsp/specs/design.md')
-    expect(content).toContain('Stable navigation and context are reflected in project-owned CONTEXT.md when that convention exists')
-    expect(content).toContain('Stable agent instructions are reflected in the nearest project-owned AGENTS.md when needed')
-    expect(content).toContain('Review project-owned CONTEXT.md and AGENTS.md and confirm the RSP entry points to the right project files')
-    expect(content).toContain('project-owned CONTEXT.md and the nearest AGENTS.md contain only the stable context and instructions assigned to them by Host Project conventions')
-    expect(content).not.toContain('Stable validation or workflow constraints are reflected in the nearest project-owned AGENTS.md when needed')
-    expect(content).toContain('Run rsp doctor')
+    expect(content).toContain('CONTEXT.md')
+    expect(content).toContain('AGENTS.md')
+    expect(content).toContain('rsp doctor — proves: <…>')
+    expect(content).not.toContain('Capture the project model')
+    expect(content).not.toContain('Stable navigation and context')
     expect(content).toContain('- Current facts:')
     expect(content).toContain('- Lasting rationale:')
-    expect(content).toContain('CONTEXT.md')
   })
 
-  it('uses a docs-oriented template when kind is docs', () => {
+  it('preserves kind-specific delta markers without authored guidance prose', () => {
     const content = generateChangeContent('docs-update', 'Improve docs', 'docs')
-    expect(content).toContain('Requirement: documentation accuracy')
-    expect(content).toContain('reader follows the updated guidance')
-    expect(content).toContain('<concrete doc path, directory, module doc, or documentation surface 1>')
-    expect(content).toContain('<cheapest decisive check; retain a new test only when justified, or not applicable: reason>')
-  })
-
-  it('uses a research-oriented template when kind is research', () => {
-    const content = generateChangeContent('investigate-cache', 'Investigate cache behavior', 'research')
-    expect(content).toContain('Requirement: research outcome recording')
-    expect(content).toContain('research question is resolved')
-    expect(content).toContain('gather evidence')
-    expect(content).toContain('note any follow-up implementation work if needed')
-  })
-
-  it('uses an ops-oriented template when kind is ops', () => {
-    const content = generateChangeContent('deploy-pipeline', 'Harden deploy pipeline', 'ops')
-    expect(content).toContain('Requirement: operational behavior')
-    expect(content).toContain('operational path succeeds')
-    expect(content).toContain('<rollback, safety, reliability, environment, or scope constraint that must hold>')
+    expect(content).toContain('### MODIFIED')
+    expect(content).toContain('- Requirement: <…>')
+    expect(content).not.toContain('documentation accuracy')
+    expect(generateChangeContent('new-capability', '', 'feature')).toContain('### ADDED')
+    expect(generateChangeContent('investigate', '', 'research')).toContain('### ADDED')
   })
 
   it('does not let the fix template invent an unexplained root cause', () => {
     const content = generateChangeContent('repair-cache', 'Repair cache behavior', 'fix')
-    expect(content).toContain('<confirmed cause and correction strategy, or exact evidence needed to establish the cause>')
+    expect(content).toContain('- Approach:\n  - <…>')
+    expect(content).not.toContain('confirmed cause')
     expect(content).not.toContain('<root cause analysis and fix strategy>')
     expect(content).not.toContain('regression test')
     expect(content).not.toContain('Exact prerequisite:')
   })
 
-  it('uses concrete affected areas and value-sensitive verification placeholders', () => {
+  it('uses neutral placeholders for affected areas and verification', () => {
     const content = generateChangeContent('my-change')
-    expect(content).toContain('<concrete file path, directory, module, or subsystem 1>')
-    expect(content).toContain('<concrete file path, directory, module, or subsystem 2 if needed>')
-    expect(content).toContain('<cheapest decisive check; retain a new test only when justified, or not applicable: reason> — proves: <behavior or scope covered>')
-    expect(content).toContain('<exact acceptance scenario, or unavailable/not applicable: owner and reason>')
-    expect(content).toContain('<behavior, compatibility, performance, safety, or scope constraint that must hold>')
+    expect(content).toContain('- Affected areas:\n  - <…>\n  - <…>')
+    expect(content).toContain('- [ ] <…> — proves: <…>')
+    expect(content).toContain('- Constraints:\n  - <…>')
   })
 
   it('does not make a new test the default automated evidence for any change kind', () => {
     for (const kind of ['feature', 'fix', 'refactor', 'docs', 'research', 'ops'] as const) {
       const content = generateChangeContent(`${kind}-change`, `${kind} outcome`, kind)
-      expect(content).toContain('<cheapest decisive check; retain a new test only when justified, or not applicable: reason>')
+      expect(content).toContain('- [ ] <…> — proves: <…>')
+      expect(content).not.toContain('regression test')
     }
   })
 
   it('keeps durable review separate from implementation verification', () => {
     const content = generateChangeContent('my-change')
-    expect(content).toContain('- Coverage:\n  - <omitted or unavailable relevant coverage and reason, or none>')
+    expect(content).toContain('- Coverage:\n  - <…>')
     expect(content).not.toContain('Durable updates:')
     expect(content).not.toContain('before archive')
   })
 
   it('uses consistent verification and durable-outcome ownership in project setup', () => {
     const content = generateChangeContent('project-setup')
-    expect(content).toContain('- Manual or environment:\n  - [ ] Review .rsp/specs/design.md and project-owned context or instructions and confirm they match the repository')
-    expect(content).toContain('- Coverage:\n  - none')
+    expect(content).toContain('- Manual or environment:\n  - [ ] <…>')
+    expect(content).toContain('- Coverage:\n  - <…>')
     expect(content).toContain('- Durable outcome targets:')
     expect(content).not.toContain('## Durable Outcomes')
   })
@@ -263,6 +247,16 @@ describe('generateSpecContent', () => {
     expect(content).toContain('## Boundaries')
     expect(content).toContain('## Constraints')
     expect(content).not.toContain('## Details')
+    expect(content).toContain('- <…>')
+    expect(content).not.toContain('why this project-level spec exists')
+  })
+
+  it('keeps project design structure without authored guidance prose', () => {
+    const content = generateDesignContent('示例项目')
+    expect(content).toContain('# Project Design: 示例项目')
+    expect(content).toContain('## Stable Facts')
+    expect(content).toContain('- <…>')
+    expect(content).not.toContain('future agents or developers')
   })
 })
 
@@ -287,7 +281,7 @@ describe('documentation command examples', () => {
 
     const custom = metadata.metadata as Record<string, unknown>
     expect(custom.author).toBe('oevery')
-    expect(custom.version).toBe('2026.07.28.1')
+    expect(custom.version).toBe('2026.07.28.4')
     expect(Object.values(custom).every(value => typeof value === 'string')).toBe(true)
     expect(custom.version).toMatch(/^\d{4}\.\d{2}\.\d{2}(?:\.\d+)?$/)
   })
@@ -349,7 +343,7 @@ describe('documentation command examples', () => {
     expect(skill).toMatch(/Do not use it for unrelated coding or create a Change for a simple session task/)
     expect(skill).toContain('metadata:')
     expect(skill).toContain('author: oevery')
-    expect(skill).toContain('version: "2026.07.28.1"')
+    expect(skill).toContain('version: "2026.07.28.4"')
     expect(contract).toContain('Executable WorkRefs are `<change>` or one direct `<group>/<change>` child.')
     expect(contract).toContain('`<group>/brief`, stored as `<group>/00-brief.md`, is not executable or focusable.')
     expect(contract).toContain('`plan.nodes`, `ready`, `edges`, `blocked`, and `waves`')
@@ -570,38 +564,11 @@ kind: feature
 })
 
 describe('behavior-first spec templates', () => {
-  it('includes guidance comment in default template Spec section', () => {
-    const content = generateChangeContent('test')
-    expect(content).toContain('<!-- Describe observable behavior and requirements. Implementation notes belong in ## Design. -->')
-  })
-
-  it('includes guidance comment in feature template Spec section', () => {
-    const content = generateChangeContent('test', 'summary', 'feature')
-    expect(content).toContain('<!-- Describe observable behavior and requirements. Implementation notes belong in ## Design. -->')
-  })
-
-  it('includes guidance comment in fix template Spec section', () => {
-    const content = generateChangeContent('test', 'summary', 'fix')
-    expect(content).toContain('<!-- Describe expected correct behavior. Implementation notes belong in ## Design. -->')
-  })
-
-  it('includes guidance comment in refactor template Spec section', () => {
-    const content = generateChangeContent('test', 'summary', 'refactor')
-    expect(content).toContain('<!-- Describe the desired structural outcome. Implementation notes belong in ## Design. -->')
-  })
-
-  it('includes guidance comment in docs template Spec section', () => {
-    const content = generateChangeContent('test', 'summary', 'docs')
-    expect(content).toContain('<!-- Describe what the reader should see or experience. Implementation notes belong in ## Design. -->')
-  })
-
-  it('includes guidance comment in research template Spec section', () => {
-    const content = generateChangeContent('test', 'summary', 'research')
-    expect(content).toContain('<!-- Describe what finding or decision must be captured. Implementation notes belong in ## Design. -->')
-  })
-
-  it('includes guidance comment in ops template Spec section', () => {
-    const content = generateChangeContent('test', 'summary', 'ops')
-    expect(content).toContain('<!-- Describe the reliable operational outcome. Implementation notes belong in ## Design. -->')
+  it('uses one neutral unfinished comment for every change kind', () => {
+    for (const kind of [undefined, 'feature', 'fix', 'refactor', 'docs', 'research', 'ops'] as const) {
+      const content = generateChangeContent('test', 'summary', kind)
+      expect(content).toContain('<!-- <…> -->')
+      expect(content).not.toMatch(/<!-- Describe /)
+    }
   })
 })

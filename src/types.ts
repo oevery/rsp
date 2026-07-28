@@ -47,6 +47,17 @@ export interface ManagePolicy {
   closeout: ManageCloseout
 }
 
+export interface ProjectLanguageConfig {
+  default: string
+  artifacts?: string
+  commit?: string
+}
+
+export interface EffectiveLanguagePolicy {
+  artifacts: string | null
+  commit: string | null
+}
+
 /** User-customizable project configuration from .rsp/config.yaml. */
 export interface RspConfig {
   /** Custom kind values (override built-in defaults when present). */
@@ -60,6 +71,8 @@ export interface RspConfig {
     activation?: ManageActivation
     closeout?: ManageCloseout
   }
+  /** Project language policy for durable artifact and commit prose. */
+  language?: ProjectLanguageConfig
 }
 
 /** Shared output-mode options for read-only commands. */
@@ -183,6 +196,7 @@ export interface StatusJsonShape {
   command: 'status'
   ok: boolean
   manage: ManagePolicy
+  language: EffectiveLanguagePolicy
   filters: {
     focused: boolean
     blocked: boolean

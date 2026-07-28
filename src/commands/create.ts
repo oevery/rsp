@@ -24,7 +24,7 @@ export async function createChange(name: string, summary = '', kind?: string, op
       const existed = existsSync(changePath)
       if (!existed) {
         const focusEntry = resolveFocusMarkerPath(workRef)
-        const content = generateChangeContent(name, summary, kind, { lite: Boolean(options.lite) })
+        const content = generateChangeContent(workRef.name, summary, kind, { lite: Boolean(options.lite) })
         await mkdir(dirname(changePath), { recursive: true })
         let changeCreated = false
         try {
@@ -51,9 +51,9 @@ export async function createChange(name: string, summary = '', kind?: string, op
       const label = existed ? 'Using' : pc.green('Created')
       console.log(`  ${label}: ${changePath}`)
       if (existed)
-        console.log(`  ${pc.dim('Unchanged focus.')} Run: rsp focus ${name}`)
+        console.log(`  ${pc.dim('Unchanged focus.')} Run: rsp focus ${workRef.name}`)
       else
-        console.log(`  ${pc.dim('focused via focus.d')} → ${name}`)
+        console.log(`  ${pc.dim('focused via focus.d')} → ${workRef.name}`)
       console.log(`  ${pc.cyan('Next:')} ${options.lite ? 'fill the lite change details, then implement and verify' : 'fill proposal/spec/design first, then implement and complete the tasks'}\n`)
     })
   }
