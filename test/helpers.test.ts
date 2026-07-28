@@ -304,7 +304,7 @@ describe('documentation command examples', () => {
     const packageJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf-8')) as { version: string }
     const changelog = readFileSync(join(root, 'CHANGELOG.md'), 'utf-8')
 
-    expect(packageJson.version).toBe('3.1.0-beta.3')
+    expect(packageJson.version).toBe('3.1.0-beta.4')
     expect(changelog).toContain('Reposition the product as Reliable Software Practice')
     expect(changelog).toContain('Separate deterministic readiness from semantic durable review and archive guidance')
     expect(changelog).toContain('## 3.0.0 (2026-07-23)')

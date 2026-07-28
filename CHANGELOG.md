@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.1.0-beta.4 (2026-07-28)
+
+- Add a strict durable language policy: project configuration selects artifact and commit prose independently while response language remains user/session-owned, and CLI scaffolds keep canonical structure with neutral placeholders instead of generated English guidance.
+- Support safe Unicode WorkRefs with NFC normalization, bounded Unicode/UTF-8 lengths, exact stored-path validation, and fail-closed collision handling while preserving ASCII kebab-case identities.
+- Centralize Change and Group Brief structure in one lossless semantic document model so readers and surgical writers use stable section identities without changing canonical Markdown, diagnostics, CRLF behavior, or existing artifact bytes.
+- Make `manage.activation: auto` classify every selected ready continuation as either fully one-step direct work or managed non-small work, requalify expanded report/design/small routes, and report the decisive routing result.
+- Require qualified Manage to delegate at least one implementation worker when available while keeping overlapping paths, providers, real hosts, hardware, and dependent verification sequential unless both mutation and verification are isolated.
+
+This prerelease remains opt-in and does not promote npm `latest`. The exact package is validated by the complete self-host release gate and clean-install package check. The new automatic Manage threshold has been dogfooded in the RSP checkout; broader independent-project routing frequency, comparative token cost, and productivity claims remain unverified. Users upgrading within 3.1 should follow the [3.1 migration guide](docs/migrations/3.1.md); users upgrading directly from 2.x must first follow the [3.0 migration guide](docs/migrations/3.0.md).
+
+See the [3.1.0-beta.4 release notes](docs/releases/3.1.0-beta.4.md).
+
 ## 3.1.0-beta.3 (2026-07-28)
 
 - Replace the generated global Archive Index with bounded `rsp history` queries and the recursive Specs index with generated per-directory `00-index.md` navigation. `rsp update` migrates only recognized generated files and preserves unrecognized paths for owner review.
