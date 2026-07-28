@@ -22,7 +22,7 @@ const EXPECTED_DEFAULT_SKILLS = [
   'rsp-shape',
   'rsp-tdd',
 ]
-const OPTIONAL_SKILL = 'rsp-codebase-audit'
+const OPTIONAL_SKILL = 'rsp-structural-audit'
 const EXPECTED_PACKAGED_SKILLS = [...EXPECTED_DEFAULT_SKILLS, OPTIONAL_SKILL].sort()
 const EXPECTED_DESIGN_REFERENCES = [
   'domain-modeling.md',

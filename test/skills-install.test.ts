@@ -31,7 +31,7 @@ const expectedSkills = [
   'rsp-shape',
   'rsp-tdd',
 ]
-const optionalSkill = 'rsp-codebase-audit'
+const optionalSkill = 'rsp-structural-audit'
 
 async function temporaryRoot(label: string): Promise<string> {
   const root = join(tmpdir(), `${label}-${randomUUID()}`)
@@ -71,11 +71,15 @@ async function createTwoSkillFixture(label: string) {
   return { packageRoot, projectRoot }
 }
 
-async function createRenamedSkillFixture(label: string) {
+async function createRenamedSkillFixture(
+  label: string,
+  obsoleteName = 'rsp-address-review',
+  replacementName = 'rsp-resolve-findings',
+) {
   const packageRoot = await temporaryRoot(`${label}-package`)
   const projectRoot = await temporaryRoot(`${label}-project`)
-  const replacement = join(packageRoot, 'skills', 'rsp-resolve-findings', 'SKILL.md')
-  const obsolete = join(projectRoot, '.agents', 'skills', 'rsp-address-review', 'SKILL.md')
+  const replacement = join(packageRoot, 'skills', replacementName, 'SKILL.md')
+  const obsolete = join(projectRoot, '.agents', 'skills', obsoleteName, 'SKILL.md')
   const unrelated = join(projectRoot, '.agents', 'skills', 'local-tool', 'SKILL.md')
   await mkdir(dirname(replacement), { recursive: true })
   await writeFile(replacement, 'replacement\n')
@@ -246,6 +250,27 @@ describe('rsp skills install', () => {
 
     const installed = await installPackagedSkills({ force: true, names: ['rsp-resolve-findings'] }, { packageRoot, projectRoot })
     expect(installed).toEqual(dryRun)
+    await expect(readFile(obsolete, 'utf8')).rejects.toMatchObject({ code: 'ENOENT' })
+    expect(await readFile(replacementTarget, 'utf8')).toBe(await readFile(replacement, 'utf8'))
+    expect(await readFile(unrelated, 'utf8')).toBe('project owned\n')
+  })
+
+  it('migrates the renamed optional structural audit only when explicitly forced', async () => {
+    const { obsolete, packageRoot, projectRoot, replacement, unrelated } = await createRenamedSkillFixture(
+      'rsp-skills-optional-audit-rename',
+      'rsp-codebase-audit',
+      'rsp-structural-audit',
+    )
+    const replacementTarget = join(projectRoot, '.agents', 'skills', 'rsp-structural-audit', 'SKILL.md')
+
+    await expect(
+      installPackagedSkills({ names: ['rsp-structural-audit'] }, { packageRoot, projectRoot }),
+    ).rejects.toThrow(/obsolete packaged Skill renames: rsp-codebase-audit -> rsp-structural-audit; rerun with --force/)
+    expect(await readFile(obsolete, 'utf8')).toBe('obsolete package version\n')
+    await expect(readFile(replacementTarget, 'utf8')).rejects.toMatchObject({ code: 'ENOENT' })
+
+    const installed = await installPackagedSkills({ force: true, names: ['rsp-structural-audit'] }, { packageRoot, projectRoot })
+    expect(installed).toEqual({ installed: ['rsp-structural-audit'], removed: ['rsp-codebase-audit'], replaced: [], unchanged: [] })
     await expect(readFile(obsolete, 'utf8')).rejects.toMatchObject({ code: 'ENOENT' })
     expect(await readFile(replacementTarget, 'utf8')).toBe(await readFile(replacement, 'utf8'))
     expect(await readFile(unrelated, 'utf8')).toBe('project owned\n')

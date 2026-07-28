@@ -25,8 +25,9 @@ export const DEFAULT_PACKAGED_SKILL_NAMES = [
   'rsp-tdd',
 ] as const
 
-const OBSOLETE_DEFAULT_SKILL_RENAMES = {
+const OBSOLETE_PACKAGED_SKILL_RENAMES = {
   'rsp-address-review': 'rsp-resolve-findings',
+  'rsp-codebase-audit': 'rsp-structural-audit',
 } as const
 
 export interface SkillInstallResult {
@@ -312,7 +313,7 @@ export async function installPackagedSkills(
 
   const selectedNames = new Set(skills.map(skill => skill.name))
   const obsoleteTreeIdentities = new Map<string, DirectoryIdentity>()
-  for (const [obsolete, replacement] of Object.entries(OBSOLETE_DEFAULT_SKILL_RENAMES)) {
+  for (const [obsolete, replacement] of Object.entries(OBSOLETE_PACKAGED_SKILL_RENAMES)) {
     if (!selectedNames.has(replacement))
       continue
     const target = join(targetRoot, obsolete)

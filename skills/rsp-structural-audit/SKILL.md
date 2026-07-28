@@ -1,13 +1,13 @@
 ---
-name: rsp-codebase-audit
+name: rsp-structural-audit
 description: Audit one explicitly bounded repository or subtree for evidence-backed structural risks before implementation work is selected. Use for report-only discovery of ownership, dependency, production-path, change-amplification, or verification mismatches; do not use for security, performance, dependency, framework, style, or production-readiness audits.
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.26.1"
+  version: "2026.07.28.1"
 ---
 
-# RSP Codebase Audit
+# RSP Structural Audit
 
 Discover the few structural risks worth considering next. Return a report only.
 
@@ -30,6 +30,8 @@ This Skill owns only its response report. It never modifies project code, tests,
 After scope and authority are fixed, read [structural audit lenses](references/structural-lenses.md) and select only the lenses relevant to evidence already encountered. Trace concrete owners and live paths; do not scan every directory or apply every lens mechanically.
 
 Qualify a finding only when exact repository evidence establishes a reachable trigger, a realistic impact, and the implicated ownership or behavior chain. Verify a seam-dependent finding by naming the direct production consumer and confirming whether its actual callee reaches or bypasses the seam. Compare focused tests or other verification evidence with that same live path when the finding depends on claimed coverage.
+
+Report the smallest unresolved shaping or design question as `Next owner`. Route solution alternatives, seam recommendations, and reversible probes to `rsp-design`; do not develop them inside this audit.
 
 Do not infer a finding from directory names, pattern matching, code size, framework taste, a generic checklist, or an isolated abstraction without a demonstrated downside. Prefer no finding to a weak finding. Stop inspecting when the requested boundary has enough evidence for at most five material findings, no qualifying finding remains, or further confidence requires authority or evidence outside the boundary.
 

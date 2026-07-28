@@ -166,9 +166,9 @@ RSP 发布十一个默认、宿主无关、按需加载的生命周期 Skills，
 | `rsp-commit` | 使用与仓库一致的结构化消息创建一个已授权、精确范围的本地提交。 |
 | `rsp-release-docs` | 起草、审计、定稿或校准基于证据的发布表面。 |
 | `rsp-manage` | 继续一个显式请求或项目启用且符合条件的 ready Change 或 shallow Group。 |
-| `rsp-codebase-audit`（可选） | 只读审计一个有界仓库或子树，发现有证据支撑的结构风险。 |
+| `rsp-structural-audit`（可选） | 只读审计一个有界仓库或子树，发现有证据支撑的结构风险。 |
 
-每个生命周期 Skill 都把结果返回现有项目或 RSP owner。只读的 Pre-Change Design 与 `rsp-codebase-audit` 可以把一个有界结果直接返回用户，而不虚构 artifact owner。套件不引入隐藏 workflow state 或递归 Skill 编排。任何 Skill 都不会推断 commit、push、publication、deployment、approval 或 human-acceptance 权限。
+每个生命周期 Skill 都把结果返回现有项目或 RSP owner。只读的 Pre-Change Design 与 `rsp-structural-audit` 可以把一个有界结果直接返回用户，而不虚构 artifact owner。套件不引入隐藏 workflow state 或递归 Skill 编排。任何 Skill 都不会推断 commit、push、publication、deployment、approval 或 human-acceptance 权限。
 
 响应语言与产物语言相互独立。面向人的响应标题、标签、解释和结论依次遵循明确指定的响应语言、项目中针对响应的指令和会话语言；已授权写入的产物正文依次遵循明确指定的产物语言、项目中针对产物的指令、目标产物的现有语言，最后才回退到会话语言。RSP 的 canonical artifact headings、WorkRef 值、路径、命令、标识符和机器消费值保持不变；响应标签可以在括号中保留技术 token，但不能直接使用未翻译的 token 作为标签。
 
@@ -214,11 +214,11 @@ rsp skills list --json
 
 该命令会预检十一个默认 package-owned targets，保留无关的 `.agents/skills` 条目（包括可选 Skills），并且只有显式传入 `--force` 才会替换内容不同的已选目录。按精确名称安装可选的项目级审计 Skill：
 
-升级仍包含 `rsp-address-review` 的安装时，其替代项是 `rsp-resolve-findings`。安装器会在变更前停止，直到 `--force` 显式授权事务性移除这个过时的 package-owned 目录；`--dry-run --force` 可同时预览移除与安装。
+升级仍包含 `rsp-address-review` 或 `rsp-codebase-audit` 的安装时，其替代项分别是 `rsp-resolve-findings` 和 `rsp-structural-audit`。安装器会在变更前停止，直到 `--force` 显式授权事务性移除这个过时的 package-owned 目录；`--dry-run --force` 可同时预览移除与安装。
 
 ```bash
-rsp skills install rsp-codebase-audit --dry-run
-rsp skills install rsp-codebase-audit
+rsp skills install rsp-structural-audit --dry-run
+rsp skills install rsp-structural-audit
 ```
 
 两种形式都从调用 `rsp` 的同一个包安装，因此 beta 评估可以固定精确 npm 身份：
@@ -311,7 +311,7 @@ AI 协助接入：
 ```text
 rsp init --agents-mode <mode>   搭建 .rsp/，并确保 AGENTS.md 含有 RSP 入口块
 rsp init --with-project-setup   同时创建 .rsp/changes/project-setup.md
-rsp update                      刷新受管文件、重建 Specs 索引并迁移旧状态
+rsp update                      刷新受管项目文件，不更新 packaged Skills
 rsp ui [--lang auto|en|zh-CN]   打开只读交互式仪表盘
 rsp skills                      在 dual TTY 中打开交互式项目 Skill 管理器
 rsp skills list [--json]        列出内置 Skills 及其精确项目安装状态
@@ -324,9 +324,9 @@ rsp group close <name>         所有子 Change 归档后关闭并归档 Group B
 rsp focus <name>                将一个 open change 标记为当前聚焦
 rsp unfocus <name>              将一个 open change 移出当前聚焦集合
 rsp archive <name>              归档到 .rsp/archives/
-rsp archive --dry-run <name>    预览归档就绪状态，不移动 change
+rsp archive --dry-run <name>    已弃用的 rsp ready 兼容入口；不会移动 change
 rsp ready <name> [--json [--compact]] [--verbose]
-                                   预览归档就绪状态（与 archive --dry-run 相同）
+                                   canonical 只读归档就绪投影
 rsp show <name|--focused> [--json [--compact]] [--verbose]
                                    显示 change 上下文，带就绪信号和上下文路径
 rsp history [--limit <n>] [--since <date>] [--until <date>] [--kind <kind>] [--group <group>] [--search <text>] [--json [--compact]]

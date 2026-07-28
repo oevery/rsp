@@ -1,0 +1,9 @@
+id: misleading-complexity
+tags: [clean, shallow-indirection]
+request: Audit src/codec. A thin facade looks redundant, but removing it would duplicate wire-version policy and error normalization across three callers.
+expected:
+  result: clean
+  min_findings: 0
+  max_findings: 0
+  required_terms: [src/codec, wire-version policy]
+  forbidden_terms: [redundant wrapper, delete the facade, implemented]

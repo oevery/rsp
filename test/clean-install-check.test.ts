@@ -9,7 +9,6 @@ const root = fileURLToPath(new URL('..', import.meta.url))
 const packageVersion = (JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as { version: string }).version
 const expectedSkills = [
   'rsp',
-  'rsp-codebase-audit',
   'rsp-commit',
   'rsp-design',
   'rsp-diagnose',
@@ -19,6 +18,7 @@ const expectedSkills = [
   'rsp-resolve-findings',
   'rsp-review',
   'rsp-shape',
+  'rsp-structural-audit',
   'rsp-tdd',
 ]
 
@@ -50,7 +50,7 @@ describe('clean install package check', () => {
       })
       expect(report.tarballSha256).toMatch(/^[a-f0-9]{64}$/)
       expect(report.inventory.skills).toEqual(expectedSkills)
-      expect(report.inventory.defaultProjectSkills).toEqual(expectedSkills.filter(name => name !== 'rsp-codebase-audit'))
+      expect(report.inventory.defaultProjectSkills).toEqual(expectedSkills.filter(name => name !== 'rsp-structural-audit'))
       expect(report.inventory.projectSkills).toEqual(expectedSkills)
       expect(report.rspDesignReferences).toEqual([
         'domain-modeling.md',
@@ -74,8 +74,8 @@ describe('clean install package check', () => {
       expect(report.inventory.files).toContain('skills/rsp-commit/SKILL.md')
       expect(report.inventory.files).toContain('skills/rsp-manage/SKILL.md')
       expect(report.inventory.files).toContain('skills/rsp-release-docs/SKILL.md')
-      expect(report.inventory.files).toContain('skills/rsp-codebase-audit/SKILL.md')
-      expect(report.inventory.files).toContain('skills/rsp-codebase-audit/references/structural-lenses.md')
+      expect(report.inventory.files).toContain('skills/rsp-structural-audit/SKILL.md')
+      expect(report.inventory.files).toContain('skills/rsp-structural-audit/references/structural-lenses.md')
       for (const path of [
         'skills/rsp/references/conflict-handling.md',
         'skills/rsp/references/durable-review.md',

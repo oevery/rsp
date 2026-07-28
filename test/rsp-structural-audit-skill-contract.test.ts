@@ -4,13 +4,13 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
-const skillDir = join(root, 'skills', 'rsp-codebase-audit')
+const skillDir = join(root, 'skills', 'rsp-structural-audit')
 const content = readFileSync(join(skillDir, 'SKILL.md'), 'utf8')
 const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/)
 const skill = match?.[2] ?? ''
 const lenses = readFileSync(join(skillDir, 'references', 'structural-lenses.md'), 'utf8')
 
-describe('rsp-codebase-audit Skill contract', () => {
+describe('rsp-structural-audit Skill contract', () => {
   it('is a portable optional Skill with one progressive reference', () => {
     expect(match).not.toBeNull()
     expect(skill).toContain('[structural audit lenses](references/structural-lenses.md)')
@@ -30,6 +30,7 @@ describe('rsp-codebase-audit Skill contract', () => {
     expect(skill).toContain('never modifies project code, tests, configuration, documentation, RSP artifacts, focus, lifecycle state, Git state, or external systems')
     expect(skill).toContain('does not create a Change, choose product intent, design a solution, apply a fix, or invoke another Skill')
     expect(skill).toContain('A focused Change may provide intent or scope but grants no additional mutation authority')
+    expect(skill).toContain('Route solution alternatives, seam recommendations, and reversible probes to `rsp-design`')
   })
 
   it('audits structural evidence without applying a generic checklist', () => {
@@ -47,6 +48,14 @@ describe('rsp-codebase-audit Skill contract', () => {
     expect(skill).toContain('reachable trigger, a realistic impact, and the implicated ownership or behavior chain')
     expect(skill).toContain('directory names, pattern matching, code size, framework taste, a generic checklist')
     expect(lenses).toContain('Code reduction is never the objective')
+  })
+
+  it('uses history and deletion reasoning as bounded investigation mechanisms', () => {
+    expect(lenses).toContain('repeated changes, recurring defects, or cross-owner correction history only to select the smallest candidate behavior chain')
+    expect(lenses).toContain('Churn is navigation evidence, not a Finding')
+    expect(lenses).toContain('If removal eliminates the apparent complexity, the layer may be pass-through')
+    expect(lenses).toContain('policy, invariants, or failure knowledge instead disperses into callers')
+    expect(lenses).toContain('Thinness alone proves neither result')
   })
 
   it('hard-gates production reachability and verification claims', () => {

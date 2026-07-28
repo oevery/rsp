@@ -10,40 +10,13 @@ import { withRspLock } from '../core/lock.js'
 import { toErrorMessage } from '../core/output.js'
 import { resolveArchiveDirectory, resolveFocusMarkerPath, WorkRefError } from '../core/work-ref.js'
 
-export interface ArchiveOptions {
-  dryRun?: boolean
-}
-
 /** Archive a change and clear its focus marker. Never blocks — all checks are warnings. */
-export async function archiveChange(name: string, options: ArchiveOptions = {}) {
+export async function archiveChange(name: string) {
   if (!name) {
     console.error(`  ${pc.red('Usage:')} rsp archive <name>`)
     process.exit(1)
   }
   guardRspInitialized()
-
-  if (options.dryRun) {
-    const workRef = await resolveArchiveWorkRefOrExit(name)
-    const content = await readFile(workRef.path, 'utf-8')
-    const dependencyInspection = await inspectChangeDependencies()
-    const checklist = collectArchiveChecklist(content, {
-      activeBlockers: dependencyInspection.activeBlockers.get(name),
-    })
-
-    console.log()
-    console.log(`  ${pc.bold('Archive dry-run for')} ${pc.cyan(name)}`)
-    console.log()
-    if (checklist.length === 0) {
-      console.log(`  ${pc.green('✓')} Ready to archive. No deterministic warnings found.\n`)
-    }
-    else {
-      for (const line of checklist)
-        console.log(`  ${pc.yellow('⚠')} ${line}`)
-      console.log()
-      console.log(`  ${pc.dim('Review the warnings above before treating this work as fully closed.')}\n`)
-    }
-    return
-  }
 
   try {
     return await withRspLock('archive-change', async () => {
@@ -104,22 +77,6 @@ export async function archiveChange(name: string, options: ArchiveOptions = {}) 
         console.log()
       }
     })
-  }
-  catch (error) {
-    if (error instanceof WorkRefError) {
-      console.error(`  ${pc.red('Error:')} ${error.message}`)
-      process.exit(1)
-    }
-    throw error
-  }
-}
-
-async function resolveArchiveWorkRefOrExit(name: string) {
-  try {
-    const workRef = await resolveExecutableChange(name, { mustExist: true })
-    resolveArchiveDirectory(workRef)
-    resolveFocusMarkerPath(workRef)
-    return workRef
   }
   catch (error) {
     if (error instanceof WorkRefError) {

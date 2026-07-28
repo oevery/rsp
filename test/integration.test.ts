@@ -504,6 +504,14 @@ describe('compact JSON output', () => {
     const createHelp = execFileSync('node', [cliPath(), 'create', '--help'], { encoding: 'utf-8' })
     expect(createHelp).not.toContain('--compact')
   })
+
+  it('states the update and archive compatibility boundaries in command help', () => {
+    const rootHelp = execFileSync('node', [cliPath(), '--help'], { encoding: 'utf-8' })
+    const archiveHelp = execFileSync('node', [cliPath(), 'archive', '--help'], { encoding: 'utf-8' })
+
+    expect(rootHelp).toContain('Refresh RSP-managed project files after upgrade; does not update packaged Skills')
+    expect(archiveHelp).toContain('Deprecated compatibility route to rsp ready; never moves the Change')
+  })
 })
 
 describe('history command', () => {
@@ -1469,8 +1477,10 @@ operator guidance
     expect(ready.readiness.activeBlockers).toBe(true)
     expect(ready.readiness.archiveReady).toBe('no')
     expect(show.change.blockers).toBe(true)
-    expect(archiveResult.status).toBe(1)
-    expect(`${archiveResult.stdout}${archiveResult.stderr}`).toContain('archive root must be a real directory')
+    expect(archiveResult.status).toBe(0)
+    expect(archiveResult.stderr).toContain('Deprecated: use `rsp ready <name>`')
+    expect(archiveResult.stdout).toContain('Archive ready: no')
+    expect(archiveResult.stdout).toContain('active blockers are present in the change file')
   })
 
   it('fails closed when the changes root is missing', async () => {
@@ -2459,8 +2469,9 @@ describe('archive name collisions', () => {
     const dryRun = spawnSync('node', [cliPath(), 'archive', 'release/api', '--dry-run'], { cwd: archiveDir, encoding: 'utf-8' })
     const result = spawnSync('node', [cliPath(), 'archive', 'release/api'], { cwd: archiveDir, encoding: 'utf-8' })
 
-    expect(dryRun.status).toBe(1)
-    expect(dryRun.stderr).toContain('archive path must be a real directory')
+    expect(dryRun.status).toBe(0)
+    expect(dryRun.stderr).toContain('Deprecated: use `rsp ready <name>`')
+    expect(dryRun.stdout).toContain('Archive readiness for release/api')
     expect(result.status).toBe(1)
     expect(result.stderr).toContain('archive path must be a real directory')
     expect(existsSync(join(archiveDir, '.rsp', 'changes', 'release', 'api.md'))).toBe(true)
@@ -3335,13 +3346,17 @@ describe('change groups', () => {
 })
 
 describe('archive --dry-run', () => {
-  it('previews archive readiness without moving the change', async () => {
+  it('delegates to the canonical human readiness projection without moving the change', async () => {
     const dryRunDir = await createRspFixture('rsp-archive-dryrun-test')
     await writeFile(join(dryRunDir, '.rsp', 'changes', 'dry-run-test.md'), renderChange('dry-run-test'))
 
-    const output = execSync(`node ${cliPath()} archive dry-run-test --dry-run`, { cwd: dryRunDir, encoding: 'utf-8' })
-    expect(output).toContain('Archive dry-run')
-    expect(output).toContain('task item(s) still incomplete')
+    const ready = spawnSync('node', [cliPath(), 'ready', 'dry-run-test'], { cwd: dryRunDir, encoding: 'utf-8' })
+    const archive = spawnSync('node', [cliPath(), 'archive', 'dry-run-test', '--dry-run'], { cwd: dryRunDir, encoding: 'utf-8' })
+    expect(ready.status, ready.stderr).toBe(0)
+    expect(archive.status, archive.stderr).toBe(0)
+    expect(archive.stderr).toContain('Deprecated: use `rsp ready <name>`')
+    expect(archive.stdout).toBe(ready.stdout)
+    expect(archive.stdout).toContain('task item(s) still incomplete')
 
     // change should still be there
     expect(existsSync(join(dryRunDir, '.rsp', 'changes', 'dry-run-test.md'))).toBe(true)

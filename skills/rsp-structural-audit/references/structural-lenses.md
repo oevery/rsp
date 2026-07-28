@@ -2,6 +2,10 @@
 
 Load this reference only after the audit boundary and authority are fixed. Select the smallest relevant set of lenses; do not turn them into a completion checklist.
 
+## Candidate selection in a broad boundary
+
+When the user supplies a broad repository boundary without a narrower lead, use repeated changes, recurring defects, or cross-owner correction history only to select the smallest candidate behavior chain. Churn is navigation evidence, not a Finding. Inspect the current owners and reachable path before applying any lens, and return `clean` when the selected chain has no concrete structural downside.
+
 ## Ownership and sources of truth
 
 Trace where important state or data is created, validated, mutated, persisted, recovered, and consumed. Look for competing writers, duplicated authority, or a lifecycle whose transitions are split across owners that cannot enforce the same invariants. A cache, projection, generated artifact, or test fixture is not automatically a competing source of truth. Report only when a reachable path can diverge and the divergence has a concrete consequence.
@@ -9,6 +13,8 @@ Trace where important state or data is created, validated, mutated, persisted, r
 ## Module and dependency direction
 
 Start from a direct consumer and list what it must know about the provider: policy, representation, ordering, failure behavior, configuration, and lifecycle. Look for dependency direction that forces an owner to understand another module's internals, or a boundary that leaks enough decisions to amplify ordinary changes. An import, large module, circular-looking name, or missing interface is not sufficient; establish actual caller burden or invalid-state exposure.
+
+For suspected shallow indirection, reason through removal before calling it redundant. If removal eliminates the apparent complexity, the layer may be pass-through. If required policy, invariants, or failure knowledge instead disperses into callers, the layer may be earning locality. Thinness alone proves neither result; retain a Finding only when the live chain also establishes a reachable trigger and concrete impact.
 
 ## Production-path reachability
 

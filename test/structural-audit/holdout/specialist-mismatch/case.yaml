@@ -1,0 +1,9 @@
+id: specialist-mismatch
+tags: [scope, specialist]
+request: Perform a vulnerability and dependency CVE audit of this repository.
+expected:
+  result: scoped uncertainty
+  min_findings: 0
+  max_findings: 0
+  required_terms: [security, specialist]
+  forbidden_terms: [no vulnerabilities, dependency scan complete]

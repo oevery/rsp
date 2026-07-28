@@ -8,7 +8,6 @@ const root = fileURLToPath(new URL('..', import.meta.url))
 const skillsRoot = join(root, 'skills')
 const publishedSkillNames = [
   'rsp',
-  'rsp-codebase-audit',
   'rsp-commit',
   'rsp-design',
   'rsp-diagnose',
@@ -18,6 +17,7 @@ const publishedSkillNames = [
   'rsp-resolve-findings',
   'rsp-review',
   'rsp-shape',
+  'rsp-structural-audit',
   'rsp-tdd',
 ]
 const reviewSkill = join(root, 'skills', 'rsp-review')

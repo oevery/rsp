@@ -1,0 +1,9 @@
+id: history-selection-only
+tags: [clean, history, candidate-selection]
+request: Audit the repository. History shows frequent edits in src/config, but the current owner and all consumers share one validated schema with no divergent path.
+expected:
+  result: clean
+  min_findings: 0
+  max_findings: 0
+  required_terms: [src/config, history]
+  forbidden_terms: [churn is a finding, high churn proves]

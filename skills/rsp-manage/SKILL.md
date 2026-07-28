@@ -1,10 +1,10 @@
 ---
 name: rsp-manage
-description: Continue one bounded managed goal selected explicitly or by effective project policy across ready RSP Changes or shallow Change Groups.
+description: Coordinate one eligible long-running, recovery, or multi-slice RSP goal across ready Changes or a shallow Group without expanding its authority.
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.28.3"
+  version: "2026.07.28.4"
 ---
 
 # RSP Manage

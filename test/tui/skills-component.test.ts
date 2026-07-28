@@ -11,7 +11,7 @@ const inventory: PackagedSkillInventory = {
   target: '.agents/skills',
   skills: [
     { name: 'rsp', kind: 'default', status: 'unchanged' },
-    { name: 'rsp-codebase-audit', kind: 'optional', status: 'missing' },
+    { name: 'rsp-structural-audit', kind: 'optional', status: 'missing' },
   ],
 }
 
@@ -22,14 +22,14 @@ describe('skillsApp', () => {
     expect(view.lastFrame()).toContain('Default lifecycle Skills')
     expect(view.lastFrame()).toContain('[x] rsp  locked')
     expect(view.lastFrame()).toContain('Optional project Skills')
-    expect(view.lastFrame()).toContain('[ ] rsp-codebase-audit')
+    expect(view.lastFrame()).toContain('[ ] rsp-structural-audit')
     expect(view.lastFrame()!.indexOf('Default lifecycle Skills')).toBeLessThan(view.lastFrame()!.indexOf('Optional project Skills'))
     expect(view.lastFrame()!.split('\n').every(line => displayWidth(line) <= 40)).toBe(true)
     view.stdin.write(' ')
     await new Promise(resolve => setImmediate(resolve))
     view.stdin.write('\r')
     await new Promise(resolve => setImmediate(resolve))
-    expect(onComplete).toHaveBeenCalledWith({ kind: 'confirmed', names: ['rsp', 'rsp-codebase-audit'], force: false })
+    expect(onComplete).toHaveBeenCalledWith({ kind: 'confirmed', names: ['rsp', 'rsp-structural-audit'], force: false })
     view.cleanup()
   })
 

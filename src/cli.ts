@@ -174,12 +174,17 @@ const archiveCommand = defineCommand({
     },
     'dry-run': {
       type: 'boolean',
-      description: 'Preview archive readiness without moving the change',
+      description: 'Deprecated compatibility route to rsp ready; never moves the Change',
       default: false,
     },
   },
   async run({ args }: { args: ArchiveChangeArgs & { 'dry-run': boolean } }) {
-    await archiveChange(args.name, { dryRun: Boolean(args['dry-run']) })
+    if (args['dry-run']) {
+      console.error('  Deprecated: use `rsp ready <name>` for read-only archive readiness.')
+      await showReady(args.name)
+      return
+    }
+    await archiveChange(args.name)
   },
 })
 
@@ -353,7 +358,7 @@ const checkCommand = defineCommand({
 const updateCommand = defineCommand({
   meta: {
     name: 'update',
-    description: 'Refresh RSP project structure after upgrade (fallback protocol, AGENTS, indices)',
+    description: 'Refresh RSP-managed project files after upgrade; does not update packaged Skills',
   },
   async run() {
     const result = await updateProject()
