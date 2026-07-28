@@ -4,7 +4,7 @@ description: Continue one bounded managed goal selected explicitly or by effecti
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.28.2"
+  version: "2026.07.28.3"
 ---
 
 # RSP Manage
@@ -46,9 +46,9 @@ Stop when discovery changes behavior, acceptance, interfaces, scope, mutation, o
 
 ## Converge managed review
 
-After fixed-scope re-review, Core correlates the report with the selected Change, original authority, fresh verification, and transient pass count. An `accepted` Finding starts another Address Review pass without asking the user to continue only when it remains inside the original behavior, acceptance, paths, mutation authority, and verification budget. Address Review never self-loops.
+After fixed-scope re-review, Core correlates the report with the selected Change, original authority, fresh verification, and transient pass count. An `accepted` Finding starts another Resolve Findings pass without asking the user to continue only when it remains inside the original behavior, acceptance, paths, mutation authority, and verification budget. Resolve Findings never self-loops.
 
-Allow at most three Address Review passes per Change, separate from the worker retry limit. Stop when the same Finding remains after two completed corrections. Also stop for `needs-clarification`; a material product, interface, or scope change; new mutation or external authority; an additional real-host, provider, or network run outside existing verification authority; or failed or unavailable decisive verification. Return one owner input. Treat an eligible in-scope Finding as `correction-needed`, not an external blocker. Keep counts and correction chronology transient.
+Allow at most three Resolve Findings passes per Change, separate from the worker retry limit. Stop when the same Finding remains after two completed corrections. Also stop for `needs-clarification`; a material product, interface, or scope change; new mutation or external authority; an additional real-host, provider, or network run outside existing verification authority; or failed or unavailable decisive verification. Return one owner input. Treat an eligible in-scope Finding as `correction-needed`, not an external blocker. Keep counts and correction chronology transient.
 
 ## Preserve boundaries
 

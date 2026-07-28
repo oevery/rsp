@@ -163,7 +163,7 @@ RSP publishes eleven default host-neutral lifecycle Skills for on-demand loading
 | `rsp-diagnose` | Confirm a cause, or return a truthful unresolved diagnosis, before correction. |
 | `rsp-tdd` | Drive one clear behavior through RED, GREEN, and safe REFACTOR. |
 | `rsp-review` | Review a fixed code, document, or mixed comparison without mutation. |
-| `rsp-address-review` | Dispose fixed findings, correct accepted ones, verify, and request re-review. |
+| `rsp-resolve-findings` | Dispose fixed findings, correct accepted ones, verify, and request re-review. |
 | `rsp-commit` | Create one authorized exact-scope local commit with a repository-consistent structured message. |
 | `rsp-release-docs` | Draft, audit, finalize, or reconcile evidence-based release surfaces. |
 | `rsp-manage` | Continue one explicitly requested or project-enabled eligible ready Change or shallow Group. |
@@ -173,7 +173,7 @@ Each lifecycle Skill returns to an existing project or RSP owner. Report-only Pr
 
 Response language and artifact language are independent. Human-facing response headings, labels, explanations, and conclusions follow the requested response language, response-specific project instructions, then the conversation language. Authorized artifact prose follows the requested artifact language, artifact-specific project instructions, then the existing artifact language, and only then the conversation language. Canonical RSP artifact headings, WorkRef values, paths, commands, identifiers, and machine-consumed values remain unchanged; response labels may retain technical tokens in parentheses but never use them as untranslated labels.
 
-Compose the suite from evidence: an explicit bounded question may enter report-only Pre-Change Design before Shape; otherwise Shape settles the executable owner and Tracked Design returns one material question to it. Core then chooses Diagnose, TDD, or Implement; Review stays report-only; Address Review corrects accepted findings and requests re-review; Core performs the durable decision before archive. An explicit release operation with a confirmed identity or range may enter Release Docs without a Release Change; create one only for material decisions, coordination, recovery, blockers, or acceptance. Manage is optional: it accepts one selected ready Change or shallow Group that needs independent dispatch, long continuation, or recovery, while small or coupled work stays direct. Projects may keep explicit activation or let Core select eligible managed work automatically.
+Compose the suite from evidence: an explicit bounded question may enter report-only Pre-Change Design before Shape; otherwise Shape settles the executable owner and Tracked Design returns one material question to it. Core then chooses Diagnose, TDD, or Implement; Review stays report-only; Resolve Findings corrects accepted findings and requests re-review; Core performs the durable decision before archive. An explicit release operation with a confirmed identity or range may enter Release Docs without a Release Change; create one only for material decisions, coordination, recovery, blockers, or acceptance. Manage is optional: it accepts one selected ready Change or shallow Group that needs independent dispatch, long continuation, or recovery, while small or coupled work stays direct. Projects may keep explicit activation or let Core select eligible managed work automatically.
 
 ### Managed automation policy
 
@@ -214,6 +214,8 @@ rsp skills list --json
 ```
 
 The command preflights the eleven default package-owned targets, leaves unrelated `.agents/skills` entries (including optional Skills) untouched, and requires explicit `--force` before replacing a divergent selected directory. Install the optional project-level audit Skill by exact name:
+
+When upgrading an installation that still contains `rsp-address-review`, the replacement is `rsp-resolve-findings`. The installer stops without mutation until `--force` explicitly authorizes transactional removal of the obsolete package-owned directory; `--dry-run --force` previews both removal and installation.
 
 ```bash
 rsp skills install rsp-codebase-audit --dry-run

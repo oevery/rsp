@@ -162,7 +162,7 @@ RSP 发布十一个默认、宿主无关、按需加载的生命周期 Skills，
 | `rsp-diagnose` | 修正前确认原因，或如实返回 unresolved diagnosis。 |
 | `rsp-tdd` | 让一个清晰行为经过 RED、GREEN 与安全的 REFACTOR。 |
 | `rsp-review` | 对固定的 Code、Document 或 mixed comparison 做只读审查。 |
-| `rsp-address-review` | 处置固定 findings，修正 accepted 项，验证并请求复审。 |
+| `rsp-resolve-findings` | 处置固定 findings，修正 accepted 项，验证并请求复审。 |
 | `rsp-commit` | 使用与仓库一致的结构化消息创建一个已授权、精确范围的本地提交。 |
 | `rsp-release-docs` | 起草、审计、定稿或校准基于证据的发布表面。 |
 | `rsp-manage` | 继续一个显式请求或项目启用且符合条件的 ready Change 或 shallow Group。 |
@@ -172,7 +172,7 @@ RSP 发布十一个默认、宿主无关、按需加载的生命周期 Skills，
 
 响应语言与产物语言相互独立。面向人的响应标题、标签、解释和结论依次遵循明确指定的响应语言、项目中针对响应的指令和会话语言；已授权写入的产物正文依次遵循明确指定的产物语言、项目中针对产物的指令、目标产物的现有语言，最后才回退到会话语言。RSP 的 canonical artifact headings、WorkRef 值、路径、命令、标识符和机器消费值保持不变；响应标签可以在括号中保留技术 token，但不能直接使用未翻译的 token 作为标签。
 
-按证据组合套件：Shape 确定 owner；Design 返回一个关键问题；Core 在 Diagnose、TDD 与 Implement 之间选择；Review 保持只读；Address Review 修正 accepted findings 并请求复审；Core 在 archive 前执行 durable decision。显式 release operation 在 identity 或 range 已确认时，可以不创建 Release Change 就进入 Release Docs；只有重大决策、协调、恢复、blocker 或 acceptance 需要持久 owner 时才创建。Manage 是可选能力：它接受一个 selected ready Change 或 shallow Group，并要求独立调度、长时 continuation 或恢复需求；小型或紧耦合工作保持直接执行。项目可以保持显式启用，也可以让 Core 自动选择符合条件的 managed work。
+按证据组合套件：Shape 确定 owner；Design 返回一个关键问题；Core 在 Diagnose、TDD 与 Implement 之间选择；Review 保持只读；Resolve Findings 修正 accepted findings 并请求复审；Core 在 archive 前执行 durable decision。显式 release operation 在 identity 或 range 已确认时，可以不创建 Release Change 就进入 Release Docs；只有重大决策、协调、恢复、blocker 或 acceptance 需要持久 owner 时才创建。Manage 是可选能力：它接受一个 selected ready Change 或 shallow Group，并要求独立调度、长时 continuation 或恢复需求；小型或紧耦合工作保持直接执行。项目可以保持显式启用，也可以让 Core 自动选择符合条件的 managed work。
 
 ### Managed automation policy
 
@@ -213,6 +213,8 @@ rsp skills list --json
 ```
 
 该命令会预检十一个默认 package-owned targets，保留无关的 `.agents/skills` 条目（包括可选 Skills），并且只有显式传入 `--force` 才会替换内容不同的已选目录。按精确名称安装可选的项目级审计 Skill：
+
+升级仍包含 `rsp-address-review` 的安装时，其替代项是 `rsp-resolve-findings`。安装器会在变更前停止，直到 `--force` 显式授权事务性移除这个过时的 package-owned 目录；`--dry-run --force` 可同时预览移除与安装。
 
 ```bash
 rsp skills install rsp-codebase-audit --dry-run

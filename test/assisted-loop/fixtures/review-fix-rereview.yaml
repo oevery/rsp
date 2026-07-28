@@ -7,7 +7,7 @@ expected:
   next_action: disposition every finding, fix accepted findings, verify, and request a fixed-scope re-review
   returned_owner: the selected Change and then the fixed-scope review checkpoint
 sources:
-  - skills/rsp-address-review/SKILL.md
+  - skills/rsp-resolve-findings/SKILL.md
 required_contract:
   - '## Disposition every finding'
   - accepted

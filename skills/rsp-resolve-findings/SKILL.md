@@ -1,13 +1,13 @@
 ---
-name: rsp-address-review
+name: rsp-resolve-findings
 description: Resolve one fixed rsp-review report for an RSP-tracked change. Use when the user or a qualified managed goal authorizes disposition, bounded fixes, fresh verification, re-review, or recovery; keep the reviewer report-only and never infer Git or publication authority.
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.25.1"
+  version: "2026.07.28.1"
 ---
 
-# RSP Address Review
+# RSP Resolve Findings
 
 Resolve one fixed review report without changing what the reviewer observed. Treat resolution as a bounded correction pass, not a retry loop or a second project lifecycle.
 
@@ -35,7 +35,7 @@ In one resolution pass, implement the smallest complete correction for accepted 
 
 After the last relevant edit, run fresh verification for the affected behavior and the selected Change. A failed, unavailable, stale, or omitted check cannot close an accepted Finding. If a check exposes another defect, return it as evidence; do not begin an automatic retry loop.
 
-Require a fresh fixed-scope re-review before claiming resolution. Return a re-review request containing the original comparison, selected authority, post-fix file set or immutable comparison, implementation summary, dispositions, and verification evidence. The re-review remains report-only. On resume with its report, correlate original Findings as resolved or remaining and return any new Finding as unresolved input to Core. Address Review never self-loops. Only qualified Manage may classify an in-scope `accepted` Finding as `correction-needed` and re-enter another bounded pass under the original managed authority and its separate convergence limit; standalone work requires new authority.
+Require a fresh fixed-scope re-review before claiming resolution. Return a re-review request containing the original comparison, selected authority, post-fix file set or immutable comparison, implementation summary, dispositions, and verification evidence. The re-review remains report-only. On resume with its report, correlate original Findings as resolved or remaining and return any new Finding as unresolved input to Core. Resolve Findings never self-loops. Only qualified Manage may classify an in-scope `accepted` Finding as `correction-needed` and re-enter another bounded pass under the original managed authority and its separate convergence limit; standalone work requires new authority.
 
 ## Handoff and recovery
 

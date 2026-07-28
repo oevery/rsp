@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
-const skill = join(root, 'skills', 'rsp-address-review')
+const skill = join(root, 'skills', 'rsp-resolve-findings')
 
 function readSkill(): string {
   const content = readFileSync(join(skill, 'SKILL.md'), 'utf8')
@@ -13,7 +13,7 @@ function readSkill(): string {
   return match![2]!
 }
 
-describe('rsp-address-review Skill contract', () => {
+describe('rsp-resolve-findings Skill contract', () => {
   it('publishes a host-neutral review-resolution capability', () => {
     const body = readSkill()
     expect(body).not.toMatch(/Codex|Claude|ChatGPT|GitHub Actions|session id|thread id/i)
@@ -47,7 +47,7 @@ describe('rsp-address-review Skill contract', () => {
     const body = readSkill()
 
     expect(body).toContain('return any new Finding as unresolved input to Core')
-    expect(body).toContain('Address Review never self-loops')
+    expect(body).toContain('Resolve Findings never self-loops')
     expect(body).toContain('Only qualified Manage may classify an in-scope `accepted` Finding as `correction-needed`')
     expect(body).toContain('original managed authority and its separate convergence limit')
     expect(body).toContain('standalone work requires new authority')

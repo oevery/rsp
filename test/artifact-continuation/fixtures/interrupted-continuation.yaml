@@ -11,7 +11,7 @@ sources:
   - skills/rsp-implement/SKILL.md
   - skills/rsp-diagnose/SKILL.md
   - skills/rsp-tdd/SKILL.md
-  - skills/rsp-address-review/SKILL.md
+  - skills/rsp-resolve-findings/SKILL.md
 all_sources_contract:
   - WorkRef
   - Authority

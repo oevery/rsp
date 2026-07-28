@@ -3,7 +3,7 @@ expected_mode: execute
 installed_skills:
   - rsp
   - rsp-manage
-  - rsp-address-review
+  - rsp-resolve-findings
   - rsp-review
   - rsp-implement
 initialize_rsp: true

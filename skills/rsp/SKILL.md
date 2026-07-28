@@ -4,7 +4,7 @@ description: Use this skill when initializing RSP, operating an existing .rsp pr
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.27.1"
+  version: "2026.07.28.1"
 ---
 
 # RSP Skill

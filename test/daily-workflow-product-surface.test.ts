@@ -6,7 +6,6 @@ import { describe, expect, it } from 'vitest'
 const root = fileURLToPath(new URL('..', import.meta.url))
 const currentSkills = [
   'rsp',
-  'rsp-address-review',
   'rsp-codebase-audit',
   'rsp-commit',
   'rsp-design',
@@ -14,6 +13,7 @@ const currentSkills = [
   'rsp-implement',
   'rsp-manage',
   'rsp-release-docs',
+  'rsp-resolve-findings',
   'rsp-review',
   'rsp-shape',
   'rsp-tdd',

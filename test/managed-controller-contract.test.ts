@@ -252,8 +252,8 @@ describe('rsp-manage product Skill', () => {
 
     expect(body).toContain('## Converge managed review')
     expect(body).toContain('without asking the user to continue')
-    expect(body).toContain('Address Review never self-loops')
-    expect(body).toContain('at most three Address Review passes per Change')
+    expect(body).toContain('Resolve Findings never self-loops')
+    expect(body).toContain('at most three Resolve Findings passes per Change')
     expect(body).toContain('separate from the worker retry limit')
     expect(body).toContain('same Finding remains after two completed corrections')
     expect(body).toContain('`correction-needed`, not an external blocker')
@@ -514,7 +514,7 @@ describe('rsp-manage product Skill', () => {
     onTestFinished(() => rmSync(outputRoot, { force: true, recursive: true }))
     const prepared = prepareManagedControllerRun({ caseId: 'review-convergence', outputRoot, root, variant: 'product' })
 
-    expect(prepared.manifest.installed_skills).toEqual(['rsp', 'rsp-manage', 'rsp-address-review', 'rsp-review', 'rsp-implement'])
+    expect(prepared.manifest.installed_skills).toEqual(['rsp', 'rsp-manage', 'rsp-resolve-findings', 'rsp-review', 'rsp-implement'])
     expect(prepared.remotePath).toBeNull()
     expect(prepared.sourceComposition).toEqual(prepared.installedComposition)
     expect(prepared.prompt).toContain('review_passes: 3')
@@ -530,7 +530,7 @@ describe('rsp-manage product Skill', () => {
   it('prepares automatic lifecycle routing without naming or directly invoking Manage', ({ onTestFinished }) => {
     const outputRoot = mkdtempSync(join(tmpdir(), 'rsp-manage-auto-lifecycle-'))
     onTestFinished(() => rmSync(outputRoot, { force: true, recursive: true }))
-    const prepared = prepareManagedControllerRun({ caseId: 'auto-lifecycle', outputRoot, root, variant: 'product' })
+    const prepared = prepareManagedControllerRun({ caseId: 'auto-lifecycle-current', outputRoot, root, variant: 'product' })
     const status = JSON.parse(execFileSync(process.execPath, [
       join(root, 'dist', 'cli.mjs'),
       'status',
@@ -781,7 +781,7 @@ describe('rsp-manage product Skill', () => {
     const manifest = parseYaml(readFileSync(manifestPath, 'utf8')) as any
     const composition = hashManagedControllerComposition(manifest.installed_skills.map((name: string) => ({
       name,
-      path: join(root, 'skills', name),
+      path: join(root, 'skills', name === 'rsp-address-review' ? 'rsp-resolve-findings' : name),
     })))
     const rescored = scoreManagedControllerObservation(manifest, {
       changed_paths: metadata.changed_paths,

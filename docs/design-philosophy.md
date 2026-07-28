@@ -372,7 +372,7 @@ Continuation 必须包含 WorkRef、authority pointers、current state、changed
 
 Managed goal、dispatch、重试、预算和 convergence count 都是 transient process state。Change、Group、Spec、Decision Record 与项目指令继续拥有 durable truth；每次进展后重新从这些 owner 和当前证据派生下一动作。缺少 owner 时返回 Shape，涉及产品、接口、scope 或 authority 决策时停止。
 
-Managed review 必须有界，且 Address Review 不自行循环。Lifecycle closeout 与 Git delivery 仍是独立能力，但项目可以用 `manual`、`lifecycle`、`local` 三个小型 preset 选择本地收尾上限：不自动收尾、仅 archive，或 archive 加有独立依据的 recovery checkpoint，并在 clean、已验证的非小型终态边界上确定性调用一次 Commit。Change 按语义结果与共享验收/回滚边界塑形，不按 commit 数量拆分。省略配置保持 explicit activation 与既有 local closeout 兼容；nearest restriction 和 host boundary 只能缩小上限。
+Managed review 必须有界，且 Resolve Findings 不自行循环。Lifecycle closeout 与 Git delivery 仍是独立能力，但项目可以用 `manual`、`lifecycle`、`local` 三个小型 preset 选择本地收尾上限：不自动收尾、仅 archive，或 archive 加有独立依据的 recovery checkpoint，并在 clean、已验证的非小型终态边界上确定性调用一次 Commit。Change 按语义结果与共享验收/回滚边界塑形，不按 commit 数量拆分。省略配置保持 explicit activation 与既有 local closeout 兼容；nearest restriction 和 host boundary 只能缩小上限。
 
 RSP 不建立通用权限系统，也不提供容易误解为宿主完全授权的 `full` 模式。Push、tag、publication、deployment、approval 和 human acceptance 始终保持显式且在项目配置之外。具体资格、预算、命令和停止条件由 `rsp` 与 `rsp-manage` Skills 拥有，不在设计哲学中复制。
 

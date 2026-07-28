@@ -20,13 +20,13 @@ const cli = join(cliPackageRoot, 'dist', 'cli.mjs')
 const temporaryRoots: string[] = []
 const expectedSkills = [
   'rsp',
-  'rsp-address-review',
   'rsp-commit',
   'rsp-design',
   'rsp-diagnose',
   'rsp-implement',
   'rsp-manage',
   'rsp-release-docs',
+  'rsp-resolve-findings',
   'rsp-review',
   'rsp-shape',
   'rsp-tdd',
@@ -69,6 +69,21 @@ async function createTwoSkillFixture(label: string) {
     await writeFile(join(projectRoot, '.agents', 'skills', name, 'SKILL.md'), `project ${name}\n`)
   }
   return { packageRoot, projectRoot }
+}
+
+async function createRenamedSkillFixture(label: string) {
+  const packageRoot = await temporaryRoot(`${label}-package`)
+  const projectRoot = await temporaryRoot(`${label}-project`)
+  const replacement = join(packageRoot, 'skills', 'rsp-resolve-findings', 'SKILL.md')
+  const obsolete = join(projectRoot, '.agents', 'skills', 'rsp-address-review', 'SKILL.md')
+  const unrelated = join(projectRoot, '.agents', 'skills', 'local-tool', 'SKILL.md')
+  await mkdir(dirname(replacement), { recursive: true })
+  await writeFile(replacement, 'replacement\n')
+  await mkdir(dirname(obsolete), { recursive: true })
+  await writeFile(obsolete, 'obsolete package version\n')
+  await mkdir(dirname(unrelated), { recursive: true })
+  await writeFile(unrelated, 'project owned\n')
+  return { obsolete, packageRoot, projectRoot, replacement, unrelated }
 }
 
 afterEach(async () => {
@@ -212,6 +227,63 @@ describe('rsp skills install', () => {
     expect(forced.stdout).toContain('replaced: rsp')
     expect(await readFile(conflicting, 'utf-8')).toBe(await readFile(join(repoRoot, 'skills', 'rsp', 'SKILL.md'), 'utf-8'))
     expect(await readFile(unrelated, 'utf-8')).toBe('project owned\n')
+  })
+
+  it('requires force to remove an obsolete packaged Skill during its replacement install', async () => {
+    const { obsolete, packageRoot, projectRoot, replacement, unrelated } = await createRenamedSkillFixture('rsp-skills-obsolete-rename')
+    const replacementTarget = join(projectRoot, '.agents', 'skills', 'rsp-resolve-findings', 'SKILL.md')
+
+    await expect(
+      installPackagedSkills({ names: ['rsp-resolve-findings'] }, { packageRoot, projectRoot }),
+    ).rejects.toThrow(/obsolete packaged Skill renames: rsp-address-review -> rsp-resolve-findings; rerun with --force/)
+    expect(await readFile(obsolete, 'utf8')).toBe('obsolete package version\n')
+    await expect(readFile(replacementTarget, 'utf8')).rejects.toMatchObject({ code: 'ENOENT' })
+
+    const dryRun = await installPackagedSkills({ dryRun: true, force: true, names: ['rsp-resolve-findings'] }, { packageRoot, projectRoot })
+    expect(dryRun).toEqual({ installed: ['rsp-resolve-findings'], removed: ['rsp-address-review'], replaced: [], unchanged: [] })
+    expect(await readFile(obsolete, 'utf8')).toBe('obsolete package version\n')
+    await expect(readFile(replacementTarget, 'utf8')).rejects.toMatchObject({ code: 'ENOENT' })
+
+    const installed = await installPackagedSkills({ force: true, names: ['rsp-resolve-findings'] }, { packageRoot, projectRoot })
+    expect(installed).toEqual(dryRun)
+    await expect(readFile(obsolete, 'utf8')).rejects.toMatchObject({ code: 'ENOENT' })
+    expect(await readFile(replacementTarget, 'utf8')).toBe(await readFile(replacement, 'utf8'))
+    expect(await readFile(unrelated, 'utf8')).toBe('project owned\n')
+  })
+
+  it('restores an obsolete packaged Skill when replacement activation fails', async () => {
+    const { obsolete, packageRoot, projectRoot } = await createRenamedSkillFixture('rsp-skills-obsolete-rollback')
+
+    await expect(installPackagedSkills({ force: true, names: ['rsp-resolve-findings'] }, {
+      packageRoot,
+      projectRoot,
+      async renamePath(source, destination) {
+        if (source.includes('/next/rsp-resolve-findings') && destination.endsWith('/rsp-resolve-findings'))
+          throw new Error('injected replacement activation failure')
+        await fsRename(source, destination)
+      },
+    })).rejects.toThrow('injected replacement activation failure')
+
+    expect(await readFile(obsolete, 'utf8')).toBe('obsolete package version\n')
+    await expect(readFile(join(projectRoot, '.agents', 'skills', 'rsp-resolve-findings', 'SKILL.md'), 'utf8')).rejects.toMatchObject({ code: 'ENOENT' })
+    expect((await readdir(join(projectRoot, '.agents', 'skills'))).some(name => name.startsWith('.rsp-skills-install-'))).toBe(false)
+  })
+
+  it('rejects a symlinked obsolete Skill before installing its replacement', async () => {
+    const packageRoot = await temporaryRoot('rsp-skills-obsolete-symlink-package')
+    const projectRoot = await temporaryRoot('rsp-skills-obsolete-symlink-project')
+    const externalRoot = await temporaryRoot('rsp-skills-obsolete-symlink-external')
+    await mkdir(join(packageRoot, 'skills', 'rsp-resolve-findings'), { recursive: true })
+    await writeFile(join(packageRoot, 'skills', 'rsp-resolve-findings', 'SKILL.md'), 'replacement\n')
+    await mkdir(join(projectRoot, '.agents', 'skills'), { recursive: true })
+    await writeFile(join(externalRoot, 'SKILL.md'), 'external\n')
+    await symlink(externalRoot, join(projectRoot, '.agents', 'skills', 'rsp-address-review'))
+
+    await expect(
+      installPackagedSkills({ force: true, names: ['rsp-resolve-findings'] }, { packageRoot, projectRoot }),
+    ).rejects.toThrow(/unsupported entry.*installed Skill rsp-address-review/)
+    expect(await readFile(join(externalRoot, 'SKILL.md'), 'utf8')).toBe('external\n')
+    await expect(readFile(join(projectRoot, '.agents', 'skills', 'rsp-resolve-findings', 'SKILL.md'), 'utf8')).rejects.toMatchObject({ code: 'ENOENT' })
   })
 
   it('rejects symlinked package-owned destinations without writing other targets', async () => {

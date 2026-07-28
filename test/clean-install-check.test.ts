@@ -9,7 +9,6 @@ const root = fileURLToPath(new URL('..', import.meta.url))
 const packageVersion = (JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as { version: string }).version
 const expectedSkills = [
   'rsp',
-  'rsp-address-review',
   'rsp-codebase-audit',
   'rsp-commit',
   'rsp-design',
@@ -17,6 +16,7 @@ const expectedSkills = [
   'rsp-implement',
   'rsp-manage',
   'rsp-release-docs',
+  'rsp-resolve-findings',
   'rsp-review',
   'rsp-shape',
   'rsp-tdd',

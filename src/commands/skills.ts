@@ -13,20 +13,25 @@ export interface InstallPackagedSkillsArgs {
 
 export const DEFAULT_PACKAGED_SKILL_NAMES = [
   'rsp',
-  'rsp-address-review',
   'rsp-commit',
   'rsp-design',
   'rsp-diagnose',
   'rsp-implement',
   'rsp-manage',
   'rsp-release-docs',
+  'rsp-resolve-findings',
   'rsp-review',
   'rsp-shape',
   'rsp-tdd',
 ] as const
 
+const OBSOLETE_DEFAULT_SKILL_RENAMES = {
+  'rsp-address-review': 'rsp-resolve-findings',
+} as const
+
 export interface SkillInstallResult {
   installed: string[]
+  removed: string[]
   unchanged: string[]
   replaced: string[]
 }
@@ -280,8 +285,9 @@ export async function installPackagedSkills(
     .sort((a, b) => a.name.localeCompare(b.name))
   const targetRoot = resolveManagedDirectoryChain(projectRoot, ['.agents', 'skills'], 'project Skills root')
 
-  const result: SkillInstallResult = { installed: [], unchanged: [], replaced: [] }
+  const result: SkillInstallResult = { installed: [], removed: [], unchanged: [], replaced: [] }
   const conflicts: string[] = []
+  const obsoleteConflicts: string[] = []
   const targetTreeIdentities = new Map<string, DirectoryIdentity>()
   for (const skill of skills) {
     const target = join(targetRoot, skill.name)
@@ -304,8 +310,32 @@ export async function installPackagedSkills(
     }
   }
 
+  const selectedNames = new Set(skills.map(skill => skill.name))
+  const obsoleteTreeIdentities = new Map<string, DirectoryIdentity>()
+  for (const [obsolete, replacement] of Object.entries(OBSOLETE_DEFAULT_SKILL_RENAMES)) {
+    if (!selectedNames.has(replacement))
+      continue
+    const target = join(targetRoot, obsolete)
+    if (inspectTarget(target, obsolete) === 'missing')
+      continue
+    const targetIdentity = inspectDirectoryIdentity(target, `obsolete installed Skill ${obsolete}`)
+    assertDirectoryIdentities([targetIdentity], `obsolete installed Skill ${obsolete}`)
+    if (args.force) {
+      result.removed.push(obsolete)
+      obsoleteTreeIdentities.set(obsolete, targetIdentity)
+    }
+    else {
+      obsoleteConflicts.push(`${obsolete} -> ${replacement}`)
+    }
+  }
+
+  const conflictMessages: string[] = []
   if (conflicts.length > 0)
-    throw new Error(`conflicting packaged Skills: ${conflicts.join(', ')}; rerun with --force to replace only these package-owned directories`)
+    conflictMessages.push(`conflicting packaged Skills: ${conflicts.join(', ')}`)
+  if (obsoleteConflicts.length > 0)
+    conflictMessages.push(`obsolete packaged Skill renames: ${obsoleteConflicts.join(', ')}`)
+  if (conflictMessages.length > 0)
+    throw new Error(`${conflictMessages.join('; ')}; rerun with --force to replace or remove only these package-owned directories`)
   if (args.dryRun)
     return result
 
@@ -337,7 +367,16 @@ export async function installPackagedSkills(
     for (const name of result.replaced) {
       assertDirectoryIdentities([targetTreeIdentities.get(name)!], `installed Skill ${name}`)
     }
+    for (const name of result.removed) {
+      assertDirectoryIdentities([obsoleteTreeIdentities.get(name)!], `obsolete installed Skill ${name}`)
+    }
 
+    for (const name of result.removed) {
+      assertDirectoryIdentities(targetIdentities, 'project Skills root')
+      assertDirectoryIdentities([obsoleteTreeIdentities.get(name)!], `obsolete installed Skill ${name}`)
+      await renamePath(join(targetRoot, name), join(previousRoot, name))
+      movedPrevious.push(name)
+    }
     for (const name of result.replaced) {
       assertDirectoryIdentities(targetIdentities, 'project Skills root')
       assertDirectoryIdentities([targetTreeIdentities.get(name)!], `installed Skill ${name}`)
@@ -400,7 +439,7 @@ export async function installPackagedSkills(
 
 export function printSkillInstallResult(result: SkillInstallResult, dryRun = false): void {
   const prefix = dryRun ? 'would be ' : ''
-  for (const status of ['installed', 'unchanged', 'replaced'] as const) {
+  for (const status of ['installed', 'unchanged', 'replaced', 'removed'] as const) {
     if (result[status].length > 0)
       console.log(`  ${prefix}${status}: ${result[status].join(', ')}`)
   }

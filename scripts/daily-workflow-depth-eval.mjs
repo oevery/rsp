@@ -570,7 +570,7 @@ export function evaluateDailyWorkflowDepth(root) {
   const d2 = existsSync(d2Path) ? JSON.parse(readFileSync(d2Path, 'utf8')) : { passed: false }
   const exactPackage = new Set(packageHashes).size === 1
   const journeysPassed = results.length === 5 && results.every(result => result.passed)
-  const stableSkills = ['rsp', 'rsp-shape', 'rsp-implement', 'rsp-diagnose', 'rsp-tdd', 'rsp-review', 'rsp-address-review']
+  const stableSkills = ['rsp', 'rsp-shape', 'rsp-implement', 'rsp-diagnose', 'rsp-tdd', 'rsp-review', 'rsp-resolve-findings']
   const frozenPackageSha256 = '7d64fab954b7366688db5bccf3e38db86c9ad0a671df1669d0e833495c368011'
   const packageBoundaryIntact = exactPackage && packageHashes[0] === frozenPackageSha256
   const passed = journeysPassed && packageBoundaryIntact && d2.passed

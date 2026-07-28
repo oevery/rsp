@@ -34,9 +34,9 @@ Never persist the goal envelope, WorkSet, waves, discovery classification, or tr
 
 ## CONVERGE — bound review correction
 
-After a managed fixed-scope re-review, correlate the report, selected Change, original authority, fresh verification, and transient convergence count. Return an in-scope `accepted` remaining or new Finding as `correction-needed` to another bounded Address Review pass without asking the user to continue. Address Review never self-loops.
+After a managed fixed-scope re-review, correlate the report, selected Change, original authority, fresh verification, and transient convergence count. Return an in-scope `accepted` remaining or new Finding as `correction-needed` to another bounded Resolve Findings pass without asking the user to continue. Resolve Findings never self-loops.
 
-Allow at most three Address Review passes per Change and stop earlier when the same Finding remains after two completed corrections. Stop for `needs-clarification`, material behavior/interface/scope or authority change, verification-budget expansion, an additional real-host/provider/network run outside existing authority, failed or unavailable decisive verification, or repeated non-convergence. Never persist the convergence count or correction chronology.
+Allow at most three Resolve Findings passes per Change and stop earlier when the same Finding remains after two completed corrections. Stop for `needs-clarification`, material behavior/interface/scope or authority change, verification-budget expansion, an additional real-host/provider/network run outside existing authority, failed or unavailable decisive verification, or repeated non-convergence. Never persist the convergence count or correction chronology.
 
 ## CLOSE — apply the bounded preset
 

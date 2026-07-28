@@ -10,7 +10,7 @@ sources:
   - skills/rsp/SKILL.md
   - skills/rsp-implement/SKILL.md
   - skills/rsp-review/SKILL.md
-  - skills/rsp-address-review/SKILL.md
+  - skills/rsp-resolve-findings/SKILL.md
 required_contract:
   - separate explicit authority
   - do not begin an automatic retry loop

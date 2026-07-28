@@ -11,13 +11,13 @@ import { parse as parseYaml } from 'yaml'
 
 const EXPECTED_DEFAULT_SKILLS = [
   'rsp',
-  'rsp-address-review',
   'rsp-commit',
   'rsp-design',
   'rsp-diagnose',
   'rsp-implement',
   'rsp-manage',
   'rsp-release-docs',
+  'rsp-resolve-findings',
   'rsp-review',
   'rsp-shape',
   'rsp-tdd',

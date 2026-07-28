@@ -211,16 +211,16 @@ describe('rsp core routing contract', () => {
         ['in-scope `accepted` remaining or new Finding', 'in-scope accepted Finding'],
         ['`correction-needed`'],
         ['without asking the user to continue', 'without another user prompt'],
-        ['Address Review never self-loops', 'Address Review itself never self-loops'],
+        ['Resolve Findings never self-loops', 'Resolve Findings itself never self-loops'],
         ['`needs-clarification`'],
         ['verification-budget expansion', 'outside existing verification authority'],
         ['repeated non-convergence'],
       ])
     }
-    expect(managed).toContain('three Address Review passes per Change')
+    expect(managed).toContain('three Resolve Findings passes per Change')
     expect(managed).toContain('same Finding remains after two completed corrections')
     expect(managed).toContain('convergence count or correction chronology')
-    expect(fallback).not.toContain('three Address Review passes per Change')
+    expect(fallback).not.toContain('three Resolve Findings passes per Change')
     expect(fallback).toContain('never dispatch, auto-continue successors, loop review corrections')
   })
 

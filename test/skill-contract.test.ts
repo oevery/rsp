@@ -8,7 +8,6 @@ const root = fileURLToPath(new URL('..', import.meta.url))
 const skillsRoot = join(root, 'skills')
 const publishedSkillNames = [
   'rsp',
-  'rsp-address-review',
   'rsp-codebase-audit',
   'rsp-commit',
   'rsp-design',
@@ -16,12 +15,13 @@ const publishedSkillNames = [
   'rsp-implement',
   'rsp-manage',
   'rsp-release-docs',
+  'rsp-resolve-findings',
   'rsp-review',
   'rsp-shape',
   'rsp-tdd',
 ]
 const reviewSkill = join(root, 'skills', 'rsp-review')
-const addressReviewSkill = join(root, 'skills', 'rsp-address-review')
+const resolveFindingsSkill = join(root, 'skills', 'rsp-resolve-findings')
 const distillUpstreamSkill = join(root, '.agents', 'skills', 'distill-upstream')
 const portableKeys = new Set([
   'description',
@@ -127,7 +127,7 @@ describe('rsp Skill contract', () => {
   })
 
   it('publishes the canonical review-resolution Skill contract', () => {
-    const { body } = readSkill(addressReviewSkill)
+    const { body } = readSkill(resolveFindingsSkill)
     expect(body).toContain('authoritative pointers, not project truth')
     expect(body).toContain('fresh fixed-scope re-review')
     expect(body).toContain('conversation language')
