@@ -22,8 +22,6 @@ describe('rsp-shape deep clarification', () => {
     expect(deep).toContain('Include a recommended answer grounded in inspected facts')
     expect(deep).toContain('Keep all artifacts unchanged until that confirmation')
     expect(deep).toContain('the same returning WorkRef')
-    expect(deep.trim().split(/\s+/).length).toBeLessThanOrEqual(400)
-    expect(skill.trim().split(/\s+/).length).toBeLessThanOrEqual(600)
   })
 
   it('covers challenge, design return, restraint, and ordinary disclosure', () => {

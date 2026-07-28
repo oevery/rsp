@@ -44,8 +44,6 @@ describe('rsp core routing contract', () => {
       expect(skill).toContain(`](${path})`)
       expect(read(`skills/rsp/${path}`)).toMatch(/Load this reference only|Load this reference before/)
     }
-    expect(skill.trim().split(/\s+/).length).toBeLessThanOrEqual(1900)
-    expect(fallback.trim().split(/\s+/).length).toBeLessThan(skill.trim().split(/\s+/).length)
   })
 
   it('derives one evidence-backed action with capability and owner boundaries', () => {

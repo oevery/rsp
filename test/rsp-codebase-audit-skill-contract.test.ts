@@ -1,32 +1,20 @@
-import { lstatSync, readFileSync } from 'node:fs'
-import { basename, join } from 'node:path'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { parse as parseYaml } from 'yaml'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const skillDir = join(root, 'skills', 'rsp-codebase-audit')
 const content = readFileSync(join(skillDir, 'SKILL.md'), 'utf8')
 const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/)
-const frontmatter = parseYaml(match?.[1] ?? '') as Record<string, unknown>
 const skill = match?.[2] ?? ''
 const lenses = readFileSync(join(skillDir, 'references', 'structural-lenses.md'), 'utf8')
 
 describe('rsp-codebase-audit Skill contract', () => {
-  it('is a concise portable optional Skill with one progressive reference', () => {
+  it('is a portable optional Skill with one progressive reference', () => {
     expect(match).not.toBeNull()
-    expect(frontmatter).toMatchObject({
-      name: basename(skillDir),
-      description: expect.any(String),
-      license: 'MIT',
-      metadata: { author: 'oevery', version: expect.stringMatching(/^\d{4}\.\d{2}\.\d{2}(?:\.\d+)?$/) },
-    })
-    expect(Object.keys(frontmatter).sort()).toEqual(['description', 'license', 'metadata', 'name'])
-    expect(lstatSync(join(skillDir, 'SKILL.md')).isSymbolicLink()).toBe(false)
-    expect(skill.trim().split(/\s+/).length).toBeLessThanOrEqual(900)
     expect(skill).toContain('[structural audit lenses](references/structural-lenses.md)')
     expect(skill).toContain('After scope and authority are fixed')
-    expect(lenses.trim().split(/\s+/).length).toBeLessThanOrEqual(900)
   })
 
   it('defines a bounded trigger and the smallest evidence input', () => {

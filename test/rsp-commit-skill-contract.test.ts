@@ -2,19 +2,15 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { parse as parseYaml } from 'yaml'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const raw = readFileSync(join(root, 'skills', 'rsp-commit', 'SKILL.md'), 'utf8')
 const match = raw.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/)
-const frontmatter = parseYaml(match?.[1] ?? '') as { name?: string, description?: string }
 const skill = match?.[2] ?? ''
 
 describe('rsp-commit Skill contract', () => {
-  it('publishes a compact portable commit capability', () => {
-    expect(frontmatter.name).toBe('rsp-commit')
-    expect(frontmatter.description).toContain('RSP-owned')
-    expect(skill.trim().split(/\s+/).length).toBeLessThanOrEqual(900)
+  it('publishes a portable commit capability', () => {
+    expect(match).not.toBeNull()
     expect(skill).not.toContain('/Users/')
   })
 

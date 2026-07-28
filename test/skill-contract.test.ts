@@ -5,16 +5,24 @@ import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
-const coreSkill = join(root, 'skills', 'rsp')
+const skillsRoot = join(root, 'skills')
+const publishedSkillNames = [
+  'rsp',
+  'rsp-address-review',
+  'rsp-codebase-audit',
+  'rsp-commit',
+  'rsp-design',
+  'rsp-diagnose',
+  'rsp-implement',
+  'rsp-manage',
+  'rsp-release-docs',
+  'rsp-review',
+  'rsp-shape',
+  'rsp-tdd',
+]
 const reviewSkill = join(root, 'skills', 'rsp-review')
 const addressReviewSkill = join(root, 'skills', 'rsp-address-review')
-const diagnoseSkill = join(root, 'skills', 'rsp-diagnose')
-const tddSkill = join(root, 'skills', 'rsp-tdd')
-const designSkill = join(root, 'skills', 'rsp-design')
-const manageSkill = join(root, 'skills', 'rsp-manage')
-const commitSkill = join(root, 'skills', 'rsp-commit')
-const releaseNotesSkill = join(root, 'skills', 'rsp-release-docs')
-const codebaseAuditSkill = join(root, 'skills', 'rsp-codebase-audit')
+const distillUpstreamSkill = join(root, '.agents', 'skills', 'distill-upstream')
 const portableKeys = new Set([
   'description',
   'license',
@@ -96,12 +104,18 @@ function expectPortableSkill(skillDir: string): void {
 }
 
 describe('rsp Skill contract', () => {
-  it('keeps the stable RSP Skill portable', () => {
-    expectPortableSkill(coreSkill)
+  it('publishes the complete portable Skill suite', () => {
+    const discovered = readdirSync(skillsRoot, { withFileTypes: true })
+      .filter(entry => entry.isDirectory())
+      .map(entry => entry.name)
+      .sort()
+
+    expect(discovered).toEqual(publishedSkillNames)
+    for (const name of discovered)
+      expectPortableSkill(join(skillsRoot, name))
   })
 
-  it('publishes a portable canonical review Skill', () => {
-    expectPortableSkill(reviewSkill)
+  it('publishes the canonical review Skill contract', () => {
     expect(reviewSkill.includes(`${sep}.agents${sep}skills${sep}`)).toBe(false)
     const { body } = readSkill(reviewSkill)
     expect(body).toContain('verify that the changed production consumer actually reaches that seam')
@@ -112,8 +126,7 @@ describe('rsp Skill contract', () => {
     expect(body).toContain('`issues_found`, `clean`, `skipped`, and `blocked`')
   })
 
-  it('publishes a portable canonical review-resolution Skill', () => {
-    expectPortableSkill(addressReviewSkill)
+  it('publishes the canonical review-resolution Skill contract', () => {
     const { body } = readSkill(addressReviewSkill)
     expect(body).toContain('authoritative pointers, not project truth')
     expect(body).toContain('fresh fixed-scope re-review')
@@ -122,47 +135,29 @@ describe('rsp Skill contract', () => {
     expect(body).toContain('`accepted`, `rejected`, and `needs-clarification`')
   })
 
-  it('publishes portable canonical diagnosis and TDD Skills', () => {
-    expectPortableSkill(diagnoseSkill)
-    expectPortableSkill(tddSkill)
-  })
-
-  it('publishes a portable canonical design Skill', () => {
-    expectPortableSkill(designSkill)
-  })
-
-  it('publishes a portable policy-selectable managed-continuation Skill', () => {
-    expectPortableSkill(manageSkill)
-  })
-
-  it('publishes a portable canonical local-commit Skill', () => {
-    expectPortableSkill(commitSkill)
-  })
-
-  it('publishes a portable canonical release-documentation Skill', () => {
-    expectPortableSkill(releaseNotesSkill)
-  })
-
-  it('publishes a portable optional codebase audit Skill', () => {
-    expectPortableSkill(codebaseAuditSkill)
-  })
-
   it('publishes the complete assisted suite while keeping research outside package roots', () => {
     const packageJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as { files: string[] }
-    const publishedSkills = readdirSync(join(root, 'skills'))
+    const publishedSkills = readdirSync(skillsRoot).sort()
     expect(packageJson.files.some(path => path.startsWith('research'))).toBe(false)
     expect(packageJson.files).toContain('skills/')
-    expect(publishedSkills).toContain('rsp')
-    expect(publishedSkills).toContain('rsp-shape')
-    expect(publishedSkills).toContain('rsp-implement')
-    expect(publishedSkills).toContain('rsp-review')
-    expect(publishedSkills).toContain('rsp-address-review')
-    expect(publishedSkills).toContain('rsp-diagnose')
-    expect(publishedSkills).toContain('rsp-tdd')
-    expect(publishedSkills).toContain('rsp-design')
-    expect(publishedSkills).toContain('rsp-manage')
-    expect(publishedSkills).toContain('rsp-commit')
-    expect(publishedSkills).toContain('rsp-release-docs')
-    expect(publishedSkills).toContain('rsp-codebase-audit')
+    expect(publishedSkills).toEqual(publishedSkillNames)
+  })
+
+  it('keeps the maintainer distillation Skill portable and conditionally disclosed', () => {
+    expectPortableSkill(distillUpstreamSkill)
+    const { body } = readSkill(distillUpstreamSkill)
+
+    for (const strategy of ['conform', 'model', 'adapt', 'tooling'])
+      expect(body).toContain(`[references/${strategy}.md](references/${strategy}.md)`)
+  })
+
+  it('keeps upstream research separate from adoption and product mutation', () => {
+    const { body } = readSkill(distillUpstreamSkill)
+
+    expect(body).toContain('Do not edit `src/`, `rules/`, published `skills/`, `.rsp/specs/`, or create an RSP change during distillation')
+    expect(body).toContain('Do not run `accept` unless the user separately asks')
+    expect(body).toContain('No local RSP problem or gap means no adoption recommendation')
+    expect(body).toContain('Start a candidate only when a normal RSP Change names')
+    expect(body).toContain('Never regenerate or overwrite existing research content automatically')
   })
 })

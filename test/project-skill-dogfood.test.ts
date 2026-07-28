@@ -39,5 +39,7 @@ describe('project Skill dogfooding', () => {
 
     expect(instructions).toContain('## Project Skill Dogfooding')
     expect(instructions).toContain('Codex currently supports Skill disablement in user config, not project `.codex/config.toml`')
+    expect(instructions).toContain('do not use Skill body or reference word-count ceilings as correctness gates')
+    expect(instructions).toContain('without losing trigger, authority, action, stop, return, or conditional-loading behavior')
   })
 })

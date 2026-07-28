@@ -16,7 +16,6 @@ const includesAny = (body: string, terms: string[]) => terms.some(term => body.i
 describe('rsp-release-docs Skill contract', () => {
   it('keeps the entrypoint compact and routes detailed references conditionally', () => {
     expect(skill).toContain('name: rsp-release-docs')
-    expect(skill.trim().split(/\s+/).length).toBeLessThanOrEqual(1400)
 
     const routes = [
       ['references/convention-discovery.md', /when repository, personal, tool, or historical conventions/],

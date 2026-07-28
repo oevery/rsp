@@ -1,34 +1,26 @@
-import { lstatSync, readFileSync } from 'node:fs'
-import { basename, join } from 'node:path'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { parse as parseYaml } from 'yaml'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const skill = join(root, 'skills', 'rsp-tdd')
 
-function readSkill(): { body: string, frontmatter: Record<string, any> } {
+function readSkill(): string {
   const content = readFileSync(join(skill, 'SKILL.md'), 'utf8')
   const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/)
   expect(match).not.toBeNull()
-  return { body: match![2]!, frontmatter: parseYaml(match![1]!) as Record<string, any> }
+  return match![2]!
 }
 
 describe('rsp-tdd Skill contract', () => {
-  it('publishes a concise host-neutral discipline', () => {
-    const { body, frontmatter } = readSkill()
-
-    expect(frontmatter.name).toBe(basename(skill))
-    expect(frontmatter.description).toEqual(expect.any(String))
-    expect(frontmatter.license).toBe('MIT')
-    expect(frontmatter.metadata).toMatchObject({ author: 'oevery', version: expect.stringMatching(/^\d{4}\.\d{2}\.\d{2}(?:\.\d+)?$/) })
-    expect(body.trim().split(/\s+/).length).toBeLessThanOrEqual(500)
-    expect(lstatSync(join(skill, 'SKILL.md')).isSymbolicLink()).toBe(false)
+  it('publishes a host-neutral discipline', () => {
+    const body = readSkill()
     expect(body).not.toMatch(/Codex|Claude|ChatGPT|GitHub Actions|session id|thread id/i)
   })
 
   it('requires an observed red before minimal green and safe refactor', () => {
-    const { body } = readSkill()
+    const body = readSkill()
 
     expect(body).toContain('## RED')
     expect(body).toContain('before production mutation')
@@ -42,7 +34,7 @@ describe('rsp-tdd Skill contract', () => {
   })
 
   it('retains only valuable tests and cleans disposable probes before final verification', () => {
-    const { body } = readSkill()
+    const body = readSkill()
 
     expect(body).toContain('## Retain or remove the test')
     expect(body).toContain('observable behavior or a real boundary')
@@ -59,7 +51,7 @@ describe('rsp-tdd Skill contract', () => {
   })
 
   it('stops truthfully and returns evidence to the same Change', () => {
-    const { body } = readSkill()
+    const body = readSkill()
 
     expect(body).toContain('behavior or acceptance is unclear')
     expect(body).toContain('mutation authority is missing')

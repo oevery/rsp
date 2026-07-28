@@ -23,7 +23,7 @@ function readSkill(directory = candidate): { body: string, frontmatter: Record<s
 }
 
 describe('rsp-manage research candidate', () => {
-  it('stays compact, explicit-only, host-neutral, and outside the stable suite', () => {
+  it('stays explicit-only, host-neutral, and outside the stable suite', () => {
     const { body, frontmatter } = readSkill()
 
     expect(frontmatter.name).toBe(basename(candidate))
@@ -31,7 +31,6 @@ describe('rsp-manage research candidate', () => {
     expect(frontmatter['disable-model-invocation']).toBeUndefined()
     expect(frontmatter.license).toBe('MIT')
     expect(frontmatter.metadata).toMatchObject({ author: 'oevery', version: expect.stringMatching(/^\d{4}\.\d{2}\.\d{2}(?:\.\d+)?$/) })
-    expect(body.trim().split(/\s+/).length).toBeLessThanOrEqual(600)
     expect(lstatSync(join(candidate, 'SKILL.md')).isSymbolicLink()).toBe(false)
     expect(body).not.toMatch(/Codex|Claude|ChatGPT|GitHub Actions|session id|thread id/i)
     expect(body).toContain('Use only when the user explicitly authorizes managed continuation')
@@ -158,7 +157,7 @@ describe('rsp-manage research candidate', () => {
 })
 
 describe('rsp-manage product Skill', () => {
-  it('is compact, portable, policy-selectable, and distinct from retained research', () => {
+  it('is portable, policy-selectable, and distinct from retained research', () => {
     const { body, frontmatter } = readSkill(product)
 
     expect(frontmatter).toMatchObject({
@@ -166,7 +165,6 @@ describe('rsp-manage product Skill', () => {
       license: 'MIT',
       metadata: { author: 'oevery', version: expect.stringMatching(/^\d{4}\.\d{2}\.\d{2}(?:\.\d+)?$/) },
     })
-    expect(body.trim().split(/\s+/).length).toBeLessThanOrEqual(800)
     expect(lstatSync(join(product, 'SKILL.md')).isSymbolicLink()).toBe(false)
     expect(body).toContain('explicit request or effective `manage.activation: auto`')
     expect(body).toContain('automatic activation grants selection, not mutation')
@@ -183,12 +181,15 @@ describe('rsp-manage product Skill', () => {
     expect(managedRouting).toContain('long/recovery work does not also need independent or parallelizable slices')
     expect(managedRouting).toContain('elapsed wall-clock minutes are never qualification evidence')
     expect(managedRouting).toContain('Small coupled one-step work and worker-only work remain ineligible')
-    expect(body).toContain('Eligible-Change any-of: independent-slices; prospectively-long-authorized-continuation; recovery')
-    expect(body).toContain('No-parallelism cannot reject long/recovery')
-    expect(body).toContain('Long: pre-dispatch authorized-objective/expected-phases, never elapsed-minutes')
-    expect(body).toContain('Ineligible: small-coupled-one-step; worker-only')
-    expect(body).toContain('Decline without mutation/controller artifact')
-    expect(body).toContain('return Core/Discipline action')
+    expect(body).toContain('genuinely independent slices')
+    expect(body).toContain('authorized continuation is prospectively long')
+    expect(body).toContain('the continuation is interruption recovery')
+    expect(body).toContain('Lack of parallel work does not disqualify a long continuation or recovery')
+    expect(body).toContain('authorized objective and expected phases, never from elapsed time')
+    expect(body).toContain('A small coupled one-step Change and worker-only work are ineligible')
+    expect(body).toContain('Decline Manage without any mutation')
+    expect(body).toContain('without creating a controller artifact')
+    expect(body).toContain('return the exact Core or Discipline action')
   })
 
   it('applies bounded closeout presets without inferring remote authority', () => {
@@ -198,7 +199,7 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('`lifecycle` grants lifecycle closeout after Core durable review but no Git action')
     expect(body).toContain('`local` grants lifecycle closeout, separately justified recovery checkpoints, and the deterministic terminal route below')
     expect(body).toContain('Missing configuration preserves `explicit` activation with `local` closeout compatibility')
-    expect(body).toContain('invalid configuration fails closed as `explicit` plus `manual`')
+    expect(body).toContain('Invalid configuration fails closed as `explicit` plus `manual`')
     expect(body).toContain('Push is opt-in only when user explicitly mentions push')
     expect(body).toContain('Never force-push')
   })
@@ -221,15 +222,16 @@ describe('rsp-manage product Skill', () => {
   it('bounds authority reads, dispatch, correction, and verification', () => {
     const { body } = readSkill(product)
 
-    expect(body).toContain('read each qualified WorkRef—including successors')
-    expect(body).toContain('complete Change or Brief/children')
-    expect(body).toContain('Specs/Decisions')
-    expect(body).toContain('`rsp status --json`, and worktree')
-    expect(body).toContain('Send a compact envelope')
+    expect(body).toContain('every qualified WorkRef, including clear in-scope successors')
+    expect(body).toContain('the complete owning Change, or the Group Brief and its children')
+    expect(body).toContain('relevant Specs and Decisions')
+    expect(body).toContain('`rsp status --json`, and the current worktree')
+    expect(body).toContain('Send a compact envelope that identifies the WorkRef, objective, authority, decisive evidence, and stop boundary')
     expect(body).toContain('four worker dispatches and one worker corrective retry')
-    expect(body).toContain('across the whole managed run; owner transitions do not reset them')
+    expect(body).toContain('across the whole managed run')
+    expect(body).toContain('Owner transitions do not reset either limit')
     expect(body).toContain('Choose the cheapest decisive check')
-    expect(body).toContain('one integration gate at most')
+    expect(body).toContain('at most one integration gate')
     expect(body).toContain('Inspect diff and verification before accepting')
     expect(body).toContain('During recovery, reread authority and evidence')
   })
@@ -252,20 +254,20 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('without asking the user to continue')
     expect(body).toContain('Address Review never self-loops')
     expect(body).toContain('at most three Address Review passes per Change')
-    expect(body).toContain('separate from worker retry')
+    expect(body).toContain('separate from the worker retry limit')
     expect(body).toContain('same Finding remains after two completed corrections')
     expect(body).toContain('`correction-needed`, not an external blocker')
-    expect(body).toContain('additional real-host/provider/network run outside existing verification authority')
-    expect(body).toContain('failed/unavailable decisive verification')
+    expect(body).toContain('additional real-host, provider, or network run outside existing verification authority')
+    expect(body).toContain('failed or unavailable decisive verification')
     expect(body).toContain('Keep counts and correction chronology transient')
   })
 
   it('preserves child owners and follows derived Group waves', () => {
     const { body } = readSkill(product)
 
-    expect(body).toContain('each qualified WorkRef—including successors')
-    expect(body).toContain('Group any-of: two-ready-children; long/recovery')
-    expect(body).toContain('dispatch child WorkRefs only in the derived `plan.waves` wave')
+    expect(body).toContain('every qualified WorkRef, including clear in-scope successors')
+    expect(body).toContain('A Group is eligible when it has at least two ready children')
+    expect(body).toContain('dispatch child WorkRefs only in the current derived `plan.waves` wave')
     expect(body).toContain('rerun `rsp status --json`')
     expect(body).toContain('restrict it to declared children')
     expect(body).toContain('shared paths, lockfiles, generated artifacts, and integration outputs overlap')

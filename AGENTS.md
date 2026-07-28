@@ -27,6 +27,7 @@ Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENT
 
 - Use the repository-discovered `rsp`, `rsp-shape`, `rsp-design`, `rsp-implement`, `rsp-diagnose`, `rsp-tdd`, `rsp-review`, `rsp-address-review`, `rsp-commit`, `rsp-release-docs`, optional report-only `rsp-codebase-audit`, and policy-selected `rsp-manage` Skills for matching work in this checkout. This self-host uses `.rsp/config.yaml` for Manage activation and closeout ceilings; configuration never expands planning, product-mutation, remote, publication, approval, or human-acceptance authority.
 - These entries are live projections of the authored package sources under `skills/`; edit the authored source, not `.agents/skills/`.
+- Treat host metadata limits as hard constraints, but do not use Skill body or reference word-count ceilings as correctness gates. Review concision semantically: remove duplication and unnecessary prose without losing trigger, authority, action, stop, return, or conditional-loading behavior.
 - Keep overlapping global engineering workflow Skills disabled in the maintainer environment while dogfooding so RSP capability gaps remain visible. Codex currently supports Skill disablement in user config, not project `.codex/config.toml`; do not add a misleading project-local disable list.
 
 ## Maintainer Research

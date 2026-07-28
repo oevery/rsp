@@ -4,7 +4,7 @@ description: Continue one bounded managed goal selected explicitly or by effecti
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.28.1"
+  version: "2026.07.28.2"
 ---
 
 # RSP Manage
@@ -13,15 +13,28 @@ Manage one ready Change or shallow Group selected by Core from an explicit reque
 
 ## Qualify before mutation
 
-Before dispatch, read each qualified WorkRef—including successors—complete Change or Brief/children, Specs/Decisions, authority, `rsp status --json`, and worktree. Missing configuration preserves `explicit` activation with `local` closeout compatibility; invalid configuration fails closed as `explicit` plus `manual`.
+Before dispatch, read all of the following:
 
-Eligible-Change any-of: independent-slices; prospectively-long-authorized-continuation; recovery. No-parallelism cannot reject long/recovery. Long: pre-dispatch authorized-objective/expected-phases, never elapsed-minutes. Group any-of: two-ready-children; long/recovery. Ineligible: small-coupled-one-step; worker-only. Decline without mutation/controller artifact; return Core/Discipline action.
+- every qualified WorkRef, including clear in-scope successors;
+- the complete owning Change, or the Group Brief and its children;
+- relevant Specs and Decisions;
+- the authority envelope, `rsp status --json`, and the current worktree.
 
-Preserve unrelated work; require explicit release identity. Allow four worker dispatches and one worker corrective retry across the whole managed run; owner transitions do not reset them.
+Missing configuration preserves `explicit` activation with `local` closeout compatibility. Invalid configuration fails closed as `explicit` plus `manual`.
+
+A Change is eligible when at least one of these independent conditions holds:
+
+- its work contains genuinely independent slices;
+- the authorized continuation is prospectively long; or
+- the continuation is interruption recovery.
+
+Lack of parallel work does not disqualify a long continuation or recovery. Derive "long" before dispatch from the authorized objective and expected phases, never from elapsed time. A Group is eligible when it has at least two ready children, or when the continuation qualifies as long or recovery. A small coupled one-step Change and worker-only work are ineligible. Decline Manage without any mutation and without creating a controller artifact, then return the exact Core or Discipline action.
+
+Preserve unrelated work and require an explicit release identity. Allow four worker dispatches and one worker corrective retry across the whole managed run. Owner transitions do not reset either limit.
 
 ## Dispatch owned work
 
-Send a compact envelope: WorkRef/objective/authority/evidence/stop-boundary. For a Group, dispatch child WorkRefs only in the derived `plan.waves` wave. Assume shared paths, lockfiles, generated artifacts, and integration outputs overlap unless an authorized isolated workspace exists. Keep blockers, later waves, overlaps, and dependent verification sequential. Workers receive no implied focus, lifecycle, Git, publication, deployment, or approval authority. Choose the cheapest decisive check and one integration gate at most.
+Send a compact envelope that identifies the WorkRef, objective, authority, decisive evidence, and stop boundary. For a Group, dispatch child WorkRefs only in the current derived `plan.waves` wave. Assume shared paths, lockfiles, generated artifacts, and integration outputs overlap unless an authorized isolated workspace exists. Keep blockers, later waves, overlaps, and dependent verification sequential. Workers receive no implied focus, lifecycle, Git, publication, deployment, or approval authority. Choose the cheapest decisive check and at most one integration gate.
 
 ## Continue from evidence
 
@@ -33,9 +46,9 @@ Stop when discovery changes behavior, acceptance, interfaces, scope, mutation, o
 
 ## Converge managed review
 
-After fixed-scope re-review, Core correlates report/Change/original-authority/verification/transient-pass-count. An `accepted` Finding inside original behavior/acceptance/paths/mutation-authority/verification-budget starts another Address Review pass without asking the user to continue. Address Review never self-loops.
+After fixed-scope re-review, Core correlates the report with the selected Change, original authority, fresh verification, and transient pass count. An `accepted` Finding starts another Address Review pass without asking the user to continue only when it remains inside the original behavior, acceptance, paths, mutation authority, and verification budget. Address Review never self-loops.
 
-Allow at most three Address Review passes per Change, separate from worker retry; stop when the same Finding remains after two completed corrections. Also stop for `needs-clarification`, material product/interface/scope change, new mutation/external authority, an additional real-host/provider/network run outside existing verification authority, or failed/unavailable decisive verification. Return one owner input. Treat eligible in-scope Finding as `correction-needed`, not an external blocker. Keep counts and correction chronology transient.
+Allow at most three Address Review passes per Change, separate from the worker retry limit. Stop when the same Finding remains after two completed corrections. Also stop for `needs-clarification`; a material product, interface, or scope change; new mutation or external authority; an additional real-host, provider, or network run outside existing verification authority; or failed or unavailable decisive verification. Return one owner input. Treat an eligible in-scope Finding as `correction-needed`, not an external blocker. Keep counts and correction chronology transient.
 
 ## Preserve boundaries
 
