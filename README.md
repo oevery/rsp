@@ -189,7 +189,9 @@ manage:
 
 - `manual`: neither archive nor commit is automatic.
 - `lifecycle`: archive may follow durable review, but commit still needs separate authority.
-- `local`: lifecycle closeout plus the existing bounded local checkpoint or terminal-commit path may run only after its exact-path, clean-boundary, verification, and delivery-value gates.
+- `local`: lifecycle closeout plus separately justified recovery checkpoints; after lifecycle closeout, a qualified clean verified terminal non-small boundary routes once to `rsp-commit`, while terminal small work stays uncommitted.
+
+Change granularity follows one observable outcome and its shared acceptance, verification, review, archive, and rollback boundary; it does not prescribe Git commit count. Each `rsp-commit` invocation still creates exactly one local commit.
 
 New `rsp init` config templates use the shown `auto` plus `lifecycle` policy. If `manage` is absent, RSP instead resolves `activation: explicit` and `closeout: local` for compatibility with the previous explicitly requested Manage behavior. Plain `rsp status` and the top-level `manage` object in `rsp status --json` show the resolved values. Nearest scoped restrictions and host enforcement can narrow the configured ceiling. RSP intentionally has no `full` preset: push, tag, publication, deployment, approval, and human acceptance remain explicit and external.
 

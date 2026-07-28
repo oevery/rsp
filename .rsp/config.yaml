@@ -14,7 +14,7 @@
 # - ops
 # - research
 
-# Self-host automatic Manage routing while keeping Git delivery explicit.
+# Self-host automatic Manage routing with bounded deterministic local commits; push and publication stay explicit.
 manage:
   activation: auto
   closeout: local

@@ -188,7 +188,9 @@ manage:
 
 - `manual`：archive 与 commit 都不会自动执行。
 - `lifecycle`：durable review 后可以 archive，但 commit 仍需要独立权限。
-- `local`：允许 lifecycle closeout，并仅在 exact-path、clean-boundary、verification 和 delivery-value gate 通过后进入已有的有界本地 checkpoint 或 terminal commit 路径。
+- `local`：允许 lifecycle closeout 和有独立依据的 recovery checkpoint；lifecycle closeout 后，符合条件且 clean、已验证的非小型终态边界会调用一次 `rsp-commit`，小型终态仍不提交。
+
+Change 粒度由一个可观察结果及其共享的 acceptance、verification、review、archive 和 rollback 边界决定，不规定 Git commit 数量。每次 `rsp-commit` 调用仍只创建一个本地 commit。
 
 新的 `rsp init` config template 使用上面的 `auto` 加 `lifecycle` policy。如果省略 `manage`，RSP 则为兼容既有显式 Manage 行为解析为 `activation: explicit` 与 `closeout: local`。普通 `rsp status` 和 `rsp status --json` 顶层的 `manage` 对象都会显示解析后的值。nearest scoped restriction 与 host enforcement 可以缩小该配置上限。RSP 有意不提供 `full` preset：push、tag、publication、deployment、approval 与 human acceptance 始终保持显式且属于外部边界。
 

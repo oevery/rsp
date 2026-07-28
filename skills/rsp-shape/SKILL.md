@@ -4,7 +4,7 @@ description: Shape or rigorously challenge unclear non-trivial work into one exe
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.25.2"
+  version: "2026.07.28.1"
 ---
 
 # RSP Shape
@@ -35,7 +35,7 @@ Never invent a product decision. When a material choice or mutation authority re
 
 Read [complex shaping](references/complex-shaping.md) when clarification needs multiple rounds, slices share one completion contract, or independently closable owners converge on terminal delivery.
 
-Prefer one ordinary Change only for one observable outcome sharing a consistency, focused-verification, review, archive, and rollback boundary. Use a shallow Group for independent outcomes under one goal; an integration gate never merges them. A shared completion contract gates Group closure, not child archive unless declared there. Keep Brief `Slices`, child `Blockers`, and derived readiness. Add no hierarchy.
+Prefer one ordinary Change only for one observable outcome sharing a consistency, focused-verification, review, archive, and rollback boundary. Change granularity does not prescribe Git commit count; never split or merge Changes merely to enforce a Change-to-commit mapping. Use a shallow Group for independent outcomes under one goal; an integration gate never merges them. A shared completion contract gates Group closure, not child archive unless declared there. Keep Brief `Slices`, child `Blockers`, and derived readiness. Add no hierarchy.
 
 Keep one observable outcome per Change:
 

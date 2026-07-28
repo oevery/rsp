@@ -4,12 +4,12 @@ description: Continue one bounded managed goal selected explicitly or by effecti
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.27.2"
+  version: "2026.07.28.1"
 ---
 
 # RSP Manage
 
-Manage one selected ready Change or shallow Change Group after Core selects it from an explicit managed request or effective `manage.activation: auto` policy. Keep RSP artifacts as durable truth and process data transient. The requested goal defines the authority envelope; automatic activation grants selection only, not mutation authority.
+Manage one ready Change or shallow Group selected by Core from an explicit request or effective `manage.activation: auto`. Keep artifacts durable and process data transient. The goal defines authority; automatic activation grants selection, not mutation.
 
 ## Qualify before mutation
 
@@ -43,11 +43,11 @@ Keep dispatch chronology out of Changes, Group Briefs, Specs, Decision Records. 
 
 Closeout requires Core-selected, currently-qualified Manage. For declined, unavailable, or unselected Manage, every `manage.closeout` preset is dormant; Core may report readiness/next action, but configuration executes neither archive nor commit. Earlier qualification does not carry forward.
 
-Qualified only: effective `manage.closeout` is an automatic grant ceiling narrowed by nearer restrictions and host enforcement. `manual` grants neither automatic archive nor commit. `lifecycle` grants lifecycle closeout after Core durable review but no Git action. `local` grants lifecycle closeout plus the existing exact-path local checkpoint or terminal-commit eligibility. Explicit current-turn authority may allow a local action not automated by the preset; denial wins.
+Qualified only: effective `manage.closeout` is an automatic grant ceiling narrowed by nearer restrictions and host enforcement. `manual` grants neither automatic archive nor commit. `lifecycle` grants lifecycle closeout after Core durable review but no Git action. `local` grants lifecycle closeout, separately justified recovery checkpoints, and the deterministic terminal route below. Explicit current-turn authority may allow a local action not automated by the preset; denial wins.
 
 When granted, close lifecycle before any commit. Change: after Core durable review run `rsp archive <change-work-ref>` and inspect the complete lifecycle diff. For shallow Group: durable-review/archive each child independently, rederive completion, then when all children plus Group gate pass run `rsp group close <group>`; inspect the complete lifecycle diff after each mutation. This includes terminal owners. Require proven review/clean-boundaries.
 
-Decide commit separately. Under `local` or explicit commit authority, downstream work may justify one recovery checkpoint: give `rsp-commit` owner, paths, evidence, lifecycle, and authority to stage exact owned paths, inspect cached boundary, commit one reviewable Change or integration-coupled wave, then derive status. Apply to Group/release owners; use Core fallback if unavailable. Terminal small owners default to no commit. A terminal non-small owner commits only for explicit delivery or evidenced recovery value when nearer rules allow. Without clean exact boundary, return without staging. Archive grants no Git or publication authority.
+Decide commit separately. Under `local` or explicit commit authority, downstream work may justify one recovery checkpoint: give `rsp-commit` owner, paths, evidence, lifecycle, and authority, then derive status. Terminal small owners default to no commit. After lifecycle closeout, a qualified `local` terminal non-small Change or Group with known owner and paths, fresh decisive verification, clean exact boundary, and no nearer denial routes exactly once to `rsp-commit`; do not require the user to repeat `commit`. An ambiguous, mixed, stale, or denied boundary stops without staging. Apply the same owner envelope to explicitly authorized Group/release commits; use Core fallback if Commit is unavailable. Archive grants no Git or publication authority.
 
 Push is opt-in only when user explicitly mentions push and remote, branch, and Group or goal milestone are unambiguous or accepted. Push there, or earlier only for required remote CI, recovery, or collaboration. Never force-push, infer push from commit authority, or push a protected or ambiguous branch. Failure preserves local commits and stops at remote boundary. Return to Core before a separate release operation and dedicated release commit.
 

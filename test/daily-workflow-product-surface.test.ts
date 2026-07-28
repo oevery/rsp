@@ -34,14 +34,14 @@ describe('daily-workflow product surface', () => {
     expect(deepClarification).toContain('the same returning WorkRef')
     expect(rspDesign).toContain('Tracked results return to Shape or the user against the same WorkRef')
 
-    expect(read('skills/rsp-manage/SKILL.md')).toContain('Keep RSP artifacts as durable truth and process data transient')
+    expect(read('skills/rsp-manage/SKILL.md')).toContain('Keep artifacts durable and process data transient')
   })
 
   it('preserves historical managed-controller research outside the promoted product Skill', () => {
     const packageJson = JSON.parse(read('package.json')) as { files: string[] }
     expect(packageJson.files.some(path => path.includes('research/candidates'))).toBe(false)
     expect(currentSkills).toContain('rsp-manage')
-    expect(read('skills/rsp-manage/SKILL.md')).toContain('Keep RSP artifacts as durable truth and process data transient')
+    expect(read('skills/rsp-manage/SKILL.md')).toContain('Keep artifacts durable and process data transient')
 
     const productTruth = [
       read('research/models/rsp-skill-system.md'),

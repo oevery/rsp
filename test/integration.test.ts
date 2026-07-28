@@ -2989,7 +2989,7 @@ describe('change groups', () => {
     expect(config).toContain('A non-empty kinds list replaces the built-in defaults; it does not extend them.')
     expect(config).toContain('Every entry must be a unique non-empty string.')
     expect(config).toContain('manage:\n  activation: auto\n  closeout: lifecycle')
-    expect(config).toContain('local may authorize an eligible local commit but never push or publication')
+    expect(config).toContain('local routes a qualified clean terminal non-small boundary to one local commit but never push or publication')
     expect(config).toContain('Set exactly one project-relative authoritative directory')
   })
 

@@ -93,6 +93,8 @@ describe('rsp-shape Skill contract', () => {
     const reference = readFileSync(join(skill, 'references', 'complex-shaping.md'), 'utf8')
 
     expect(body).toContain('one observable outcome sharing a consistency, focused-verification, review, archive, and rollback boundary')
+    expect(body).toContain('Change granularity does not prescribe Git commit count')
+    expect(body).toContain('never split or merge Changes merely to enforce a Change-to-commit mapping')
     expect(reference).toContain('its tasks must converge across the same consistency, focused-verification, review, archive, and rollback boundary')
     expect(reference).toContain('A shared file, module, deadline, or integration check does not establish that cohesion by itself')
   })

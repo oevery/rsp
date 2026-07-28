@@ -27,7 +27,7 @@ ${fmtList(VALID_KINDS, 0)}
 
 # New projects default to automatic Manage routing with lifecycle-only closeout.
 # Use activation: explicit to require a named managed request.
-# closeout accepts manual, lifecycle, or local; local may authorize an eligible local commit but never push or publication.
+# closeout accepts manual, lifecycle, or local; local routes a qualified clean terminal non-small boundary to one local commit but never push or publication.
 manage:
   activation: auto
   closeout: lifecycle

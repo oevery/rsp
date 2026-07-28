@@ -168,10 +168,10 @@ describe('rsp-manage product Skill', () => {
     })
     expect(body.trim().split(/\s+/).length).toBeLessThanOrEqual(800)
     expect(lstatSync(join(product, 'SKILL.md')).isSymbolicLink()).toBe(false)
-    expect(body).toContain('explicit managed request or effective `manage.activation: auto` policy')
-    expect(body).toContain('automatic activation grants selection only')
-    expect(body).toContain('one selected ready Change or shallow Change Group')
-    expect(body).toContain('Keep RSP artifacts as durable truth and process data transient')
+    expect(body).toContain('explicit request or effective `manage.activation: auto`')
+    expect(body).toContain('automatic activation grants selection, not mutation')
+    expect(body).toContain('one ready Change or shallow Group')
+    expect(body).toContain('Keep artifacts durable and process data transient')
     expect(readFileSync(join(candidate, 'SKILL.md'), 'utf8')).not.toBe(readFileSync(join(product, 'SKILL.md'), 'utf8'))
   })
 
@@ -196,7 +196,7 @@ describe('rsp-manage product Skill', () => {
 
     expect(body).toContain('`manual` grants neither automatic archive nor commit')
     expect(body).toContain('`lifecycle` grants lifecycle closeout after Core durable review but no Git action')
-    expect(body).toContain('`local` grants lifecycle closeout plus the existing exact-path local checkpoint or terminal-commit eligibility')
+    expect(body).toContain('`local` grants lifecycle closeout, separately justified recovery checkpoints, and the deterministic terminal route below')
     expect(body).toContain('Missing configuration preserves `explicit` activation with `local` closeout compatibility')
     expect(body).toContain('invalid configuration fails closed as `explicit` plus `manual`')
     expect(body).toContain('Push is opt-in only when user explicitly mentions push')
@@ -277,8 +277,8 @@ describe('rsp-manage product Skill', () => {
   it('continues a bounded goal across derived owners and stops at real boundaries', () => {
     const { body } = readSkill(product)
 
-    expect(body).toContain('requested goal defines the authority envelope')
-    expect(body).toContain('automatic activation grants selection only, not mutation authority')
+    expect(body).toContain('The goal defines authority')
+    expect(body).toContain('automatic activation grants selection, not mutation')
     expect(body).toContain('At owner boundaries, Core re-derives from goal')
     expect(body).toContain('Continue a clear in-scope ready successor')
     expect(body).toContain('Stop only when neither a ready successor nor clearly missing ownership remains')
@@ -834,9 +834,8 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('out of Changes, Group Briefs, Specs, Decision Records')
     expect(body).toContain('Changes retain converged requirements')
     expect(body).toContain('Briefs retain shared completion without copied child state')
-    expect(body).toContain('commit one reviewable Change or integration-coupled wave')
-    expect(body).toContain('stage exact owned paths')
-    expect(body).toContain('inspect cached boundary')
+    expect(body).toContain('give `rsp-commit` owner, paths, evidence, lifecycle, and authority')
+    expect(body).toContain('routes exactly once to `rsp-commit`')
   })
 
   it('keeps process chronology transient and returns only outcome evidence', () => {
@@ -864,7 +863,7 @@ describe('rsp-manage product Skill', () => {
 
     expect(body).toContain('This includes terminal owners')
     expect(body).toContain('Terminal small owners default to no commit')
-    expect(body).toContain('Without clean exact boundary, return without staging')
+    expect(body).toContain('An ambiguous, mixed, stale, or denied boundary stops without staging')
   })
 
   it('closes a terminal shallow Group through child and brief commands before commit', () => {
@@ -883,10 +882,13 @@ describe('rsp-manage product Skill', () => {
     expect(commitDecision).toBeGreaterThan(closeGroup)
   })
 
-  it('commits terminal non-small work only with separate justification', () => {
+  it('routes a qualified local terminal non-small boundary exactly once to Commit', () => {
     const { body } = readSkill(product)
 
-    expect(body).toContain('A terminal non-small owner commits only for explicit delivery or evidenced recovery value when nearer rules allow')
+    expect(body).toContain('a qualified `local` terminal non-small Change or Group')
+    expect(body).toContain('routes exactly once to `rsp-commit`')
+    expect(body).toContain('do not require the user to repeat `commit`')
+    expect(body).toContain('An ambiguous, mixed, stale, or denied boundary stops without staging')
     expect(body).toContain('Under `local` or explicit commit authority, downstream work may justify one recovery checkpoint')
     expect(body).toContain('then derive status')
     expect(body).toContain('Return to Core before a separate release operation and dedicated release commit')
