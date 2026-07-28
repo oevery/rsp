@@ -9,6 +9,7 @@ const skill = read('skills/rsp/SKILL.md')
 const managed = read('skills/rsp/references/managed-routing.md')
 const durable = read('skills/rsp/references/durable-review.md')
 const fallback = read('rules/rsp-rules.md')
+const skillSystem = read('.rsp/specs/skill-system.md')
 const coreContract = `${skill}\n${managed}`
 
 function headings(markdown: string): string[] {
@@ -134,14 +135,16 @@ describe('rsp core routing contract', () => {
     for (const body of [skill, managed, fallback]) {
       expectSemanticGroup(body, [
         ['Before later-turn mutation'],
-        ['direct report', 'direct report, tiny, or small route'],
+        ['direct report, design, tiny, or small route'],
         ['now-authorized objective', 'newly authorized objective'],
         ['prospective work'],
         ['cross-module implementation', 'Cross-module implementation'],
         ['multiple acceptance surfaces'],
         ['repeated production-path correction'],
         ['real-host validation'],
+        ['bounded review convergence'],
         ['lifecycle delivery'],
+        ['clear ready successor'],
         ['smallest sufficient WorkRef'],
         ['fresh Manage qualification', 'fresh qualification', 'smallest sufficient WorkRef before mutation'],
         ['before mutation'],
@@ -154,6 +157,45 @@ describe('rsp core routing contract', () => {
     const routes = skill.indexOf('1. Stop for ambiguous authority')
     expect(rederive).toBeGreaterThanOrEqual(0)
     expect(routes).toBeGreaterThan(rederive)
+  })
+
+  it('biases automatic Manage toward prospective non-small work while preserving one-step direct work', () => {
+    for (const body of [managed, fallback, skillSystem]) {
+      expectSemanticGroup(body, [
+        ['independent slices', 'independent mutation/verification slices'],
+        ['interruption recovery'],
+        ['implementation followed by integration verification', 'implementation plus integration/review/lifecycle'],
+        ['cross-module or cross-process mutation'],
+        ['real-host, provider, or hardware verification', 'real-host/provider/hardware verification'],
+        ['bounded finding convergence'],
+        ['clear ready successor'],
+        ['one owner, one local seam, one mutation pass, one decisive check'],
+        ['no managed lifecycle coordination'],
+        ['no ready successor'],
+        ['fails any one', 'fails any one condition'],
+        ['non-small'],
+      ])
+    }
+    expect(managed).toContain('bias non-small continuation toward Manage')
+    expect(managed).toContain('Decline as direct one-step work only when all of these are true')
+    expect(managed).toContain('do not leave the middle case unclassified')
+    expect(managed).toContain('elapsed wall-clock minutes are never qualification evidence')
+    expect(fallback).toContain('Elapsed time and message count alone never escalate work')
+    expect(skillSystem).toContain('lack of parallelizable slices does not defeat qualification')
+  })
+
+  it('makes managed selection and safe dispatch reasoning observable without controller state', () => {
+    expect(skill).toContain('state `selected` or `declined` with the decisive qualification signal or complete direct-work exclusion')
+    expect(skill).toContain('state why it is parallel or sequential')
+    expect(managed).toContain('report `selected` with the decisive qualification signal')
+    expect(managed).toContain('`declined` with the complete direct-work exclusion')
+    expect(managed).toContain('concrete overlap/isolation evidence that makes it sequential or parallel')
+    expect(managed).toContain('create no controller state')
+    expect(fallback).toContain('Report that Manage is unavailable rather than selected')
+    expect(fallback).toContain('any applicable serial/parallel overlap reason')
+    expect(skillSystem).toContain('qualified Manage dispatches at least one implementation worker with a complete owner envelope')
+    expect(skillSystem).toContain('Delegation never requires parallelism')
+    expect(skillSystem).toContain('This observability is response-only and creates no controller state')
   })
 
   it('blocks implicit dirty-path ownership transfer between WorkRefs', () => {

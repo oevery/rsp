@@ -25,16 +25,20 @@ Missing configuration preserves `explicit` activation with `local` closeout comp
 A Change is eligible when at least one of these independent conditions holds:
 
 - its work contains genuinely independent slices;
-- the authorized continuation is prospectively long; or
+- prospective execution signals show more than one bounded phase or authority surface; or
 - the continuation is interruption recovery.
 
-Lack of parallel work does not disqualify a long continuation or recovery. Derive "long" before dispatch from the authorized objective and expected phases, never from elapsed time. A Group is eligible when it has at least two ready children, or when the continuation qualifies as long or recovery. A small coupled one-step Change and worker-only work are ineligible. Decline Manage without any mutation and without creating a controller artifact, then return the exact Core or Discipline action.
+Prospective signals are implementation followed by integration verification, managed review, or lifecycle work; cross-module or cross-process mutation; real-host, provider, or hardware verification; bounded finding convergence; or a clear ready successor. Lack of parallel work does not disqualify prospective or recovery work. Derive the signals before dispatch from the authorized objective and expected phases, never from elapsed time. A Group is eligible when it has at least two ready children, or when the continuation qualifies through prospective signals or recovery.
+
+Under automatic activation, decline as direct one-step work only when all of these are true: one owner, one local seam, one mutation pass, one decisive check, no managed lifecycle coordination, and no ready successor. A selected ready completion or continuation that fails any one condition qualifies as non-small through automatic activation even when no separate prospective signal is obvious; do not leave the middle case unclassified. Worker-only work remains ineligible. Decline Manage without any mutation and without creating a controller artifact, then return the exact Core or Discipline action. Report `selected` or `declined` and its decisive qualification or exclusion; when dispatch applies, also report the concrete reason for sequential or parallel execution. Keep this reasoning transient.
 
 Preserve unrelated work and require an explicit release identity. Allow four worker dispatches and one worker corrective retry across the whole managed run. Owner transitions do not reset either limit.
 
 ## Dispatch owned work
 
-Send a compact envelope that identifies the WorkRef, objective, authority, decisive evidence, and stop boundary. For a Group, dispatch child WorkRefs only in the current derived `plan.waves` wave. Assume shared paths, lockfiles, generated artifacts, and integration outputs overlap unless an authorized isolated workspace exists. Keep blockers, later waves, overlaps, and dependent verification sequential. Workers receive no implied focus, lifecycle, Git, publication, deployment, or approval authority. Choose the cheapest decisive check and at most one integration gate.
+Send a compact envelope that identifies the WorkRef, objective, authority, decisive evidence, and stop boundary. When the host supports workers and authorized implementation remains, dispatch at least one implementation worker; sequential execution does not permit the controller to absorb the whole implementation. The controller retains owner resolution, worker-result acceptance, integration verification, review convergence, lifecycle, and Git decisions.
+
+For a Group, dispatch child WorkRefs only in the current derived `plan.waves` wave. Assume shared paths, lockfiles, generated artifacts, integration state, real hosts, provider sessions, and hardware resources overlap unless an authorized isolated workspace and verification boundary exist. Keep blockers, later waves, overlaps, and dependent verification sequential. Dispatch in parallel only for isolated mutation paths and verification resources; delegation never implies concurrency. Workers receive no implied focus, lifecycle, Git, publication, deployment, or approval authority. Choose the cheapest decisive check and at most one integration gate.
 
 ## Continue from evidence
 
