@@ -336,7 +336,7 @@ function getChangeTemplateByKind(kind?: string) {
     why: placeholder,
     scope: placeholder,
     nonGoals: placeholder,
-    specSection: `<!-- ${placeholder} -->\n### ${delta}\n- Requirement: ${placeholder}\n  - ${placeholder}`,
+    specSection: `### ${delta}\n- Requirement: ${placeholder}\n  - ${placeholder}`,
     acceptanceSection: `#### Scenario: ${placeholder}\n- GIVEN ${placeholder}\n- WHEN ${placeholder}\n- THEN ${placeholder}`,
     approach: placeholder,
     affectedArea1: placeholder,

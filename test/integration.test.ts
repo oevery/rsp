@@ -460,6 +460,7 @@ manage:
     ])
 
     expect(artifacts[0]).toContain('- Outcome: 中文摘要')
+    expect(artifacts[0]).not.toContain('<!--')
     expect(artifacts[1]).toContain('## Goal\n- 中文目标')
     for (const content of artifacts) {
       expect(content).toContain('<…>')

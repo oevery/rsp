@@ -555,11 +555,10 @@ kind: feature
 })
 
 describe('behavior-first spec templates', () => {
-  it('uses one neutral unfinished comment for every change kind', () => {
+  it('omits scaffold comments for every change kind', () => {
     for (const kind of [undefined, 'feature', 'fix', 'refactor', 'docs', 'research', 'ops'] as const) {
       const content = generateChangeContent('test', 'summary', kind)
-      expect(content).toContain('<!-- <…> -->')
-      expect(content).not.toMatch(/<!-- Describe /)
+      expect(content).not.toContain('<!--')
     }
   })
 })
