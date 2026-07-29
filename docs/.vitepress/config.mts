@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitepress'
 
 const shared = {
+  logo: '/rsp-icon.svg',
   search: { provider: 'local' as const },
   socialLinks: [{ icon: 'github' as const, link: 'https://github.com/oevery/rsp' }],
 }
@@ -8,6 +9,7 @@ const shared = {
 export default defineConfig({
   title: 'RSP',
   description: 'Reliable Software Practice',
+  head: [['link', { rel: 'icon', type: 'image/svg+xml', href: '/rsp-icon.svg' }]],
   srcDir: 'site',
   cleanUrls: true,
   ignoreDeadLinks: [/^https?:\/\//],
