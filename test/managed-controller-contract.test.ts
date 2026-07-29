@@ -103,7 +103,7 @@ describe('rsp-manage research candidate', () => {
     expect(prepared.manifest.installed_skills).toEqual(['rsp', 'rsp-manage', 'rsp-implement'])
     expect(prepared.manifest.allowed_changes).not.toContain('.rsp/focus.d/normalize-checkpoint')
     expect(prepared.prompt).toContain('preserve focus')
-    expect(prepared.manifest.continuation_contract.ordered_fields).toEqual([
+    expect(prepared.manifest.continuation_contract?.ordered_fields).toEqual([
       'WorkRef',
       'Authority',
       'Current state',

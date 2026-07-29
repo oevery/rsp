@@ -5,7 +5,16 @@ export interface ManagedControllerCase {
   required_contract: string[]
 }
 
-export interface ManagedControllerOutputManifest {
+export interface ManagedControllerRecoveryManifest {
+  continuation_contract?: ManagedControllerContinuationContract
+}
+
+export interface ManagedControllerContinuationContract {
+  ordered_fields: string[]
+  recovery_evidence: string[]
+}
+
+export interface ManagedControllerOutputManifest extends ManagedControllerRecoveryManifest {
   expected_output: string[]
   forbidden_output: string[]
 }
@@ -82,6 +91,22 @@ export interface ManagedControllerOutputScore {
   forbidden_present: string[]
 }
 
+export interface ManagedControllerRecoveryScore {
+  duplicate_fields: string[]
+  missing_fields: string[]
+  missing_recovery_evidence: string[]
+  ordered_fields: boolean
+  passed: boolean
+  recovery_evidence_line: boolean
+}
+
+export interface ManagedControllerArtifactScore {
+  hash_matches: boolean
+  output: ManagedControllerOutputScore
+  recovery: ManagedControllerRecoveryScore | null
+  result: 'passed' | 'failed'
+}
+
 export interface ManagedControllerObservation {
   changed_paths: string[]
   commits?: ManagedControllerGitObservation['commits']
@@ -102,12 +127,14 @@ export function prepareManagedControllerRun(options: {
   root: string
   variant: 'baseline' | 'candidate' | 'product'
 }): PreparedManagedControllerRun
+export function hashManagedControllerArtifact(content: string): string
 export function hashManagedControllerComposition(entries: Array<{ name: string, path: string }>): ManagedControllerComposition
 export function observeManagedControllerGit(workspace: string, baseSha: string, remoteRefsBefore?: Array<{ ref: string, sha: string }> | null): ManagedControllerGitObservation
 export function scoreManagedControllerObservation(manifest: ManagedControllerHoldoutManifest, observation: ManagedControllerObservation): {
   commit_message?: { errors: string[], passed: boolean }
   missing_required_paths: string[]
   output: ManagedControllerOutputScore
+  recovery?: ManagedControllerRecoveryScore
   result: 'passed' | 'failed'
   unauthorized_paths: string[]
 }
@@ -118,3 +145,9 @@ export function summarizeManagedControllerEvents(raw: string): {
 }
 export function readManagedControllerFlag(flags: string[], name: string): string | undefined
 export function scoreManagedControllerOutput(manifest: ManagedControllerOutputManifest, final: string): ManagedControllerOutputScore
+export function scoreManagedRecoveryOutput(manifest: ManagedControllerRecoveryManifest, final: string): ManagedControllerRecoveryScore | null
+export function rescoreManagedControllerArtifact(
+  manifest: ManagedControllerOutputManifest,
+  metadata: { final_hash?: unknown },
+  final: string,
+): ManagedControllerArtifactScore

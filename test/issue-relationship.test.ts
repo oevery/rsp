@@ -1,4 +1,3 @@
-import type { IssueRelationshipError } from '../src/core/issue-relationship.js'
 import { execFileSync, spawnSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
@@ -53,7 +52,7 @@ describe('change issue relationships', () => {
       { url: 'https://EXAMPLE.com/issues/1', relation: 'closes' },
     ] }, 'duplicate_issue_url'],
   ])('rejects invalid metadata with stable code %s', (frontmatter, code) => {
-    expect(() => parseIssueRelationships(frontmatter)).toThrowError(expect.objectContaining<IssueRelationshipError>({ code }))
+    expect(() => parseIssueRelationships(frontmatter)).toThrowError(expect.objectContaining({ code }))
   })
 
   it('creates issue-linked Changes offline and projects them through open and archive reads', async () => {
