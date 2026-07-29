@@ -295,7 +295,7 @@ Archive 不等于 durable truth。
 - `Design`：实现形态、影响区域、约束。
 - `Tasks`：具体实现工作。
 - `Verify`：验证和 durable decision 清单。
-- `Blockers`：活跃 blocker；可使用 `- requires \`<change-work-ref>\`: <reason>` 声明一个确定性的可执行 Change 依赖，其余 prose 不会被猜测为依赖边。
+- `Blockers`：活跃 blocker；可使用 ``- requires `<change-work-ref>`: <reason>`` 声明一个确定性的可执行 Change 依赖，其余 prose 不会被猜测为依赖边。
 
 依赖图不是新的持久化产物。Change 与 archive heading 继续拥有事实，CLI 只集中投影 `ready`、带原因的 `edges`、`blocked` 和 `waves`。这使人类和 AI 获得同一份紧凑视图，同时避免 Brief、YAML 或独立 graph 文件成为第二份状态来源。
 
@@ -493,7 +493,7 @@ RSP 受管 block 不是：
 - 长期规则存储。
 - `specs/`、skill 或 fallback protocol 的重复副本。
 
-只有 `<!-- rsp:begin --> ... <!-- rsp:end -->` 受管 block 由工具拥有。
+只有 `&lt;!-- rsp:begin --&gt; ... &lt;!-- rsp:end --&gt;` 受管 block 由工具拥有。
 
 精确 read order 以 generated block 为准：nearest `AGENTS.md`，可选 context map/context，`rsp` skill 或 `.rsp/rsp-rules.md` fallback，focus 与选中的 Change，最后才是相关 Specs。
 

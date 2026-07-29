@@ -2,3 +2,5 @@ node_modules/
 dist/
 .vitest/
 .cache/
+docs/.vitepress/cache/
+docs/.vitepress/dist/
