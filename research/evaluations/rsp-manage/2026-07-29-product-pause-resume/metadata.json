@@ -1,0 +1,64 @@
+{
+  "kind": "sanitized-real-host-evidence",
+  "run_identity": "pause-resume-product-i6Gkc1",
+  "case_id": "pause-resume",
+  "variant": "product",
+  "result": "passed",
+  "exit_code": 0,
+  "timed_out": false,
+  "duration_ms": 119951,
+  "settings": {
+    "codex": "codex-cli 0.144.6",
+    "model": "gpt-5.6-terra",
+    "effort": "medium",
+    "sandbox": "workspace-write"
+  },
+  "usage": {
+    "input_tokens": 438581,
+    "cached_input_tokens": 397312,
+    "output_tokens": 3620,
+    "reasoning_output_tokens": 786,
+    "tool_calls": 8
+  },
+  "composition": {
+    "hash": "9742d4c47194ed9612968177753a6db510e3faed62594c1e8648bf8dbead0a38",
+    "stable": true,
+    "skills": [
+      { "name": "rsp", "hash": "972220c1dfec5cb34bddbfbb6ebcf6b5550255395b97d0c30ab4ee894ba91548" },
+      { "name": "rsp-manage", "hash": "2707f341fbdc25a36bf3f87bb8a796a90ac0ad0d08a297a1614e046a919d934c" },
+      { "name": "rsp-implement", "hash": "8d16c743f355ab4e1798fa0eece3c0d025cd316d6d5426c4770dced216041e34" }
+    ],
+    "boundary_hashes": {
+      "source_before": "9742d4c47194ed9612968177753a6db510e3faed62594c1e8648bf8dbead0a38",
+      "installed_before": "9742d4c47194ed9612968177753a6db510e3faed62594c1e8648bf8dbead0a38",
+      "source_after": "9742d4c47194ed9612968177753a6db510e3faed62594c1e8648bf8dbead0a38",
+      "installed_after": "9742d4c47194ed9612968177753a6db510e3faed62594c1e8648bf8dbead0a38"
+    }
+  },
+  "verification": {
+    "command": "npm test",
+    "passed": true,
+    "tests": 1,
+    "failures": 0
+  },
+  "output_score": {
+    "expected_missing": [],
+    "forbidden_present": []
+  },
+  "forbidden_actions": {
+    "push": 0,
+    "force_push": 0,
+    "publication": 0
+  },
+  "changed_paths": [
+    ".rsp/changes/normalize-checkpoint.md",
+    "src/checkpoint.mjs"
+  ],
+  "required_paths_missing": [],
+  "unauthorized_paths": [],
+  "final_hash": "c362411a7f70664ae70859cdb3a292cb4e3e9217f2f7e1acbd4bcac71e916b01",
+  "raw_final_hash": "e025a93529019a58c7184971eadc26e6d1177ad43d1bd58de50dcb9940468d25",
+  "raw_events_hash": "49102a7f3ea30554e42708e17b414d3bc4f8733d57fadf8d100aa31535f7d373",
+  "raw_metadata_hash": "a576a335b3e5ee0a8b255e72dc3589306678bb6fc9ee0c0fb0da879413a2a5db",
+  "fixture_manifest_semantic_hash": "3937b26efde15fd7a998980453bbd21fe6f887d0011f422faa41d8c8de329b56"
+}

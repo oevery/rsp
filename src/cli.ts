@@ -9,7 +9,7 @@ import { runCheck } from './commands/check.js'
 import { createChange } from './commands/create.js'
 import { runDoctor } from './commands/doctor.js'
 import { focusChange, unfocusChange } from './commands/focus.js'
-import { closeChangeGroup, createChangeGroup } from './commands/group.js'
+import { closeChangeGroup, createChangeGroup, reopenChangeGroup } from './commands/group.js'
 import { showHistory } from './commands/history.js'
 import { initProject } from './commands/init.js'
 import { showReady } from './commands/ready.js'
@@ -123,7 +123,7 @@ const groupCreateCommand = defineCommand({
 const groupCommand = defineCommand({
   meta: {
     name: 'group',
-    description: 'Create and close shallow Change Groups',
+    description: 'Create, close, and explicitly reopen shallow Change Groups',
   },
   subCommands: {
     create: groupCreateCommand,
@@ -141,6 +141,31 @@ const groupCommand = defineCommand({
       },
       async run({ args }: { args: { name: string } }) {
         await closeChangeGroup(args.name)
+      },
+    }),
+    reopen: defineCommand({
+      meta: {
+        name: 'reopen',
+        description: 'Restore one archived Group Brief while retaining history',
+      },
+      args: {
+        name: {
+          type: 'positional',
+          description: 'Archived Change Group name',
+          required: true,
+        },
+        from: {
+          type: 'string',
+          description: 'Exact .rsp/archives/... path when the Group has multiple archives',
+        },
+        reason: {
+          type: 'string',
+          description: 'One-line concern that makes Group completion unfinished',
+          required: true,
+        },
+      },
+      async run({ args }: { args: { name: string, from?: string, reason: string } }) {
+        await reopenChangeGroup(args.name, { from: args.from, reason: args.reason })
       },
     }),
   },

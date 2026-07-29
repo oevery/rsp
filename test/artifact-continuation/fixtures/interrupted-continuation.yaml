@@ -32,4 +32,9 @@ required_contract:
   - inspect worktree
   - not durable truth
   - explicit path authority
+  - progress or status inquiry
+  - explicit pause
+  - release or unfocus
+  - preserve the focused owner
+  - requalify Manage
 prohibited_actions: [hidden-state, stale-verification, second-state-store]

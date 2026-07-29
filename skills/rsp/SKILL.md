@@ -4,7 +4,7 @@ description: Use this skill when initializing RSP, operating an existing .rsp pr
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.28.4"
+  version: "2026.07.29.1"
 ---
 
 # RSP Skill
@@ -65,7 +65,7 @@ Keep the Change a convergent snapshot of the current plan and final decisive evi
 
 Persist only `open` and `archived`; derive readiness, blockers, stage, and next actions. Do not infer implementation, review, Git, publication, or approval authority from focus, readiness, routing, or capability availability.
 
-When fresh evidence shows that an archived executable Change did not meet its original acceptance, keep the correction under the same WorkRef by explicitly running `rsp reopen <work-ref> --reason <text>`. Reopen retains the selected archive as history, restores and focuses open work, and adds unfinished Task and Verify evidence. If multiple archives share the WorkRef, require exact `--from .rsp/archives/...` selection rather than choosing the newest. Treat the open WorkRef as current dependency state; do not cascade into archived dependents or implicitly reopen a closed Change Group. Use a new corrective Change for genuinely new scope or an independently delivered correction. Reopen is lifecycle mutation only and grants no Git, release, publication, deployment, or approval authority.
+When fresh evidence shows that archived acceptance was incomplete, keep the correction under the same owner through explicit lifecycle commands. `rsp reopen <work-ref> --reason <text>` retains the selected archive, restores and focuses executable work, and adds unfinished Task and Verify evidence. If its Group is closed, first run `rsp group reopen <group> --reason <text>` to restore only one exact retained Brief as unfocused work with unfinished completion evidence, then separately reopen only the incomplete child. Multiple matching Change or Group archives require exact `--from .rsp/archives/...` selection rather than choosing the newest. Treat open work as current dependency state; never cascade into children or archived dependents, and never use `rsp group create` to reuse archived identity. Use a new corrective Change for genuinely new or independently delivered scope. Reopen is lifecycle mutation only and grants no Git, release, publication, deployment, or approval authority.
 
 Load detailed procedures only when their path is active:
 
@@ -79,6 +79,8 @@ Load detailed procedures only when their path is active:
 Route planned design to the selected Change; stable implemented facts to the smallest relevant Spec or authorized scoped instruction; lasting rationale to one exact Decision Record; stable navigation to project-owned `CONTEXT.md`; stable operating rules to project-owned `AGENTS.md`; and temporary continuation to the response. Never write planned state as current truth or duplicate facts into rationale.
 
 Use RSP commands for managed setup, focus, repair, indexes, archive, and reopen. Do not directly create command-owned files, edit generated indexes or `.rsp/rsp-rules.md` as durable truth, or modify the managed RSP block. Preserve unrelated work. Core recommends explicit archive only after the durable decision; it does not execute archive or grant staging, commit, push, publication, deletion, deployment, approval, or human-acceptance authority. A configured `manage.closeout` preset remains dormant unless Core selected and qualified Manage for the current continuation; declined, unavailable, or unselected Manage leaves Core advisory even under `lifecycle` or `local`. Core also does not execute reopen without explicit lifecycle authority. The qualified Manage rules in [managed routing](references/managed-routing.md) are the sole scoped exceptions.
+
+During a qualified managed run, a progress or status inquiry reports evidence and continuing intent without ending authorized work. An explicit pause must stop and confirm active workers before acknowledgement, preserve the focused owner, and prevent further mutation until resume. Only an explicit release or unfocus request clears selection; blockers preserve the focused owner. Resume treats response prose as pointers, reopens authority and artifacts, inspects drift and stale evidence, and must requalify Manage before mutation or dispatch. These behaviors never create a persisted paused or controller state.
 
 When accepted work remains, return a localized continuation with these semantic fields in order: `WorkRef`, `Authority`, `Current state`, `Changed artifacts`, `Fresh verification`, `Blockers`, `Next action`. Preserve technical values. The continuation points to existing owners, is not a second state store, and must not be persisted without explicit path authority. On resume, reopen its pointers, inspect drift, and refresh decisive evidence.
 

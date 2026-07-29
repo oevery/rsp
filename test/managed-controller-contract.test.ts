@@ -6,7 +6,7 @@ import { basename, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
-import { evaluateManagedController, hashManagedControllerComposition, loadManagedControllerCases, observeManagedControllerGit, prepareManagedControllerRun, readManagedControllerFlag, scoreManagedControllerObservation, scoreManagedControllerOutput, summarizeManagedControllerEvents } from '../scripts/managed-controller-eval.mjs'
+import { evaluateManagedController, hashManagedControllerArtifact, hashManagedControllerComposition, loadManagedControllerCases, observeManagedControllerGit, prepareManagedControllerRun, readManagedControllerFlag, rescoreManagedControllerArtifact, scoreManagedControllerObservation, scoreManagedControllerOutput, scoreManagedRecoveryOutput, summarizeManagedControllerEvents } from '../scripts/managed-controller-eval.mjs'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const candidate = join(root, 'research', 'candidates', 'skills', 'rsp-manage')
@@ -52,11 +52,17 @@ describe('rsp-manage research candidate', () => {
     const cases = loadManagedControllerCases(root)
     expect(cases.map(item => item.id)).toEqual([
       'authority-stop',
+      'blocker-continuation',
       'dispatch-envelope',
+      'drift-safe-resume',
+      'drift-stop',
       'explicit-eligibility',
+      'explicit-pause',
       'fresh-return',
       'interruption-recovery',
       'ordinary-restraint',
+      'owner-release',
+      'progress-continues',
     ])
     expect(evaluateManagedController(root)).toEqual(cases.map(item => ({ id: item.id, missing: [], passed: true })))
   })
@@ -81,6 +87,108 @@ describe('rsp-manage research candidate', () => {
     expect(prepared.manifest.expected_mode).toBe('decline')
     expect(prepared.manifest.allowed_changes).toEqual([])
     expect(prepared.prompt).toContain('Use $rsp-manage')
+  })
+
+  it('prepares the exact-package pause and resume recovery holdout', ({ onTestFinished }) => {
+    const outputRoot = mkdtempSync(join(tmpdir(), 'rsp-manage-pause-resume-'))
+    onTestFinished(() => rmSync(outputRoot, { force: true, recursive: true }))
+
+    const prepared = prepareManagedControllerRun({
+      caseId: 'pause-resume',
+      outputRoot,
+      root,
+      variant: 'product',
+    })
+
+    expect(prepared.manifest.installed_skills).toEqual(['rsp', 'rsp-manage', 'rsp-implement'])
+    expect(prepared.manifest.allowed_changes).not.toContain('.rsp/focus.d/normalize-checkpoint')
+    expect(prepared.prompt).toContain('preserve focus')
+    expect(prepared.manifest.continuation_contract.ordered_fields).toEqual([
+      'WorkRef',
+      'Authority',
+      'Current state',
+      'Changed artifacts',
+      'Fresh verification',
+      'Blockers',
+      'Next action',
+    ])
+    expect(prepared.prompt).toContain('handoff-pointer')
+    expect(readFileSync(join(prepared.workspace, '.rsp', 'focus.d', 'normalize-checkpoint'), 'utf8').trim()).toBe('')
+  })
+
+  it('scores ordered continuation fields and explicit resume-preflight evidence', () => {
+    const manifest = {
+      continuation_contract: {
+        ordered_fields: ['WorkRef', 'Authority', 'Current state', 'Changed artifacts', 'Fresh verification', 'Blockers', 'Next action'],
+        recovery_evidence: ['handoff-pointer', 'authority-reread', 'manage-requalified'],
+      },
+    }
+    const passing = [
+      '- WorkRef: normalize-checkpoint',
+      '- Authority: source and Change',
+      '- Current state: blocked',
+      '- Changed artifacts: src/checkpoint.mjs',
+      '- Fresh verification: npm test passed',
+      '- Blockers: receiver unavailable',
+      '- Next action: run receiver acceptance',
+      '- Recovery evidence: handoff-pointer authority-reread manage-requalified',
+    ].join('\n')
+
+    expect(scoreManagedRecoveryOutput(manifest, passing)).toEqual({
+      duplicate_fields: [],
+      missing_fields: [],
+      missing_recovery_evidence: [],
+      ordered_fields: true,
+      passed: true,
+      recovery_evidence_line: true,
+    })
+    expect(scoreManagedRecoveryOutput(manifest, passing.replace('- Authority:', '- Zuthority:').replace('- Next action:', '- Authority:'))).toMatchObject({
+      ordered_fields: false,
+      passed: false,
+    })
+  })
+
+  it('hashes and resurcores immutable pause-resume evidence against the current contract', () => {
+    const retained = join(root, 'research', 'evaluations', 'rsp-manage', '2026-07-29-product-pause-resume')
+    const metadata = JSON.parse(readFileSync(join(retained, 'metadata.json'), 'utf8')) as any
+    const final = readFileSync(join(retained, 'final.md'), 'utf8')
+    const manifest = parseYaml(readFileSync(join(root, 'test', 'managed-controller', 'holdout', 'pause-resume', 'case.yaml'), 'utf8')) as any
+
+    expect(hashManagedControllerArtifact(final)).toBe(metadata.final_hash)
+    expect(rescoreManagedControllerArtifact(manifest, metadata, final)).toMatchObject({
+      hash_matches: true,
+      recovery: {
+        duplicate_fields: [],
+        missing_fields: [],
+        missing_recovery_evidence: manifest.continuation_contract.recovery_evidence,
+        ordered_fields: true,
+        passed: false,
+        recovery_evidence_line: false,
+      },
+      result: 'failed',
+    })
+  })
+
+  it('rescores the structured pause-resume evidence against the current contract', () => {
+    const retained = join(root, 'research', 'evaluations', 'rsp-manage', '2026-07-29-product-pause-resume-structured')
+    const metadata = JSON.parse(readFileSync(join(retained, 'metadata.json'), 'utf8')) as any
+    const final = readFileSync(join(retained, 'final.md'), 'utf8')
+    const manifest = parseYaml(readFileSync(join(root, 'test', 'managed-controller', 'holdout', 'pause-resume', 'case.yaml'), 'utf8')) as any
+
+    expect(hashManagedControllerArtifact(final)).toBe(metadata.final_hash)
+    expect(rescoreManagedControllerArtifact(manifest, metadata, final)).toMatchObject({
+      hash_matches: true,
+      output: { expected_missing: [], forbidden_present: [] },
+      recovery: {
+        duplicate_fields: [],
+        missing_fields: [],
+        missing_recovery_evidence: [],
+        ordered_fields: true,
+        passed: true,
+        recovery_evidence_line: true,
+      },
+      result: 'passed',
+    })
   })
 
   it('scores human-facing boundaries in the requested language', () => {
@@ -157,6 +265,14 @@ describe('rsp-manage research candidate', () => {
 })
 
 describe('rsp-manage product Skill', () => {
+  it('keeps status, pause, release, blockers, and resume as distinct recovery behaviors', () => {
+    const results = evaluateManagedController(root)
+      .filter(result => ['blocker-continuation', 'drift-safe-resume', 'explicit-pause', 'owner-release', 'progress-continues'].includes(result.id))
+
+    expect(results).toHaveLength(5)
+    expect(results).toEqual(results.map(result => ({ ...result, missing: [], passed: true })))
+  })
+
   it('is portable, policy-selectable, and distinct from retained research', () => {
     const { body, frontmatter } = readSkill(product)
 
@@ -872,7 +988,7 @@ describe('rsp-manage product Skill', () => {
     const { body } = readSkill(product)
 
     expect(body).toContain('Keep dispatch chronology out of Changes, Group Briefs, Specs, Decision Records')
-    expect(body).toContain('Return WorkRefs, verification, omissions, boundary owner, and next action')
+    expect(body).toContain('return the incomplete continuation in this order: `WorkRef, Authority, Current state, Changed artifacts, Fresh verification, Blockers, and Next action`')
     expect(body).toContain('Do not expose retry chronology')
     expect(body).toContain('Archive grants no Git or publication authority')
   })

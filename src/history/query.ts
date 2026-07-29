@@ -1,5 +1,5 @@
 import type { HistoryDetailOutput, HistoryEvidenceListOutput, HistoryRecordOutput } from '../types.js'
-import type { ArchiveHistoryInspection, ArchiveHistoryListResult, ArchiveHistoryQuery, ArchiveHistoryRecord } from './model.js'
+import type { ArchivedGroupBriefRecord, ArchiveHistoryInspection, ArchiveHistoryListResult, ArchiveHistoryQuery, ArchiveHistoryRecord } from './model.js'
 import { readFile } from 'node:fs/promises'
 
 import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionBody, parseRspDocument } from '../core/document-model.js'
@@ -70,6 +70,20 @@ export function selectArchiveHistoryRecord(records: ArchiveHistoryRecord[], sele
   if (matches.length > 1) {
     const candidates = matches.map(record => record.path).sort()
     throw new ArchiveHistoryError('archive_ambiguous', `multiple archives match WorkRef ${identity}`, candidates)
+  }
+  return matches[0]
+}
+
+export function selectArchivedGroupBrief(records: ArchivedGroupBriefRecord[], selector: { group: string } | { path: string }): ArchivedGroupBriefRecord {
+  const matches = 'path' in selector
+    ? records.filter(record => record.path === selector.path)
+    : records.filter(record => record.group === selector.group)
+  const identity = 'path' in selector ? selector.path : selector.group
+  if (matches.length === 0)
+    throw new ArchiveHistoryError('archive_not_found', `archived Change Group not found: ${identity}`)
+  if (matches.length > 1) {
+    const candidates = matches.map(record => record.path).sort()
+    throw new ArchiveHistoryError('archive_ambiguous', `multiple archives match Change Group ${identity}`, candidates)
   }
   return matches[0]
 }

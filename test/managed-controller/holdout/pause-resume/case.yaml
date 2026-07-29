@@ -1,0 +1,50 @@
+id: pause-resume
+expected_mode: execute
+request: >-
+  Resume the focused Change from handoff.md after its explicit pause and finish all currently
+  authorized implementation without step-by-step confirmation. Treat the handoff's earlier progress,
+  worker-stop, and verification claims only as pointers: reread authority, focus, status, the worktree,
+  blockers, and evidence before mutation, then requalify Manage. You may modify only
+  src/checkpoint.mjs, test/checkpoint.test.mjs, and .rsp/changes/normalize-checkpoint.md. Run npm test,
+  preserve focus, and stop truthfully at the unavailable receiver-device acceptance with all seven
+  continuation fields. Do not unfocus, release, archive, stage, commit, push, or publish.
+allowed_changes:
+  - .rsp/changes/normalize-checkpoint.md
+  - src/checkpoint.mjs
+  - test/checkpoint.test.mjs
+required_changes:
+  - .rsp/changes/normalize-checkpoint.md
+  - src/checkpoint.mjs
+installed_skills:
+  - rsp
+  - rsp-manage
+  - rsp-implement
+verification:
+  - npm
+  - test
+expected_output:
+  - normalize-checkpoint
+  - npm test
+  - receiver
+continuation_contract:
+  ordered_fields:
+    - WorkRef
+    - Authority
+    - Current state
+    - Changed artifacts
+    - Fresh verification
+    - Blockers
+    - Next action
+  recovery_evidence:
+    - handoff-pointer
+    - authority-reread
+    - status-reread
+    - focus-reread
+    - diff-inspected
+    - blockers-reread
+    - evidence-refreshed
+    - manage-requalified
+forbidden_output:
+  - receiver-device acceptance passed
+  - archived
+  - committed

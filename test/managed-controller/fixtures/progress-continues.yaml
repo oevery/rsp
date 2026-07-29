@@ -1,0 +1,11 @@
+id: progress-continues
+skill_variant: product
+evidence:
+  - The user asks for progress while authorized unblocked managed work remains.
+required_contract:
+  - Treat a progress or status inquiry as an update, not a stop signal
+  - report current evidence and continuing intent
+  - continue authorized work after the update
+prohibited_actions:
+  - terminal status response
+  - implicit pause

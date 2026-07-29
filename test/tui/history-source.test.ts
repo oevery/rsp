@@ -20,6 +20,7 @@ function inspection(records: ArchiveHistoryRecord[], complete = true): ArchiveHi
   return {
     rootExists: true,
     records,
+    groupBriefs: [],
     diagnostics: complete ? [] : [{ severity: 'error', code: 'archive_read_failed', path: '.rsp/archives/bad.md', message: 'bad archive' }],
     diagnosticSummary: { total: complete ? 0 : 1, returned: complete ? 0 : 1, hasMore: false },
     runtime: [],

@@ -18,9 +18,17 @@ export interface ArchiveHistoryRecord extends HistoryRecordOutput {
   searchSummary?: string
 }
 
+export interface ArchivedGroupBriefRecord {
+  date: string
+  group: string
+  path: string
+  sourcePath: string
+}
+
 export interface ArchiveHistoryInspection {
   rootExists: boolean
   records: ArchiveHistoryRecord[]
+  groupBriefs: ArchivedGroupBriefRecord[]
   diagnostics: CommandDiagnostic[]
   diagnosticSummary: BoundedCollectionSummary
   runtime: RuntimeDiagnostic[]

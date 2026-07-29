@@ -1,0 +1,26 @@
+{
+  "recovery": {
+    "structured_continuation_passed": true,
+    "ordered_fields": true,
+    "duplicate_fields": [],
+    "missing_fields": [],
+    "missing_recovery_evidence": [],
+    "focus_preserved": true,
+    "resume_preflight_self_reported": true
+  },
+  "continuation": {
+    "environment_blocker_reported": true,
+    "manual_acceptance_claimed": false
+  },
+  "delivery": {
+    "local_commits": 0,
+    "push": false,
+    "publication": false
+  },
+  "isolation": {
+    "source_stable": true,
+    "installed_stable": true,
+    "raw_events_retained": false,
+    "disposable_workspace_retained": false
+  }
+}

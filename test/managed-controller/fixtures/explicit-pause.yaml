@@ -1,0 +1,11 @@
+id: explicit-pause
+skill_variant: product
+evidence:
+  - The user explicitly pauses a managed run while a worker may still be active.
+required_contract:
+  - interrupt active workers and confirm they have stopped before acknowledging the pause
+  - keep the focused WorkRef selected
+  - do not mutate again until resume
+prohibited_actions:
+  - acknowledge before interruption
+  - unfocus on pause

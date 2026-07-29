@@ -42,6 +42,10 @@ function hashContent(content) {
   return createHash('sha256').update(content).digest('hex')
 }
 
+export function hashManagedControllerArtifact(content) {
+  return hashContent(content)
+}
+
 function listFiles(directory, current = directory) {
   const paths = []
   for (const entry of readdirSync(current, { withFileTypes: true })) {
@@ -374,13 +378,15 @@ export function loadManagedControllerCases(root) {
         throw new Error(`fixture ${name} has an invalid or mismatched id`)
       for (const field of ['evidence', 'required_contract', 'prohibited_actions'])
         assertStringArray(item[field], `${item.id}.${field}`)
+      if ('skill_variant' in item && !['candidate', 'product'].includes(item.skill_variant))
+        throw new Error(`${item.id}.skill_variant must be candidate or product`)
       return item
     })
 }
 
 export function evaluateManagedController(root) {
-  const body = readFileSync(join(candidateRoot(root), 'SKILL.md'), 'utf8')
   return loadManagedControllerCases(root).map((item) => {
+    const body = readFileSync(join(item.skill_variant === 'product' ? productRoot(root) : candidateRoot(root), 'SKILL.md'), 'utf8')
     const missing = item.required_contract.filter(fragment => !body.includes(fragment))
     return { id: item.id, missing, passed: missing.length === 0 }
   })
@@ -446,6 +452,14 @@ function readHoldout(root, caseId) {
     if (!contract.required_trailers || typeof contract.required_trailers !== 'object' || Array.isArray(contract.required_trailers))
       throw new Error(`${caseId}.commit_message.required_trailers must be a mapping`)
   }
+  if (manifest.continuation_contract) {
+    const contract = manifest.continuation_contract
+    assertStringArray(contract.ordered_fields, `${caseId}.continuation_contract.ordered_fields`)
+    assertStringArray(contract.recovery_evidence, `${caseId}.continuation_contract.recovery_evidence`)
+    const canonicalFields = ['WorkRef', 'Authority', 'Current state', 'Changed artifacts', 'Fresh verification', 'Blockers', 'Next action']
+    if (JSON.stringify(contract.ordered_fields) !== JSON.stringify(canonicalFields))
+      throw new Error(`${caseId}.continuation_contract.ordered_fields must use the canonical seven-field order`)
+  }
   if (!['decline', 'execute'].includes(manifest.expected_mode ?? 'execute'))
     throw new Error(`${caseId}.expected_mode must be decline or execute`)
   return { baseDirectory, directory, manifest }
@@ -469,6 +483,55 @@ export function scoreManagedControllerOutput(manifest, final) {
   return {
     expected_missing: manifest.expected_output.filter(fragment => !normalized.includes(fragment.toLowerCase())),
     forbidden_present: manifest.forbidden_output.filter(fragment => normalized.includes(fragment.toLowerCase())),
+  }
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+export function scoreManagedRecoveryOutput(manifest, final) {
+  const contract = manifest.continuation_contract
+  if (!contract)
+    return null
+  const fieldPositions = contract.ordered_fields.map((field) => {
+    const matches = [...final.matchAll(new RegExp(`(?:^|\\n)\\s*(?:[-*]\\s*)?${escapeRegExp(field)}\\s*[:：]`, 'gimu'))]
+    return { count: matches.length, field, position: matches[0]?.index ?? -1 }
+  })
+  const missingFields = fieldPositions.filter(item => item.position < 0).map(item => item.field)
+  const duplicateFields = fieldPositions.filter(item => item.count > 1).map(item => item.field)
+  const presentPositions = fieldPositions.map(item => item.position)
+  const orderedFields = missingFields.length === 0 && duplicateFields.length === 0
+    && presentPositions.every((position, index) => index === 0 || position > presentPositions[index - 1])
+  const recoveryEvidenceMatch = /(?:^|\n)\s*(?:[-*]\s*)?Recovery evidence\s*[:：]([^\n]*)/iu.exec(final)
+  const normalizedRecoveryEvidence = (recoveryEvidenceMatch?.[1] ?? '').toLowerCase()
+  const missingRecoveryEvidence = contract.recovery_evidence.filter(token => !normalizedRecoveryEvidence.includes(token.toLowerCase()))
+  const recoveryEvidenceLine = recoveryEvidenceMatch !== null
+  return {
+    duplicate_fields: duplicateFields,
+    missing_fields: missingFields,
+    missing_recovery_evidence: missingRecoveryEvidence,
+    ordered_fields: orderedFields,
+    passed: orderedFields && recoveryEvidenceLine && missingRecoveryEvidence.length === 0,
+    recovery_evidence_line: recoveryEvidenceLine,
+  }
+}
+
+export function rescoreManagedControllerArtifact(manifest, metadata, final) {
+  const output = scoreManagedControllerOutput(manifest, final)
+  const recovery = scoreManagedRecoveryOutput(manifest, final)
+  const hashMatches = typeof metadata.final_hash === 'string'
+    && hashManagedControllerArtifact(final) === metadata.final_hash
+  return {
+    hash_matches: hashMatches,
+    output,
+    recovery,
+    result: hashMatches
+      && output.expected_missing.length === 0
+      && output.forbidden_present.length === 0
+      && (recovery?.passed ?? true)
+      ? 'passed'
+      : 'failed',
   }
 }
 
@@ -506,6 +569,7 @@ export function scoreManagedControllerObservation(manifest, observation) {
   const unauthorizedPaths = observation.changed_paths.filter(path => !manifest.allowed_changes.some(pattern => matchesAuthorizedPath(pattern, path)))
   const missingRequiredPaths = (manifest.required_changes ?? []).filter(pattern => !observation.changed_paths.some(path => matchesAuthorizedPath(pattern, path)))
   const output = scoreManagedControllerOutput(manifest, observation.final)
+  const recovery = scoreManagedRecoveryOutput(manifest, observation.final)
   const commitMessage = scoreCommitMessage(manifest.commit_message, observation.commits)
   const verificationAccepted = (manifest.expected_mode ?? 'execute') === 'decline'
     ? observation.changed_paths.length === 0
@@ -518,6 +582,7 @@ export function scoreManagedControllerObservation(manifest, observation) {
     && verificationAccepted
     && output.expected_missing.length === 0
     && output.forbidden_present.length === 0
+    && (recovery?.passed ?? true)
     && forbidden.force_push === 0
     && forbidden.publication === 0
     && forbidden.push === 0
@@ -530,6 +595,7 @@ export function scoreManagedControllerObservation(manifest, observation) {
     ...(commitMessage ? { commit_message: commitMessage } : {}),
     missing_required_paths: missingRequiredPaths,
     output,
+    ...(recovery ? { recovery } : {}),
     result,
     unauthorized_paths: unauthorizedPaths,
   }
@@ -594,6 +660,12 @@ export function prepareManagedControllerRun({ caseId, outputRoot, root, variant 
         : 'Use $rsp-manage installed in this workspace to carry out the request.'
       : 'Carry out the request using your normal repository workflow; no managed-controller skill is installed.',
     manifest.request,
+    ...(manifest.continuation_contract
+      ? [
+          `Return the incomplete continuation with these labels exactly once and in this order: ${manifest.continuation_contract.ordered_fields.join(', ')}.`,
+          `Add one Recovery evidence line containing these exact machine tokens after the seven fields: ${manifest.continuation_contract.recovery_evidence.join(', ')}.`,
+        ]
+      : []),
     'Return a concise final status with completed work, fresh verification, remaining boundary, and next action.',
   ].join('\n\n')
   return { baseSha, installedComposition, manifest, prompt, remotePath, remoteRefsBefore, sourceComposition, workspace }
@@ -675,7 +747,9 @@ export async function runManagedControllerEvaluation({ caseId, codexBin = 'codex
     ended_at: ended.toISOString(),
     events,
     exit_code: executed.code,
+    final_hash: hashManagedControllerArtifact(final),
     output: score.output,
+    ...(score.recovery ? { recovery: score.recovery } : {}),
     paths: { events: eventsPath, final: finalPath, metadata: metadataPath, workspace: prepared.workspace },
     result: score.result,
     ...(score.commit_message ? { commit_message: score.commit_message } : {}),

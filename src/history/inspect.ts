@@ -1,6 +1,6 @@
 import type { ArchiveTreeInspection } from '../core/work-ref.js'
 import type { CommandDiagnostic, IssueRelationship, RuntimeDiagnostic } from '../types.js'
-import type { ArchiveHistoryInspection, ArchiveHistoryRecord } from './model.js'
+import type { ArchivedGroupBriefRecord, ArchiveHistoryInspection, ArchiveHistoryRecord } from './model.js'
 import { readFile } from 'node:fs/promises'
 import { basename, dirname, relative } from 'node:path'
 
@@ -25,6 +25,7 @@ export async function inspectArchiveHistory(options: { archivesDir?: string, arc
   }))
   const runtime: RuntimeDiagnostic[] = []
   const records: ArchiveHistoryRecord[] = []
+  const groupBriefs: ArchivedGroupBriefRecord[] = []
 
   if (!tree.rootExists && tree.diagnostics.length === 0) {
     diagnostics.push({
@@ -52,15 +53,19 @@ export async function inspectArchiveHistory(options: { archivesDir?: string, arc
       diagnostics.push(parsed.diagnostic)
     if (parsed.record)
       records.push(parsed.record)
+    if (parsed.groupBrief)
+      groupBriefs.push(parsed.groupBrief)
   }
 
   records.sort(compareHistoryRecords)
+  groupBriefs.sort(compareArchivedGroupBriefs)
   diagnostics.sort(compareDiagnostics)
   const diagnosticTotal = diagnostics.length
   const boundedDiagnostics = diagnostics.slice(0, HISTORY_MAX_DIAGNOSTICS)
   return {
     rootExists: tree.rootExists,
     records,
+    groupBriefs,
     diagnostics: boundedDiagnostics,
     diagnosticSummary: {
       total: diagnosticTotal,
@@ -71,7 +76,7 @@ export async function inspectArchiveHistory(options: { archivesDir?: string, arc
   }
 }
 
-function parseArchiveEntry(sourcePath: string, path: string, archivesDir: string, content: string): { record?: ArchiveHistoryRecord, diagnostic?: CommandDiagnostic } {
+function parseArchiveEntry(sourcePath: string, path: string, archivesDir: string, content: string): { record?: ArchiveHistoryRecord, groupBrief?: ArchivedGroupBriefRecord, diagnostic?: CommandDiagnostic } {
   const nameMatch = basename(sourcePath).match(ARCHIVE_NAME_RE)
   if (!nameMatch || !isCalendarDate(nameMatch[1])) {
     return { diagnostic: errorDiagnostic('archive_name_invalid', path, 'archive filename must use a valid YYYY-MM-DD_name.md date') }
@@ -106,7 +111,7 @@ function parseArchiveEntry(sourcePath: string, path: string, archivesDir: string
     if (!archiveGroup || group !== archiveGroup || frontmatter.kind !== 'group' || !matchesArchiveStem(archiveStem, 'brief')) {
       return { diagnostic: errorDiagnostic('archive_identity_mismatch', path, `archived Change Group identity ${group} does not match its archive path`) }
     }
-    return {}
+    return { groupBrief: { date, group, path, sourcePath } }
   }
 
   let issues: IssueRelationship[] | undefined
@@ -201,6 +206,12 @@ function escapeRegExp(value: string): string {
 function compareHistoryRecords(left: ArchiveHistoryRecord, right: ArchiveHistoryRecord): number {
   return right.date.localeCompare(left.date)
     || left.workRef.localeCompare(right.workRef)
+    || left.path.localeCompare(right.path)
+}
+
+function compareArchivedGroupBriefs(left: ArchivedGroupBriefRecord, right: ArchivedGroupBriefRecord): number {
+  return right.date.localeCompare(left.date)
+    || left.group.localeCompare(right.group)
     || left.path.localeCompare(right.path)
 }
 

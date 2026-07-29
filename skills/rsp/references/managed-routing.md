@@ -36,6 +36,12 @@ After accepted managed progress, re-read `rsp status --json` and apply PREFLIGHT
 
 Never persist the goal envelope, WorkSet, waves, discovery classification, or transition chronology.
 
+### Interrupt and resume
+
+Treat a progress or status inquiry as an evidence update, not a stop signal, and continue authorized work when the preflight remains valid. An explicit pause interrupts active workers and confirms their stop before acknowledgement, preserves the focused owner, and permits no later mutation until resume. Only an explicit release or unfocus request clears owner selection; an environment or verification blocker must preserve the focused owner and return the complete seven-field continuation.
+
+On resume, treat the continuation only as pointers: reread current authority, status, focus, owned diff, blockers, and decisive evidence; invalidate stale claims; rerun PREFLIGHT; and requalify Manage before mutation or dispatch. Never persist pause, worker, controller, or execution-chronology state.
+
 ## CONVERGE — bound review correction
 
 After a managed fixed-scope re-review, correlate the report, selected Change, original authority, fresh verification, and transient convergence count. Return an in-scope `accepted` remaining or new Finding as `correction-needed` to another bounded Resolve Findings pass without asking the user to continue. Resolve Findings never self-loops.
@@ -49,6 +55,8 @@ Enter CLOSE only when Core selected and QUALIFY accepted Manage for the current 
 After that gate passes, use effective `manage.closeout` as an automatic grant ceiling, narrowed by nearer restrictions and host enforcement. `manual` grants neither automatic archive nor commit. `lifecycle` grants lifecycle closeout after Core durable review but no Git action. `local` adds separately justified recovery checkpoints and the deterministic terminal route below. Explicit current-turn authority may allow a named local action that the preset does not automate; denial still wins.
 
 When lifecycle closeout is granted, archive a Change after Core durable review. A shallow Group independently reviews and archives each child, re-derives completion, then runs `rsp group close <group>` only after every child and the Group gate pass. Inspect the complete lifecycle diff after each mutation, including terminal owners.
+
+During authorized recovery, a closed Group and its incomplete archived child remain two explicit lifecycle operations: first `rsp group reopen <group> --reason <text>`, then `rsp reopen <group>/<child> --reason <text>`. Neither operation cascades into other children or dependents, creates controller state, or grants Git or external authority.
 
 Decide Git delivery separately. Under `local` or explicit commit authority, accepted downstream work may justify an exact-path recovery checkpoint unless commits are reserved or denied. Terminal small work defaults to no commit. After lifecycle closeout, a qualified `local` terminal non-small Change or Group with a derived owner, allowed paths, fresh decisive verification, one clean exact boundary, and no nearer denial must be handed exactly once to `rsp-commit`; do not require the user to repeat `commit`. An ambiguous, mixed, stale, or denied boundary stops without staging. Commit owns structured message construction, one local commit, and post-commit observation; when unavailable, return the equivalent bounded Core manual action against the same owner.
 

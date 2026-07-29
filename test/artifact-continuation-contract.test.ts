@@ -94,6 +94,21 @@ describe('rsp artifact routing and continuation contract', () => {
     expect(fallback).toContain('it is not durable truth or a second state store')
   })
 
+  it('distinguishes progress, pause, owner release, blockers, and resume at the portable boundary', () => {
+    const core = readFileSync(join(root, 'skills', 'rsp', 'SKILL.md'), 'utf8')
+    const manage = readFileSync(join(root, 'skills', 'rsp-manage', 'SKILL.md'), 'utf8')
+    const routing = readFileSync(join(root, 'skills', 'rsp', 'references', 'managed-routing.md'), 'utf8')
+    const fallback = readFileSync(join(root, 'rules', 'rsp-rules.md'), 'utf8')
+
+    for (const body of [core, manage, routing, fallback]) {
+      expect(body).toContain('progress or status inquiry')
+      expect(body).toContain('explicit pause')
+      expect(body).toContain('release or unfocus')
+      expect(body).toContain('preserve the focused owner')
+      expect(body).toContain('requalify Manage')
+    }
+  })
+
   it('converges Changes before archive and gates persistent artifact audience', () => {
     const shape = readFileSync(join(root, 'skills', 'rsp-shape', 'SKILL.md'), 'utf8')
     const fallback = readFileSync(join(root, 'rules', 'rsp-rules.md'), 'utf8')

@@ -1,0 +1,25 @@
+{
+  "recovery": {
+    "handoff_treated_as_pointer": true,
+    "authority_reopened": true,
+    "focus_preserved": true,
+    "manage_requalified": true,
+    "stale_verification_refreshed": true
+  },
+  "continuation": {
+    "complete_seven_fields": true,
+    "environment_blocker_reported": true,
+    "manual_acceptance_claimed": false
+  },
+  "delivery": {
+    "local_commits": 0,
+    "push": false,
+    "publication": false
+  },
+  "isolation": {
+    "source_stable": true,
+    "installed_stable": true,
+    "raw_events_retained": false,
+    "disposable_workspace_retained": false
+  }
+}

@@ -9,6 +9,7 @@ import { countCheckboxes, hasMeaningfulBlockerBody, normalizeLogicalPath, parseF
 import { GROUP_BRIEF_FILENAME, inspectArchiveTree, inspectFocusTree, inspectWorkTree, isCanonicalExecutableWorkRef, resolveWorkRef, WorkRefError } from './work-ref.js'
 
 export const GROUP_BRIEF_SECTIONS = getCanonicalSectionHeadings(GROUP_BRIEF_DOCUMENT_SCHEMA)
+export const GROUP_REOPEN_COMPLETION_PREFIX = 'Resolve reopened concern from'
 
 export interface ChangeGroupInspection {
   groups: ChangeGroupStatusOutput[]
@@ -65,6 +66,8 @@ export async function inspectChangeGroups(options: { workTree?: WorkTreeInspecti
   const groups: ChangeGroupStatusOutput[] = []
   const archivedSlicesByGroup = new Map<string, Set<string>>()
   const archivedGroups = new Set<string>()
+  const archivedGroupReopenEvidence = new Map<string, Set<string>>()
+  const archivedGroupBriefPaths = new Map<string, Set<string>>()
   const openGroupNames = new Set(workTree.briefs.map(brief => brief.group))
 
   for (const path of archiveTree.files) {
@@ -92,8 +95,16 @@ export async function inspectChangeGroups(options: { workTree?: WorkTreeInspecti
           archivedSlicesByGroup.set(archiveGroup, groupSlices)
         }
       }
-      if (getDocumentTitle(parseRspDocument(content, GROUP_BRIEF_DOCUMENT_SCHEMA), 'identity') === archiveGroup)
+      if (getDocumentTitle(parseRspDocument(content, GROUP_BRIEF_DOCUMENT_SCHEMA), 'identity') === archiveGroup) {
         archivedGroups.add(archiveGroup)
+        const evidence = archivedGroupReopenEvidence.get(archiveGroup) ?? new Set<string>()
+        for (const item of getGroupReopenEvidence(content))
+          evidence.add(item.key)
+        archivedGroupReopenEvidence.set(archiveGroup, evidence)
+        const retainedPaths = archivedGroupBriefPaths.get(archiveGroup) ?? new Set<string>()
+        retainedPaths.add(`.rsp/archives/${archivePath}`)
+        archivedGroupBriefPaths.set(archiveGroup, retainedPaths)
+      }
     }
     catch (error) {
       diagnostics.push({
@@ -124,7 +135,11 @@ export async function inspectChangeGroups(options: { workTree?: WorkTreeInspecti
 
     const parsed = parseGroupBrief(brief.group, content)
     diagnostics.push(...parsed.diagnostics.map(diagnostic => ({ ...diagnostic, path: brief.path })))
-    if (archivedGroups.has(brief.group)) {
+    if (archivedGroups.has(brief.group) && !hasExplicitGroupReopenEvidence(
+      content,
+      archivedGroupReopenEvidence.get(brief.group) ?? new Set(),
+      archivedGroupBriefPaths.get(brief.group) ?? new Set(),
+    )) {
       diagnostics.push({
         severity: 'error',
         code: 'group_identity_reopened',
@@ -226,6 +241,34 @@ export async function inspectChangeGroups(options: { workTree?: WorkTreeInspecti
 
   groups.sort((left, right) => left.name.localeCompare(right.name))
   return { groups, diagnostics }
+}
+
+export interface GroupReopenEvidence {
+  active: boolean
+  key: string
+  sourcePath: string
+}
+
+/** Read exact archive-bound Group reopen evidence from Completion Conditions. */
+export function getGroupReopenEvidence(content: string): GroupReopenEvidence[] {
+  const completion = getDocumentSectionBody(parseRspDocument(content, GROUP_BRIEF_DOCUMENT_SCHEMA), 'completionConditions')
+  return completion.split('\n').flatMap((line) => {
+    const match = line.trim().match(/^-\s+\[([ /xX-])\]\s+(Resolve reopened concern from `(\.rsp\/archives\/[^`]+)`: \S.*)$/)
+    return match ? [{ active: match[1] !== '-', key: match[2], sourcePath: match[3] }] : []
+  })
+}
+
+/** Accept only active evidence bound to this Group's retained history and absent from every retained snapshot. */
+export function hasExplicitGroupReopenEvidence(
+  content: string,
+  retainedEvidence: ReadonlySet<string>,
+  retainedGroupBriefPaths: ReadonlySet<string>,
+): boolean {
+  return getGroupReopenEvidence(content).some(item => (
+    item.active
+    && retainedGroupBriefPaths.has(item.sourcePath)
+    && !retainedEvidence.has(item.key)
+  ))
 }
 
 /** Require a grouped Change identity to be declared by its sibling Group Brief. */

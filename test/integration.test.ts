@@ -155,6 +155,20 @@ async function createRspFixture(prefix: string, directories: string[] = ['specs'
   return root
 }
 
+async function createClosedGroupProject(prefix: string): Promise<string> {
+  const root = join(tmpdir(), prefix, randomUUID())
+  await mkdir(root, { recursive: true })
+  execSync(`node ${cliPath()} init`, { cwd: root })
+  execSync(`node ${cliPath()} group create release "Ship the release"`, { cwd: root })
+  await writeFile(join(root, '.rsp', 'changes', 'release', '00-brief.md'), renderGroupBrief('release', ['release/api', 'release/ui'], { complete: true }))
+  execSync(`node ${cliPath()} create release/api`, { cwd: root })
+  execSync(`node ${cliPath()} create release/ui`, { cwd: root })
+  execSync(`node ${cliPath()} archive release/api`, { cwd: root })
+  execSync(`node ${cliPath()} archive release/ui`, { cwd: root })
+  execSync(`node ${cliPath()} group close release`, { cwd: root })
+  return root
+}
+
 beforeAll(async () => {
   execSync('pnpm build', { cwd: repoRoot, stdio: 'pipe' })
   testDir = join(tmpdir(), 'rsp-int-test', randomUUID())
@@ -3434,6 +3448,233 @@ describe('change groups', () => {
     expect(existsSync(join(groupDir, '.rsp', 'changes', 'release'))).toBe(false)
     const after = JSON.parse(execSync(`node ${cliPath()} status --json`, { cwd: groupDir, encoding: 'utf-8' }))
     expect(after.groups).toEqual([])
+  })
+
+  it('reopens a closed Change Group before explicitly reopening one child', async () => {
+    const groupDir = join(tmpdir(), 'rsp-group-explicit-reopen-test', randomUUID())
+    await mkdir(groupDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: groupDir })
+    execSync(`node ${cliPath()} group create release "Ship the release"`, { cwd: groupDir })
+    await writeFile(join(groupDir, '.rsp', 'changes', 'release', '00-brief.md'), renderGroupBrief('release', ['release/api', 'release/ui'], { complete: true }))
+    execSync(`node ${cliPath()} create release/api`, { cwd: groupDir })
+    execSync(`node ${cliPath()} create release/ui`, { cwd: groupDir })
+    execSync(`node ${cliPath()} archive release/api`, { cwd: groupDir })
+    execSync(`node ${cliPath()} archive release/ui`, { cwd: groupDir })
+    execSync(`node ${cliPath()} group close release`, { cwd: groupDir })
+
+    const archiveDir = join(groupDir, '.rsp', 'archives', 'release')
+    const archiveFiles = await readdir(archiveDir)
+    const briefArchive = archiveFiles.find(name => name.endsWith('_brief.md'))!
+    const retained = new Map(await Promise.all(archiveFiles.map(async name => [name, await readFile(join(archiveDir, name), 'utf-8')] as const)))
+    const output = execSync(`node ${cliPath()} group reopen release --reason "api still fails"`, { cwd: groupDir, encoding: 'utf-8' })
+    const briefPath = join(groupDir, '.rsp', 'changes', 'release', '00-brief.md')
+
+    expect(output).toContain('Reopened Change Group: release')
+    expect(await readFile(briefPath, 'utf-8')).toContain(`- [ ] Resolve reopened concern from \`.rsp/archives/release/${briefArchive}\`: api still fails`)
+    expect(await readdir(archiveDir)).toEqual(archiveFiles)
+    for (const [name, content] of retained)
+      expect(await readFile(join(archiveDir, name), 'utf-8')).toBe(content)
+    expect(existsSync(join(groupDir, '.rsp', 'changes', 'release', 'api.md'))).toBe(false)
+    expect(existsSync(join(groupDir, '.rsp', 'changes', 'release', 'ui.md'))).toBe(false)
+    expect(existsSync(join(groupDir, '.rsp', 'focus.d', 'release'))).toBe(false)
+
+    const reopenedStatus = JSON.parse(execSync(`node ${cliPath()} status --json`, { cwd: groupDir, encoding: 'utf-8' }))
+    expect(reopenedStatus.diagnostics).not.toContainEqual(expect.objectContaining({ code: 'group_identity_reopened', change: 'release' }))
+    expect(reopenedStatus.groups[0]).toEqual(expect.objectContaining({
+      name: 'release',
+      readyToClose: false,
+      slices: [
+        expect.objectContaining({ name: 'release/api', state: 'archived' }),
+        expect.objectContaining({ name: 'release/ui', state: 'archived' }),
+      ],
+    }))
+
+    execSync(`node ${cliPath()} reopen release/api --reason "api still fails"`, { cwd: groupDir })
+    expect(existsSync(join(groupDir, '.rsp', 'changes', 'release', 'api.md'))).toBe(true)
+    expect(existsSync(join(groupDir, '.rsp', 'focus.d', 'release', 'api'))).toBe(true)
+    expect(existsSync(join(groupDir, '.rsp', 'changes', 'release', 'ui.md'))).toBe(false)
+
+    expect((await readdir(join(groupDir, '.rsp', 'changes', 'release'))).some(name => name.includes('.tmp'))).toBe(false)
+    const cleanupResidue = join(groupDir, '.rsp', '.group-reopen-leftover.tmp')
+    await writeFile(cleanupResidue, 'partial temporary output')
+    const residueStatus = spawnSync('node', [cliPath(), 'status', '--json'], { cwd: groupDir, encoding: 'utf-8' })
+    expect(residueStatus.status).toBe(0)
+    await rm(cleanupResidue)
+  })
+
+  it('requires exact Group archive selection and rejects identity mismatches before mutation', async () => {
+    const groupDir = await createClosedGroupProject('rsp-group-reopen-selection-test')
+    const archiveDir = join(groupDir, '.rsp', 'archives', 'release')
+    const firstBrief = (await readdir(archiveDir)).find(name => name.endsWith('_brief.md'))!
+    const secondBrief = firstBrief.replace('_brief.md', '_brief-2.md')
+    await cp(join(archiveDir, firstBrief), join(archiveDir, secondBrief))
+    const otherArchiveDir = join(groupDir, '.rsp', 'archives', 'other')
+    await mkdir(otherArchiveDir, { recursive: true })
+    const otherBrief = firstBrief.replace('_brief.md', '_brief.md')
+    await writeFile(join(otherArchiveDir, otherBrief), renderGroupBrief('other', ['other/api', 'other/ui'], { complete: true }))
+
+    const ambiguous = spawnSync('node', [cliPath(), 'group', 'reopen', 'release', '--reason', 'api still fails'], { cwd: groupDir, encoding: 'utf-8' })
+    expect(ambiguous.status).toBe(1)
+    expect(ambiguous.stderr).toContain('multiple archives match Change Group release')
+    expect(ambiguous.stderr).toContain(`.rsp/archives/release/${firstBrief}`)
+    expect(ambiguous.stderr).toContain(`.rsp/archives/release/${secondBrief}`)
+    expect(existsSync(join(groupDir, '.rsp', 'changes', 'release'))).toBe(false)
+
+    const mismatch = spawnSync('node', [
+      cliPath(),
+      'group',
+      'reopen',
+      'release',
+      '--from',
+      `.rsp/archives/other/${otherBrief}`,
+      '--reason',
+      'wrong group',
+    ], { cwd: groupDir, encoding: 'utf-8' })
+    expect(mismatch.status).toBe(1)
+    expect(mismatch.stderr).toContain('selected archived Change Group belongs to other, not release')
+    expect(existsSync(join(groupDir, '.rsp', 'changes', 'release'))).toBe(false)
+
+    execFileSync('node', [
+      cliPath(),
+      'group',
+      'reopen',
+      'release',
+      '--from',
+      `.rsp/archives/release/${secondBrief}`,
+      '--reason',
+      'api still fails',
+    ], { cwd: groupDir })
+    expect(existsSync(join(groupDir, '.rsp', 'changes', 'release', '00-brief.md'))).toBe(true)
+  })
+
+  it('fails atomically on incomplete history, malformed sections, and an open Group collision', async () => {
+    const incompleteDir = await createClosedGroupProject('rsp-group-reopen-incomplete-history-test')
+    await writeFile(join(incompleteDir, '.rsp', 'archives', 'bad-name.md'), '# invalid archive\n')
+    const incomplete = spawnSync('node', [cliPath(), 'group', 'reopen', 'release', '--reason', 'must inspect first'], { cwd: incompleteDir, encoding: 'utf-8' })
+    expect(incomplete.status).toBe(1)
+    expect(incomplete.stderr).toContain('archive history inspection is incomplete')
+    expect(existsSync(join(incompleteDir, '.rsp', 'changes', 'release'))).toBe(false)
+
+    const malformedDir = await createClosedGroupProject('rsp-group-reopen-malformed-test')
+    const malformedArchiveDir = join(malformedDir, '.rsp', 'archives', 'release')
+    const malformedBrief = (await readdir(malformedArchiveDir)).find(name => name.endsWith('_brief.md'))!
+    const malformedPath = join(malformedArchiveDir, malformedBrief)
+    await writeFile(malformedPath, `${await readFile(malformedPath, 'utf-8')}\n## Completion Conditions\n- [x] duplicate\n`)
+    const malformed = spawnSync('node', [cliPath(), 'group', 'reopen', 'release', '--reason', 'must remain atomic'], { cwd: malformedDir, encoding: 'utf-8' })
+    expect(malformed.status).toBe(1)
+    expect(malformed.stderr).toContain('must contain exactly one canonical required section: Completion Conditions')
+    expect(existsSync(join(malformedDir, '.rsp', 'changes', 'release'))).toBe(false)
+
+    const collisionDir = await createClosedGroupProject('rsp-group-reopen-collision-test')
+    execSync(`node ${cliPath()} group reopen release --reason "first concern"`, { cwd: collisionDir })
+    const openBrief = join(collisionDir, '.rsp', 'changes', 'release', '00-brief.md')
+    const beforeCollision = await readFile(openBrief, 'utf-8')
+    const collision = spawnSync('node', [cliPath(), 'group', 'reopen', 'release', '--reason', 'must not overwrite'], { cwd: collisionDir, encoding: 'utf-8' })
+    expect(collision.status).toBe(1)
+    expect(collision.stderr).toContain('Change Group work subtree for release must be absent or empty')
+    expect(await readFile(openBrief, 'utf-8')).toBe(beforeCollision)
+  })
+
+  it('requires empty work and focus subtrees before Group reopen', async () => {
+    const emptyDir = await createClosedGroupProject('rsp-group-reopen-empty-subtrees-test')
+    await mkdir(join(emptyDir, '.rsp', 'changes', 'release'), { recursive: true })
+    await mkdir(join(emptyDir, '.rsp', 'focus.d', 'release'), { recursive: true })
+    execSync(`node ${cliPath()} group reopen release --reason "empty directories are reusable"`, { cwd: emptyDir })
+    expect(existsSync(join(emptyDir, '.rsp', 'changes', 'release', '00-brief.md'))).toBe(true)
+
+    const orphanDir = await createClosedGroupProject('rsp-group-reopen-orphan-work-test')
+    await mkdir(join(orphanDir, '.rsp', 'changes', 'release'), { recursive: true })
+    await writeFile(join(orphanDir, '.rsp', 'changes', 'release', 'orphan.md'), renderChange('release/orphan'))
+    const orphan = spawnSync('node', [cliPath(), 'group', 'reopen', 'release', '--reason', 'must reject orphan'], { cwd: orphanDir, encoding: 'utf-8' })
+    expect(orphan.status).toBe(1)
+    expect(orphan.stderr).toContain('Change Group work subtree for release must be absent or empty')
+    expect(existsSync(join(orphanDir, '.rsp', 'changes', 'release', '00-brief.md'))).toBe(false)
+
+    const focusDir = await createClosedGroupProject('rsp-group-reopen-stale-focus-test')
+    await mkdir(join(focusDir, '.rsp', 'focus.d', 'release'), { recursive: true })
+    await writeFile(join(focusDir, '.rsp', 'focus.d', 'release', 'api'), '')
+    const staleFocus = spawnSync('node', [cliPath(), 'group', 'reopen', 'release', '--reason', 'must reject focus'], { cwd: focusDir, encoding: 'utf-8' })
+    expect(staleFocus.status).toBe(1)
+    expect(staleFocus.stderr).toContain('Change Group focus subtree for release must be absent or empty')
+    expect(existsSync(join(focusDir, '.rsp', 'changes', 'release'))).toBe(false)
+
+    const unsupportedDir = await createClosedGroupProject('rsp-group-reopen-unsupported-entry-test')
+    await mkdir(join(unsupportedDir, '.rsp', 'changes', 'release', 'nested'), { recursive: true })
+    const unsupported = spawnSync('node', [cliPath(), 'group', 'reopen', 'release', '--reason', 'must reject nested entry'], { cwd: unsupportedDir, encoding: 'utf-8' })
+    expect(unsupported.status).toBe(1)
+    expect(unsupported.stderr).toContain('Change Group work subtree for release must be absent or empty')
+    expect(existsSync(join(unsupportedDir, '.rsp', 'changes', 'release', '00-brief.md'))).toBe(false)
+  })
+
+  it('rejects replayed Group reopen evidence and accepts a fresh retained snapshot', async () => {
+    const groupDir = await createClosedGroupProject('rsp-group-reopen-evidence-replay-test')
+    const archiveDir = join(groupDir, '.rsp', 'archives', 'release')
+    const firstBrief = (await readdir(archiveDir)).find(name => name.endsWith('_brief.md'))!
+    const firstArchivePath = `.rsp/archives/release/${firstBrief}`
+    execFileSync('node', [cliPath(), 'group', 'reopen', 'release', '--from', firstArchivePath, '--reason', 'api still fails'], { cwd: groupDir })
+
+    const openBrief = join(groupDir, '.rsp', 'changes', 'release', '00-brief.md')
+    await writeFile(openBrief, (await readFile(openBrief, 'utf-8')).replace(
+      `- [ ] Resolve reopened concern from \`${firstArchivePath}\`: api still fails`,
+      `- [x] Resolve reopened concern from \`${firstArchivePath}\`: api still fails`,
+    ))
+    execSync(`node ${cliPath()} group close release`, { cwd: groupDir })
+    const briefArchives = (await readdir(archiveDir)).filter(name => name.includes('_brief')).sort()
+    expect(briefArchives).toHaveLength(2)
+    const secondBrief = briefArchives.find(name => name !== firstBrief)!
+    const secondArchivePath = `.rsp/archives/release/${secondBrief}`
+
+    await mkdir(join(groupDir, '.rsp', 'changes', 'release'), { recursive: true })
+    await cp(join(archiveDir, secondBrief), openBrief)
+    const copiedStatus = spawnSync('node', [cliPath(), 'status', '--json'], { cwd: groupDir, encoding: 'utf-8' })
+    expect(copiedStatus.status).toBe(1)
+    expect(JSON.parse(copiedStatus.stdout).diagnostics).toContainEqual(expect.objectContaining({ code: 'group_identity_reopened', change: 'release' }))
+    await rm(join(groupDir, '.rsp', 'changes', 'release'), { recursive: true })
+
+    const replay = spawnSync('node', [cliPath(), 'group', 'reopen', 'release', '--from', firstArchivePath, '--reason', 'api still fails'], { cwd: groupDir, encoding: 'utf-8' })
+    expect(replay.status).toBe(1)
+    expect(replay.stderr).toContain('reopen evidence already exists in retained Change Group history')
+    expect(existsSync(join(groupDir, '.rsp', 'changes', 'release'))).toBe(false)
+
+    execFileSync('node', [cliPath(), 'group', 'reopen', 'release', '--from', secondArchivePath, '--reason', 'api still fails'], { cwd: groupDir })
+    const repeated = await readFile(openBrief, 'utf-8')
+    expect(repeated).toContain(`- [ ] Resolve reopened concern from \`${secondArchivePath}\`: api still fails`)
+    const repeatedStatus = spawnSync('node', [cliPath(), 'status', '--json'], { cwd: groupDir, encoding: 'utf-8' })
+    expect(repeatedStatus.status).toBe(0)
+  })
+
+  it('requires reopen evidence to reference a retained Brief path for the current Group', async () => {
+    const groupDir = await createClosedGroupProject('rsp-group-reopen-evidence-source-test')
+    const releaseArchiveDir = join(groupDir, '.rsp', 'archives', 'release')
+    const releaseBrief = (await readdir(releaseArchiveDir)).find(name => name.endsWith('_brief.md'))!
+    const releaseArchivePath = `.rsp/archives/release/${releaseBrief}`
+    const openGroupDir = join(groupDir, '.rsp', 'changes', 'release')
+    const openBrief = join(openGroupDir, '00-brief.md')
+    await mkdir(openGroupDir, { recursive: true })
+    await cp(join(releaseArchiveDir, releaseBrief), openBrief)
+
+    const nonexistentPath = '.rsp/archives/release/2099-01-01_brief.md'
+    await writeFile(openBrief, (await readFile(openBrief, 'utf-8')).replace(
+      '\n## Durable Outcomes',
+      `\n- [ ] Resolve reopened concern from \`${nonexistentPath}\`: fabricated source\n\n## Durable Outcomes`,
+    ))
+    const nonexistentStatus = spawnSync('node', [cliPath(), 'status', '--json'], { cwd: groupDir, encoding: 'utf-8' })
+    expect(nonexistentStatus.status).toBe(1)
+    expect(JSON.parse(nonexistentStatus.stdout).diagnostics).toContainEqual(expect.objectContaining({ code: 'group_identity_reopened', change: 'release' }))
+
+    const otherArchiveDir = join(groupDir, '.rsp', 'archives', 'other')
+    await mkdir(otherArchiveDir, { recursive: true })
+    await writeFile(join(otherArchiveDir, releaseBrief), renderGroupBrief('other', ['other/api', 'other/ui'], { complete: true }))
+    const otherArchivePath = `.rsp/archives/other/${releaseBrief}`
+    await writeFile(openBrief, (await readFile(openBrief, 'utf-8')).replace(nonexistentPath, otherArchivePath))
+    const otherStatus = spawnSync('node', [cliPath(), 'status', '--json'], { cwd: groupDir, encoding: 'utf-8' })
+    expect(otherStatus.status).toBe(1)
+    expect(JSON.parse(otherStatus.stdout).diagnostics).toContainEqual(expect.objectContaining({ code: 'group_identity_reopened', change: 'release' }))
+
+    await rm(openGroupDir, { recursive: true })
+    execFileSync('node', [cliPath(), 'group', 'reopen', 'release', '--from', releaseArchivePath, '--reason', 'legitimate source'], { cwd: groupDir })
+    const legitimateStatus = spawnSync('node', [cliPath(), 'status', '--json'], { cwd: groupDir, encoding: 'utf-8' })
+    expect(legitimateStatus.status).toBe(0)
   })
 
   it('does not close a Change Group while a stale child focus marker remains', async () => {

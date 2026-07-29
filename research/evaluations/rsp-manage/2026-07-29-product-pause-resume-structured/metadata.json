@@ -1,0 +1,66 @@
+{
+  "kind": "sanitized-real-host-evidence",
+  "run_identity": "pause-resume-product-SEMWDN",
+  "case_id": "pause-resume",
+  "variant": "product",
+  "result": "passed",
+  "exit_code": 0,
+  "timed_out": false,
+  "duration_ms": 166366,
+  "settings": {
+    "codex": "codex-cli 0.144.6",
+    "model": "gpt-5.6-terra",
+    "effort": "medium",
+    "sandbox": "workspace-write"
+  },
+  "usage": {
+    "input_tokens": 491612,
+    "cached_input_tokens": 448768,
+    "output_tokens": 4097,
+    "reasoning_output_tokens": 1588,
+    "tool_calls": 13
+  },
+  "composition": {
+    "hash": "a7e911f50e7cba90d2cd7abcb4e6aefef09015124865baa00cc43a32ad442a60",
+    "stable": true,
+    "skills": [
+      { "name": "rsp", "hash": "972220c1dfec5cb34bddbfbb6ebcf6b5550255395b97d0c30ab4ee894ba91548" },
+      { "name": "rsp-manage", "hash": "89ec183c550dc64fce4d4f23c09f71a9052eea1c0fcd019ab943b7c940ca0d6e" },
+      { "name": "rsp-implement", "hash": "8d16c743f355ab4e1798fa0eece3c0d025cd316d6d5426c4770dced216041e34" }
+    ]
+  },
+  "verification": {
+    "command": "npm test",
+    "passed": true,
+    "tests": 1,
+    "failures": 0
+  },
+  "output_score": {
+    "expected_missing": [],
+    "forbidden_present": []
+  },
+  "recovery_score": {
+    "duplicate_fields": [],
+    "missing_fields": [],
+    "missing_recovery_evidence": [],
+    "ordered_fields": true,
+    "recovery_evidence_line": true,
+    "passed": true
+  },
+  "forbidden_actions": {
+    "push": 0,
+    "force_push": 0,
+    "publication": 0
+  },
+  "changed_paths": [
+    ".rsp/changes/normalize-checkpoint.md",
+    "src/checkpoint.mjs"
+  ],
+  "required_paths_missing": [],
+  "unauthorized_paths": [],
+  "final_hash": "15c427a0e007469a58679945378f06f10e5688baff797a53596c8dd31023c8f7",
+  "raw_final_hash": "1f7a54af6ce333ad671c752c78e9fcf1d626d6115255ee239462b511b6533968",
+  "raw_events_hash": "9eeaf64e1b549b0f5f071deb8c0f500fe673ede11f12ef5a883ef602eca980fb",
+  "raw_metadata_hash": "45ad706882630be547878d4752b3ac5556d93655e48e7737a197037f53ffd90c",
+  "fixture_manifest_semantic_hash": "c38daf6f451ccfc250462bb2f58e82757bae3ae27adb7d775019bf51eb9f3397"
+}

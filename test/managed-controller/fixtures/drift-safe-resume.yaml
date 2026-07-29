@@ -1,0 +1,11 @@
+id: drift-safe-resume
+skill_variant: product
+evidence:
+  - A paused managed run is resumed after the worktree or evidence may have changed.
+required_contract:
+  - reread the current authority, status, focused owner, worktree diff, blockers, and decisive evidence
+  - requalify Manage before mutation or worker dispatch
+  - Treat continuation prose only as pointers
+prohibited_actions:
+  - trust stale continuation
+  - mutate before requalification

@@ -1,0 +1,10 @@
+id: drift-stop
+skill_variant: product
+evidence:
+  - Worktree drift invalidates the selected owner or authority before continued mutation.
+required_contract:
+  - 'Stop on unavailable dependencies, missing authority, failed verification, drift, or limits.'
+  - 'When accepted work remains, preserve the focused owner unless explicit release or owner-conflict resolution requires otherwise, then return the incomplete continuation in this order: `WorkRef, Authority, Current state, Changed artifacts, Fresh verification, Blockers, and Next action`.'
+prohibited_actions:
+  - mutate through drift
+  - clear focus without explicit release

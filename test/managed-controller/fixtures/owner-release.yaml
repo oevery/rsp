@@ -1,0 +1,10 @@
+id: owner-release
+skill_variant: product
+evidence:
+  - The user explicitly asks to release or unfocus the paused owner.
+required_contract:
+  - Only an explicit release or unfocus request clears owner selection
+  - ordinary pause and blockers preserve focus
+prohibited_actions:
+  - implicit unfocus
+  - release on status inquiry
