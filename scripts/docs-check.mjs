@@ -3,6 +3,7 @@ import { dirname, extname, join, relative, resolve } from 'node:path'
 
 const repositoryRoot = resolve(import.meta.dirname, '..')
 const docsRoot = join(repositoryRoot, 'docs')
+const siteRoot = join(docsRoot, 'site')
 const localeRoots = ['en', 'zh-CN']
 
 function markdownFiles(root) {
@@ -18,8 +19,12 @@ function normalizeSiteTarget(target) {
   const withoutQuery = target.split(/[?#]/, 1)[0]
   if (!withoutQuery)
     return null
-  if (withoutQuery.startsWith('/'))
-    return join(docsRoot, withoutQuery)
+  if (withoutQuery.startsWith('/')) {
+    const route = withoutQuery.slice(1)
+    return route === 'zh-CN' || route.startsWith('zh-CN/')
+      ? join(siteRoot, route)
+      : join(siteRoot, 'en', route)
+  }
   return null
 }
 
@@ -36,21 +41,23 @@ function candidateTargets(source, rawTarget) {
 
 const errors = []
 const [firstLocale, ...otherLocales] = localeRoots
-const firstFiles = markdownFiles(join(docsRoot, firstLocale))
+const firstRoot = join(siteRoot, firstLocale)
+const firstFiles = markdownFiles(firstRoot)
 
 for (const file of firstFiles) {
-  const localePath = relative(join(docsRoot, firstLocale), file)
+  const localePath = relative(firstRoot, file)
   for (const locale of otherLocales) {
-    const pair = join(docsRoot, locale, localePath)
+    const pair = join(siteRoot, locale, localePath)
     if (!existsSync(pair))
       errors.push(`Missing ${locale} page for ${firstLocale}/${localePath}`)
   }
 }
 
 for (const locale of otherLocales) {
-  for (const file of markdownFiles(join(docsRoot, locale))) {
-    const localePath = relative(join(docsRoot, locale), file)
-    const pair = join(docsRoot, firstLocale, localePath)
+  const localeRoot = join(siteRoot, locale)
+  for (const file of markdownFiles(localeRoot)) {
+    const localePath = relative(localeRoot, file)
+    const pair = join(firstRoot, localePath)
     if (!existsSync(pair))
       errors.push(`Missing ${firstLocale} page for ${locale}/${localePath}`)
   }

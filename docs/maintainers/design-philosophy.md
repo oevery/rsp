@@ -411,7 +411,7 @@ RSP 有多个表面。
 - `README.md`：人类概览、入门、示例。
 - `.rsp/rsp-rules.md`：skill 不可用时的最小 fallback protocol。
 - `skills/`：优先使用的按需操作手册。
-- `docs/design-philosophy.md`：设计理由。
+- `docs/maintainers/design-philosophy.md`：设计理由。
 - `AGENTS.md`：RSP 受管 block 是入口导航层，项目自有 section 可承载稳定 scoped instructions。
 
 这些表面应互相强化。

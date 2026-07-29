@@ -286,8 +286,8 @@ describe('documentation command examples', () => {
   it('explains npx usage in the getting-started guides', () => {
     const root = fileURLToPath(new URL('..', import.meta.url))
     const packageJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf-8')) as { version: string }
-    const guide = readFileSync(join(root, 'docs', 'en', 'getting-started.md'), 'utf-8')
-    const chineseGuide = readFileSync(join(root, 'docs', 'zh-CN', 'getting-started.md'), 'utf-8')
+    const guide = readFileSync(join(root, 'docs', 'site', 'en', 'getting-started.md'), 'utf-8')
+    const chineseGuide = readFileSync(join(root, 'docs', 'site', 'zh-CN', 'getting-started.md'), 'utf-8')
     expect(guide).toContain('For opt-in beta evaluation, pin the exact prerelease identity')
     expect(guide).toContain(`npx -y @oevery/rsp@${packageJson.version} init`)
     expect(guide).toContain('skills install --dry-run')
@@ -349,12 +349,12 @@ describe('documentation command examples', () => {
     const skill = readFileSync(join(root, 'skills', 'rsp', 'SKILL.md'), 'utf-8')
     const setup = readFileSync(join(root, 'skills', 'rsp', 'references', 'setup-repair.md'), 'utf-8')
     const readme = readFileSync(join(root, 'README.md'), 'utf-8')
-    const skillsGuide = readFileSync(join(root, 'docs', 'en', 'guides', 'skills.md'), 'utf-8')
-    const zhSkillsGuide = readFileSync(join(root, 'docs', 'zh-CN', 'guides', 'skills.md'), 'utf-8')
-    const gettingStarted = readFileSync(join(root, 'docs', 'en', 'getting-started.md'), 'utf-8')
-    const zhGettingStarted = readFileSync(join(root, 'docs', 'zh-CN', 'getting-started.md'), 'utf-8')
-    const cliReference = readFileSync(join(root, 'docs', 'en', 'reference', 'cli.md'), 'utf-8')
-    const zhCliReference = readFileSync(join(root, 'docs', 'zh-CN', 'reference', 'cli.md'), 'utf-8')
+    const skillsGuide = readFileSync(join(root, 'docs', 'site', 'en', 'guides', 'skills.md'), 'utf-8')
+    const zhSkillsGuide = readFileSync(join(root, 'docs', 'site', 'zh-CN', 'guides', 'skills.md'), 'utf-8')
+    const gettingStarted = readFileSync(join(root, 'docs', 'site', 'en', 'getting-started.md'), 'utf-8')
+    const zhGettingStarted = readFileSync(join(root, 'docs', 'site', 'zh-CN', 'getting-started.md'), 'utf-8')
+    const cliReference = readFileSync(join(root, 'docs', 'site', 'en', 'reference', 'cli.md'), 'utf-8')
+    const zhCliReference = readFileSync(join(root, 'docs', 'site', 'zh-CN', 'reference', 'cli.md'), 'utf-8')
     const projectDesign = readFileSync(join(root, '.rsp', 'specs', 'design.md'), 'utf-8')
     const projectSpecs = [
       'cli-contracts.md',
@@ -399,7 +399,7 @@ describe('documentation command examples', () => {
 
   it('documents external workflow tradeoffs in the design philosophy', () => {
     const root = fileURLToPath(new URL('..', import.meta.url))
-    const design = readFileSync(join(root, 'docs', 'design-philosophy.md'), 'utf-8')
+    const design = readFileSync(join(root, 'docs', 'maintainers', 'design-philosophy.md'), 'utf-8')
 
     expect(design).toContain('## 外部工作流取舍')
     expect(design).toContain('### 与 spec-kit 的边界')

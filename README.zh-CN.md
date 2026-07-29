@@ -40,7 +40,7 @@ rsp show --focused
 
 遵循 nearest `AGENTS.md`，在工作推进时同步 focused Change，运行 fresh project checks，完成 durable-update 判断，并仅在 acceptance 满足后归档。
 
-[阅读完整入门指南](./docs/zh-CN/getting-started.md)。
+[阅读完整入门指南](./docs/site/zh-CN/getting-started.md)。
 
 ## Artifact 模型
 
@@ -57,15 +57,15 @@ rsp show --focused
 
 ## 文档
 
-- [开始使用](./docs/zh-CN/getting-started.md)
-- [核心概念与 artifact owner](./docs/zh-CN/concepts.md)
-- [日常工作流](./docs/zh-CN/guides/daily-workflow.md)
-- [Skills 与 managed work](./docs/zh-CN/guides/skills.md)
-- [配置参考](./docs/zh-CN/reference/configuration.md)
-- [CLI 参考](./docs/zh-CN/reference/cli.md)
+- [开始使用](./docs/site/zh-CN/getting-started.md)
+- [核心概念与 artifact owner](./docs/site/zh-CN/concepts.md)
+- [日常工作流](./docs/site/zh-CN/guides/daily-workflow.md)
+- [Skills 与 managed work](./docs/site/zh-CN/guides/skills.md)
+- [配置参考](./docs/site/zh-CN/reference/configuration.md)
+- [CLI 参考](./docs/site/zh-CN/reference/cli.md)
 - [3.0 迁移指南](./docs/migrations/3.0.md)与 [3.1 迁移指南](./docs/migrations/3.1.md)
 - [发布说明](./docs/releases/3.1.0-beta.5.md)
-- [设计哲学](./docs/design-philosophy.md)与[维护者 upstream research](./docs/upstreams.md)
+- [设计哲学](./docs/maintainers/design-philosophy.md)与[维护者 upstream research](./docs/maintainers/upstreams.md)
 
 在本地运行文档：
 

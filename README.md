@@ -40,7 +40,7 @@ rsp show --focused
 
 Follow the nearest `AGENTS.md`, edit the focused Change as work progresses, run fresh project checks, make the durable-update decision, and archive only after acceptance is satisfied.
 
-[Read the full getting-started guide](./docs/en/getting-started.md).
+[Read the full getting-started guide](./docs/site/en/getting-started.md).
 
 ## Artifact model
 
@@ -57,15 +57,15 @@ A Change is one Markdown file with canonical Proposal, Spec, Design, Tasks, Veri
 
 ## Documentation
 
-- [Getting started](./docs/en/getting-started.md)
-- [Core concepts and artifact ownership](./docs/en/concepts.md)
-- [Daily workflow](./docs/en/guides/daily-workflow.md)
-- [Skills and managed work](./docs/en/guides/skills.md)
-- [Configuration reference](./docs/en/reference/configuration.md)
-- [CLI reference](./docs/en/reference/cli.md)
+- [Getting started](./docs/site/en/getting-started.md)
+- [Core concepts and artifact ownership](./docs/site/en/concepts.md)
+- [Daily workflow](./docs/site/en/guides/daily-workflow.md)
+- [Skills and managed work](./docs/site/en/guides/skills.md)
+- [Configuration reference](./docs/site/en/reference/configuration.md)
+- [CLI reference](./docs/site/en/reference/cli.md)
 - [3.0 migration guide](./docs/migrations/3.0.md) and [3.1 migration guide](./docs/migrations/3.1.md)
 - [Release notes](./docs/releases/3.1.0-beta.5.md)
-- [Design philosophy](./docs/design-philosophy.md) and [maintainer upstream research](./docs/upstreams.md)
+- [Design philosophy](./docs/maintainers/design-philosophy.md) and [maintainer upstream research](./docs/maintainers/upstreams.md)
 
 Run the documentation locally:
 

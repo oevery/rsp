@@ -8,6 +8,7 @@ const shared = {
 export default defineConfig({
   title: 'RSP',
   description: 'Reliable Software Practice',
+  srcDir: 'site',
   cleanUrls: true,
   ignoreDeadLinks: [/^https?:\/\//],
   themeConfig: shared,
@@ -51,7 +52,6 @@ function nav(locale: 'en' | 'zh-CN') {
     { text: zh ? '入门' : 'Get started', link: `${prefix}/getting-started` },
     { text: zh ? '指南' : 'Guides', link: `${prefix}/guides/daily-workflow` },
     { text: zh ? '参考' : 'Reference', link: `${prefix}/reference/cli` },
-    { text: zh ? '迁移' : 'Migrations', link: '/migrations/3.1' },
   ]
 }
 

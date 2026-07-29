@@ -14,7 +14,7 @@
   - [Interactive TUI](./tui.md): dashboard routing, state, presentation, localization, history, layout, and terminal lifecycle.
   - [Distribution and Maintainer Research](./distribution.md): package inventory, Skill installation, releases, evaluation provenance, repository layering, and upstream research.
 - Decision Records under the configured authoritative path own lasting rationale for hard-to-reverse choices; Specs own current facts.
-- `docs/design-philosophy.md` is explanatory maintainer rationale, not a normative protocol source.
+- `docs/maintainers/design-philosophy.md` is explanatory maintainer rationale, not a normative protocol source.
 
 ## Boundaries
 - In scope:
@@ -30,7 +30,8 @@
 | Product distribution | `rules/`, `skills/` | Bundled fallback source, eleven default lifecycle Skills, and independently installed optional project Skills |
 | Project host integration | `.agents/skills/` | Live published-Skill projections and maintainer-only research capability |
 | Maintainer tooling | `scripts/` | Deterministic repository and upstream maintenance workflows |
-| Maintainer knowledge | `docs/`, `research/` | Explanatory design material, source distillations, cross-source models, and recommendations |
+| Public guidance | `docs/site/` | Paired English and Simplified Chinese user guides rendered by VitePress |
+| Repository records | `docs/maintainers/`, `docs/migrations/`, `docs/releases/`, `research/` | Explanatory maintainer material, version records, source distillations, cross-source models, and recommendations |
 | Verification | `test/` | Observable product and maintainer-tooling checks |
 | Self-hosting protocol | `.rsp/` | Durable facts, open work, focus, and archive history for this repository |
 | Transient/generated | `.cache/`, `dist/`, dependency directories | Disposable preparation evidence, build output, and installed dependencies |
