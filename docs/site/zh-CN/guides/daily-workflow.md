@@ -1,6 +1,6 @@
 # 日常工作流
 
-RSP 根据用户意图、仓库 authority、selected Change、当前证据、verification 与 blockers 派生一个 next action。Stage 是指导，不是持久状态。
+RSP 根据用户意图、仓库权威信息、选定的 Change、当前证据、验证与阻塞项派生下一步操作。阶段是指导信息，不是持久状态。
 
 ## 选择当前工作
 
@@ -10,50 +10,50 @@ rsp focus <work-ref>
 rsp show --focused
 ```
 
-只有 `.rsp/focus.d/` 中的 marker 会选择当前工作。存在多个 focused Changes 时，必须由用户或仓库上下文识别正在操作的目标。对于 grouped work，先阅读 sibling Group Brief，再阅读 selected child。
+只有 `.rsp/focus.d/` 中的标记文件会选择当前工作。存在多个聚焦的 Change 时，必须由用户或仓库上下文识别正在操作的目标。对于分组工作，先阅读同级 Group Brief，再阅读选定的子 Change。
 
-Mutation 前检查 worktree，并保留无关的 modified、staged 或 untracked work。Focus 与 readiness 不授予 product mutation、Git、lifecycle、publication 或 approval 权限。
+修改前检查工作树，并保留无关的已修改、已暂存或未跟踪内容。聚焦与就绪不授予产品修改、Git、生命周期、发布或批准权限。
 
 ## 路由工作
 
 ```text
-outcome 或 scope 不清楚 → shape
-实质性 design 问题 → design
-原因不明的 failure → diagnose
-显式或具体风险要求 test-first → TDD
-证据充分的普通变更 → implement
-固定 comparison 请求 → review
-accepted findings → resolve findings
-显式确认的 release operation → release docs
+结果或范围不清楚 → 塑造
+实质性设计问题 → 设计
+原因不明的失败 → 诊断
+显式要求或具体风险需要测试先行 → TDD
+证据充分的普通变更 → 实现
+固定比较范围的请求 → 审查
+已接受的发现 → 解决发现
+显式确认的发布操作 → 发布文档
 ```
 
-每项能力都返回同一 Change 或现有 repository owner。不要创建第二份计划、workflow state 或 receipt store。
+每项能力都返回同一 Change 或现有仓库归属位置。不要创建第二份计划、工作流状态或回执存储。
 
 ## 保持 Change 与现实同步
 
 - 实现推翻原计划时更新 Proposal、Spec 或 Design。
 - 仅在结果存在后勾选 Tasks。
-- 在 Verify 中记录 fresh commands、覆盖范围、结果与相关 omissions。
+- 在 Verify 中记录最新运行的命令、覆盖范围、结果与相关遗漏。
 - 把尚未解决的外部或技术约束保留在 Blockers。
-- 优先选择成本最低的决定性 verification。仅当新测试保护 observable behavior 或真实 boundary，并带来独立长期信心时才保留。
+- 优先选择成本最低的决定性验证。仅当新测试保护可观察行为或真实边界，并带来独立的长期信心时才保留。
 
-仅用精确 dependency blocker 指向另一个 executable Change：
+仅用精确的依赖阻塞项指向另一个可执行 Change：
 
 ```md
-- requires `authentication/session-model`: session ownership must land first
+- requires `authentication/session-model`: 必须先落地会话归属关系
 ```
 
 ## 验证与审查
 
-最终相关修改后，运行与 changed risk 成比例的检查。过去的运行结果已经 stale。工具或环境缺失表示 verification unavailable；实际执行发现缺陷表示 failed，二者都不能描述为 passed。
+完成最后的相关修改后，运行与变更风险相称的检查。过去的运行结果已经过时。工具或环境缺失表示验证不可用；实际执行发现缺陷表示验证失败，二者都不能描述为通过。
 
-Review 使用固定 comparison scope 并保持只读。在明确 mutation authority 下修正 accepted findings，重跑受影响检查，然后请求 re-review，不要自行宣称 convergence。
+审查使用固定的比较范围并保持只读。在明确的修改权限下修正已接受的发现，重跑受影响的检查，然后请求复审，不要自行宣称已经收敛。
 
-## Durable decision 与 archive
+## 持久化判断与归档
 
-Tasks 与必需检查通过且无 blocker 后，分别判断是否需要：
+Tasks 与必需检查通过且无阻塞项后，分别判断是否需要：
 
-- 更新已有 Spec 或 scoped instruction，或创建新的 durable Spec；
+- 更新已有 Spec 或作用域指令，或创建新的持久化 Spec；
 - 为长期理由创建或更新 Decision Record。
 
 然后显式归档：
@@ -63,14 +63,14 @@ rsp ready <work-ref>
 rsp archive <work-ref>
 ```
 
-`rsp ready` 提供 deterministic readiness 与 semantic-review signals，只是 advisory，不是 archive approval。Archive 后重新检查完整目标交付范围。Commit、push、publication、deployment、approval 与 human acceptance 仍是独立权限。
+`rsp ready` 提供确定性的就绪信息与语义审查信号，仅供参考，并不代表归档已获批准。归档后重新检查完整的目标交付范围。提交、推送、发布、部署、批准与人工验收仍是独立权限。
 
 ## 恢复
 
-如果后续证据表明原 acceptance 实际未满足，使用明确理由重开相同 identity：
+如果后续证据表明原验收条件实际未满足，使用明确理由重开同一标识：
 
 ```bash
-rsp reopen <work-ref> --reason "<why acceptance remains incomplete>"
+rsp reopen <work-ref> --reason "<验收条件仍未满足的原因>"
 ```
 
-多个 archive 匹配时，增加精确 `--from .rsp/archives/...` path。Group 已关闭时先重开 Group。真正的新 scope 或独立交付的 correction 使用新 Change。
+多个归档匹配时，增加精确的 `--from .rsp/archives/...` 路径。Group 已关闭时先重开 Group。真正的新范围或独立交付的修正使用新 Change。

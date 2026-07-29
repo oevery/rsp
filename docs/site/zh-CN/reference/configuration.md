@@ -1,10 +1,10 @@
 # 配置参考
 
-项目配置位于 `.rsp/config.yaml`。省略可选 mapping 时保留兼容默认值；配置永远不会扩展权限。
+项目配置位于 `.rsp/config.yaml`。省略可选映射时保留兼容默认值；配置永远不会扩展权限。
 
-## Change kinds
+## Change 类型
 
-内置 Change kinds 为 `feature`、`fix`、`refactor`、`docs`、`ops` 与 `research`。非空配置列表会替换而不是扩展默认值，每个 entry 必须是唯一的非空字符串。
+内置 Change 类型为 `feature`、`fix`、`refactor`、`docs`、`ops` 与 `research`。非空配置列表会替换而不是扩展默认值，每个条目必须是唯一的非空字符串。
 
 ```yaml
 kinds:
@@ -22,22 +22,22 @@ language:
   commit: en
 ```
 
-存在 `language` mapping 时，`default` 必填。它为 durable artifacts 与 commit prose 提供默认值；可选的 `artifacts` 和 `commit` 覆盖相应 surface。值使用规范化 BCP 47 language tag。
+存在 `language` 映射时，`default` 必填。它为持久化产物与提交说明提供默认值；可选的 `artifacts` 和 `commit` 覆盖相应内容。值使用规范化的 BCP 47 语言标签。
 
-Response language 仍由用户和会话所有，不能通过 `language.response` 配置。已有 artifact 保持既有语言，除非明确授权翻译。Canonical headings、commands、paths、identifiers、Conventional Commit types 与 scopes、trailers、machine values 和 WorkRefs 不本地化。
+回复语言仍由用户和会话决定，不能通过 `language.response` 配置。已有产物保持既有语言，除非明确授权翻译。规范标题、命令、路径、标识符、Conventional Commit 类型与作用域、尾注、机器值和 WorkRefs 不本地化。
 
 ## Decision Records
 
-Decision Records 默认位于 `.rsp/specs/decisions/`。如果 Host Project 已在其他位置拥有 ADR，只配置一个项目相对的权威目录：
+Decision Records 默认位于 `.rsp/specs/decisions/`。如果宿主项目已在其他位置拥有 ADR，只配置一个项目相对的权威目录：
 
 ```yaml
 decisions:
   path: docs/adr
 ```
 
-该 path 不能是绝对路径、不能逃逸 Host Project，也不能指向其他 `.rsp/` core location。切换 path 不会迁移已有 records。在项目迁移或明确删除旧记录前，`rsp doctor` 会报告遗留在默认目录的 inactive records。
+该路径不能是绝对路径、不能逃逸宿主项目，也不能指向其他 `.rsp/` 核心位置。切换路径不会迁移已有记录。在项目迁移或明确删除旧记录前，`rsp doctor` 会报告遗留在默认目录的非活动记录。
 
-## Manage policy
+## Manage 策略
 
 ```yaml
 manage:
@@ -45,14 +45,14 @@ manage:
   closeout: lifecycle
 ```
 
-`activation` 接受 `explicit` 或 `auto`。Automatic activation 允许 Core 为符合条件的工作选择 controller，不授予 mutation 或 lifecycle 权限。
+`activation` 接受 `explicit` 或 `auto`。自动激活允许 Core（核心协议）为符合条件的工作选择控制器，但不授予修改或生命周期权限。
 
 `closeout` 接受：
 
-- `manual`：不自动 archive 或 commit。
-- `lifecycle`：成功 durable review 后可以 archive；commit 仍然独立。
-- `local`：在 lifecycle closeout 基础上，允许符合条件、clean、已验证、非小型终态边界执行一次有独立依据的 local commit。
+- `manual`：不自动归档或提交。
+- `lifecycle`：成功完成持久化审查后可以归档；提交仍然独立。
+- `local`：在生命周期收尾基础上，允许符合条件、工作树干净、已验证、非小型终态边界执行一次有独立依据的本地提交。
 
-省略 `manage` 时，兼容默认值解析为 `activation: explicit` 与 `closeout: local`。Nearest project restrictions 与 host enforcement 只能缩小这些上限。RSP 有意不提供 `full` preset；push、tag、publication、deployment、approval 与 human acceptance 保持显式。
+省略 `manage` 时，兼容默认值解析为 `activation: explicit` 与 `closeout: local`。最近的项目限制与宿主强制规则只能缩小这些上限。RSP 有意不提供 `full` 预设；推送、标签、发布、部署、批准与人工验收保持显式。
 
-选择行为见 [Skills 与 managed work](../guides/skills.md)。
+选择行为见 [Skills 与受管工作](../guides/skills.md)。

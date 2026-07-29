@@ -293,9 +293,9 @@ describe('documentation command examples', () => {
     expect(guide).toContain('skills install --dry-run')
     expect(guide).toContain(`npx -y @oevery/rsp@${packageJson.version} skills install`)
     expect(guide).toContain('suggest `npx -y @oevery/rsp create <name>` for tracked work')
-    expect(chineseGuide).toContain('进行 opt-in beta 评估时，应固定精确 prerelease 身份')
+    expect(chineseGuide).toContain('选择参与 beta 评估时，应固定精确的预发布版本')
     expect(chineseGuide).toContain(`npx -y @oevery/rsp@${packageJson.version} init`)
-    expect(chineseGuide).toContain('suggest `npx -y @oevery/rsp create <name>` for tracked work')
+    expect(chineseGuide).toContain('建议使用 `npx -y @oevery/rsp create <name>` 创建需要跟踪的工作')
   })
 
   it('marks the canonical-only protocol release as a breaking version', () => {
@@ -377,8 +377,8 @@ describe('documentation command examples', () => {
     expect(gettingStarted).toContain('Simple current-session tasks should not create RSP changes unless tracking is intentionally needed')
     expect(zhCliReference).toContain('健康项目会返回 `fixed: []`')
     expect(zhSkillsGuide).toContain('按证据组合套件')
-    expect(zhSkillsGuide).toContain('任何 Skill 都不推断 commit、push、publication、deployment、approval 或 human-acceptance 权限')
-    expect(zhGettingStarted).toContain('简单的当前会话任务默认不应创建 RSP change')
+    expect(zhSkillsGuide).toContain('任何 Skill 都不推断提交、推送、发布、部署、批准或人工验收权限')
+    expect(zhGettingStarted).toContain('简单的当前会话任务默认不应创建 RSP Change')
     expect(projectDesign).toContain('[CLI Contracts](./cli-contracts.md)')
     expect(projectDesign).toContain('[Skill System](./skill-system.md)')
     expect(projectSpecs).toContain('`rsp add spec` rewrites only changed indexes in the affected directory chain')
