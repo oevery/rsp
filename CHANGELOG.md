@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.1.0-beta.5 (2026-07-29)
+
+- Add validated external issue relationships to Changes, including offline `rsp create --issue`, explicit `relates` or `closes` intent, fail-closed metadata checks, and traceability through status, show, history, Shape, and terminal commit preparation without adding provider credentials or remote mutation to the CLI.
+- Add explicit `rsp group reopen <group> --reason <text> [--from <archive-path>]` recovery for one retained Group Brief, preserving immutable archives and requiring a separate child reopen instead of silently restoring grouped work.
+- Distinguish managed status updates, explicit pause, owner release, blockers, and drift-safe resume while preserving one focused owner and returning a complete continuation contract for incomplete work.
+- Reduce ordinary Skill runtime context through conditional branch ownership while preserving standalone capability, authority, recovery, and release behavior; fixed provider cases passed with lower measured input usage.
+- Restore typecheck as a passing release gate and retain the bounded Vitest worker configuration for repeatable full-suite and clean-install candidate verification.
+
+This prerelease remains opt-in and does not promote npm `latest`. Existing Changes and archives without issue metadata remain compatible, and Group recovery requires an explicit two-step Group-then-child reopen. The exact package is validated by the complete self-host release gate and clean-install package check. Live host scheduling across a real multi-turn pause/status interaction and broader independent-project productivity remain unverified. Users upgrading within 3.1 should follow the [3.1 migration guide](docs/migrations/3.1.md); users upgrading directly from 2.x must first follow the [3.0 migration guide](docs/migrations/3.0.md).
+
+See the [3.1.0-beta.5 release notes](docs/releases/3.1.0-beta.5.md).
+
 ## 3.1.0-beta.4 (2026-07-28)
 
 - Add a strict durable language policy: project configuration selects artifact and commit prose independently while response language remains user/session-owned, and CLI scaffolds keep canonical structure with neutral placeholders instead of generated English guidance.
