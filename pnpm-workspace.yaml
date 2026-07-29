@@ -9,3 +9,4 @@ trustPolicyIgnoreAfter: 10080
 
 allowBuilds:
   esbuild: false
+  workerd: true

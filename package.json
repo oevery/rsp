@@ -46,6 +46,7 @@
     "dev": "tsup --watch",
     "docs:build": "vitepress build docs",
     "docs:check": "node scripts/docs-check.mjs",
+    "docs:deploy": "wrangler deploy",
     "docs:dev": "vitepress dev docs",
     "docs:preview": "vitepress preview docs",
     "lint": "eslint .",
@@ -70,6 +71,7 @@
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
     "vitepress": "^1.6.4",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "wrangler": "^4.114.0"
   }
 }
