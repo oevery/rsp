@@ -31,6 +31,8 @@ A tiny or mechanical boundary may be subject-only when that subject fully explai
 
 Do not copy file lists, command transcripts, routine verification output, execution chronology, or the full Change/archive. Add only truthful trailers: one `RSP-WorkRef:` per included WorkRef, `RSP-Group:` when the Group is the commit owner, authoritative external references already owned by the work, and `BREAKING CHANGE:` only for an actual breaking change. Never invent an issue, co-author, sign-off, breaking change, or AI attribution.
 
+Project every owned issue relationship as a non-closing `Issue: <canonical-url>` reference when proportionate. Only a terminal commit whose selected Change acceptance is complete may additionally use a provider-supported closing keyword for an explicit `relation: closes`. Checkpoints, `relation: relates`, ambiguous Change or Group ownership, and unresolved provider or repository identity emit no closing keyword. When safe shorthand cannot be resolved, keep only the canonical URL; never infer an issue from changed files or mutate the external tracker.
+
 ## Commit the exact boundary
 
 Stage only the explicit allowed paths. Re-read `git status --short`, inspect the complete cached path list and cached diff, and confirm they represent exactly one owner boundary with no sensitive material. If the cached boundary is wrong, stop and leave unrelated work untouched; do not repair it by broad staging, destructive reset, or history rewrite.

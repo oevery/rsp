@@ -1,4 +1,4 @@
-import type { CheckboxCount, DeltaSections, Frontmatter, RuntimeDiagnostic, ScenarioBlock } from '../types.js'
+import type { CheckboxCount, DeltaSections, Frontmatter, IssueRelationship, RuntimeDiagnostic, ScenarioBlock } from '../types.js'
 import { existsSync } from 'node:fs'
 import { readdir, readFile, rmdir } from 'node:fs/promises'
 
@@ -150,14 +150,15 @@ export function normalizeLogicalPath(pathValue: string): string {
 }
 
 /** Generate a change file content from the built-in single-file template. */
-export function generateChangeContent(name: string, summary = '', kind?: string, options: { lite?: boolean } = {}): string {
+export function generateChangeContent(name: string, summary = '', kind?: string, options: { lite?: boolean, issues?: IssueRelationship[] } = {}): string {
   const placeholder = '<…>'
   const proposalSummary = summary || placeholder
+  const issueFrontmatter = renderIssueFrontmatter(options.issues ?? [])
 
   if (name === 'project-setup') {
     return `---
 kind: ops
----
+${issueFrontmatter}---
 
 ${renderDocumentTitle(CHANGE_DOCUMENT_SCHEMA, 'project-setup')}
 
@@ -216,13 +217,13 @@ ${changeSectionHeading('blockers')}
 
   const frontmatterKind = kind ?? '<choose: feature | fix | refactor | docs | ops | research>'
   if (options.lite)
-    return generateLiteChangeContent(name, proposalSummary, frontmatterKind)
+    return generateLiteChangeContent(name, proposalSummary, frontmatterKind, issueFrontmatter)
 
   const template = getChangeTemplateByKind(kind)
 
   return `---
 kind: "${frontmatterKind}"
----
+${issueFrontmatter}---
 
 ${renderDocumentTitle(CHANGE_DOCUMENT_SCHEMA, name)}
 
@@ -268,11 +269,11 @@ ${changeSectionHeading('blockers')}
 `
 }
 
-function generateLiteChangeContent(name: string, proposalSummary: string, frontmatterKind: string): string {
+function generateLiteChangeContent(name: string, proposalSummary: string, frontmatterKind: string, issueFrontmatter: string): string {
   const placeholder = '<…>'
   return `---
 kind: "${frontmatterKind}"
----
+${issueFrontmatter}---
 
 ${renderDocumentTitle(CHANGE_DOCUMENT_SCHEMA, name)}
 
@@ -320,6 +321,12 @@ ${changeSectionHeading('verify')}
 ${changeSectionHeading('blockers')}
 - none
 `
+}
+
+function renderIssueFrontmatter(issues: IssueRelationship[]): string {
+  if (issues.length === 0)
+    return ''
+  return `issues:\n${issues.map(issue => `  - url: ${JSON.stringify(issue.url)}\n    relation: ${issue.relation}`).join('\n')}\n`
 }
 
 function getChangeTemplateByKind(kind?: string) {

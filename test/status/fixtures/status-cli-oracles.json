@@ -16,9 +16,9 @@
       "--json"
     ],
     "status": 0,
-    "stdoutSha256": "b3ffbb046745b8b20ffdfffbe82e665681c89109c810bc4eddcad4704adb8e8c",
+    "stdoutSha256": "45d833e52ff28ab1f45e1019cf156b255fe94f2ac77e9ecc0841071dd6de2f30",
     "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "jsonSha256": "5f9ec3bd66bae0d1299821e37a178ed3dedcb416c5300888122d7d26250e0208"
+    "jsonSha256": "efa09eeb577e4bce532f68fd4a9c215107d530cc1468705b48d7046cb67636be"
   },
   "grouped-human": {
     "argv": [],
@@ -31,9 +31,9 @@
       "--json"
     ],
     "status": 1,
-    "stdoutSha256": "0101ffc3b2c4af61a72f90169307961ce8087bbb4b3376214e28f05c63b58347",
+    "stdoutSha256": "c20e3090180c711571aaf24df4b7323f8af8faaccb7aae25e76892219d474919",
     "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "jsonSha256": "7f3388013ced79f453246a9623a8fdf277f252391f077bf88f9143221db73bfd"
+    "jsonSha256": "6ea38d473d21f949ba6538bfcc136afa4a0b6402e70b6bf13ad943fb82ef7dd2"
   },
   "filtered-blocked-human": {
     "argv": [
@@ -70,9 +70,9 @@
       "--compact"
     ],
     "status": 0,
-    "stdoutSha256": "7aa8f73491792b17dcaf0f65c6e626c767b183f4341bfc05eb694f9582fe8f6c",
+    "stdoutSha256": "c85ba70ff436922103698f4509703cccbb419d31de63389aa4746f5428a2b7a0",
     "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "jsonSha256": "5ef291b42c975860f4cfb91b2bd280e3555124b1b3283fff0b24b7b00581697c"
+    "jsonSha256": "cf5b4ca6a1a727755539b51c7e81d8bcb8b36abaf9e8dd889c55d884c5ea8f63"
   },
   "verbose-runtime-human": {
     "argv": [
@@ -93,9 +93,9 @@
       "--json"
     ],
     "status": 1,
-    "stdoutSha256": "467c891d5eecb67dc783a749debeca058d7ba1dae65cc334f079d45fb559e24f",
+    "stdoutSha256": "5e99f37749407b76ec2c8929e0eaba1dac73a7a46b8f8725822fc7453fa38172",
     "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "jsonSha256": "07607dc23c710fc7fa9af0ba4bf148519a74735e03f118f32da59fa1ad86659d"
+    "jsonSha256": "446ca14765312e679b5edb84f79805e1cd9704881eac65a5faa131b6eb9573ec"
   },
   "invalid-filter-human": {
     "argv": [

@@ -1,4 +1,4 @@
-import type { CommandRunOptions, RuntimeDiagnostic } from '../types.js'
+import type { CommandRunOptions, IssueRelationship, RuntimeDiagnostic } from '../types.js'
 import { readFile } from 'node:fs/promises'
 
 import { resolveExecutableChange } from '../core/change-group.js'
@@ -6,6 +6,7 @@ import { inspectRspConfig, pc } from '../core/config.js'
 import { resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
 import { buildDurableReviewGuidance, collectArchiveReadiness, countCheckboxes, getDurableReviewCandidateTargets, guardRspInitialized, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, parseScenarios } from '../core/helpers.js'
+import { IssueRelationshipError, parseIssueRelationships } from '../core/issue-relationship.js'
 import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
 import { inspectFocusTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 
@@ -16,6 +17,7 @@ interface ShowResult {
     name: string
     path: string | null
     kind: string
+    issues: IssueRelationship[]
     isFocused: boolean
     progress: { done: number, total: number }
     blockers: boolean
@@ -122,11 +124,15 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
   }
 
   let kind = '—'
+  let issues: IssueRelationship[] = []
   try {
     const fm = parseFrontmatter(content)
     kind = fm?.kind ? String(fm.kind) : '—'
+    issues = parseIssueRelationships(fm)
   }
   catch (error) {
+    if (error instanceof IssueRelationshipError)
+      exitShowError({ code: error.code, message: error.message }, options)
     kind = '(invalid)'
     reportRuntime({
       code: 'frontmatter_parse_failed',
@@ -180,6 +186,7 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
       name,
       path: normalizeLogicalPath(srcPath),
       kind,
+      issues,
       isFocused,
       progress: { done: cb.done, total: cb.total },
       blockers,
@@ -200,6 +207,11 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
   console.log(`  ${pc.bold('Change:')} ${pc.cyan(name)}`)
   console.log(`  ${pc.dim('Path:')} ${normalizeLogicalPath(srcPath)}`)
   console.log(`  ${pc.dim('Kind:')} ${kind}`)
+  if (issues.length > 0) {
+    console.log(`  ${pc.dim('Issues:')}`)
+    for (const issue of issues)
+      console.log(`    ${issue.relation} ${issue.url}`)
+  }
   console.log(`  ${pc.dim('Focused:')} ${isFocused ? pc.green('yes') : pc.dim('no')}`)
   console.log(`  ${pc.dim('Progress:')} ${cb.done}/${cb.total}`)
   console.log(`  ${pc.dim('Blockers:')} ${blockers ? pc.yellow('yes') : pc.green('no')}`)

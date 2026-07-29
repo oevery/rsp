@@ -327,7 +327,7 @@ rsp skills list [--json]        List bundled Skills and exact project installati
 rsp skills install [name] [--dry-run] [--force]
                                   Install the default eleven Skills or one exact optional Skill into .agents/skills
 rsp add spec <name>             Create .rsp/specs/<name>.md and rebuild specs index
-rsp create <name> [summary]     Create .rsp/changes/<name>.md; add --lite for a shorter template
+rsp create <name> [summary]     Create .rsp/changes/<name>.md; add --lite or --issue <url> [--issue-relation relates|closes]
 rsp group create <name> [goal] Create an unfocused .rsp/changes/<name>/00-brief.md
 rsp group close <name>         Archive a completed Group Brief after every child is archived
 rsp focus <name>                Mark an open change as currently focused
@@ -377,6 +377,8 @@ rsp history cli-machine-output/add-bounded-history-query --json --compact
 The JSON-producing inspection commands `status`, `show`, `ready`, `check`, `doctor`, and `history` accept `--json --compact` for the same parsed value as `--json`, serialized on one LF-terminated line. `--compact` requires `--json`; other commands reject it before running command behavior.
 
 `rsp create --lite` is a shorter template for explicitly tracked small changes; simple current-session tasks should not create RSP changes unless tracking is intentionally needed.
+
+`rsp create <name> --issue <url>` attaches one validated external issue without network access and defaults to `relation: relates`; `--issue-relation closes` must be explicit and requires `--issue`. Issue options never update an existing Change: that invocation fails without changing the Change or focus. RSP stores only the canonical URL and relationship, never credentials, fetched title/body, or retrieval state. `status --json`, `show`, and `history` preserve valid relationships; immutable archives with older issue metadata remain readable but omit that opaque legacy projection. Shape may use available host access to retrieve real issue content, but failed access degrades to login retry, pasted source data, or a link-only draft rather than fabrication. Commit may add a closing keyword only for a terminal commit with completed acceptance and an owned `closes` relationship; otherwise it keeps a non-closing canonical URL reference.
 
 `rsp doctor --fix` runs only safe deterministic repairs. Its `fixed` JSON entries report actual filesystem changes; a healthy project returns `fixed: []` and the human output says no safe fixes are needed.
 

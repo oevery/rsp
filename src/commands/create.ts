@@ -5,16 +5,21 @@ import { dirname } from 'node:path'
 import { resolveExecutableChange } from '../core/change-group.js'
 import { CHANGES_DIR, FOCUS_DIR, pc } from '../core/config.js'
 import { cleanupEmptyParentDirs, generateChangeContent, guardRspInitialized } from '../core/helpers.js'
+import { createIssueRelationship } from '../core/issue-relationship.js'
 import { withRspLock } from '../core/lock.js'
 import { writeManagedFile } from '../core/managed-path.js'
 import { resolveFocusMarkerPath, WorkRefError } from '../core/work-ref.js'
 
 /** Create a new single-file change under .rsp/changes/<name>.md and focus it when newly created. */
-export async function createChange(name: string, summary = '', kind?: string, options: { lite?: boolean } = {}) {
+export async function createChange(name: string, summary = '', kind?: string, options: { lite?: boolean, issue?: string, issueRelation?: string } = {}) {
   if (!name) {
     console.error(`  ${pc.red('Usage:')} rsp create <name> [summary]`)
     process.exit(1)
   }
+  const hasIssueOption = options.issue !== undefined
+  if (options.issueRelation && !hasIssueOption)
+    throw new Error('--issue-relation requires --issue')
+  const issues = options.issue !== undefined ? [createIssueRelationship(options.issue, options.issueRelation)] : []
   guardRspInitialized()
 
   try {
@@ -22,9 +27,11 @@ export async function createChange(name: string, summary = '', kind?: string, op
       const workRef = await resolveExecutableChange(name)
       const changePath = workRef.path
       const existed = existsSync(changePath)
+      if (existed && hasIssueOption)
+        throw new Error(`Change already exists; --issue cannot update ${workRef.name}`)
       if (!existed) {
         const focusEntry = resolveFocusMarkerPath(workRef)
-        const content = generateChangeContent(workRef.name, summary, kind, { lite: Boolean(options.lite) })
+        const content = generateChangeContent(workRef.name, summary, kind, { lite: Boolean(options.lite), issues })
         await mkdir(dirname(changePath), { recursive: true })
         let changeCreated = false
         try {

@@ -69,24 +69,36 @@ const createCommand = defineCommand({
     description: 'Create .rsp/changes/<name>.md [summary]',
   },
   args: {
-    name: {
+    'name': {
       type: 'positional',
       description: 'Change name',
       required: true,
     },
-    kind: {
+    'kind': {
       type: 'string',
       description: 'Optional kind for a kind-aware template (feature, fix, refactor, docs, ops, research)',
     },
-    lite: {
+    'lite': {
       type: 'boolean',
       description: 'Use a shorter change template while keeping the required RSP sections',
       default: false,
     },
+    'issue': {
+      type: 'string',
+      description: 'Attach one external issue URL without fetching it',
+    },
+    'issue-relation': {
+      type: 'string',
+      description: 'Issue relationship: relates (default) or closes; requires --issue',
+    },
   },
   async run({ args }: { args: CreateChangeArgs }) {
     const summary = Array.isArray(args._) && args._.length > 1 ? args._.slice(1).join(' ') : ''
-    await createChange(args.name, summary, args.kind, { lite: Boolean(args.lite) })
+    await createChange(args.name, summary, args.kind, {
+      lite: Boolean(args.lite),
+      issue: args.issue,
+      issueRelation: args.issueRelation,
+    })
   },
 })
 

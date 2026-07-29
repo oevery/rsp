@@ -6,6 +6,7 @@ import { loadRspConfig, pc, resolveKinds, resolveRequiredSections } from '../cor
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
 import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionDefinitionByHeading, getDocumentSections, parseRspDocument } from '../core/document-model.js'
 import { detectDeltaSections, parseFrontmatter, parseScenarios } from '../core/helpers.js'
+import { IssueRelationshipError, parseIssueRelationships } from '../core/issue-relationship.js'
 import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
 import { inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 
@@ -260,6 +261,18 @@ export async function runCheck(options: CheckOptions = {}): Promise<CheckResult>
     }
 
     if (fm) {
+      try {
+        parseIssueRelationships(fm)
+      }
+      catch (error) {
+        addDiagnostic({
+          severity: 'error',
+          code: error instanceof IssueRelationshipError ? error.code : 'invalid_issue_metadata',
+          change: name,
+          path: fp,
+          message: error instanceof Error ? error.message : String(error),
+        })
+      }
       if (!('kind' in fm)) {
         addDiagnostic({
           severity: 'error',

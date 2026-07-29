@@ -269,6 +269,11 @@ function printHistoryDetail(result: HistoryDetailResult): void {
   console.log(`  ${pc.dim('Kind:')} ${record.kind}`)
   console.log(`  ${pc.dim('Path:')} ${record.path}`)
   console.log(`  ${pc.dim('Summary:')} ${record.summary}${record.summaryTruncated ? '…' : ''}`)
+  if ((record.issues?.length ?? 0) > 0) {
+    console.log(`  ${pc.dim('Issues:')}`)
+    for (const issue of record.issues ?? [])
+      console.log(`    ${issue.relation} ${issue.url}`)
+  }
   console.log(`  ${pc.dim('Scenarios:')} ${record.scenarioCount}`)
   console.log(`  ${pc.dim('Tasks:')} ${record.checkboxes.tasks.done}/${record.checkboxes.tasks.total}`)
   console.log(`  ${pc.dim('Verify:')} ${record.checkboxes.verify.done}/${record.checkboxes.verify.total}`)

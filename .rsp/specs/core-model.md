@@ -34,13 +34,14 @@
 - Implemented stable facts route to the smallest relevant Spec or explicitly authorized project context/instruction. Planned design remains in its Change, lasting rationale routes to one Decision Record, and temporary continuation remains response-only unless an exact path is authorized.
 - Successful readiness inspection provides deterministic guidance, not archive approval. Core or a human owns the archive recommendation after durable review; lifecycle, Git delivery, publication, deployment, approval, and human acceptance remain separate authorities.
 - Fresh evidence that the original acceptance was not met may justify explicit reopen under the same WorkRef. Reopen retains history and introduces unfinished Task and Verify evidence; genuinely new scope or an independently delivered correction uses a new Change. Archived dependents and closed Groups never reopen implicitly.
-- RSP coordinates one local Workspace. External repository and tracker references are ordinary Markdown with no protocol semantics.
+- RSP coordinates one local Workspace. A Change may own zero or more typed external issue relationships in frontmatter as an `issues` list. Each entry contains exactly one normalized absolute `http` or `https` `url` without credentials or fragments and one `relation` value, `relates` or `closes`; duplicate normalized URLs and unsupported shapes, fields, schemes, or relations are invalid. Existing Changes without `issues` remain valid.
+- Issue relationships preserve traceability and delivery intent only. External trackers retain issue content and lifecycle authority; `closes` is not proof of closure and grants no network access, credential use, provider integration, or external mutation. Immutable archives that predate this schema may retain non-v1 `issues` metadata as opaque legacy content; archive reads omit its issue projection without rewriting or rejecting the historical record.
 
 ## Boundaries
 - In scope:
   - Flat Changes, one shallow Group level, exact local Change dependencies, focus, archive, and durable-writeback ownership.
 - Out of scope:
-  - Recursive work trees, attachments, automatic scheduling, persisted dependency/readiness state, automatic Spec promotion, automatic Decision Record creation, multi-root rationale synchronization, and cross-workspace coordination semantics.
+  - Recursive work trees, attachments, automatic scheduling, persisted dependency/readiness or issue-retrieval state, provider API adapters, automatic Spec promotion, automatic Decision Record creation, multi-root rationale synchronization, and cross-workspace coordination semantics.
 
 ## Constraints
 - Preserve one-file Changes, canonical sections, `.rsp/focus.d/` as sole focus truth, and `open` plus `archived` as the complete state set. Archive and reopen are explicit lifecycle transitions and never add persisted controller state. WorkRef normalization never permits traversal, spaces, unsafe punctuation, unsupported depth, reserved identities, or silent repair of non-canonical stored paths.

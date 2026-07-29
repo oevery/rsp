@@ -1,6 +1,13 @@
 /** Change kind in the single-file workflow. */
 export type ChangeKind = 'feature' | 'fix' | 'refactor' | 'docs' | 'ops' | 'research'
 
+export type IssueRelation = 'relates' | 'closes'
+
+export interface IssueRelationship {
+  url: string
+  relation: IssueRelation
+}
+
 /** Parsed YAML frontmatter from a change file. */
 export interface Frontmatter {
   kind?: string
@@ -20,6 +27,8 @@ export interface CreateChangeArgs {
   name: string
   kind?: string
   lite?: boolean
+  issue?: string
+  issueRelation?: string
   _: string[]
 }
 
@@ -112,6 +121,7 @@ export interface HistoryRecordOutput {
   summary: string
   summaryTruncated: boolean
   path: string
+  issues?: IssueRelationship[]
 }
 
 export interface HistoryEvidenceListOutput {
@@ -143,6 +153,7 @@ export interface StatusRecordOutput {
   isFocused: boolean
   isBlocked: boolean
   path: string | null
+  issues?: IssueRelationship[]
 }
 
 export interface ChangeDependencyEdgeOutput {

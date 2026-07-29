@@ -1,5 +1,5 @@
 import type { ArchiveTreeInspection } from '../core/work-ref.js'
-import type { CommandDiagnostic, RuntimeDiagnostic } from '../types.js'
+import type { CommandDiagnostic, IssueRelationship, RuntimeDiagnostic } from '../types.js'
 import type { ArchiveHistoryInspection, ArchiveHistoryRecord } from './model.js'
 import { readFile } from 'node:fs/promises'
 import { basename, dirname, relative } from 'node:path'
@@ -7,6 +7,7 @@ import { basename, dirname, relative } from 'node:path'
 import { ARCHIVES_DIR } from '../core/config.js'
 import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionBody, getDocumentTitles, GROUP_BRIEF_DOCUMENT_SCHEMA, parseRspDocument } from '../core/document-model.js'
 import { normalizeLogicalPath, parseFrontmatter } from '../core/helpers.js'
+import { parseIssueRelationships } from '../core/issue-relationship.js'
 import { toErrorMessage } from '../core/output.js'
 import { inspectArchiveTree, isCanonicalExecutableWorkRef, isCanonicalWorkRefSegment } from '../core/work-ref.js'
 import { HISTORY_MAX_DIAGNOSTICS, HISTORY_MAX_TEXT_CODE_POINTS } from './model.js'
@@ -108,6 +109,18 @@ function parseArchiveEntry(sourcePath: string, path: string, archivesDir: string
     return {}
   }
 
+  let issues: IssueRelationship[] | undefined
+  if ('issues' in frontmatter) {
+    try {
+      issues = parseIssueRelationships(frontmatter)
+    }
+    catch {
+      // Archives predate the v1 issue schema and are immutable. Preserve their
+      // history record while treating unrecognized issue metadata as opaque.
+      issues = undefined
+    }
+  }
+
   const workRef = changeHeadings[0]
   const segments = workRef.split('/')
   if (segments.length === 2 && (segments[1] === 'brief' || segments[1] === '00-brief')) {
@@ -132,6 +145,7 @@ function parseArchiveEntry(sourcePath: string, path: string, archivesDir: string
       summary: summary.value,
       summaryTruncated: summary.truncated,
       path,
+      ...(issues === undefined ? {} : { issues }),
       sourcePath,
       searchSummary: rawSummary,
     },

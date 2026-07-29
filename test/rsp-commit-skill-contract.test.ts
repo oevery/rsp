@@ -64,4 +64,20 @@ describe('rsp-commit Skill contract', () => {
     ])
       expect(skill).toContain(fragment)
   })
+
+  it('projects owned issue links without premature or invented closing syntax', () => {
+    for (const fragment of [
+      '`Issue: <canonical-url>`',
+      'terminal commit',
+      'acceptance is complete',
+      '`relation: closes`',
+      'Checkpoints',
+      '`relation: relates`',
+      'unresolved provider or repository identity',
+      'canonical URL',
+      'never infer an issue from changed files',
+      'never',
+    ])
+      expect(skill).toContain(fragment)
+  })
 })

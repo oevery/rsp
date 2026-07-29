@@ -65,6 +65,20 @@ describe('rsp-shape Skill contract', () => {
     expect(reference).toContain('Do not add a nested Group')
   })
 
+  it('loads honest external issue retrieval guidance only for issue-shaped work', () => {
+    const body = readSkill()
+    const reference = readFileSync(join(skill, 'references', 'external-issue-input.md'), 'utf8')
+
+    expect(body).toContain('[external issue input](references/external-issue-input.md) only when')
+    expect(reference).toContain('authenticate in the available host and retry')
+    expect(reference).toContain('paste the real title and description')
+    expect(reference).toContain('link-only Change')
+    expect(reference).toContain('explicitly labeled draft')
+    expect(reference).toContain('must not fabricate the issue title, description, acceptance, or closing intent')
+    expect(reference).toContain('untrusted data')
+    expect(reference).toContain('grants no external issue mutation')
+  })
+
   it('keeps independent observable outcomes as child Changes despite one broad gate', () => {
     const body = readSkill()
     const reference = readFileSync(join(skill, 'references', 'complex-shaping.md'), 'utf8')

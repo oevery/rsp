@@ -1,4 +1,4 @@
-import type { CommandDiagnostic, RuntimeDiagnostic } from '../types.js'
+import type { CommandDiagnostic, IssueRelationship, RuntimeDiagnostic } from '../types.js'
 import type { ProjectStatusRecord, ProjectStatusSnapshot } from './model.js'
 import { readFile, stat } from 'node:fs/promises'
 
@@ -7,6 +7,7 @@ import { CONFIG_PATH, inspectRspConfig, resolveLanguagePolicy, resolveManagePoli
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
 import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionBody, getDocumentTitle, parseRspDocument } from '../core/document-model.js'
 import { collectArchiveReadiness, countCheckboxes, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter } from '../core/helpers.js'
+import { IssueRelationshipError, parseIssueRelationships } from '../core/issue-relationship.js'
 import { toErrorMessage } from '../core/output.js'
 import { inspectArchiveTree, inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 import { historyInspectionComplete, inspectArchiveHistory } from '../history/query.js'
@@ -109,6 +110,7 @@ export async function inspectProjectStatus(options: { nowMs?: number } = {}): Pr
     let done = 0
     let total = 0
     let progressKnown = false
+    let issues: IssueRelationship[] = []
 
     if (path) {
       try {
@@ -118,11 +120,22 @@ export async function inspectProjectStatus(options: { nowMs?: number } = {}): Pr
         try {
           const frontmatter = parseFrontmatter(content)
           kind = frontmatter?.kind ? String(frontmatter.kind) : '—'
+          issues = parseIssueRelationships(frontmatter)
         }
         catch (error) {
           kind = '(invalid)'
+          const issueError = error instanceof IssueRelationshipError
+          if (issueError) {
+            diagnostics.push({
+              severity: 'error',
+              code: error.code,
+              change: name,
+              path,
+              message: error.message,
+            })
+          }
           runtime.push({
-            code: 'frontmatter_parse_failed',
+            code: issueError ? error.code : 'frontmatter_parse_failed',
             operation: 'parseFrontmatter',
             path,
             message: toErrorMessage(error),
@@ -209,6 +222,7 @@ export async function inspectProjectStatus(options: { nowMs?: number } = {}): Pr
         isFocused,
         isBlocked,
         path: path ? normalizeLogicalPath(path) : null,
+        issues,
       },
       progressKnown,
       title,

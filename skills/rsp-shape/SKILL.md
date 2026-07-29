@@ -29,6 +29,8 @@ Inspect the repository before asking. Ask only for an owner decision changing be
 
 Read [deep clarification](references/deep-clarification.md) when the user explicitly asks for rigorous challenge, a high-risk decision remains, or one design question returns. Prefer the installed `rsp-design` capability; otherwise use its fallback.
 
+Read [external issue input](references/external-issue-input.md) only when a Change declares an issue relationship or the request asks to shape from an issue URL.
+
 Never invent a product decision. When a material choice or mutation authority remains unresolved, leave the work open and report the single highest-impact blocker.
 
 ## Choose the owner
