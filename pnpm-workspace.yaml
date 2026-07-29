@@ -1,17 +1,11 @@
-packages:
-  - '.'
-
-minimumReleaseAgeExclude:
-  - eslint@10.8.0
-  - postcss@8.5.23
 shellEmulator: true
 
 trustPolicy: no-downgrade
 
-trustPolicyIgnoreAfter: 10080
+packages:
+  - .
 
-overrides:
-  postcss: 8.5.23
+trustPolicyIgnoreAfter: 10080
 
 allowBuilds:
   esbuild: false
