@@ -1,0 +1,36 @@
+{
+  "tokenizer": "tiktoken o200k_base",
+  "current": {
+    "primary_composition": "HEAD Core + HEAD Implement",
+    "core": 2991,
+    "implement": 857,
+    "core_implement": 3848,
+    "evaluation_bundle": 7522
+  },
+  "structural": {
+    "primary_composition": "candidate Core + HEAD Implement",
+    "core": 2529,
+    "implement": 857,
+    "core_implement": 3386,
+    "evaluation_bundle": 6932
+  },
+  "combined": {
+    "primary_composition": "candidate Core + candidate Implement",
+    "core": 2529,
+    "implement": 842,
+    "core_implement": 3371,
+    "evaluation_bundle": 6917
+  },
+  "candidate_active_paths": {
+    "core_plus_implement": 3371,
+    "core_plus_managed_preflight": 3626,
+    "core_plus_managed_preflight_plus_manage": 5552,
+    "core_plus_release_fallback": 2856,
+    "core_plus_reopen_recovery": 2725
+  },
+  "notes": [
+    "Evaluation bundle totals include the exact Core, Implement, Manage, and conditionally applicable references embedded for behavior evaluation; they are not claims that every file loads on every route.",
+    "The representative Core plus Implement path decreases by 477 tokens (12.40%) from current to combined.",
+    "The notation-only structural to combined delta is 15 tokens (0.44%) on Core plus Implement."
+  ]
+}

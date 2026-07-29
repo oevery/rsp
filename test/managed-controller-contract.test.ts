@@ -351,10 +351,10 @@ describe('rsp-manage product Skill', () => {
   it('keeps closeout presets dormant until Manage qualifies for the current continuation', () => {
     const { body } = readSkill(product)
 
-    expect(managedRouting).toContain('Enter CLOSE only when Core selected and QUALIFY accepted Manage for the current continuation')
     expect(managedRouting).toContain('If Manage was declined, unavailable, or unselected, every `manage.closeout` preset is dormant')
     expect(managedRouting).toContain('configuration executes neither archive nor commit')
-    expect(managedRouting).toContain('After that gate passes, use effective `manage.closeout` as an automatic grant ceiling')
+    expect(managedRouting).toContain('After selection, stop using this reference for execution detail')
+    expect(managedRouting).toContain('`rsp-manage` solely owns interruption and resume, convergence limits, lifecycle and commit execution')
     expect(durableReview).toContain('A `manage.closeout` preset applies only when Core selected and qualified Manage for the current continuation')
     expect(coreSkill).toContain('declined, unavailable, or unselected Manage leaves Core advisory even under `lifecycle` or `local`')
     expect(body).toContain('Closeout requires Core-selected, currently-qualified Manage')

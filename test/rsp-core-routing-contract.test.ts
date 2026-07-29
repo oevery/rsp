@@ -6,11 +6,14 @@ import { describe, expect, it } from 'vitest'
 const root = fileURLToPath(new URL('..', import.meta.url))
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
 const skill = read('skills/rsp/SKILL.md')
+const manageSkill = read('skills/rsp-manage/SKILL.md')
 const managed = read('skills/rsp/references/managed-routing.md')
 const durable = read('skills/rsp/references/durable-review.md')
+const releaseOperations = read('skills/rsp/references/release-operations.md')
+const reopenRecovery = read('skills/rsp/references/reopen-recovery.md')
 const fallback = read('rules/rsp-rules.md')
 const skillSystem = read('.rsp/specs/skill-system.md')
-const coreContract = `${skill}\n${managed}`
+const coreContract = `${skill}\n${managed}\n${manageSkill}\n${releaseOperations}\n${reopenRecovery}`
 
 function headings(markdown: string): string[] {
   const prose = markdown.replace(/```[\s\S]*?```/g, '')
@@ -29,7 +32,6 @@ describe('rsp core routing contract', () => {
       'Scope',
       'Derive one next action',
       'Implementation evidence',
-      'Release operations',
       'Operate the selected Change',
       'Ownership and safety',
       'Durable decision output',
@@ -41,6 +43,8 @@ describe('rsp core routing contract', () => {
       'references/conflict-handling.md',
       'references/durable-review.md',
       'references/managed-routing.md',
+      'references/release-operations.md',
+      'references/reopen-recovery.md',
     ]) {
       expect(skill).toContain(`](${path})`)
       expect(read(`skills/rsp/${path}`)).toMatch(/Load this reference only|Load this reference before/)
@@ -95,7 +99,9 @@ describe('rsp core routing contract', () => {
       ['Never infer it from version order'],
       ['credential-free `ready` or `not ready`'],
     ])
-    expect(skill).toMatch(/never executes or grants commit, tag, push, release creation, publication, deployment, or approval authority/)
+    expect(releaseOperations).toMatch(/never executes or grants commit, tag, push, release creation, publication, deployment, or approval authority/)
+    expect(releaseOperations).toContain('Load it before requiring a confirmed identity, range, or clean candidate')
+    expect(releaseOperations).toContain('An unconfirmed identity or range, unclean exact candidate, missing owner, or material release-surface ambiguity stops before versioned mutation')
     expect(fallback).toMatch(/Route release documentation only for an explicit release operation with a confirmed identity or range/)
   })
 
@@ -219,49 +225,45 @@ describe('rsp core routing contract', () => {
   })
 
   it('reuses the managed preflight after progress without persisting orchestration state', () => {
-    for (const body of [managed]) {
-      expectSemanticGroup(body, [
-        ['transient authority envelope'],
-        ['After accepted managed progress', 'After accepted progress'],
-        ['Continue a clear in-scope ready successor', 'continue a clear in-scope ready successor'],
-        ['Stop naturally', 'stop naturally'],
-        ['neither a ready successor nor clearly missing ownership remains'],
-        ['suspends dispatch', 'suspend dispatch'],
-        ['independently verifiable and archivable result'],
-        ['at least two such results sharing one goal', 'at least two such results sharing the goal'],
-        ['without another authorization round'],
-        ['public-interface'],
-        ['external-action'],
-      ])
-    }
+    expectSemanticGroup(managed, [
+      ['transient authority envelope'],
+      ['returns to Core at an owner boundary or resume'],
+      ['re-read `rsp status --json`'],
+      ['apply PREFLIGHT again'],
+      ['rerun QUALIFY'],
+      ['clear in-scope ready successor'],
+      ['Clearly missing ownership'],
+      ['Core requalifies without another authorization round'],
+      ['public-interface'],
+      ['external-action'],
+    ])
     expectSemanticGroup(managed, [
       ['Never persist the goal envelope, WorkSet, waves'],
       ['discovery classification', 'discovered-work classification'],
-      ['convergence count'],
-      ['correction chronology'],
     ])
+    expect(manageSkill).toContain('Never persist a paused state, worker registry, controller ledger, or execution chronology')
+    expect(manageSkill).toContain('Keep counts and correction chronology transient')
   })
 
   it('returns in-scope managed review findings to bounded convergence', () => {
-    for (const body of [managed]) {
-      expectSemanticGroup(body, [
-        ['managed fixed-scope re-review'],
-        ['selected Change'],
-        ['original authority'],
-        ['fresh verification'],
-        ['transient convergence count'],
-        ['in-scope `accepted` remaining or new Finding', 'in-scope accepted Finding'],
-        ['`correction-needed`'],
-        ['without asking the user to continue', 'without another user prompt'],
-        ['Resolve Findings never self-loops', 'Resolve Findings itself never self-loops'],
-        ['`needs-clarification`'],
-        ['verification-budget expansion', 'outside existing verification authority'],
-        ['repeated non-convergence'],
-      ])
-    }
-    expect(managed).toContain('three Resolve Findings passes per Change')
-    expect(managed).toContain('same Finding remains after two completed corrections')
-    expect(managed).toContain('convergence count or correction chronology')
+    expectSemanticGroup(manageSkill, [
+      ['After fixed-scope re-review'],
+      ['selected Change'],
+      ['original authority'],
+      ['fresh verification'],
+      ['transient pass count'],
+      ['`accepted` Finding'],
+      ['`correction-needed`'],
+      ['without asking the user to continue'],
+      ['Resolve Findings never self-loops'],
+      ['`needs-clarification`'],
+      ['outside existing verification authority'],
+      ['repeated non-convergence', 'same Finding remains after two completed corrections'],
+    ])
+    expect(manageSkill).toContain('three Resolve Findings passes per Change')
+    expect(manageSkill).toContain('same Finding remains after two completed corrections')
+    expect(manageSkill).toContain('counts and correction chronology transient')
+    expect(managed).not.toContain('three Resolve Findings passes per Change')
     expect(fallback).not.toContain('three Resolve Findings passes per Change')
     expect(fallback).toContain('never dispatch, auto-continue successors, loop review corrections')
   })
@@ -300,20 +302,20 @@ describe('rsp core routing contract', () => {
   it('prohibits inferred delivery and lifecycle actions', () => {
     expect(skill).toContain('Do not infer implementation, review, Git, publication, or approval authority')
     expect(skill).toMatch(/does not execute archive or grant staging, commit, push, publication, deletion, deployment, approval, or human-acceptance authority/)
-    expect(skill).toContain('The qualified Manage rules in [managed routing]')
-    expect(managed).toContain('Inspect the complete lifecycle diff after each mutation, including terminal owners')
-    expect(managed).toContain('archive a Change after Core durable review')
-    expect(managed).toContain('`rsp group close <group>` only after every child and the Group gate pass')
-    expect(managed).toContain('Terminal small work defaults to no commit')
-    expect(managed).toContain('a qualified `local` terminal non-small Change or Group')
-    expect(managed).toContain('must be handed exactly once to `rsp-commit`')
-    expect(managed).toContain('do not require the user to repeat `commit`')
-    expect(managed).toContain('An ambiguous, mixed, stale, or denied boundary stops without staging')
-    expect(managed).toContain('Push requires an explicit user mention plus an unambiguous remote, branch, and milestone')
-    expect(managed).toContain('Never force-push')
-    expect(managed).toContain('`manual` grants neither automatic archive nor commit')
-    expect(managed).toContain('`lifecycle` grants lifecycle closeout after Core durable review but no Git action')
-    expect(managed).toContain('`local` adds separately justified recovery checkpoints and the deterministic terminal route below')
+    expect(skill).toContain('`rsp-manage` solely owns interruption and resume, convergence, lifecycle and commit execution detail')
+    expect(manageSkill).toContain('inspect the complete lifecycle diff')
+    expect(manageSkill).toContain('after Core durable review run `rsp archive <change-work-ref>`')
+    expect(manageSkill).toContain('`rsp group close <group>`')
+    expect(manageSkill).toContain('Terminal small owners default to no commit')
+    expect(manageSkill).toContain('qualified `local` terminal non-small Change or Group')
+    expect(manageSkill).toContain('routes exactly once to `rsp-commit`')
+    expect(manageSkill).toContain('do not require the user to repeat `commit`')
+    expect(manageSkill).toContain('An ambiguous, mixed, stale, or denied boundary stops without staging')
+    expect(manageSkill).toContain('Push is opt-in only when user explicitly mentions push')
+    expect(manageSkill).toContain('Never force-push')
+    expect(manageSkill).toContain('`manual` grants neither automatic archive nor commit')
+    expect(manageSkill).toContain('`lifecycle` grants lifecycle closeout after Core durable review but no Git action')
+    expect(manageSkill).toContain('`local` grants lifecycle closeout, separately justified recovery checkpoints, and the deterministic terminal route below')
     expect(managed).toContain('Missing configuration preserves `explicit` activation with `local` closeout compatibility')
     expect(managed).toContain('Invalid configuration fails closed as `explicit` plus `manual`')
     expect(durable).toContain('`manual` leaves archive advisory')
@@ -327,7 +329,7 @@ describe('rsp core routing contract', () => {
     expect(skill).toContain('A configured `manage.closeout` preset remains dormant unless Core selected and qualified Manage for the current continuation')
     expect(managed).toContain('If Manage was declined, unavailable, or unselected, every `manage.closeout` preset is dormant')
     expect(managed).toContain('ordinary Core may report readiness and the explicit next lifecycle or Git action')
-    expect(managed).toContain('Do not infer the current-continuation gate from readiness, an earlier managed run, or project policy alone')
+    expect(managed).toContain('Readiness, an earlier managed run, or project policy never substitutes for current selection and qualification')
     expect(durable).toContain('declined, unavailable, or unselected Manage leaves Core advisory')
     expect(durable).toContain('In a qualified managed continuation')
     expect(fallback).toContain('Every `manage.closeout` preset stays advisory because fallback Core never selects or qualifies Manage')
@@ -339,9 +341,8 @@ describe('rsp core routing contract', () => {
     expect(durable).toContain('stage only allowed paths')
     expect(durable).toContain('repository-consistent Conventional subject plus a proportionate body and truthful RSP trailers')
     expect(durable).toContain('observe its complete message, paths, remaining worktree, and remote safety')
-    expect(managed).toContain('must be handed exactly once to `rsp-commit`')
-    expect(managed).toContain('Commit owns structured message construction, one local commit, and post-commit observation')
-    expect(managed).toContain('equivalent bounded Core manual action against the same owner')
+    expect(manageSkill).toContain('routes exactly once to `rsp-commit`')
+    expect(manageSkill).toContain('use Core fallback if Commit is unavailable')
     expect(fallback).toContain('this minimal fallback still grants and executes no Git action')
   })
 })

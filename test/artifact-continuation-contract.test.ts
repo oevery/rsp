@@ -100,13 +100,19 @@ describe('rsp artifact routing and continuation contract', () => {
     const routing = readFileSync(join(root, 'skills', 'rsp', 'references', 'managed-routing.md'), 'utf8')
     const fallback = readFileSync(join(root, 'rules', 'rsp-rules.md'), 'utf8')
 
-    for (const body of [core, manage, routing, fallback]) {
+    expect(core).toContain('once selected, that Skill solely owns interruption and resume')
+
+    for (const body of [manage, fallback]) {
       expect(body).toContain('progress or status inquiry')
       expect(body).toContain('explicit pause')
       expect(body).toContain('release or unfocus')
       expect(body).toContain('preserve the focused owner')
       expect(body).toContain('requalify Manage')
     }
+    expect(routing).toContain('## REQUALIFY')
+    expect(routing).toContain('After selection, stop using this reference for execution detail')
+    expect(routing).not.toContain('progress or status inquiry')
+    expect(routing).not.toContain('explicit pause')
   })
 
   it('converges Changes before archive and gates persistent artifact audience', () => {

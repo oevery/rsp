@@ -1,0 +1,68 @@
+{
+  "variant": "combined",
+  "primary_composition": "candidate Core + candidate Implement",
+  "model": "user-configured",
+  "effort": "user-configured",
+  "codex_cli": "codex-cli 0.144.6",
+  "command_config": [
+    "--ephemeral",
+    "user-configured provider/model/effort",
+    "--ignore-rules",
+    "--sandbox read-only",
+    "--output-schema"
+  ],
+  "started_at": "2026-07-29T05:20:21.156Z",
+  "ended_at": "2026-07-29T05:20:38.526Z",
+  "duration_ms": 17370,
+  "timeout_ms": 300000,
+  "exit_code": 0,
+  "signal": null,
+  "error": null,
+  "stderr_hash": "c14e18956474c6aacd565b1e7036546ed75297e42a3e85fd4b71e8af2021e634",
+  "prompt_hash": "e603e35fa878ccdecdd584fe7490ba0c01c7cd55538d325da1ad92a078d00327",
+  "schema_hash": "088dfe00db0511b2261dc150d35624d913c247953bc2c6800a8f4bb86c84142a",
+  "cases_hash": "863a10673efb555bfdee3208b220eb802b45155c20f58c278bcf6283b63d64b8",
+  "oracle_hash": "2b1f2495d14cd28e6b4ed146d93680725d777f6f224b040aaf3c45197245fe85",
+  "bundle_hash": "45ada17abfb244f94495a4c271f07d228f519c9ed1d72aae2c47c4ec3ffbcdf2",
+  "sources": [
+    {
+      "path": "skills/rsp/SKILL.md",
+      "sha256": "71d9830c41a1fc21222cdc21a2413a391be103383c9538dab092f5082e75880d"
+    },
+    {
+      "path": "skills/rsp-implement/SKILL.md",
+      "sha256": "4b5eb7baa0644d4f7ee1fc5666c4ac4983d8f44219a8b1c353b8ac331d360a8e"
+    },
+    {
+      "path": "skills/rsp-manage/SKILL.md",
+      "sha256": "b13a0695f856c70d2d62ecca75d5f0224b395cb08326155bfcd0ef25f703b762"
+    },
+    {
+      "path": "skills/rsp/references/managed-routing.md",
+      "sha256": "58b3694691615f27bb6ca1e2921015b8d97aaac0fd601428935da90beab1e652"
+    },
+    {
+      "path": "skills/rsp/references/release-operations.md",
+      "sha256": "a7c54e8296cee7f6ea64557a7a7bd4c57c0b90477f0af542cfaa9954e25a95b3"
+    },
+    {
+      "path": "skills/rsp/references/reopen-recovery.md",
+      "sha256": "6ccbd08f89006b09f223c7395b0f1b440b2a4365ee8e3672d19392b2f38127b1"
+    }
+  ],
+  "final_hash": "f4e976af37d7b2afe03a0f05f32a047e4c578ec22cd3456fdcac9921eb6b713c",
+  "event_count": 4,
+  "usage": {
+    "input_tokens": 29293,
+    "cached_input_tokens": 0,
+    "output_tokens": 693,
+    "reasoning_output_tokens": 116
+  },
+  "score_passed": false,
+  "limitations": [
+    "One provider run per variant; this is behavior evidence, not stochastic or latency calibration.",
+    "Provider, model, and effort come from user configuration; private endpoint and credentials are neither inspected nor retained.",
+    "The prompt embeds exact runtime texts and fixed cases; it does not exercise repository tool discovery.",
+    "Usage is retained only when emitted by codex exec."
+  ]
+}

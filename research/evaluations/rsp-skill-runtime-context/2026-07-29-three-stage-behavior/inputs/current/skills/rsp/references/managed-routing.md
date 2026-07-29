@@ -1,0 +1,63 @@
+# Managed routing
+
+Load this reference only for a requested completion or continuation that is not a report-only review or release operation and is either explicitly managed or has effective `manage.activation: auto` in status. Missing configuration preserves `explicit` activation with `local` closeout compatibility. Invalid configuration fails closed as `explicit` plus `manual` and must remain visible.
+
+## PREFLIGHT — resolve the owner
+
+Treat the requested goal and independently allowed planning and product mutations as a transient authority envelope. Automatic activation grants controller selection only and never adds planning or product-mutation authority. Resolve the smallest sufficient owner before testing Manage eligibility.
+
+Before focusing, dispatching, or mutating a different WorkRef, inspect dirty paths and the diff against the prior owner's declared and observed product or durable-truth paths. Overlap never changes owner implicitly: continue the same open WorkRef, explicitly reopen its archived acceptance when authorized and applicable, use an explicitly authorized integration owner, or stop for boundary resolution. Disjoint authorized work may proceed without staging or a forced commit; insufficient ownership evidence stops the transition.
+
+- Reuse one unambiguous selected ready owner.
+- Return tiny settled work to direct engineering without a synthetic Change or controller artifact.
+- For clear non-trivial work with no sufficient ready owner, an explicit managed request authorizes only in-scope RSP planning artifacts unless the user requests no edits. Under automatic activation, route to Shape only when the current request or nearer authority independently permits those artifacts; configuration alone never does. Then re-read status/readiness and re-evaluate without another authorization round.
+- If repository evidence leaves a material product, acceptance, public-interface, scope, mutation-authority, external-action, or human choice, Shape returns the single highest-impact owner decision and creates no implementation or controller artifact.
+
+A prior direct report, design, tiny, or small route is not sticky. Before later-turn mutation, rederive from the now-authorized objective and prospective work. Material expansion into cross-module implementation, multiple acceptance surfaces, repeated production-path correction, real-host validation, bounded review convergence, lifecycle delivery, or a clear ready successor requires Core to establish or reuse the smallest sufficient WorkRef and rerun this preflight plus fresh Manage qualification before mutation. Unchanged tiny/small follow-ups remain direct; elapsed time and message count alone never trigger escalation.
+
+PREFLIGHT is complete only when one selected ready Change or shallow Group owns the requested outcome and no material decision remains.
+
+## QUALIFY — select or decline Manage
+
+Select `rsp-manage` only for one selected ready Change or shallow Group that qualifies through at least one independent path: genuinely independent slices, interruption recovery, or prospective execution signals showing more than one bounded phase or authority surface. Prospective signals are implementation followed by integration verification, managed review, or lifecycle work; cross-module or cross-process mutation; real-host, provider, or hardware verification; bounded finding convergence; or a clear ready successor. A Change with prospective or recovery work does not also need independent or parallelizable slices. Derive these signals before dispatch from the authorized objective and expected phases; elapsed wall-clock minutes are never qualification evidence.
+
+Under automatic activation, bias non-small continuation toward Manage. Decline as direct one-step work only when all of these are true: one owner, one local seam, one mutation pass, one decisive check, no managed lifecycle coordination, and no ready successor. A selected ready completion or continuation that fails any one of these conditions qualifies as non-small through this automatic path even when no separate prospective signal is obvious; do not leave the middle case unclassified. Worker-only work remains ineligible. Readiness alone does not qualify work without a requested completion or continuation, and automatic routing remains bounded by the requested goal.
+
+Make the route observable: report `selected` with the decisive qualification signal, or `declined` with the complete direct-work exclusion and exact Core or Discipline action. If dispatch applies, report the concrete overlap/isolation evidence that makes it sequential or parallel. Selection, decline, and dispatch reasoning remain transient and create no controller state.
+
+## CONTINUE — rederive from evidence
+
+After accepted managed progress, re-read `rsp status --json` and apply PREFLIGHT again.
+
+- Continue a clear in-scope ready successor.
+- When ownership is clearly missing, Manage suspends dispatch and returns discovery evidence to Core. Shape keeps a cohesive correction in its Change, gives one independently verifiable and archivable result one Change, or gives at least two such results sharing one goal one shallow Group. Core then requalifies without another authorization round.
+- Stop naturally only when neither a ready successor nor clearly missing ownership remains.
+- Stop earlier for a material behavior, acceptance, public-interface, scope, mutation-authority, external-action, or human decision.
+
+Never persist the goal envelope, WorkSet, waves, discovery classification, or transition chronology.
+
+### Interrupt and resume
+
+Treat a progress or status inquiry as an evidence update, not a stop signal, and continue authorized work when the preflight remains valid. An explicit pause interrupts active workers and confirms their stop before acknowledgement, preserves the focused owner, and permits no later mutation until resume. Only an explicit release or unfocus request clears owner selection; an environment or verification blocker must preserve the focused owner and return the complete seven-field continuation.
+
+On resume, treat the continuation only as pointers: reread current authority, status, focus, owned diff, blockers, and decisive evidence; invalidate stale claims; rerun PREFLIGHT; and requalify Manage before mutation or dispatch. Never persist pause, worker, controller, or execution-chronology state.
+
+## CONVERGE — bound review correction
+
+After a managed fixed-scope re-review, correlate the report, selected Change, original authority, fresh verification, and transient convergence count. Return an in-scope `accepted` remaining or new Finding as `correction-needed` to another bounded Resolve Findings pass without asking the user to continue. Resolve Findings never self-loops.
+
+Allow at most three Resolve Findings passes per Change and stop earlier when the same Finding remains after two completed corrections. Stop for `needs-clarification`, material behavior/interface/scope or authority change, verification-budget expansion, an additional real-host/provider/network run outside existing authority, failed or unavailable decisive verification, or repeated non-convergence. Never persist the convergence count or correction chronology.
+
+## CLOSE — apply the bounded preset
+
+Enter CLOSE only when Core selected and QUALIFY accepted Manage for the current continuation. If Manage was declined, unavailable, or unselected, every `manage.closeout` preset is dormant: ordinary Core may report readiness and the explicit next lifecycle or Git action, but configuration executes neither archive nor commit. Do not infer the current-continuation gate from readiness, an earlier managed run, or project policy alone; keep the selection and qualification result transient.
+
+After that gate passes, use effective `manage.closeout` as an automatic grant ceiling, narrowed by nearer restrictions and host enforcement. `manual` grants neither automatic archive nor commit. `lifecycle` grants lifecycle closeout after Core durable review but no Git action. `local` adds separately justified recovery checkpoints and the deterministic terminal route below. Explicit current-turn authority may allow a named local action that the preset does not automate; denial still wins.
+
+When lifecycle closeout is granted, archive a Change after Core durable review. A shallow Group independently reviews and archives each child, re-derives completion, then runs `rsp group close <group>` only after every child and the Group gate pass. Inspect the complete lifecycle diff after each mutation, including terminal owners.
+
+During authorized recovery, a closed Group and its incomplete archived child remain two explicit lifecycle operations: first `rsp group reopen <group> --reason <text>`, then `rsp reopen <group>/<child> --reason <text>`. Neither operation cascades into other children or dependents, creates controller state, or grants Git or external authority.
+
+Decide Git delivery separately. Under `local` or explicit commit authority, accepted downstream work may justify an exact-path recovery checkpoint unless commits are reserved or denied. Terminal small work defaults to no commit. After lifecycle closeout, a qualified `local` terminal non-small Change or Group with a derived owner, allowed paths, fresh decisive verification, one clean exact boundary, and no nearer denial must be handed exactly once to `rsp-commit`; do not require the user to repeat `commit`. An ambiguous, mixed, stale, or denied boundary stops without staging. Commit owns structured message construction, one local commit, and post-commit observation; when unavailable, return the equivalent bounded Core manual action against the same owner.
+
+Push requires an explicit user mention plus an unambiguous remote, branch, and milestone. Never force-push; preserve local commits on failure. Managed authority never includes publication, deployment, approval, or human acceptance.

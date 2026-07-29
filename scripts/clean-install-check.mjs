@@ -34,6 +34,8 @@ const EXPECTED_CORE_REFERENCES = [
   'durable-review.md',
   'groups-dependencies.md',
   'managed-routing.md',
+  'release-operations.md',
+  'reopen-recovery.md',
   'setup-repair.md',
 ]
 const EXPECTED_RELEASE_REFERENCES = [

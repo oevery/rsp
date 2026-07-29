@@ -1,0 +1,69 @@
+{
+  "variant": "structural",
+  "primary_composition": "candidate Core + HEAD Implement",
+  "model": "user-configured",
+  "effort": "user-configured",
+  "codex_cli": "codex-cli 0.144.6",
+  "command_config": [
+    "--ephemeral",
+    "user-configured provider/model/effort",
+    "--ignore-rules",
+    "--sandbox read-only",
+    "--output-schema"
+  ],
+  "started_at": "2026-07-29T05:21:50.180Z",
+  "ended_at": "2026-07-29T05:22:06.358Z",
+  "duration_ms": 16178,
+  "timeout_ms": 300000,
+  "exit_code": 0,
+  "signal": null,
+  "error": null,
+  "stderr_hash": "9182ecda5324f1810778fb0c5faf64461eadc08847794ebdd95570699a9c0560",
+  "prompt_hash": "c0f41b338dde0b3cbf8ae8b4deef2357b7a8786f65da9ae2d3cd75a3b9b4ebf8",
+  "schema_hash": "088dfe00db0511b2261dc150d35624d913c247953bc2c6800a8f4bb86c84142a",
+  "cases_hash": "863a10673efb555bfdee3208b220eb802b45155c20f58c278bcf6283b63d64b8",
+  "oracle_hash": "2a82a457baac10b505b403a0fa85a48a7743cfe5b43053f72825b28c857f6e8e",
+  "bundle_hash": "0bc02239d35791777305e9f2f83c7559e438d9f349d5eecee3a401d9c7afb10e",
+  "sources": [
+    {
+      "path": "skills/rsp/SKILL.md",
+      "sha256": "71d9830c41a1fc21222cdc21a2413a391be103383c9538dab092f5082e75880d"
+    },
+    {
+      "path": "skills/rsp-implement/SKILL.md",
+      "sha256": "e120c955b909edb623ea1a637492ed06d368a83e10a3dbdc0b87f0fb9f423a64"
+    },
+    {
+      "path": "skills/rsp-manage/SKILL.md",
+      "sha256": "b13a0695f856c70d2d62ecca75d5f0224b395cb08326155bfcd0ef25f703b762"
+    },
+    {
+      "path": "skills/rsp/references/managed-routing.md",
+      "sha256": "58b3694691615f27bb6ca1e2921015b8d97aaac0fd601428935da90beab1e652"
+    },
+    {
+      "path": "skills/rsp/references/release-operations.md",
+      "sha256": "a7c54e8296cee7f6ea64557a7a7bd4c57c0b90477f0af542cfaa9954e25a95b3"
+    },
+    {
+      "path": "skills/rsp/references/reopen-recovery.md",
+      "sha256": "6ccbd08f89006b09f223c7395b0f1b440b2a4365ee8e3672d19392b2f38127b1"
+    }
+  ],
+  "final_hash": "2c6ac808f5f2c9f2c00a5c114c9692c4a46767646e600e6f4c548c5ea457123b",
+  "event_count": 4,
+  "usage": {
+    "input_tokens": 29310,
+    "cached_input_tokens": 0,
+    "output_tokens": 668,
+    "reasoning_output_tokens": 147
+  },
+  "score_passed": true,
+  "limitations": [
+    "One provider run per variant; this is behavior evidence, not stochastic or latency calibration.",
+    "Provider, model, and effort come from user configuration; private endpoint and credentials are neither inspected nor retained.",
+    "The missing-authority owner oracle was adjudicated to same_change because report-only status preserves and returns the existing focused owner.",
+    "The prompt embeds exact runtime texts and fixed cases; it does not exercise repository tool discovery.",
+    "Usage is retained only when emitted by codex exec."
+  ]
+}

@@ -8,6 +8,7 @@ expected:
   next_action: resume the smallest bounded action from fresh evidence
 sources:
   - skills/rsp/SKILL.md
+  - skills/rsp-manage/SKILL.md
   - skills/rsp-implement/SKILL.md
   - skills/rsp-diagnose/SKILL.md
   - skills/rsp-tdd/SKILL.md

@@ -1,0 +1,61 @@
+{
+  "variant": "current",
+  "primary_composition": "HEAD Core + HEAD Implement",
+  "model": "user-configured",
+  "effort": "user-configured",
+  "codex_cli": "codex-cli 0.144.6",
+  "command_config": [
+    "--ephemeral",
+    "user-configured provider/model/effort",
+    "--ignore-rules",
+    "--sandbox read-only",
+    "--output-schema"
+  ],
+  "started_at": "2026-07-29T05:21:29.538Z",
+  "ended_at": "2026-07-29T05:21:50.155Z",
+  "duration_ms": 20617,
+  "timeout_ms": 300000,
+  "exit_code": 0,
+  "signal": null,
+  "error": null,
+  "stderr_hash": "7d50daef807bcc0a5fb19239e51da364bb5ba53b4798d2fc05afdfdeef872f41",
+  "prompt_hash": "8bbc1a44f0459613e5e57a388292a4f7037012adfead939e80f1b93b1302df5c",
+  "schema_hash": "088dfe00db0511b2261dc150d35624d913c247953bc2c6800a8f4bb86c84142a",
+  "cases_hash": "863a10673efb555bfdee3208b220eb802b45155c20f58c278bcf6283b63d64b8",
+  "oracle_hash": "2a82a457baac10b505b403a0fa85a48a7743cfe5b43053f72825b28c857f6e8e",
+  "bundle_hash": "d2518a9c2b3073cd17e5fbf065aa58359fbb1a0b4b7f640c308de91b15f4b1ea",
+  "sources": [
+    {
+      "path": "skills/rsp/SKILL.md",
+      "sha256": "a4d76b297d1a24eea475dd64fe431b59243ee16d5bd2d40fd10ed56eb97462ba"
+    },
+    {
+      "path": "skills/rsp-implement/SKILL.md",
+      "sha256": "e120c955b909edb623ea1a637492ed06d368a83e10a3dbdc0b87f0fb9f423a64"
+    },
+    {
+      "path": "skills/rsp-manage/SKILL.md",
+      "sha256": "3e0821a165fdfc642cd48783a88c317e80cd36e2b2f0724e544d5b45f66b7551"
+    },
+    {
+      "path": "skills/rsp/references/managed-routing.md",
+      "sha256": "92ca77ee9190cf4eb690ec809ff59d0064b0916dc4b362c11007534255fea641"
+    }
+  ],
+  "final_hash": "c7c43867b108038033c131cc213875fe6d45aac13435f44b65ab99f207c53c84",
+  "event_count": 4,
+  "usage": {
+    "input_tokens": 29854,
+    "cached_input_tokens": 0,
+    "output_tokens": 724,
+    "reasoning_output_tokens": 191
+  },
+  "score_passed": false,
+  "limitations": [
+    "One provider run per variant; this is behavior evidence, not stochastic or latency calibration.",
+    "Provider, model, and effort come from user configuration; private endpoint and credentials are neither inspected nor retained.",
+    "The missing-authority owner oracle was adjudicated to same_change because report-only status preserves and returns the existing focused owner.",
+    "The prompt embeds exact runtime texts and fixed cases; it does not exercise repository tool discovery.",
+    "Usage is retained only when emitted by codex exec."
+  ]
+}

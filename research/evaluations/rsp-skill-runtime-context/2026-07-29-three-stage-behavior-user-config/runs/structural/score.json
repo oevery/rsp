@@ -1,0 +1,134 @@
+{
+  "passed": false,
+  "parse_error": false,
+  "cases": [
+    {
+      "id": "normal-implement",
+      "expected": [
+        "RSP_IMPLEMENT",
+        "allowed_in_routed_skill",
+        "none",
+        "same_change"
+      ],
+      "observed": [
+        "RSP_IMPLEMENT",
+        "allowed_in_routed_skill",
+        "none",
+        "same_change"
+      ],
+      "passed": true
+    },
+    {
+      "id": "unexplained-diagnose",
+      "expected": [
+        "RSP_DIAGNOSE",
+        "prohibited",
+        "none",
+        "same_change"
+      ],
+      "observed": [
+        "RSP_DIAGNOSE",
+        "prohibited",
+        "none",
+        "same_change"
+      ],
+      "passed": true
+    },
+    {
+      "id": "risk-qualified-tdd",
+      "expected": [
+        "RSP_TDD",
+        "allowed_in_routed_skill",
+        "none",
+        "same_change"
+      ],
+      "observed": [
+        "RSP_TDD",
+        "allowed_in_routed_skill",
+        "none",
+        "same_change"
+      ],
+      "passed": true
+    },
+    {
+      "id": "missing-authority",
+      "expected": [
+        "STOP",
+        "prohibited",
+        "missing_authority",
+        "unknown"
+      ],
+      "observed": [
+        "STOP",
+        "prohibited",
+        "missing_authority",
+        "same_change"
+      ],
+      "passed": false
+    },
+    {
+      "id": "release-fallback-unconfirmed-unclean",
+      "expected": [
+        "RELEASE_FALLBACK_STOP",
+        "prohibited",
+        "release_identity_clean_candidate",
+        "release_owner"
+      ],
+      "observed": [
+        "RELEASE_FALLBACK_STOP",
+        "prohibited",
+        "release_identity_clean_candidate",
+        "release_owner"
+      ],
+      "passed": true
+    },
+    {
+      "id": "reopen-ambiguous-no-authority",
+      "expected": [
+        "REOPEN_RECOVERY_STOP",
+        "prohibited",
+        "exact_archive_lifecycle_authority",
+        "archived_change"
+      ],
+      "observed": [
+        "REOPEN_RECOVERY_STOP",
+        "prohibited",
+        "exact_archive_lifecycle_authority",
+        "archived_change"
+      ],
+      "passed": true
+    },
+    {
+      "id": "managed-status",
+      "expected": [
+        "MANAGE_CONTINUE",
+        "allowed_after_status_update",
+        "none",
+        "managed_change"
+      ],
+      "observed": [
+        "MANAGE_CONTINUE",
+        "allowed_after_status_update",
+        "none",
+        "managed_change"
+      ],
+      "passed": true
+    },
+    {
+      "id": "managed-pause",
+      "expected": [
+        "MANAGE_PAUSE",
+        "prohibited_until_resume",
+        "none",
+        "managed_change"
+      ],
+      "observed": [
+        "MANAGE_PAUSE",
+        "prohibited_until_resume",
+        "none",
+        "managed_change"
+      ],
+      "passed": true
+    }
+  ]
+}

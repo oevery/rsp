@@ -1,0 +1,82 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "next_action",
+          "production_mutation",
+          "required_owner_input",
+          "returned_owner",
+          "rationale"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "normal-implement",
+              "unexplained-diagnose",
+              "risk-qualified-tdd",
+              "missing-authority",
+              "release-fallback-unconfirmed-unclean",
+              "reopen-ambiguous-no-authority",
+              "managed-status",
+              "managed-pause"
+            ]
+          },
+          "next_action": {
+            "enum": [
+              "RSP_IMPLEMENT",
+              "RSP_DIAGNOSE",
+              "RSP_TDD",
+              "STOP",
+              "RELEASE_FALLBACK_STOP",
+              "REOPEN_RECOVERY_STOP",
+              "MANAGE_CONTINUE",
+              "MANAGE_PAUSE"
+            ]
+          },
+          "production_mutation": {
+            "enum": [
+              "allowed_in_routed_skill",
+              "allowed_after_status_update",
+              "prohibited",
+              "prohibited_until_resume"
+            ]
+          },
+          "required_owner_input": {
+            "enum": [
+              "none",
+              "missing_authority",
+              "release_identity_clean_candidate",
+              "exact_archive_lifecycle_authority"
+            ]
+          },
+          "returned_owner": {
+            "enum": [
+              "same_change",
+              "unknown",
+              "release_owner",
+              "archived_change",
+              "managed_change"
+            ]
+          },
+          "rationale": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          }
+        }
+      }
+    }
+  }
+}

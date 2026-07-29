@@ -1,0 +1,34 @@
+[
+  {
+    "id": "normal-implement",
+    "scenario": "A selected ready Change owns one local behavior. The behavior, cause, edit path, mutation authority, and decisive existing check are clear. Test-first is not required and no concrete changed risk needs pre-mutation RED. Implementation is incomplete."
+  },
+  {
+    "id": "unexplained-diagnose",
+    "scenario": "A selected Change has a reproducible multi-layer failure, but the cause and owning seam are not explained. The request permits investigation and later correction, but no production mutation should encode a guessed cause."
+  },
+  {
+    "id": "risk-qualified-tdd",
+    "scenario": "A selected ready Change modifies a persisted public state transition. Behavior, cause, owner, and mutation authority are clear. A pre-mutation RED materially reduces the concrete regression risk."
+  },
+  {
+    "id": "missing-authority",
+    "scenario": "A focused ready Change exists, but the request is only to explain current status. No product mutation, lifecycle, Git, release, or external authority was granted."
+  },
+  {
+    "id": "release-fallback-unconfirmed-unclean",
+    "scenario": "The user explicitly requests release finalization. rsp-release-docs is unavailable. No release identity or range is confirmed, the exact candidate is unclean, and no owner has resolved the ambiguity. Decide the next action before any versioned mutation."
+  },
+  {
+    "id": "reopen-ambiguous-no-authority",
+    "scenario": "Fresh evidence disproves acceptance of an archived Change. Multiple retained archives match, and no explicit lifecycle authority was granted. Decide the next action before any reopen command."
+  },
+  {
+    "id": "managed-status",
+    "scenario": "Core already selected and qualified rsp-manage for an authorized non-small Change. Workers are active and checks remain available. The user asks only for a progress update, without pausing or releasing the owner."
+  },
+  {
+    "id": "managed-pause",
+    "scenario": "Core already selected and qualified rsp-manage for an authorized non-small Change. Workers are active. The user explicitly says pause now."
+  }
+]
