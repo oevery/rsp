@@ -1,3 +1,6 @@
+packages:
+  - '.'
+
 minimumReleaseAgeExclude:
   - eslint@10.8.0
   - postcss@8.5.23
