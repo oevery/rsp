@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.1.1 (2026-07-30)
+
+- Make structured commit-message transport preserve real line boundaries across tool, shell, and Git layers by requiring actual newlines or a safely prepared message file.
+- Treat unintended literal `\n` sequences in the observed commit body as a post-commit mismatch and stop without inferring amend or second-commit authority.
+
+RSP 3.1.0 remains available as a GitHub release but was not published to npm. Version 3.1.1 is the first stable 3.1 package published to the registry.
+
+See the [3.1.1 release notes](docs/releases/3.1.1.md).
+
 ## 3.1.0 (2026-07-30)
 
 - **Breaking:** Require Node.js 22 or later. Registry users upgrading from RSP 2.x must follow the [3.0 migration guide](docs/migrations/3.0.md) before applying the [3.1 migration](docs/migrations/3.1.md).
