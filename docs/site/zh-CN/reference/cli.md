@@ -1,6 +1,6 @@
 # CLI 参考
 
-环境中已经可以直接调用 RSP 时使用 `rsp <command>`。评估 beta 版本时固定精确的包版本：`npx -y @oevery/rsp@3.1.0-beta.5 <command>`。
+环境中已经可以直接调用 RSP 时使用 `rsp <command>`。接入和维护时通过 `npx -y @oevery/rsp@latest <command>` 调用当前稳定包。
 
 ## 接入与 Skills
 

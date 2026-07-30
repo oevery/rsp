@@ -21,13 +21,13 @@ intent → shape → design when needed → diagnose | TDD | implement
 
 ## Five-minute start
 
-RSP 3.1 requires Node.js 22 or later. Pin the prerelease while evaluating it:
+RSP 3.1 requires Node.js 22 or later. Use the current stable release:
 
 ```bash
-npx -y @oevery/rsp@3.1.0-beta.5 init --with-project-setup
+npx -y @oevery/rsp@latest init --with-project-setup
 # fill .rsp/changes/project-setup.md
 # fill .rsp/specs/design.md
-npx -y @oevery/rsp@3.1.0-beta.5 doctor
+npx -y @oevery/rsp@latest doctor
 ```
 
 Then create and focus one tracked change:
@@ -64,7 +64,7 @@ A Change is one Markdown file with canonical Proposal, Spec, Design, Tasks, Veri
 - [Configuration reference](./docs/site/en/reference/configuration.md)
 - [CLI reference](./docs/site/en/reference/cli.md)
 - [3.0 migration guide](./docs/migrations/3.0.md) and [3.1 migration guide](./docs/migrations/3.1.md)
-- [Release notes](./docs/releases/3.1.0-beta.5.md)
+- [Release notes](./docs/releases/3.1.0.md)
 - [Design philosophy](./docs/maintainers/design-philosophy.md) and [maintainer upstream research](./docs/maintainers/upstreams.md)
 
 Run the documentation locally:

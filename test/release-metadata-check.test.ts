@@ -136,6 +136,43 @@ describe('release metadata check', () => {
     }
   })
 
+  it('requires @latest examples for a stable release', () => {
+    const stableVersion = '4.2.0'
+    const directory = fixture({
+      'package.json': JSON.stringify({ name: '@example/rsp', version: stableVersion }),
+      'CHANGELOG.md': `# Changelog\n\n## ${stableVersion} (2026-07-30)\n\n- Ship the stable release.\n`,
+      'README.md': '# Example\n\nUse `npx -y @example/rsp@latest init`.\n',
+      'README.zh-CN.md': '# 示例\n\n使用 `npx -y @example/rsp@latest init`。\n',
+      [`docs/releases/${stableVersion}.md`]: `# RSP ${stableVersion}\n\n**Full comparison:** [v4.1.0...v${stableVersion}](https://example.test/compare/v4.1.0...v${stableVersion})\n`,
+    })
+    try {
+      const result = run(directory)
+      expect(result.status, result.stderr).toBe(0)
+    }
+    finally {
+      rmSync(directory, { force: true, recursive: true })
+    }
+  })
+
+  it('rejects a fixed stable version where @latest is required', () => {
+    const stableVersion = '4.2.0'
+    const directory = fixture({
+      'package.json': JSON.stringify({ name: '@example/rsp', version: stableVersion }),
+      'CHANGELOG.md': `# Changelog\n\n## ${stableVersion} (2026-07-30)\n\n- Ship the stable release.\n`,
+      'README.md': `# Example\n\nUse \`npx -y @example/rsp@${stableVersion} init\`.\n`,
+      'README.zh-CN.md': `# 示例\n\n使用 \`npx -y @example/rsp@${stableVersion} init\`。\n`,
+      [`docs/releases/${stableVersion}.md`]: `# RSP ${stableVersion}\n\n**Full comparison:** [v4.1.0...v${stableVersion}](https://example.test/compare/v4.1.0...v${stableVersion})\n`,
+    })
+    try {
+      const result = run(directory)
+      expect(result.status).toBe(1)
+      expect(result.stderr.match(/README must use @latest for the current stable package example/gu)).toHaveLength(2)
+    }
+    finally {
+      rmSync(directory, { force: true, recursive: true })
+    }
+  })
+
   it('rejects known future-publication phrases without banning unrelated release prose', () => {
     const directory = fixture({
       'README.md': `# Example\n\nThese registry commands remain unavailable until ${version} is published.\n\nUse \`npx -y @example/rsp@${version}\`.\n`,

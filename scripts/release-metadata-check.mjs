@@ -132,10 +132,15 @@ function inspectReleaseNotesIdentity(violations, path, text, version) {
 function inspectReadmeExamples(violations, path, text, packageName, version) {
   if (typeof packageName !== 'string' || packageName.length === 0)
     return
-  const examplePattern = new RegExp(`\\bnpx\\s+-y\\s+${escapeRegExp(packageName)}@(${VERSION_SOURCE})\\b`, 'gu')
-  const examples = [...text.matchAll(examplePattern)]
-  if (!examples.some(example => example[1] === version))
-    addViolation(violations, { path, line: 1, reason: `README must include an exact npx example for current package version ${version}` })
+  const prerelease = version.includes('-')
+  const identity = prerelease ? version : 'latest'
+  const examplePattern = new RegExp(`\\bnpx\\s+-y\\s+${escapeRegExp(packageName)}@${escapeRegExp(identity)}\\b`, 'gu')
+  if (!examplePattern.test(text)) {
+    const reason = prerelease
+      ? `README must include an exact npx example for current package version ${version}`
+      : 'README must use @latest for the current stable package example'
+    addViolation(violations, { path, line: 1, reason })
+  }
 }
 
 function checkReleaseMetadata(root) {

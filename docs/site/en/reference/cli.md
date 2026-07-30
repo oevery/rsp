@@ -1,6 +1,6 @@
 # CLI reference
 
-Use `rsp <command>` when RSP is already available in the environment. For beta evaluation, pin the exact package identity: `npx -y @oevery/rsp@3.1.0-beta.5 <command>`.
+Use `rsp <command>` when RSP is already available in the environment. For setup and maintenance, invoke the current stable package with `npx -y @oevery/rsp@latest <command>`.
 
 ## Setup and Skills
 

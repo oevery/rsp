@@ -285,16 +285,15 @@ describe('documentation command examples', () => {
 
   it('explains npx usage in the getting-started guides', () => {
     const root = fileURLToPath(new URL('..', import.meta.url))
-    const packageJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf-8')) as { version: string }
     const guide = readFileSync(join(root, 'docs', 'site', 'en', 'getting-started.md'), 'utf-8')
     const chineseGuide = readFileSync(join(root, 'docs', 'site', 'zh-CN', 'getting-started.md'), 'utf-8')
-    expect(guide).toContain('For opt-in beta evaluation, pin the exact prerelease identity')
-    expect(guide).toContain(`npx -y @oevery/rsp@${packageJson.version} init`)
+    expect(guide).toContain('Use the current stable release')
+    expect(guide).toContain('npx -y @oevery/rsp@latest init')
     expect(guide).toContain('skills install --dry-run')
-    expect(guide).toContain(`npx -y @oevery/rsp@${packageJson.version} skills install`)
+    expect(guide).toContain('npx -y @oevery/rsp@latest skills install')
     expect(guide).toContain('suggest `npx -y @oevery/rsp create <name>` for tracked work')
-    expect(chineseGuide).toContain('选择参与 beta 评估时，应固定精确的预发布版本')
-    expect(chineseGuide).toContain(`npx -y @oevery/rsp@${packageJson.version} init`)
+    expect(chineseGuide).toContain('使用当前稳定版本')
+    expect(chineseGuide).toContain('npx -y @oevery/rsp@latest init')
     expect(chineseGuide).toContain('建议使用 `npx -y @oevery/rsp create <name>` 创建需要跟踪的工作')
   })
 
@@ -303,7 +302,7 @@ describe('documentation command examples', () => {
     const packageJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf-8')) as { version: string }
     const changelog = readFileSync(join(root, 'CHANGELOG.md'), 'utf-8')
 
-    expect(packageJson.version).toBe('3.1.0-beta.5')
+    expect(packageJson.version).toBe('3.1.0')
     expect(changelog).toContain('Reposition the product as Reliable Software Practice')
     expect(changelog).toContain('Separate deterministic readiness from semantic durable review and archive guidance')
     expect(changelog).toContain('## 3.0.0 (2026-07-23)')

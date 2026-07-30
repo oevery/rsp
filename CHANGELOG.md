@@ -1,5 +1,20 @@
 # Changelog
 
+## 3.1.0 (2026-07-30)
+
+- **Breaking:** Require Node.js 22 or later. Registry users upgrading from RSP 2.x must follow the [3.0 migration guide](docs/migrations/3.0.md) before applying the [3.1 migration](docs/migrations/3.1.md).
+- Add a read-only terminal dashboard, bounded archive history, compact JSON output, dependency-plan projections, and clearer plain-text status and readiness surfaces.
+- Add policy-controlled managed execution for long-running work, shallow Group waves, review convergence, automatic routing, explicit pause/resume recovery, and lifecycle or eligible local-commit closeout without broadening external authority.
+- Add exact-package project Skill installation, interactive Skill management, bounded commit preparation, pre-change design, structural audit, and renamed review-resolution capabilities.
+- Add safe Change and Group recovery, hierarchical Specs navigation, explicit issue relationships, Unicode WorkRefs, durable artifact and commit language policy, and one lossless semantic document model.
+- Improve release integrity with exact-candidate metadata checks, bounded test concurrency, typecheck and clean-install gates, publication-invariant release surfaces, and stable-package `@latest` documentation checks.
+- Add a bilingual documentation site and concise public guides while keeping maintainer records and repository evidence separate from user documentation.
+- Preserve existing Change and archive compatibility where documented; recovery, issue lifecycle, Git delivery, publication, deployment, approval, and human acceptance remain explicit operations.
+
+The 3.1 workflow was dogfooded in the RSP repository and exercised in boats-cloud across automatic Manage routing, lifecycle closeout, Group recovery, multi-slice work, Windows/Electron acceptance, and full client gates. Live host scheduling across a real multi-turn pause/resume interaction, stochastic provider behavior, and broad comparative productivity claims remain outside the verified release claims.
+
+See the [3.1.0 release notes](docs/releases/3.1.0.md).
+
 ## 3.1.0-beta.5 (2026-07-29)
 
 - Add validated external issue relationships to Changes, including offline `rsp create --issue`, explicit `relates` or `closes` intent, fail-closed metadata checks, and traceability through status, show, history, Shape, and terminal commit preparation without adding provider credentials or remote mutation to the CLI.

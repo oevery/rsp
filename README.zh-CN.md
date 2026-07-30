@@ -21,13 +21,13 @@ RSP 把模糊意图转化为经过塑造、实现、审查和验证的软件变�
 
 ## 五分钟入门
 
-RSP 3.1 需要 Node.js 22 或更高版本。评估预发布版本时请固定精确版本：
+RSP 3.1 需要 Node.js 22 或更高版本。使用当前稳定版本：
 
 ```bash
-npx -y @oevery/rsp@3.1.0-beta.5 init --with-project-setup
+npx -y @oevery/rsp@latest init --with-project-setup
 # 填写 .rsp/changes/project-setup.md
 # 填写 .rsp/specs/design.md
-npx -y @oevery/rsp@3.1.0-beta.5 doctor
+npx -y @oevery/rsp@latest doctor
 ```
 
 然后创建并聚焦一个受跟踪变更：
@@ -64,7 +64,7 @@ rsp show --focused
 - [配置参考](./docs/site/zh-CN/reference/configuration.md)
 - [CLI 参考](./docs/site/zh-CN/reference/cli.md)
 - [3.0 迁移指南](./docs/migrations/3.0.md)与 [3.1 迁移指南](./docs/migrations/3.1.md)
-- [发布说明](./docs/releases/3.1.0-beta.5.md)
+- [发布说明](./docs/releases/3.1.0.md)
 - [设计哲学](./docs/maintainers/design-philosophy.md)与[维护者上游研究](./docs/maintainers/upstreams.md)
 
 在本地运行文档：

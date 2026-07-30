@@ -1,18 +1,18 @@
 # Five-minute start
 
-RSP 3.1 requires Node.js 22 or later. For opt-in beta evaluation, pin the exact prerelease identity so the workflow does not move underneath the repository.
+RSP 3.1 requires Node.js 22 or later. Use the current stable release for setup and maintenance commands.
 
 ## Initialize a project
 
 ```bash
-npx -y @oevery/rsp@3.1.0-beta.5 init --with-project-setup
+npx -y @oevery/rsp@latest init --with-project-setup
 ```
 
 This creates the `.rsp/` foundation, ensures the RSP entry in `AGENTS.md`, and creates `.rsp/changes/project-setup.md`. Fill that Change and `.rsp/specs/design.md`, then inspect the setup:
 
 ```bash
-npx -y @oevery/rsp@3.1.0-beta.5 doctor
-npx -y @oevery/rsp@3.1.0-beta.5 status
+npx -y @oevery/rsp@latest doctor
+npx -y @oevery/rsp@latest status
 ```
 
 Use `init --agents-mode print` when you need RSP to print the resulting `AGENTS.md` content as well as initialize the project. RSP owns only the block between `<!-- rsp:begin -->` and `<!-- rsp:end -->`; surrounding project instructions remain project-owned.
@@ -47,8 +47,8 @@ Archive does not grant Git, publication, or deployment authority. Reinspect the 
 Preview and install the eleven default Skills from the exact RSP package being used:
 
 ```bash
-npx -y @oevery/rsp@3.1.0-beta.5 skills install --dry-run
-npx -y @oevery/rsp@3.1.0-beta.5 skills install
+npx -y @oevery/rsp@latest skills install --dry-run
+npx -y @oevery/rsp@latest skills install
 ```
 
 The optional report-only structural audit is installed by exact name:

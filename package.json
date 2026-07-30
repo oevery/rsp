@@ -1,7 +1,7 @@
 {
   "name": "@oevery/rsp",
   "type": "module",
-  "version": "3.1.0-beta.5",
+  "version": "3.1.0",
   "description": "RSP (Reliable Software Practice), a repository-native engineering workflow for humans and AI agents",
   "author": "oevery",
   "license": "MIT",
@@ -37,7 +37,7 @@
   },
   "scripts": {
     "prepare": "pnpm run build",
-    "release:check": "pnpm run release:metadata-check && pnpm run build && pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run release:package-check",
+    "release:check": "pnpm run release:metadata-check && pnpm run docs:check && pnpm run docs:build && pnpm run build && pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run release:package-check",
     "release:candidate-check": "node scripts/release-candidate-check.mjs && pnpm run release:check",
     "release:metadata-check": "node scripts/release-metadata-check.mjs",
     "release:package-check": "node scripts/clean-install-check.mjs",
