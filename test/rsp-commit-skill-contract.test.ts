@@ -65,6 +65,17 @@ describe('rsp-commit Skill contract', () => {
       expect(skill).toContain(fragment)
   })
 
+  it('preserves multiline messages across tool and shell boundaries', () => {
+    for (const fragment of [
+      'actual line breaks or a safely prepared message file',
+      'ordinary quoted `\\n` escape sequences',
+      'raw complete committed message',
+      'unintended literal `\\n` sequences',
+      'post-commit mismatch',
+    ])
+      expect(skill).toContain(fragment)
+  })
+
   it('projects owned issue links without premature or invented closing syntax', () => {
     for (const fragment of [
       '`Issue: <canonical-url>`',

@@ -37,7 +37,9 @@ Project every owned issue relationship as a non-closing `Issue: <canonical-url>`
 
 Stage only the explicit allowed paths. Re-read `git status --short`, inspect the complete cached path list and cached diff, and confirm they represent exactly one owner boundary with no sensitive material. If the cached boundary is wrong, stop and leave unrelated work untouched; do not repair it by broad staging, destructive reset, or history rewrite.
 
-Create one local commit with the prepared subject, optional body, and trailers. Do not push, tag, publish, amend, rebase, or force-push. Afterward observe `HEAD`, the complete committed message, committed paths, remaining worktree state, and remote refs when a remote-safety assertion is required. A commit command succeeding is insufficient if the observed message or paths differ from the prepared boundary.
+Transport a structured multiline message with actual line breaks or a safely prepared message file. Do not rely on ordinary quoted `\n` escape sequences as portable newlines; a host shell may pass those characters through literally.
+
+Create one local commit with the prepared subject, optional body, and trailers. Do not push, tag, publish, amend, rebase, or force-push. Afterward observe `HEAD`, the raw complete committed message, committed paths, remaining worktree state, and remote refs when required. A successful commit is still a post-commit mismatch when the observed message differs from the prepared message, including unintended literal `\n` sequences; report and stop without inferring amend or second-commit authority.
 
 ## Return the receipt
 
