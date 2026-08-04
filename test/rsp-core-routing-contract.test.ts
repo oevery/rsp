@@ -164,6 +164,31 @@ describe('rsp core routing contract', () => {
     expect(fallback).toContain('Intake returns exactly one of `ready`, `needs-shape`, `needs-owner`, or `out-of-goal`')
   })
 
+  it('continues an ordinary ready non-small Change when explicit activation does not select Manage', () => {
+    const routeFive = skill.match(/^5\. (.+)$/m)?.[1] ?? ''
+    const routeSix = skill.match(/^6\. (.+)$/m)?.[1] ?? ''
+    const routeSeven = skill.indexOf('7. If the Change is not shape-ready')
+    const implementation = skill.indexOf('8. For incomplete implementation')
+    const durableDecision = skill.indexOf('9. When Tasks and required verification pass')
+
+    expectSemanticGroup(routeFive, [
+      ['`manage.activation: explicit`', 'under `explicit`'],
+      ['only for an explicitly managed request'],
+    ])
+    expectSemanticGroup(routeSix, [
+      ['stop only when authority or selection is actually ambiguous'],
+      ['Otherwise preserve ordinary routing under the clear ready owner'],
+      ['Shape readiness'],
+      ['Implementation evidence'],
+      ['durable decision'],
+      ['without an explicitly managed request is not itself a stop signal'],
+    ])
+    expect(routeSix).not.toMatch(/^If Manage Intake is not selected, stop for/)
+    expect([routeSeven, implementation, durableDecision].every(index => index >= 0)).toBe(true)
+    expect(routeSeven).toBeLessThan(implementation)
+    expect(implementation).toBeLessThan(durableDecision)
+  })
+
   it('defines peer route dispositions and explicit stop resume contracts', () => {
     expect(skill).toContain('`RouteDisposition` is exactly `specialist`, `direct`, `managed`, `shape`, or `stop`')
     expect(skill).toContain('`specialist` returns one explicit Discipline owner')

@@ -375,6 +375,9 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('canonical `FrontierDisposition` is exactly `out-of-goal`, `owner-decision`, `fog`, `evidence-needed`, or `executable`')
     expect(body).toContain('public `ready-to-execute` maps only to canonical `executable`')
     expect(body).toContain('`StopDisposition: return-to-shape`')
+    expect(body).toContain('halt the current managed control phase')
+    expect(body).toContain('Do not continue an independently ready slice, dispatch another worker, or mutate product state')
+    expect(body).not.toContain('unless an independently ready owned slice can continue')
     expect(body).toContain('Resume only after Shape confirms a ready owner and Core freshly rederives the route')
   })
 

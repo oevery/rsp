@@ -55,7 +55,7 @@ After Intake returns `ready` and Manage qualifies, classify every newly surfaced
 
 - `out-of-goal` stops for topology or authority resolution with `StopDisposition: reroute`.
 - `owner-decision` stops with the single highest-impact owner question when behavior, acceptance, public interface, scope, mutation authority, external action, or human acceptance is unresolved. Return `StopDisposition: ask-owner` and resume through fresh Intake after the answer.
-- `fog` is not yet a precise question. Create no synthetic Task, Change, Blocker, or worker dispatch; return `StopDisposition: return-to-shape` to Core/Shape unless an independently ready owned slice can continue. Resume only after Shape confirms a ready owner and Core freshly rederives the route.
+- `fog` is not yet a precise question. Create no synthetic Task, Change, Blocker, or worker dispatch; return `StopDisposition: return-to-shape` to Core/Shape and halt the current managed control phase. Do not continue an independently ready slice, dispatch another worker, or mutate product state. Resume only after Shape confirms a ready owner and Core freshly rederives the route.
 - `evidence-needed` is one precise factual question answerable without choosing any owner decision above. If evidence would cross one of those boundaries, take the applicable stop instead of selecting Fix.
 - Canonical `executable` permits lane selection only after ownership, authority, and required evidence are settled.
 
