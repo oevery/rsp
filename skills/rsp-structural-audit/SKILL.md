@@ -37,7 +37,7 @@ Do not infer a finding from directory names, pattern matching, code size, framew
 
 ## Output
 
-Render headings, field labels, explanations, and conclusions in the language explicitly requested by the user; otherwise follow nearest project instructions, then the conversation language. Treat the shape below as semantic field order rather than fixed English wording, while preserving paths, severity labels, confidence values, and the result values `findings`, `clean`, and `scoped uncertainty`.
+Render headings, field labels, explanations, and conclusions in the language explicitly requested by the user; otherwise follow nearest project instructions, then the conversation language. Treat the shape below as semantic field order rather than fixed English wording, while preserving paths, severity labels, confidence values, and the result values `findings`, `clean`, and `scoped uncertainty`; when their language differs from the response, retain those values only as secondary exact tokens beside localized narration.
 
 Return findings ranked by material impact, then confidence. Emit at most five and use this shape:
 

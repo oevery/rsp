@@ -9,7 +9,7 @@ metadata:
 
 # RSP TDD
 
-Implement one clear behavior test-first, follow Core's response-versus-artifact language boundary, and return evidence to its selected Change.
+Implement one clear behavior test-first and return evidence to its selected Change. Follow Core's response-versus-artifact language boundary for all user-visible control narration; when the response language differs, keep exact canonical values only as secondary parenthesized or code-formatted tokens.
 
 ## Establish the cycle
 

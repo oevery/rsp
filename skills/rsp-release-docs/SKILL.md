@@ -11,6 +11,8 @@ metadata:
 
 Build one net-release evidence ledger and project it into repository-owned release surfaces. Git history locates evidence; it is not product truth.
 
+Follow Core's response-versus-artifact language boundary for all user-visible control narration; when the response language differs, keep exact canonical values only as secondary parenthesized or code-formatted tokens.
+
 ## Establish authority
 
 Resolve user scope, audience, language, format, references, and mutation authority first; then nearest project instructions, release-tool configuration, target-artifact conventions, and prior published releases. Higher-precedence evidence wins. Ask one focused question only when an unresolved owner choice materially changes the public result.

@@ -11,7 +11,7 @@ metadata:
 
 Do not implement the shaped work.
 
-Follow Core's response-versus-artifact language boundary.
+Follow Core's response-versus-artifact language boundary for all user-visible control narration; when the response language differs, keep exact canonical values only as secondary parenthesized or code-formatted tokens.
 
 ## Establish the boundary
 

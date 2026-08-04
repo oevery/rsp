@@ -22,6 +22,19 @@ function readSkill(directory = candidate): { body: string, frontmatter: Record<s
   return { body: match![2]!, frontmatter: parseYaml(match![1]!) as Record<string, any> }
 }
 
+function scoreLocalizedReceiptResult(output: string, exactResult: string) {
+  const resultLine = output.split(/\r?\n/).find(line => /^结果[:：]/u.test(line.trim()))
+  const value = resultLine?.replace(/^结果[:：]\s*/u, '') ?? ''
+  const tokenIndex = value.indexOf(exactResult)
+  const primaryNarration = tokenIndex > 0 ? value.slice(0, tokenIndex) : ''
+
+  return {
+    exact_result_preserved: tokenIndex >= 0,
+    localized_primary_narration: /\p{Script=Han}/u.test(primaryNarration),
+    exact_result_is_secondary: tokenIndex > 0 && /[（(`]\s*$/u.test(primaryNarration),
+  }
+}
+
 describe('rsp-manage research candidate', () => {
   it('stays explicit-only, host-neutral, and outside the stable suite', () => {
     const { body, frontmatter } = readSkill()
@@ -399,6 +412,8 @@ describe('rsp-manage product Skill', () => {
       'prohibited actions',
       'comparison baseline',
       'expected result schema',
+      'response language',
+      'localized control-narration rule',
       'stop conditions',
     ])
     expect(inlineValues(commonReceiptParagraph)).toEqual([
@@ -417,6 +432,9 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('Verify is a private Manager-only read-only lane')
     expect(body).toContain('runs only for the Change-declared risk or after a failed correction')
     expect(body).toContain('Fixed-scope review remains owned by `rsp-review`')
+    expect(body).toContain('human-facing receipt prose in the response language')
+    expect(body).toContain('applies equally to private Inspect and Verify lanes that have no standalone Skill')
+    expect(body).toContain('localize the primary result explanation and retain the exact result only as a secondary parenthesized or code-formatted token')
     expect(body.match(/Diagnose[\s\S]*?Its result is exactly one of ([^;]+);/)?.[1]?.match(/`[^`]+`/g)).toEqual([
       '`confirmed-same-scope`',
       '`unresolved-same-scope`',
@@ -443,6 +461,24 @@ describe('rsp-manage product Skill', () => {
     expect(body).not.toMatch(/token[^\n.]*rout|rout[^\n.]*token/i)
     expect(existsSync(join(root, 'skills', 'rsp-inspect'))).toBe(false)
     expect(existsSync(join(root, 'skills', 'rsp-verify'))).toBe(false)
+  })
+
+  it('scores localized Chinese receipt narration without a fixed result translation table', () => {
+    expect(scoreLocalizedReceiptResult('结果：changed-same-scope', 'changed-same-scope')).toEqual({
+      exact_result_preserved: true,
+      localized_primary_narration: false,
+      exact_result_is_secondary: false,
+    })
+    expect(scoreLocalizedReceiptResult('结果：同范围已修改（changed-same-scope）', 'changed-same-scope')).toEqual({
+      exact_result_preserved: true,
+      localized_primary_narration: true,
+      exact_result_is_secondary: true,
+    })
+    expect(scoreLocalizedReceiptResult('结果：验证通过（pass）', 'pass')).toEqual({
+      exact_result_preserved: true,
+      localized_primary_narration: true,
+      exact_result_is_secondary: true,
+    })
   })
 
   it('protects required Fix and Verify capacity without fixed lane allocations', () => {

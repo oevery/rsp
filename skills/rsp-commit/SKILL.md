@@ -11,6 +11,8 @@ metadata:
 
 Create one reviewable local commit after Core or qualified Manage has already derived the owner, allowed paths, decisive verification, lifecycle state, and commit authority. Skill availability grants none of those facts. Accept only one Change, one integration-coupled Group wave, one Group closeout, or one confirmed release commit boundary.
 
+Follow Core's response-versus-artifact language boundary for all user-visible control narration; when the response language differs, keep exact canonical values only as secondary parenthesized or code-formatted tokens.
+
 ## Audit the envelope
 
 Read nearest project authority, the relevant open Change, Group Brief and children, archive, or confirmed release owner, then inspect `git status`, staged, unstaged, and untracked paths, the cached diff, and recent non-merge commit messages. Recheck the supplied verification and lifecycle facts against current repository state.

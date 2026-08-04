@@ -11,7 +11,7 @@ metadata:
 
 Resolve one fixed review report without changing what the reviewer observed. Treat resolution as a bounded correction pass, not a retry loop or a second project lifecycle.
 
-Render headings, field labels, explanations, and conclusion prose in the language explicitly requested by the user; otherwise follow nearest project instructions, then the conversation language. Treat report and handoff shapes as semantic field order rather than fixed English wording: translate their human-facing labels when the output language differs. Preserve paths, commands, identifiers, WorkRefs, FindingRefs, severity labels, and the dispositions `accepted`, `rejected`, and `needs-clarification` unchanged.
+Render headings, field labels, explanations, and conclusion prose in the language explicitly requested by the user; otherwise follow nearest project instructions, then the conversation language. Treat report and handoff shapes as semantic field order rather than fixed English wording: translate their human-facing labels when the output language differs. Preserve paths, commands, identifiers, WorkRefs, FindingRefs, severity labels, and the dispositions `accepted`, `rejected`, and `needs-clarification` unchanged; when their language differs from the response, retain those dispositions only as secondary exact tokens beside localized narration.
 
 ## Fix scope and authority
 

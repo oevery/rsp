@@ -171,4 +171,48 @@ describe('rsp artifact routing and continuation contract', () => {
       expect(readFileSync(join(root, source), 'utf8'), source).toContain('response-versus-artifact language boundary')
     }
   })
+
+  it('localizes observable control narration while preserving canonical values as secondary tokens', () => {
+    const skillSystem = readFileSync(join(root, '.rsp', 'specs', 'skill-system.md'), 'utf8')
+    const core = readFileSync(join(root, 'skills', 'rsp', 'SKILL.md'), 'utf8')
+    const fallback = readFileSync(join(root, 'rules', 'rsp-rules.md'), 'utf8')
+
+    for (const [source, body] of [
+      ['.rsp/specs/skill-system.md', skillSystem],
+      ['skills/rsp/SKILL.md', core],
+      ['rules/rsp-rules.md', fallback],
+    ] as const) {
+      expect(body, source).toContain('Every user-visible RSP progress update, phase or stage description, control result, worker receipt, stop reason, and handoff')
+      expect(body, source).toMatch(/natural-language narration selected by (?:that|the response-language) precedence/)
+      expect(body, source).toMatch(/canonical technical value remains unchanged in parentheses or code formatting|retain a canonical technical value unchanged in parentheses or code formatting/)
+      expect(body, source).toMatch(/must not stand alone as the human-facing label|never stands alone as the human-facing label/)
+      expect(body, source).toContain('does not change persisted artifact language or host-owned hidden reasoning summaries')
+    }
+
+    for (const source of [
+      'skills/rsp-shape/SKILL.md',
+      'skills/rsp-diagnose/SKILL.md',
+      'skills/rsp-tdd/SKILL.md',
+      'skills/rsp-implement/SKILL.md',
+      'skills/rsp-manage/SKILL.md',
+      'skills/rsp-commit/SKILL.md',
+      'skills/rsp-release-docs/SKILL.md',
+    ]) {
+      const body = readFileSync(join(root, source), 'utf8')
+      expect(body, source).toContain('response-versus-artifact language boundary for all user-visible control narration')
+      expect(body, source).toContain('secondary parenthesized or code-formatted tokens')
+      expect(body, source).not.toContain('Every user-visible RSP progress update, phase or stage description, control result, worker receipt, stop reason, and handoff')
+    }
+
+    for (const source of [
+      'skills/rsp-design/SKILL.md',
+      'skills/rsp-review/SKILL.md',
+      'skills/rsp-resolve-findings/SKILL.md',
+      'skills/rsp-structural-audit/SKILL.md',
+    ]) {
+      const body = readFileSync(join(root, source), 'utf8')
+      expect(body, source).toMatch(/technical token alone as a response label|secondary exact tokens beside localized narration/)
+      expect(body, source).not.toContain('Every user-visible RSP progress update, phase or stage description, control result, worker receipt, stop reason, and handoff')
+    }
+  })
 })
