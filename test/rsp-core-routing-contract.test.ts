@@ -136,7 +136,7 @@ describe('rsp core routing contract', () => {
       ['one explicit isolated material domain, module/seam, or evidence-seeking design question'],
       ['`rsp-design`'],
       ['explicitly managed'],
-      ['effective status policy'],
+      ['effective `manage.activation: auto`', '`manage.activation: auto`'],
       ['`manage.activation: auto`'],
       ['one selected ready Change'],
       ['genuinely independent slices'],
@@ -153,9 +153,9 @@ describe('rsp core routing contract', () => {
     expect(releaseOperations).toContain('An unconfirmed identity or range, unclean exact candidate, missing owner, or material release-surface ambiguity stops before versioned mutation')
   })
 
-  it('resolves an explicitly or automatically managed owner through Intake before qualification', () => {
+  it('resolves a ready owner in Core before Manage qualification', () => {
     const lowered = managed.toLowerCase()
-    const resolveOwner = lowered.indexOf('intake resolves the smallest sufficient owner before testing manage eligibility')
+    const resolveOwner = lowered.indexOf('core resolves the smallest sufficient owner before testing manage eligibility')
     const qualifyManage = lowered.indexOf('select `rsp-manage` only')
 
     expect(resolveOwner).toBeGreaterThanOrEqual(0)
@@ -163,14 +163,13 @@ describe('rsp core routing contract', () => {
     expectSemanticGroup(managed, [
       ['fixed-scope Review, release, isolated Design, and tiny settled-work exceptions'],
       ['complete small-work exclusion'],
-      ['canonical `ControlOutcome`'],
+      ['canonical ownership `ControlOutcome`'],
       ['in-scope RSP planning artifacts'],
-      ['repeats Intake selection and qualification'],
+      ['freshly derives ownership, route, and qualification'],
       ['without another authorization round'],
-      ['Product or authority decisions remain with their returned owner'],
-      ['without implementation or controller mutation'],
-      ['return to Core for rerouting'],
-      ['without focusing another owner, dispatching work, or mutating durable or product state'],
+      ['material product or authority decision'],
+      ['return evidence to Core'],
+      ['without dispatching work or mutating product state'],
     ])
     expect(managed).toContain('Automatic activation grants controller selection only')
     expect(managed).toContain('configuration alone never does')
@@ -179,55 +178,49 @@ describe('rsp core routing contract', () => {
     expect(fallback).toContain('Configuration selects no capability and grants no planning, product-mutation, lifecycle, Git, publication, deployment, approval, or human-acceptance authority')
   })
 
-  it('routes non-small goals through transient Intake before Shape or managed execution', () => {
+  it('routes missing ownership through Shape before managed execution', () => {
     const review = skill.indexOf('Route an explicit report-only review')
     const release = skill.indexOf('Route an explicit release-documentation')
     const design = skill.indexOf('Route one explicit isolated material')
     const tiny = skill.indexOf('Return tiny settled work directly')
-    const intake = skill.indexOf('select the no-mutation Manage Intake')
+    const owner = skill.indexOf('Core resolves whether one unambiguous shape-ready Change or shallow Group owns the goal')
 
-    expect([review, release, design, tiny, intake].every(index => index >= 0)).toBe(true)
+    expect([review, release, design, tiny, owner].every(index => index >= 0)).toBe(true)
     expect(review).toBeLessThan(release)
     expect(release).toBeLessThan(design)
     expect(design).toBeLessThan(tiny)
-    expect(tiny).toBeLessThan(intake)
-    expect(skill).toContain('returns one canonical `ControlOutcome`')
-    expect(skill).toContain('Core consumes its returned disposition, next owner, required input, and resume rule')
-    expect(skill).toContain('re-reads status and repeats Intake selection and qualification')
+    expect(tiny).toBeLessThan(owner)
+    expect(skill).toContain('Missing or non-ready ownership reports `RouteDisposition: shape`')
+    expect(skill).toContain('then re-reads status and freshly derives ownership and routing')
 
-    expect(managed).toContain('## INTAKE — resolve the owner without execution')
-    expect(managed).toContain('Under `manage.activation: auto`, select Intake for every other requested completion or continuation')
-    expect(managed).toContain('Invoke `rsp-manage` Intake and consume its canonical `ControlOutcome`')
-    expect(managed).toContain('Canonical ready ownership identifies one unambiguous selected shape-ready Change or shallow Group')
-    expect(managed).toContain('Intake creates no Task, Blocker, worker envelope, frontier, ticket, run record, or synthetic WorkRef')
+    expect(managed).toContain('## OWNER PREFLIGHT — Core resolves the owner without execution')
+    expect(managed).toContain('Core derives one canonical ownership `ControlOutcome`')
+    expect(managed).toContain('Shape returns the ready WorkRef to Core')
+    expect(managed).toContain('Owner preflight creates no Task, Blocker, worker envelope, frontier, ticket, run record, or synthetic WorkRef')
 
-    expect(manageSkill).toContain('## Manage Intake')
-    expect(manageSkill).toContain('It does not focus another owner, mutate a planning or product artifact, create a controller record, or dispatch a worker')
-    expect(manageSkill).toContain('only `ready` enters `## Qualify before mutation`')
+    expect(manageSkill).toContain('## Selected-goal entry')
+    expect(manageSkill).toContain('Manage has no pre-owner Intake')
+    expect(manageSkill).toContain('never creates, focuses, or reshapes a durable owner')
   })
 
   it('continues an ordinary ready non-small Change when explicit activation does not select Manage', () => {
-    const routeFive = skill.match(/^5\. (.+)$/m)?.[1] ?? ''
     const routeSix = skill.match(/^6\. (.+)$/m)?.[1] ?? ''
-    const routeSeven = skill.indexOf('7. If the Change is not shape-ready')
     const implementation = skill.indexOf('8. For incomplete implementation')
     const durableDecision = skill.indexOf('9. When Tasks and required verification pass')
 
-    expectSemanticGroup(routeFive, [
-      ['`manage.activation: explicit`', 'under `explicit`'],
-      ['only for an explicitly managed request'],
-    ])
     expectSemanticGroup(routeSix, [
+      ['`manage.activation: explicit`', 'under `explicit`'],
+      ['qualify only an explicitly managed request'],
+    ])
+    const routeSeven = skill.match(/^7\. (.+)$/m)?.[1] ?? ''
+    expectSemanticGroup(routeSeven, [
       ['stop only when authority or selection is actually ambiguous'],
       ['Otherwise preserve ordinary routing under the clear ready owner'],
-      ['Shape readiness'],
       ['Implementation evidence'],
       ['durable decision'],
       ['without an explicitly managed request is not itself a stop signal'],
     ])
-    expect(routeSix).not.toMatch(/^If Manage Intake is not selected, stop for/)
-    expect([routeSeven, implementation, durableDecision].every(index => index >= 0)).toBe(true)
-    expect(routeSeven).toBeLessThan(implementation)
+    expect([implementation, durableDecision].every(index => index >= 0)).toBe(true)
     expect(implementation).toBeLessThan(durableDecision)
   })
 
@@ -235,7 +228,7 @@ describe('rsp core routing contract', () => {
     expect(skill).toContain('`RouteDisposition` is exactly `specialist`, `direct`, `managed`, `shape`, or `stop`')
     expect(skill).toContain('`specialist` returns one explicit Discipline owner')
     expect(skill).toContain('`direct` permits one bounded Core or Implement mutation path with one decisive verification and no WorkerEnvelope')
-    expect(skill).toContain('`managed` enters Manage Intake')
+    expect(skill).toContain('`managed` hands one selected shape-ready owner and bounded goal to Manage after qualification')
     expect(skill).toContain('`shape` returns unclear owned work to Shape')
     expect(skill).toContain('`stop` names one `StopDisposition`')
     expect(skill).toContain('exactly `ask-owner`, `return-to-shape`, `reroute`, `retry-with-evidence`, `environment-blocked`, `verification-blocked`, or `capability-unavailable`')
@@ -247,25 +240,17 @@ describe('rsp core routing contract', () => {
     expect(fallback).toContain('Persist only `open` and `archived` lifecycle state')
   })
 
-  it('keeps detailed Intake compatibility mapping owned only by rsp-manage', () => {
-    expect(manageSkill).toContain('Intake returns exactly one response-only owner state')
-    expect(manageSkill).toContain('canonical `OwnershipDisposition` is exactly `ready`, `ask-owner`, `return-to-shape`, or `reroute`')
-    expect(manageSkill).toContain('`needs-shape` maps to canonical `OwnershipDisposition: return-to-shape`')
-    expect(manageSkill).toContain('`needs-owner` maps to canonical `OwnershipDisposition: ask-owner`')
-    expect(manageSkill).toContain('`out-of-goal` maps to canonical `OwnershipDisposition: reroute`')
-    expect(manageSkill).toContain('resume through fresh Intake only after the owner answers')
-    expect(manageSkill).toContain('Core must establish a new owner or authority boundary before continuing')
-    expect(manageSkill).toContain('without turning it into a product question')
-    expect(manageSkill).toContain('Every return is one transient `ControlOutcome` containing phase, disposition, decisive evidence, next owner, required input when any, and its resume or rederivation rule')
-
-    for (const body of [skill, managed, fallback]) {
-      expect(body).not.toContain('`needs-shape`')
-      expect(body).not.toContain('`needs-owner`')
-      expect(body).not.toContain('`out-of-goal`')
-      expect(body).not.toContain('Intake returns exactly one of')
-    }
-
-    expect(managed).toContain('compatibility labels, exact canonical mappings, response schema, and detailed resume contracts are owned only by `rsp-manage`')
+  it('keeps owner resolution in Core and selected execution in Manage', () => {
+    expect(managed).toContain('Canonical `OwnershipDisposition` is exactly `ready`, `ask-owner`, `return-to-shape`, or `reroute`')
+    expect(managed).toContain('Manage has no pre-owner Intake')
+    expect(manageSkill).toContain('Core resolves ownership before this Skill is entered')
+    expect(manageSkill).toContain('Reject an incomplete handoff without mutation and return to Core')
+    expect(manageSkill).toContain('Core and its managed-routing reference solely own initial Manage qualification')
+    expect(manageSkill).toContain('Manage never repeats the direct-versus-managed eligibility test')
+    expect(manageSkill).not.toContain('## Qualify before mutation')
+    expect(manageSkill).not.toContain('Decline Manage without any mutation')
+    expect(manageSkill).not.toContain('`needs-shape`')
+    expect(manageSkill).not.toContain('`needs-owner`')
     expect(skill).toContain('`return-to-shape` resumes only after Shape confirms a ready owner')
   })
 
@@ -284,7 +269,7 @@ describe('rsp core routing contract', () => {
         ['lifecycle delivery'],
         ['clear ready successor'],
         ['smallest sufficient WorkRef'],
-        ['fresh Manage qualification', 'fresh qualification', 'fresh Manage Intake selection and qualification', 'smallest sufficient WorkRef before mutation'],
+        ['fresh Manage qualification', 'fresh qualification', 'fresh owner preflight and Manage qualification', 'rerun owner preflight plus fresh Manage qualification', 'smallest sufficient WorkRef before mutation'],
         ['before mutation'],
         ['remain tiny/small', 'Unchanged tiny/small follow-ups remain direct', 'unchanged tiny/small follow-ups stay direct'],
         ['Elapsed time and message count', 'elapsed time and message count alone'],
@@ -295,7 +280,7 @@ describe('rsp core routing contract', () => {
     const routes = skill.indexOf('1. Route an explicit report-only review')
     expect(rederive).toBeGreaterThanOrEqual(0)
     expect(routes).toBeGreaterThan(rederive)
-    expect(skill).toContain('Report `RouteDisposition: direct`. Perform no Manage Intake or WorkerEnvelope')
+    expect(skill).toContain('Report `RouteDisposition: direct`. Perform no Manage handoff or WorkerEnvelope')
     expect(skill).toContain('rederive before further mutation if prospective work expands beyond any condition')
     expect(fallback).toContain('Before later mutation or a different WorkRef, rederive authority')
     expect(fallback).toContain('Do not auto-continue a successor or widen the boundary because more work is visible')
@@ -336,7 +321,7 @@ describe('rsp core routing contract', () => {
     expect(managed).toContain('create no controller state')
     expect(fallback).toContain('does not emulate `rsp-manage`')
     expect(fallback).toContain('worker dispatch')
-    expect(skillSystem).toContain('qualified Manage dispatches at least one implementation worker with a complete owner envelope')
+    expect(skillSystem).toContain('a Manage run with a valid selected handoff dispatches at least one implementation worker with a complete owner envelope')
     expect(skillSystem).toContain('Delegation never requires parallelism')
     expect(skillSystem).toContain('This observability is response-only and creates no controller state')
   })
@@ -361,18 +346,12 @@ describe('rsp core routing contract', () => {
     expect(fallback).toContain('stop for boundary resolution when ownership overlaps or remains uncertain')
   })
 
-  it('reuses Manage Intake selection after progress without persisting orchestration state', () => {
+  it('keeps same-goal progress inside Manage without persisting orchestration state', () => {
     expectSemanticGroup(managed, [
       ['transient authority envelope'],
-      ['returns to Core at an owner boundary or resume'],
-      ['re-read `rsp status --json`'],
-      ['apply Intake selection again'],
-      ['rerun QUALIFY'],
+      ['Ordinary Fix, Verify, Review, or Resolve Findings receipts remain inside Manage'],
       ['clear in-scope ready successor'],
-      ['Clearly missing ownership'],
-      ['Core requalifies without another authorization round'],
-      ['public-interface'],
-      ['external-action'],
+      ['Owner identity, topology, requested route, behavior, acceptance, public interface, scope, mutation authority, or external-action authority changes return evidence to Core'],
     ])
     expectSemanticGroup(managed, [
       ['Never persist the goal envelope, WorkSet, waves'],
@@ -439,9 +418,9 @@ describe('rsp core routing contract', () => {
   it('prohibits inferred delivery and lifecycle actions', () => {
     expect(skill).toContain('Do not infer implementation, review, Git, publication, or approval authority')
     expect(skill).toMatch(/does not execute archive or grant staging, commit, push, publication, deletion, deployment, approval, or human-acceptance authority/)
-    expect(skill).toContain('`rsp-manage` solely owns interruption and resume, convergence, lifecycle and commit execution detail')
+    expect(skill).toContain('Manage solely owns same-goal revalidation, interruption and resume, review convergence, acceptance, lifecycle, and commit execution detail')
     expect(manageSkill).toContain('inspect the complete lifecycle diff')
-    expect(manageSkill).toContain('after Core durable review run `rsp archive <change-work-ref>`')
+    expect(manageSkill).toContain('after Manage-owned clean fixed-scope durable review run `rsp archive <change-work-ref>`')
     expect(manageSkill).toContain('`rsp group close <group>`')
     expect(manageSkill).toContain('Terminal small owners default to no commit')
     expect(manageSkill).toContain('qualified `local` terminal non-small Change or Group')
@@ -451,8 +430,8 @@ describe('rsp core routing contract', () => {
     expect(manageSkill).toContain('Push is opt-in only when user explicitly mentions push')
     expect(manageSkill).toContain('Never force-push')
     expect(manageSkill).toContain('`manual` grants neither automatic archive nor commit')
-    expect(manageSkill).toContain('`lifecycle` grants lifecycle closeout after Core durable review but no Git action')
-    expect(manageSkill).toContain('`local` grants lifecycle closeout, separately justified recovery checkpoints, and the deterministic terminal route below')
+    expect(manageSkill).toContain('`lifecycle` grants lifecycle closeout after Manage-owned clean fixed-scope durable review but no Git action')
+    expect(manageSkill).toContain('`local` automatically grants lifecycle closeout')
     expect(managed).toContain('Missing configuration preserves `explicit` activation with `local` closeout compatibility')
     expect(managed).toContain('Invalid configuration fails closed as `explicit` plus `manual`')
     expect(durable).toContain('`manual` leaves archive advisory')

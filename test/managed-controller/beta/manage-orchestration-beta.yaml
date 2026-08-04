@@ -3,13 +3,13 @@ case: pause-resume
 variants:
   - baseline
   - product
-holdout_manifest_sha256: c38daf6f451ccfc250462bb2f58e82757bae3ae27adb7d775019bf51eb9f3397
-base_tree_sha256: 5b5c545c7dff0de6561429fa8c81837f53d14705b95f48a8e28af5989427ee3c
+holdout_manifest_sha256: 9efb6f109991a8f6d0d77053599f8cbe4a2a1bef27460a145615e4c871ba9a64
+base_tree_sha256: 186c503aa8a467c7de0ed867a158cc0456df01fa528c1ef3945e12374fead43a
 product_skill_names:
   - rsp
   - rsp-manage
   - rsp-implement
-product_composition_sha256: 1099bfac07dce7bb604d1ac2adfafc8ebbaf3d4c9b559bd6ad0836008cbbfd23
+product_composition_sha256: 52a2322edf3e2bd4038c5f94112dacf1d9a303d283d3b655f6251ffd7a25dd00
 prior_retained_evidence:
   - path: research/evaluations/rsp-manage/2026-08-04-manage-orchestration-beta/report.md
     sha256: 4c4d7ff94bbdfbfc6988e9d264cff05de89a37f6dcc9e19f555536ba02011dc1

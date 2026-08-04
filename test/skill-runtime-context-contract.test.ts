@@ -37,28 +37,21 @@ describe('skill runtime context composition', () => {
   })
 
   it('keeps routing preselection separate from selected Manage execution detail', () => {
-    expect(core).toContain('`rsp-manage` solely owns interruption and resume, convergence, lifecycle and commit execution detail')
+    expect(core).toContain('Manage solely owns same-goal revalidation, interruption and resume, review convergence, acceptance, lifecycle, and commit execution detail')
     expect(core).not.toContain('An explicit pause must stop and confirm active workers before acknowledgement')
-    for (const heading of ['## INTAKE', '## QUALIFY', '## REQUALIFY', '## Dormant closeout fail-safe'])
+    for (const heading of ['## OWNER PREFLIGHT', '## QUALIFY', '## HANDOFF AND RETURN', '## Dormant closeout fail-safe'])
       expect(managed).toContain(heading)
     for (const heading of ['### Interrupt and resume', '## CONVERGE', '## CLOSE'])
       expect(managed).not.toContain(heading)
     expect(managed).not.toContain('Allow at most three Resolve Findings passes per Change')
     expect(managed).not.toContain('When lifecycle closeout is granted')
-    expect(manage).toContain('Once selected, this Skill solely owns interruption and resume, convergence, lifecycle and commit execution detail')
+    expect(manage).toContain('Once selected, this Skill solely owns same-goal revalidation, interruption and resume, review convergence, acceptance, lifecycle and commit execution detail')
     expect(manage).toContain('## Handle interruption')
     expect(manage).toContain('## Converge managed review')
-    expect(manage).toContain('Qualified only: effective `manage.closeout` is an automatic grant ceiling')
-    expect(manage).toContain('Intake returns exactly one response-only owner state')
-    expect(manage).toContain('`needs-shape` maps to canonical `OwnershipDisposition: return-to-shape`')
-    expect(manage).toContain('Every return is one transient `ControlOutcome` containing phase, disposition, decisive evidence, next owner, required input when any, and its resume or rederivation rule')
-    for (const projection of [core, managed]) {
-      expect(projection).not.toContain('`needs-shape`')
-      expect(projection).not.toContain('`needs-owner`')
-      expect(projection).not.toContain('`out-of-goal`')
-    }
-    for (const runtimeDoc of [core, managed, manage])
-      expect(runtimeDoc).not.toMatch(/\bpreflight\b/iu)
+    expect(manage).toContain('Valid selected handoff only: effective `manage.closeout` is an automatic grant ceiling')
+    expect(manage).toContain('Manage has no pre-owner Intake')
+    expect(manage).toContain('goal, WorkRef, authority envelope, decisive qualification evidence, closeout ceiling, and return boundaries')
+    expect(manage).toContain('Do not return to Core merely to repeat route selection or qualification')
   })
 
   it('uses only local numbered arrows for the closed implementation route', () => {

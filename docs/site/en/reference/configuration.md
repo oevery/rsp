@@ -45,13 +45,13 @@ manage:
   closeout: lifecycle
 ```
 
-`activation` accepts `explicit` or `auto`. After specialist and complete small-work exceptions, automatic activation selects a no-mutation Manage Intake for requested completion or continuation; only an Intake `ready` result can proceed to qualification and managed execution. It grants no planning, product mutation, lifecycle, or external authority.
+`activation` accepts `explicit` or `auto`. After specialist and complete small-work exceptions, Core first resolves one shape-ready owner and solely owns initial Manage qualification plus the `selected | declined` route result. Missing or non-ready ownership goes to Shape and returns to Core before Manage qualification; automatic activation never sends pre-owner work into Manage. Selected Manage validates the handoff against current owner, authority, and owned-diff evidence without repeating direct-versus-managed eligibility. Activation grants no planning, product mutation, lifecycle, or external authority.
 
 `closeout` accepts:
 
 - `manual`: no automatic archive or commit.
 - `lifecycle`: archive may follow a successful durable review; commit remains separate.
-- `local`: lifecycle closeout plus one separately justified local commit at an eligible clean, verified, non-small terminal boundary.
+- `local`: automatically archives an eligible, verified, non-small terminal managed boundary with a clean exact owned boundary and routes its exact paths once to local Commit without another user request.
 
 When `manage` is omitted, compatibility defaults resolve to `activation: explicit` and `closeout: local`. Nearest project restrictions and host enforcement can only narrow these ceilings. RSP intentionally has no `full` preset; push, tag, publication, deployment, approval, and human acceptance stay explicit.
 

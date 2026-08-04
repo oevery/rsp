@@ -39,7 +39,7 @@ This file is the minimal fallback protocol for agents that cannot load the `rsp`
 
 ## Safety ceiling
 
-- This fallback does not emulate `rsp-manage`, Manage Intake, worker dispatch, convergence loops, managed resume, or configured closeout. Configuration selects no capability and grants no planning, product-mutation, lifecycle, Git, publication, deployment, approval, or human-acceptance authority.
+- This fallback does not emulate `rsp-manage`, ready-owner qualification, worker dispatch, convergence loops, managed resume, or configured closeout. Configuration selects no capability and grants no planning, product-mutation, lifecycle, Git, publication, deployment, approval, or human-acceptance authority.
 - Do not create or repair command-owned RSP files directly. Do not create archives or restore archived content by editing files; use the owning RSP command only with explicit lifecycle authority.
 - This fallback never archives, closes a Group, stages, commits, tags, pushes, publishes, deploys, deletes unrelated work, or records external approval. Those actions require their own explicit authority and available owning capability.
 - On malformed or incomplete evidence, ambiguous focus or ownership, unresolved decisions, unavailable required capability, failed verification, or out-of-scope work, fail closed without mutation. State what was inspected, what is missing, who owns the next decision or action, and what evidence or authority permits resumption.

@@ -45,13 +45,13 @@ manage:
   closeout: lifecycle
 ```
 
-`activation` 接受 `explicit` 或 `auto`。在保留专门路由与完整小工作例外后，自动激活会让已请求完成或继续的工作先进入不修改状态的 Manage Intake；只有 Intake 返回 `ready` 才能继续资格判断与受管执行。它不授予规划、产品修改、生命周期或外部操作权限。
+`activation` 接受 `explicit` 或 `auto`。在保留专门路由与完整小工作例外后，Core 会先解析一个 shape-ready owner，并独占首次 Manage 资格判断及 `selected | declined` 路由结果；缺少或未就绪的归属直接进入 Shape，并在 Manage 资格判断前返回 Core。已选择的 Manage 只根据当前 owner、权限与归属差异证据校验 handoff，不重复判断 direct 还是 managed。自动激活不会把尚无 owner 的工作交给 Manage，也不授予规划、产品修改、生命周期或外部操作权限。
 
 `closeout` 接受：
 
 - `manual`：不自动归档或提交。
 - `lifecycle`：成功完成持久化审查后可以归档；提交仍然独立。
-- `local`：在生命周期收尾基础上，允许符合条件、工作树干净、已验证、非小型终态边界执行一次有独立依据的本地提交。
+- `local`：自动归档符合条件、已验证、非小型且归属边界干净、路径精确、无混杂或越界改动的受管终态边界，并把这些精确路径一次性路由到本地 Commit，无需用户再次请求。
 
 省略 `manage` 时，兼容默认值解析为 `activation: explicit` 与 `closeout: local`。最近的项目限制与宿主强制规则只能缩小这些上限。RSP 有意不提供 `full` 预设；推送、标签、发布、部署、批准与人工验收保持显式。
 

@@ -3,12 +3,13 @@ sources:
   - skills/rsp-manage/SKILL.md
   - skills/rsp/references/managed-routing.md
 evidence:
-  - Evidence receipts force fresh status, Intake selection, and qualification before later mutation.
+  - Same-goal evidence receipts force internal Manage revalidation before later mutation.
   - Dynamic dispatch capacity protects known required Fix and Verify work without fixed lane allocations.
   - Corrective retry requires new evidence and enough remaining capacity for decisive acceptance.
   - Controller execution state remains response-only and is never durable project state.
 required_contract:
-  - An evidence receipt triggers fresh status, Intake selection, and qualification rederivation before any later mutation or dispatch
+  - After every ordinary same-goal Fix, Verify, Review, or Resolve Findings receipt, re-read status, owner, authority, diff, blockers, and decisive evidence internally before any later mutation or dispatch
+  - Do not return to Core merely to repeat route selection or qualification
   - Total worker dispatch remains at most four
   - count one Fix when accepted mutation is still required and count one Verify when the declared acceptance risk or a failed correction still requires worker verification
   - Start the optional dispatch only when the remaining dispatch capacity covers that dispatch plus every known required obligation

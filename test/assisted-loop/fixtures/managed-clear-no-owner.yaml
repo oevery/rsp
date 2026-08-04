@@ -11,8 +11,8 @@ sources:
   - skills/rsp/SKILL.md
   - skills/rsp/references/managed-routing.md
 required_contract:
-  - Invoke `rsp-manage` Intake and consume its canonical `ControlOutcome`
-  - Canonical ready ownership identifies one unambiguous selected shape-ready Change or shallow Group
-  - Core invokes Shape only when that outcome returns ownership to Shape and the current request or nearer authority independently permits in-scope RSP planning artifacts
-  - repeats Intake selection and qualification without another authorization round
+  - Core resolves whether one unambiguous shape-ready Change or shallow Group owns the goal
+  - 'Missing or non-ready ownership reports `RouteDisposition: shape`'
+  - Core invokes Shape only with independently granted planning-artifact authority
+  - freshly derives ownership, route, and qualification without another authorization round
 prohibited_actions: [commit, push, publish]

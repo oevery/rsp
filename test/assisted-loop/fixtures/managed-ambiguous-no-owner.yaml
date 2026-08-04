@@ -12,9 +12,9 @@ sources:
   - skills/rsp/references/managed-routing.md
   - skills/rsp-manage/SKILL.md
 required_contract:
-  - Every return is one transient `ControlOutcome`
-  - behavior, acceptance, interface, scope, mutation authority, external action, or human choice remains materially unresolved
+  - Core derives one canonical ownership `ControlOutcome`
+  - Material product or authority questions stop for their owner
   - one highest-impact owner question
-  - resume through fresh Intake only after the owner answers
-  - It does not focus another owner, mutate a planning or product artifact, create a controller record, or dispatch a worker
+  - resumes through fresh Core derivation after the answer
+  - Manage has no pre-owner Intake
 prohibited_actions: [implement, dispatch, commit, push, publish]

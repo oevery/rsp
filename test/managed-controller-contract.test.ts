@@ -73,7 +73,7 @@ describe('rsp-manage research candidate', () => {
       'explicit-pause',
       'fresh-return',
       'frontier-precedence-stop',
-      'intake-routing',
+      'owner-preflight-routing',
       'interruption-recovery',
       'lane-boundaries',
       'ordinary-restraint',
@@ -84,7 +84,7 @@ describe('rsp-manage research candidate', () => {
       'control-route-transitions',
       'transient-execution-bounds',
     ].sort())
-    expect(cases.find(item => item.id === 'intake-routing')?.sources).toEqual([
+    expect(cases.find(item => item.id === 'owner-preflight-routing')?.sources).toEqual([
       'skills/rsp/SKILL.md',
       'skills/rsp-manage/SKILL.md',
       'skills/rsp/references/managed-routing.md',
@@ -162,11 +162,11 @@ describe('rsp-manage research candidate', () => {
     expect(readFileSync(join(prepared.workspace, '.rsp', 'focus.d', 'normalize-checkpoint'), 'utf8').trim()).toBe('')
   })
 
-  it('scores ordered continuation fields and explicit resume-Intake-selection evidence', () => {
+  it('scores ordered continuation fields and selected-goal resume evidence', () => {
     const manifest = {
       continuation_contract: {
         ordered_fields: ['WorkRef', 'Authority', 'Current state', 'Changed artifacts', 'Fresh verification', 'Blockers', 'Next action'],
-        recovery_evidence: ['handoff-pointer', 'authority-reread', 'manage-requalified'],
+        recovery_evidence: ['handoff-pointer', 'authority-reread', 'selected-handoff-validated'],
       },
     }
     const passing = [
@@ -177,7 +177,7 @@ describe('rsp-manage research candidate', () => {
       '- Fresh verification: npm test passed',
       '- Blockers: receiver unavailable',
       '- Next action: run receiver acceptance',
-      '- Recovery evidence: handoff-pointer authority-reread manage-requalified',
+      '- Recovery evidence: handoff-pointer authority-reread selected-handoff-validated',
     ].join('\n')
 
     expect(scoreManagedRecoveryOutput(manifest, passing)).toEqual({
@@ -228,12 +228,12 @@ describe('rsp-manage research candidate', () => {
       recovery: {
         duplicate_fields: [],
         missing_fields: [],
-        missing_recovery_evidence: [],
+        missing_recovery_evidence: ['selected-handoff-validated'],
         ordered_fields: true,
-        passed: true,
+        passed: false,
         recovery_evidence_line: true,
       },
-      result: 'passed',
+      result: 'failed',
     })
   })
 
@@ -330,12 +330,12 @@ describe('rsp-manage product Skill', () => {
     expect(lstatSync(join(product, 'SKILL.md')).isSymbolicLink()).toBe(false)
     expect(body).toContain('explicit request or effective `manage.activation: auto`')
     expect(body).toContain('automatic activation grants selection, not mutation')
-    expect(body).toContain('one ready Change or shallow Group')
+    expect(body).toContain('one selected shape-ready Change or shallow Group')
     expect(body).toContain('Keep artifacts durable and process data transient')
     expect(readFileSync(join(candidate, 'SKILL.md'), 'utf8')).not.toBe(readFileSync(join(product, 'SKILL.md'), 'utf8'))
   })
 
-  it('uses proactive independent qualification paths without elapsed-time inference', () => {
+  it('keeps initial qualification in Core and validates only the selected handoff in Manage', () => {
     const { body } = readSkill(product)
 
     expect(managedRouting).toContain('qualifies through at least one independent path')
@@ -352,16 +352,16 @@ describe('rsp-manage product Skill', () => {
     expect(managedRouting).toContain('one owner, one local seam, one mutation pass, one decisive check, no managed lifecycle coordination, and no ready successor')
     expect(managedRouting).toContain('fails any one of these conditions qualifies as non-small through this automatic path')
     expect(managedRouting).toContain('do not leave the middle case unclassified')
-    expect(body).toContain('genuinely independent slices')
-    expect(body).toContain('prospective execution signals show more than one bounded phase or authority surface')
-    expect(body).toContain('the continuation is interruption recovery')
-    expect(body).toContain('Lack of parallel work does not disqualify prospective or recovery work')
-    expect(body).toContain('authorized objective and expected phases, never from elapsed time')
-    expect(body).toContain('decline as direct one-step work only when all of these are true')
-    expect(body).toContain('fails any one condition qualifies as non-small through automatic activation')
-    expect(body).toContain('Decline Manage without any mutation')
-    expect(body).toContain('without creating a controller artifact')
-    expect(body).toContain('return the exact Core or Discipline action')
+    expect(body).toContain('Core and its managed-routing reference solely own initial Manage qualification')
+    expect(body).toContain('Manage never repeats the direct-versus-managed eligibility test')
+    expect(body).toContain('validate the handoff against current evidence')
+    expect(body).toContain('the selected owner and topology still match')
+    expect(body).toContain('the authority envelope still permits the next action')
+    expect(body).toContain('owned paths remain exact and unmixed')
+    expect(body).toContain('the decisive qualification evidence has not been invalidated')
+    expect(body).toContain('continue the selected managed goal without repeating qualification')
+    expect(body).not.toContain('## Qualify before mutation')
+    expect(body).not.toContain('Decline Manage without any mutation')
   })
 
   it('classifies the execution frontier in fail-closed order before dispatch or mutation', () => {
@@ -388,6 +388,9 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('canonical `FrontierDisposition` is exactly `out-of-goal`, `owner-decision`, `fog`, `evidence-needed`, or `executable`')
     expect(body).toContain('public `ready-to-execute` maps only to canonical `executable`')
     expect(body).toContain('`StopDisposition: return-to-shape`')
+    expect(body).toContain('return `StopDisposition: return-to-shape` to Core')
+    expect(body).toContain('Only Core may route authorized Shape')
+    expect(body).not.toContain('return `StopDisposition: return-to-shape` to Core/Shape')
     expect(body).toContain('halt the current managed control phase')
     expect(body).toContain('Do not continue an independently ready slice, dispatch another worker, or mutate product state')
     expect(body).not.toContain('unless an independently ready owned slice can continue')
@@ -534,11 +537,12 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('neither archive nor commit runs')
   })
 
-  it('requalifies after evidence and keeps all controller execution state transient', () => {
+  it('revalidates selected-goal evidence and keeps all controller execution state transient', () => {
     const { body } = readSkill(product)
 
     expect(body).toContain('Inspect the actual diff and fresh verification before acceptance')
-    expect(body).toContain('An evidence receipt triggers fresh status, Intake selection, and qualification rederivation before any later mutation or dispatch')
+    expect(body).toContain('After every ordinary same-goal Fix, Verify, Review, or Resolve Findings receipt')
+    expect(body).toContain('Do not return to Core merely to repeat route selection or qualification')
     expect(body).toContain('frontier classification, lane choice, envelopes, receipts, dispatch and retry counts, concurrency reasoning, and resume chronology response-only')
     expect(body).toContain('Converged requirements and design belong in the selected Change')
     expect(body).toContain('real dependencies in `Blockers`')
@@ -551,12 +555,11 @@ describe('rsp-manage product Skill', () => {
 
     expect(body).toContain('When the host supports workers and authorized implementation remains, dispatch at least one implementation worker')
     expect(body).toContain('sequential execution does not permit the controller to absorb the whole implementation')
-    expect(body).toContain('The controller retains owner resolution, worker-result acceptance, integration verification, review convergence, lifecycle, and Git decisions')
+    expect(body).toContain('The controller retains worker-result acceptance, integration verification, review convergence, lifecycle, and Git decisions')
     expect(body).toContain('real hosts, provider sessions, and hardware resources overlap')
     expect(body).toContain('unless an authorized isolated workspace and verification boundary exist')
     expect(body).toContain('Dispatch in parallel only for isolated mutation paths and verification resources')
     expect(body).toContain('delegation never implies concurrency')
-    expect(body).toContain('Report `selected` or `declined`')
     expect(body).toContain('concrete reason for sequential or parallel execution')
     expect(managedRouting).toContain('Make the route observable')
     expect(managedRouting).toContain('report `selected` with the decisive qualification signal')
@@ -568,33 +571,33 @@ describe('rsp-manage product Skill', () => {
     const { body } = readSkill(product)
 
     expect(body).toContain('`manual` grants neither automatic archive nor commit')
-    expect(body).toContain('`lifecycle` grants lifecycle closeout after Core durable review but no Git action')
-    expect(body).toContain('`local` grants lifecycle closeout, separately justified recovery checkpoints, and the deterministic terminal route below')
-    expect(body).toContain('Missing configuration preserves `explicit` activation with `local` closeout compatibility')
-    expect(body).toContain('Invalid configuration fails closed as `explicit` plus `manual`')
+    expect(body).toContain('`lifecycle` grants lifecycle closeout after Manage-owned clean fixed-scope durable review but no Git action')
+    expect(body).toContain('`local` automatically grants lifecycle closeout')
+    expect(managedRouting).toContain('Missing configuration preserves `explicit` activation with `local` closeout compatibility')
+    expect(managedRouting).toContain('Invalid configuration fails closed as `explicit` plus `manual`')
     expect(body).toContain('Push is opt-in only when user explicitly mentions push')
     expect(body).toContain('Never force-push')
   })
 
-  it('keeps closeout presets dormant until Manage qualifies for the current continuation', () => {
+  it('keeps closeout presets dormant until the selected qualified handoff remains valid', () => {
     const { body } = readSkill(product)
 
     expect(managedRouting).toContain('If Manage was declined, unavailable, or unselected, every `manage.closeout` preset is dormant')
     expect(managedRouting).toContain('configuration executes neither archive nor commit')
     expect(managedRouting).toContain('After selection, stop using this reference for execution detail')
-    expect(managedRouting).toContain('`rsp-manage` solely owns interruption and resume, convergence limits, lifecycle and commit execution')
+    expect(managedRouting).toContain('`rsp-manage` solely owns same-goal revalidation, interruption and resume, review convergence, acceptance, lifecycle and commit execution')
     expect(durableReview).toContain('A `manage.closeout` preset applies only when Core selected and qualified Manage for the current continuation')
     expect(coreSkill).toContain('declined, unavailable, or unselected Manage leaves Core advisory even under `lifecycle` or `local`')
-    expect(body).toContain('Closeout requires Core-selected, currently-qualified Manage')
-    expect(body).toContain('For declined, unavailable, or unselected Manage, every `manage.closeout` preset is dormant')
-    expect(body).toContain('Earlier qualification does not carry forward')
-    expect(body).toContain('Qualified only: effective `manage.closeout` is an automatic grant ceiling')
+    expect(body).toContain('Closeout requires a Core-selected and qualified handoff that remains valid under current evidence')
+    expect(body).toContain('For declined, unavailable, unselected, incomplete, or drifted handoffs, every `manage.closeout` preset is dormant')
+    expect(body).toContain('Earlier qualification does not carry forward across a new continuation')
+    expect(body).toContain('Valid selected handoff only: effective `manage.closeout` is an automatic grant ceiling')
   })
 
   it('bounds authority reads, dispatch, correction, and verification', () => {
     const { body } = readSkill(product)
 
-    expect(body).toContain('every qualified WorkRef, including clear in-scope successors')
+    expect(body).toContain('every selected WorkRef, including clear in-scope successors')
     expect(body).toContain('the complete owning Change, or the Group Brief and its children')
     expect(body).toContain('relevant Specs and Decisions')
     expect(body).toContain('`rsp status --json`, and the current worktree')
@@ -637,8 +640,8 @@ describe('rsp-manage product Skill', () => {
   it('preserves child owners and follows derived Group waves', () => {
     const { body } = readSkill(product)
 
-    expect(body).toContain('every qualified WorkRef, including clear in-scope successors')
-    expect(body).toContain('A Group is eligible when it has at least two ready children')
+    expect(body).toContain('every selected WorkRef, including clear in-scope successors')
+    expect(managedRouting).toContain('A Group qualifies when it has at least two ready children')
     expect(body).toContain('dispatch child WorkRefs only in the current derived `plan.waves` wave')
     expect(body).toContain('rerun `rsp status --json`')
     expect(body).toContain('restrict it to declared children')
@@ -653,13 +656,11 @@ describe('rsp-manage product Skill', () => {
 
     expect(body).toContain('The goal defines authority')
     expect(body).toContain('automatic activation grants selection, not mutation')
-    expect(body).toContain('At owner boundaries, Core re-derives from goal')
-    expect(body).toContain('Continue a clear in-scope ready successor')
-    expect(body).toContain('Stop only when neither a ready successor nor clearly missing ownership remains')
-    expect(body).toContain('suspend dispatch and return evidence to Core')
-    expect(body).toContain('Core routes Shape and requalifies')
-    expect(body).toContain('Manage neither classifies discovery nor changes topology')
-    expect(body).toContain('without another authorization round')
+    expect(body).toContain('Continue a clear in-scope ready successor while the goal')
+    expect(body).toContain('Return to Core only when owner identity, topology, requested route, behavior, acceptance, public interface, scope, mutation authority, or external-action authority changes')
+    expect(body).toContain('suspend mutation, return decisive evidence')
+    expect(body).toContain('only Core may route authorized Shape')
+    expect(body).toContain('never classify discovery or change topology')
     expect(body).toContain('Stop when discovery changes behavior')
     expect(body).toContain('Never persist the goal envelope, WorkSet, waves, or discovery classification')
   })
@@ -1224,9 +1225,9 @@ describe('rsp-manage product Skill', () => {
   it('closes an allowed lifecycle even when commit is denied', () => {
     const { body } = readSkill(product)
 
-    expect(body).toContain('`lifecycle` grants lifecycle closeout after Core durable review but no Git action')
+    expect(body).toContain('`lifecycle` grants lifecycle closeout after Manage-owned clean fixed-scope durable review but no Git action')
     expect(body).toContain('When granted, close lifecycle before any commit')
-    expect(body).toContain('after Core durable review run `rsp archive <change-work-ref>`')
+    expect(body).toContain('after Manage-owned clean fixed-scope durable review run `rsp archive <change-work-ref>`')
     expect(body).toContain('inspect the complete lifecycle diff')
     expect(body).toContain('Decide commit separately')
     expect(body).toContain('narrowed by nearer restrictions and host enforcement')

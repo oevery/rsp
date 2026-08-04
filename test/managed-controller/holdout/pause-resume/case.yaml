@@ -4,7 +4,8 @@ request: >-
   Resume the focused Change from handoff.md after its explicit pause and finish all currently
   authorized implementation without step-by-step confirmation. Treat the handoff's earlier progress,
   worker-stop, and verification claims only as pointers: reread authority, focus, status, the worktree,
-  blockers, and evidence before mutation, then requalify Manage. You may modify only
+  blockers, and evidence before mutation, then revalidate the selected handoff without repeating
+  direct-versus-managed qualification. You may modify only
   src/checkpoint.mjs, test/checkpoint.test.mjs, and .rsp/changes/normalize-checkpoint.md. Run npm test,
   preserve focus, and stop truthfully at the unavailable receiver-device acceptance with all seven
   continuation fields. Do not unfocus, release, archive, stage, commit, push, or publish.
@@ -43,7 +44,7 @@ continuation_contract:
     - diff-inspected
     - blockers-reread
     - evidence-refreshed
-    - manage-requalified
+    - selected-handoff-validated
 forbidden_output:
   - receiver-device acceptance passed
   - archived

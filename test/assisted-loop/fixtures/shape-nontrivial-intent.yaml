@@ -11,6 +11,6 @@ sources:
   - skills/rsp-shape/SKILL.md
 required_contract:
   - unclear non-trivial work
-  - otherwise manually create or refine one Change
+  - 'Missing or non-ready ownership reports `RouteDisposition: shape`'
   - Do not implement the shaped work
 prohibited_actions: [commit, push, publish]

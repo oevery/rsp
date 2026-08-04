@@ -7,21 +7,18 @@ sources:
   - skills/rsp-manage/SKILL.md
 evidence:
   - Core exposes specialist, direct, managed, shape, and stop as peer route dispositions.
-  - Intake compatibility labels map to canonical ownership dispositions with distinct resume owners.
-  - Fog returns through Shape while owner questions resume through fresh Intake and out-of-goal reroutes through Core.
+  - Shape always returns ready ownership through Core.
+  - Selected Manage returns only at a true boundary.
 required_contract:
   - '`RouteDisposition` is exactly `specialist`, `direct`, `managed`, `shape`, or `stop`'
   - one response-only transient `ControlOutcome`
   - '`OwnershipDisposition` is exactly `ready`, `ask-owner`, `return-to-shape`, or `reroute`'
-  - '`needs-owner` maps to canonical `OwnershipDisposition: ask-owner`'
-  - '`needs-shape` maps to canonical `OwnershipDisposition: return-to-shape`'
-  - '`out-of-goal` maps to canonical `OwnershipDisposition: reroute`'
   - canonical `FrontierDisposition` is exactly `out-of-goal`, `owner-decision`, `fog`, `evidence-needed`, or `executable`
   - '`StopDisposition` is exactly `ask-owner`, `return-to-shape`, `reroute`, `retry-with-evidence`, `environment-blocked`, `verification-blocked`, or `capability-unavailable`'
-  - resume through fresh Intake only after the owner answers
-  - Resume only after Shape confirms a ready owner and Core freshly rederives the route
-  - Core must establish a new owner or authority boundary before continuing
-  - Perform no Manage Intake or WorkerEnvelope
+  - returning a ready owner to Core for fresh route derivation
+  - it never resumes Manage directly
+  - Return to Core only when owner identity, topology, requested route, behavior, acceptance, public interface, scope, mutation authority, or external-action authority changes
+  - Perform no Manage handoff or WorkerEnvelope
 prohibited_actions:
   - persist ControlOutcome
   - resume Manage directly from Shape

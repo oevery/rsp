@@ -19,36 +19,29 @@
 ## Route Disposition
 - Core owns `RouteDisposition`, whose values are exactly:
   - `specialist`: return one explicit Discipline owner for its bounded action.
-  - `direct`: execute one bounded Core or Implement mutation path with one decisive verification and no Manage Intake or WorkerEnvelope.
-  - `managed`: enter no-mutation Manage Intake for the requested goal.
+  - `direct`: execute one bounded Core or Implement mutation path with one decisive verification and no Manage handoff or WorkerEnvelope.
+  - `managed`: hand one selected shape-ready owner and bounded goal to Manage after qualification.
   - `shape`: return unclear but owned work to Shape.
   - `stop`: perform no further action and name the applicable `StopDisposition`.
 - Direct execution requires all of: one ready owner, one local seam, one mutation pass, one decisive check, no managed lifecycle coordination, and no ready successor.
 - If any direct-execution condition ceases to hold, Core freshly rederives the route. Direct execution does not silently expand into managed execution.
 
 ## Ownership and Frontier Dispositions
-- Manage Intake owns `OwnershipDisposition`, whose values are exactly:
+- Core owner resolution and Shape returns use `OwnershipDisposition`, whose values are exactly:
   - `ready`
   - `ask-owner`
   - `return-to-shape`
   - `reroute`
-- Existing public Intake labels map to the canonical vocabulary as follows:
-
-| Intake label | Canonical ownership disposition | Next owner and resume |
-| --- | --- | --- |
-| `ready` | `ready` | Manage may continue to qualification and frontier derivation. |
-| `needs-owner` | `ask-owner` | The product or authority owner answers one highest-impact question; Manage reruns Intake from fresh evidence. |
-| `needs-shape` | `return-to-shape` | Shape clarifies the owned work and returns a ready owner; Core then reruns Intake and qualification. |
-| `out-of-goal` | `reroute` | Core establishes a new owner, WorkRef, topology, or authority boundary before deriving a new route. |
-
-- `FrontierDisposition` applies only after Intake has confirmed a ready owner and Manage has qualified. Its values remain exactly:
+- `ready` means one unambiguous shape-ready Change or shallow Group owns the requested outcome. `return-to-shape` means Core may invoke Shape only under independently granted planning-artifact authority. `ask-owner` stops for one material product or authority decision. `reroute` means Core must establish a new owner, WorkRef, topology, route, dirty-path, scope, or authority boundary.
+- Only `ready` ownership may enter Manage qualification. Manage never creates, focuses, or resolves a pre-owner boundary.
+- `FrontierDisposition` applies only after Core has handed Manage a ready, qualified owner. Its values remain exactly:
   - `owner-decision`
   - `fog`
   - `evidence-needed`
   - `executable`
   - `out-of-goal`
 - Frontier precedence is fail-closed: `out-of-goal` → `owner-decision` → `fog` → `evidence-needed` → `executable`.
-- `owner-decision` stops with `ask-owner`; `fog` stops with `return-to-shape`; frontier `out-of-goal` stops with `reroute`. Evidence collection may continue only when it is authorized, bounded, and capable of advancing the current acceptance path.
+- `owner-decision` stops with `ask-owner`; `fog` stops with `return-to-shape`; frontier `out-of-goal` stops with `reroute`. Each is a true boundary return to Core. Evidence collection may continue only when it is authorized, bounded, and capable of advancing the current acceptance path.
 
 ## Stop and Resume
 - `StopDisposition` values are exactly:
@@ -63,7 +56,7 @@
 
 | Stop disposition | Required next action | Resume rule |
 | --- | --- | --- |
-| `ask-owner` | Ask one highest-impact owner decision with the evidenced tradeoff. | Rerun Intake or the owning Discipline from fresh evidence after the answer. |
+| `ask-owner` | Ask one highest-impact owner decision with the evidenced tradeoff. | Core freshly derives ownership and routing, or reruns the owning Discipline, after the answer. |
 | `return-to-shape` | Shape uses ordinary clarification or explicit deep clarification without implementation. | Resume only after Shape confirms a ready owner, then freshly rederive routing and qualification. |
 | `reroute` | Core establishes a valid owner, WorkRef, topology, dirty-path boundary, or authority. | Start again at Core route derivation; do not resume the prior frontier. |
 | `retry-with-evidence` | Supply new evidence that directly addresses the failed or unresolved result. | Retry only within the owning Discipline's or Manage's declared retry bound. |
@@ -77,6 +70,7 @@
 - Specialist Disciplines and managed lanes retain their own exact result schemas. The control model does not replace Diagnose, Inspect, Fix, Verify, Review, or Resolve Findings results with a generic execution enum.
 - Only a missing optional Discipline Skill may use that Discipline's bounded manual fallback against the same owner. A manual fallback never substitutes for a required managed worker or required independent Verify.
 - A managed WorkerEnvelope and its receipt are transient execution evidence. Every envelope carries the response language and the localized control-narration rule: human-facing receipt narration uses that response language, while an exact result value remains unchanged only as a secondary parenthesized or code-formatted token. This applies equally to private Inspect and Verify lanes that have no standalone Skill.
+- A same-goal receipt whose WorkRef, topology, route, scope, behavior, acceptance, interface, and authority remain unchanged is revalidated inside Manage. It does not return to Core merely to repeat route selection or qualification.
 - A required worker obligation is satisfied only when the worker was actually created and returned a valid result within its declared authority and schema.
 - A required worker that cannot be created, returns no valid receipt, reports unavailable or changed boundaries, or cannot satisfy required independent verification produces `capability-unavailable` or the more specific evidenced stop and keeps acceptance `incomplete`. The controller cannot replace the missing receipt with an assumption, a generic manual fallback, or its own undeclared work.
 - Token counts, token limits, and token cost are not routing, dispatch, retry, authority, completion, acceptance, or closeout inputs.
@@ -95,24 +89,25 @@
 - The existing closeout tiers remain authority ceilings:
   - `manual`: no automatic archive or commit.
   - `lifecycle`: may derive `lifecycle-ready`, but never `local-commit-ready`.
-  - `local`: may derive `local-commit-ready` only for one exact, terminal, clean, verified, non-small boundary after lifecycle closeout.
+  - `local`: archives one eligible terminal non-small managed boundary and then routes its exact clean paths exactly once to local Commit without another user request.
 - A nearer denial or restriction narrows any configured ceiling. Push, publication, deployment, approval, and human acceptance remain separately authorized.
 
 ## Transition Invariants
 1. Core derives one route; it does not persist the route.
 2. Shape returns a clarified owner; it does not execute product work.
-3. Manage Intake resolves ownership before qualification or frontier work.
-4. Frontier classification occurs only for a ready, qualified managed owner.
+3. Core resolves one ready owner before Manage qualification; Shape returns only to Core.
+4. Frontier classification occurs only after Core selects and hands off a ready, qualified managed owner.
 5. Every stop halts mutation and names how control may resume.
 6. Every required worker obligation needs actual creation evidence and a valid receipt.
 7. Acceptance is derived from fresh evidence, never from the absence of a failure event.
 8. Closeout is derived only after acceptance and durable review, never directly from execution progress.
 9. Lifecycle closeout precedes any eligible local commit; remote delivery remains explicit.
-10. Resume invalidates stale control claims and rereads the owning artifacts, authority, diff, blockers, and decisive evidence.
+10. Same-goal resume and receipts invalidate stale control claims and are revalidated inside Manage; only a true owner, topology, route, behavior, acceptance, interface, scope, or authority boundary returns to Core.
 
 ## Boundaries
 - Core owns route derivation and rerouting.
 - Shape owns clarification and ready-owner return.
 - Each Discipline owns its bounded action, exact result, and applicable stop.
-- Manage owns Intake, qualification, execution-frontier derivation, worker acceptance, convergence, acceptance derivation, and eligible closeout after selection.
+- Core owns initial Manage qualification and the `selected | declined` route result.
+- Manage owns selected-handoff validation, selected-goal execution-frontier derivation, worker acceptance, internal current-evidence revalidation, review convergence, acceptance derivation, and eligible closeout after selection; it does not repeat direct-versus-managed eligibility.
 - The selected Change or shallow Group remains the only durable work owner. Changes remain only `open` or `archived`.

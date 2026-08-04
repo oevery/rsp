@@ -23,8 +23,8 @@ required_contract:
   - 'Any other acceptance state derives `CloseoutEligibility: not-eligible`'
   - neither archive nor commit runs
   - '`manual` grants neither automatic archive nor commit'
-  - '`lifecycle` grants lifecycle closeout after Core durable review but no Git action'
-  - '`local` grants lifecycle closeout, separately justified recovery checkpoints, and the deterministic terminal route below'
+  - '`lifecycle` grants lifecycle closeout after Manage-owned clean fixed-scope durable review but no Git action'
+  - '`local` automatically grants lifecycle closeout'
 prohibited_actions:
   - controller substitutes for unavailable required implementation worker
   - missing receipt accepted as success
