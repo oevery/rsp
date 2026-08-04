@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { existsSync, lstatSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -59,12 +59,45 @@ describe('rsp-manage research candidate', () => {
       'explicit-eligibility',
       'explicit-pause',
       'fresh-return',
+      'frontier-precedence-stop',
+      'intake-routing',
       'interruption-recovery',
+      'lane-boundaries',
       'ordinary-restraint',
       'owner-release',
       'progress-continues',
+      'required-worker-closeout',
+      'shape-requalification',
+      'control-route-transitions',
+      'transient-execution-bounds',
+    ].sort())
+    expect(cases.find(item => item.id === 'intake-routing')?.sources).toEqual([
+      'skills/rsp/SKILL.md',
+      'skills/rsp/references/managed-routing.md',
+      'rules/rsp-rules.md',
     ])
     expect(evaluateManagedController(root)).toEqual(cases.map(item => ({ id: item.id, missing: [], passed: true })))
+  })
+
+  it('fails closed when a contract fixture source escapes the repository root', ({ onTestFinished }) => {
+    const fixtureRoot = mkdtempSync(join(tmpdir(), 'rsp-manage-contract-source-'))
+    onTestFinished(() => rmSync(fixtureRoot, { force: true, recursive: true }))
+    const fixtures = join(fixtureRoot, 'test', 'managed-controller', 'fixtures')
+    mkdirSync(fixtures, { recursive: true })
+    writeFileSync(join(fixtures, 'unsafe-source.yaml'), [
+      'id: unsafe-source',
+      'sources:',
+      '  - ../outside.md',
+      'evidence:',
+      '  - Unsafe source paths must fail closed.',
+      'required_contract:',
+      '  - unreachable',
+      'prohibited_actions:',
+      '  - repository escape',
+      '',
+    ].join('\n'))
+
+    expect(() => loadManagedControllerCases(fixtureRoot)).toThrow('escapes')
   })
 
   it('fails closed when an evaluation flag has no value', () => {
@@ -316,6 +349,160 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('Decline Manage without any mutation')
     expect(body).toContain('without creating a controller artifact')
     expect(body).toContain('return the exact Core or Discipline action')
+  })
+
+  it('classifies the execution frontier in fail-closed order before dispatch or mutation', () => {
+    const { body } = readSkill(product)
+    const frontier = body.indexOf('## Resolve the execution frontier')
+    const outOfGoal = body.indexOf('`out-of-goal` →', frontier)
+    const ownerDecision = body.indexOf('`owner-decision` →', outOfGoal)
+    const fog = body.indexOf('`fog` →', ownerDecision)
+    const evidenceNeeded = body.indexOf('`evidence-needed` →', fog)
+    const readyToExecute = body.indexOf('`ready-to-execute`', evidenceNeeded)
+
+    expect(frontier).toBeGreaterThanOrEqual(0)
+    expect(outOfGoal).toBeGreaterThan(frontier)
+    expect(ownerDecision).toBeGreaterThan(outOfGoal)
+    expect(fog).toBeGreaterThan(ownerDecision)
+    expect(evidenceNeeded).toBeGreaterThan(fog)
+    expect(readyToExecute).toBeGreaterThan(evidenceNeeded)
+    expect(body).toContain('`out-of-goal` stops for topology or authority resolution')
+    expect(body).toContain('`owner-decision` stops with the single highest-impact owner question')
+    expect(body).toContain('`fog` is not yet a precise question')
+    expect(body).toContain('Create no synthetic Task, Change, Blocker, or worker dispatch')
+    expect(body).toContain('`evidence-needed` is one precise factual question')
+    expect(body).toContain('take the applicable stop instead of selecting Fix')
+    expect(body).toContain('canonical `FrontierDisposition` is exactly `out-of-goal`, `owner-decision`, `fog`, `evidence-needed`, or `executable`')
+    expect(body).toContain('public `ready-to-execute` maps only to canonical `executable`')
+    expect(body).toContain('`StopDisposition: return-to-shape`')
+    expect(body).toContain('Resume only after Shape confirms a ready owner and Core freshly rederives the route')
+  })
+
+  it('defines one complete token-independent WorkerEnvelope and exact lane receipt schemas', () => {
+    const { body } = readSkill(product)
+    const envelopeParagraph = body.match(/Every lane receives one transient `WorkerEnvelope` with these common fields: ([^\n]+)\n/)?.[1]
+    const commonReceiptParagraph = body.match(/Every receipt contains these common fields: ([^\n]+)\n/)?.[1]
+    const inlineValues = (source: string | undefined) => [...(source ?? '').matchAll(/`([^`]+)`/g)].map(match => match[1])
+
+    expect(inlineValues(envelopeParagraph)).toEqual([
+      'WorkRef',
+      'lane',
+      'objective',
+      'current hypothesis',
+      'known evidence',
+      'allowed paths',
+      'allowed actions and commands',
+      'prohibited actions',
+      'comparison baseline',
+      'expected result schema',
+      'stop conditions',
+    ])
+    expect(inlineValues(commonReceiptParagraph)).toEqual([
+      'WorkRef',
+      'lane objective',
+      'effective authority',
+      'result',
+      'decisive evidence',
+      'stop boundary',
+    ])
+    expect(body).toContain('Diagnose reuses `rsp-diagnose` and remains read-only')
+    expect(body).toContain('an explicit no-cause result')
+    expect(body).toContain('Inspect is a private Manager-only read-only lane')
+    expect(body).toContain('Fix reuses `rsp-implement`')
+    expect(body).toContain('is the sole product writer at its mutation boundary')
+    expect(body).toContain('Verify is a private Manager-only read-only lane')
+    expect(body).toContain('runs only for the Change-declared risk or after a failed correction')
+    expect(body).toContain('Fixed-scope review remains owned by `rsp-review`')
+    expect(body.match(/Diagnose[\s\S]*?Its result is exactly one of ([^;]+);/)?.[1]?.match(/`[^`]+`/g)).toEqual([
+      '`confirmed-same-scope`',
+      '`unresolved-same-scope`',
+      '`boundary-changed`',
+    ])
+    expect(body.match(/Inspect[\s\S]*?Its result is exactly one of ([^;]+);/)?.[1]?.match(/`[^`]+`/g)).toEqual([
+      '`confirmed-same-scope`',
+      '`unresolved-same-scope`',
+      '`boundary-changed`',
+    ])
+    expect(body.match(/Fix reuses[\s\S]*?Its result is exactly one of ([^;]+);/)?.[1]?.match(/`[^`]+`/g)).toEqual([
+      '`changed-same-scope`',
+      '`no-change`',
+      '`boundary-changed`',
+    ])
+    expect(body.match(/Verify is[\s\S]*?Its result is exactly one of ([^;]+);/)?.[1]?.match(/`[^`]+`/g)).toEqual([
+      '`pass`',
+      '`failed-with-new-evidence`',
+      '`failed-without-new-evidence`',
+      '`unavailable`',
+      '`boundary-changed`',
+    ])
+    expect(body).not.toMatch(/token\s+(?:budget|limit)|(?:budget|limit)[^\n.]*token/i)
+    expect(body).not.toMatch(/token[^\n.]*rout|rout[^\n.]*token/i)
+    expect(existsSync(join(root, 'skills', 'rsp-inspect'))).toBe(false)
+    expect(existsSync(join(root, 'skills', 'rsp-verify'))).toBe(false)
+  })
+
+  it('protects required Fix and Verify capacity without fixed lane allocations', () => {
+    const { body } = readSkill(product)
+    const capacity = body.match(/Before starting an optional Diagnose or Inspect dispatch,[^\n]+/)?.[0] ?? ''
+
+    expect(body).toContain('may run alongside another read-only lane only when paths and verification resources are demonstrably isolated')
+    expect(body).toContain('otherwise keep it sequential')
+    expect(body).toContain('Separate Group child mutation boundaries may overlap only under the existing isolated workspace and verification rule')
+    expect(body).toContain('Total worker dispatch remains at most four')
+    expect(capacity).toContain('count one Fix when accepted mutation is still required')
+    expect(capacity).toContain('count one Verify when the declared acceptance risk or a failed correction still requires worker verification')
+    expect(capacity).toContain('remaining dispatch capacity covers that dispatch plus every known required obligation')
+    expect(capacity).toContain('otherwise skip it and preserve the completion path')
+    expect(body).toContain('dynamic capacity protection, not a fixed per-lane allocation')
+    expect(body).toContain('at most one corrective retry')
+    expect(body).toContain('new evidence makes another correction discriminating')
+    expect(body).toContain('remaining dispatch capacity still covers the retry and every then-required Verify dispatch')
+    expect(body).toContain('can still produce decisive acceptance evidence')
+    expect(body).toContain('A failure without new evidence, or a retry that cannot still be decisively verified, stops dispatch')
+    expect(body).toContain('Managed review remains at most three Resolve Findings passes per Change with separate accounting')
+  })
+
+  it('establishes independent Verify by worker identity and downgrades truthfully', () => {
+    const { body } = readSkill(product)
+
+    expect(body).toContain('Independent Verify is established only when its worker identity and the accepted Fix worker identity are both available and different')
+    expect(body).toContain('If the host cannot establish that identity boundary, record `independence: unavailable`')
+    expect(body).toContain('ordinary read-only Verify may still run')
+    expect(body).toContain('must not claim independent verification')
+    expect(body).toContain('`independence: established | unavailable`')
+  })
+
+  it('keeps missing required worker evidence incomplete and outside closeout', () => {
+    const { body } = readSkill(product)
+
+    expect(body).toContain('`AcceptanceDisposition` independently from execution')
+    expect(body).toContain('exactly `incomplete`, `evidence-complete`, or `review-clean`')
+    expect(body).toContain('A required worker that was not created, did not return a valid required receipt, returned `unavailable` or `boundary-changed`')
+    expect(body).toContain('keeps acceptance `incomplete`')
+    expect(body).toContain('Accepted required receipts plus fresh declared verification may derive only `evidence-complete`')
+    expect(body).toContain('only a clean fixed-scope durable review may then derive `review-clean`')
+    expect(body).toContain('An execution receipt never derives `review-clean` directly')
+    expect(body).toContain('When a required worker cannot be created, return `StopDisposition: capability-unavailable`')
+    expect(body).toContain('Absence of a dispatch event or receipt is never success')
+    expect(body).toContain('cannot be replaced by the controller claiming the worker\'s result')
+
+    expect(body).toContain('`CloseoutEligibility` independently')
+    expect(body).toContain('exactly `not-eligible`, `lifecycle-ready`, or `local-commit-ready`')
+    expect(body).toContain('Only `AcceptanceDisposition: review-clean` plus fresh owner, authority, exact diff, and decisive verification evidence can derive a ready value')
+    expect(body).toContain('forces `AcceptanceDisposition: incomplete` and `CloseoutEligibility: not-eligible`')
+    expect(body).toContain('neither archive nor commit runs')
+  })
+
+  it('requalifies after evidence and keeps all controller execution state transient', () => {
+    const { body } = readSkill(product)
+
+    expect(body).toContain('Inspect the actual diff and fresh verification before acceptance')
+    expect(body).toContain('An evidence receipt triggers fresh status, preflight, and qualification rederivation before any later mutation or dispatch')
+    expect(body).toContain('frontier classification, lane choice, envelopes, receipts, dispatch and retry counts, concurrency reasoning, and resume chronology response-only')
+    expect(body).toContain('Converged requirements and design belong in the selected Change')
+    expect(body).toContain('real dependencies in `Blockers`')
+    expect(body).toContain('durable facts or rationale in ordinary durable review')
+    expect(body).toContain('Create no frontier file, ticket map, ledger, registry, ambient hook, or numeric routing score')
   })
 
   it('requires one implementation worker without forcing parallelism and reports the route', () => {

@@ -45,7 +45,7 @@ manage:
   closeout: lifecycle
 ```
 
-`activation` 接受 `explicit` 或 `auto`。自动激活允许 Core（核心协议）为符合条件的工作选择控制器，但不授予修改或生命周期权限。
+`activation` 接受 `explicit` 或 `auto`。在保留专门路由与完整小工作例外后，自动激活会让已请求完成或继续的工作先进入不修改状态的 Manage Intake；只有 Intake 返回 `ready` 才能继续资格判断与受管执行。它不授予规划、产品修改、生命周期或外部操作权限。
 
 `closeout` 接受：
 

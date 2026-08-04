@@ -24,6 +24,24 @@ describe('rsp-shape deep clarification', () => {
     expect(deep).toContain('the same returning WorkRef')
   })
 
+  it('owns questioning modes but returns execution control through Core', () => {
+    const skill = readFileSync(join(root, 'skills', 'rsp-shape', 'SKILL.md'), 'utf8')
+    const deep = readFileSync(join(root, 'skills', 'rsp-shape', 'references', 'deep-clarification.md'), 'utf8')
+
+    expect(skill).toContain('Ordinary clarification asks one to three related material questions')
+    expect(skill).toContain('explicit deep clarification asks exactly one owner decision per turn')
+    expect(skill).toContain('`StopDisposition: return-to-shape` may enter either mode')
+    expect(skill).toContain('returning a ready owner to Core for fresh route derivation')
+    expect(skill).toContain('it never resumes Manage directly')
+    expect(skill).toContain('return `OwnershipDisposition: ready`')
+    expect(skill).toContain('do not relabel unresolved fog as ready work')
+
+    expect(deep).toContain('fulfills `StopDisposition: return-to-shape`')
+    expect(deep).toContain('does not resume the prior execution path itself')
+    expect(deep).toContain('return `OwnershipDisposition: ready` to Core')
+    expect(deep).toContain('freshly rederives the route')
+  })
+
   it('covers challenge, design return, restraint, and ordinary disclosure', () => {
     const cases = loadShapeDepthCases(root)
     expect(cases.map(item => item.id)).toEqual([

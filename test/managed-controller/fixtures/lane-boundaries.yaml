@@ -1,0 +1,27 @@
+id: lane-boundaries
+sources:
+  - skills/rsp-manage/SKILL.md
+evidence:
+  - Every lane receives the complete common WorkerEnvelope and returns one exact lane result schema.
+  - Read-only overlap requires isolated paths and verification resources while Fix remains the sole writer.
+  - Independent Verify is established only by a distinct worker identity and otherwise downgrades truthfully.
+required_contract:
+  - 'Every lane receives one transient `WorkerEnvelope` with these common fields: `WorkRef`, `lane`, `objective`, `current hypothesis` when one exists, `known evidence`, `allowed paths`, `allowed actions and commands`, `prohibited actions`, `comparison baseline`, `expected result schema`, and `stop conditions`'
+  - Diagnose reuses `rsp-diagnose` and remains read-only
+  - 'Its result is exactly one of `confirmed-same-scope`, `unresolved-same-scope`, or `boundary-changed`; the receipt also gives decisive evidence and the next safe discriminating check when one exists'
+  - Inspect is a private Manager-only read-only lane
+  - may run alongside another read-only lane only when paths and verification resources are demonstrably isolated
+  - otherwise keep it sequential
+  - Fix reuses `rsp-implement`, receives explicit in-scope mutation authority, and is the sole product writer at its mutation boundary
+  - 'Its result is exactly one of `changed-same-scope`, `no-change`, or `boundary-changed`; the receipt also gives `worker identity` when the host exposes it, changed paths, and fresh verification evidence'
+  - Verify is a private Manager-only read-only lane
+  - runs only for the Change-declared risk or after a failed correction
+  - 'Its result is exactly one of `pass`, `failed-with-new-evidence`, `failed-without-new-evidence`, `unavailable`, or `boundary-changed`; the receipt also gives named checks, the observed diff boundary, `worker identity` when the host exposes it, and `independence: established | unavailable`'
+  - 'Every receipt contains these common fields: `WorkRef`, `lane objective`, `effective authority`, `result`, `decisive evidence`, and `stop boundary`'
+  - Independent Verify is established only when its worker identity and the accepted Fix worker identity are both available and different
+  - 'record `independence: unavailable`; ordinary read-only Verify may still run, but Manager must not claim independent verification'
+prohibited_actions:
+  - concurrent writes at one mutation boundary
+  - Verify performed by Fix
+  - fabricated independent verification
+  - public Inspect or Verify Skill

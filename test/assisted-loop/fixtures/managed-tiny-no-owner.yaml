@@ -11,7 +11,7 @@ sources:
   - skills/rsp/SKILL.md
   - skills/rsp/references/managed-routing.md
 required_contract:
-  - Resolve the smallest sufficient owner before testing Manage eligibility
-  - Return tiny settled work to direct engineering
-  - without a synthetic Change or controller artifact
+  - tiny settled-work exceptions
+  - complete small-work exclusion
+  - no-mutation Manage Intake
 prohibited_actions: [shape, dispatch, commit, push, publish]

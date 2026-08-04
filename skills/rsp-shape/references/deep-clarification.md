@@ -24,6 +24,8 @@ Ask exactly one owner decision per turn. Include a recommended answer grounded i
 
 When no material dependent decision remains, summarize the resulting behavior, boundaries, and acceptance contract, then ask the owner to confirm shared understanding. Keep all artifacts unchanged until that confirmation. After confirmation, write only authorized decisions into their existing RSP owners and reapply the Shape Ready gate.
 
+This branch fulfills `StopDisposition: return-to-shape`; it does not resume the prior execution path itself. Only after shared understanding is confirmed and the Shape Ready gate passes may Shape return `OwnershipDisposition: ready` to Core, which freshly rederives the route.
+
 ## Completion criterion
 
 Finish the deep branch when every material dependent decision is either owner-confirmed or recorded as one explicit blocker, the project design task has returned to the same WorkRef when used, and no artifact changed before shared understanding was confirmed.

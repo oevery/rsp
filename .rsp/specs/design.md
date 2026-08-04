@@ -10,7 +10,8 @@
 - The canonical domain Specs are:
   - [Core Model](./core-model.md): artifacts, WorkRefs, Change Groups, lifecycle, dependencies, focus, and durable writeback.
   - [CLI Contracts](./cli-contracts.md): deterministic commands, filesystem safety, inspection, JSON, history, indexes, and repair.
-  - [Skill System](./skill-system.md): the eleven default lifecycle Skills, optional project Skills, composition, progressive disclosure, managed continuation, and authority boundaries.
+  - [Skill System](./skill-system.md): the eleven default lifecycle Skills, optional project Skills, composition, progressive disclosure, Manage Intake and bounded execution-frontier behavior, and authority boundaries.
+  - [Skill Control Model](./skill-control-model.md): canonical transient route, ownership, frontier, stop/resume, acceptance, and closeout vocabulary shared across Core, Shape, Disciplines, and Manage.
   - [Interactive TUI](./tui.md): dashboard routing, state, presentation, localization, history, layout, and terminal lifecycle.
   - [Distribution and Maintainer Research](./distribution.md): package inventory, Skill installation, releases, evaluation provenance, repository layering, and upstream research.
 - Decision Records under the configured authoritative path own lasting rationale for hard-to-reverse choices; Specs own current facts.

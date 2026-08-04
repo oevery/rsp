@@ -2,20 +2,24 @@
 
 Load this reference only for a requested completion or continuation that is not a report-only review or release operation and is either explicitly managed or has effective `manage.activation: auto` in status. Missing configuration preserves `explicit` activation with `local` closeout compatibility. Invalid configuration fails closed as `explicit` plus `manual` and must remain visible.
 
-## PREFLIGHT — resolve the owner
+## INTAKE — resolve the owner without execution
 
-Treat the requested goal and independently allowed planning and product mutations as a transient authority envelope. Automatic activation grants controller selection only and never adds planning or product-mutation authority. Resolve the smallest sufficient owner before testing Manage eligibility.
+Use this route after Core has preserved the fixed-scope Review, release, isolated Design, and tiny settled-work exceptions. Under `manage.activation: explicit`, select Intake only for an explicitly managed request. Under `manage.activation: auto`, select Intake for every other requested completion or continuation that does not satisfy the complete small-work exclusion: one owner, one local seam, one mutation pass, one decisive check, no managed lifecycle coordination, and no ready successor.
+
+Treat the requested goal and independently allowed planning and product mutations as a transient authority envelope. Automatic activation grants controller selection only and never adds planning or product-mutation authority. Intake resolves the smallest sufficient owner before testing Manage eligibility, without focusing another owner, dispatching work, or mutating durable or product state.
 
 Before focusing, dispatching, or mutating a different WorkRef, inspect dirty paths and the diff against the prior owner's declared and observed product or durable-truth paths. Overlap never changes owner implicitly: continue the same open WorkRef, explicitly reopen its archived acceptance when authorized and applicable, use an explicitly authorized integration owner, or stop for boundary resolution. Disjoint authorized work may proceed without staging or a forced commit; insufficient ownership evidence stops the transition.
 
-- Reuse one unambiguous selected ready owner.
-- Return tiny settled work to direct engineering without a synthetic Change or controller artifact.
-- For clear non-trivial work with no sufficient ready owner, an explicit managed request authorizes only in-scope RSP planning artifacts unless the user requests no edits. Under automatic activation, route to Shape only when the current request or nearer authority independently permits those artifacts; configuration alone never does. Then re-read status/readiness and re-evaluate without another authorization round.
-- If repository evidence leaves a material product, acceptance, public-interface, scope, mutation-authority, external-action, or human choice, Shape returns the single highest-impact owner decision and creates no implementation or controller artifact.
+- `ready`: reuse one unambiguous selected shape-ready Change or shallow Group, then enter QUALIFY. This maps to canonical `OwnershipDisposition: ready`.
+- `needs-shape`: when clear non-trivial work has no sufficient ready owner, return to Core. This maps to canonical `OwnershipDisposition: return-to-shape` and `StopDisposition: return-to-shape`. Core invokes Shape only when the current request or nearer authority independently permits in-scope RSP planning artifacts; configuration alone never does. Then Core re-reads status/readiness and repeats Intake, PREFLIGHT, and qualification without another authorization round.
+- `needs-owner`: when repository evidence leaves a material product, acceptance, public-interface, scope, mutation-authority, external-action, or human choice, return the single highest-impact owner decision and create no implementation or controller artifact. This maps to canonical `OwnershipDisposition: ask-owner` and `StopDisposition: ask-owner`; resume through fresh Intake only after the owner answers.
+- `out-of-goal`: when dirty-path evidence, topology, selected-owner identity, or authority evidence cannot establish a safe owner boundary, stop for topology or authority resolution. This maps to canonical `OwnershipDisposition: reroute` and `StopDisposition: reroute`; Core must establish a new owner or authority boundary before continuing and must not turn it into a product question.
 
 A prior direct report, design, tiny, or small route is not sticky. Before later-turn mutation, rederive from the now-authorized objective and prospective work. Material expansion into cross-module implementation, multiple acceptance surfaces, repeated production-path correction, real-host validation, bounded review convergence, lifecycle delivery, or a clear ready successor requires Core to establish or reuse the smallest sufficient WorkRef and rerun this preflight plus fresh Manage qualification before mutation. Unchanged tiny/small follow-ups remain direct; elapsed time and message count alone never trigger escalation.
 
-PREFLIGHT is complete only when one selected ready Change or shallow Group owns the requested outcome and no material decision remains.
+Intake returns exactly one of `ready`, `needs-shape`, `needs-owner`, or `out-of-goal`, with decisive evidence and its next owner. It creates no Task, Blocker, worker envelope, frontier, ticket, run record, or synthetic WorkRef. PREFLIGHT is complete only after a `ready` result identifies one selected shape-ready Change or shallow Group that owns the requested outcome and no material decision remains.
+
+The canonical `OwnershipDisposition` is exactly `ready`, `ask-owner`, `return-to-shape`, or `reroute`. Compatibility Intake labels remain only at this public boundary and always declare their canonical disposition and resume contract.
 
 ## QUALIFY — select or decline Manage
 

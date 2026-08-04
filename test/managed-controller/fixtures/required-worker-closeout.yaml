@@ -1,0 +1,31 @@
+id: required-worker-closeout
+sources:
+  - skills/rsp-manage/SKILL.md
+evidence:
+  - Required implementation and independent verification obligations require accepted worker receipts.
+  - Missing creation, invalid receipts, unavailable workers, boundary changes, and unmet independence keep acceptance incomplete.
+  - Incomplete acceptance cannot activate lifecycle or local-commit closeout.
+required_contract:
+  - '`AcceptanceDisposition` independently from execution'
+  - exactly `incomplete`, `evidence-complete`, or `review-clean`
+  - A required worker that was not created, did not return a valid required receipt, returned `unavailable` or `boundary-changed`
+  - keeps acceptance `incomplete`
+  - Accepted required receipts plus fresh declared verification may derive only `evidence-complete`
+  - only a clean fixed-scope durable review may then derive `review-clean`
+  - An execution receipt never derives `review-clean` directly
+  - 'When a required worker cannot be created, return `StopDisposition: capability-unavailable`'
+  - Absence of a dispatch event or receipt is never success
+  - cannot be replaced by the controller claiming the worker's result
+  - '`CloseoutEligibility` independently'
+  - exactly `not-eligible`, `lifecycle-ready`, or `local-commit-ready`
+  - 'Only `AcceptanceDisposition: review-clean` plus fresh owner, authority, exact diff, and decisive verification evidence can derive a ready value'
+  - 'forces `AcceptanceDisposition: incomplete` and `CloseoutEligibility: not-eligible`'
+  - neither archive nor commit runs
+  - '`manual` grants neither automatic archive nor commit'
+  - '`lifecycle` grants lifecycle closeout after Core durable review but no Git action'
+  - '`local` grants lifecycle closeout, separately justified recovery checkpoints, and the deterministic terminal route below'
+prohibited_actions:
+  - controller substitutes for unavailable required implementation worker
+  - missing receipt accepted as success
+  - archive incomplete acceptance
+  - commit incomplete acceptance

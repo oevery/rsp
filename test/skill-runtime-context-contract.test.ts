@@ -39,7 +39,7 @@ describe('skill runtime context composition', () => {
   it('keeps routing preselection separate from selected Manage execution detail', () => {
     expect(core).toContain('`rsp-manage` solely owns interruption and resume, convergence, lifecycle and commit execution detail')
     expect(core).not.toContain('An explicit pause must stop and confirm active workers before acknowledgement')
-    for (const heading of ['## PREFLIGHT', '## QUALIFY', '## REQUALIFY', '## Dormant closeout fail-safe'])
+    for (const heading of ['## INTAKE', '## QUALIFY', '## REQUALIFY', '## Dormant closeout fail-safe'])
       expect(managed).toContain(heading)
     for (const heading of ['### Interrupt and resume', '## CONVERGE', '## CLOSE'])
       expect(managed).not.toContain(heading)

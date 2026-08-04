@@ -3,7 +3,7 @@
 import { execFileSync, spawn } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
-import { basename, dirname, join, relative, resolve, sep } from 'node:path'
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { parse as parseYaml } from 'yaml'
@@ -365,6 +365,27 @@ function holdoutFixtures(root) {
   return join(root, 'test', 'managed-controller', 'holdout')
 }
 
+function contractSources(root, item) {
+  if (!item.sources) {
+    const path = join(item.skill_variant === 'product' ? productRoot(root) : candidateRoot(root), 'SKILL.md')
+    assertSafeFile(root, path, `${item.id} legacy skill source`)
+    return [path]
+  }
+  assertStringArray(item.sources, `${item.id}.sources`)
+  if ('skill_variant' in item)
+    throw new Error(`${item.id} cannot combine sources with skill_variant`)
+  if (new Set(item.sources).size !== item.sources.length)
+    throw new Error(`${item.id}.sources must not contain duplicates`)
+  return item.sources.map((source) => {
+    if (isAbsolute(source))
+      throw new Error(`${item.id}.sources must be root-relative`)
+    const path = resolve(root, source)
+    assertContained(root, path, `${item.id} source ${source}`)
+    assertSafeFile(root, path, `${item.id} source ${source}`)
+    return path
+  })
+}
+
 export function loadManagedControllerCases(root) {
   const fixtures = contractFixtures(root)
   return readdirSync(fixtures)
@@ -380,14 +401,15 @@ export function loadManagedControllerCases(root) {
         assertStringArray(item[field], `${item.id}.${field}`)
       if ('skill_variant' in item && !['candidate', 'product'].includes(item.skill_variant))
         throw new Error(`${item.id}.skill_variant must be candidate or product`)
+      contractSources(root, item)
       return item
     })
 }
 
 export function evaluateManagedController(root) {
   return loadManagedControllerCases(root).map((item) => {
-    const body = readFileSync(join(item.skill_variant === 'product' ? productRoot(root) : candidateRoot(root), 'SKILL.md'), 'utf8')
-    const missing = item.required_contract.filter(fragment => !body.includes(fragment))
+    const bodies = contractSources(root, item).map(path => readFileSync(path, 'utf8'))
+    const missing = item.required_contract.filter(fragment => !bodies.some(body => body.includes(fragment)))
     return { id: item.id, missing, passed: missing.length === 0 }
   })
 }

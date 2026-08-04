@@ -27,6 +27,8 @@ During an explicit managed goal, its original planning-artifact authority remain
 
 Inspect the repository before asking. Ask only for an owner decision changing behavior, data, interfaces, compatibility, safety, ownership, migration, or acceptance. Write only authorized answers.
 
+Shape owns two transient questioning modes. Ordinary clarification asks one to three related material questions, while explicit deep clarification asks exactly one owner decision per turn. A Core or Manage `StopDisposition: return-to-shape` may enter either mode, but Shape resumes execution only by returning a ready owner to Core for fresh route derivation; it never resumes Manage directly.
+
 Read [deep clarification](references/deep-clarification.md) when the user explicitly asks for rigorous challenge, a high-risk decision remains, or one design question returns. Prefer the installed `rsp-design` capability; otherwise use its fallback.
 
 Read [external issue input](references/external-issue-input.md) only when a Change declares an issue relationship or the request asks to shape from an issue URL.
@@ -67,3 +69,5 @@ A Change is ready only when:
 - one Change or a justified shallow Group is the smallest sufficient owner.
 
 After mutation, run the focused RSP check. Return WorkRef, artifacts, validation, and next action or blocker.
+
+When the gate passes, return `OwnershipDisposition: ready`, the WorkRef, decisive readiness evidence, and next owner `Core`. When it does not pass, return one explicit blocker or owner question; do not relabel unresolved fog as ready work.

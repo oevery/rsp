@@ -1,0 +1,87 @@
+{
+  "id": "manage-orchestration-beta",
+  "case": "pause-resume",
+  "plan_hash": "22b1c4ed72cb8a99368a90f675ea1877fc177dae707103fad682010d48ceeee0",
+  "holdout_manifest_sha256": "c38daf6f451ccfc250462bb2f58e82757bae3ae27adb7d775019bf51eb9f3397",
+  "base_tree_sha256": "5b5c545c7dff0de6561429fa8c81837f53d14705b95f48a8e28af5989427ee3c",
+  "deterministic_contracts": {
+    "passed": true,
+    "cases": 17
+  },
+  "runs": [
+    {
+      "variant": "baseline",
+      "outcome": "passed",
+      "completion": "contract-passed",
+      "first_fix_result": null,
+      "worker_dispatch_count": null,
+      "tool_calls": 5,
+      "verification_rounds": {
+        "agent_observed": 1,
+        "harness": 1,
+        "harness_passed": true
+      },
+      "elapsed_ms": 166328,
+      "human_intervention_outcome": "required-after-automated-work",
+      "omissions": [
+        "first-fix result is not emitted as a structured event",
+        "worker dispatches are not distinguishable from aggregate tool calls"
+      ],
+      "output_contract": {
+        "expected_missing": [],
+        "forbidden_present": []
+      },
+      "recovery_contract": {
+        "duplicate_fields": [],
+        "missing_fields": [],
+        "missing_recovery_evidence": [],
+        "ordered_fields": true,
+        "passed": true,
+        "recovery_evidence_line": true
+      },
+      "unauthorized_paths": []
+    },
+    {
+      "variant": "product",
+      "outcome": "passed",
+      "completion": "contract-passed",
+      "first_fix_result": null,
+      "worker_dispatch_count": null,
+      "tool_calls": 7,
+      "verification_rounds": {
+        "agent_observed": 3,
+        "harness": 1,
+        "harness_passed": true
+      },
+      "elapsed_ms": 280582,
+      "human_intervention_outcome": "required-after-automated-work",
+      "omissions": [
+        "first-fix result is not emitted as a structured event",
+        "worker dispatches are not distinguishable from aggregate tool calls"
+      ],
+      "output_contract": {
+        "expected_missing": [],
+        "forbidden_present": []
+      },
+      "recovery_contract": {
+        "duplicate_fields": [],
+        "missing_fields": [],
+        "missing_recovery_evidence": [],
+        "ordered_fields": true,
+        "passed": true,
+        "recovery_evidence_line": true
+      },
+      "unauthorized_paths": []
+    }
+  ],
+  "comparison": {
+    "status": "complete",
+    "reason": null
+  },
+  "conclusion_limits": [
+    "no numeric promotion threshold",
+    "no activation or release change",
+    "no provider or real-host generality claim",
+    "unavailable measurements remain explicit omissions"
+  ]
+}

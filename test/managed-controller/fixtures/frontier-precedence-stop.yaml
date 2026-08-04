@@ -1,0 +1,17 @@
+id: frontier-precedence-stop
+sources:
+  - skills/rsp-manage/SKILL.md
+evidence:
+  - A qualified ready owner classifies newly surfaced uncertainty in fail-closed precedence order.
+  - Owner decisions, fog, and out-of-goal evidence stop before evidence or Fix dispatch.
+required_contract:
+  - '`out-of-goal` → `owner-decision` → `fog` → `evidence-needed` → `ready-to-execute`'
+  - '`out-of-goal` stops for topology or authority resolution'
+  - '`owner-decision` stops with the single highest-impact owner question'
+  - '`fog` is not yet a precise question'
+  - Create no synthetic Task, Change, Blocker, or worker dispatch
+  - If evidence would cross one of those boundaries, take the applicable stop instead of selecting Fix
+prohibited_actions:
+  - evidence lane before owner-decision
+  - synthetic work for fog
+  - Fix outside the selected goal

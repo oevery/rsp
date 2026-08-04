@@ -1,5 +1,6 @@
 export interface ManagedControllerCase {
   id: string
+  sources?: string[]
   evidence: string[]
   prohibited_actions: string[]
   required_contract: string[]

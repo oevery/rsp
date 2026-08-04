@@ -45,7 +45,7 @@ manage:
   closeout: lifecycle
 ```
 
-`activation` accepts `explicit` or `auto`. Automatic activation permits Core to select a controller for qualified work; it grants no mutation or lifecycle authority.
+`activation` accepts `explicit` or `auto`. After specialist and complete small-work exceptions, automatic activation selects a no-mutation Manage Intake for requested completion or continuation; only an Intake `ready` result can proceed to qualification and managed execution. It grants no planning, product mutation, lifecycle, or external authority.
 
 `closeout` accepts:
 

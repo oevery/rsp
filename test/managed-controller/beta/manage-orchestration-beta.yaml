@@ -1,0 +1,29 @@
+id: manage-orchestration-beta
+case: pause-resume
+variants:
+  - baseline
+  - product
+holdout_manifest_sha256: c38daf6f451ccfc250462bb2f58e82757bae3ae27adb7d775019bf51eb9f3397
+base_tree_sha256: 5b5c545c7dff0de6561429fa8c81837f53d14705b95f48a8e28af5989427ee3c
+product_skill_names:
+  - rsp
+  - rsp-manage
+  - rsp-implement
+product_composition_sha256: ee2e26aee295ea182add2102d928f016e58685cd3e53d3447d92f13268688b76
+prior_retained_evidence:
+  - path: research/evaluations/rsp-manage/2026-08-04-manage-orchestration-beta/report.md
+    sha256: 4c4d7ff94bbdfbfc6988e9d264cff05de89a37f6dcc9e19f555536ba02011dc1
+  - path: research/evaluations/rsp-manage/2026-08-04-manage-orchestration-beta/summary.json
+    sha256: 2cbbde60883e17dd0bee50c0214c3a13cc6626d04b2dc5d26ed89dd1f498de8e
+observations:
+  - completion outcome
+  - first-fix result where observable
+  - worker or tool dispatch count where observable
+  - verification rounds
+  - elapsed time where observable
+  - human-intervention outcome
+conclusion_limits:
+  - no numeric promotion threshold
+  - no activation or release change
+  - no provider or real-host generality claim
+  - unavailable measurements remain explicit omissions

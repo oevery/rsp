@@ -1,0 +1,31 @@
+id: control-route-transitions
+sources:
+  - skills/rsp/SKILL.md
+  - skills/rsp/references/managed-routing.md
+  - skills/rsp-shape/SKILL.md
+  - skills/rsp-shape/references/deep-clarification.md
+  - skills/rsp-manage/SKILL.md
+  - rules/rsp-rules.md
+evidence:
+  - Core exposes specialist, direct, managed, shape, and stop as peer route dispositions.
+  - Intake compatibility labels map to canonical ownership dispositions with distinct resume owners.
+  - Fog returns through Shape while owner questions resume through fresh Intake and out-of-goal reroutes through Core.
+required_contract:
+  - '`RouteDisposition` is exactly `specialist`, `direct`, `managed`, `shape`, or `stop`'
+  - one response-only transient `ControlOutcome`
+  - '`OwnershipDisposition` is exactly `ready`, `ask-owner`, `return-to-shape`, or `reroute`'
+  - '`needs-owner` maps to canonical `OwnershipDisposition: ask-owner`'
+  - '`needs-shape` maps to canonical `OwnershipDisposition: return-to-shape`'
+  - '`out-of-goal` maps to canonical `OwnershipDisposition: reroute`'
+  - canonical `FrontierDisposition` is exactly `out-of-goal`, `owner-decision`, `fog`, `evidence-needed`, or `executable`
+  - '`StopDisposition` is exactly `ask-owner`, `return-to-shape`, `reroute`, `retry-with-evidence`, `environment-blocked`, `verification-blocked`, or `capability-unavailable`'
+  - resume through fresh Intake only after the owner answers
+  - Resume only after Shape confirms a ready owner and Core freshly rederives the route
+  - Core must establish a new owner or authority boundary before continuing
+  - Perform no Manage Intake or WorkerEnvelope
+  - lifecycle remains only `open` or `archived`
+prohibited_actions:
+  - persist ControlOutcome
+  - resume Manage directly from Shape
+  - treat out-of-goal as a product question
+  - retain direct routing after boundary expansion

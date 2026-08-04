@@ -1,0 +1,35 @@
+id: transient-execution-bounds
+sources:
+  - skills/rsp-manage/SKILL.md
+  - skills/rsp/references/managed-routing.md
+  - rules/rsp-rules.md
+evidence:
+  - Evidence receipts force fresh status, preflight, and qualification before later mutation.
+  - Dynamic dispatch capacity protects known required Fix and Verify work without fixed lane allocations.
+  - Corrective retry requires new evidence and enough remaining capacity for decisive acceptance.
+  - Controller execution state remains response-only and is never durable project state.
+required_contract:
+  - An evidence receipt triggers fresh status, preflight, and qualification rederivation before any later mutation or dispatch
+  - Total worker dispatch remains at most four
+  - count one Fix when accepted mutation is still required and count one Verify when the declared acceptance risk or a failed correction still requires worker verification
+  - Start the optional dispatch only when the remaining dispatch capacity covers that dispatch plus every known required obligation
+  - otherwise skip it and preserve the completion path, or stop when no decisive path fits
+  - dynamic capacity protection, not a fixed per-lane allocation
+  - An evidenced failed correction permits at most one corrective retry
+  - Start it only when new evidence makes another correction discriminating
+  - the remaining dispatch capacity still covers the retry and every then-required Verify dispatch
+  - those remaining resources can still produce decisive acceptance evidence
+  - A failure without new evidence, or a retry that cannot still be decisively verified, stops dispatch
+  - Managed review remains at most three Resolve Findings passes per Change with separate accounting
+  - Owner transitions do not reset either limit
+  - Keep frontier classification, lane choice, envelopes, receipts, dispatch and retry counts, concurrency reasoning, and resume chronology response-only
+  - Create no frontier file, ticket map, ledger, registry, ambient hook, or numeric routing score
+  - Never persist the goal envelope, WorkSet, waves, discovery classification, or transition chronology
+  - never dispatch, auto-continue successors, loop review corrections, archive, stage, commit, push, or persist controller state
+prohibited_actions:
+  - more than four worker dispatches
+  - more than one corrective retry
+  - optional evidence consuming known required Fix or Verify capacity
+  - fixed per-lane allocations
+  - more than three managed review passes
+  - persisted controller state
