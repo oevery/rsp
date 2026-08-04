@@ -8,7 +8,6 @@ expected:
   next_action: stop before Git continuation or commit
 sources:
   - skills/rsp/SKILL.md
-  - rules/rsp-rules.md
   - skills/rsp-implement/SKILL.md
 required_contract:
   - base/ours/theirs

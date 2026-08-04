@@ -2,7 +2,6 @@ id: shape-requalification
 sources:
   - skills/rsp/SKILL.md
   - skills/rsp/references/managed-routing.md
-  - rules/rsp-rules.md
 evidence:
   - A canonical outcome that returns ownership to Shape goes back to Core and planning authority remains independent.
   - After Shape, Core rereads current evidence and reruns Intake selection and qualification.
@@ -13,7 +12,6 @@ required_contract:
   - Core invokes Shape only when that outcome returns ownership to Shape and the current request or nearer authority independently permits in-scope RSP planning artifacts
   - configuration alone never does
   - 'When selected execution returns to Core at an owner boundary or resume, re-read `rsp status --json`, apply Intake selection again, then rerun QUALIFY before any later mutation or dispatch.'
-  - Invoke Shape only when the returned outcome assigns it ownership and planning artifacts are independently authorized
 prohibited_actions:
   - treat returned Shape ownership as mutation authority
   - reuse stale qualification after Shape

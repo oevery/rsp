@@ -88,7 +88,6 @@ describe('rsp-manage research candidate', () => {
       'skills/rsp/SKILL.md',
       'skills/rsp-manage/SKILL.md',
       'skills/rsp/references/managed-routing.md',
-      'rules/rsp-rules.md',
     ])
     expect(evaluateManagedController(root)).toEqual(cases.map(item => ({ id: item.id, missing: [], passed: true })))
   })

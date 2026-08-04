@@ -5,7 +5,6 @@ sources:
   - skills/rsp-shape/SKILL.md
   - skills/rsp-shape/references/deep-clarification.md
   - skills/rsp-manage/SKILL.md
-  - rules/rsp-rules.md
 evidence:
   - Core exposes specialist, direct, managed, shape, and stop as peer route dispositions.
   - Intake compatibility labels map to canonical ownership dispositions with distinct resume owners.
@@ -23,7 +22,6 @@ required_contract:
   - Resume only after Shape confirms a ready owner and Core freshly rederives the route
   - Core must establish a new owner or authority boundary before continuing
   - Perform no Manage Intake or WorkerEnvelope
-  - lifecycle remains only `open` or `archived`
 prohibited_actions:
   - persist ControlOutcome
   - resume Manage directly from Shape

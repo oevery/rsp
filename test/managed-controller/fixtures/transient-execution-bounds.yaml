@@ -2,7 +2,6 @@ id: transient-execution-bounds
 sources:
   - skills/rsp-manage/SKILL.md
   - skills/rsp/references/managed-routing.md
-  - rules/rsp-rules.md
 evidence:
   - Evidence receipts force fresh status, Intake selection, and qualification before later mutation.
   - Dynamic dispatch capacity protects known required Fix and Verify work without fixed lane allocations.
@@ -25,7 +24,6 @@ required_contract:
   - Keep frontier classification, lane choice, envelopes, receipts, dispatch and retry counts, concurrency reasoning, and resume chronology response-only
   - Create no frontier file, ticket map, ledger, registry, ambient hook, or numeric routing score
   - Never persist the goal envelope, WorkSet, waves, discovery classification, or transition chronology
-  - never dispatch, auto-continue successors, loop review corrections, archive, stage, commit, push, or persist controller state
 prohibited_actions:
   - more than four worker dispatches
   - more than one corrective retry

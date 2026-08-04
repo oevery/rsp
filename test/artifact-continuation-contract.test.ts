@@ -46,6 +46,7 @@ const semanticAlternatives: Record<string, string[]> = {
   'Before archive': ['before archive'],
   'inspect worktree': ['inspect drift'],
   'not durable truth': ['not a second state store'],
+  'continue or abort the Git operation': ['continuing, aborting'],
 }
 
 function satisfiesSemanticContract(body: string, contract: string): boolean {
@@ -91,7 +92,7 @@ describe('rsp artifact routing and continuation contract', () => {
     expect(core).toMatch(/reopen (?:its|every authority) pointers?/)
     expect(core).toMatch(/refresh (?:decisive evidence|any verification)/)
     expect(core).toMatch(/not (?:a second state store|persisted without explicit path authority)/)
-    expect(fallback).toContain('it is not durable truth or a second state store')
+    expect(fallback).toMatch(/not durable truth or a second state store/i)
   })
 
   it('distinguishes progress, pause, owner release, blockers, and resume at the portable boundary', () => {
@@ -102,13 +103,13 @@ describe('rsp artifact routing and continuation contract', () => {
 
     expect(core).toMatch(/once Manage is selected, that Skill solely owns interruption and resume/i)
 
-    for (const body of [manage, fallback]) {
-      expect(body).toContain('progress or status inquiry')
-      expect(body).toContain('explicit pause')
-      expect(body).toContain('release or unfocus')
-      expect(body).toContain('preserve the focused owner')
-      expect(body).toContain('requalify Manage')
-    }
+    expect(manage).toContain('progress or status inquiry')
+    expect(manage).toContain('explicit pause')
+    expect(manage).toContain('release or unfocus')
+    expect(manage).toContain('preserve the focused owner')
+    expect(manage).toContain('requalify Manage')
+    expect(fallback).toContain('does not emulate `rsp-manage`')
+    expect(fallback).toContain('managed resume')
     expect(routing).toContain('## REQUALIFY')
     expect(routing).toContain('After selection, stop using this reference for execution detail')
     expect(routing).not.toContain('progress or status inquiry')
@@ -119,22 +120,21 @@ describe('rsp artifact routing and continuation contract', () => {
     const shape = readFileSync(join(root, 'skills', 'rsp-shape', 'SKILL.md'), 'utf8')
     const fallback = readFileSync(join(root, 'rules', 'rsp-rules.md'), 'utf8')
 
-    for (const body of [shape, fallback]) {
-      expect(body).toMatch(/convergent current-plan(?: and |\/)final-evidence snapshot/)
-      expect(body).toContain('not an append-only execution log')
-      expect(body).toMatch(/replace superseded/i)
-      expect(body).toContain('final decisive')
-      expect(body).toContain('in the response')
-      expect(body).toContain('Before archive')
-      expect(body).toContain('real product actors')
-      expect(body).toMatch(/domain(?:, system, user, or operator)? language/)
-    }
+    expect(shape).toMatch(/convergent current-plan(?: and |\/)final-evidence snapshot/)
+    expect(shape).toContain('not an append-only execution log')
+    expect(shape).toMatch(/replace superseded/i)
+    expect(shape).toContain('final decisive')
+    expect(shape).toContain('in the response')
+    expect(shape).toContain('Before archive')
+    expect(shape).toContain('real product actors')
+    expect(shape).toMatch(/domain(?:, system, user, or operator)? language/)
 
     expect(shape).toContain('not authors or execution narrators')
-    expect(fallback).toContain('hypothetical future agent')
-    expect(fallback).toContain('Ordinary implementation is the default')
-    expect(fallback).toContain('Retain a new test only when it protects observable behavior or a real boundary')
-    expect(fallback).toContain('otherwise remove the temporary probe')
+    expect(fallback).toContain('convergent current-plan and final-evidence snapshot')
+    expect(fallback).toContain('not an append-only execution log')
+    expect(fallback).toContain('Replace superseded plans and evidence')
+    expect(fallback).toContain('temporary execution or continuation state to the response')
+    expect(fallback).toContain('Before archive')
   })
 
   it('localizes response labels without changing project artifact language', () => {
@@ -155,11 +155,8 @@ describe('rsp artifact routing and continuation contract', () => {
     expect(core).toMatch(/localized continuation with these semantic fields in order/)
     expect(core).toMatch(/Localize headings and labels|localized continuation/)
     expect(core).toMatch(/Preserve technical values/)
-    expect(fallback).toContain('Keep response language user/session-owned and durable project language repository-owned')
-    expect(fallback).toContain('project `.rsp/config.yaml` never selects it')
-    expect(fallback).toContain('configured effective artifact language')
-    expect(fallback).toContain('configured effective commit language')
-    expect(fallback).toContain('changing configuration never rewrites it')
+    expect(fallback).toContain('Use the response language for user-visible narration')
+    expect(fallback).toContain('Preserve each existing artifact\'s established language unless translation is explicitly authorized')
 
     for (const source of [
       'skills/rsp-shape/SKILL.md',
@@ -180,7 +177,6 @@ describe('rsp artifact routing and continuation contract', () => {
     for (const [source, body] of [
       ['.rsp/specs/skill-system.md', skillSystem],
       ['skills/rsp/SKILL.md', core],
-      ['rules/rsp-rules.md', fallback],
     ] as const) {
       expect(body, source).toContain('Every user-visible RSP progress update, phase or stage description, control result, worker receipt, stop reason, and handoff')
       expect(body, source).toMatch(/natural-language narration selected by (?:that|the response-language) precedence/)
@@ -188,6 +184,8 @@ describe('rsp artifact routing and continuation contract', () => {
       expect(body, source).toMatch(/must not stand alone as the human-facing label|never stands alone as the human-facing label/)
       expect(body, source).toContain('does not change persisted artifact language or host-owned hidden reasoning summaries')
     }
+    expect(fallback).toContain('Use the response language for user-visible narration')
+    expect(fallback).toContain('preserving exact WorkRefs, paths, commands, headings, and machine values')
 
     for (const source of [
       'skills/rsp-shape/SKILL.md',
