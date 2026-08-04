@@ -10,9 +10,11 @@ expected:
 sources:
   - skills/rsp/SKILL.md
   - skills/rsp/references/managed-routing.md
+  - skills/rsp-manage/SKILL.md
 required_contract:
-  - Intake resolves the smallest sufficient owner before testing Manage eligibility
-  - material product, acceptance, public-interface, scope, mutation-authority, external-action, or human choice
-  - single highest-impact owner decision
-  - create no implementation or controller artifact
+  - Every return is one transient `ControlOutcome`
+  - behavior, acceptance, interface, scope, mutation authority, external action, or human choice remains materially unresolved
+  - one highest-impact owner question
+  - resume through fresh Intake only after the owner answers
+  - It does not focus another owner, mutate a planning or product artifact, create a controller record, or dispatch a worker
 prohibited_actions: [implement, dispatch, commit, push, publish]

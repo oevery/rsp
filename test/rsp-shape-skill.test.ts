@@ -33,13 +33,50 @@ describe('rsp-shape deep clarification', () => {
     expect(skill).toContain('`StopDisposition: return-to-shape` may enter either mode')
     expect(skill).toContain('returning a ready owner to Core for fresh route derivation')
     expect(skill).toContain('it never resumes Manage directly')
-    expect(skill).toContain('return `OwnershipDisposition: ready`')
-    expect(skill).toContain('do not relabel unresolved fog as ready work')
+    expect(skill).toContain('`OwnershipDisposition: ready`')
+    expect(skill).toMatch(/do not relabel unresolved fog as ready work/i)
 
     expect(deep).toContain('fulfills `StopDisposition: return-to-shape`')
     expect(deep).toContain('does not resume the prior execution path itself')
     expect(deep).toContain('return `OwnershipDisposition: ready` to Core')
     expect(deep).toContain('freshly rederives the route')
+  })
+
+  it('returns complete ready and non-ready Shape control outcomes', () => {
+    const skill = readFileSync(join(root, 'skills', 'rsp-shape', 'SKILL.md'), 'utf8')
+
+    const ready = skill.match(/When the gate passes[\s\S]*?derives the route\./)?.[0] ?? ''
+    for (const field of [
+      '`ControlOutcome`',
+      'phase Shape',
+      '`OwnershipDisposition: ready`',
+      'WorkRef',
+      'decisive readiness evidence',
+      'next owner `Core`',
+      'resume rule',
+      'Core freshly derives the route',
+    ]) {
+      expect(ready).toContain(field)
+    }
+
+    const ownerQuestion = skill.match(/When a material owner question[\s\S]*?after the answer\./)?.[0] ?? ''
+    expect(ownerQuestion).toContain('phase Shape')
+    expect(ownerQuestion).toContain('`StopDisposition: ask-owner`')
+    expect(ownerQuestion).toContain('next owner `owner`')
+    expect(ownerQuestion).toContain('required answer')
+    expect(ownerQuestion).toContain('reruns Shape from fresh evidence')
+
+    const otherBlocker = skill.match(/For any other blocker[\s\S]*?ready work\./)?.[0] ?? ''
+    for (const field of [
+      'applicable canonical `StopDisposition`',
+      'decisive evidence',
+      'next owner',
+      'required input',
+      'resume rule',
+    ]) {
+      expect(otherBlocker).toContain(field)
+    }
+    expect(otherBlocker).toContain('Do not relabel unresolved fog as ready work')
   })
 
   it('covers challenge, design return, restraint, and ordinary disclosure', () => {

@@ -14,6 +14,7 @@
   - `resumeRule`, which names whether continuation resumes through the current phase or requires fresh derivation by Core
 - A `ControlOutcome` is never durable product or workflow state. It is not stored in a Change, Group Brief, Spec, Decision Record, archive, registry, generated projection, or hidden host ledger.
 - Each Skill uses only the terms needed for its phase. Phase-specific dispositions remain distinct and are not flattened into one universal status enum.
+- Shape returns a phase Shape `ControlOutcome` with `OwnershipDisposition: ready`, the WorkRef, decisive readiness evidence, next owner `Core`, and a rule for Core to freshly derive the route only when its Ready gate passes. A material owner question instead returns `StopDisposition: ask-owner`, next owner `owner`, the required answer, and a rule to rerun Shape from fresh evidence after the answer. Any other non-ready blocker returns its applicable canonical `StopDisposition`, next owner, required input, and resume rule.
 
 ## Route Disposition
 - Core owns `RouteDisposition`, whose values are exactly:
@@ -74,8 +75,9 @@
 
 ## Execution Evidence
 - Specialist Disciplines and managed lanes retain their own exact result schemas. The control model does not replace Diagnose, Inspect, Fix, Verify, Review, or Resolve Findings results with a generic execution enum.
+- Only a missing optional Discipline Skill may use that Discipline's bounded manual fallback against the same owner. A manual fallback never substitutes for a required managed worker or required independent Verify.
 - A managed WorkerEnvelope and its receipt are transient execution evidence. A required worker obligation is satisfied only when the worker was actually created and returned a valid result within its declared authority and schema.
-- A required worker that cannot be created, returns no valid receipt, reports unavailable or changed boundaries, or cannot satisfy required independent verification produces `capability-unavailable` or the more specific evidenced stop. The controller cannot replace the missing receipt with an assumption or its own undeclared work.
+- A required worker that cannot be created, returns no valid receipt, reports unavailable or changed boundaries, or cannot satisfy required independent verification produces `capability-unavailable` or the more specific evidenced stop and keeps acceptance `incomplete`. The controller cannot replace the missing receipt with an assumption, a generic manual fallback, or its own undeclared work.
 - Token counts, token limits, and token cost are not routing, dispatch, retry, authority, completion, acceptance, or closeout inputs.
 
 ## Acceptance and Closeout

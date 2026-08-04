@@ -73,6 +73,7 @@ describe('rsp-manage research candidate', () => {
     ].sort())
     expect(cases.find(item => item.id === 'intake-routing')?.sources).toEqual([
       'skills/rsp/SKILL.md',
+      'skills/rsp-manage/SKILL.md',
       'skills/rsp/references/managed-routing.md',
       'rules/rsp-rules.md',
     ])
@@ -149,7 +150,7 @@ describe('rsp-manage research candidate', () => {
     expect(readFileSync(join(prepared.workspace, '.rsp', 'focus.d', 'normalize-checkpoint'), 'utf8').trim()).toBe('')
   })
 
-  it('scores ordered continuation fields and explicit resume-preflight evidence', () => {
+  it('scores ordered continuation fields and explicit resume-Intake-selection evidence', () => {
     const manifest = {
       continuation_contract: {
         ordered_fields: ['WorkRef', 'Authority', 'Current state', 'Changed artifacts', 'Fresh verification', 'Blockers', 'Next action'],
@@ -485,14 +486,16 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('Accepted required receipts plus fresh declared verification may derive only `evidence-complete`')
     expect(body).toContain('only a clean fixed-scope durable review may then derive `review-clean`')
     expect(body).toContain('An execution receipt never derives `review-clean` directly')
-    expect(body).toContain('When a required worker cannot be created, return `StopDisposition: capability-unavailable`')
+    expect(body).toContain('When dispatch cannot satisfy a required worker obligation, apply the AcceptanceDisposition rule above')
+    expect(body).toContain('return `StopDisposition: capability-unavailable`, keep acceptance `incomplete`, and stop')
     expect(body).toContain('Absence of a dispatch event or receipt is never success')
     expect(body).toContain('cannot be replaced by the controller claiming the worker\'s result')
 
     expect(body).toContain('`CloseoutEligibility` independently')
     expect(body).toContain('exactly `not-eligible`, `lifecycle-ready`, or `local-commit-ready`')
     expect(body).toContain('Only `AcceptanceDisposition: review-clean` plus fresh owner, authority, exact diff, and decisive verification evidence can derive a ready value')
-    expect(body).toContain('forces `AcceptanceDisposition: incomplete` and `CloseoutEligibility: not-eligible`')
+    expect(body).toContain('Any other acceptance state derives `CloseoutEligibility: not-eligible`')
+    expect(body.match(/A required worker that was not created, did not return a valid required receipt, returned `unavailable` or `boundary-changed`/g)).toHaveLength(1)
     expect(body).toContain('neither archive nor commit runs')
   })
 
@@ -500,7 +503,7 @@ describe('rsp-manage product Skill', () => {
     const { body } = readSkill(product)
 
     expect(body).toContain('Inspect the actual diff and fresh verification before acceptance')
-    expect(body).toContain('An evidence receipt triggers fresh status, preflight, and qualification rederivation before any later mutation or dispatch')
+    expect(body).toContain('An evidence receipt triggers fresh status, Intake selection, and qualification rederivation before any later mutation or dispatch')
     expect(body).toContain('frontier classification, lane choice, envelopes, receipts, dispatch and retry counts, concurrency reasoning, and resume chronology response-only')
     expect(body).toContain('Converged requirements and design belong in the selected Change')
     expect(body).toContain('real dependencies in `Blockers`')

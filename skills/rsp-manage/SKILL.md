@@ -9,7 +9,7 @@ metadata:
 
 # RSP Manage
 
-Manage one requested goal selected by Core from an explicit request or effective `manage.activation: auto`. Its transient Intake first resolves one owner state; only a `ready` result can enter managed execution for one ready Change or shallow Group. Once selected, this Skill solely owns interruption and resume, convergence, lifecycle and commit execution detail while Core's managed-routing reference retains preflight and requalification. Keep artifacts durable and process data transient. The goal defines authority; automatic activation grants selection, not mutation.
+Manage one requested goal selected by Core from an explicit request or effective `manage.activation: auto`. Its transient Intake first resolves one owner state; only a `ready` result can enter managed execution for one ready Change or shallow Group. Once selected, this Skill solely owns interruption and resume, convergence, lifecycle and commit execution detail while Core's managed-routing reference retains Intake selection and requalification. Keep artifacts durable and process data transient. The goal defines authority; automatic activation grants selection, not mutation.
 
 ## Manage Intake
 
@@ -18,7 +18,7 @@ Before qualification or dispatch, Intake reads the requested goal, current selec
 Intake returns exactly one response-only owner state with decisive evidence and the next owner:
 
 - `ready` maps to canonical `OwnershipDisposition: ready`: one selected shape-ready Change or shallow Group owns the requested outcome. Continue to qualification.
-- `needs-shape` maps to canonical `OwnershipDisposition: return-to-shape`: no sufficient ready owner exists for clear non-trivial work. Return `StopDisposition: return-to-shape` to Core; only Core may invoke Shape with independently granted planning-artifact authority, then re-read status and rerun Intake/preflight and qualification.
+- `needs-shape` maps to canonical `OwnershipDisposition: return-to-shape`: no sufficient ready owner exists for clear non-trivial work. Return `StopDisposition: return-to-shape` to Core; only Core may invoke Shape with independently granted planning-artifact authority, then re-read status and rerun Intake selection and qualification.
 - `needs-owner` maps to canonical `OwnershipDisposition: ask-owner`: behavior, acceptance, interface, scope, mutation authority, external action, or human choice remains materially unresolved. Return `StopDisposition: ask-owner` with the one highest-impact owner question and resume through fresh Intake only after the owner answers.
 - `out-of-goal` maps to canonical `OwnershipDisposition: reroute`: owner identity, topology, dirty-path ownership, or authority cannot safely establish the requested boundary. Return `StopDisposition: reroute`; Core must establish a new owner or authority boundary before continuing, without turning it into a product question.
 
@@ -68,7 +68,7 @@ Every lane receives one transient `WorkerEnvelope` with these common fields: `Wo
 - Fix reuses `rsp-implement`, receives explicit in-scope mutation authority, and is the sole product writer at its mutation boundary. Separate Group child mutation boundaries may overlap only under the existing isolated workspace and verification rule. Its result is exactly one of `changed-same-scope`, `no-change`, or `boundary-changed`; the receipt also gives `worker identity` when the host exposes it, changed paths, and fresh verification evidence.
 - Verify is a private Manager-only read-only lane and runs only for the Change-declared risk or after a failed correction. Its result is exactly one of `pass`, `failed-with-new-evidence`, `failed-without-new-evidence`, `unavailable`, or `boundary-changed`; the receipt also gives named checks, the observed diff boundary, `worker identity` when the host exposes it, and `independence: established | unavailable`. Fixed-scope review remains owned by `rsp-review`; Inspect and Verify are not public Skills.
 
-Every receipt contains these common fields: `WorkRef`, `lane objective`, `effective authority`, `result`, `decisive evidence`, and `stop boundary`, plus the lane-specific fields above. Inspect the actual diff and fresh verification before acceptance. An evidence receipt triggers fresh status, preflight, and qualification rederivation before any later mutation or dispatch.
+Every receipt contains these common fields: `WorkRef`, `lane objective`, `effective authority`, `result`, `decisive evidence`, and `stop boundary`, plus the lane-specific fields above. Inspect the actual diff and fresh verification before acceptance. An evidence receipt triggers fresh status, Intake selection, and qualification rederivation before any later mutation or dispatch.
 
 Independent Verify is established only when its worker identity and the accepted Fix worker identity are both available and different. If the host cannot establish that identity boundary, record `independence: unavailable`; ordinary read-only Verify may still run, but Manager must not claim independent verification.
 
@@ -84,7 +84,7 @@ An evidenced failed correction permits at most one corrective retry. Start it on
 
 Send a compact envelope that identifies the WorkRef, objective, authority, decisive evidence, and stop boundary. When the host supports workers and authorized implementation remains, dispatch at least one implementation worker; sequential execution does not permit the controller to absorb the whole implementation. The controller retains owner resolution, worker-result acceptance, integration verification, review convergence, lifecycle, and Git decisions.
 
-When a required worker cannot be created, return `StopDisposition: capability-unavailable`, keep `AcceptanceDisposition: incomplete`, and stop. Absence of a dispatch event or receipt is never success, does not discharge the required obligation, and cannot be replaced by the controller claiming the worker's result.
+When dispatch cannot satisfy a required worker obligation, apply the AcceptanceDisposition rule above: return `StopDisposition: capability-unavailable`, keep acceptance `incomplete`, and stop. Absence of a dispatch event or receipt is never success, does not discharge the required obligation, and cannot be replaced by the controller claiming the worker's result.
 
 For a Group, dispatch child WorkRefs only in the current derived `plan.waves` wave. Assume shared paths, lockfiles, generated artifacts, integration state, real hosts, provider sessions, and hardware resources overlap unless an authorized isolated workspace and verification boundary exist. Keep blockers, later waves, overlaps, and dependent verification sequential. Dispatch in parallel only for isolated mutation paths and verification resources; delegation never implies concurrency. Workers receive no implied focus, lifecycle, Git, publication, deployment, or approval authority. Choose the cheapest decisive check and at most one integration gate.
 
@@ -114,7 +114,7 @@ Keep dispatch chronology out of Changes, Group Briefs, Specs, Decision Records. 
 
 Closeout requires Core-selected, currently-qualified Manage. For declined, unavailable, or unselected Manage, every `manage.closeout` preset is dormant; Core may report readiness/next action, but configuration executes neither archive nor commit. Earlier qualification does not carry forward.
 
-Derive `CloseoutEligibility` independently; it is exactly `not-eligible`, `lifecycle-ready`, or `local-commit-ready`. Only `AcceptanceDisposition: review-clean` plus fresh owner, authority, exact diff, and decisive verification evidence can derive a ready value. Missing required worker creation, a missing or invalid required receipt, `unavailable`, `boundary-changed`, or unsatisfied required independent verification forces `AcceptanceDisposition: incomplete` and `CloseoutEligibility: not-eligible`; neither archive nor commit runs.
+Derive `CloseoutEligibility` independently; it is exactly `not-eligible`, `lifecycle-ready`, or `local-commit-ready`. Only `AcceptanceDisposition: review-clean` plus fresh owner, authority, exact diff, and decisive verification evidence can derive a ready value. Any other acceptance state derives `CloseoutEligibility: not-eligible`; neither archive nor commit runs.
 
 Qualified only: effective `manage.closeout` is an automatic grant ceiling narrowed by nearer restrictions and host enforcement. `manual` grants neither automatic archive nor commit. `lifecycle` grants lifecycle closeout after Core durable review but no Git action. `local` grants lifecycle closeout, separately justified recovery checkpoints, and the deterministic terminal route below. Explicit current-turn authority may allow a local action not automated by the preset; denial wins.
 

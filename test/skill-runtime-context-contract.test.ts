@@ -49,6 +49,16 @@ describe('skill runtime context composition', () => {
     expect(manage).toContain('## Handle interruption')
     expect(manage).toContain('## Converge managed review')
     expect(manage).toContain('Qualified only: effective `manage.closeout` is an automatic grant ceiling')
+    expect(manage).toContain('Intake returns exactly one response-only owner state')
+    expect(manage).toContain('`needs-shape` maps to canonical `OwnershipDisposition: return-to-shape`')
+    expect(manage).toContain('Every return is one transient `ControlOutcome` containing phase, disposition, decisive evidence, next owner, required input when any, and its resume or rederivation rule')
+    for (const projection of [core, managed]) {
+      expect(projection).not.toContain('`needs-shape`')
+      expect(projection).not.toContain('`needs-owner`')
+      expect(projection).not.toContain('`out-of-goal`')
+    }
+    for (const runtimeDoc of [core, managed, manage])
+      expect(runtimeDoc).not.toMatch(/\bpreflight\b/iu)
   })
 
   it('uses only local numbered arrows for the closed implementation route', () => {

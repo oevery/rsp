@@ -11,6 +11,7 @@ sources:
 required_contract:
   - manual fallback reproduces
   - manual fallback observes the focused RED
-  - Missing capabilities never invalidate RSP
-  - same Change
+  - A missing optional Discipline Skill does not invalidate RSP
+  - use its bounded manual fallback against the same owner
+  - This fallback never substitutes for a required managed worker or required independent Verify
 prohibited_actions: [commit, push, publish]

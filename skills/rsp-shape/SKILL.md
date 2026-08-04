@@ -70,4 +70,8 @@ A Change is ready only when:
 
 After mutation, run the focused RSP check. Return WorkRef, artifacts, validation, and next action or blocker.
 
-When the gate passes, return `OwnershipDisposition: ready`, the WorkRef, decisive readiness evidence, and next owner `Core`. When it does not pass, return one explicit blocker or owner question; do not relabel unresolved fog as ready work.
+When the gate passes, return a `ControlOutcome` for phase Shape with `OwnershipDisposition: ready`, the WorkRef, decisive readiness evidence, next owner `Core`, and a resume rule that Core freshly derives the route.
+
+When a material owner question prevents readiness, return a non-ready `ControlOutcome` for phase Shape with `StopDisposition: ask-owner`, the decisive evidence, next owner `owner`, the required answer, and a resume rule that reruns Shape from fresh evidence after the answer.
+
+For any other blocker, return a non-ready Shape `ControlOutcome` with the applicable canonical `StopDisposition`, decisive evidence, next owner, required input, and resume rule. Do not relabel unresolved fog as ready work.

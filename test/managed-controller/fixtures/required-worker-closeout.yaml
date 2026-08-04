@@ -3,8 +3,8 @@ sources:
   - skills/rsp-manage/SKILL.md
 evidence:
   - Required implementation and independent verification obligations require accepted worker receipts.
-  - Missing creation, invalid receipts, unavailable workers, boundary changes, and unmet independence keep acceptance incomplete.
-  - Incomplete acceptance cannot activate lifecycle or local-commit closeout.
+  - Acceptance owns the complete required-worker failure set; dispatch applies that rule to capability-unavailable.
+  - Closeout derives not-eligible from every non-review-clean acceptance state without restating worker failures.
 required_contract:
   - '`AcceptanceDisposition` independently from execution'
   - exactly `incomplete`, `evidence-complete`, or `review-clean`
@@ -13,13 +13,14 @@ required_contract:
   - Accepted required receipts plus fresh declared verification may derive only `evidence-complete`
   - only a clean fixed-scope durable review may then derive `review-clean`
   - An execution receipt never derives `review-clean` directly
-  - 'When a required worker cannot be created, return `StopDisposition: capability-unavailable`'
+  - When dispatch cannot satisfy a required worker obligation, apply the AcceptanceDisposition rule above
+  - 'return `StopDisposition: capability-unavailable`, keep acceptance `incomplete`, and stop'
   - Absence of a dispatch event or receipt is never success
   - cannot be replaced by the controller claiming the worker's result
   - '`CloseoutEligibility` independently'
   - exactly `not-eligible`, `lifecycle-ready`, or `local-commit-ready`
   - 'Only `AcceptanceDisposition: review-clean` plus fresh owner, authority, exact diff, and decisive verification evidence can derive a ready value'
-  - 'forces `AcceptanceDisposition: incomplete` and `CloseoutEligibility: not-eligible`'
+  - 'Any other acceptance state derives `CloseoutEligibility: not-eligible`'
   - neither archive nor commit runs
   - '`manual` grants neither automatic archive nor commit'
   - '`lifecycle` grants lifecycle closeout after Core durable review but no Git action'
@@ -27,5 +28,6 @@ required_contract:
 prohibited_actions:
   - controller substitutes for unavailable required implementation worker
   - missing receipt accepted as success
+  - repeated required-worker failure set in dispatch or closeout
   - archive incomplete acceptance
   - commit incomplete acceptance

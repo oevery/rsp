@@ -1,23 +1,31 @@
 id: intake-routing
 sources:
   - skills/rsp/SKILL.md
+  - skills/rsp-manage/SKILL.md
   - skills/rsp/references/managed-routing.md
   - rules/rsp-rules.md
 evidence:
   - Core preserves specialist and tiny-work exceptions before automatic Manage Intake.
-  - Intake exposes exactly four owner returns without execution or durable controller mutation.
+  - Core, managed-routing, and fallback consume canonical outcomes without copying the compatibility schema.
+  - rsp-manage solely owns the detailed Intake labels, canonical mappings, response schema, and resume contracts.
 required_contract:
   - Route an explicit report-only review with fixed scope
   - Route an explicit release-documentation, finalization, publication, or reconciliation operation
   - Route one explicit isolated material domain, module/seam, or evidence-seeking design question
   - Return tiny settled work directly only when
-  - 'Intake returns exactly one of `ready`, `needs-shape`, `needs-owner`, or `out-of-goal`'
-  - '`ready`: reuse one unambiguous selected shape-ready Change or shallow Group'
-  - '`needs-shape`: when clear non-trivial work has no sufficient ready owner'
-  - '`needs-owner`: when repository evidence leaves a material product, acceptance, public-interface, scope, mutation-authority, external-action, or human choice'
-  - '`out-of-goal`: when dirty-path evidence, topology, selected-owner identity, or authority evidence cannot establish a safe owner boundary'
-  - It creates no Task, Blocker, worker envelope, frontier, ticket, run record, or synthetic WorkRef
+  - returns one canonical `ControlOutcome`
+  - Core consumes its returned disposition, next owner, required input, and resume rule
+  - Invoke `rsp-manage` Intake and consume its canonical `ControlOutcome`
+  - compatibility labels, exact canonical mappings, response schema, and detailed resume contracts are owned only by `rsp-manage`
+  - Intake returns exactly one response-only owner state with decisive evidence and the next owner
+  - '`ready` maps to canonical `OwnershipDisposition: ready`'
+  - '`needs-shape` maps to canonical `OwnershipDisposition: return-to-shape`'
+  - '`needs-owner` maps to canonical `OwnershipDisposition: ask-owner`'
+  - '`out-of-goal` maps to canonical `OwnershipDisposition: reroute`'
+  - Every return is one transient `ControlOutcome` containing phase, disposition, decisive evidence, next owner, required input when any, and its resume or rederivation rule
+  - Intake creates no Task, Blocker, worker envelope, frontier, ticket, run record, or synthetic WorkRef
 prohibited_actions:
   - route specialist work through Manage Intake
   - dispatch from Intake
   - persist an Intake controller record
+  - duplicate Intake compatibility mapping outside rsp-manage

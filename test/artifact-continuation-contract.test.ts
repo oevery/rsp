@@ -100,7 +100,7 @@ describe('rsp artifact routing and continuation contract', () => {
     const routing = readFileSync(join(root, 'skills', 'rsp', 'references', 'managed-routing.md'), 'utf8')
     const fallback = readFileSync(join(root, 'rules', 'rsp-rules.md'), 'utf8')
 
-    expect(core).toContain('once selected, that Skill solely owns interruption and resume')
+    expect(core).toMatch(/once Manage is selected, that Skill solely owns interruption and resume/i)
 
     for (const body of [manage, fallback]) {
       expect(body).toContain('progress or status inquiry')
