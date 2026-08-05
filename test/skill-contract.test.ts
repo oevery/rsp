@@ -21,6 +21,8 @@ const publishedSkillNames = [
   'rsp-tdd',
 ]
 const reviewSkill = join(root, 'skills', 'rsp-review')
+const reviewCode = readFileSync(join(reviewSkill, 'references', 'code-review.md'), 'utf8')
+const reviewDocument = readFileSync(join(reviewSkill, 'references', 'document-review.md'), 'utf8')
 const resolveFindingsSkill = join(root, 'skills', 'rsp-resolve-findings')
 const distillUpstreamSkill = join(root, '.agents', 'skills', 'distill-upstream')
 const portableKeys = new Set([
@@ -118,9 +120,13 @@ describe('rsp Skill contract', () => {
   it('publishes the canonical review Skill contract', () => {
     expect(reviewSkill.includes(`${sep}.agents${sep}skills${sep}`)).toBe(false)
     const { body } = readSkill(reviewSkill)
-    expect(body).toContain('verify that the changed production consumer actually reaches that seam')
+    expect(body).toContain('[Code review](references/code-review.md)')
+    expect(body).toContain('[Document review](references/document-review.md)')
+    expect(body).toContain('A mixed review reads both references')
+    expect(reviewCode).toContain('verify that the changed production consumer actually reaches that seam')
     expect(body).toContain('never return `clean` for authority-only documents')
-    expect(body).toContain('Absence of a new test is not actionable by itself')
+    expect(reviewCode).toContain('Absence of a new test is not actionable by itself')
+    expect(reviewDocument).toContain('Before the Document verdict, enumerate every unresolved choice')
     expect(body).toContain('conversation language')
     expect(body).toContain('shape below as semantic field order rather than fixed English wording')
     expect(body).toContain('`issues_found`, `clean`, `skipped`, and `blocked`')

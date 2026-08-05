@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
 import { evaluateManagedController, hashManagedControllerArtifact, hashManagedControllerComposition, loadManagedControllerCases, observeManagedControllerGit, prepareManagedControllerRun, readManagedControllerFlag, rescoreManagedControllerArtifact, scoreManagedControllerObservation, scoreManagedControllerOutput, scoreManagedRecoveryOutput, summarizeManagedControllerEvents } from '../scripts/managed-controller-eval.mjs'
+import { canonicalEnum, findSemanticUnit, inlineCodeValues, inlineCodeValuesInUnit, markdownListItem, markdownSection, orderedMarkers } from './helpers/markdown-contract'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const candidate = join(root, 'research', 'candidates', 'skills', 'rsp-manage')
@@ -14,6 +15,8 @@ const product = join(root, 'skills', 'rsp-manage')
 const managedRouting = readFileSync(join(root, 'skills', 'rsp', 'references', 'managed-routing.md'), 'utf8')
 const durableReview = readFileSync(join(root, 'skills', 'rsp', 'references', 'durable-review.md'), 'utf8')
 const coreSkill = readFileSync(join(root, 'skills', 'rsp', 'SKILL.md'), 'utf8')
+const reviewConvergence = readFileSync(join(product, 'references', 'review-convergence.md'), 'utf8')
+const closeout = readFileSync(join(product, 'references', 'closeout.md'), 'utf8')
 
 function readSkill(directory = candidate): { body: string, frontmatter: Record<string, any> } {
   const content = readFileSync(join(directory, 'SKILL.md'), 'utf8')
@@ -363,76 +366,50 @@ describe('rsp-manage product Skill', () => {
 
   it('keeps initial qualification in Core and validates only the selected handoff in Manage', () => {
     const { body } = readSkill(product)
+    const qualify = markdownSection(managedRouting, 'QUALIFY — select or decline Manage')
+    const entry = `${markdownSection(body, 'Selected-goal entry')}\n${markdownSection(body, 'Validate the selected handoff before mutation')}`
 
-    expect(managedRouting).toContain('qualifies through at least one independent path')
-    expect(managedRouting).toContain('prospective execution signals showing more than one bounded phase or authority surface')
-    expect(managedRouting).toContain('implementation followed by integration verification, managed review, or lifecycle work')
-    expect(managedRouting).toContain('cross-module or cross-process mutation')
-    expect(managedRouting).toContain('real-host, provider, or hardware verification')
-    expect(managedRouting).toContain('bounded finding convergence')
-    expect(managedRouting).toContain('a clear ready successor')
-    expect(managedRouting).toContain('does not also need independent or parallelizable slices')
-    expect(managedRouting).toContain('elapsed wall-clock minutes are never qualification evidence')
-    expect(managedRouting).toContain('bias non-small continuation toward Manage')
-    expect(managedRouting).toContain('authoritative Specs, product presentation, public documentation, and multiple verification surfaces')
-    expect(managedRouting).toContain('even when one writer owns all mutations and dispatch must remain sequential')
-    expect(managedRouting).toContain('Writer count and lack of parallelism do not collapse multiple acceptance or authority surfaces into one local seam')
-    expect(managedRouting).toContain('Decline as direct one-step work only when all of these are true')
-    expect(managedRouting).toContain('one owner, one local seam, one mutation pass, one decisive check, no managed lifecycle coordination, and no ready successor')
-    expect(managedRouting).toContain('fails any one of these conditions qualifies as non-small through this automatic path')
-    expect(managedRouting).toContain('do not leave the middle case unclassified')
-    expect(body).toContain('Core and its managed-routing reference solely own initial Manage qualification')
-    expect(body).toContain('Manage never repeats the direct-versus-managed eligibility test')
-    expect(body).toContain('validate the handoff against current evidence')
-    expect(body).toContain('the selected owner and topology still match')
-    expect(body).toContain('the authority envelope still permits the next action')
-    expect(body).toContain('owned paths remain exact and unmixed')
-    expect(body).toContain('the decisive qualification evidence has not been invalidated')
-    expect(body).toContain('continue the selected managed goal without repeating qualification')
+    expect(findSemanticUnit(qualify, ['independent path', 'independent slices', 'interruption recovery', 'prospective execution signals'])).toBeDefined()
+    expect(findSemanticUnit(qualify, ['implementation', 'integration verification', 'managed review', 'lifecycle work'])).toBeDefined()
+    expect(findSemanticUnit(qualify, ['cross-module', 'real-host', 'bounded finding convergence', 'ready successor'])).toBeDefined()
+    expect(findSemanticUnit(qualify, ['elapsed wall-clock minutes', 'never qualification evidence'])).toBeDefined()
+    expect(findSemanticUnit(qualify, ['automatic activation', 'non-small', 'Manage'])).toBeDefined()
+    expect(findSemanticUnit(qualify, ['Specs', 'product presentation', 'public documentation', 'verification surfaces', 'sequential'])).toBeDefined()
+    expect(findSemanticUnit(qualify, ['one owner', 'one local seam', 'one mutation pass', 'one decisive check', 'no managed lifecycle coordination', 'no ready successor'])).toBeDefined()
+    expect(findSemanticUnit(qualify, ['fails any one', 'non-small', 'middle case'])).toBeDefined()
+    expect(findSemanticUnit(entry, ['Core', 'solely own', 'initial Manage qualification'])).toBeDefined()
+    expect(findSemanticUnit(entry, ['Manage', 'never repeats', 'direct-versus-managed eligibility'])).toBeDefined()
+    expect(findSemanticUnit(entry, [/validate only handoff completeness/i, 'owner and topology', 'authority envelope', 'owned paths', 'qualification evidence'])).toBeDefined()
+    expect(findSemanticUnit(entry, ['continue the selected managed goal', 'without repeating qualification'])).toBeDefined()
     expect(body).not.toContain('## Qualify before mutation')
     expect(body).not.toContain('Decline Manage without any mutation')
   })
 
   it('classifies the execution frontier in fail-closed order before dispatch or mutation', () => {
     const { body } = readSkill(product)
-    const frontier = body.indexOf('## Resolve the execution frontier')
-    const outOfGoal = body.indexOf('`out-of-goal` →', frontier)
-    const ownerDecision = body.indexOf('`owner-decision` →', outOfGoal)
-    const fog = body.indexOf('`fog` →', ownerDecision)
-    const evidenceNeeded = body.indexOf('`evidence-needed` →', fog)
-    const readyToExecute = body.indexOf('`ready-to-execute`', evidenceNeeded)
+    const frontier = markdownSection(body, 'Resolve the execution frontier')
 
-    expect(frontier).toBeGreaterThanOrEqual(0)
-    expect(outOfGoal).toBeGreaterThan(frontier)
-    expect(ownerDecision).toBeGreaterThan(outOfGoal)
-    expect(fog).toBeGreaterThan(ownerDecision)
-    expect(evidenceNeeded).toBeGreaterThan(fog)
-    expect(readyToExecute).toBeGreaterThan(evidenceNeeded)
-    expect(body).toContain('`out-of-goal` stops for topology or authority resolution')
-    expect(body).toContain('`owner-decision` stops with the single highest-impact question for its `DecisionOwner`')
-    expect(body).toContain('`fog` is not yet a precise question')
-    expect(body).toContain('Create no synthetic Task, Change, Blocker, or worker dispatch')
-    expect(body).toContain('`evidence-needed` is one precise factual question')
-    expect(body).toContain('take the applicable stop instead of selecting Fix')
-    expect(body).toContain('canonical `FrontierDisposition` is exactly `out-of-goal`, `owner-decision`, `fog`, `evidence-needed`, or `executable`')
-    expect(body).toContain('public `ready-to-execute` maps only to canonical `executable`')
-    expect(body).toContain('`StopDisposition: return-to-shape`')
-    expect(body).toContain('return `StopDisposition: return-to-shape` to Core')
-    expect(body).toContain('Only Core may route authorized Shape')
+    expect(orderedMarkers(frontier, ['`out-of-goal` →', '`owner-decision` →', '`fog` →', '`evidence-needed` →', '`ready-to-execute`'])).toBe(true)
+    expect(canonicalEnum(frontier, 'FrontierDisposition')).toEqual(['out-of-goal', 'owner-decision', 'fog', 'evidence-needed', 'executable'])
+    expect(findSemanticUnit(frontier, ['`out-of-goal`', 'topology or authority resolution'])).toBeDefined()
+    expect(findSemanticUnit(frontier, ['`owner-decision`', 'highest-impact question', '`DecisionOwner`'])).toBeDefined()
+    expect(findSemanticUnit(frontier, ['`fog`', 'not yet a precise question', 'no synthetic Task', 'worker dispatch'])).toBeDefined()
+    expect(findSemanticUnit(frontier, ['`evidence-needed`', 'precise factual question'])).toBeDefined()
+    expect(findSemanticUnit(frontier, ['applicable stop', 'instead of selecting Fix'])).toBeDefined()
+    expect(findSemanticUnit(frontier, ['`ready-to-execute`', 'canonical `executable`'])).toBeDefined()
+    expect(findSemanticUnit(frontier, ['`StopDisposition: return-to-shape`', 'Core', 'Only Core', 'Shape'])).toBeDefined()
     expect(body).not.toContain('return `StopDisposition: return-to-shape` to Core/Shape')
-    expect(body).toContain('halt the current managed control phase')
-    expect(body).toContain('Do not continue an independently ready slice, dispatch another worker, or mutate product state')
+    expect(findSemanticUnit(frontier, ['halt the current managed control phase', 'Do not continue', 'dispatch another worker', 'mutate product state'])).toBeDefined()
     expect(body).not.toContain('unless an independently ready owned slice can continue')
-    expect(body).toContain('Resume only after Shape confirms a ready owner and Core freshly rederives the route')
+    expect(findSemanticUnit(frontier, ['Resume only after', 'Shape', 'ready owner', 'Core', 'rederives the route'])).toBeDefined()
   })
 
   it('defines one complete token-independent WorkerEnvelope and exact lane receipt schemas', () => {
     const { body } = readSkill(product)
-    const envelopeParagraph = body.match(/Every lane receives one transient `WorkerEnvelope` with these common fields: ([^\n]+)\n/)?.[1]
-    const commonReceiptParagraph = body.match(/Every receipt contains these common fields: ([^\n]+)\n/)?.[1]
-    const inlineValues = (source: string | undefined) => [...(source ?? '').matchAll(/`([^`]+)`/g)].map(match => match[1])
+    const lanes = markdownSection(body, 'Resolve the execution frontier')
 
-    expect(inlineValues(envelopeParagraph)).toEqual([
+    expect(inlineCodeValuesInUnit(lanes, ['Every lane', '`WorkerEnvelope`', 'common fields'])).toEqual([
+      'WorkerEnvelope',
       'WorkRef',
       'lane',
       'objective',
@@ -447,7 +424,7 @@ describe('rsp-manage product Skill', () => {
       'localized control-narration rule',
       'stop conditions',
     ])
-    expect(inlineValues(commonReceiptParagraph)).toEqual([
+    expect(inlineCodeValuesInUnit(lanes, ['Every receipt', 'common fields'])).toEqual([
       'WorkRef',
       'lane objective',
       'effective authority',
@@ -455,39 +432,22 @@ describe('rsp-manage product Skill', () => {
       'decisive evidence',
       'stop boundary',
     ])
-    expect(body).toContain('Diagnose reuses `rsp-diagnose` and remains read-only')
-    expect(body).toContain('an explicit no-cause result')
-    expect(body).toContain('Inspect is a private Manager-only read-only lane')
-    expect(body).toContain('Fix reuses `rsp-implement`')
-    expect(body).toContain('is the sole product writer at its mutation boundary')
-    expect(body).toContain('Verify is a private Manager-only read-only lane')
-    expect(body).toContain('runs only for the Change-declared risk or after a failed correction')
-    expect(body).toContain('Fixed-scope review remains owned by `rsp-review`')
-    expect(body).toContain('human-facing receipt prose in the response language')
-    expect(body).toContain('applies equally to private Inspect and Verify lanes that have no standalone Skill')
-    expect(body).toContain('localize the primary result explanation and retain the exact result only as a secondary parenthesized or code-formatted token')
-    expect(body.match(/Diagnose[\s\S]*?Its result is exactly one of ([^;]+);/)?.[1]?.match(/`[^`]+`/g)).toEqual([
-      '`confirmed-same-scope`',
-      '`unresolved-same-scope`',
-      '`boundary-changed`',
+    expect(findSemanticUnit(lanes, ['Diagnose', '`rsp-diagnose`', 'read-only', 'no-cause result'])).toBeDefined()
+    expect(findSemanticUnit(lanes, ['Inspect', 'private Manager-only', 'read-only lane'])).toBeDefined()
+    expect(findSemanticUnit(lanes, ['Fix', '`rsp-implement`', 'sole product writer'])).toBeDefined()
+    expect(findSemanticUnit(lanes, ['Verify', 'private Manager-only', 'read-only lane', 'Change-declared risk', 'failed correction'])).toBeDefined()
+    expect(findSemanticUnit(lanes, ['Fixed-scope review', '`rsp-review`'])).toBeDefined()
+    expect(findSemanticUnit(lanes, ['human-facing receipt prose', 'response language', 'Inspect', 'Verify'])).toBeDefined()
+    expect(findSemanticUnit(lanes, ['localize', 'primary result explanation', 'exact result', 'secondary'])).toBeDefined()
+    expect(inlineCodeValues(markdownListItem(lanes, 'Diagnose'))).toEqual([
+      'rsp-diagnose',
+      'confirmed-same-scope',
+      'unresolved-same-scope',
+      'boundary-changed',
     ])
-    expect(body.match(/Inspect[\s\S]*?Its result is exactly one of ([^;]+);/)?.[1]?.match(/`[^`]+`/g)).toEqual([
-      '`confirmed-same-scope`',
-      '`unresolved-same-scope`',
-      '`boundary-changed`',
-    ])
-    expect(body.match(/Fix reuses[\s\S]*?Its result is exactly one of ([^;]+);/)?.[1]?.match(/`[^`]+`/g)).toEqual([
-      '`changed-same-scope`',
-      '`no-change`',
-      '`boundary-changed`',
-    ])
-    expect(body.match(/Verify is[\s\S]*?Its result is exactly one of ([^;]+);/)?.[1]?.match(/`[^`]+`/g)).toEqual([
-      '`pass`',
-      '`failed-with-new-evidence`',
-      '`failed-without-new-evidence`',
-      '`unavailable`',
-      '`boundary-changed`',
-    ])
+    expect(inlineCodeValues(markdownListItem(lanes, 'Inspect'))).toEqual(['confirmed-same-scope', 'unresolved-same-scope', 'boundary-changed'])
+    expect(inlineCodeValues(markdownListItem(lanes, 'Fix'))).toEqual(['rsp-implement', 'changed-same-scope', 'no-change', 'boundary-changed', 'worker identity'])
+    expect(inlineCodeValues(markdownListItem(lanes, 'Verify'))).toEqual(['pass', 'failed-with-new-evidence', 'failed-without-new-evidence', 'unavailable', 'boundary-changed', 'worker identity', 'independence: established | unavailable', 'rsp-review'])
     expect(body).not.toMatch(/token\s+(?:budget|limit)|(?:budget|limit)[^\n.]*token/i)
     expect(body).not.toMatch(/token[^\n.]*rout|rout[^\n.]*token/i)
     expect(existsSync(join(root, 'skills', 'rsp-inspect'))).toBe(false)
@@ -530,7 +490,7 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('remaining dispatch capacity still covers the retry and every then-required Verify dispatch')
     expect(body).toContain('can still produce decisive acceptance evidence')
     expect(body).toContain('A failure without new evidence, or a retry that cannot still be decisively verified, stops dispatch')
-    expect(body).toContain('Managed review remains at most three Resolve Findings passes per Change with separate accounting')
+    expect(reviewConvergence).toContain('Allow at most three Resolve Findings passes per Change')
   })
 
   it('establishes independent Verify by worker identity and downgrades truthfully', () => {
@@ -545,29 +505,42 @@ describe('rsp-manage product Skill', () => {
 
   it('keeps missing required worker evidence incomplete and outside closeout', () => {
     const { body } = readSkill(product)
+    const lanes = markdownSection(body, 'Resolve the execution frontier')
+    const boundaries = markdownSection(body, 'Preserve boundaries')
 
-    expect(body).toContain('`AcceptanceDisposition` independently from execution')
-    expect(body).toContain('exactly `incomplete`, `evidence-complete`, or `review-clean`')
-    expect(body).toContain('A required worker that was not created, did not return a valid required receipt, returned `unavailable` or `boundary-changed`')
-    expect(body).toContain('keeps acceptance `incomplete`')
-    expect(body).toContain('Implementation verification, fixed-scope change review, and the durable writeback decision are separate gates')
-    expect(body).toContain('Accepted required receipts plus fresh declared verification may derive only `evidence-complete`')
-    expect(body).toContain('this verification is implementation verification')
-    expect(body).toContain('Only a clean fixed-scope change review may then derive managed `review-clean`')
-    expect(body).toContain('An execution receipt never derives `review-clean` directly')
-    expect(body).toContain('a verification receipt does not derive it either')
-    expect(body).toContain('The later durable writeback decision cannot substitute for fixed-scope change review')
-    expect(body).toContain('When dispatch cannot satisfy a required worker obligation, apply the AcceptanceDisposition rule above')
-    expect(body).toContain('return `StopDisposition: capability-unavailable`, keep acceptance `incomplete`, and stop')
-    expect(body).toContain('Absence of a dispatch event or receipt is never success')
-    expect(body).toContain('cannot be replaced by the controller claiming the worker\'s result')
+    expect(canonicalEnum(lanes, 'AcceptanceDisposition')).toEqual(['incomplete', 'evidence-complete', 'review-clean'])
+    expect(findSemanticUnit(lanes, ['required worker', 'not created', 'valid required receipt', '`unavailable`', '`boundary-changed`', '`incomplete`'])).toBeDefined()
+    expect(findSemanticUnit(lanes, ['Implementation verification', 'fixed-scope change review', 'durable writeback decision', 'separate gates'])).toBeDefined()
+    expect(findSemanticUnit(lanes, ['Accepted required receipts', 'fresh declared verification', '`evidence-complete`', 'implementation verification'])).toBeDefined()
+    expect(findSemanticUnit(lanes, ['clean fixed-scope change review', '`review-clean`'])).toBeDefined()
+    expect(findSemanticUnit(lanes, ['execution receipt', 'verification receipt', 'never derives', '`review-clean`'])).toBeDefined()
+    expect(findSemanticUnit(lanes, ['durable writeback decision', 'cannot substitute', 'fixed-scope change review'])).toBeDefined()
+    expect(findSemanticUnit(body, ['required worker obligation', '`StopDisposition: capability-unavailable`', '`incomplete`', 'stop'])).toBeDefined()
+    expect(findSemanticUnit(body, ['Absence of a dispatch event or receipt', 'never success', 'controller claiming'])).toBeDefined()
 
-    expect(body).toContain('`CloseoutEligibility` independently')
-    expect(body).toContain('exactly `not-eligible`, `lifecycle-ready`, or `local-commit-ready`')
-    expect(body).toContain('Only `AcceptanceDisposition: review-clean` plus fresh owner, authority, exact diff, and decisive verification evidence can derive a ready value')
-    expect(body).toContain('Any other acceptance state derives `CloseoutEligibility: not-eligible`')
+    expect(canonicalEnum(boundaries, 'CloseoutEligibility')).toEqual(['not-eligible', 'lifecycle-ready', 'local-commit-ready'])
+    expect(findSemanticUnit(boundaries, ['`AcceptanceDisposition: review-clean`', 'fresh owner', 'authority', 'exact diff', 'decisive verification evidence', 'ready value'])).toBeDefined()
+    expect(findSemanticUnit(boundaries, ['Any other acceptance state', '`CloseoutEligibility: not-eligible`'])).toBeDefined()
     expect(body.match(/A required worker that was not created, did not return a valid required receipt, returned `unavailable` or `boundary-changed`/g)).toHaveLength(1)
-    expect(body).toContain('neither archive nor commit runs')
+    expect(findSemanticUnit(boundaries, ['neither archive nor commit runs'])).toBeDefined()
+  })
+
+  it('fails semantic controller contracts when enums or qualification ownership are removed', () => {
+    const { body } = readSkill(product)
+    const lanes = markdownSection(body, 'Resolve the execution frontier')
+    const entry = `${markdownSection(body, 'Selected-goal entry')}\n${markdownSection(body, 'Validate the selected handoff before mutation')}`
+    const withoutReviewClean = lanes.replace(', or `review-clean`', '')
+    const reassignedQualification = entry.replace(
+      'Core and its managed-routing reference solely own initial Manage qualification',
+      'Manage owns initial Manage qualification',
+    )
+    const reassignedFixOwner = lanes
+      .replace('and is the sole product writer at its mutation boundary', 'at its mutation boundary')
+      .replace('Verify is a private Manager-only read-only lane', 'Verify is the sole product writer and a private Manager-only read-only lane')
+
+    expect(canonicalEnum(withoutReviewClean, 'AcceptanceDisposition')).not.toEqual(['incomplete', 'evidence-complete', 'review-clean'])
+    expect(findSemanticUnit(reassignedQualification, ['Core', 'solely own', 'initial Manage qualification'])).toBeUndefined()
+    expect(findSemanticUnit(reassignedFixOwner, ['Fix', '`rsp-implement`', 'sole product writer'])).toBeUndefined()
   })
 
   it('revalidates selected-goal evidence and keeps all controller execution state transient', () => {
@@ -602,15 +575,13 @@ describe('rsp-manage product Skill', () => {
   })
 
   it('applies bounded closeout presets without inferring remote authority', () => {
-    const { body } = readSkill(product)
-
-    expect(body).toContain('`manual` grants neither automatic archive nor commit')
-    expect(body).toContain('`lifecycle` grants lifecycle closeout after Manage-owned clean fixed-scope change review and a complete durable writeback decision but no Git action')
-    expect(body).toContain('`local` automatically grants lifecycle closeout')
+    expect(closeout).toContain('`manual` grants neither automatic archive nor commit')
+    expect(closeout).toContain('`lifecycle` grants lifecycle closeout after Manage-owned clean fixed-scope change review and a complete durable writeback decision but no Git action')
+    expect(closeout).toContain('`local` automatically grants lifecycle closeout')
     expect(managedRouting).toContain('Missing configuration preserves `explicit` activation with `local` closeout compatibility')
     expect(managedRouting).toContain('Invalid configuration fails closed as `explicit` plus `manual`')
-    expect(body).toContain('Push is opt-in only when user explicitly mentions push')
-    expect(body).toContain('Never force-push')
+    expect(closeout).toContain('Push is opt-in only when user explicitly mentions push')
+    expect(closeout).toContain('Never force-push')
   })
 
   it('keeps closeout presets dormant until the selected qualified handoff remains valid', () => {
@@ -626,7 +597,7 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('Closeout requires a Core-selected and qualified handoff that remains valid under current evidence')
     expect(body).toContain('For declined, unavailable, unselected, incomplete, or drifted handoffs, every `manage.closeout` preset is dormant')
     expect(body).toContain('Earlier qualification does not carry forward across a new continuation')
-    expect(body).toContain('Valid selected handoff only: effective `manage.closeout` is an automatic grant ceiling')
+    expect(closeout).toContain('Valid selected handoff only: effective `manage.closeout` is an automatic grant ceiling')
   })
 
   it('bounds authority reads, dispatch, correction, and verification', () => {
@@ -658,18 +629,16 @@ describe('rsp-manage product Skill', () => {
   })
 
   it('converges managed review separately without redundant user continuation', () => {
-    const { body } = readSkill(product)
-
-    expect(body).toContain('## Converge managed review')
-    expect(body).toContain('without asking the user to continue')
-    expect(body).toContain('Resolve Findings never self-loops')
-    expect(body).toContain('at most three Resolve Findings passes per Change')
-    expect(body).toContain('separate from the worker retry limit')
-    expect(body).toContain('same Finding remains after two completed corrections')
-    expect(body).toContain('`correction-needed`, not an external blocker')
-    expect(body).toContain('additional real-host, provider, or network run outside existing verification authority')
-    expect(body).toContain('failed or unavailable decisive verification')
-    expect(body).toContain('Keep counts and correction chronology transient')
+    expect(reviewConvergence).toContain('# Managed review convergence')
+    expect(reviewConvergence).toContain('without asking the user to continue')
+    expect(reviewConvergence).toContain('Resolve Findings never self-loops')
+    expect(reviewConvergence).toContain('at most three Resolve Findings passes per Change')
+    expect(reviewConvergence).toContain('separate from the worker retry limit')
+    expect(reviewConvergence).toContain('same Finding remains after two completed corrections')
+    expect(reviewConvergence).toContain('`correction-needed`, not an external blocker')
+    expect(reviewConvergence).toContain('additional real-host, provider, or network run outside existing verification authority')
+    expect(reviewConvergence).toContain('failed or unavailable decisive verification')
+    expect(reviewConvergence).toContain('Keep counts and correction chronology transient')
   })
 
   it('preserves child owners and follows derived Group waves', () => {
@@ -1244,8 +1213,8 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('out of Changes, Group Briefs, Specs, Decision Records')
     expect(body).toContain('Changes retain converged requirements')
     expect(body).toContain('Briefs retain shared completion without copied child state')
-    expect(body).toContain('give `rsp-commit` the WorkOwner, paths, evidence, lifecycle state, and authority')
-    expect(body).toContain('routes exactly once to `rsp-commit`')
+    expect(closeout).toContain('give `rsp-commit` the WorkOwner, paths, evidence, lifecycle state, and authority')
+    expect(closeout).toContain('routes exactly once to `rsp-commit`')
   })
 
   it('keeps process chronology transient and returns only outcome evidence', () => {
@@ -1254,65 +1223,56 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('Keep dispatch chronology out of Changes, Group Briefs, Specs, Decision Records')
     expect(body).toContain('return the incomplete continuation in this order: `WorkRef, Authority, Current state, Changed artifacts, Fresh verification, Blockers, and Next action`')
     expect(body).toContain('Do not expose retry chronology')
-    expect(body).toContain('Archive grants no Git or publication authority')
+    expect(closeout).toContain('Archive grants no Git or publication authority')
   })
 
   it('closes an allowed lifecycle even when commit is denied', () => {
-    const { body } = readSkill(product)
-
-    expect(body).toContain('`lifecycle` grants lifecycle closeout after Manage-owned clean fixed-scope change review and a complete durable writeback decision but no Git action')
-    expect(body).toContain('When granted, close lifecycle before any commit')
-    expect(body).toContain('after Manage-owned clean fixed-scope change review and the durable writeback decision run `rsp archive <change-work-ref>`')
-    expect(body).toContain('inspect the complete lifecycle diff')
-    expect(body).toContain('Decide commit eligibility separately')
-    expect(body).toContain('narrowed by nearer restrictions and host enforcement')
+    expect(closeout).toContain('`lifecycle` grants lifecycle closeout after Manage-owned clean fixed-scope change review and a complete durable writeback decision but no Git action')
+    expect(closeout).toContain('When granted, close lifecycle before any commit')
+    expect(closeout).toContain('after Manage-owned clean fixed-scope change review and the durable writeback decision run `rsp archive <change-work-ref>`')
+    expect(closeout).toContain('inspect the complete lifecycle diff')
+    expect(closeout).toContain('Decide commit eligibility separately')
+    expect(closeout).toContain('narrowed by nearer restrictions and host enforcement')
   })
 
   it('closes a terminal final owner while keeping small work uncommitted', () => {
-    const { body } = readSkill(product)
-
-    expect(body).toContain('This includes terminal owners')
-    expect(body).toContain('Terminal small owners default to no commit')
-    expect(body).toContain('An ambiguous, mixed, stale, or denied boundary stops without staging')
+    expect(closeout).toContain('This includes terminal owners')
+    expect(closeout).toContain('Terminal small owners default to no commit')
+    expect(closeout).toContain('An ambiguous, mixed, stale, or denied boundary stops without staging')
   })
 
   it('closes a terminal shallow Group through child and brief commands before commit', () => {
-    const { body } = readSkill(product)
-    const archiveChild = body.indexOf('review, decide durable writeback, and archive each child independently')
-    const rederive = body.indexOf('rederive completion')
-    const closeGroup = body.indexOf('run `rsp group close <group>`')
-    const commitDecision = body.indexOf('Decide commit eligibility separately')
+    const archiveChild = closeout.indexOf('review, decide durable writeback, and archive each child independently')
+    const rederive = closeout.indexOf('rederive completion')
+    const closeGroup = closeout.indexOf('run `rsp group close <group>`')
+    const commitDecision = closeout.indexOf('Decide commit eligibility separately')
 
-    expect(body).toContain('For shallow Group')
+    expect(closeout).toContain('For shallow Group')
     expect(archiveChild).toBeGreaterThanOrEqual(0)
     expect(rederive).toBeGreaterThan(archiveChild)
-    expect(body).toContain('all children plus Group gate pass')
+    expect(closeout).toContain('all children plus Group gate pass')
     expect(closeGroup).toBeGreaterThan(rederive)
-    expect(body).toContain('inspect the complete lifecycle diff after each mutation')
+    expect(closeout).toContain('inspect the complete lifecycle diff after each mutation')
     expect(commitDecision).toBeGreaterThan(closeGroup)
   })
 
   it('routes a qualified local terminal non-small boundary exactly once to Commit', () => {
-    const { body } = readSkill(product)
-
-    expect(body).toContain('a qualified `local` terminal non-small Change or Group')
-    expect(body).toContain('routes exactly once to `rsp-commit`')
-    expect(body).toContain('do not require the user to repeat `commit`')
-    expect(body).toContain('An ambiguous, mixed, stale, or denied boundary stops without staging')
-    expect(body).toContain('Under `local` or explicit commit authority, downstream work may justify one recovery checkpoint')
-    expect(body).toContain('then derive status')
-    expect(body).toContain('Return to Core before a separate release operation and dedicated release commit')
+    expect(closeout).toContain('a qualified `local` terminal non-small Change or Group')
+    expect(closeout).toContain('routes exactly once to `rsp-commit`')
+    expect(closeout).toContain('do not require the user to repeat `commit`')
+    expect(closeout).toContain('An ambiguous, mixed, stale, or denied boundary stops without staging')
+    expect(closeout).toContain('Under `local` or explicit commit authority, downstream work may justify one recovery checkpoint')
+    expect(closeout).toContain('then derive status')
+    expect(closeout).toContain('Return to Core before a separate release operation and dedicated release commit')
   })
 
   it('keeps push explicit, milestone-bound, non-force, and failure-safe', () => {
-    const { body } = readSkill(product)
-
-    expect(body).toContain('Push is opt-in only when user explicitly mentions push')
-    expect(body).toContain('remote, branch, and Group or goal milestone are unambiguous or accepted')
-    expect(body).toContain('required remote CI, recovery, or collaboration')
-    expect(body).toContain('Never force-push')
-    expect(body).toContain('infer push from commit authority')
-    expect(body).toContain('protected or ambiguous branch')
-    expect(body).toContain('Failure preserves local commits and stops at remote boundary')
+    expect(closeout).toContain('Push is opt-in only when user explicitly mentions push')
+    expect(closeout).toContain('remote, branch, and Group or goal milestone are unambiguous or accepted')
+    expect(closeout).toContain('required remote CI, recovery, or collaboration')
+    expect(closeout).toContain('Never force-push')
+    expect(closeout).toContain('infer push from commit authority')
+    expect(closeout).toContain('protected or ambiguous branch')
+    expect(closeout).toContain('Failure preserves local commits and stops at remote boundary')
   })
 })

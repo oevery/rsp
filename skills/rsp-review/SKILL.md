@@ -4,7 +4,7 @@ description: Review an RSP-tracked code, document, or mixed change against a fix
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.22.3"
+  version: "2026.08.05.1"
 ---
 
 # RSP Review
@@ -34,32 +34,9 @@ Determine applicability only from artifacts inside the fixed comparison scope. A
 
 Inspect in a bounded order: fixed status/diff, selected authority, then only the smallest direct behavior chain and tests needed to resolve a concrete question. Stop when every applicable pipeline can be judged. Do not search unrelated files or broaden authority merely to fill Coverage or Findings.
 
-## Review Code
+Read [Code review](references/code-review.md) only when the fixed reviewed artifacts make the Code pipeline applicable.
 
-Check in this order:
-
-1. Safety and correctness: reachable bugs, data loss, security violations, invalid state transitions, broken contracts, unsafe failures, and regressions.
-2. Change and Spec fidelity: observable behavior against explicit intent and stable facts.
-3. Project standards: only rules established by nearest instructions or authoritative local conventions.
-4. Production reachability — hard gate before completing a seam-dependent Finding: when a Finding or suggested correction depends on an adapter, wrapper, validator, normalizer, or similar seam, name the direct production caller, compare its actual callee with that seam, and verify that the changed production consumer actually reaches that seam. Put the comparison in Evidence or Coverage. If the live path bypasses the seam, report the bypass and do not present an isolated seam fix as sufficient.
-5. Regression evidence — hard gate before `clean`: for every changed Code artifact, compare public return and failure behavior at the comparison point with the reviewed diff. Changing failure delivery between throw/rejection, sentinel values, `null`, status codes, or result objects is always a failure-contract change, even when implementation matches the selected Change. Without a focused test or other explicit verification evidence, emit a Finding and return `issues_found`. Absence of a new test is not actionable by itself: apply the simple deterministic-correction exception when the public behavior shape is preserved and no risky branch, state transition, concurrency, persistence, security behavior, or failure delivery changes, even though the corrected value differs. The exception never applies to a failure-contract change.
-6. Simplicity: unnecessary abstraction, duplication, indirection, dependency, or scope expansion with a concrete smaller alternative; never trade away required behavior.
-
-Anchor each Finding to changed lines or the smallest behavior chain. State a realistic trigger and impact. Do not report formatting, naming, generated output, taste, or hypothetical cleanup without authority or demonstrated downside.
-
-## Review Documents
-
-Classify each document by its semantic role: requirement/Change, implementation plan, Spec, Decision Record/ADR, or explanatory/user documentation. Then check:
-
-1. Authority and traceability of claims and decisions.
-2. Internal and cross-artifact coherence, including current implementation facts.
-3. Completeness and ambiguity: undefined terms, unverifiable completion, and choices disguised as decisions. Report an unresolved product, operational, rollback, migration, or completion choice as an ambiguity Finding when no authority resolves it; ask for owner judgment and mark a dependent result blocked only when the choice prevents coherent review.
-4. Feasibility of named paths, interfaces, sequencing, safety, migration, and executable verification, at the detail appropriate to the document role.
-5. Scope and concision: scope leakage, duplicate authority, unrelated requirements, or verbosity hiding a contract.
-
-Before the Document verdict, enumerate every unresolved choice in each changed document. Any unresolved product, operational, rollback, migration, ownership, or completion choice must either have resolving authority or produce an ambiguity Finding; do not stop after finding other defects.
-
-Anchor Findings to the smallest heading or claim. Do not apply code-style or test-coverage rules to semantic documents, auto-fix meaning, or rewrite prose for taste.
+Read [Document review](references/document-review.md) only when the fixed reviewed artifacts make the Document pipeline applicable. A mixed review reads both references; authority-only artifacts never trigger either reference by themselves.
 
 ## Report
 

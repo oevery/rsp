@@ -1,5 +1,7 @@
 id: drift-safe-resume
-skill_variant: product
+sources:
+  - skills/rsp-manage/SKILL.md
+  - skills/rsp-manage/references/interruption-recovery.md
 evidence:
   - A paused managed run is resumed after the worktree or evidence may have changed.
 required_contract:

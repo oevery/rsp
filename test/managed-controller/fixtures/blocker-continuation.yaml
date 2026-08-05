@@ -1,5 +1,7 @@
 id: blocker-continuation
-skill_variant: product
+sources:
+  - skills/rsp-manage/SKILL.md
+  - skills/rsp-manage/references/interruption-recovery.md
 evidence:
   - An environment or verification blocker stops dispatch while accepted work remains.
 required_contract:

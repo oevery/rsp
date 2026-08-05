@@ -1,5 +1,7 @@
 id: explicit-pause
-skill_variant: product
+sources:
+  - skills/rsp-manage/SKILL.md
+  - skills/rsp-manage/references/interruption-recovery.md
 evidence:
   - The user explicitly pauses a managed run while a worker may still be active.
 required_contract:

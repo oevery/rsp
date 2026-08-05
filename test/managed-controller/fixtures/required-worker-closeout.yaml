@@ -1,6 +1,7 @@
 id: required-worker-closeout
 sources:
   - skills/rsp-manage/SKILL.md
+  - skills/rsp-manage/references/closeout.md
 evidence:
   - Required implementation and independent verification obligations require accepted worker receipts.
   - Acceptance owns the complete required-worker failure set; dispatch applies that rule to capability-unavailable.

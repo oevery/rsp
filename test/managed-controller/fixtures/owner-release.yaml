@@ -1,5 +1,7 @@
 id: owner-release
-skill_variant: product
+sources:
+  - skills/rsp-manage/SKILL.md
+  - skills/rsp-manage/references/interruption-recovery.md
 evidence:
   - The user explicitly asks to release or unfocus the paused owner.
 required_contract:

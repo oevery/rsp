@@ -4,7 +4,7 @@ description: Coordinate one eligible long-running, recovery, or multi-slice RSP 
 license: MIT
 metadata:
   author: oevery
-  version: "2026.08.05.1"
+  version: "2026.08.05.2"
 ---
 
 # RSP Manage
@@ -61,7 +61,7 @@ Keep frontier classification, lane choice, envelopes, receipts, dispatch and ret
 
 Total worker dispatch remains at most four. Before starting an optional Diagnose or Inspect dispatch, derive the currently known required remaining worker obligations: count one Fix when accepted mutation is still required and count one Verify when the declared acceptance risk or a failed correction still requires worker verification. Start the optional dispatch only when the remaining dispatch capacity covers that dispatch plus every known required obligation; otherwise skip it and preserve the completion path, or stop when no decisive path fits. This is dynamic capacity protection, not a fixed per-lane allocation.
 
-An evidenced failed correction permits at most one corrective retry. Start it only when new evidence makes another correction discriminating, the remaining dispatch capacity still covers the retry and every then-required Verify dispatch, and those remaining resources can still produce decisive acceptance evidence. A failure without new evidence, or a retry that cannot still be decisively verified, stops dispatch. Managed review remains at most three Resolve Findings passes per Change with separate accounting. Missing verification, drift, an authority boundary, or unavailable capability also stops dispatch. Use an explicit manual fallback only when it stays within the same owner and authority; Manager never absorbs an unavailable worker's unauthorized implementation.
+An evidenced failed correction permits at most one corrective retry. Start it only when new evidence makes another correction discriminating, the remaining dispatch capacity still covers the retry and every then-required Verify dispatch, and those remaining resources can still produce decisive acceptance evidence. A failure without new evidence, or a retry that cannot still be decisively verified, stops dispatch. Missing verification, drift, an authority boundary, or unavailable capability also stops dispatch. Use an explicit manual fallback only when it stays within the same owner and authority; Manager never absorbs an unavailable worker's unauthorized implementation.
 
 ## Dispatch owned work
 
@@ -79,17 +79,9 @@ Continue a clear in-scope ready successor while the goal, WorkRef topology, rout
 
 Stop when discovery changes behavior, acceptance, interfaces, scope, mutation, or external authority. Retry only evidenced corrections. During recovery, reread authority and evidence. If incomplete archived child acceptance belongs to a closed Group, require separate explicit lifecycle authority for `rsp group reopen <group> --reason <text>` before `rsp reopen <group>/<child>`; restore neither children nor dependents implicitly. Never create controller status or parallel lifecycle state.
 
-## Handle interruption
+Read [interruption and recovery](references/interruption-recovery.md) only for a progress or status inquiry, explicit pause or release, an environment or verification stop, or resume from continuation pointers.
 
-Treat a progress or status inquiry as an update, not a stop signal: report current evidence and continuing intent, then continue authorized work after the update while authority, verification, and blockers still permit it. For an explicit pause, interrupt active workers and confirm they have stopped before acknowledging the pause, keep the focused WorkRef selected, and do not mutate again until resume. Only an explicit release or unfocus request clears owner selection; ordinary pause and blockers preserve focus.
-
-When an environment or verification boundary stops dispatch, preserve the focused owner. Update the Change only with durable blocker and verification facts, then return the incomplete continuation in this order: `WorkRef, Authority, Current state, Changed artifacts, Fresh verification, Blockers, and Next action`. Treat continuation prose only as pointers. On resume, reread the current authority, status, focused owner, worktree diff, blockers, and decisive evidence; mark stale or unverifiable claims pending and revalidate the selected handoff before mutation or worker dispatch. Never persist a paused state, worker registry, controller ledger, or execution chronology.
-
-## Converge managed review
-
-After fixed-scope re-review, Manage correlates the report with the selected Change, original authority, fresh verification, and transient pass count. An `accepted` Finding starts another Resolve Findings pass without asking the user to continue only when it remains inside the original behavior, acceptance, paths, mutation authority, and declared verification scope. Resolve Findings never self-loops.
-
-Allow at most three Resolve Findings passes per Change, separate from the worker retry limit. Stop when the same Finding remains after two completed corrections. Also stop for `needs-clarification`; a material product, interface, or scope change; new mutation or external authority; an additional real-host, provider, or network run outside existing verification authority; or failed or unavailable decisive verification. Return one owner input. Treat an eligible in-scope Finding as `correction-needed`, not an external blocker. Keep counts and correction chronology transient.
+Read [managed review convergence](references/review-convergence.md) only after a fixed-scope re-review returns Findings or when an accepted in-scope Finding may require another bounded Resolve Findings pass.
 
 ## Preserve boundaries
 
@@ -99,12 +91,6 @@ Closeout requires a Core-selected and qualified handoff that remains valid under
 
 Derive `CloseoutEligibility` independently; it is exactly `not-eligible`, `lifecycle-ready`, or `local-commit-ready`. Only `AcceptanceDisposition: review-clean` plus fresh owner, authority, exact diff, and decisive verification evidence can derive a ready value. Any other acceptance state derives `CloseoutEligibility: not-eligible`; neither archive nor commit runs.
 
-Valid selected handoff only: effective `manage.closeout` is an automatic grant ceiling narrowed by nearer restrictions and host enforcement. `manual` grants neither automatic archive nor commit. `lifecycle` grants lifecycle closeout after Manage-owned clean fixed-scope change review and a complete durable writeback decision but no Git action. `local` automatically grants lifecycle closeout and, for one eligible terminal non-small clean exact owned boundary, exactly one local Commit route without another user request. Separately justified recovery checkpoints remain possible within the same ceiling. Explicit current-turn authority may allow a local action not automated by the preset; denial wins.
-
-When granted, close lifecycle before any commit. Change: after Manage-owned clean fixed-scope change review and the durable writeback decision run `rsp archive <change-work-ref>` and inspect the complete lifecycle diff. For shallow Group: review, decide durable writeback, and archive each child independently; rederive completion, then when all children plus Group gate pass run `rsp group close <group>`; inspect the complete lifecycle diff after each mutation. This includes terminal owners. Require proven review/clean-boundaries.
-
-Decide commit eligibility separately. Under `local` or explicit commit authority, downstream work may justify one recovery checkpoint: give `rsp-commit` the WorkOwner, paths, evidence, lifecycle state, and authority, then derive status from its receipt. Terminal small owners default to no commit. After lifecycle closeout, a qualified `local` terminal non-small Change or Group with known owner and paths, fresh decisive verification, clean exact boundary, and no nearer denial routes exactly once to `rsp-commit`; do not require the user to repeat `commit`. An ambiguous, mixed, stale, or denied boundary stops without staging. Apply the same owner envelope to explicitly authorized Group/release commits. If Commit is unavailable, return `StopDisposition: capability-unavailable` to Core for its bounded manual Commit fallback; Manage does not stage or commit. Archive grants no Git or publication authority.
-
-Push is opt-in only when user explicitly mentions push and remote, branch, and Group or goal milestone are unambiguous or accepted. Push there, or earlier only for required remote CI, recovery, or collaboration. Never force-push, infer push from commit authority, or push a protected or ambiguous branch. Failure preserves local commits and stops at remote boundary. Return to Core before a separate release operation and dedicated release commit.
+Read [lifecycle and delivery closeout](references/closeout.md) only after `CloseoutEligibility` becomes ready, when an explicitly authorized recovery checkpoint is being considered, or when the user explicitly requests push. The reference owns preset application, lifecycle commands, Commit handoff, and remote delivery constraints; this Skill retains the fail-safe above before loading it.
 
 Stop on unavailable dependencies, missing authority, failed verification, drift, or limits. When accepted work remains, preserve the focused owner unless explicit release or owner-conflict resolution requires otherwise, then return the incomplete continuation in this order: `WorkRef, Authority, Current state, Changed artifacts, Fresh verification, Blockers, and Next action`. Do not expose retry chronology or claim unobserved completion.

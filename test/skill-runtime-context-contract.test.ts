@@ -3,12 +3,16 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import { findSemanticUnit, markdownHeadings, markdownLinks, markdownSection } from './helpers/markdown-contract'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
 const core = read('skills/rsp/SKILL.md')
 const implement = read('skills/rsp-implement/SKILL.md')
 const manage = read('skills/rsp-manage/SKILL.md')
+const manageInterruption = read('skills/rsp-manage/references/interruption-recovery.md')
+const manageReview = read('skills/rsp-manage/references/review-convergence.md')
+const manageCloseout = read('skills/rsp-manage/references/closeout.md')
 const managed = read('skills/rsp/references/managed-routing.md')
 const release = read('skills/rsp/references/release-operations.md')
 const reopen = read('skills/rsp/references/reopen-recovery.md')
@@ -20,41 +24,54 @@ const hash = (body: string | Uint8Array) => createHash('sha256').update(body).di
 
 describe('skill runtime context composition', () => {
   it('keeps inactive release and reopen procedures behind direct Core references', () => {
-    expect(core).toContain('](references/release-operations.md)')
-    expect(core).toContain('](references/reopen-recovery.md)')
+    expect(markdownLinks(core)).toEqual(expect.arrayContaining([
+      'references/release-operations.md',
+      'references/reopen-recovery.md',
+    ]))
     expect(core).not.toContain('### Release operations')
     expect(core).not.toContain('`rsp reopen <work-ref> --reason <text>` retains the selected archive')
 
-    expect(release).toContain('Load this reference only')
-    expect(release).toContain('Release identity is an owner decision')
-    expect(release).toContain('Load it before requiring a confirmed identity, range, or clean candidate')
-    expect(release).toContain('unclean exact candidate')
-    expect(release).toContain('stops before versioned mutation')
-    expect(release).toContain('credential-free `ready` or `not ready` handoff')
-    expect(reopen).toContain('Load this reference only')
-    expect(reopen).toContain('`rsp reopen <work-ref> --reason <text>`')
-    expect(reopen).toContain('first run `rsp group reopen <group> --reason <text>`')
-    expect(reopen).toContain('grants no Git, release, publication, deployment, or approval authority')
+    expect(findSemanticUnit(release, ['Load this reference only', 'release'])).toBeDefined()
+    expect(findSemanticUnit(release, ['Release identity', 'owner decision'])).toBeDefined()
+    expect(findSemanticUnit(release, ['unconfirmed', 'unclean exact candidate', 'stops before versioned mutation'])).toBeDefined()
+    expect(findSemanticUnit(release, ['credential-free', '`ready`', '`not ready`', 'handoff'])).toBeDefined()
+    expect(findSemanticUnit(reopen, ['Load this reference only', 'archived', 'acceptance'])).toBeDefined()
+    expect(findSemanticUnit(reopen, ['`rsp reopen <work-ref> --reason <text>`'])).toBeDefined()
+    expect(findSemanticUnit(reopen, ['`rsp group reopen <group> --reason <text>`', 'first'])).toBeDefined()
+    expect(findSemanticUnit(reopen, ['grants no Git', 'release', 'publication', 'deployment', 'approval authority'])).toBeDefined()
   })
 
   it('keeps routing preselection separate from selected Manage execution detail', () => {
-    expect(core).toContain('Manage solely owns same-goal revalidation, interruption and resume, review convergence, acceptance, lifecycle closeout, and commit eligibility and orchestration')
-    expect(core).toContain('`rsp-commit` retains exact Git execution')
+    expect(findSemanticUnit(core, ['Manage', 'solely owns', 'same-goal revalidation', 'review convergence', 'lifecycle closeout'])).toBeDefined()
+    expect(findSemanticUnit(core, ['`rsp-commit`', 'exact Git execution'])).toBeDefined()
     expect(core).not.toContain('An explicit pause must stop and confirm active workers before acknowledgement')
-    for (const heading of ['## OWNER PREFLIGHT', '## QUALIFY', '## HANDOFF AND RETURN', '## Dormant closeout fail-safe'])
-      expect(managed).toContain(heading)
-    for (const heading of ['### Interrupt and resume', '## CONVERGE', '## CLOSE'])
-      expect(managed).not.toContain(heading)
+    expect(markdownHeadings(managed, [2])).toEqual([
+      'OWNER PREFLIGHT — Core resolves the owner without execution',
+      'QUALIFY — select or decline Manage',
+      'HANDOFF AND RETURN — bound selected execution',
+      'Dormant closeout fail-safe',
+    ])
+    expect(markdownHeadings(managed)).not.toEqual(expect.arrayContaining(['Interrupt and resume', 'CONVERGE', 'CLOSE']))
     expect(managed).not.toContain('Allow at most three Resolve Findings passes per Change')
     expect(managed).not.toContain('When lifecycle closeout is granted')
-    expect(manage).toContain('Once selected, this Skill solely owns same-goal revalidation, interruption and resume, review convergence, acceptance, lifecycle closeout, and commit eligibility and orchestration')
-    expect(manage).toContain('Exact staging, message construction, local commit execution, and post-commit observation remain owned by `rsp-commit`')
-    expect(manage).toContain('## Handle interruption')
-    expect(manage).toContain('## Converge managed review')
-    expect(manage).toContain('Valid selected handoff only: effective `manage.closeout` is an automatic grant ceiling')
-    expect(manage).toContain('Manage has no pre-owner Intake')
-    expect(manage).toContain('goal, WorkRef, authority envelope, decisive qualification evidence, closeout ceiling, and return boundaries')
-    expect(manage).toContain('Do not return to Core merely to repeat route selection or qualification')
+    expect(findSemanticUnit(manage, ['this Skill', 'solely owns', 'same-goal revalidation', 'review convergence', 'lifecycle closeout'])).toBeDefined()
+    expect(findSemanticUnit(manage, ['staging', 'message construction', 'local commit execution', '`rsp-commit`'])).toBeDefined()
+    expect(markdownLinks(manage)).toEqual(expect.arrayContaining([
+      'references/interruption-recovery.md',
+      'references/review-convergence.md',
+      'references/closeout.md',
+    ]))
+    expect(markdownHeadings(manage, [2])).not.toEqual(expect.arrayContaining(['Handle interruption', 'Converge managed review']))
+    expect(findSemanticUnit(manageInterruption, ['progress or status inquiry', 'explicit pause', 'resume'])).toBeDefined()
+    expect(findSemanticUnit(manageReview, ['fixed-scope re-review', 'Resolve Findings'])).toBeDefined()
+    expect(findSemanticUnit(manageReview, ['three Resolve Findings passes', 'worker retry limit'])).toBeDefined()
+    expect(findSemanticUnit(manageCloseout, ['`manage.closeout`', 'automatic grant ceiling'])).toBeDefined()
+    expect(findSemanticUnit(manageCloseout, ['`rsp-commit`', 'exactly once', 'does not stage or commit'])).toBeDefined()
+    expect(findSemanticUnit(markdownSection(manage, 'Preserve boundaries'), [/Core-selected and qualified handoff/i, '`manage.closeout`', 'dormant'])).toBeDefined()
+    expect(findSemanticUnit(manageCloseout, [/valid selected handoff/i, '`manage.closeout`', 'grant ceiling'])).toBeDefined()
+    expect(findSemanticUnit(manage, ['no pre-owner Intake'])).toBeDefined()
+    expect(findSemanticUnit(manage, ['goal', 'WorkRef', 'authority envelope', 'qualification evidence', 'closeout ceiling', 'return boundaries'])).toBeDefined()
+    expect(findSemanticUnit(manage, ['Do not return to Core', 'repeat route selection or qualification'])).toBeDefined()
   })
 
   it('uses only local numbered arrows for the closed implementation route', () => {
@@ -93,12 +110,11 @@ describe('skill runtime context composition', () => {
   })
 
   it('keeps review-related gates separate across runtime composition', () => {
-    expect(core).toContain('When Tasks and required verification pass without blockers')
-    expect(core).toContain('This is implementation verification')
-    expect(core).toContain('perform the durable writeback decision')
-    expect(core).toContain('A fixed-scope change review remains a separate report-only gate')
-    expect(manage).toContain('Implementation verification, fixed-scope change review, and the durable writeback decision are separate gates')
-    expect(manage).toContain('Only a clean fixed-scope change review may then derive managed `review-clean`')
+    expect(findSemanticUnit(core, ['Tasks', 'required verification', 'without blockers', 'durable writeback decision'])).toBeDefined()
+    expect(findSemanticUnit(core, ['implementation verification'])).toBeDefined()
+    expect(findSemanticUnit(core, ['fixed-scope change review', 'separate report-only gate'])).toBeDefined()
+    expect(findSemanticUnit(manage, ['Implementation verification', 'fixed-scope change review', 'durable writeback decision', 'separate gates'])).toBeDefined()
+    expect(findSemanticUnit(manage, ['clean fixed-scope change review', '`review-clean`'])).toBeDefined()
   })
 
   it('retains exact three-stage inputs and a truthful provider blocker', () => {

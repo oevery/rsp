@@ -1,6 +1,7 @@
 id: transient-execution-bounds
 sources:
   - skills/rsp-manage/SKILL.md
+  - skills/rsp-manage/references/review-convergence.md
   - skills/rsp/references/managed-routing.md
 evidence:
   - Same-goal evidence receipts force internal Manage revalidation before later mutation.
@@ -20,7 +21,7 @@ required_contract:
   - the remaining dispatch capacity still covers the retry and every then-required Verify dispatch
   - those remaining resources can still produce decisive acceptance evidence
   - A failure without new evidence, or a retry that cannot still be decisively verified, stops dispatch
-  - Managed review remains at most three Resolve Findings passes per Change with separate accounting
+  - Allow at most three Resolve Findings passes per Change, separate from the worker retry limit
   - Owner transitions do not reset either limit
   - Keep frontier classification, lane choice, envelopes, receipts, dispatch and retry counts, concurrency reasoning, and resume chronology response-only
   - Create no frontier file, ticket map, ledger, registry, ambient hook, or numeric routing score

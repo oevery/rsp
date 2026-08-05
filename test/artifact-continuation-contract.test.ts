@@ -97,7 +97,7 @@ describe('rsp artifact routing and continuation contract', () => {
 
   it('distinguishes progress, pause, owner release, blockers, and resume at the portable boundary', () => {
     const core = readFileSync(join(root, 'skills', 'rsp', 'SKILL.md'), 'utf8')
-    const manage = readFileSync(join(root, 'skills', 'rsp-manage', 'SKILL.md'), 'utf8')
+    const manage = readSourceClosure('skills/rsp-manage/SKILL.md').join('\n')
     const routing = readFileSync(join(root, 'skills', 'rsp', 'references', 'managed-routing.md'), 'utf8')
     const fallback = readFileSync(join(root, 'rules', 'rsp-rules.md'), 'utf8')
 

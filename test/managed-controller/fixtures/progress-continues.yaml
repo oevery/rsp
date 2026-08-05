@@ -1,5 +1,7 @@
 id: progress-continues
-skill_variant: product
+sources:
+  - skills/rsp-manage/SKILL.md
+  - skills/rsp-manage/references/interruption-recovery.md
 evidence:
   - The user asks for progress while authorized unblocked managed work remains.
 required_contract:
