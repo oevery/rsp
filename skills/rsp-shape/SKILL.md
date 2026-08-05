@@ -4,7 +4,7 @@ description: Shape or rigorously challenge unclear non-trivial work into one exe
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.28.1"
+  version: "2026.08.05.1"
 ---
 
 # RSP Shape
@@ -21,13 +21,13 @@ A request to shape, create, or refine a Change grants artifact authority unless 
 
 Return the request directly to implementation when it is tiny and concrete or the selected Change is already ready. Do not rewrite settled work for style or completeness.
 
-During an explicit managed goal, its original planning-artifact authority remains valid for clear in-scope discovery. Keep a cohesive correction in the current Change; create one Change for an independently closable result, or one shallow Group for at least two such results sharing the goal. Return the ready WorkRef to Core for fresh qualification without another authorization round. Stop on changed behavior, acceptance, public interfaces, goal scope, mutation authority, or external action.
+During an explicit managed goal, its original planning-artifact authority remains valid for clear in-scope discovery. Keep a cohesive correction in the current Change; create one Change for an independently closable result, or one shallow Group for at least two such results sharing the goal. Return the ready WorkOwner to Core for fresh qualification without another authorization round. Stop on changed behavior, acceptance, public interfaces, goal scope, mutation authority, or external action.
 
 ## Resolve material ambiguity
 
 Inspect the repository before asking. Ask only for an owner decision changing behavior, data, interfaces, compatibility, safety, ownership, migration, or acceptance. Write only authorized answers.
 
-Shape owns two transient questioning modes. Ordinary clarification asks one to three related material questions, while explicit deep clarification asks exactly one owner decision per turn. A Core or Manage `StopDisposition: return-to-shape` may enter either mode, but Shape resumes execution only by returning a ready owner to Core for fresh route derivation; it never resumes Manage directly.
+Shape owns two transient questioning modes. Ordinary clarification asks one to three related material questions, while explicit deep clarification asks exactly one DecisionOwner question per turn. A Core or Manage `StopDisposition: return-to-shape` may enter either mode, but Shape resumes execution only by returning a ready WorkOwner to Core for fresh route derivation; it never resumes Manage directly.
 
 Read [deep clarification](references/deep-clarification.md) when the user explicitly asks for rigorous challenge, a high-risk decision remains, or one design question returns. Prefer the installed `rsp-design` capability; otherwise use its fallback.
 
@@ -70,8 +70,8 @@ A Change is ready only when:
 
 After mutation, run the focused RSP check. Return WorkRef, artifacts, validation, and next action or blocker.
 
-When the gate passes, return a `ControlOutcome` for phase Shape with `OwnershipDisposition: ready`, the WorkRef, decisive readiness evidence, next owner `Core`, and a resume rule that Core freshly derives the route.
+When the gate passes, return a `ControlOutcome` for phase Shape with the ready `WorkOwner` WorkRef, decisive readiness evidence, `NextOwner: Core`, and a resume rule that Core freshly derives the route.
 
-When a material owner question prevents readiness, return a non-ready `ControlOutcome` for phase Shape with `StopDisposition: ask-owner`, the decisive evidence, next owner `owner`, the required answer, and a resume rule that reruns Shape from fresh evidence after the answer.
+When a material decision prevents readiness, return a non-ready `ControlOutcome` for phase Shape with `StopDisposition: ask-owner`, the decisive evidence, the `DecisionOwner`, the required answer, and a resume rule that reruns Shape from fresh evidence after the answer.
 
-For any other blocker, return a non-ready Shape `ControlOutcome` with the applicable canonical `StopDisposition`, decisive evidence, next owner, required input, and resume rule. Do not relabel unresolved fog as ready work.
+For any other blocker, return a non-ready Shape `ControlOutcome` with the applicable canonical `StopDisposition`, decisive evidence, `NextOwner`, required input, and resume rule. Do not relabel unresolved fog as ready work.

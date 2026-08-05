@@ -30,9 +30,9 @@ RSP publishes eleven default host-neutral lifecycle Skills for on-demand loading
 
 ## Control outcomes
 
-RSP uses a transient Skill Control Model to explain the current decision without creating a persisted controller state. Core chooses one peer route: a specialist Discipline, bounded direct execution, managed execution, return to Shape, or stop. Direct execution stays limited to one ready owner, one local seam, one mutation pass, one decisive check, no managed lifecycle coordination, and no ready successor; if that boundary expands, Core derives the route again.
+RSP uses a transient Skill Control Model to explain the current decision without creating a persisted controller state. Core chooses one peer route: a specialist Discipline, bounded direct execution, managed execution, return to Shape, or stop. Direct execution stays limited to one ready owner, one local seam, one mutation pass, one decisive check, no managed lifecycle coordination, and no ready successor; if that boundary expands, Core derives the route again. Core may directly mutate only RSP control-plane state; product mutation belongs to Implement or the same bounded manual Discipline action.
 
-Ownership questions, execution uncertainty, and acceptance are separate phases. A stop must say who acts next, what input is required, and whether work returns through Shape or Core, or waits for fresh evidence, environment, verification, or capability. Missing required worker creation or a missing valid receipt is unavailable evidence, never successful completion. Acceptance remains incomplete until every required result is fresh and valid; lifecycle or local-commit eligibility is derived only after clean durable review.
+Work ownership, decision ownership, transient handoff, execution uncertainty, and acceptance are separate concepts. `WorkOwner` means the selected Change or shallow Group, `DecisionOwner` means the human or authority source required for a material decision, and `NextOwner` means the next control or execution capability. A stop must say who acts next, what input is required, and whether work returns through Shape or Core, or waits for fresh evidence, environment, verification, or capability. Missing required worker creation or a missing valid receipt is unavailable evidence, never successful completion. Acceptance remains incomplete until every required result is fresh and valid; lifecycle or local-commit eligibility is derived only after clean durable review.
 
 These outcomes exist only in the current response and host execution context. Changes and Groups remain the durable owners, and their lifecycle remains `open` or `archived`.
 
@@ -51,7 +51,7 @@ manage:
 - `explicit`: Manage is selected only when explicitly requested.
 - `auto`: after preserving Review, release, isolated Design, and complete small-work exceptions, Core resolves a ready owner and qualifies every remaining non-small requested completion or continuation for Manage.
 
-Core resolves one unambiguous shape-ready Change or shallow Group and solely owns initial Manage qualification plus the `selected | declined` route result. Missing or non-ready ownership routes directly to Shape under independent planning-artifact authority; Shape returns the ready WorkRef to Core for fresh routing and never resumes Manage directly. Once selected, Manage validates handoff completeness and current owner, authority, and owned-diff drift without repeating direct-versus-managed eligibility, then internally revalidates ordinary same-goal Fix, Verify, Review, and Resolve Findings receipts. It returns to Core only for a real owner, topology, route, behavior, acceptance, interface, scope, or authority boundary.
+Core resolves one unambiguous shape-ready Change or shallow Group as the `WorkOwner` and solely owns initial Manage qualification plus the `selected | declined` route result. Missing or non-ready ownership routes directly to Shape under independent planning-artifact authority; Shape returns the ready WorkOwner to Core for fresh routing and never resumes Manage directly. Once selected, Manage validates handoff completeness and current owner, authority, and owned-diff drift without repeating direct-versus-managed eligibility, then internally revalidates ordinary same-goal Fix, Verify, Review, and Resolve Findings receipts. It returns to Core only for a real owner, topology, route, behavior, acceptance, interface, scope, or authority boundary.
 
 During managed execution, newly surfaced uncertainty is classified in fail-closed order as out-of-goal, owner decision, fog, factual evidence needed, or ready to execute. Each transient worker packet fixes the WorkRef, lane objective, current hypothesis and evidence, allowed paths/actions/commands, prohibited actions, comparison baseline, result schema, and stop conditions. Token counts and limits never control dispatch, routing, authority, completion, or acceptance.
 
@@ -62,6 +62,8 @@ Diagnose and private Inspect lanes are read-only; Fix is the sole writer at its 
 - `manual`: archive and commit remain manual.
 - `lifecycle`: durable review may be followed by archive; commit remains separate.
 - `local`: automatically archives an eligible, verified, non-small terminal managed boundary with a clean exact owned boundary and routes its exact paths once to local Commit without another user request.
+
+Manage derives commit eligibility, timing, and the Commit envelope; `rsp-commit` exclusively owns exact staging, message construction, one local commit, and post-commit observation.
 
 `activation` never grants planning or product-mutation authority. For a currently selected and qualified Manage run, `closeout` is only the automatic lifecycle/local-Git ceiling described above and nearer restrictions may narrow it. Push, tags, releases, publication, deployment, approval, human acceptance, and other external actions always remain explicit.
 

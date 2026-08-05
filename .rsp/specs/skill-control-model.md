@@ -14,26 +14,23 @@
   - `resumeRule`, which names whether continuation resumes through the current phase or requires fresh derivation by Core
 - A `ControlOutcome` is never durable product or workflow state. It is not stored in a Change, Group Brief, Spec, Decision Record, archive, registry, generated projection, or hidden host ledger.
 - Each Skill uses only the terms needed for its phase. Phase-specific dispositions remain distinct and are not flattened into one universal status enum.
-- Shape returns a phase Shape `ControlOutcome` with `OwnershipDisposition: ready`, the WorkRef, decisive readiness evidence, next owner `Core`, and a rule for Core to freshly derive the route only when its Ready gate passes. A material owner question instead returns `StopDisposition: ask-owner`, next owner `owner`, the required answer, and a rule to rerun Shape from fresh evidence after the answer. Any other non-ready blocker returns its applicable canonical `StopDisposition`, next owner, required input, and resume rule.
+- `WorkOwner` means the selected Change or shallow Group that durably owns the requested outcome. `DecisionOwner` means the human or authority source required to settle one material decision. `NextOwner` means the next control or execution capability named by the transient outcome.
+- Shape returns a phase Shape `ControlOutcome` with the ready `WorkOwner`, decisive readiness evidence, `NextOwner: Core`, and a rule for Core to freshly derive the route only when its Ready gate passes. A material decision instead returns `StopDisposition: ask-owner`, the `DecisionOwner`, the required answer, and a rule to rerun Shape from fresh evidence after the answer. Any other non-ready blocker returns its applicable canonical `StopDisposition`, `NextOwner`, required input, and resume rule.
 
 ## Route Disposition
 - Core owns `RouteDisposition`, whose values are exactly:
   - `specialist`: return one explicit Discipline owner for its bounded action.
-  - `direct`: execute one bounded Core or Implement mutation path with one decisive verification and no Manage handoff or WorkerEnvelope.
+  - `direct`: execute one bounded non-managed path with one decisive verification and no Manage handoff or WorkerEnvelope. Core may directly mutate only RSP control-plane state; product mutation belongs to Implement or the same bounded manual Discipline action.
   - `managed`: hand one selected shape-ready owner and bounded goal to Manage after qualification.
   - `shape`: return unclear but owned work to Shape.
   - `stop`: perform no further action and name the applicable `StopDisposition`.
 - Direct execution requires all of: one ready owner, one local seam, one mutation pass, one decisive check, no managed lifecycle coordination, and no ready successor.
 - If any direct-execution condition ceases to hold, Core freshly rederives the route. Direct execution does not silently expand into managed execution.
 
-## Ownership and Frontier Dispositions
-- Core owner resolution and Shape returns use `OwnershipDisposition`, whose values are exactly:
-  - `ready`
-  - `ask-owner`
-  - `return-to-shape`
-  - `reroute`
-- `ready` means one unambiguous shape-ready Change or shallow Group owns the requested outcome. `return-to-shape` means Core may invoke Shape only under independently granted planning-artifact authority. `ask-owner` stops for one material product or authority decision. `reroute` means Core must establish a new owner, WorkRef, topology, route, dirty-path, scope, or authority boundary.
-- Only `ready` ownership may enter Manage qualification. Manage never creates, focuses, or resolves a pre-owner boundary.
+## Work Ownership and Frontier Dispositions
+- Core resolves one unambiguous shape-ready `WorkOwner` before Manage qualification. Missing or non-ready ownership uses `RouteDisposition: shape` only when independently granted planning-artifact authority permits Shape; a material product or authority decision uses `StopDisposition: ask-owner`, and an invalid WorkRef, topology, route, dirty-path, scope, or authority boundary uses `StopDisposition: reroute`.
+- Shape returns only a ready `WorkOwner` to Core. It does not encode Shape routing or stop reasons in a second ownership-status enum.
+- Only a ready `WorkOwner` may enter Manage qualification. Manage never creates, focuses, or resolves a pre-owner boundary.
 - `FrontierDisposition` applies only after Core has handed Manage a ready, qualified owner. Its values remain exactly:
   - `owner-decision`
   - `fog`
@@ -52,7 +49,7 @@
   - `environment-blocked`
   - `verification-blocked`
   - `capability-unavailable`
-- Every stop names the next owner, required input, and resume rule:
+- Every stop names the `NextOwner`, required input, and resume rule:
 
 | Stop disposition | Required next action | Resume rule |
 | --- | --- | --- |
@@ -109,5 +106,6 @@
 - Shape owns clarification and ready-owner return.
 - Each Discipline owns its bounded action, exact result, and applicable stop.
 - Core owns initial Manage qualification and the `selected | declined` route result.
-- Manage owns selected-handoff validation, selected-goal execution-frontier derivation, worker acceptance, internal current-evidence revalidation, review convergence, acceptance derivation, and eligible closeout after selection; it does not repeat direct-versus-managed eligibility.
+- Manage owns selected-handoff validation, selected-goal execution-frontier derivation, worker acceptance, internal current-evidence revalidation, review convergence, acceptance derivation, lifecycle closeout, and commit eligibility and orchestration after selection; it does not repeat direct-versus-managed eligibility or perform Commit's exact Git procedure.
+- Commit owns exact staging, message construction, one local commit, and post-commit observation for a Core- or Manage-derived boundary.
 - The selected Change or shallow Group remains the only durable work owner. Changes remain only `open` or `archived`.

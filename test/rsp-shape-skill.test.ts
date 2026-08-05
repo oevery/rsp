@@ -29,16 +29,16 @@ describe('rsp-shape deep clarification', () => {
     const deep = readFileSync(join(root, 'skills', 'rsp-shape', 'references', 'deep-clarification.md'), 'utf8')
 
     expect(skill).toContain('Ordinary clarification asks one to three related material questions')
-    expect(skill).toContain('explicit deep clarification asks exactly one owner decision per turn')
+    expect(skill).toContain('explicit deep clarification asks exactly one DecisionOwner question per turn')
     expect(skill).toContain('`StopDisposition: return-to-shape` may enter either mode')
-    expect(skill).toContain('returning a ready owner to Core for fresh route derivation')
+    expect(skill).toContain('returning a ready WorkOwner to Core for fresh route derivation')
     expect(skill).toContain('it never resumes Manage directly')
-    expect(skill).toContain('`OwnershipDisposition: ready`')
+    expect(skill).toContain('ready `WorkOwner` WorkRef')
     expect(skill).toMatch(/do not relabel unresolved fog as ready work/i)
 
     expect(deep).toContain('fulfills `StopDisposition: return-to-shape`')
     expect(deep).toContain('does not resume the prior execution path itself')
-    expect(deep).toContain('return `OwnershipDisposition: ready` to Core')
+    expect(deep).toContain('return the ready `WorkOwner` to Core')
     expect(deep).toContain('freshly rederives the route')
   })
 
@@ -49,20 +49,19 @@ describe('rsp-shape deep clarification', () => {
     for (const field of [
       '`ControlOutcome`',
       'phase Shape',
-      '`OwnershipDisposition: ready`',
-      'WorkRef',
+      'ready `WorkOwner` WorkRef',
       'decisive readiness evidence',
-      'next owner `Core`',
+      '`NextOwner: Core`',
       'resume rule',
       'Core freshly derives the route',
     ]) {
       expect(ready).toContain(field)
     }
 
-    const ownerQuestion = skill.match(/When a material owner question[\s\S]*?after the answer\./)?.[0] ?? ''
+    const ownerQuestion = skill.match(/When a material decision[\s\S]*?after the answer\./)?.[0] ?? ''
     expect(ownerQuestion).toContain('phase Shape')
     expect(ownerQuestion).toContain('`StopDisposition: ask-owner`')
-    expect(ownerQuestion).toContain('next owner `owner`')
+    expect(ownerQuestion).toContain('`DecisionOwner`')
     expect(ownerQuestion).toContain('required answer')
     expect(ownerQuestion).toContain('reruns Shape from fresh evidence')
 
@@ -70,7 +69,7 @@ describe('rsp-shape deep clarification', () => {
     for (const field of [
       'applicable canonical `StopDisposition`',
       'decisive evidence',
-      'next owner',
+      '`NextOwner`',
       'required input',
       'resume rule',
     ]) {

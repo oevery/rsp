@@ -12,8 +12,8 @@ sources:
   - skills/rsp/references/managed-routing.md
   - skills/rsp-manage/SKILL.md
 required_contract:
-  - Core derives one canonical ownership `ControlOutcome`
-  - Material product or authority questions stop for their owner
+  - Core derives one ownership `ControlOutcome`
+  - Material product or authority questions stop for their `DecisionOwner`
   - one highest-impact owner question
   - resumes through fresh Core derivation after the answer
   - Manage has no pre-owner Intake

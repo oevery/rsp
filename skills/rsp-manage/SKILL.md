@@ -4,12 +4,12 @@ description: Coordinate one eligible long-running, recovery, or multi-slice RSP 
 license: MIT
 metadata:
   author: oevery
-  version: "2026.08.04.1"
+  version: "2026.08.05.1"
 ---
 
 # RSP Manage
 
-Manage one requested goal selected by Core from an explicit request or effective `manage.activation: auto`. Enter only with one selected shape-ready Change or shallow Group plus a transient handoff containing the goal, WorkRef, authority envelope, decisive qualification evidence, closeout ceiling, and return boundaries. Once selected, this Skill solely owns same-goal revalidation, interruption and resume, review convergence, acceptance, lifecycle and commit execution detail. Keep artifacts durable and process data transient. The goal defines authority; automatic activation grants selection, not mutation.
+Manage one requested goal selected by Core from an explicit request or effective `manage.activation: auto`. Enter only with one selected shape-ready Change or shallow Group plus a transient handoff containing the goal, WorkRef, authority envelope, decisive qualification evidence, closeout ceiling, and return boundaries. Once selected, this Skill solely owns same-goal revalidation, interruption and resume, review convergence, acceptance, lifecycle closeout, and commit eligibility and orchestration. Exact staging, message construction, local commit execution, and post-commit observation remain owned by `rsp-commit`. Keep artifacts durable and process data transient. The goal defines authority; automatic activation grants selection, not mutation.
 
 Follow Core's response-versus-artifact language boundary for all user-visible control narration; when the response language differs, keep exact canonical values only as secondary parenthesized or code-formatted tokens.
 
@@ -37,7 +37,7 @@ Preserve unrelated work and require an explicit release identity. Allow four wor
 After the selected handoff remains valid, classify every newly surfaced unknown before selecting work, in this fail-closed compatibility order: `out-of-goal` → `owner-decision` → `fog` → `evidence-needed` → `ready-to-execute`. The canonical `FrontierDisposition` is exactly `out-of-goal`, `owner-decision`, `fog`, `evidence-needed`, or `executable`; public `ready-to-execute` maps only to canonical `executable`.
 
 - `out-of-goal` stops for topology or authority resolution with `StopDisposition: reroute`.
-- `owner-decision` stops with the single highest-impact owner question when behavior, acceptance, public interface, scope, mutation authority, external action, or human acceptance is unresolved. Return `StopDisposition: ask-owner` to Core for fresh routing after the answer.
+- `owner-decision` stops with the single highest-impact question for its `DecisionOwner` when behavior, acceptance, public interface, scope, mutation authority, external action, or human acceptance is unresolved. Return `StopDisposition: ask-owner` to Core for fresh routing after the answer.
 - `fog` is not yet a precise question. Create no synthetic Task, Change, Blocker, or worker dispatch; return `StopDisposition: return-to-shape` to Core and halt the current managed control phase. Only Core may route authorized Shape. Do not continue an independently ready slice, dispatch another worker, or mutate product state. Resume only after Shape confirms a ready owner and Core freshly rederives the route.
 - `evidence-needed` is one precise factual question answerable without choosing any owner decision above. If evidence would cross one of those boundaries, take the applicable stop instead of selecting Fix.
 - Canonical `executable` permits lane selection only after ownership, authority, and required evidence are settled.
@@ -65,7 +65,7 @@ An evidenced failed correction permits at most one corrective retry. Start it on
 
 ## Dispatch owned work
 
-Send a compact envelope that identifies the WorkRef, objective, authority, decisive evidence, and stop boundary. When the host supports workers and authorized implementation remains, dispatch at least one implementation worker; sequential execution does not permit the controller to absorb the whole implementation. The controller retains worker-result acceptance, integration verification, review convergence, lifecycle, and Git decisions.
+Send a compact envelope that identifies the WorkRef, objective, authority, decisive evidence, and stop boundary. When the host supports workers and authorized implementation remains, dispatch at least one implementation worker; sequential execution does not permit the controller to absorb the whole implementation. The controller retains worker-result acceptance, integration verification, review convergence, lifecycle decisions, and commit eligibility and orchestration. It does not absorb Commit's exact Git procedure.
 
 When dispatch cannot satisfy a required worker obligation, apply the AcceptanceDisposition rule above: return `StopDisposition: capability-unavailable`, keep acceptance `incomplete`, and stop. Absence of a dispatch event or receipt is never success, does not discharge the required obligation, and cannot be replaced by the controller claiming the worker's result.
 
@@ -103,7 +103,7 @@ Valid selected handoff only: effective `manage.closeout` is an automatic grant c
 
 When granted, close lifecycle before any commit. Change: after Manage-owned clean fixed-scope durable review run `rsp archive <change-work-ref>` and inspect the complete lifecycle diff. For shallow Group: durable-review/archive each child independently, rederive completion, then when all children plus Group gate pass run `rsp group close <group>`; inspect the complete lifecycle diff after each mutation. This includes terminal owners. Require proven review/clean-boundaries.
 
-Decide commit separately. Under `local` or explicit commit authority, downstream work may justify one recovery checkpoint: give `rsp-commit` owner, paths, evidence, lifecycle, and authority, then derive status. Terminal small owners default to no commit. After lifecycle closeout, a qualified `local` terminal non-small Change or Group with known owner and paths, fresh decisive verification, clean exact boundary, and no nearer denial routes exactly once to `rsp-commit`; do not require the user to repeat `commit`. An ambiguous, mixed, stale, or denied boundary stops without staging. Apply the same owner envelope to explicitly authorized Group/release commits; use Core fallback if Commit is unavailable. Archive grants no Git or publication authority.
+Decide commit eligibility separately. Under `local` or explicit commit authority, downstream work may justify one recovery checkpoint: give `rsp-commit` the WorkOwner, paths, evidence, lifecycle state, and authority, then derive status from its receipt. Terminal small owners default to no commit. After lifecycle closeout, a qualified `local` terminal non-small Change or Group with known owner and paths, fresh decisive verification, clean exact boundary, and no nearer denial routes exactly once to `rsp-commit`; do not require the user to repeat `commit`. An ambiguous, mixed, stale, or denied boundary stops without staging. Apply the same owner envelope to explicitly authorized Group/release commits. If Commit is unavailable, return `StopDisposition: capability-unavailable` to Core for its bounded manual Commit fallback; Manage does not stage or commit. Archive grants no Git or publication authority.
 
 Push is opt-in only when user explicitly mentions push and remote, branch, and Group or goal milestone are unambiguous or accepted. Push there, or earlier only for required remote CI, recovery, or collaboration. Never force-push, infer push from commit authority, or push a protected or ambiguous branch. Failure preserves local commits and stops at remote boundary. Return to Core before a separate release operation and dedicated release commit.
 

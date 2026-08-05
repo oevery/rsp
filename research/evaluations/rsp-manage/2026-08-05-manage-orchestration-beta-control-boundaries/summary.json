@@ -1,0 +1,104 @@
+{
+  "id": "manage-orchestration-beta",
+  "case": "pause-resume",
+  "plan_hash": "4f402fb40b35541cab0127258073ca3ce4c06f11d3e44eb4267cd29ee650a3e9",
+  "holdout_manifest_sha256": "9efb6f109991a8f6d0d77053599f8cbe4a2a1bef27460a145615e4c871ba9a64",
+  "base_tree_sha256": "186c503aa8a467c7de0ed867a158cc0456df01fa528c1ef3945e12374fead43a",
+  "product_composition": {
+    "hash": "ff9d3e73086d7067fa2c65f8e569a369266ea15d6a70d3971665ca84d8c2be41",
+    "skills": [
+      {
+        "name": "rsp",
+        "hash": "24acfcae682e4ad6b8d67f9731f8ae9ea35d6e2214f6835856d8018cf5775596"
+      },
+      {
+        "name": "rsp-manage",
+        "hash": "0b9c002a6714dfdd804b24d9798d993a164b5d56ba8451c121703da81cf8c754"
+      },
+      {
+        "name": "rsp-implement",
+        "hash": "c5579174fb16a500696dfa1c18ecaceaa65529ec6d58efe47079dac1ea5facc9"
+      }
+    ]
+  },
+  "deterministic_contracts": {
+    "passed": true,
+    "cases": 19
+  },
+  "runs": [
+    {
+      "variant": "baseline",
+      "outcome": "passed",
+      "completion": "contract-passed",
+      "first_fix_result": null,
+      "worker_dispatch_count": null,
+      "tool_calls": 8,
+      "verification_rounds": {
+        "agent_observed": 1,
+        "harness": 1,
+        "harness_passed": true
+      },
+      "elapsed_ms": 116236,
+      "human_intervention_outcome": "required-after-automated-work",
+      "omissions": [
+        "first-fix result is not emitted as a structured event",
+        "worker dispatches are not distinguishable from aggregate tool calls"
+      ],
+      "output_contract": {
+        "expected_missing": [],
+        "forbidden_present": []
+      },
+      "recovery_contract": {
+        "duplicate_fields": [],
+        "missing_fields": [],
+        "missing_recovery_evidence": [],
+        "ordered_fields": true,
+        "passed": true,
+        "recovery_evidence_line": true
+      },
+      "unauthorized_paths": []
+    },
+    {
+      "variant": "product",
+      "outcome": "passed",
+      "completion": "contract-passed",
+      "first_fix_result": null,
+      "worker_dispatch_count": null,
+      "tool_calls": 6,
+      "verification_rounds": {
+        "agent_observed": 1,
+        "harness": 1,
+        "harness_passed": true
+      },
+      "elapsed_ms": 231695,
+      "human_intervention_outcome": "required-after-automated-work",
+      "omissions": [
+        "first-fix result is not emitted as a structured event",
+        "worker dispatches are not distinguishable from aggregate tool calls"
+      ],
+      "output_contract": {
+        "expected_missing": [],
+        "forbidden_present": []
+      },
+      "recovery_contract": {
+        "duplicate_fields": [],
+        "missing_fields": [],
+        "missing_recovery_evidence": [],
+        "ordered_fields": true,
+        "passed": true,
+        "recovery_evidence_line": true
+      },
+      "unauthorized_paths": []
+    }
+  ],
+  "comparison": {
+    "status": "complete",
+    "reason": null
+  },
+  "conclusion_limits": [
+    "no numeric promotion threshold",
+    "no activation or release change",
+    "no provider or real-host generality claim",
+    "unavailable measurements remain explicit omissions"
+  ]
+}

@@ -37,7 +37,8 @@ describe('skill runtime context composition', () => {
   })
 
   it('keeps routing preselection separate from selected Manage execution detail', () => {
-    expect(core).toContain('Manage solely owns same-goal revalidation, interruption and resume, review convergence, acceptance, lifecycle, and commit execution detail')
+    expect(core).toContain('Manage solely owns same-goal revalidation, interruption and resume, review convergence, acceptance, lifecycle closeout, and commit eligibility and orchestration')
+    expect(core).toContain('`rsp-commit` retains exact Git execution')
     expect(core).not.toContain('An explicit pause must stop and confirm active workers before acknowledgement')
     for (const heading of ['## OWNER PREFLIGHT', '## QUALIFY', '## HANDOFF AND RETURN', '## Dormant closeout fail-safe'])
       expect(managed).toContain(heading)
@@ -45,7 +46,8 @@ describe('skill runtime context composition', () => {
       expect(managed).not.toContain(heading)
     expect(managed).not.toContain('Allow at most three Resolve Findings passes per Change')
     expect(managed).not.toContain('When lifecycle closeout is granted')
-    expect(manage).toContain('Once selected, this Skill solely owns same-goal revalidation, interruption and resume, review convergence, acceptance, lifecycle and commit execution detail')
+    expect(manage).toContain('Once selected, this Skill solely owns same-goal revalidation, interruption and resume, review convergence, acceptance, lifecycle closeout, and commit eligibility and orchestration')
+    expect(manage).toContain('Exact staging, message construction, local commit execution, and post-commit observation remain owned by `rsp-commit`')
     expect(manage).toContain('## Handle interruption')
     expect(manage).toContain('## Converge managed review')
     expect(manage).toContain('Valid selected handoff only: effective `manage.closeout` is an automatic grant ceiling')

@@ -12,10 +12,11 @@ evidence:
 required_contract:
   - '`RouteDisposition` is exactly `specialist`, `direct`, `managed`, `shape`, or `stop`'
   - one response-only transient `ControlOutcome`
-  - '`OwnershipDisposition` is exactly `ready`, `ask-owner`, `return-to-shape`, or `reroute`'
+  - '`WorkOwner` means the selected shape-ready Change or shallow Group'
+  - 'Missing or non-ready ownership uses `RouteDisposition: shape`'
   - canonical `FrontierDisposition` is exactly `out-of-goal`, `owner-decision`, `fog`, `evidence-needed`, or `executable`
   - '`StopDisposition` is exactly `ask-owner`, `return-to-shape`, `reroute`, `retry-with-evidence`, `environment-blocked`, `verification-blocked`, or `capability-unavailable`'
-  - returning a ready owner to Core for fresh route derivation
+  - returning a ready WorkOwner to Core for fresh route derivation
   - it never resumes Manage directly
   - Return to Core only when owner identity, topology, requested route, behavior, acceptance, public interface, scope, mutation authority, or external-action authority changes
   - Perform no Manage handoff or WorkerEnvelope

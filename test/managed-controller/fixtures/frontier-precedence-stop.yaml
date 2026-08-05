@@ -7,7 +7,7 @@ evidence:
 required_contract:
   - '`out-of-goal` → `owner-decision` → `fog` → `evidence-needed` → `ready-to-execute`'
   - '`out-of-goal` stops for topology or authority resolution'
-  - '`owner-decision` stops with the single highest-impact owner question'
+  - '`owner-decision` stops with the single highest-impact question for its `DecisionOwner`'
   - '`fog` is not yet a precise question'
   - Create no synthetic Task, Change, Blocker, or worker dispatch
   - If evidence would cross one of those boundaries, take the applicable stop instead of selecting Fix

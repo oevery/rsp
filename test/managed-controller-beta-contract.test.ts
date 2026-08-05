@@ -435,4 +435,66 @@ describe('managed-controller beta evidence', () => {
     expect(report).toContain('no activation or release change')
     expect(report).toContain('no provider-general or real-host-general conclusion')
   })
+
+  it('retains the control-boundary generation under the new prompt identity', () => {
+    const generationDirectory = join(
+      root,
+      'research',
+      'evaluations',
+      'rsp-manage',
+      '2026-08-05-manage-orchestration-beta-control-boundaries',
+    )
+    const report = readFileSync(join(generationDirectory, 'report.md'), 'utf8')
+    const rawSummary = readFileSync(join(generationDirectory, 'summary.json'), 'utf8')
+    const summary = JSON.parse(rawSummary)
+
+    expect(hashContent(report)).toBe(
+      'e139483e4c6f2b9112b24db565c82e744458abe4dbef91060c10182bcc57bad3',
+    )
+    expect(hashContent(rawSummary)).toBe(
+      '3d73b203716992a087f1148018fddb03136456c4e01cbdff7723b8570615848b',
+    )
+    expect(summary.product_composition.hash).toBe(
+      'ff9d3e73086d7067fa2c65f8e569a369266ea15d6a70d3971665ca84d8c2be41',
+    )
+    expect(summary.deterministic_contracts).toEqual({
+      passed: true,
+      cases: evaluateManagedController(root).length,
+    })
+    expect(summary.runs).toEqual([
+      expect.objectContaining({
+        variant: 'baseline',
+        outcome: 'passed',
+        completion: 'contract-passed',
+        tool_calls: 8,
+        verification_rounds: {
+          agent_observed: 1,
+          harness: 1,
+          harness_passed: true,
+        },
+        elapsed_ms: 116236,
+        unauthorized_paths: [],
+      }),
+      expect.objectContaining({
+        variant: 'product',
+        outcome: 'passed',
+        completion: 'contract-passed',
+        tool_calls: 6,
+        verification_rounds: {
+          agent_observed: 1,
+          harness: 1,
+          harness_passed: true,
+        },
+        elapsed_ms: 231695,
+        unauthorized_paths: [],
+      }),
+    ])
+    expect(rawSummary).not.toMatch(/"(?:model|provider|session|settings|token|usage|workspace)"\s*:/u)
+    expect(report).toContain('model `ocx/gpt-5.6-terra`')
+    expect(report).toContain('all 19 current')
+    expect(report).toContain('Receiver-device acceptance remained explicitly unavailable')
+    expect(report).toContain('complete only for this one holdout')
+    expect(report).toContain('remain unchanged historical evidence')
+    expect(report).toContain('no activation or release change')
+  })
 })
