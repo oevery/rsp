@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.2.0 (2026-08-05)
+
+- Unify Core, Shape, Discipline, and Manage control around explicit route, owner, stop, resume, acceptance, and closeout outcomes without adding persisted controller state or widening mutation authority.
+- Make automatic Manage routing select non-small and multi-surface completion work while preserving direct handling for settled one-step work and specialist routing for review, release, and isolated design operations.
+- Add human-readable Change and Group summaries to status JSON, plain status, the dashboard, and archive history while preserving exact WorkRef identity.
+- Default newly inferred WorkRefs to ASCII lowercase kebab-case while preserving explicit project naming conventions and all existing ASCII or Unicode identities.
+- Localize human-facing control narration independently from canonical technical values, artifact language, commit language, and host-owned state.
+- Clarify the packaged Skill suite model, reduce the fallback protocol to its safety kernel, and progressively load inactive Manage and Review procedures without changing the published Skill inventory.
+
+Existing 3.1 projects require no dedicated migration. Refresh the managed fallback and package-owned Skills to adopt the new control contracts and presentation behavior.
+
+See the [3.2.0 release notes](docs/releases/3.2.0.md).
+
 ## 3.1.1 (2026-07-30)
 
 - Make structured commit-message transport preserve real line boundaries across tool, shell, and Git layers by requiring actual newlines or a safely prepared message file.
