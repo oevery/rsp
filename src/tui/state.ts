@@ -101,8 +101,8 @@ function unfilteredItems(state: DashboardState, scope = state.scope): DashboardI
       type: 'change',
       key: record.output.name,
       workRef: record.output.name,
-      title: record.title,
-      searchable: `${record.output.name} ${record.title}`,
+      title: record.output.summary ?? record.title,
+      searchable: `${record.output.name} ${record.output.summary ?? ''} ${record.title}`,
       record,
     }))
   }
@@ -111,8 +111,8 @@ function unfilteredItems(state: DashboardState, scope = state.scope): DashboardI
       type: 'group',
       key: group.name,
       workRef: group.name,
-      title: group.name,
-      searchable: `${group.name} ${group.slices.map(slice => slice.name).join(' ')}`,
+      title: group.summary ?? group.name,
+      searchable: `${group.name} ${group.summary ?? ''} ${group.slices.map(slice => slice.name).join(' ')}`,
       group,
     }))
   }

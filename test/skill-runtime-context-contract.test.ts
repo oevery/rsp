@@ -12,6 +12,7 @@ const manage = read('skills/rsp-manage/SKILL.md')
 const managed = read('skills/rsp/references/managed-routing.md')
 const release = read('skills/rsp/references/release-operations.md')
 const reopen = read('skills/rsp/references/reopen-recovery.md')
+const shape = read('skills/rsp-shape/SKILL.md')
 const skillSystem = read('.rsp/specs/skill-system.md')
 const evaluation = join(root, 'research/evaluations/rsp-skill-runtime-context/2026-07-29-three-stage-behavior')
 const verifiedEvaluation = join(root, 'research/evaluations/rsp-skill-runtime-context/2026-07-29-three-stage-behavior-user-config-adjudicated')
@@ -77,6 +78,18 @@ describe('skill runtime context composition', () => {
     expect(skillSystem).toContain('never requires recursively loading another Discipline Skill body or a runtime glossary')
     expect(skillSystem).toContain('measurably reduce its loaded-path token cost')
     expect(skillSystem).toContain('private notation')
+  })
+
+  it('records the WorkRef boundary once and leaves detailed inference to Shape', () => {
+    expect(skillSystem).toContain('WorkRefs are stable identities independent from prose-language and locale policy')
+    expect(skillSystem).toContain('later guidance never renames an existing identity')
+    expect(skillSystem).toContain('Shape owns the naming policy whenever a new WorkRef must be inferred')
+    expect(skillSystem).not.toContain('WorkRef authoring preserves explicit valid user input')
+
+    expect(shape).toContain('preserve an explicit valid user-supplied identity')
+    expect(shape).toContain('explicit nearest project or domain WorkRef naming convention')
+    expect(shape).toContain('infer ASCII lowercase kebab-case from stable domain or technical vocabulary')
+    expect(shape).toContain('Artifact, commit, response, host locale, and TUI language settings never select or translate WorkRef language')
   })
 
   it('keeps review-related gates separate across runtime composition', () => {

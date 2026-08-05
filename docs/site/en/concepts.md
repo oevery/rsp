@@ -31,7 +31,11 @@ A Change owns one observable outcome with a shared acceptance, verification, rev
 
 Keep it as a convergent snapshot of the current plan and final decisive evidence. Temporary probes, debugging chronology, and routine command transcripts belong in the working conversation, not durable artifacts.
 
-Change names can be flat (`<change>`) or one direct grouped child (`<group>/<change>`). Recursive work directories are invalid. An exact blocker line declares a dependency:
+Change names can be flat (`<change>`) or one direct grouped child (`<group>/<change>`). Recursive work directories are invalid.
+
+When RSP must infer a new WorkRef, an explicit valid user-supplied identity takes precedence, followed by an explicit nearest project or domain naming convention. Without either, the default is ASCII lowercase kebab-case derived from stable domain or technical vocabulary, such as `user-login`. Valid Unicode WorkRefs such as `听说训练/模拟朗读` remain supported when supplied explicitly or selected by project convention. Artifact language, commit language, response language, host locale, and TUI language do not choose or translate WorkRef language, and changing guidance never renames an existing identity.
+
+An exact blocker line declares a dependency:
 
 ```md
 - requires `<change-work-ref>`: <reason>

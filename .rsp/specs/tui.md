@@ -12,6 +12,7 @@
 - Bare `rsp skills` is a separate dual-TTY entry. Its component owns only optional selection and confirmation; it closes the terminal session before the CLI invokes the presentation-neutral atomic installer once. It is not part of the read-only dashboard.
 - Default suite and optional project Skills render as separate groups. Defaults are selected and locked, optionals start unselected, and divergent selected targets require a separate replacement confirmation. Cancellation or declining replacement returns no mutation plan.
 - `ProjectStatusSnapshot` is an immutable rich internal snapshot. The public status JSON uses an exact adapter and remains flat; TUI state does not leak into it.
+- Change and Group lists/details render a present semantic summary as secondary human-readable text while keeping the exact WorkRef first and authoritative. Current-work filtering matches WorkRef, summary, and the existing relevant identity fields.
 - History list/detail loading, errors, filters, selection, and viewport state stay separate from `ProjectStatusSnapshot`. History loads only when first visited, and structured detail loads only after `Enter`.
 - Project-relative archive path is the unique history selection identity. A TUI-owned source atomically caches validated records from the last successful bounded list so detail does not re-inspect the archive; failed refresh preserves the prior valid cache.
 - Structured Tasks, Verify, and Blockers evidence recognizes only RSP checkbox/list prefixes, preserves project-authored Markdown punctuation, and renders one count-bearing heading plus hanging-wrapped terminal-native content per section without a Markdown dependency.
@@ -28,6 +29,6 @@
   - Dashboard mutation, TUI-owned filesystem mutation, CLI contract localization, persisted UI state, alternative archive semantics, and loading UI dependencies on non-interactive paths.
 
 ## Constraints
-- Maintain the exact public status JSON contract and lazy-load the TUI.
+- Maintain the public status JSON contract, including nullable Change and Group summaries, and lazy-load the TUI.
 - Render correctly at the supported 40-column minimum and cleanly recover the terminal on normal exit, errors, signals, and rejected interactive loading.
 - History detail must remain bounded, presentation-neutral at its source seam, and keyed by unique archive path.

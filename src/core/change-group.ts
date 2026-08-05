@@ -7,6 +7,7 @@ import { ARCHIVES_DIR } from './config.js'
 import { CHANGE_DOCUMENT_SCHEMA, getCanonicalSectionHeadings, getDocumentSectionBody, getDocumentTitle, GROUP_BRIEF_DOCUMENT_SCHEMA, parseRspDocument, renderDocumentSectionHeading, renderDocumentTitle } from './document-model.js'
 import { countCheckboxes, hasMeaningfulBlockerBody, normalizeLogicalPath, parseFrontmatter } from './helpers.js'
 import { GROUP_BRIEF_FILENAME, inspectArchiveTree, inspectFocusTree, inspectWorkTree, isCanonicalExecutableWorkRef, resolveWorkRef, WorkRefError } from './work-ref.js'
+import { extractGroupSummary } from './work-summary.js'
 
 export const GROUP_BRIEF_SECTIONS = getCanonicalSectionHeadings(GROUP_BRIEF_DOCUMENT_SCHEMA)
 export const GROUP_REOPEN_COMPLETION_PREFIX = 'Resolve reopened concern from'
@@ -230,6 +231,7 @@ export async function inspectChangeGroups(options: { workTree?: WorkTreeInspecti
 
     groups.push({
       name: brief.group,
+      summary: extractGroupSummary(content),
       path: normalizeLogicalPath(brief.path),
       slices,
       completion: parsed.completion,

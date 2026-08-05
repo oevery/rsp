@@ -39,6 +39,8 @@ Never invent a product decision. When a material choice or mutation authority re
 
 Read [complex shaping](references/complex-shaping.md) when clarification needs multiple rounds, slices share one completion contract, or independently closable owners converge on terminal delivery.
 
+When Shape must establish a new WorkRef, preserve an explicit valid user-supplied identity through canonical normalization. Otherwise follow an explicit nearest project or domain WorkRef naming convention. If neither exists, infer ASCII lowercase kebab-case from stable domain or technical vocabulary. Artifact, commit, response, host locale, and TUI language settings never select or translate WorkRef language. Safe Unicode remains available through explicit input or project/domain convention; never rename an existing open or archived identity because language or naming guidance changes.
+
 Prefer one ordinary Change only for one observable outcome sharing a consistency, focused-verification, review, archive, and rollback boundary. Change granularity does not prescribe Git commit count; never split or merge Changes merely to enforce a Change-to-commit mapping. Use a shallow Group for independent outcomes under one goal; an integration gate never merges them. A shared completion contract gates Group closure, not child archive unless declared there. Keep Brief `Slices`, child `Blockers`, and derived readiness. Add no hierarchy.
 
 Keep one observable outcome per Change:

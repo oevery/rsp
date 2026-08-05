@@ -12,6 +12,8 @@ const durable = read('skills/rsp/references/durable-review.md')
 const releaseOperations = read('skills/rsp/references/release-operations.md')
 const reopenRecovery = read('skills/rsp/references/reopen-recovery.md')
 const fallback = read('rules/rsp-rules.md')
+const shape = read('skills/rsp-shape/SKILL.md')
+const coreModel = read('.rsp/specs/core-model.md')
 const skillSystem = read('.rsp/specs/skill-system.md')
 const coreContract = `${skill}\n${managed}\n${manageSkill}\n${releaseOperations}\n${reopenRecovery}`
 
@@ -100,6 +102,28 @@ describe('rsp core routing contract', () => {
     ])
     expect(skill).toContain('Stages are derived guidance, never persisted state')
     expect(skill).toContain('Do not preload, enumerate, or recursively invoke optional capabilities')
+  })
+
+  it('keeps WorkRef identity boundaries in Core and detailed inference with its owners', () => {
+    expect(skill).toContain('WorkRefs are stable identities independent from artifact, commit, response, host locale, and TUI language settings')
+    expect(skill).toContain('Existing identities are never renamed by later language or naming guidance')
+    expect(skill).toContain('when a new WorkRef must be inferred, Shape owns its naming policy')
+    expect(skill).not.toContain('ASCII lowercase kebab-case')
+    expect(skill).not.toContain('explicit nearest project or domain WorkRef naming convention')
+
+    for (const body of [shape, fallback, coreModel]) {
+      const lowered = body.toLowerCase()
+      expect(body).toContain('explicit valid user')
+      expect(body).toContain('project or domain')
+      expect(body).toContain('ASCII lowercase kebab-case')
+      expect(lowered).toContain('language')
+      expect(lowered).toContain('locale')
+      expect(body).toContain('Unicode')
+      expectSemanticGroup(body, [
+        ['existing identit', 'an existing open or archived identity', 'existing open or archived identities'],
+      ])
+    }
+    expect(fallback).toContain('Language or locale settings never select or translate WorkRef language')
   })
 
   it('limits manual fallback to optional Disciplines without replacing required managed evidence', () => {

@@ -5,11 +5,12 @@ import { readFile } from 'node:fs/promises'
 import { basename, dirname, relative } from 'node:path'
 
 import { ARCHIVES_DIR } from '../core/config.js'
-import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionBody, getDocumentTitles, GROUP_BRIEF_DOCUMENT_SCHEMA, parseRspDocument } from '../core/document-model.js'
+import { CHANGE_DOCUMENT_SCHEMA, getDocumentTitles, GROUP_BRIEF_DOCUMENT_SCHEMA, parseRspDocument } from '../core/document-model.js'
 import { normalizeLogicalPath, parseFrontmatter } from '../core/helpers.js'
 import { parseIssueRelationships } from '../core/issue-relationship.js'
 import { toErrorMessage } from '../core/output.js'
 import { inspectArchiveTree, isCanonicalExecutableWorkRef, isCanonicalWorkRefSegment } from '../core/work-ref.js'
+import { extractChangeSummary } from '../core/work-summary.js'
 import { HISTORY_MAX_DIAGNOSTICS, HISTORY_MAX_TEXT_CODE_POINTS } from './model.js'
 
 const ARCHIVE_NAME_RE = /^(\d{4}-\d{2}-\d{2})_(.+)\.md$/
@@ -137,7 +138,7 @@ function parseArchiveEntry(sourcePath: string, path: string, archivesDir: string
     return { diagnostic: errorDiagnostic('archive_identity_mismatch', path, `archived Change identity ${workRef} does not match its archive path`) }
   }
 
-  const rawSummary = extractSummary(content, changeDocument)
+  const rawSummary = extractChangeSummary(content, changeDocument, { preservePlaceholder: true })
   if (!rawSummary)
     return { diagnostic: errorDiagnostic('archive_summary_missing', path, 'archived Change must contain frontmatter summary, Proposal Outcome, or Proposal Summary') }
   const summary = boundText(rawSummary)
@@ -155,19 +156,6 @@ function parseArchiveEntry(sourcePath: string, path: string, archivesDir: string
       searchSummary: rawSummary,
     },
   }
-}
-
-function extractSummary(content: string, document = parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA)): string {
-  const frontmatter = parseFrontmatter(content)
-  if (typeof frontmatter?.summary === 'string' && frontmatter.summary.trim())
-    return frontmatter.summary.trim()
-  const proposalLines = getDocumentSectionBody(document, 'proposal').split('\n').map(line => line.trim())
-  for (const prefix of ['- Outcome:', '- Summary:']) {
-    const line = proposalLines.find(candidate => candidate.startsWith(prefix))
-    if (line && line.slice(prefix.length).trim())
-      return line.slice(prefix.length).trim()
-  }
-  return ''
 }
 
 export function boundText(value: string): { value: string, truncated: boolean } {

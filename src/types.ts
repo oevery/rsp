@@ -144,6 +144,7 @@ export interface HistoryDetailOutput extends HistoryRecordOutput {
 
 export interface StatusRecordOutput {
   name: string
+  summary: string | null
   kind: string
   progress: {
     done: number
@@ -191,6 +192,7 @@ export interface ChangeGroupSliceOutput {
 
 export interface ChangeGroupStatusOutput {
   name: string
+  summary: string | null
   path: string
   slices: ChangeGroupSliceOutput[]
   completion: {

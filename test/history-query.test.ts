@@ -125,6 +125,19 @@ describe('archive history query', () => {
     expect(() => queryArchiveHistory(inspection.records, { search: '   ' })).toThrowError(expect.objectContaining({ code: 'invalid_history_search' }))
   })
 
+  it('shares Change summary precedence while preserving immutable archive placeholder compatibility', async () => {
+    const root = await fixture()
+    await writeFile(join(root, '.rsp', 'archives', '2026-07-25_frontmatter.md'), archivedChange('frontmatter', 'feature', 'Outcome summary').replace('kind: feature', 'kind: feature\nsummary: Frontmatter summary'))
+    await writeFile(join(root, '.rsp', 'archives', '2026-07-25_outcome.md'), archivedChange('outcome', 'feature', 'Legacy summary').replace('- Summary: Legacy summary', '- Outcome: Outcome summary\n- Summary: Legacy summary'))
+    await writeFile(join(root, '.rsp', 'archives', '2026-07-25_placeholder.md'), archivedChange('placeholder', 'feature', '<…>'))
+
+    const inspection = await inspectArchiveHistory({ archivesDir: join(root, '.rsp', 'archives') })
+
+    expect(inspection.records).toContainEqual(expect.objectContaining({ workRef: 'frontmatter', summary: 'Frontmatter summary' }))
+    expect(inspection.records).toContainEqual(expect.objectContaining({ workRef: 'outcome', summary: 'Outcome summary' }))
+    expect(inspection.records).toContainEqual(expect.objectContaining({ workRef: 'placeholder', summary: '<…>' }))
+  })
+
   it('selects exact detail and bounds every evidence field', async () => {
     const root = await fixture()
     const path = join(root, '.rsp', 'archives', '2026-07-25_bounded.md')

@@ -61,6 +61,8 @@ export function printStatusPlain(view: ProjectStatusView): void {
     for (const { output: record, progressKnown } of view.records) {
       const state = [record.isFocused ? 'focused' : 'open', record.isBlocked ? 'blocked' : null].filter(Boolean).join(' · ')
       console.log(`  ${pc.bold('Change:')} ${record.isBlocked ? pc.yellow(record.name) : record.name}`)
+      if (record.summary)
+        console.log(`    ${pc.dim(`Summary: ${record.summary}`)}`)
       console.log(`    ${state} · ${record.kind} · age ${record.ageDays ?? '—'}d · progress ${progressKnown ? `${record.progress.done}/${record.progress.total}` : '—'}`)
     }
   }
@@ -78,6 +80,8 @@ export function printStatusPlain(view: ProjectStatusView): void {
       const nameDisplay = record.isBlocked ? pc.yellow(namePadded) : namePadded
       const ageDisplay = record.isFocused ? pc.cyan(agePadded) : agePadded
       console.log(`  ${marker}${nameDisplay} ${kindPadded} ${ageDisplay} ${progressPadded}`)
+      if (record.summary)
+        console.log(`    ${pc.dim(`Summary: ${record.summary}`)}`)
     }
   }
 
@@ -96,6 +100,8 @@ function printChangeGroups(groups: ChangeGroupStatusOutput[]): void {
     const readiness = group.readyToClose ? pc.green('ready to close') : pc.dim('not ready')
     const blocked = group.blockers ? ` ${pc.yellow('blocked')}` : ''
     console.log(`  ${group.name}: ${archived}/${group.slices.length} archived, completion ${group.completion.done}/${group.completion.total}, ${readiness}${blocked}`)
+    if (group.summary)
+      console.log(`    ${pc.dim(`Summary: ${group.summary}`)}`)
   }
   console.log()
 }

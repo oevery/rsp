@@ -18,6 +18,7 @@ This file is the minimal fallback protocol for agents that cannot load the `rsp`
 
 - `changes/` owns open work, `archives/` owns completed history, `specs/` owns stable current facts, and the configured Decision Record path owns lasting rationale and tradeoffs.
 - A Change owns one executable outcome and its acceptance, Tasks, verification, and blockers. Executable WorkRefs are `<change>` or one direct `<group>/<change>` child. A Group Brief provides shared context but is not executable or focusable.
+- For a new inferred WorkRef, preserve explicit valid user input first, otherwise follow an explicit nearest project or domain naming convention, otherwise use ASCII lowercase kebab-case from stable domain or technical vocabulary. Language or locale settings never select or translate WorkRef language. Valid Unicode remains available through explicit input or project/domain convention, and existing identities are never renamed by later guidance.
 - Persist only `open` and `archived` lifecycle state. Readiness, blockers, routes, verification freshness, progress, and next actions are derived from current artifacts and evidence.
 - Project-owned `AGENTS.md` and `CONTEXT.md` retain their own instruction and context authority. RSP does not replace them.
 - Prefer RSP commands for deterministic setup, status, validation, repair, focus, Spec-index, history, archive, and reopen operations. Invalid identity, structure, dependency, managed path, symlink, or incomplete inspection fails closed.

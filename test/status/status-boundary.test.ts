@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it, vi } from 'vitest'
 
 import { clearConfigCache } from '../../src/core/config.js'
+import { extractChangeSummary, extractGroupSummary } from '../../src/core/work-summary.js'
 import { deriveStatusView } from '../../src/status/derive.js'
 import { inspectProjectStatus } from '../../src/status/inspect.js'
 import { printStatusPlain } from '../../src/status/plain.js'
@@ -19,6 +20,7 @@ const root = fileURLToPath(new URL('../..', import.meta.url))
 function record(overrides: Partial<StatusRecordOutput> & Pick<StatusRecordOutput, 'name'>): ProjectStatusSnapshot['records'][number] {
   return {
     output: {
+      summary: null,
       kind: 'feature',
       progress: { done: 0, total: 1 },
       ageDays: 2,
@@ -87,7 +89,7 @@ describe('project status boundary', () => {
   })
 
   it('keeps the public v3 success and command-error envelopes exact', () => {
-    const view = deriveStatusView(snapshot([record({ name: 'alpha' })]))
+    const view = deriveStatusView(snapshot([record({ name: 'alpha', summary: '可读结果' })]))
     expect(toStatusJson(view)).toEqual({
       command: 'status',
       ok: true,
@@ -95,7 +97,7 @@ describe('project status boundary', () => {
       language: { artifacts: null, commit: null },
       filters: { focused: false, blocked: false, stale: null },
       focused: [],
-      records: [record({ name: 'alpha' }).output],
+      records: [record({ name: 'alpha', summary: '可读结果' }).output],
       groups: [],
       plan: { nodes: [], ready: [], edges: [], blocked: [], waves: [] },
       summary: { total: 1, focused: 0, blocked: 0 },
@@ -121,6 +123,59 @@ describe('project status boundary', () => {
       runtime: [],
       error: { code: 'invalid_stale_filter', message: 'invalid' },
     })
+
+    const grouped = snapshot()
+    grouped.groups = [{
+      name: 'delivery',
+      summary: '交付 API 与 UI',
+      path: '.rsp/changes/delivery/00-brief.md',
+      slices: [],
+      completion: { done: 0, total: 1 },
+      blockers: false,
+      readyToClose: false,
+      warnings: [],
+    }]
+    expect(toStatusJson(deriveStatusView(grouped)).groups).toEqual([expect.objectContaining({
+      name: 'delivery',
+      summary: '交付 API 与 UI',
+    })])
+  })
+
+  it('extracts presentation-neutral Change and Group summaries with placeholder-safe precedence', () => {
+    expect(extractChangeSummary(`---
+kind: feature
+summary: Frontmatter summary
+---
+
+# Change: alpha
+
+## Proposal
+- Outcome: Outcome summary
+- Summary: Legacy summary
+`)).toBe('Frontmatter summary')
+    expect(extractChangeSummary(`# Change: alpha
+
+## Proposal
+- Outcome: <…>
+- Summary: Legacy summary
+`)).toBe('Legacy summary')
+    expect(extractChangeSummary(`# Change: alpha
+
+## Proposal
+- Outcome: <…>
+- Summary:
+`)).toBeNull()
+    expect(extractGroupSummary(`# Change Group: delivery
+
+## Goal
+- <…>
+- 交付 API 与 UI
+`)).toBe('交付 API 与 UI')
+    expect(extractGroupSummary(`# Change Group: delivery
+
+## Goal
+- <…>
+`)).toBeNull()
   })
 
   it('preserves the empty-project plain presentation', () => {

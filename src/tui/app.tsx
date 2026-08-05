@@ -95,6 +95,14 @@ function CurrentDetail({ expanded, item, messages, snapshot, width }: { expanded
         {' '}
         {item.workRef}
       </Text>
+      {item.title !== item.workRef && (
+        <Text>
+          {messages.summary}
+          :
+          {' '}
+          {truncateDisplay(item.title, Math.max(8, width - displayWidth(messages.summary) - 3))}
+        </Text>
+      )}
       <Text>
         {messages.progress}
         :
@@ -391,9 +399,11 @@ export function DashboardApp({ initialDimensions, initialSnapshot, inspectHistor
           )
         }
         const label = stateLabel(item, state.snapshot, messages)
-        const identity = item.type === 'group' && item.group.slices.length
-          ? `${item.workRef}: ${item.group.slices.map(slice => slice.name).join(', ')}`
-          : item.workRef
+        const identity = item.title !== item.workRef
+          ? `${item.workRef} — ${item.title}`
+          : item.type === 'group' && item.group.slices.length
+            ? `${item.workRef}: ${item.group.slices.map(slice => slice.name).join(', ')}`
+            : item.workRef
         return (
           <Text key={item.key} inverse={selectedItem}>
             {selectedItem ? '›' : ' '}

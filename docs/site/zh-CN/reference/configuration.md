@@ -26,6 +26,8 @@ language:
 
 回复语言仍由用户和会话决定，不能通过 `language.response` 配置。已有产物保持既有语言，除非明确授权翻译。规范标题、命令、路径、标识符、Conventional Commit 类型与作用域、尾注、机器值和 WorkRefs 不本地化。
 
+RSP 不提供 WorkRef 语言或风格配置字段。`language.default: zh-CN` 可以选择中文 Change 正文，但不会选择中文 WorkRef。当用户没有显式提供标识，最近的项目或领域也没有命名约定时，推断出的 WorkRef 默认使用 ASCII 小写 kebab-case。显式提供或项目约定选择的有效 Unicode WorkRef 仍然受支持并保持不变。
+
 ## Decision Records
 
 Decision Records 默认位于 `.rsp/specs/decisions/`。如果宿主项目已在其他位置拥有 ADR，只配置一个项目相对的权威目录：

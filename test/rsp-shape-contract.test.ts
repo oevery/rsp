@@ -42,6 +42,16 @@ describe('rsp-shape Skill contract', () => {
     expect(body).toContain('Stop on changed behavior, acceptance, public interfaces, goal scope, mutation authority, or external action')
   })
 
+  it('infers stable ASCII WorkRefs without disabling explicit or project-owned Unicode', () => {
+    const body = readSkill()
+
+    expect(body).toContain('preserve an explicit valid user-supplied identity through canonical normalization')
+    expect(body).toContain('explicit nearest project or domain WorkRef naming convention')
+    expect(body).toContain('infer ASCII lowercase kebab-case from stable domain or technical vocabulary')
+    expect(body).toContain('Safe Unicode remains available through explicit input or project/domain convention')
+    expect(body).toContain('never rename an existing open or archived identity')
+  })
+
   it('plans retained tests only when they provide distinct durable value', () => {
     const body = readSkill()
 

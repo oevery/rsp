@@ -10,6 +10,7 @@ import { collectArchiveReadiness, countCheckboxes, hasMeaningfulBlockers, normal
 import { IssueRelationshipError, parseIssueRelationships } from '../core/issue-relationship.js'
 import { toErrorMessage } from '../core/output.js'
 import { inspectArchiveTree, inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
+import { extractChangeSummary } from '../core/work-summary.js'
 import { historyInspectionComplete, inspectArchiveHistory } from '../history/query.js'
 
 export async function inspectProjectStatus(options: { nowMs?: number } = {}): Promise<ProjectStatusSnapshot> {
@@ -101,6 +102,7 @@ export async function inspectProjectStatus(options: { nowMs?: number } = {}): Pr
   for (const name of allNames) {
     const path = changeMap.get(name)
     let kind = '—'
+    let summary: string | null = null
     let title = name
     let blockerEntries: string[] = []
     let readiness = emptyReadiness(false)
@@ -116,6 +118,7 @@ export async function inspectProjectStatus(options: { nowMs?: number } = {}): Pr
       try {
         const content = await readFile(path, 'utf-8')
         title = extractChangeTitle(content) ?? name
+        summary = extractChangeSummary(content)
         blockerEntries = extractBlockerEntries(content)
         try {
           const frontmatter = parseFrontmatter(content)
@@ -216,6 +219,7 @@ export async function inspectProjectStatus(options: { nowMs?: number } = {}): Pr
     records.push({
       output: {
         name,
+        summary,
         kind,
         progress: { done, total },
         ageDays,

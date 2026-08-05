@@ -12,7 +12,7 @@ const snapshot: ProjectStatusSnapshot = {
   language: { artifacts: null, commit: null },
   focused: ['alpha', 'beta'],
   records: ['alpha', 'beta'].map((name, index) => ({
-    output: { name, kind: 'feature', progress: { done: index, total: 2 }, ageDays: 0, isFocused: true, isBlocked: index === 1, path: `.rsp/changes/${name}.md` },
+    output: { name, summary: null, kind: 'feature', progress: { done: index, total: 2 }, ageDays: 0, isFocused: true, isBlocked: index === 1, path: `.rsp/changes/${name}.md` },
     progressKnown: true,
     title: name,
     blockerEntries: index ? ['owner decision'] : ['requires `setup`: establish setup first'],
@@ -20,6 +20,7 @@ const snapshot: ProjectStatusSnapshot = {
   })),
   groups: [{
     name: 'delivery',
+    summary: null,
     path: '.rsp/changes/delivery/00-brief.md',
     slices: [{ name: 'delivery/api', boundary: 'API slice', state: 'open' }, { name: 'delivery/ui', boundary: 'UI slice', state: 'open' }],
     completion: { done: 0, total: 2 },
@@ -143,6 +144,37 @@ describe('dashboardApp', () => {
     await new Promise(resolve => setImmediate(resolve))
     expect(view.lastFrame()).toContain('规范状态：focused · ready · waiting · resolved · blocked')
     expect(view.lastFrame()).toContain('图例  ◎ 聚焦')
+    view.cleanup()
+  })
+
+  it('shows current summaries in list and detail while preserving WorkRef identity at 40 columns', async () => {
+    const summarized = structuredClone(snapshot)
+    summarized.records[0].output.summary = '组合听说题型'
+    summarized.groups[0].summary = '交付 API 与 UI'
+    const view = render(React.createElement(DashboardApp, {
+      initialSnapshot: summarized,
+      initialDimensions: { width: 40, height: 20 },
+      messages: catalogs['zh-CN'],
+      ...defaultInspectors,
+    }))
+    expect(view.lastFrame()).toContain('alpha — 组合')
+    expect(view.lastFrame()).toContain('alpha')
+    expect(view.lastFrame()!.split('\n').every(line => displayWidth(line) <= 40)).toBe(true)
+
+    view.stdin.write('\r')
+    await new Promise(resolve => setImmediate(resolve))
+    expect(view.lastFrame()).toContain('详情: alpha')
+    expect(view.lastFrame()).toContain('摘要: 组合听说题型')
+    view.stdin.write('\x1B')
+    await new Promise(resolve => setTimeout(resolve, 150))
+    view.stdin.write('\t')
+    await new Promise(resolve => setImmediate(resolve))
+    expect(view.lastFrame()).toContain('delivery — 交付')
+    view.stdin.write('\r')
+    await new Promise(resolve => setImmediate(resolve))
+    expect(view.lastFrame()).toContain('详情: delivery')
+    expect(view.lastFrame()).toContain('摘要: 交付 API 与 UI')
+    expect(view.lastFrame()!.split('\n').every(line => displayWidth(line) <= 40)).toBe(true)
     view.cleanup()
   })
 

@@ -18,6 +18,7 @@ function snapshot(names: string[]): ProjectStatusSnapshot {
     records: names.map((name, index) => ({
       output: {
         name,
+        summary: null,
         kind: 'feature',
         progress: { done: index, total: names.length },
         ageDays: 0,
@@ -108,7 +109,7 @@ describe('dashboard projection', () => {
 
   it('projects transitive Group dependencies and only valid next actions', () => {
     const input = snapshot(['delivery/api', 'foundation', 'setup'])
-    input.groups = [{ name: 'delivery', path: '.rsp/changes/delivery/00-brief.md', slices: [{ name: 'delivery/api', boundary: 'API', state: 'open' }], completion: { done: 0, total: 1 }, blockers: false, readyToClose: false, warnings: [] }]
+    input.groups = [{ name: 'delivery', summary: null, path: '.rsp/changes/delivery/00-brief.md', slices: [{ name: 'delivery/api', boundary: 'API', state: 'open' }], completion: { done: 0, total: 1 }, blockers: false, readyToClose: false, warnings: [] }]
     input.plan.edges = [
       { change: 'delivery/api', requires: 'foundation', reason: 'API needs foundation', state: 'open' },
       { change: 'foundation', requires: 'setup', reason: 'foundation needs setup', state: 'archived' },
@@ -180,7 +181,7 @@ describe('dashboard reducer', () => {
 
   it('filters, switches scope, handles resize, and retains last data on refresh failure', () => {
     const first = snapshot(['alpha', 'beta'])
-    first.groups = [{ name: 'group-a', path: '.rsp/changes/group-a/00-brief.md', slices: [], completion: { done: 0, total: 1 }, blockers: false, readyToClose: false, warnings: [] }]
+    first.groups = [{ name: 'group-a', summary: null, path: '.rsp/changes/group-a/00-brief.md', slices: [], completion: { done: 0, total: 1 }, blockers: false, readyToClose: false, warnings: [] }]
     let state = initialDashboardState(first, { width: 120, height: 24 })
     state = reduceDashboard(state, { type: 'filter', value: 'beta' })
     expect(visibleItems(state).map(item => item.workRef)).toEqual(['beta'])
@@ -191,6 +192,27 @@ describe('dashboard reducer', () => {
     state = reduceDashboard(state, { type: 'refresh-failed', message: 'read failed' })
     expect(state.snapshot).toBe(first)
     expect(state.refresh.error).toBe('read failed')
+  })
+
+  it('filters current Changes and Groups by summary while keeping WorkRef keys stable', () => {
+    const input = snapshot(['mock-exam-flow'])
+    input.records[0].output.summary = '组合听说题型'
+    input.groups = [{
+      name: 'delivery',
+      summary: '交付 API 与 UI',
+      path: '.rsp/changes/delivery/00-brief.md',
+      slices: [],
+      completion: { done: 0, total: 1 },
+      blockers: false,
+      readyToClose: false,
+      warnings: [],
+    }]
+    let state = initialDashboardState(input, { width: 80, height: 20 })
+    state = reduceDashboard(state, { type: 'filter', value: '听说题型' })
+    expect(visibleItems(state).map(item => item.workRef)).toEqual(['mock-exam-flow'])
+    state = reduceDashboard(state, { type: 'scope', scope: 'groups' })
+    state = reduceDashboard(state, { type: 'filter', value: 'API 与 UI' })
+    expect(visibleItems(state).map(item => item.workRef)).toEqual(['delivery'])
   })
 
   it('coalesces repeated refresh requests', () => {

@@ -8,7 +8,7 @@
   "focused-human": {
     "argv": [],
     "status": 0,
-    "stdoutSha256": "9ab5f7bdfa89b11d72c1a1fa485dad043c9a4b35ec0727f992fd96ea2817e1b2",
+    "stdoutSha256": "9820561ab76677a15308a11e316ee6cb602d3b334efcf2254a39a13d9524060a",
     "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "focused-json-success": {
@@ -16,14 +16,14 @@
       "--json"
     ],
     "status": 0,
-    "stdoutSha256": "45d833e52ff28ab1f45e1019cf156b255fe94f2ac77e9ecc0841071dd6de2f30",
+    "stdoutSha256": "81dab0ec0e60b33a1a2861da2579ef3a782e696cda27a46f5de9c63beba19c05",
     "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "jsonSha256": "efa09eeb577e4bce532f68fd4a9c215107d530cc1468705b48d7046cb67636be"
+    "jsonSha256": "d1c45cb1eaf292cc2add31635d1bda71ad497e668b17e94de6ccb229a6f3399f"
   },
   "grouped-human": {
     "argv": [],
     "status": 1,
-    "stdoutSha256": "2ff92a2c9ac5930cf2e23b34c57701a1550daaf7ae4b4eb8deb9e368bfeb0ddd",
+    "stdoutSha256": "e670d8fedbcca08288de43811a6e855d50e5ec74a778464a42a49b50b83016da",
     "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "grouped-json": {
@@ -31,16 +31,16 @@
       "--json"
     ],
     "status": 1,
-    "stdoutSha256": "c20e3090180c711571aaf24df4b7323f8af8faaccb7aae25e76892219d474919",
+    "stdoutSha256": "b40acf87be3e1ebc2c54d3599da0e5af19560e9f14d7fd34366cc4128571cd9b",
     "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "jsonSha256": "6ea38d473d21f949ba6538bfcc136afa4a0b6402e70b6bf13ad943fb82ef7dd2"
+    "jsonSha256": "b19ae617f565b3f06710af25f94c2ee16212b52309a47169a05edf521a87f2f4"
   },
   "filtered-blocked-human": {
     "argv": [
       "--blocked"
     ],
     "status": 0,
-    "stdoutSha256": "8d0beacae69cf7ef120652f5dd215285c4416f4f438e1ea3b49913b2ae2aaa2f",
+    "stdoutSha256": "29d67bf24cfd79a969df72eeae067a0013ab7771e704331a6b1e5809228849c9",
     "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "filtered-stale-human": {
@@ -49,19 +49,19 @@
       "14"
     ],
     "status": 0,
-    "stdoutSha256": "c4190788c069b931d76aea3d0616de7b8d9ac956b0d9c146401b7719857f3f03",
+    "stdoutSha256": "7d3589e3f1dc02eb5c73985b1dd3aa8bf068cbdd00143fd25aaadf1a10b030eb",
     "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "completed-long-workref-human": {
     "argv": [],
     "status": 0,
-    "stdoutSha256": "fbaa93db628f22888a2b069285fd4f74195042726d3aaaf5a8d4fd843dab9ea3",
+    "stdoutSha256": "f632c68b92755897e59078b76ed62f365360b37b6c0a574d0829b46f2022b571",
     "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "archive-trend-human": {
     "argv": [],
     "status": 0,
-    "stdoutSha256": "3024b58801797cf0891ddeba1a29e0a9c464b36580bfe31b76b9bd457ea7e902",
+    "stdoutSha256": "b37e29390f4b8038a4a2aa731fd51f03765a55ec185ef9ddb0e1ddc177ec0df8",
     "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "compact-json": {
@@ -70,9 +70,9 @@
       "--compact"
     ],
     "status": 0,
-    "stdoutSha256": "c85ba70ff436922103698f4509703cccbb419d31de63389aa4746f5428a2b7a0",
+    "stdoutSha256": "e574b1ec9173ba48ea635202e7a84f662f6f2ce9bdef2dd80f4f6b676b2cfe92",
     "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "jsonSha256": "cf5b4ca6a1a727755539b51c7e81d8bcb8b36abaf9e8dd889c55d884c5ea8f63"
+    "jsonSha256": "f711bfd9c5280ca51958e0d7d4c510fa6741059babdf8903642257d50e914e3d"
   },
   "verbose-runtime-human": {
     "argv": [
@@ -93,9 +93,9 @@
       "--json"
     ],
     "status": 1,
-    "stdoutSha256": "5e99f37749407b76ec2c8929e0eaba1dac73a7a46b8f8725822fc7453fa38172",
+    "stdoutSha256": "a654ae57a94eab922f52f33202bd076c0b1344cd41b4006ddd8bafbfab767b42",
     "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "jsonSha256": "446ca14765312e679b5edb84f79805e1cd9704881eac65a5faa131b6eb9573ec"
+    "jsonSha256": "caf76b0be4dae8ebe476f7d45b031be976600158af34bea7b1a2a4271a1ce683"
   },
   "invalid-filter-human": {
     "argv": [

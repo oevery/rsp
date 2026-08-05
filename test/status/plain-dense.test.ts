@@ -17,7 +17,7 @@ describe('dense plain status', () => {
       query: { focused: false, blocked: false, stale: null },
       focused: [longName],
       records: [{
-        output: { name: longName, kind: 'feature', progress: { done: 12, total: 12 }, ageDays: 0, isFocused: true, isBlocked: true, path: `.rsp/changes/${longName}.md` },
+        output: { name: longName, summary: 'Readable completed outcome', kind: 'feature', progress: { done: 12, total: 12 }, ageDays: 0, isFocused: true, isBlocked: true, path: `.rsp/changes/${longName}.md` },
         progressKnown: true,
         title: longName,
         blockerEntries: ['waiting for owner'],
@@ -47,5 +47,6 @@ describe('dense plain status', () => {
     expect(output.match(/External blockers:/g)).toHaveLength(1)
     expect(output).not.toContain('Blocked:')
     expect(output).toContain(`Change: ${longName}`)
+    expect(output).toContain('Summary: Readable completed outcome')
   })
 })
