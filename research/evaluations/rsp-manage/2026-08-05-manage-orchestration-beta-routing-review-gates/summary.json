@@ -1,0 +1,90 @@
+{
+  "id": "manage-orchestration-beta",
+  "case": "auto-multisurface-routing",
+  "plan_hash": "246dc874f7ba88cbffb10ac0966838d28780d8cba73a2ce8efb8d0a231a8c7da",
+  "holdout_manifest_sha256": "5fc67db7f4b7bc54b12f86d811e89d9c384d94e1f376abfb5688d6652b794e30",
+  "base_tree_sha256": "5581fdea1ebaf6000348340e25a7b1f1d84378fced4f2ca03bfda7aa787af7cd",
+  "product_composition": {
+    "hash": "8d7481e9859af6696b2283e75804cb027d089d1b42071ae4f41f2782fcff85ac",
+    "skills": [
+      {
+        "name": "rsp",
+        "hash": "420388d62d7cf0d9918074ef14234beccb58ad5bc351f20c4207a5e033f26c57"
+      },
+      {
+        "name": "rsp-manage",
+        "hash": "6ed426fe21da19cdacff95c3ee62bbb3640b6dbe9d1e911ce7e468bef2fc061b"
+      },
+      {
+        "name": "rsp-implement",
+        "hash": "c5579174fb16a500696dfa1c18ecaceaa65529ec6d58efe47079dac1ea5facc9"
+      }
+    ]
+  },
+  "deterministic_contracts": {
+    "passed": true,
+    "cases": 19
+  },
+  "runs": [
+    {
+      "variant": "baseline",
+      "outcome": "passed",
+      "completion": "contract-passed",
+      "first_fix_result": null,
+      "worker_dispatch_count": null,
+      "tool_calls": 5,
+      "verification_rounds": {
+        "agent_observed": 1,
+        "harness": 1,
+        "harness_passed": true
+      },
+      "elapsed_ms": 129683,
+      "human_intervention_outcome": "not-observed",
+      "omissions": [
+        "first-fix result is not emitted as a structured event",
+        "worker dispatches are not distinguishable from aggregate tool calls"
+      ],
+      "output_contract": {
+        "expected_missing": [],
+        "forbidden_present": []
+      },
+      "recovery_contract": null,
+      "unauthorized_paths": []
+    },
+    {
+      "variant": "product",
+      "outcome": "passed",
+      "completion": "contract-passed",
+      "first_fix_result": null,
+      "worker_dispatch_count": null,
+      "tool_calls": 10,
+      "verification_rounds": {
+        "agent_observed": 1,
+        "harness": 1,
+        "harness_passed": true
+      },
+      "elapsed_ms": 337149,
+      "human_intervention_outcome": "not-observed",
+      "omissions": [
+        "first-fix result is not emitted as a structured event",
+        "worker dispatches are not distinguishable from aggregate tool calls"
+      ],
+      "output_contract": {
+        "expected_missing": [],
+        "forbidden_present": []
+      },
+      "recovery_contract": null,
+      "unauthorized_paths": []
+    }
+  ],
+  "comparison": {
+    "status": "complete",
+    "reason": null
+  },
+  "conclusion_limits": [
+    "no numeric promotion threshold",
+    "no activation or release change",
+    "no provider or real-host generality claim",
+    "unavailable measurements remain explicit omissions"
+  ]
+}

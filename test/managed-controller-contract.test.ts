@@ -135,6 +135,32 @@ describe('rsp-manage research candidate', () => {
     expect(prepared.prompt).toContain('Use $rsp-manage')
   })
 
+  it('prepares an unseen automatic multi-surface holdout that selects sequential Manage', ({ onTestFinished }) => {
+    const outputRoot = mkdtempSync(join(tmpdir(), 'rsp-manage-auto-multisurface-'))
+    onTestFinished(() => rmSync(outputRoot, { force: true, recursive: true }))
+
+    const prepared = prepareManagedControllerRun({
+      caseId: 'auto-multisurface-routing',
+      outputRoot,
+      root,
+      variant: 'product',
+    })
+
+    expect(prepared.manifest.automatic_activation).toBe(true)
+    expect(prepared.manifest.expected_mode).toBe('execute')
+    expect(prepared.manifest.installed_skills).toEqual(['rsp', 'rsp-manage', 'rsp-implement'])
+    expect(prepared.manifest.required_changes).toEqual([
+      '.rsp/changes/refresh-status-guidance.md',
+      '.rsp/specs/status-presentation.md',
+      'src/status-card.mjs',
+      'docs/en/status.md',
+      'docs/zh-CN/status.md',
+    ])
+    expect(prepared.prompt).toContain('project-installed skills and project workflow')
+    expect(prepared.manifest.expected_output).toEqual(expect.arrayContaining(['selected', 'sequential', 'npm test']))
+    expect(prepared.manifest.forbidden_output).toEqual(expect.arrayContaining(['RouteDisposition: direct', 'declined']))
+  })
+
   it('prepares the exact-package pause and resume recovery holdout', ({ onTestFinished }) => {
     const outputRoot = mkdtempSync(join(tmpdir(), 'rsp-manage-pause-resume-'))
     onTestFinished(() => rmSync(outputRoot, { force: true, recursive: true }))
@@ -348,6 +374,9 @@ describe('rsp-manage product Skill', () => {
     expect(managedRouting).toContain('does not also need independent or parallelizable slices')
     expect(managedRouting).toContain('elapsed wall-clock minutes are never qualification evidence')
     expect(managedRouting).toContain('bias non-small continuation toward Manage')
+    expect(managedRouting).toContain('authoritative Specs, product presentation, public documentation, and multiple verification surfaces')
+    expect(managedRouting).toContain('even when one writer owns all mutations and dispatch must remain sequential')
+    expect(managedRouting).toContain('Writer count and lack of parallelism do not collapse multiple acceptance or authority surfaces into one local seam')
     expect(managedRouting).toContain('Decline as direct one-step work only when all of these are true')
     expect(managedRouting).toContain('one owner, one local seam, one mutation pass, one decisive check, no managed lifecycle coordination, and no ready successor')
     expect(managedRouting).toContain('fails any one of these conditions qualifies as non-small through this automatic path')
@@ -521,9 +550,13 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('exactly `incomplete`, `evidence-complete`, or `review-clean`')
     expect(body).toContain('A required worker that was not created, did not return a valid required receipt, returned `unavailable` or `boundary-changed`')
     expect(body).toContain('keeps acceptance `incomplete`')
+    expect(body).toContain('Implementation verification, fixed-scope change review, and the durable writeback decision are separate gates')
     expect(body).toContain('Accepted required receipts plus fresh declared verification may derive only `evidence-complete`')
-    expect(body).toContain('only a clean fixed-scope durable review may then derive `review-clean`')
+    expect(body).toContain('this verification is implementation verification')
+    expect(body).toContain('Only a clean fixed-scope change review may then derive managed `review-clean`')
     expect(body).toContain('An execution receipt never derives `review-clean` directly')
+    expect(body).toContain('a verification receipt does not derive it either')
+    expect(body).toContain('The later durable writeback decision cannot substitute for fixed-scope change review')
     expect(body).toContain('When dispatch cannot satisfy a required worker obligation, apply the AcceptanceDisposition rule above')
     expect(body).toContain('return `StopDisposition: capability-unavailable`, keep acceptance `incomplete`, and stop')
     expect(body).toContain('Absence of a dispatch event or receipt is never success')
@@ -546,7 +579,7 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('frontier classification, lane choice, envelopes, receipts, dispatch and retry counts, concurrency reasoning, and resume chronology response-only')
     expect(body).toContain('Converged requirements and design belong in the selected Change')
     expect(body).toContain('real dependencies in `Blockers`')
-    expect(body).toContain('durable facts or rationale in ordinary durable review')
+    expect(body).toContain('durable facts or rationale in the durable writeback decision')
     expect(body).toContain('Create no frontier file, ticket map, ledger, registry, ambient hook, or numeric routing score')
   })
 
@@ -572,7 +605,7 @@ describe('rsp-manage product Skill', () => {
     const { body } = readSkill(product)
 
     expect(body).toContain('`manual` grants neither automatic archive nor commit')
-    expect(body).toContain('`lifecycle` grants lifecycle closeout after Manage-owned clean fixed-scope durable review but no Git action')
+    expect(body).toContain('`lifecycle` grants lifecycle closeout after Manage-owned clean fixed-scope change review and a complete durable writeback decision but no Git action')
     expect(body).toContain('`local` automatically grants lifecycle closeout')
     expect(managedRouting).toContain('Missing configuration preserves `explicit` activation with `local` closeout compatibility')
     expect(managedRouting).toContain('Invalid configuration fails closed as `explicit` plus `manual`')
@@ -1227,9 +1260,9 @@ describe('rsp-manage product Skill', () => {
   it('closes an allowed lifecycle even when commit is denied', () => {
     const { body } = readSkill(product)
 
-    expect(body).toContain('`lifecycle` grants lifecycle closeout after Manage-owned clean fixed-scope durable review but no Git action')
+    expect(body).toContain('`lifecycle` grants lifecycle closeout after Manage-owned clean fixed-scope change review and a complete durable writeback decision but no Git action')
     expect(body).toContain('When granted, close lifecycle before any commit')
-    expect(body).toContain('after Manage-owned clean fixed-scope durable review run `rsp archive <change-work-ref>`')
+    expect(body).toContain('after Manage-owned clean fixed-scope change review and the durable writeback decision run `rsp archive <change-work-ref>`')
     expect(body).toContain('inspect the complete lifecycle diff')
     expect(body).toContain('Decide commit eligibility separately')
     expect(body).toContain('narrowed by nearer restrictions and host enforcement')
@@ -1245,7 +1278,7 @@ describe('rsp-manage product Skill', () => {
 
   it('closes a terminal shallow Group through child and brief commands before commit', () => {
     const { body } = readSkill(product)
-    const archiveChild = body.indexOf('durable-review/archive each child independently')
+    const archiveChild = body.indexOf('review, decide durable writeback, and archive each child independently')
     const rederive = body.indexOf('rederive completion')
     const closeGroup = body.indexOf('run `rsp group close <group>`')
     const commitDecision = body.indexOf('Decide commit eligibility separately')

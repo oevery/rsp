@@ -19,9 +19,9 @@
 
 ## Route Disposition
 - Core owns `RouteDisposition`, whose values are exactly:
-  - `specialist`: return one explicit Discipline owner for its bounded action.
-  - `direct`: execute one bounded non-managed path with one decisive verification and no Manage handoff or WorkerEnvelope. Core may directly mutate only RSP control-plane state; product mutation belongs to Implement or the same bounded manual Discipline action.
-  - `managed`: hand one selected shape-ready owner and bounded goal to Manage after qualification.
+  - `specialist`: return one explicit bounded Discipline result path. The named Discipline owns that one action and returns its result without becoming a completion controller.
+  - `direct`: orchestrate one bounded non-managed completion or continuation with one decisive verification and no Manage handoff or WorkerEnvelope. It may name exactly one Discipline executor. Core may directly mutate only RSP control-plane state; product mutation belongs to Implement or the same bounded manual Discipline action.
+  - `managed`: hand one selected shape-ready owner and bounded goal to Manage after qualification. This is the only route that composes worker lanes and review convergence.
   - `shape`: return unclear but owned work to Shape.
   - `stop`: perform no further action and name the applicable `StopDisposition`.
 - Direct execution requires all of: one ready owner, one local seam, one mutation pass, one decisive check, no managed lifecycle coordination, and no ready successor.
@@ -73,10 +73,14 @@
 - Token counts, token limits, and token cost are not routing, dispatch, retry, authority, completion, acceptance, or closeout inputs.
 
 ## Acceptance and Closeout
+- Implementation verification, fixed-scope change review, and the durable writeback decision are separate gates:
+  - implementation verification supplies fresh evidence after every mutation;
+  - fixed-scope change review is a report-only comparison owned by Review and is required when explicitly requested, required by nearer authority or risk, or needed to derive managed `review-clean`; it is not automatically required for every tiny direct action;
+  - the durable writeback decision occurs before archive and independently decides whether stable current facts or lasting rationale must be written. It never substitutes for fixed-scope change review.
 - `AcceptanceDisposition` values are exactly:
   - `incomplete`: at least one required result, receipt, owner decision, verification, or acceptance input is missing, invalid, unavailable, boundary-changing, or unresolved.
-  - `evidence-complete`: required execution and verification evidence is fresh and accepted, but durable fixed-scope review is not yet clean.
-  - `review-clean`: required evidence is complete and the current fixed-scope durable review has no unresolved accepted finding.
+  - `evidence-complete`: required execution and implementation verification evidence is fresh and accepted, but the required fixed-scope change review is not yet clean.
+  - `review-clean`: required evidence is complete and the current fixed-scope change review has no unresolved accepted finding.
 - `CloseoutEligibility` values are exactly:
   - `not-eligible`
   - `lifecycle-ready`
@@ -97,7 +101,7 @@
 5. Every stop halts mutation and names how control may resume.
 6. Every required worker obligation needs actual creation evidence and a valid receipt.
 7. Acceptance is derived from fresh evidence, never from the absence of a failure event.
-8. Closeout is derived only after acceptance and durable review, never directly from execution progress.
+8. Closeout is derived only after acceptance and the durable writeback decision, never directly from execution progress.
 9. Lifecycle closeout precedes any eligible local commit; remote delivery remains explicit.
 10. Same-goal resume and receipts invalidate stale control claims and are revalidated inside Manage; only a true owner, topology, route, behavior, acceptance, interface, scope, or authority boundary returns to Core.
 

@@ -4,7 +4,7 @@ RSP 发布一个由十一项与宿主无关的 Skill 组成的默认套件，供
 
 | Skill | 职责 |
 |---|---|
-| `rsp` | 派生下一步操作，指导接入、持久化审查与归档判断。 |
+| `rsp` | 派生下一步操作，指导接入、持久化写回判断与归档判断。 |
 | `rsp-shape` | 塑造一个可执行 Change 或合理的浅层 Group。 |
 | `rsp-design` | 解决一个边界明确的领域、模块或接缝设计问题，或一个以寻找证据为目的的设计问题。 |
 | `rsp-implement` | 实现一个已选定且就绪的 Change，并提供最新验证。 |
@@ -43,15 +43,21 @@ RSP 发布一个由十一项与宿主无关的 Skill 组成的默认套件，供
 
 ## 控制结果
 
-RSP 使用临时的 Skill Control Model 解释当前决策，但不会创建持久化控制器状态。Core 在同级路径中选择一种：专门 Discipline、受限直接执行、受管执行、返回 Shape，或停止。直接执行必须始终满足一个 ready owner、一个本地 seam、一次修改、一个决定性检查、不需要受管生命周期协调且没有 ready successor；边界一旦扩大，Core 就重新推导路由。Core 只能直接修改 RSP 控制面状态；产品修改由 Implement 或同一边界内的受限手动 Discipline 操作执行。
+RSP 使用临时的 Skill Control Model 解释当前决策，但不会创建持久化控制器状态。Core 在同级路径中选择一种：专门 Discipline、受限直接执行、受管执行、返回 Shape，或停止。specialist 路径结束于一个显式且边界明确的 Discipline 结果。direct 路径编排一次非 Manage 的完成或继续过程，可以指定恰好一个 Discipline executor，但不会把它变成 Controller。只有 managed 路径可以组合 worker lanes 和 Review 收敛。直接执行必须始终满足一个 ready owner、一个本地 seam、一次修改、一个决定性检查、不需要受管生命周期协调且没有 ready successor；边界一旦扩大，Core 就重新推导路由。Core 只能直接修改 RSP 控制面状态；产品修改由 Implement 或同一边界内的受限手动 Discipline 操作执行。
 
-工作归属、决策归属、临时交接、执行不确定性与验收是不同概念。`WorkOwner` 表示选定的 Change 或浅层 Group，`DecisionOwner` 表示必须作出实质决策的人或权限来源，`NextOwner` 表示下一个控制或执行能力。每次停止都必须说明下一位 owner、所需输入，以及工作应经 Shape 或 Core 返回，还是等待新的证据、环境、验证或能力。必需 worker 未实际创建或没有有效 receipt 时，只能视为能力不可用，绝不能视为成功完成。所有必需结果都具备最新有效证据前，验收保持 incomplete；只有 durable review 干净后，才能进一步推导 lifecycle 或 local commit 资格。
+工作归属、决策归属、临时交接、执行不确定性与验收是不同概念。`WorkOwner` 表示选定的 Change 或浅层 Group，`DecisionOwner` 表示必须作出实质决策的人或权限来源，`NextOwner` 表示下一个控制或执行能力。每次停止都必须说明下一位 owner、所需输入，以及工作应经 Shape 或 Core 返回，还是等待新的证据、环境、验证或能力。必需 worker 未实际创建或没有有效 receipt 时，只能视为能力不可用，绝不能视为成功完成。
+
+三个容易混淆的门槛彼此独立：
+
+- 实现验证（implementation verification）在每次修改后提供最新证据。
+- 固定范围变更审查（fixed-scope change review）是 Review 拥有的只读比较；仅在用户显式请求、项目权限或风险要求，或受管流程需要推导 `review-clean` 时才是必需项，不会自动施加给每个 tiny direct 操作。
+- 持久化写回判断（durable writeback decision）在归档前必做，并独立判断是否要把稳定现状或长期理由更新到 Spec、范围明确的指令或 Decision Record；它不能替代固定范围变更审查。
 
 这些结果只存在于当前响应与宿主执行上下文中。Change 和 Group 仍是持久归属者，其生命周期仍只有 `open` 或 `archived`。
 
 ## 受管自动化
 
-Manage 是符合条件的长时间运行、恢复、多切片、反复收敛、真实宿主验收或生命周期交付工作的控制器。单步工作和紧密耦合的小型工作保持直接执行。
+Manage 是符合条件的长时间运行、恢复、多切片、反复收敛、真实宿主验收或生命周期交付工作的控制器。在自动激活下，一个同时跨越权威 Specs、产品呈现、公开文档和多个验证面的 tracked completion 必须选择 Manage，即使所有修改都由一个 writer 串行完成。真正的单步工作和紧密耦合的小型工作保持直接执行。
 
 ```yaml
 manage:
@@ -73,7 +79,7 @@ Diagnose 与私有 Inspect lane 保持只读；Fix 是其修改边界内的唯�
 `closeout` 设置 Manage 已被实际选择并通过资格判断后的收尾上限：
 
 - `manual`：归档与提交都保持手动。
-- `lifecycle`：持久化审查后可以归档；提交仍然独立。
+- `lifecycle`：所需固定范围变更审查干净且持久化写回判断完成后可以归档；提交仍然独立。
 - `local`：自动归档符合条件、已验证、非小型且归属边界干净、路径精确、无混杂或越界改动的受管终态边界，并把这些精确路径一次性路由到本地 Commit，无需用户再次请求。
 
 Manage 负责推导 commit 资格、时机和 Commit envelope；`rsp-commit` 独占精确暂存、message 构造、一次本地提交和提交后观察。

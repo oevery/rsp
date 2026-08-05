@@ -11,7 +11,7 @@ required_contract:
   - A required worker that was not created, did not return a valid required receipt, returned `unavailable` or `boundary-changed`
   - keeps acceptance `incomplete`
   - Accepted required receipts plus fresh declared verification may derive only `evidence-complete`
-  - only a clean fixed-scope durable review may then derive `review-clean`
+  - Only a clean fixed-scope change review may then derive managed `review-clean`
   - An execution receipt never derives `review-clean` directly
   - When dispatch cannot satisfy a required worker obligation, apply the AcceptanceDisposition rule above
   - 'return `StopDisposition: capability-unavailable`, keep acceptance `incomplete`, and stop'
@@ -23,7 +23,7 @@ required_contract:
   - 'Any other acceptance state derives `CloseoutEligibility: not-eligible`'
   - neither archive nor commit runs
   - '`manual` grants neither automatic archive nor commit'
-  - '`lifecycle` grants lifecycle closeout after Manage-owned clean fixed-scope durable review but no Git action'
+  - '`lifecycle` grants lifecycle closeout after Manage-owned clean fixed-scope change review and a complete durable writeback decision but no Git action'
   - '`local` automatically grants lifecycle closeout'
 prohibited_actions:
   - controller substitutes for unavailable required implementation worker

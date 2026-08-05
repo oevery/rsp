@@ -4,7 +4,7 @@ Load this reference only for a requested completion or continuation that is not 
 
 ## OWNER PREFLIGHT — Core resolves the owner without execution
 
-Use this route after Core has preserved the fixed-scope Review, release, isolated Design, and tiny settled-work exceptions. Under `manage.activation: explicit`, consider Manage only for an explicitly managed request. Under `manage.activation: auto`, consider it for every other requested completion or continuation that does not satisfy the complete small-work exclusion: one owner, one local seam, one mutation pass, one decisive check, no managed lifecycle coordination, and no ready successor.
+Use this route after Core has preserved the fixed-scope Review, release, isolated Design, and tiny settled-work exceptions. Here fixed-scope Review means the explicit report-only fixed-scope change review. Under `manage.activation: explicit`, consider Manage only for an explicitly managed request. Under `manage.activation: auto`, consider it for every other requested completion or continuation that does not satisfy the complete small-work exclusion: one owner, one local seam, one mutation pass, one decisive check, no managed lifecycle coordination, and no ready successor.
 
 Treat the requested goal and independently allowed planning and product mutations as a transient authority envelope. Automatic activation grants controller selection only and never adds planning or product-mutation authority. Core resolves the smallest sufficient owner before testing Manage eligibility, without dispatching work or mutating product state.
 
@@ -22,7 +22,9 @@ Select `rsp-manage` only for one selected ready Change or shallow Group that qua
 
 A Group qualifies when it has at least two ready children, or when the continuation qualifies through prospective signals or recovery.
 
-Under automatic activation, bias non-small continuation toward Manage. Decline as direct one-step work only when all of these are true: one owner, one local seam, one mutation pass, one decisive check, no managed lifecycle coordination, and no ready successor. A selected ready completion or continuation that fails any one of these conditions qualifies as non-small through this automatic path even when no separate prospective signal is obvious; do not leave the middle case unclassified. Worker-only work remains ineligible. Readiness alone does not qualify work without a requested completion or continuation, and automatic routing remains bounded by the requested goal.
+Under automatic activation, bias non-small continuation toward Manage. A tracked completion spanning authoritative Specs, product presentation, public documentation, and multiple verification surfaces is multi-surface non-small work and reports `selected` even when one writer owns all mutations and dispatch must remain sequential. Writer count and lack of parallelism do not collapse multiple acceptance or authority surfaces into one local seam.
+
+Decline as direct one-step work only when all of these are true: one owner, one local seam, one mutation pass, one decisive check, no managed lifecycle coordination, and no ready successor. A selected ready completion or continuation that fails any one of these conditions qualifies as non-small through this automatic path even when no separate prospective signal is obvious; do not leave the middle case unclassified. Worker-only work remains ineligible. Readiness alone does not qualify work without a requested completion or continuation, and automatic routing remains bounded by the requested goal.
 
 Make the route observable: report `selected` with the decisive qualification signal, or `declined` with the complete direct-work exclusion and exact Core or Discipline action. If dispatch applies, report the concrete overlap/isolation evidence that makes it sequential or parallel. Selection, decline, and dispatch reasoning remain transient and create no controller state.
 

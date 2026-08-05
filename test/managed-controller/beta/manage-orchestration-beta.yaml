@@ -1,15 +1,15 @@
 id: manage-orchestration-beta
-case: pause-resume
+case: auto-multisurface-routing
 variants:
   - baseline
   - product
-holdout_manifest_sha256: 9efb6f109991a8f6d0d77053599f8cbe4a2a1bef27460a145615e4c871ba9a64
-base_tree_sha256: 186c503aa8a467c7de0ed867a158cc0456df01fa528c1ef3945e12374fead43a
+holdout_manifest_sha256: 5fc67db7f4b7bc54b12f86d811e89d9c384d94e1f376abfb5688d6652b794e30
+base_tree_sha256: 5581fdea1ebaf6000348340e25a7b1f1d84378fced4f2ca03bfda7aa787af7cd
 product_skill_names:
   - rsp
   - rsp-manage
   - rsp-implement
-product_composition_sha256: ff9d3e73086d7067fa2c65f8e569a369266ea15d6a70d3971665ca84d8c2be41
+product_composition_sha256: 8d7481e9859af6696b2283e75804cb027d089d1b42071ae4f41f2782fcff85ac
 prior_retained_evidence:
   - path: research/evaluations/rsp-manage/2026-08-04-manage-orchestration-beta/report.md
     sha256: 4c4d7ff94bbdfbfc6988e9d264cff05de89a37f6dcc9e19f555536ba02011dc1

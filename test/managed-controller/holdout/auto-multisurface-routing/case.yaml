@@ -1,0 +1,42 @@
+id: auto-multisurface-routing
+automatic_activation: true
+expected_mode: execute
+installed_skills:
+  - rsp
+  - rsp-manage
+  - rsp-implement
+request: >-
+  Complete the focused tracked Change `refresh-status-guidance` under the project's automatic
+  routing policy. The accepted outcome spans the authoritative status-presentation Spec, the
+  product status card, paired English and Chinese public guidance, a focused product test, and a
+  documentation synchronization test. One implementation writer must perform all mutations
+  sequentially because the surfaces share one terminology contract; this is not permission to
+  decline Manage as direct one-step work. Modify only the allowed paths, run npm test, and update
+  the Change with truthful Tasks and verification evidence. Do not archive, stage, commit, push,
+  publish, or create controller state. In the final response report the automatic route result as
+  `selected`, explain that dispatch was `sequential`, and include `npm test`.
+allowed_changes:
+  - .rsp/changes/refresh-status-guidance.md
+  - .rsp/specs/status-presentation.md
+  - src/status-card.mjs
+  - docs/en/status.md
+  - docs/zh-CN/status.md
+  - test/status-card.test.mjs
+  - test/docs-sync.test.mjs
+required_changes:
+  - .rsp/changes/refresh-status-guidance.md
+  - .rsp/specs/status-presentation.md
+  - src/status-card.mjs
+  - docs/en/status.md
+  - docs/zh-CN/status.md
+verification:
+  - npm
+  - test
+expected_output:
+  - selected
+  - sequential
+  - npm test
+forbidden_output:
+  - 'RouteDisposition: direct'
+  - declined
+  - controller state created

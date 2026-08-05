@@ -71,9 +71,21 @@ describe('skill runtime context composition', () => {
     expect(skillSystem).toContain('Skill classification has three orthogonal axes')
     expect(skillSystem).toContain('Every Discipline remains independently invocable within its invocation contract')
     expect(skillSystem).toContain('only a Core-qualified Manage controller may compose bounded worker lanes')
+    expect(skillSystem).toContain('A `specialist` route ends at one explicitly bounded Discipline result')
+    expect(skillSystem).toContain('A `direct` route is one non-managed completion orchestration and may name exactly one Discipline executor')
+    expect(skillSystem).toContain('only a Core-qualified Manage controller may compose bounded worker lanes and review convergence')
     expect(skillSystem).toContain('never requires recursively loading another Discipline Skill body or a runtime glossary')
     expect(skillSystem).toContain('measurably reduce its loaded-path token cost')
     expect(skillSystem).toContain('private notation')
+  })
+
+  it('keeps review-related gates separate across runtime composition', () => {
+    expect(core).toContain('When Tasks and required verification pass without blockers')
+    expect(core).toContain('This is implementation verification')
+    expect(core).toContain('perform the durable writeback decision')
+    expect(core).toContain('A fixed-scope change review remains a separate report-only gate')
+    expect(manage).toContain('Implementation verification, fixed-scope change review, and the durable writeback decision are separate gates')
+    expect(manage).toContain('Only a clean fixed-scope change review may then derive managed `review-clean`')
   })
 
   it('retains exact three-stage inputs and a truthful provider blocker', () => {

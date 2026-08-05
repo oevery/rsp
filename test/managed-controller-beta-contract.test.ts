@@ -32,7 +32,7 @@ function hashContent(content: string) {
 function copyBetaContractProject(target: string) {
   for (const path of [
     ['test', 'managed-controller', 'beta'],
-    ['test', 'managed-controller', 'holdout', 'pause-resume'],
+    ['test', 'managed-controller', 'holdout', 'auto-multisurface-routing'],
     ['skills', 'rsp'],
     ['skills', 'rsp-manage'],
     ['skills', 'rsp-implement'],
@@ -50,7 +50,7 @@ describe('managed-controller beta evidence', () => {
     const plan = loadManagedControllerBetaPlan(root)
 
     expect(plan.id).toBe('manage-orchestration-beta')
-    expect(plan.case).toBe('pause-resume')
+    expect(plan.case).toBe('auto-multisurface-routing')
     expect(plan.variants).toEqual(['baseline', 'product'])
     expect(plan.holdout_manifest_sha256).toMatch(/^[a-f0-9]{64}$/)
     expect(plan.base_tree_sha256).toMatch(/^[a-f0-9]{64}$/)
@@ -90,7 +90,7 @@ describe('managed-controller beta evidence', () => {
     onTestFinished(() => rmSync(directory, { force: true, recursive: true }))
     copyBetaContractProject(directory)
 
-    const manifestPath = join(directory, 'test', 'managed-controller', 'holdout', 'pause-resume', 'case.yaml')
+    const manifestPath = join(directory, 'test', 'managed-controller', 'holdout', 'auto-multisurface-routing', 'case.yaml')
     const manifest = readFileSync(manifestPath, 'utf8')
     writeFileSync(manifestPath, manifest.replace('  - rsp-implement\n', ''))
     expect(() => loadManagedControllerBetaPlan(directory)).toThrow(

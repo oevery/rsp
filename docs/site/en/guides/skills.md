@@ -4,7 +4,7 @@ RSP publishes a default suite of eleven host-neutral Skills for on-demand loadin
 
 | Skill | Responsibility |
 |---|---|
-| `rsp` | Derive the next action; guide setup, durable review, and archive decisions. |
+| `rsp` | Derive the next action; guide setup, durable writeback, and archive decisions. |
 | `rsp-shape` | Shape one executable Change or justified shallow Group. |
 | `rsp-design` | Resolve one bounded domain, module/seam, or evidence-seeking design question. |
 | `rsp-implement` | Implement one selected ready Change with fresh verification. |
@@ -43,15 +43,21 @@ Installation, runtime role, and invocation are separate:
 
 ## Control outcomes
 
-RSP uses a transient Skill Control Model to explain the current decision without creating a persisted controller state. Core chooses one peer route: a specialist Discipline, bounded direct execution, managed execution, return to Shape, or stop. Direct execution stays limited to one ready owner, one local seam, one mutation pass, one decisive check, no managed lifecycle coordination, and no ready successor; if that boundary expands, Core derives the route again. Core may directly mutate only RSP control-plane state; product mutation belongs to Implement or the same bounded manual Discipline action.
+RSP uses a transient Skill Control Model to explain the current decision without creating a persisted controller state. Core chooses one peer route: a specialist Discipline, bounded direct execution, managed execution, return to Shape, or stop. A specialist route ends at one explicitly bounded Discipline result. A direct route orchestrates one non-managed completion or continuation and may name exactly one Discipline executor without making it a controller. Managed is the only route that composes worker lanes and review convergence. Direct execution stays limited to one ready owner, one local seam, one mutation pass, one decisive check, no managed lifecycle coordination, and no ready successor; if that boundary expands, Core derives the route again. Core may directly mutate only RSP control-plane state; product mutation belongs to Implement or the same bounded manual Discipline action.
 
-Work ownership, decision ownership, transient handoff, execution uncertainty, and acceptance are separate concepts. `WorkOwner` means the selected Change or shallow Group, `DecisionOwner` means the human or authority source required for a material decision, and `NextOwner` means the next control or execution capability. A stop must say who acts next, what input is required, and whether work returns through Shape or Core, or waits for fresh evidence, environment, verification, or capability. Missing required worker creation or a missing valid receipt is unavailable evidence, never successful completion. Acceptance remains incomplete until every required result is fresh and valid; lifecycle or local-commit eligibility is derived only after clean durable review.
+Work ownership, decision ownership, transient handoff, execution uncertainty, and acceptance are separate concepts. `WorkOwner` means the selected Change or shallow Group, `DecisionOwner` means the human or authority source required for a material decision, and `NextOwner` means the next control or execution capability. A stop must say who acts next, what input is required, and whether work returns through Shape or Core, or waits for fresh evidence, environment, verification, or capability. Missing required worker creation or a missing valid receipt is unavailable evidence, never successful completion.
+
+Three review-related gates remain distinct:
+
+- Implementation verification supplies fresh evidence after every mutation.
+- Fixed-scope change review is the report-only Review comparison. It is required when explicitly requested, required by project authority or risk, or needed for managed `review-clean`; it is not automatically required for every tiny direct action.
+- The durable writeback decision is required before archive and independently decides whether stable current facts or lasting rationale must update a Spec, scoped instruction, or Decision Record. It never substitutes for fixed-scope change review.
 
 These outcomes exist only in the current response and host execution context. Changes and Groups remain the durable owners, and their lifecycle remains `open` or `archived`.
 
 ## Managed automation
 
-Manage is a controller for eligible long-running, recovery, multi-slice, repeated-convergence, real-host acceptance, or lifecycle delivery work. Direct one-step and small tightly coupled work remains direct.
+Manage is a controller for eligible long-running, recovery, multi-slice, repeated-convergence, real-host acceptance, or lifecycle delivery work. A tracked completion spanning authoritative Specs, product presentation, public documentation, and multiple verification surfaces selects Manage under automatic activation even when one writer performs the mutations sequentially. True one-step and small tightly coupled work remains direct.
 
 ```yaml
 manage:
@@ -73,7 +79,7 @@ Diagnose and private Inspect lanes are read-only; Fix is the sole writer at its 
 `closeout` sets a ceiling after Manage has actually been selected and qualified:
 
 - `manual`: archive and commit remain manual.
-- `lifecycle`: durable review may be followed by archive; commit remains separate.
+- `lifecycle`: after required fixed-scope change review is clean and the durable writeback decision is complete, archive may follow; commit remains separate.
 - `local`: automatically archives an eligible, verified, non-small terminal managed boundary with a clean exact owned boundary and routes its exact paths once to local Commit without another user request.
 
 Manage derives commit eligibility, timing, and the Commit envelope; `rsp-commit` exclusively owns exact staging, message construction, one local commit, and post-commit observation.

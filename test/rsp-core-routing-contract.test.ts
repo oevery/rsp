@@ -226,11 +226,14 @@ describe('rsp core routing contract', () => {
 
   it('defines peer route dispositions and explicit stop resume contracts', () => {
     expect(skill).toContain('`RouteDisposition` is exactly `specialist`, `direct`, `managed`, `shape`, or `stop`')
-    expect(skill).toContain('`specialist` returns one explicit Discipline owner')
-    expect(skill).toContain('`direct` permits one bounded non-managed path with one decisive verification and no WorkerEnvelope')
+    expect(skill).toContain('`specialist` returns one explicitly bounded Discipline result path')
+    expect(skill).toContain('without becoming a completion controller')
+    expect(skill).toContain('`direct` orchestrates one bounded non-managed completion or continuation with one decisive verification and no WorkerEnvelope')
+    expect(skill).toContain('it may name exactly one Discipline executor')
     expect(skill).toContain('Core may directly mutate only RSP control-plane state')
     expect(skill).toContain('product mutation belongs to Implement or the same bounded manual Discipline action')
     expect(skill).toContain('`managed` hands one selected shape-ready owner and bounded goal to Manage after qualification')
+    expect(skill).toContain('the only route that composes worker lanes and review convergence')
     expect(skill).toContain('`shape` returns unclear owned work to Shape')
     expect(skill).toContain('`stop` names one `StopDisposition`')
     expect(skill).toContain('exactly `ask-owner`, `return-to-shape`, `reroute`, `retry-with-evidence`, `environment-blocked`, `verification-blocked`, or `capability-unavailable`')
@@ -311,9 +314,25 @@ describe('rsp core routing contract', () => {
     expect(managed).toContain('Decline as direct one-step work only when all of these are true')
     expect(managed).toContain('do not leave the middle case unclassified')
     expect(managed).toContain('elapsed wall-clock minutes are never qualification evidence')
+    expect(managed).toContain('authoritative Specs, product presentation, public documentation, and multiple verification surfaces')
+    expect(managed).toContain('even when one writer owns all mutations and dispatch must remain sequential')
+    expect(managed).toContain('Writer count and lack of parallelism do not collapse multiple acceptance or authority surfaces into one local seam')
     expect(fallback).toContain('Perform at most one bounded ordinary Core action or one optional Discipline action against the same owner')
     expect(fallback).toContain('If the action becomes multi-owner, cross-boundary, dependent on managed coordination')
     expect(skillSystem).toContain('lack of parallelizable slices does not defeat qualification')
+  })
+
+  it('separates implementation verification, fixed-scope change review, and durable writeback', () => {
+    for (const body of [skillSystem, durable, manageSkill]) {
+      expect(body).toContain('implementation verification')
+      expect(body).toContain('fixed-scope change review')
+      expect(body).toContain('durable writeback decision')
+    }
+    expect(durable).toContain('not automatically required for every tiny direct action')
+    expect(durable).toContain('always required before archive')
+    expect(durable).toContain('never substitutes for fixed-scope change review')
+    expect(manageSkill).toContain('Only a clean fixed-scope change review may then derive managed `review-clean`')
+    expect(manageSkill).toContain('The later durable writeback decision cannot substitute for fixed-scope change review')
   })
 
   it('makes managed selection and safe dispatch reasoning observable without controller state', () => {
@@ -425,7 +444,7 @@ describe('rsp core routing contract', () => {
     expect(skill).toContain('Manage solely owns same-goal revalidation, interruption and resume, review convergence, acceptance, lifecycle closeout, and commit eligibility and orchestration')
     expect(skill).toContain('`rsp-commit` retains exact Git execution')
     expect(manageSkill).toContain('inspect the complete lifecycle diff')
-    expect(manageSkill).toContain('after Manage-owned clean fixed-scope durable review run `rsp archive <change-work-ref>`')
+    expect(manageSkill).toContain('after Manage-owned clean fixed-scope change review and the durable writeback decision run `rsp archive <change-work-ref>`')
     expect(manageSkill).toContain('`rsp group close <group>`')
     expect(manageSkill).toContain('Terminal small owners default to no commit')
     expect(manageSkill).toContain('qualified `local` terminal non-small Change or Group')
@@ -435,7 +454,7 @@ describe('rsp core routing contract', () => {
     expect(manageSkill).toContain('Push is opt-in only when user explicitly mentions push')
     expect(manageSkill).toContain('Never force-push')
     expect(manageSkill).toContain('`manual` grants neither automatic archive nor commit')
-    expect(manageSkill).toContain('`lifecycle` grants lifecycle closeout after Manage-owned clean fixed-scope durable review but no Git action')
+    expect(manageSkill).toContain('`lifecycle` grants lifecycle closeout after Manage-owned clean fixed-scope change review and a complete durable writeback decision but no Git action')
     expect(manageSkill).toContain('`local` automatically grants lifecycle closeout')
     expect(managed).toContain('Missing configuration preserves `explicit` activation with `local` closeout compatibility')
     expect(managed).toContain('Invalid configuration fails closed as `explicit` plus `manual`')
