@@ -23,7 +23,7 @@ kind: "refactor"
 ### MODIFIED
 - Requirement: Skill classification separates distribution kind, runtime role, and invocation mode.
   - Distribution kind remains the existing flat `default | optional` inventory contract.
-  - Runtime roles explain Core, Discipline, Controller, and Discovery ownership without creating another runtime manifest.
+  - Runtime roles explain Core, Shape, Discipline, Controller, and Discovery ownership without creating another runtime manifest.
   - Invocation mode explains direct, Core-routed, policy-selected, and explicit selection independently from installation.
 - Requirement: Current prose and human inventory labels call the bundled default collection the default suite rather than implying every Skill is a lifecycle stage.
 - Requirement: Recursive orchestration remains forbidden for ordinary Discipline Skills; only a Core-qualified Manage controller may compose bounded worker lanes.
