@@ -68,8 +68,10 @@ describe('skill runtime context composition', () => {
 
   it('records single ownership, standalone invocation, and measured-notation boundaries', () => {
     expect(skillSystem).toContain('Each branch has one detailed procedure owner')
-    expect(skillSystem).toContain('Every Discipline remains independently invocable')
-    expect(skillSystem).toContain('never requires recursively loading another Skill body or a runtime glossary')
+    expect(skillSystem).toContain('Skill classification has three orthogonal axes')
+    expect(skillSystem).toContain('Every Discipline remains independently invocable within its invocation contract')
+    expect(skillSystem).toContain('only a Core-qualified Manage controller may compose bounded worker lanes')
+    expect(skillSystem).toContain('never requires recursively loading another Discipline Skill body or a runtime glossary')
     expect(skillSystem).toContain('measurably reduce its loaded-path token cost')
     expect(skillSystem).toContain('private notation')
   })

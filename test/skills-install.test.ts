@@ -111,7 +111,7 @@ describe('rsp skills install', () => {
     expect(await readdir(projectRoot)).toEqual([])
   })
 
-  it('installs the default lifecycle inventory and is idempotent', async () => {
+  it('installs the default suite inventory and is idempotent', async () => {
     const projectRoot = await temporaryRoot('rsp-skills-install')
     const unrelated = join(projectRoot, '.agents', 'skills', 'local-tool', 'SKILL.md')
     await mkdir(join(projectRoot, '.agents', 'skills', 'local-tool'), { recursive: true })

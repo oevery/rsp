@@ -1,6 +1,6 @@
 # Skills 与受管工作
 
-RSP 发布十一项默认、与宿主无关、按需加载的生命周期 Skills。每项 Skill 都有明确且狭窄的权限边界，并把结果返回已有的项目或 RSP 归属位置。
+RSP 发布一个由十一项与宿主无关的 Skill 组成的默认套件，供按需加载。每项 Skill 都有明确且狭窄的权限边界，并把结果返回已有的项目或 RSP 归属位置。
 
 | Skill | 职责 |
 |---|---|
@@ -17,6 +17,19 @@ RSP 发布十一项默认、与宿主无关、按需加载的生命周期 Skills
 | `rsp-manage` | 协调符合条件的长时间运行、恢复或多切片延续工作。 |
 
 `rsp-structural-audit` 是可选的纯报告项目 Skill，在授予实现权限前审计一个边界明确的仓库或子树。
+
+安装方式、运行时角色和调用方式彼此独立：
+
+| Skills | 分发方式 | 运行时角色 | 调用方式 |
+|---|---|---|---|
+| `rsp` | 默认 | Core | 直接作为项目入口 |
+| `rsp-shape` | 默认 | Shape | 由 Core 路由，或显式请求塑形 |
+| Design、Implement、Diagnose、TDD、Review、Resolve Findings 与 Release Docs | 默认 | Discipline | 由 Core 路由为专门能力，或接受边界明确的显式请求 |
+| `rsp-commit` | 默认 | 本地交付 Discipline | 在精确边界获得授权后由 Core 或 Manage 路由 |
+| `rsp-manage` | 默认 | Controller | Core 根据显式请求或有效项目策略选择 |
+| `rsp-structural-audit` | 可选 | Discovery | 显式纯报告请求 |
+
+“默认”表示随套件安装，并不表示自动调用。普通 Discipline Skill 不递归编排面向用户的流程；只有通过 Core 资格判断的 Manage Controller 才能组合有边界的 worker lanes。
 
 ## 按证据组合套件
 

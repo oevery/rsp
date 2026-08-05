@@ -19,7 +19,7 @@ export const skillsCatalogs: Record<UiLocale, SkillsTuiMessages> = {
   'en': {
     title: 'RSP Skill manager',
     target: 'Target',
-    defaultHeading: 'Default lifecycle Skills',
+    defaultHeading: 'Default suite Skills',
     optionalHeading: 'Optional project Skills',
     missing: 'missing',
     unchanged: 'unchanged',
@@ -33,7 +33,7 @@ export const skillsCatalogs: Record<UiLocale, SkillsTuiMessages> = {
   'zh-CN': {
     title: 'RSP Skill 管理器',
     target: '目标',
-    defaultHeading: '默认生命周期 Skills',
+    defaultHeading: '默认套件 Skills',
     optionalHeading: '可选项目 Skills',
     missing: '未安装',
     unchanged: '一致',

@@ -1,6 +1,6 @@
 # Skills and managed work
 
-RSP publishes eleven default host-neutral lifecycle Skills for on-demand loading. Each has a narrow authority boundary and returns its result to an existing project or RSP owner.
+RSP publishes a default suite of eleven host-neutral Skills for on-demand loading. Each has a narrow authority boundary and returns its result to an existing project or RSP owner.
 
 | Skill | Responsibility |
 |---|---|
@@ -17,6 +17,19 @@ RSP publishes eleven default host-neutral lifecycle Skills for on-demand loading
 | `rsp-manage` | Coordinate one eligible long-running, recovery, or multi-slice continuation. |
 
 `rsp-structural-audit` is an optional report-only project Skill. It audits one bounded repository or subtree before implementation authority is granted.
+
+Installation, runtime role, and invocation are separate:
+
+| Skills | Distribution | Runtime role | Invocation |
+|---|---|---|---|
+| `rsp` | default | Core | direct project entry |
+| `rsp-shape` | default | Shape | Core-routed or explicit shaping |
+| Design, implementation, diagnosis, TDD, review, finding resolution, and Release Docs | default | Discipline | Core-routed specialist or explicit bounded request |
+| `rsp-commit` | default | local-delivery Discipline | Core- or Manage-routed after an authorized exact boundary |
+| `rsp-manage` | default | Controller | Core-selected from an explicit request or effective project policy |
+| `rsp-structural-audit` | optional | Discovery | explicit report-only request |
+
+`default` means installed with the suite; it does not mean automatically invoked. Ordinary Discipline Skills do not recursively orchestrate user-facing flows. Only a Core-qualified Manage controller composes bounded worker lanes.
 
 ## Compose the suite from evidence
 

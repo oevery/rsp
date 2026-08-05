@@ -27,7 +27,7 @@ afterEach(async () => {
 })
 
 describe('packaged Skill inventory', () => {
-  it('groups human output into default lifecycle and optional project Skills', () => {
+  it('groups human output into default suite and optional project Skills', () => {
     const log = vi.spyOn(console, 'log').mockImplementation(() => {})
     printPackagedSkillInventory({
       package: { name: '@example/rsp', version: '1.2.3' },
@@ -41,7 +41,7 @@ describe('packaged Skill inventory', () => {
       '  @example/rsp@1.2.3',
       '  target: .agents/skills',
       '',
-      '  Default lifecycle Skills',
+      '  Default suite Skills',
       '    rsp  unchanged',
       '',
       '  Optional project Skills',

@@ -238,7 +238,7 @@ export function printPackagedSkillInventory(inventory: PackagedSkillInventory): 
   console.log(`  ${inventory.package.name}@${inventory.package.version}`)
   console.log(`  target: ${inventory.target}`)
   for (const group of [
-    { heading: 'Default lifecycle Skills', kind: 'default' },
+    { heading: 'Default suite Skills', kind: 'default' },
     { heading: 'Optional project Skills', kind: 'optional' },
   ] as const) {
     console.log('')

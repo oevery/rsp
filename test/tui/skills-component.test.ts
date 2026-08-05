@@ -19,11 +19,11 @@ describe('skillsApp', () => {
   it('locks defaults, selects an optional Skill, and returns one confirmed plan', async () => {
     const onComplete = vi.fn()
     const view = render(React.createElement(SkillsApp, { inventory, messages: skillsCatalogs.en, initialWidth: 40, onComplete }))
-    expect(view.lastFrame()).toContain('Default lifecycle Skills')
+    expect(view.lastFrame()).toContain('Default suite Skills')
     expect(view.lastFrame()).toContain('[x] rsp  locked')
     expect(view.lastFrame()).toContain('Optional project Skills')
     expect(view.lastFrame()).toContain('[ ] rsp-structural-audit')
-    expect(view.lastFrame()!.indexOf('Default lifecycle Skills')).toBeLessThan(view.lastFrame()!.indexOf('Optional project Skills'))
+    expect(view.lastFrame()!.indexOf('Default suite Skills')).toBeLessThan(view.lastFrame()!.indexOf('Optional project Skills'))
     expect(view.lastFrame()!.split('\n').every(line => displayWidth(line) <= 40)).toBe(true)
     view.stdin.write(' ')
     await new Promise(resolve => setImmediate(resolve))
@@ -37,7 +37,7 @@ describe('skillsApp', () => {
     const onComplete = vi.fn()
     const divergent = { ...inventory, skills: inventory.skills.map(skill => skill.name === 'rsp' ? { ...skill, status: 'divergent' as const } : skill) }
     const view = render(React.createElement(SkillsApp, { inventory: divergent, messages: skillsCatalogs['zh-CN'], onComplete }))
-    expect(view.lastFrame()).toContain('默认生命周期 Skills')
+    expect(view.lastFrame()).toContain('默认套件 Skills')
     expect(view.lastFrame()).toContain('可选项目 Skills')
     view.stdin.write('\r')
     await new Promise(resolve => setImmediate(resolve))
