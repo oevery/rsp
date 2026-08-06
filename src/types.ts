@@ -23,6 +23,30 @@ export interface CheckboxCount {
   total: number
 }
 
+export interface VerifyCriticalitySummary {
+  required: CheckboxCount
+  optional: CheckboxCount
+  unclassified: CheckboxCount
+  legacy: boolean
+}
+
+export interface ArchiveReadinessOutput {
+  incompleteTasks: number
+  incompleteVerify: number
+  incompleteRequiredVerify: number
+  incompleteOptionalVerify: number
+  requiredVerify: CheckboxCount
+  optionalVerify: CheckboxCount
+  legacyVerify: boolean
+  completionGate: 'pass' | 'blocked'
+  coverageWarnings: number
+  activeBlockers: boolean
+  missingScenarios: boolean
+  deterministic: 'pass' | 'warnings'
+  semantic: 'needs-review'
+  archiveReady: 'yes' | 'judgment' | 'no'
+}
+
 export interface CreateChangeArgs {
   name: string
   kind?: string

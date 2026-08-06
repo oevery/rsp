@@ -60,7 +60,7 @@ After an isolated workspace has an authorized exact commit set, route local tran
 - **TDD when justified:** use `rsp-tdd` only when test-first is explicitly required by the user, Change, or project instructions, or when a concrete changed risk makes a pre-mutation RED materially safer. Public contracts, persisted data, security or money, concurrency, complex transitions, and escaped defects qualify; mere testability or being a fix does not. Its manual fallback observes the focused RED, makes the minimum GREEN change, and refactors only while green.
 - **Ordinary implementation by default:** use `rsp-implement`, or the equivalent bounded edit and verification, once the behavior, cause, and owner are sufficiently evidenced.
 
-All branches return evidence, Tasks, Verify updates, and blockers to the same Change. Fresh verification is required, but a new test is only one option; use the cheapest decisive check that covers the changed risk.
+All branches return evidence, Tasks, Verify updates, and blockers to the same Change. Under `## Verify`, `### Required` owns evidence necessary to prove acceptance or a changed material risk; `### Optional` owns additional environment, compatibility, scale, or confidence coverage. Legacy unclassified Verify items are Required. Fresh Required verification is mandatory, but a new test is only one option; use the cheapest decisive check that covers the changed risk. Optional omissions remain visible warnings and do not block an otherwise complete Change. Do not downgrade incomplete Required evidence to Optional for closeout convenience; reclassification changes acceptance and requires explicit owner authority plus fresh readiness and review.
 
 ## Operate the selected Change
 
@@ -104,4 +104,4 @@ After loading [durable writeback decision](references/durable-review.md), choose
 - <localized Archive ready label>: <yes | no>
 ```
 
-Response-only Continuation and Durable Decision labels are not canonical artifact headings. In Chinese, for example, use `## 持久化决策`, `决策记录（Decision Record）`, and `可归档（Archive ready）`, not English labels alone. A required unwritten update or real blocker makes archive readiness `no`; CLI `archiveReady: judgment` is advisory, not approval.
+Response-only Continuation and Durable Decision labels are not canonical artifact headings. In Chinese, for example, use `## 持久化决策`, `决策记录（Decision Record）`, and `可归档（Archive ready）`, not English labels alone. A required unwritten update, incomplete Task, incomplete Required Verify item, or real blocker makes archive readiness `no`; Optional coverage warnings do not. Before lifecycle closeout, consume a fresh `rsp ready <work-ref> --json` result and require `completionGate: pass` plus `archiveReady: yes`.

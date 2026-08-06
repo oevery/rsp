@@ -132,7 +132,7 @@ function printDependencyPlan(plan: ChangeDependencyPlanOutput, records: ProjectS
     console.log(`  ${pc.dim('External blockers:')} ${external.join(', ')}`)
   const implementationReady = plan.ready.filter((name) => {
     const record = records.find(candidate => candidate.output.name === name)
-    return !record || record.readiness.incompleteTasks > 0 || record.readiness.incompleteVerify > 0
+    return !record || record.readiness.incompleteTasks > 0 || record.readiness.incompleteRequiredVerify > 0
   })
   const completedReady = plan.ready.filter(name => !implementationReady.includes(name))
   const next = implementationReady.length > 0

@@ -32,6 +32,13 @@ function snapshot(names: string[]): ProjectStatusSnapshot {
       readiness: {
         incompleteTasks: names.length - index,
         incompleteVerify: 1,
+        incompleteRequiredVerify: 1,
+        incompleteOptionalVerify: 0,
+        requiredVerify: { todo: 1, progress: 0, done: 0, dropped: 0, total: 1 },
+        optionalVerify: { todo: 0, progress: 0, done: 0, dropped: 0, total: 0 },
+        legacyVerify: true,
+        completionGate: 'blocked',
+        coverageWarnings: 0,
         activeBlockers: index === names.length - 1,
         missingScenarios: false,
         deterministic: 'pass',

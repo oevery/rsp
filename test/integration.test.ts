@@ -155,6 +155,11 @@ async function createRspFixture(prefix: string, directories: string[] = ['specs'
   return root
 }
 
+async function completeOpenChange(root: string, name: string): Promise<void> {
+  const path = join(root, '.rsp', 'changes', `${name}.md`)
+  await writeFile(path, (await readFile(path, 'utf-8')).replaceAll('- [ ]', '- [x]'))
+}
+
 async function createClosedGroupProject(prefix: string): Promise<string> {
   const root = join(tmpdir(), prefix, randomUUID())
   await mkdir(root, { recursive: true })
@@ -163,6 +168,8 @@ async function createClosedGroupProject(prefix: string): Promise<string> {
   await writeFile(join(root, '.rsp', 'changes', 'release', '00-brief.md'), renderGroupBrief('release', ['release/api', 'release/ui'], { complete: true }))
   execSync(`node ${cliPath()} create release/api`, { cwd: root })
   execSync(`node ${cliPath()} create release/ui`, { cwd: root })
+  await completeOpenChange(root, 'release/api')
+  await completeOpenChange(root, 'release/ui')
   execSync(`node ${cliPath()} archive release/api`, { cwd: root })
   execSync(`node ${cliPath()} archive release/ui`, { cwd: root })
   execSync(`node ${cliPath()} group close release`, { cwd: root })
@@ -230,6 +237,7 @@ describe('change lifecycle integration', () => {
     await writeFile(join(groupDir, '.rsp', 'changes', 'release', '00-brief.md'), renderGroupBrief('release', ['release/api', 'release/ui']))
 
     execSync(`node ${cliPath()} create release/api --kind feature "Ship release API"`, { cwd: groupDir })
+    await completeOpenChange(groupDir, 'release/api')
     const shown = JSON.parse(execSync(`node ${cliPath()} show release/api --json`, { cwd: groupDir, encoding: 'utf-8' }))
     const ready = JSON.parse(execSync(`node ${cliPath()} ready release/api --json`, { cwd: groupDir, encoding: 'utf-8' }))
     execSync(`node ${cliPath()} archive release/api`, { cwd: groupDir })
@@ -481,6 +489,7 @@ manage:
 
   it('archives a change and clears its marker', async () => {
     const { archiveChange } = await import('../src/commands/archive.js')
+    await writeFile(changesPath('test-change.md'), (await readFile(changesPath('test-change.md'), 'utf-8')).replaceAll('- [ ]', '- [x]'))
     await archiveChange('test-change')
 
     expect(existsSync(changesPath('test-change.md'))).toBe(false)
@@ -510,20 +519,48 @@ manage:
     await writeFile(join(archiveWarnDir, '.rsp', 'changes', 'warn-me.md'), renderChange('warn-me'))
     await writeFile(join(archiveWarnDir, '.rsp', 'focus.d', 'warn-me'), '')
 
-    let output = ''
-    try {
-      output = execSync(`node ${cliPath()} archive warn-me 2>&1`, { cwd: archiveWarnDir, encoding: 'utf-8' })
-    }
-    catch (error) {
-      output = String((error as { stdout?: string }).stdout || '')
-    }
-    expect(output).toContain('Verify checklist item(s) are still incomplete')
-    expect(output).not.toContain('durable updates decision still appears open')
+    const result = spawnSync('node', [cliPath(), 'archive', 'warn-me'], { cwd: archiveWarnDir, encoding: 'utf-8' })
+    const output = `${result.stdout}${result.stderr}`
+    expect(result.status).toBe(1)
+    expect(output).toContain('required Verify item(s) are still incomplete')
+    expect(existsSync(join(archiveWarnDir, '.rsp', 'changes', 'warn-me.md'))).toBe(true)
+    expect((await readdir(join(archiveWarnDir, '.rsp', 'archives'))).some(f => f.endsWith('_warn-me.md'))).toBe(false)
+  })
+
+  it('archives a complete change with incomplete optional verification', async () => {
+    const archiveOptionalDir = await createRspFixture('rsp-archive-optional-test', ['specs', 'changes', 'archives', 'focus.d'])
+    const content = renderChange('optional')
+      .replace('- [ ] implement optional', '- [x] implement optional')
+      .replace(
+        `## Verify
+- Automated:
+  - [ ] run tests
+- Manual:
+  - [ ] smoke test optional
+- Durable updates:
+  - [ ] decide whether this change produced durable knowledge for .rsp/specs/ or stable instructions for the nearest project-owned AGENTS.md
+  - [ ] if yes, update the smallest correct target before archive`,
+        `## Verify
+### Required
+- [x] run tests
+- [x] durable decision
+### Optional
+- [ ] smoke test optional`,
+      )
+    await writeFile(join(archiveOptionalDir, '.rsp', 'changes', 'optional.md'), content)
+    await writeFile(join(archiveOptionalDir, '.rsp', 'focus.d', 'optional'), '')
+
+    const result = spawnSync('node', [cliPath(), 'archive', 'optional'], { cwd: archiveOptionalDir, encoding: 'utf-8' })
+    const output = `${result.stdout}${result.stderr}`
+    expect(result.status).toBe(0)
+    expect(output).toContain('optional Verify item(s) are still incomplete')
+    expect(existsSync(join(archiveOptionalDir, '.rsp', 'changes', 'optional.md'))).toBe(false)
+    expect((await readdir(join(archiveOptionalDir, '.rsp', 'archives'))).some(f => f.endsWith('_optional.md'))).toBe(true)
   })
 
   it('treats archive follow-up failures as warnings after the archive move succeeds', async () => {
     const archiveWarnDir = await createRspFixture('rsp-archive-followup-warning-test', ['specs', 'changes', 'archives', 'focus.d'])
-    await writeFile(join(archiveWarnDir, '.rsp', 'changes', 'warn-followup.md'), renderChange('warn-followup'))
+    await writeFile(join(archiveWarnDir, '.rsp', 'changes', 'warn-followup.md'), renderChange('warn-followup').replaceAll('- [ ]', '- [x]'))
     await writeFile(join(archiveWarnDir, '.rsp', 'focus.d', 'warn-followup'), '')
     await mkdir(join(archiveWarnDir, '.git'), { recursive: true })
     await chmod(join(archiveWarnDir, '.rsp', 'focus.d'), 0o555)
@@ -2594,6 +2631,7 @@ describe('archive name collisions', () => {
     execFileSync('node', [cliPath(), 'init'], { cwd: archiveDir })
     const workRef = '听说训练-é'
     execFileSync('node', [cliPath(), 'create', workRef, '验证中文归档'], { cwd: archiveDir })
+    await completeOpenChange(archiveDir, workRef)
 
     const today = new Date().toISOString().slice(0, 10)
     const canonicalName = `${today}_${workRef}.md`
@@ -2638,8 +2676,10 @@ describe('archive name collisions', () => {
     const { archiveChange } = await import('../src/commands/archive.js')
 
     await createChange('duplicate-archive', 'first pass')
+    await writeFile(changesPath('duplicate-archive.md'), (await readFile(changesPath('duplicate-archive.md'), 'utf-8')).replaceAll('- [ ]', '- [x]'))
     await archiveChange('duplicate-archive')
     await createChange('duplicate-archive', 'second pass')
+    await writeFile(changesPath('duplicate-archive.md'), (await readFile(changesPath('duplicate-archive.md'), 'utf-8')).replaceAll('- [ ]', '- [x]'))
     await archiveChange('duplicate-archive')
 
     const archiveFiles = (await readdir(archivePath())).filter(f => f !== 'INDEX.md')
@@ -2853,7 +2893,7 @@ describe('ready command', () => {
 
     const output = execSync(`node ${cliPath()} ready incomplete`, { cwd: readyDir, encoding: 'utf-8' })
     expect(output).toContain('task item(s) still incomplete')
-    expect(output).toContain('Verify checklist item(s) are still incomplete')
+    expect(output).toContain('required Verify item(s) are still incomplete')
     expect(output).not.toContain('Run: rsp archive incomplete')
 
     // change should still be there (not archived)
@@ -2899,7 +2939,8 @@ describe('ready command', () => {
     expect(result.readiness.missingScenarios).toBe(false)
     expect(result.readiness.deterministic).toBe('warnings')
     expect(result.readiness.semantic).toBe('needs-review')
-    expect(result.readiness.archiveReady).toBe('judgment')
+    expect(result.readiness.archiveReady).toBe('no')
+    expect(result.readiness.completionGate).toBe('blocked')
     expect(result.durableReview.required).toBe(true)
     expect(result.durableReview.factDecisions).toContain('No current-fact update needed')
     expect(result.durableReview.rationaleDecisions).toContain('No Decision Record needed')
@@ -3014,7 +3055,8 @@ describe('show command', () => {
     expect(result.change.readiness).toHaveProperty('missingScenarios')
     expect(result.change.readiness.deterministic).toBe('warnings')
     expect(result.change.readiness.semantic).toBe('needs-review')
-    expect(result.change.readiness.archiveReady).toBe('judgment')
+    expect(result.change.readiness.archiveReady).toBe('no')
+    expect(result.change.readiness.completionGate).toBe('blocked')
     expect(Array.isArray(result.contextPaths)).toBe(true)
     expect(result.contextPaths).toContain('.rsp/specs/design.md')
     expect(result.contextPaths).not.toContain('.rsp/specs/00-index.md')
@@ -3337,6 +3379,9 @@ describe('change groups', () => {
     execSync(`node ${cliPath()} create release/api`, { cwd: groupDir })
     execSync(`node ${cliPath()} create release/ui`, { cwd: groupDir })
     execSync(`node ${cliPath()} create release/docs`, { cwd: groupDir })
+    await completeOpenChange(groupDir, 'release/api')
+    await completeOpenChange(groupDir, 'release/ui')
+    await completeOpenChange(groupDir, 'release/docs')
     execSync(`node ${cliPath()} archive release/docs`, { cwd: groupDir })
     await writeFile(briefPath, renderGroupBrief('release', ['release/api', 'release/ui'], { complete: true }))
     execSync(`node ${cliPath()} archive release/api`, { cwd: groupDir })
@@ -3404,6 +3449,8 @@ describe('change groups', () => {
     await writeFile(join(groupDir, '.rsp', 'changes', 'release', '00-brief.md'), renderGroupBrief('release', ['release/api', 'release/ui'], { complete: true }))
     execSync(`node ${cliPath()} create release/api`, { cwd: groupDir })
     execSync(`node ${cliPath()} create release/ui`, { cwd: groupDir })
+    await completeOpenChange(groupDir, 'release/api')
+    await completeOpenChange(groupDir, 'release/ui')
 
     const result = spawnSync('node', [cliPath(), 'group', 'close', 'release'], { cwd: groupDir, encoding: 'utf-8' })
 
@@ -3421,6 +3468,8 @@ describe('change groups', () => {
     await writeFile(join(groupDir, '.rsp', 'changes', 'release', '00-brief.md'), renderGroupBrief('release', ['release/api', 'release/ui'], { complete: true }))
     execSync(`node ${cliPath()} create release/api`, { cwd: groupDir })
     execSync(`node ${cliPath()} create release/ui`, { cwd: groupDir })
+    await completeOpenChange(groupDir, 'release/api')
+    await completeOpenChange(groupDir, 'release/ui')
     execSync(`node ${cliPath()} archive release/api`, { cwd: groupDir })
     execSync(`node ${cliPath()} archive release/ui`, { cwd: groupDir })
 
@@ -3460,6 +3509,8 @@ describe('change groups', () => {
     await writeFile(join(groupDir, '.rsp', 'changes', 'release', '00-brief.md'), renderGroupBrief('release', ['release/api', 'release/ui'], { complete: true }))
     execSync(`node ${cliPath()} create release/api`, { cwd: groupDir })
     execSync(`node ${cliPath()} create release/ui`, { cwd: groupDir })
+    await completeOpenChange(groupDir, 'release/api')
+    await completeOpenChange(groupDir, 'release/ui')
     execSync(`node ${cliPath()} archive release/api`, { cwd: groupDir })
     execSync(`node ${cliPath()} archive release/ui`, { cwd: groupDir })
     execSync(`node ${cliPath()} group close release`, { cwd: groupDir })
@@ -3687,6 +3738,8 @@ describe('change groups', () => {
     await writeFile(join(groupDir, '.rsp', 'changes', 'release', '00-brief.md'), renderGroupBrief('release', ['release/api', 'release/ui'], { complete: true }))
     execSync(`node ${cliPath()} create release/api`, { cwd: groupDir })
     execSync(`node ${cliPath()} create release/ui`, { cwd: groupDir })
+    await completeOpenChange(groupDir, 'release/api')
+    await completeOpenChange(groupDir, 'release/ui')
     execSync(`node ${cliPath()} archive release/api`, { cwd: groupDir })
     execSync(`node ${cliPath()} archive release/ui`, { cwd: groupDir })
     await mkdir(join(groupDir, '.rsp', 'focus.d', 'release'), { recursive: true })
@@ -3707,6 +3760,8 @@ describe('change groups', () => {
     await writeFile(join(groupDir, '.rsp', 'changes', 'release', '00-brief.md'), renderGroupBrief('release', ['release/api', 'release/ui'], { complete: true }))
     execSync(`node ${cliPath()} create release/api`, { cwd: groupDir })
     execSync(`node ${cliPath()} create release/ui`, { cwd: groupDir })
+    await completeOpenChange(groupDir, 'release/api')
+    await completeOpenChange(groupDir, 'release/ui')
     execSync(`node ${cliPath()} archive release/api`, { cwd: groupDir })
     execSync(`node ${cliPath()} archive release/ui`, { cwd: groupDir })
     execSync(`node ${cliPath()} group close release`, { cwd: groupDir })

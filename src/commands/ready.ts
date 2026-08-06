@@ -1,4 +1,4 @@
-import type { CommandRunOptions, RuntimeDiagnostic } from '../types.js'
+import type { ArchiveReadinessOutput, CommandRunOptions, RuntimeDiagnostic } from '../types.js'
 import { readFile } from 'node:fs/promises'
 
 import { resolveExecutableChange } from '../core/change-group.js'
@@ -14,15 +14,7 @@ interface ReadyResult {
   ok: true
   change: string
   path: string | null
-  readiness: {
-    incompleteTasks: number
-    incompleteVerify: number
-    activeBlockers: boolean
-    missingScenarios: boolean
-    deterministic: 'pass' | 'warnings'
-    semantic: 'needs-review'
-    archiveReady: 'yes' | 'judgment' | 'no'
-  }
+  readiness: ArchiveReadinessOutput
   durableReview: {
     required: true
     factDecisions: string[]
@@ -90,6 +82,13 @@ export async function showReady(name: string, options: CommandRunOptions = {}): 
   const readiness = {
     incompleteTasks: readinessDetails.taskTodos.length,
     incompleteVerify: readinessDetails.verifyTodos.length,
+    incompleteRequiredVerify: readinessDetails.requiredVerifyTodos.length,
+    incompleteOptionalVerify: readinessDetails.optionalVerifyTodos.length,
+    requiredVerify: readinessDetails.verifyCriticality.required,
+    optionalVerify: readinessDetails.verifyCriticality.optional,
+    legacyVerify: readinessDetails.verifyCriticality.legacy,
+    completionGate: readinessDetails.archiveReady === 'no' ? 'blocked' as const : 'pass' as const,
+    coverageWarnings: readinessDetails.optionalVerifyTodos.length,
     activeBlockers: readinessDetails.activeBlockers,
     missingScenarios: readinessDetails.missingScenarios,
     deterministic: readinessDetails.deterministic,
@@ -141,6 +140,9 @@ export async function showReady(name: string, options: CommandRunOptions = {}): 
   }
 
   console.log(`  ${pc.dim('Deterministic readiness:')} ${readiness.deterministic === 'pass' ? pc.green('pass') : pc.yellow('warnings')}`)
+  console.log(`  ${pc.dim('Completion gate:')} ${readiness.completionGate === 'pass' ? pc.green('pass') : pc.red('blocked')}`)
+  console.log(`  ${pc.dim('Required verification:')} ${readiness.requiredVerify.done}/${readiness.requiredVerify.total}`)
+  console.log(`  ${pc.dim('Optional coverage:')} ${readiness.optionalVerify.done}/${readiness.optionalVerify.total}${readiness.coverageWarnings > 0 ? pc.yellow(` · ${readiness.coverageWarnings} warning(s)`) : ''}`)
   console.log(`  ${pc.dim('Semantic review:')} ${pc.yellow('needed')}`)
   console.log(`  ${pc.dim('Archive ready:')} ${formatArchiveReady(readiness.archiveReady)}\n`)
   console.log(`  ${pc.bold('Durable review:')}`)

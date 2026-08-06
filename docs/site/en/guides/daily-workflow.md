@@ -33,7 +33,7 @@ Each capability returns to the same Change or existing repository owner. Avoid c
 
 - Update Proposal, Spec, or Design when implementation invalidates the prior plan.
 - Check Tasks only after the outcome exists.
-- Record fresh commands, covered scope, results, and relevant omissions in Verify.
+- Record acceptance-critical evidence under Verify `### Required`; record additional environment, compatibility, scale, or confidence coverage under `### Optional`. Optional omissions stay visible without blocking completion.
 - Keep unresolved external or technical constraints in Blockers.
 - Prefer the cheapest decisive verification. Retain a new test only when it protects observable behavior or a real boundary and adds distinct future confidence.
 
@@ -63,7 +63,7 @@ rsp ready <work-ref>
 rsp archive <work-ref>
 ```
 
-`rsp ready` provides deterministic readiness and semantic-review signals. It is advisory, not archive approval. After archive, recheck the whole intended delivery scope. Commit, push, publication, deployment, approval, and human acceptance remain separate authorities.
+`rsp ready` provides the required completion gate, optional coverage warnings, and semantic-review signals. `rsp archive` fails closed when Tasks, Required Verify, or blockers remain. After archive, recheck the whole intended delivery scope. Commit, push, publication, deployment, approval, and human acceptance remain separate authorities.
 
 ## Recovery
 

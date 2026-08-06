@@ -145,14 +145,22 @@ export async function inspectProjectStatus(options: { nowMs?: number } = {}): Pr
           })
         }
         isBlocked = dependencyInspection.activeBlockers.get(name) ?? hasMeaningfulBlockers(content)
-        const checkboxes = countCheckboxes(content)
-        done = checkboxes.done
-        total = checkboxes.total
-        progressKnown = true
         const details = collectArchiveReadiness(content, { activeBlockers: isBlocked })
+        const document = parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA)
+        const taskCheckboxes = countCheckboxes(getDocumentSectionBody(document, 'tasks'))
+        done = taskCheckboxes.done + details.verifyCriticality.required.done
+        total = taskCheckboxes.total + details.verifyCriticality.required.total
+        progressKnown = true
         readiness = {
           incompleteTasks: details.taskTodos.length,
           incompleteVerify: details.verifyTodos.length,
+          incompleteRequiredVerify: details.requiredVerifyTodos.length,
+          incompleteOptionalVerify: details.optionalVerifyTodos.length,
+          requiredVerify: details.verifyCriticality.required,
+          optionalVerify: details.verifyCriticality.optional,
+          legacyVerify: details.verifyCriticality.legacy,
+          completionGate: details.archiveReady === 'no' ? 'blocked' : 'pass',
+          coverageWarnings: details.optionalVerifyTodos.length,
           activeBlockers: details.activeBlockers,
           missingScenarios: details.missingScenarios,
           deterministic: details.deterministic,
@@ -252,6 +260,13 @@ function emptyReadiness(activeBlockers: boolean): ProjectStatusRecord['readiness
   return {
     incompleteTasks: 0,
     incompleteVerify: 0,
+    incompleteRequiredVerify: 0,
+    incompleteOptionalVerify: 0,
+    requiredVerify: { todo: 0, progress: 0, done: 0, dropped: 0, total: 0 },
+    optionalVerify: { todo: 0, progress: 0, done: 0, dropped: 0, total: 0 },
+    legacyVerify: false,
+    completionGate: activeBlockers ? 'blocked' : 'pass',
+    coverageWarnings: 0,
     activeBlockers,
     missingScenarios: false,
     deterministic: 'pass',

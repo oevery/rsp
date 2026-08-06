@@ -15,7 +15,7 @@ Follow Core's response-versus-artifact language boundary for all user-visible co
 
 ## Audit the envelope
 
-Read nearest project authority, the relevant open Change, Group Brief and children, archive, or confirmed release owner, then inspect `git status`, staged, unstaged, and untracked paths, the cached diff, and recent non-merge commit messages. Recheck the supplied verification and lifecycle facts against current repository state.
+Read nearest project authority, the relevant open Change, Group Brief and children, archive, or confirmed release owner, then inspect `git status`, staged, unstaged, and untracked paths, the cached diff, and recent non-merge commit messages. Recheck the supplied verification and lifecycle facts against current repository state. For a terminal Change or Group child, inspect its open or archived Verify section and stop before staging when a Task or Required Verify item remains incomplete or a blocker remains active. Legacy unclassified Verify items are Required. Optional coverage warnings do not block a terminal commit, but include a material omission in the commit body when it affects review. A checkpoint commit remains explicitly non-terminal and does not claim completed acceptance.
 
 Stop without staging when the owner, allowed paths, commit authority, verification, lifecycle state, or logical boundary is missing, ambiguous, stale, or conflicts with unrelated work. Stop when an allowed path contains mixed owned and unrelated changes that cannot be staged without guessing. Never infer archive, Group closeout, commit, push, tag, publication, approval, amend, rebase, force-push, or history-rewrite authority.
 

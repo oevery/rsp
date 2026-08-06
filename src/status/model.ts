@@ -1,4 +1,5 @@
 import type {
+  ArchiveReadinessOutput,
   ChangeDependencyPlanOutput,
   ChangeGroupStatusOutput,
   CommandDiagnostic,
@@ -19,15 +20,7 @@ export interface ProjectStatusRecord {
   progressKnown: boolean
   title: string
   blockerEntries: string[]
-  readiness: {
-    incompleteTasks: number
-    incompleteVerify: number
-    activeBlockers: boolean
-    missingScenarios: boolean
-    deterministic: 'pass' | 'warnings'
-    semantic: 'needs-review'
-    archiveReady: 'yes' | 'judgment' | 'no'
-  }
+  readiness: ArchiveReadinessOutput
 }
 
 export interface ProjectStatusSnapshot {

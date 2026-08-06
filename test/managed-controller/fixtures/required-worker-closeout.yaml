@@ -20,7 +20,8 @@ required_contract:
   - cannot be replaced by the controller claiming the worker's result
   - '`CloseoutEligibility` independently'
   - exactly `not-eligible`, `lifecycle-ready`, or `local-commit-ready`
-  - 'Only `AcceptanceDisposition: review-clean` plus fresh owner, authority, exact diff, and decisive verification evidence can derive a ready value'
+  - 'require `completionGate: pass` plus `archiveReady: yes`'
+  - 'Only that machine gate, `AcceptanceDisposition: review-clean`, fresh owner, authority, exact diff, and decisive Required verification evidence can derive a ready value'
   - 'Any other acceptance state derives `CloseoutEligibility: not-eligible`'
   - neither archive nor commit runs
   - '`manual` grants neither automatic archive nor commit'

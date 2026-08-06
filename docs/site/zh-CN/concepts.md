@@ -27,7 +27,7 @@ RSP 把未完成工作、持久化事实、长期理由、作用域指令和已�
 
 ## 一个 Change，一个结果
 
-一个 Change 拥有一个可观察结果，以及共享的验收、验证、审查、归档和回滚边界。它保留规范的 Proposal、Spec、Design、Tasks、Verify 与 Blockers 章节。
+一个 Change 拥有一个可观察结果，以及共享的验收、验证、审查、归档和回滚边界。它保留规范的 Proposal、Spec、Design、Tasks、Verify 与 Blockers 章节。Verify 下的 `### Required` 保存验收关键证据，`### Optional` 保存额外环境、兼容性、规模或信心覆盖；未分类的旧 Verify 项按 Required 处理。
 
 让 Change 成为当前计划和最终决定性证据的收敛快照。临时探针、调试过程和日常命令流水属于工作会话，不属于持久化产物。
 

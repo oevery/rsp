@@ -519,7 +519,7 @@ describe('rsp-manage product Skill', () => {
     expect(findSemanticUnit(body, ['Absence of a dispatch event or receipt', 'never success', 'controller claiming'])).toBeDefined()
 
     expect(canonicalEnum(boundaries, 'CloseoutEligibility')).toEqual(['not-eligible', 'lifecycle-ready', 'local-commit-ready'])
-    expect(findSemanticUnit(boundaries, ['`AcceptanceDisposition: review-clean`', 'fresh owner', 'authority', 'exact diff', 'decisive verification evidence', 'ready value'])).toBeDefined()
+    expect(findSemanticUnit(boundaries, ['`completionGate: pass`', '`archiveReady: yes`', '`AcceptanceDisposition: review-clean`', 'fresh owner', 'authority', 'exact diff', 'decisive Required verification evidence', 'ready value'])).toBeDefined()
     expect(findSemanticUnit(boundaries, ['Any other acceptance state', '`CloseoutEligibility: not-eligible`'])).toBeDefined()
     expect(body.match(/A required worker that was not created, did not return a valid required receipt, returned `unavailable` or `boundary-changed`/g)).toHaveLength(1)
     expect(findSemanticUnit(boundaries, ['neither archive nor commit runs'])).toBeDefined()

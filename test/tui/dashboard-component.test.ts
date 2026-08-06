@@ -16,7 +16,7 @@ const snapshot: ProjectStatusSnapshot = {
     progressKnown: true,
     title: name,
     blockerEntries: index ? ['owner decision'] : ['requires `setup`: establish setup first'],
-    readiness: { incompleteTasks: 1, incompleteVerify: 1, activeBlockers: Boolean(index), missingScenarios: false, deterministic: 'pass', semantic: 'needs-review', archiveReady: 'no' },
+    readiness: { incompleteTasks: 1, incompleteVerify: 1, incompleteRequiredVerify: 1, incompleteOptionalVerify: 0, requiredVerify: { todo: 1, progress: 0, done: 0, dropped: 0, total: 1 }, optionalVerify: { todo: 0, progress: 0, done: 0, dropped: 0, total: 0 }, legacyVerify: true, completionGate: 'blocked', coverageWarnings: 0, activeBlockers: Boolean(index), missingScenarios: false, deterministic: 'pass', semantic: 'needs-review', archiveReady: 'no' },
   })),
   groups: [{
     name: 'delivery',

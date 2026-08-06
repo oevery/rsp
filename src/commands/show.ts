@@ -1,10 +1,11 @@
-import type { CommandRunOptions, IssueRelationship, RuntimeDiagnostic } from '../types.js'
+import type { ArchiveReadinessOutput, CommandRunOptions, IssueRelationship, RuntimeDiagnostic } from '../types.js'
 import { readFile } from 'node:fs/promises'
 
 import { resolveExecutableChange } from '../core/change-group.js'
 import { inspectRspConfig, pc } from '../core/config.js'
 import { resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
+import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionBody, parseRspDocument } from '../core/document-model.js'
 import { buildDurableReviewGuidance, collectArchiveReadiness, countCheckboxes, getDurableReviewCandidateTargets, guardRspInitialized, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, parseScenarios } from '../core/helpers.js'
 import { IssueRelationshipError, parseIssueRelationships } from '../core/issue-relationship.js'
 import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
@@ -22,15 +23,7 @@ interface ShowResult {
     progress: { done: number, total: number }
     blockers: boolean
     scenarioCount: number
-    readiness: {
-      incompleteTasks: number
-      incompleteVerify: number
-      activeBlockers: boolean
-      missingScenarios: boolean
-      deterministic: 'pass' | 'warnings'
-      semantic: 'needs-review'
-      archiveReady: 'yes' | 'judgment' | 'no'
-    }
+    readiness: ArchiveReadinessOutput
   }
   contextPaths: string[]
   durableReview: {
@@ -145,14 +138,26 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
   const isFocused = focused.has(name)
 
   const dependencyInspection = await inspectChangeDependencies()
-  const cb = countCheckboxes(content)
   const blockers = dependencyInspection.activeBlockers.get(name) ?? hasMeaningfulBlockers(content)
   const scenarios = parseScenarios(content)
   const readinessDetails = collectArchiveReadiness(content, { activeBlockers: blockers })
+  const document = parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA)
+  const taskCheckboxes = countCheckboxes(getDocumentSectionBody(document, 'tasks'))
+  const progress = {
+    done: taskCheckboxes.done + readinessDetails.verifyCriticality.required.done,
+    total: taskCheckboxes.total + readinessDetails.verifyCriticality.required.total,
+  }
 
   const readiness = {
     incompleteTasks: readinessDetails.taskTodos.length,
     incompleteVerify: readinessDetails.verifyTodos.length,
+    incompleteRequiredVerify: readinessDetails.requiredVerifyTodos.length,
+    incompleteOptionalVerify: readinessDetails.optionalVerifyTodos.length,
+    requiredVerify: readinessDetails.verifyCriticality.required,
+    optionalVerify: readinessDetails.verifyCriticality.optional,
+    legacyVerify: readinessDetails.verifyCriticality.legacy,
+    completionGate: readinessDetails.archiveReady === 'no' ? 'blocked' as const : 'pass' as const,
+    coverageWarnings: readinessDetails.optionalVerifyTodos.length,
     activeBlockers: readinessDetails.activeBlockers,
     missingScenarios: readinessDetails.missingScenarios,
     deterministic: readinessDetails.deterministic,
@@ -188,7 +193,7 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
       kind,
       issues,
       isFocused,
-      progress: { done: cb.done, total: cb.total },
+      progress,
       blockers,
       scenarioCount: scenarios.length,
       readiness,
@@ -213,13 +218,15 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
       console.log(`    ${issue.relation} ${issue.url}`)
   }
   console.log(`  ${pc.dim('Focused:')} ${isFocused ? pc.green('yes') : pc.dim('no')}`)
-  console.log(`  ${pc.dim('Progress:')} ${cb.done}/${cb.total}`)
+  console.log(`  ${pc.dim('Progress:')} ${progress.done}/${progress.total}`)
   console.log(`  ${pc.dim('Blockers:')} ${blockers ? pc.yellow('yes') : pc.green('no')}`)
   console.log(`  ${pc.dim('Scenarios:')} ${scenarios.length}`)
   console.log()
   console.log(`  ${pc.bold('Readiness:')}`)
   console.log(`    ${pc.dim('Incomplete tasks:')} ${readiness.incompleteTasks > 0 ? pc.yellow(String(readiness.incompleteTasks)) : pc.green('0')}`)
-  console.log(`    ${pc.dim('Incomplete verify:')} ${readiness.incompleteVerify > 0 ? pc.yellow(String(readiness.incompleteVerify)) : pc.green('0')}`)
+  console.log(`    ${pc.dim('Incomplete required verify:')} ${readiness.incompleteRequiredVerify > 0 ? pc.yellow(String(readiness.incompleteRequiredVerify)) : pc.green('0')}`)
+  console.log(`    ${pc.dim('Optional coverage warnings:')} ${readiness.coverageWarnings > 0 ? pc.yellow(String(readiness.coverageWarnings)) : pc.green('0')}`)
+  console.log(`    ${pc.dim('Completion gate:')} ${readiness.completionGate === 'pass' ? pc.green('pass') : pc.red('blocked')}`)
   console.log(`    ${pc.dim('Active blockers:')} ${readiness.activeBlockers ? pc.yellow('yes') : pc.green('no')}`)
   console.log(`    ${pc.dim('Missing scenarios:')} ${readiness.missingScenarios ? pc.yellow('yes') : pc.green('no')}`)
   console.log(`    ${pc.dim('Deterministic:')} ${readiness.deterministic === 'pass' ? pc.green('pass') : pc.yellow('warnings')}`)

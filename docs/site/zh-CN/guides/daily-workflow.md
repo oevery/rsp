@@ -33,7 +33,7 @@ rsp show --focused
 
 - 实现推翻原计划时更新 Proposal、Spec 或 Design。
 - 仅在结果存在后勾选 Tasks。
-- 在 Verify 中记录最新运行的命令、覆盖范围、结果与相关遗漏。
+- 在 Verify 的 `### Required` 下记录验收关键证据，在 `### Optional` 下记录额外环境、兼容性、规模或信心覆盖；Optional 遗漏保持可见但不阻断完成。
 - 把尚未解决的外部或技术约束保留在 Blockers。
 - 优先选择成本最低的决定性验证。仅当新测试保护可观察行为或真实边界，并带来独立的长期信心时才保留。
 
@@ -63,7 +63,7 @@ rsp ready <work-ref>
 rsp archive <work-ref>
 ```
 
-`rsp ready` 提供确定性的就绪信息与语义审查信号，仅供参考，并不代表归档已获批准。归档后重新检查完整的目标交付范围。提交、推送、发布、部署、批准与人工验收仍是独立权限。
+`rsp ready` 提供必须完成门禁、可选覆盖警告与语义审查信号。Tasks、Required Verify 或 blocker 未完成时，`rsp archive` 会 fail closed。归档后重新检查完整的目标交付范围。提交、推送、发布、部署、批准与人工验收仍是独立权限。
 
 ## 恢复
 

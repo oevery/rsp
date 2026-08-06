@@ -21,7 +21,7 @@ describe('dense plain status', () => {
         progressKnown: true,
         title: longName,
         blockerEntries: ['waiting for owner'],
-        readiness: { incompleteTasks: 0, incompleteVerify: 0, activeBlockers: true, missingScenarios: false, deterministic: 'pass', semantic: 'needs-review', archiveReady: 'no' },
+        readiness: { incompleteTasks: 0, incompleteVerify: 0, incompleteRequiredVerify: 0, incompleteOptionalVerify: 0, requiredVerify: { todo: 0, progress: 0, done: 0, dropped: 0, total: 0 }, optionalVerify: { todo: 0, progress: 0, done: 0, dropped: 0, total: 0 }, legacyVerify: false, completionGate: 'blocked', coverageWarnings: 0, activeBlockers: true, missingScenarios: false, deterministic: 'pass', semantic: 'needs-review', archiveReady: 'no' },
       }],
       groups: [],
       plan: {

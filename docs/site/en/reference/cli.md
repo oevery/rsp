@@ -42,7 +42,7 @@ rsp reopen <name> --reason <text> [--from <archive-path>]
                                 Restore incomplete archived acceptance
 ```
 
-`rsp ready` and `rsp show` expose deterministic readiness and semantic-review signals. They never turn those signals into archive approval. `rsp archive --dry-run` remains a deprecated compatibility alias for `rsp ready` and does not move a Change.
+`rsp ready` and `rsp show` expose the required completion gate, optional coverage warnings, and semantic-review signals. Incomplete Tasks, Required Verify items, or blockers produce `archiveReady: no`; incomplete Optional verification remains a warning. `rsp archive` fails without moving the Change when the completion gate is blocked. `rsp archive --dry-run` remains a deprecated compatibility alias for `rsp ready` and does not move a Change.
 
 ## Isolated workspaces
 

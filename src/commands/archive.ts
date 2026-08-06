@@ -5,12 +5,12 @@ import { basename, join } from 'node:path'
 import { resolveExecutableChange } from '../core/change-group.js'
 import { CHANGES_DIR, FOCUS_DIR, pc } from '../core/config.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
-import { cleanupEmptyParentDirs, collectArchiveChecklist, guardRspInitialized } from '../core/helpers.js'
+import { cleanupEmptyParentDirs, collectArchiveReadiness, guardRspInitialized } from '../core/helpers.js'
 import { withRspLock } from '../core/lock.js'
 import { toErrorMessage } from '../core/output.js'
 import { resolveArchiveDirectory, resolveFocusMarkerPath, WorkRefError } from '../core/work-ref.js'
 
-/** Archive a change and clear its focus marker. Never blocks — all checks are warnings. */
+/** Archive a change and clear its focus marker after the deterministic completion gate passes. */
 export async function archiveChange(name: string) {
   if (!name) {
     console.error(`  ${pc.red('Usage:')} rsp archive <name>`)
@@ -24,21 +24,27 @@ export async function archiveChange(name: string) {
       const srcPath = workRef.path
       const archiveSubdir = resolveArchiveDirectory(workRef)
       const focusEntry = resolveFocusMarkerPath(workRef)
+      const date = new Date().toISOString().slice(0, 10)
+      const base = basename(workRef.name)
+      const archiveName = resolveArchiveName(archiveSubdir, date, base)
       const content = await readFile(srcPath, 'utf-8')
       const dependencyInspection = await inspectChangeDependencies()
-      const checklist = collectArchiveChecklist(content, {
+      const readiness = collectArchiveReadiness(content, {
         activeBlockers: dependencyInspection.activeBlockers.get(workRef.name),
       })
+      const checklist = readiness.warnings
 
       for (const line of checklist)
         console.log(`  ${pc.yellow('⚠')} ${line}`)
+      if (readiness.archiveReady === 'no') {
+        console.error(`  ${pc.red('Archive blocked:')} complete all Tasks and required Verify items, and resolve active blockers.`)
+        process.exitCode = 1
+        return
+      }
       if (checklist.length > 0)
         console.log(`  ${pc.dim('Archive will continue. Review the warnings above before treating this work as fully closed.')}\n`)
 
-      const date = new Date().toISOString().slice(0, 10)
-      const base = basename(workRef.name)
       await mkdir(archiveSubdir, { recursive: true })
-      const archiveName = resolveArchiveName(archiveSubdir, date, base)
       await rename(srcPath, join(archiveSubdir, archiveName))
 
       const postArchiveWarnings: string[] = []

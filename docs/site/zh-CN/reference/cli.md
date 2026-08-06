@@ -42,7 +42,7 @@ rsp reopen <name> --reason <text> [--from <archive-path>]
                                 恢复未满足验收条件的已归档 Change
 ```
 
-`rsp ready` 和 `rsp show` 提供确定性的就绪信息与语义审查信号，但不会把这些信号视为归档批准。`rsp archive --dry-run` 作为 `rsp ready` 已弃用的兼容别名保留，不会移动 Change。
+`rsp ready` 和 `rsp show` 分别提供必须完成门禁、可选覆盖警告与语义审查信号。未完成的 Tasks、Required Verify 或 blocker 会产生 `archiveReady: no`；未完成的 Optional 验证只保留警告。完成门禁被阻断时，`rsp archive` 会失败且不移动 Change。`rsp archive --dry-run` 作为 `rsp ready` 已弃用的兼容别名保留，不会移动 Change。
 
 ## 隔离 Workspace
 

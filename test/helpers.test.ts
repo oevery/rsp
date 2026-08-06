@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
-import { collectArchiveChecklist, collectArchiveReadiness, countCheckboxes, detectDeltaSections, generateChangeContent, generateDesignContent, generateSpecContent, getDurableReviewCandidateTargets, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, parseScenarios, parseYamlLines, renderRspAgentsBlock } from '../src/core/helpers.js'
+import { classifyVerifyCheckboxes, collectArchiveChecklist, collectArchiveReadiness, countCheckboxes, detectDeltaSections, generateChangeContent, generateDesignContent, generateSpecContent, getDurableReviewCandidateTargets, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, parseScenarios, parseYamlLines, renderRspAgentsBlock } from '../src/core/helpers.js'
 
 describe('parseYamlLines', () => {
   it('parses key-value pairs', () => {
@@ -48,6 +48,62 @@ describe('countCheckboxes', () => {
 - [x] done
 - [-] dropped`
     expect(countCheckboxes(content)).toEqual({ todo: 1, progress: 1, done: 1, dropped: 1, total: 4 })
+  })
+})
+
+describe('classifyVerifyCheckboxes', () => {
+  it('separates required and optional verification', () => {
+    const result = classifyVerifyCheckboxes(`### Required
+- [x] focused tests
+- [ ] real path
+
+### Optional
+- [ ] extra browser`)
+
+    expect(result.required).toMatchObject({ done: 1, todo: 1, total: 2 })
+    expect(result.optional).toMatchObject({ todo: 1, total: 1 })
+    expect(result.unclassified.total).toBe(0)
+    expect(result.legacy).toBe(false)
+  })
+
+  it('treats unclassified verification as required for legacy safety', () => {
+    const result = classifyVerifyCheckboxes(`- [ ] legacy smoke
+
+### Optional
+- [ ] extra coverage`)
+
+    expect(result.required.todo).toBe(1)
+    expect(result.optional.todo).toBe(1)
+    expect(result.legacy).toBe(true)
+  })
+})
+
+describe('collectArchiveReadiness verification criticality', () => {
+  it('allows incomplete optional coverage after required verification passes', () => {
+    const content = `# Change: gates
+
+## Spec
+#### Scenario: complete
+- GIVEN a change
+- WHEN it runs
+- THEN it works
+
+## Tasks
+- [x] done
+
+## Verify
+### Required
+- [x] tests
+### Optional
+- [ ] extra
+
+## Blockers
+- none`
+    const result = collectArchiveReadiness(content)
+
+    expect(result.requiredVerifyTodos).toHaveLength(0)
+    expect(result.optionalVerifyTodos).toHaveLength(1)
+    expect(result.archiveReady).toBe('yes')
   })
 })
 
@@ -312,6 +368,8 @@ describe('documentation command examples', () => {
     const root = fileURLToPath(new URL('..', import.meta.url))
     const skill = readFileSync(join(root, 'skills', 'rsp', 'SKILL.md'), 'utf-8')
     const rules = readFileSync(join(root, 'rules', 'rsp-rules.md'), 'utf-8')
+    const manage = readFileSync(join(root, 'skills', 'rsp-manage', 'SKILL.md'), 'utf-8')
+    const commit = readFileSync(join(root, 'skills', 'rsp-commit', 'SKILL.md'), 'utf-8')
     const coreReferences = [
       'conflict-handling.md',
       'durable-review.md',
@@ -344,6 +402,11 @@ describe('documentation command examples', () => {
     expect(contract).toContain('Do not directly create command-owned files')
     expect(contract).toMatch(/does not execute archive or grant staging, commit, push, publication/)
     expect(skill).not.toContain('Minimal example:')
+    expect(skill).toContain('`### Required` owns evidence necessary to prove acceptance')
+    expect(skill).toContain('`### Optional` owns additional environment, compatibility, scale, or confidence coverage')
+    expect(rules).toContain('legacy unclassified items are Required')
+    expect(manage).toContain('require `completionGate: pass` plus `archiveReady: yes`')
+    expect(commit).toContain('stop before staging when a Task or Required Verify item remains incomplete')
   })
 
   it('documents the localized durable decision contract and consolidated Skill guidance', () => {
@@ -484,7 +547,7 @@ kind: feature
 `
     const warnings = collectArchiveChecklist(content)
     expect(warnings.some(w => w.includes('task item(s) still incomplete'))).toBe(true)
-    expect(warnings.some(w => w.includes('Verify checklist item(s) are still incomplete'))).toBe(true)
+    expect(warnings.some(w => w.includes('required Verify item(s) are still incomplete'))).toBe(true)
   })
 
   it('reports active blockers', () => {

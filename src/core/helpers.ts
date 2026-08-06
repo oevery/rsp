@@ -1,4 +1,4 @@
-import type { CheckboxCount, DeltaSections, Frontmatter, IssueRelationship, RuntimeDiagnostic, ScenarioBlock } from '../types.js'
+import type { CheckboxCount, DeltaSections, Frontmatter, IssueRelationship, RuntimeDiagnostic, ScenarioBlock, VerifyCriticalitySummary } from '../types.js'
 import { existsSync } from 'node:fs'
 import { readdir, readFile, rmdir } from 'node:fs/promises'
 
@@ -48,6 +48,54 @@ export function countCheckboxes(content: string): CheckboxCount {
   const done = (content.match(/\[x\]/g) || []).length
   const dropped = (content.match(/\[-\]/g) || []).length
   return { todo, progress, done, dropped, total: todo + progress + done + dropped }
+}
+
+/** Classify Verify checkbox items while keeping legacy Changes fail-closed. */
+export function classifyVerifyCheckboxes(sectionText: string): VerifyCriticalitySummary {
+  const buckets = collectVerifyCheckboxLines(sectionText)
+  return {
+    required: countCheckboxes([...buckets.required, ...buckets.unclassified].join('\n')),
+    optional: countCheckboxes(buckets.optional.join('\n')),
+    unclassified: countCheckboxes(buckets.unclassified.join('\n')),
+    legacy: buckets.legacy,
+  }
+}
+
+function collectVerifyCheckboxLines(sectionText: string): {
+  required: string[]
+  optional: string[]
+  unclassified: string[]
+  legacy: boolean
+} {
+  const required: string[] = []
+  const optional: string[] = []
+  const unclassified: string[] = []
+  let current: 'required' | 'optional' | 'unclassified' = 'unclassified'
+  let sawClassificationHeading = false
+
+  for (const line of sectionText.split('\n')) {
+    const heading = line.match(/^###\s+(Required|Optional)\s*$/i)
+    if (heading) {
+      current = heading[1].toLowerCase() as 'required' | 'optional'
+      sawClassificationHeading = true
+      continue
+    }
+    if (!/^- \[[ /x-]\]/i.test(line.trim()))
+      continue
+    if (current === 'required')
+      required.push(line)
+    else if (current === 'optional')
+      optional.push(line)
+    else
+      unclassified.push(line)
+  }
+
+  return {
+    required,
+    optional,
+    unclassified,
+    legacy: unclassified.length > 0 || !sawClassificationHeading,
+  }
 }
 
 interface WalkOptions {
@@ -203,8 +251,10 @@ ${changeSectionHeading('tasks')}
 - [ ] AGENTS.md: ${placeholder}
 
 ${changeSectionHeading('verify')}
+### Required
 - Automated:
   - [ ] rsp doctor — proves: ${placeholder}
+### Optional
 - Manual or environment:
   - [ ] ${placeholder}
 - Coverage:
@@ -257,8 +307,10 @@ ${changeSectionHeading('tasks')}
 - [ ] ${template.task}
 
 ${changeSectionHeading('verify')}
+### Required
 - Automated:
   - [ ] ${template.automatedVerify} — proves: ${placeholder}
+### Optional
 - Manual or environment:
   - [ ] ${template.manualVerify}
 - Coverage:
@@ -311,8 +363,10 @@ ${changeSectionHeading('tasks')}
 - [ ] ${placeholder}
 
 ${changeSectionHeading('verify')}
+### Required
 - Automated:
   - [ ] ${placeholder} — proves: ${placeholder}
+### Optional
 - Manual or environment:
   - [ ] ${placeholder}
 - Coverage:
@@ -555,6 +609,9 @@ export function detectDeltaSections(content: string): DeltaSections {
 export interface ArchiveReadiness {
   taskTodos: string[]
   verifyTodos: string[]
+  requiredVerifyTodos: string[]
+  optionalVerifyTodos: string[]
+  verifyCriticality: VerifyCriticalitySummary
   activeBlockers: boolean
   scenarioCount: number
   missingScenarios: boolean
@@ -587,9 +644,15 @@ export function collectArchiveReadiness(content: string, options: { activeBlocke
   if (taskTodos.length > 0)
     warnings.push(`${taskTodos.length} task item(s) still incomplete`)
 
-  const verifyTodos = getOpenCheckboxes(verifySection)
-  if (verifyTodos.length > 0)
-    warnings.push(`${verifyTodos.length} Verify checklist item(s) are still incomplete`)
+  const verifyCriticality = classifyVerifyCheckboxes(verifySection)
+  const verifyLines = collectVerifyCheckboxLines(verifySection)
+  const requiredVerifyTodos = getOpenCheckboxes([...verifyLines.required, ...verifyLines.unclassified].join('\n'))
+  const optionalVerifyTodos = getOpenCheckboxes(verifyLines.optional.join('\n'))
+  const verifyTodos = [...requiredVerifyTodos, ...optionalVerifyTodos]
+  if (requiredVerifyTodos.length > 0)
+    warnings.push(`${requiredVerifyTodos.length} required Verify item(s) are still incomplete`)
+  if (optionalVerifyTodos.length > 0)
+    warnings.push(`${optionalVerifyTodos.length} optional Verify item(s) are still incomplete`)
 
   const activeBlockers = options.activeBlockers ?? hasMeaningfulBlockers(content)
   if (activeBlockers)
@@ -600,15 +663,16 @@ export function collectArchiveReadiness(content: string, options: { activeBlocke
   if (missingScenarios)
     warnings.push('no Scenario blocks found (some changes do not need them)')
 
-  const archiveReady = activeBlockers
+  const archiveReady = activeBlockers || taskTodos.length > 0 || requiredVerifyTodos.length > 0
     ? 'no'
-    : warnings.length === 0
-      ? 'yes'
-      : 'judgment'
+    : 'yes'
 
   return {
     taskTodos,
     verifyTodos,
+    requiredVerifyTodos,
+    optionalVerifyTodos,
+    verifyCriticality,
     activeBlockers,
     scenarioCount: scenarios.length,
     missingScenarios,

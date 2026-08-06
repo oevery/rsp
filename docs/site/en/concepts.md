@@ -27,7 +27,7 @@ Stable scoped workflow and validation instructions belong in the nearest project
 
 ## One Change, one outcome
 
-A Change owns one observable outcome with a shared acceptance, verification, review, archive, and rollback boundary. It keeps canonical sections for Proposal, Spec, Design, Tasks, Verify, and Blockers.
+A Change owns one observable outcome with a shared acceptance, verification, review, archive, and rollback boundary. It keeps canonical sections for Proposal, Spec, Design, Tasks, Verify, and Blockers. Under Verify, `### Required` contains acceptance-critical evidence and `### Optional` contains additional environment, compatibility, scale, or confidence coverage. Legacy unclassified Verify items are treated as Required.
 
 Keep it as a convergent snapshot of the current plan and final decisive evidence. Temporary probes, debugging chronology, and routine command transcripts belong in the working conversation, not durable artifacts.
 
