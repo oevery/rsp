@@ -9,7 +9,49 @@ function skill(name: string): string {
   return readFileSync(join(root, 'skills', name, 'SKILL.md'), 'utf8')
 }
 
+function projectFile(path: string): string {
+  return readFileSync(join(root, path), 'utf8')
+}
+
 describe('rsp workspace Skills', () => {
+  it('keeps Core as the sole isolation selector across routing surfaces', () => {
+    const core = skill('rsp')
+    const manage = skill('rsp-manage')
+    const workspace = skill('rsp-workspace')
+    const spec = projectFile('.rsp/specs/skill-system.md')
+    const fallback = projectFile('rules/rsp-rules.md')
+
+    for (const fragment of [
+      'Before applying the small-work exclusion',
+      'Core alone selects whether workspace isolation is materially useful',
+      'Evaluating those signals does not load `rsp-workspace`',
+      'An explicit direct request still enters Core for this selection',
+      'A selected workspace remains execution infrastructure for that direct route',
+    ])
+      expect(core).toContain(fragment)
+    expect(core.indexOf('Before applying the small-work exclusion')).toBeLessThan(core.indexOf('Return tiny settled work directly'))
+
+    for (const fragment of [
+      'Core resolves ownership before this Skill is entered and also resolves workspace-isolation selection',
+      'allocate or reuse one `rsp-workspace` session per executable WorkRef',
+      'Manage never independently selects isolation',
+      'return that evidence to Core for fresh route derivation',
+      'workspace-isolation evidence only when Core selected isolation',
+      'The absence of a workspace-isolation boundary is valid when Core did not select isolation',
+    ])
+      expect(manage).toContain(fragment)
+
+    expect(workspace).toContain('selected only by Core')
+    expect(workspace).toContain('An explicit direct request routes through Core')
+    expect(workspace).not.toContain('selected by Core or qualified Manage')
+    expect(spec).toContain('Core keeps selection, routing, ownership, safety')
+    expect(spec).toContain('evaluating those signals does not load `rsp-workspace`')
+    expect(spec).toContain('Manage allocates or reuses workspace sessions only after Core selection')
+    expect(spec).not.toContain('after Core or Manage selects isolation')
+    expect(fallback).toContain('As the Core fallback, evaluate workspace isolation before the small-work decision')
+    expect(fallback).toContain('Evaluating those signals does not load the Workspace capability')
+  })
+
   it('keeps workspace infrastructure separate from ownership and delivery authority', () => {
     const body = skill('rsp-workspace')
     for (const fragment of [
@@ -28,9 +70,11 @@ describe('rsp workspace Skills', () => {
       'Return through the invoking result contract',
       '`Workspace observations`',
       'are not redefined here',
+      'Core receives the ordinary invoking result',
       'Do not create nested workspaces',
       '`--discard` is destructive authority',
       'Never infer Commit, Land',
+      'not a WorkOwner, project adapter, completion controller, Discipline',
     ])
       expect(body).toContain(fragment)
     for (const duplicate of [
@@ -42,6 +86,14 @@ describe('rsp workspace Skills', () => {
     ])
       expect(body).not.toContain(duplicate)
     expect(body).not.toMatch(/\b(?:Node|Maven|Gradle|mise|Compose|Nacos|frontend|backend)\b/u)
+  })
+
+  it('documents Workspace as default Infrastructure without changing distribution', () => {
+    const spec = projectFile('.rsp/specs/skill-system.md')
+
+    expect(spec).toContain('Core, Shape, Discipline, Infrastructure, Controller, or Discovery')
+    expect(spec).toContain('| `rsp-workspace` | default | Infrastructure: isolated execution |')
+    expect(spec).not.toContain('| `rsp-workspace` | default | Discipline:')
   })
 
   it('requires exact local landing authority and preserves conflicts', () => {

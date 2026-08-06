@@ -119,6 +119,15 @@ describe('rsp Skill contract', () => {
       expectPortableSkill(join(skillsRoot, name))
   })
 
+  it('keeps Workspace in the default published suite after role classification', () => {
+    const packageJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as { files: string[] }
+    const skillSystem = readFileSync(join(root, '.rsp', 'specs', 'skill-system.md'), 'utf8')
+
+    expect(publishedSkillNames).toContain('rsp-workspace')
+    expect(packageJson.files).toContain('skills/')
+    expect(skillSystem).toContain('| `rsp-workspace` | default | Infrastructure: isolated execution |')
+  })
+
   it('keeps published Skills independent from repository-only Specs and cross-Skill files', () => {
     for (const name of publishedSkillNames) {
       const { body } = readSkill(join(skillsRoot, name))

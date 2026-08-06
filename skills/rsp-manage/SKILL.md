@@ -4,18 +4,18 @@ description: Coordinate one eligible long-running, recovery, or multi-slice RSP 
 license: MIT
 metadata:
   author: oevery
-  version: "2026.08.05.2"
+  version: "2026.08.06.1"
 ---
 
 # RSP Manage
 
-Manage one requested goal selected by Core from an explicit request or effective `manage.activation: auto`. Enter only with one selected shape-ready Change or shallow Group plus a transient handoff containing the goal, WorkRef, authority envelope, decisive qualification evidence, closeout ceiling, and return boundaries. Once selected, this Skill solely owns same-goal revalidation, interruption and resume, review convergence, acceptance, lifecycle closeout, and commit eligibility and orchestration. Exact staging, message construction, local commit execution, and post-commit observation remain owned by `rsp-commit`. Keep artifacts durable and process data transient. The goal defines authority; automatic activation grants selection, not mutation.
+Manage one requested goal selected by Core from an explicit request or effective `manage.activation: auto`. Enter only with one selected shape-ready Change or shallow Group plus a transient handoff containing the goal, WorkRef, authority envelope, decisive qualification evidence, closeout ceiling, and return boundaries, plus Core's selected workspace-isolation boundary when any. Once selected, this Skill solely owns same-goal revalidation, interruption and resume, review convergence, acceptance, lifecycle closeout, and commit eligibility and orchestration. Exact staging, message construction, local commit execution, and post-commit observation remain owned by `rsp-commit`. Keep artifacts durable and process data transient. The goal defines authority; automatic activation grants selection, not mutation.
 
 Follow Core's response-versus-artifact language boundary for all user-visible control narration; when the response language differs, keep exact canonical values only as secondary parenthesized or code-formatted tokens.
 
 ## Selected-goal entry
 
-Core resolves ownership before this Skill is entered. Manage has no pre-owner Intake and never creates, focuses, or reshapes a durable owner. Reject an incomplete handoff without mutation and return to Core with the missing owner, authority, qualification, closeout, or return-boundary evidence.
+Core resolves ownership before this Skill is entered and also resolves workspace-isolation selection. Manage has no pre-owner Intake and never creates, focuses, or reshapes a durable owner; it also never independently selects isolation. Reject an incomplete handoff without mutation and return to Core with the missing owner, authority, qualification, closeout, or return-boundary evidence, plus missing workspace-isolation evidence only when Core selected isolation.
 
 ## Validate the selected handoff before mutation
 
@@ -28,7 +28,7 @@ Before dispatch, validate the handoff against current evidence by re-reading all
 - relevant Specs and Decisions;
 - the authority envelope, `rsp status --json`, and the current worktree.
 
-Validate only handoff completeness and current drift: the selected owner and topology still match, the requested goal and route are unchanged, the authority envelope still permits the next action, owned paths remain exact and unmixed, and the decisive qualification evidence has not been invalidated. If the handoff is incomplete, evidence has drifted, or a true owner, topology, route, behavior, acceptance, interface, scope, mutation-authority, or external-action-authority boundary changed, stop without mutation and return the decisive evidence to Core. Otherwise continue the selected managed goal without repeating qualification. When dispatch applies, report only the concrete reason for sequential or parallel execution. Keep validation and dispatch reasoning transient.
+Validate only handoff completeness: owner and topology, authority envelope, owned paths, qualification evidence, and, only when Core selected isolation, workspace-isolation evidence. Then check current drift: the selected owner and topology still match, the requested goal and route are unchanged, the authority envelope still permits the next action, owned paths remain exact and unmixed, the decisive qualification evidence remains valid, and any selected workspace-isolation evidence has not been invalidated. If the handoff is incomplete, evidence has drifted, a selected workspace-isolation boundary is no longer valid, or a true owner, topology, route, behavior, acceptance, interface, scope, mutation-authority, or external-action-authority boundary changed, stop without mutation and return the decisive evidence to Core. Otherwise continue the selected managed goal without repeating qualification or workspace selection. The absence of a workspace-isolation boundary is valid when Core did not select isolation. When dispatch applies, report only the concrete reason for sequential or parallel execution. Keep validation and dispatch reasoning transient.
 
 Preserve unrelated work and require an explicit release identity. Allow four worker dispatches and one worker corrective retry across the whole managed run. Owner transitions do not reset either limit.
 
@@ -71,7 +71,7 @@ When dispatch cannot satisfy a required worker obligation, apply the AcceptanceD
 
 For a Group, dispatch child WorkRefs only in the current derived `plan.waves` wave. Assume shared paths, lockfiles, generated artifacts, integration state, real hosts, provider sessions, and hardware resources overlap unless an authorized isolated workspace and verification boundary exist. Keep blockers, later waves, overlaps, and dependent verification sequential. Dispatch in parallel only for isolated mutation paths and verification resources; delegation never implies concurrency. Workers receive no implied focus, lifecycle, Git, publication, deployment, or approval authority. Choose the cheapest decisive check and at most one integration gate.
 
-When isolation is selected, request one `rsp-workspace` session per executable WorkRef before dispatch and pass its exact path and branch in every worker envelope. All lanes for the same WorkRef reuse that session. Different worktrees do not prove host resources, external state, generated state, provider sessions, or real execution environments are independent; require explicit shared-resource evidence and register cooperative leases for recoverable host activities, or keep those checks sequential. Workspace preparation, activity registration, landing, and disposal consume no worker dispatch slot, but each retains its own authority and stop boundary.
+When Core selected isolation in the handoff, allocate or reuse one `rsp-workspace` session per executable WorkRef before dispatch and pass its exact path and branch in every worker envelope. Manage never independently selects isolation. All lanes for the same WorkRef reuse that session. Different worktrees do not prove host resources, external state, generated state, provider sessions, or real execution environments are independent; require explicit shared-resource evidence and register cooperative leases for recoverable host activities, or keep those checks sequential. If new evidence shows that Core's selected isolation boundary is unnecessary, insufficient, or otherwise invalid, suspend dispatch and return that evidence to Core for fresh route derivation. Workspace preparation, activity registration, landing, and disposal consume no worker dispatch slot, but each retains its own authority and stop boundary.
 
 ## Continue from evidence
 

@@ -4,16 +4,16 @@ description: Prepare, inspect, operate, recover, or safely dispose one isolated 
 license: MIT
 metadata:
   author: oevery
-  version: "2026.08.06.4"
+  version: "2026.08.06.5"
 ---
 
 # RSP Workspace
 
-Operate one isolated workspace selected by Core or qualified Manage. This Skill is execution infrastructure, not a WorkOwner, project adapter, completion controller, or Git delivery grant.
+Operate one isolated workspace selected only by Core. Manage may allocate or reuse sessions only after that selection. This Skill is execution infrastructure, not a WorkOwner, project adapter, completion controller, Discipline, or Git delivery grant.
 
 ## Require a selected boundary
 
-Require one executable open WorkRef, explicit workspace authority, the target local branch, and decisive evidence that isolation is warranted by parallel Changes, unrelated dirty work, an independent runtime boundary, or an explicit user request. Ordinary temporary work remains in the current worktree. Without an RSP WorkOwner, create no implicit or host-branded branch.
+Require one executable open WorkRef, explicit workspace authority, the target local branch, and Core's selected isolation boundary based on parallel Changes, unrelated dirty work, an independent runtime boundary, or an explicit user request. An explicit direct request routes through Core and never selects this Skill by itself. Ordinary temporary work remains in the current worktree. Without an RSP WorkOwner, create no implicit or host-branded branch.
 
 Before mutation inspect the selected Change and Group Brief when any, current branch and HEAD, existing `rsp/<workref>` branch, registered worktrees, target dirty paths, and any existing workspace record. Stop on identity, ownership, path, target, or authority ambiguity.
 
@@ -29,7 +29,6 @@ The active AI or human owns project-semantic interpretation. Do not create a wor
 
 - Core retains its `ControlOutcome` and canonical `StopDisposition`.
 - Manage retains its `WorkerEnvelope`, frontier classification, and authority envelope.
-- A direct explicit invocation retains the ordinary bounded Discipline request and result.
 
 When that contract needs workspace detail, append only a `Workspace context` containing the exact path, branch, target branch, dirty paths, commits ahead, registered activities, shared resources, and intended workspace-local actions. Keep it transient. Do not persist it, turn it into project configuration, serialize it as a universal execution plan, or ask the CLI to interpret it.
 
@@ -59,8 +58,7 @@ Use `rsp workspace activity stop <workref> --id <id>` to stop one recorded activ
 After the selected action, return through the invoking owner's existing result surface:
 
 - Manage receives its ordinary common receipt and lane-specific fields.
-- Core receives the ordinary Discipline result or, when work remains, the canonical Continuation.
-- A direct explicit caller receives the ordinary bounded result.
+- Core receives the ordinary invoking result or, when work remains, the canonical Continuation.
 
 Append only `Workspace observations`: operation performed, exact path/branch/target, changed local resources, active activities, and cleanup state. Evidence, omissions, effective authority, result, next owner, and stop boundary remain owned by the invoking contract and are not redefined here.
 

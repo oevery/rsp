@@ -337,7 +337,7 @@ describe('rsp core routing contract', () => {
     expect(rederive).toBeGreaterThanOrEqual(0)
     expect(routes).toBeGreaterThan(rederive)
     expect(skill).toContain('Report `RouteDisposition: direct`. Perform no Manage handoff or WorkerEnvelope')
-    expect(skill).toContain('rederive before further mutation if prospective work expands beyond any condition')
+    expect(skill.toLowerCase()).toContain('rederive before further mutation if prospective work expands beyond any condition')
     expect(fallback).toContain('Before later mutation or a different WorkRef, rederive authority')
     expect(fallback).toContain('Do not auto-continue a successor or widen the boundary because more work is visible')
   })
