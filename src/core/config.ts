@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import pc from 'picocolors'
+import { parseDocument, stringify, visit } from 'yaml'
 import { getDecisionRecordsConfigIssue, normalizeDecisionRecordsPath, validateDecisionRecordsPath } from './decisions.js'
 import { CHANGE_DOCUMENT_SCHEMA, getCanonicalSectionHeadings } from './document-model.js'
 import { parseYamlText } from './helpers.js'
@@ -36,8 +37,60 @@ export { pc }
 export const VALID_KINDS: ChangeKind[] = ['feature', 'fix', 'refactor', 'docs', 'ops', 'research']
 /** Built-in required sections in change files. */
 export const DEFAULT_REQUIRED_SECTIONS = getCanonicalSectionHeadings(CHANGE_DOCUMENT_SCHEMA)
-export const DEFAULT_MANAGE_POLICY: ManagePolicy = { activation: 'explicit', closeout: 'local' }
-export const FAILED_CLOSED_MANAGE_POLICY: ManagePolicy = { activation: 'explicit', closeout: 'manual' }
+export const LEGACY_MISSING_CONFIG_MANAGE_POLICY: ManagePolicy = { activation: 'explicit', closeout: 'local' }
+export const INVALID_CONFIG_MANAGE_POLICY: ManagePolicy = { activation: 'explicit', closeout: 'manual' }
+export const CONFIG_DEFAULTS = {
+  kinds: [] as string[],
+  decisions: { path: '.rsp/specs/decisions' },
+  language: { default: 'en' },
+  manage: { activation: 'auto' as const, closeout: 'local' as const },
+}
+
+export function generateConfigTemplate(config: RspConfig = {}): string {
+  const kinds = config.kinds ?? CONFIG_DEFAULTS.kinds
+  const decisions = { ...CONFIG_DEFAULTS.decisions, ...config.decisions }
+  const manage = { ...CONFIG_DEFAULTS.manage, ...config.manage }
+  const language = { ...CONFIG_DEFAULTS.language, ...config.language }
+  const kindsYaml = stringify(kinds).trimEnd()
+  const renderedKinds = kinds.length === 0
+    ? `kinds: ${kindsYaml}`
+    : `kinds:\n${kindsYaml.split('\n').map(line => `  ${line}`).join('\n')}`
+  const artifactsLine = language.artifacts
+    ? `  artifacts: ${stringify(language.artifacts).trim()}`
+    : '  # artifacts: zh-CN'
+  const commitLine = language.commit
+    ? `  commit: ${stringify(language.commit).trim()}`
+    : '  # commit: zh-CN'
+
+  return `# RSP project configuration
+# An empty kinds list retains the built-in defaults.
+# A non-empty kinds list replaces the built-in defaults; it does not extend them.
+# Every entry must be a unique non-empty string.
+#
+# Built-in defaults:
+#   kinds:               ${VALID_KINDS.join(', ')}
+#
+${renderedKinds}
+
+# Decision Records default to .rsp/specs/decisions.
+decisions:
+  path: ${stringify(decisions.path).trim()}
+
+# New projects default to automatic Manage routing with local closeout.
+# Use activation: explicit to require a named managed request.
+# closeout accepts manual, lifecycle, or local; local routes a qualified clean terminal non-small boundary to one local commit but never push or publication.
+manage:
+  activation: ${manage.activation}
+  closeout: ${manage.closeout}
+
+# Set one shared project default for durable artifact and commit prose.
+# Response language remains user/session-owned and is never read from this project mapping.
+language:
+  default: ${stringify(language.default).trim()}
+${artifactsLine}
+${commitLine}
+`
+}
 
 const MANAGE_ACTIVATIONS: ManageActivation[] = ['explicit', 'auto']
 const MANAGE_CLOSEOUTS: ManageCloseout[] = ['manual', 'lifecycle', 'local']
@@ -45,6 +98,126 @@ const MANAGE_CLOSEOUTS: ManageCloseout[] = ['manual', 'lifecycle', 'local']
 export interface RspConfigInspection {
   config: RspConfig
   issues: string[]
+}
+
+export interface ConfigDefaultsReconciliation {
+  content: string
+  added: string[]
+  changed: boolean
+}
+
+/**
+ * Reconcile a valid config against the canonical template.
+ * Generated comments are refreshed; custom comments use conservative append-only repair.
+ */
+export function reconcileRspConfigDefaults(raw: string): ConfigDefaultsReconciliation {
+  const document = parseDocument(raw)
+  if (document.errors.length > 0)
+    throw new Error(document.errors.map(error => error.message).join('; '))
+
+  const parsed = parseYamlText(raw)
+  const issues = validateRspConfig(parsed)
+  if (issues.length > 0)
+    throw new Error(issues.join('; '))
+
+  const added = collectMissingConfigDefaults(parsed)
+  const customComments = hasCustomConfigComments(document, parsed)
+  if (customComments) {
+    backfillConfigDocument(document, parsed)
+  }
+
+  if (customComments && added.length === 0)
+    return { content: raw, added, changed: false }
+
+  const content = customComments
+    ? String(document)
+    : generateConfigTemplate(parsed as RspConfig)
+  return { content, added, changed: content !== raw }
+}
+
+function collectMissingConfigDefaults(parsed: Record<string, unknown>): string[] {
+  const added: string[] = []
+  if (!('kinds' in parsed))
+    added.push('kinds')
+  if (!('decisions' in parsed) || !hasNestedKey(parsed.decisions, 'path'))
+    added.push('decisions.path')
+  if (!('language' in parsed))
+    added.push('language.default')
+  if (!('manage' in parsed)) {
+    added.push('manage.activation', 'manage.closeout')
+  }
+  else {
+    if (!hasNestedKey(parsed.manage, 'activation'))
+      added.push('manage.activation')
+    if (!hasNestedKey(parsed.manage, 'closeout'))
+      added.push('manage.closeout')
+  }
+  return added
+}
+
+function backfillConfigDocument(document: ReturnType<typeof parseDocument>, parsed: Record<string, unknown>): void {
+  if (!('kinds' in parsed))
+    document.set('kinds', [...CONFIG_DEFAULTS.kinds])
+  if (!('decisions' in parsed))
+    document.set('decisions', { path: CONFIG_DEFAULTS.decisions.path })
+  else if (!hasNestedKey(parsed.decisions, 'path'))
+    document.setIn(['decisions', 'path'], CONFIG_DEFAULTS.decisions.path)
+  if (!('language' in parsed))
+    document.set('language', { default: CONFIG_DEFAULTS.language.default })
+  if (!('manage' in parsed)) {
+    document.set('manage', { ...CONFIG_DEFAULTS.manage })
+  }
+  else {
+    if (!hasNestedKey(parsed.manage, 'activation'))
+      document.setIn(['manage', 'activation'], CONFIG_DEFAULTS.manage.activation)
+    if (!hasNestedKey(parsed.manage, 'closeout'))
+      document.setIn(['manage', 'closeout'], CONFIG_DEFAULTS.manage.closeout)
+  }
+}
+
+function hasNestedKey(value: unknown, key: string): boolean {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value) && key in value)
+}
+
+const LEGACY_GENERATED_CONFIG_COMMENTS = new Set([
+  'Omit kinds or use [] to retain the built-in defaults.',
+  'New projects default to automatic Manage routing with lifecycle-only closeout.',
+  'Self-host automatic Manage routing with bounded deterministic local commits; push and publication stay explicit.',
+  'Set exactly one project-relative authoritative directory when the Host Project already owns Decision Records elsewhere.',
+  'kinds:',
+  'decisions:',
+  'path: docs/adr',
+  ...VALID_KINDS.map(kind => `- ${kind}`),
+])
+
+function hasCustomConfigComments(document: ReturnType<typeof parseDocument>, parsed: Record<string, unknown>): boolean {
+  const generated = new Set(collectConfigComments(parseDocument(generateConfigTemplate(parsed as RspConfig))))
+  for (const comment of LEGACY_GENERATED_CONFIG_COMMENTS)
+    generated.add(comment)
+  return collectConfigComments(document).some(comment => !generated.has(comment))
+}
+
+function collectConfigComments(document: ReturnType<typeof parseDocument>): string[] {
+  const comments: string[] = []
+  const append = (value: string | null | undefined) => {
+    if (!value)
+      return
+    for (const line of value.split('\n')) {
+      const comment = line.trim()
+      if (comment)
+        comments.push(comment)
+    }
+  }
+
+  append(document.commentBefore)
+  append(document.comment)
+  visit(document, {
+    Node(_key, node) {
+      append(node.commentBefore)
+      append(node.comment)
+    },
+  })
+  return comments
 }
 
 /** Cached parsed config inspection to avoid repeated file reads. */
@@ -208,10 +381,10 @@ export function resolveRequiredSections(_config: RspConfig): string[] {
 /** Resolve effective Manage policy, using the strict fail-closed policy for invalid config. */
 export function resolveManagePolicy(config: RspConfig, options: { configValid?: boolean } = {}): ManagePolicy {
   if (options.configValid === false)
-    return { ...FAILED_CLOSED_MANAGE_POLICY }
+    return { ...INVALID_CONFIG_MANAGE_POLICY }
   return {
-    activation: config.manage?.activation ?? DEFAULT_MANAGE_POLICY.activation,
-    closeout: config.manage?.closeout ?? DEFAULT_MANAGE_POLICY.closeout,
+    activation: config.manage?.activation ?? LEGACY_MISSING_CONFIG_MANAGE_POLICY.activation,
+    closeout: config.manage?.closeout ?? LEGACY_MISSING_CONFIG_MANAGE_POLICY.closeout,
   }
 }
 

@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { generateConfigTemplate } from '../src/commands/init.js'
-import { clearConfigCache, DEFAULT_REQUIRED_SECTIONS, inspectRspConfig, loadRspConfig, resolveKinds, resolveLanguagePolicy, resolveManagePolicy, resolveRequiredSections, VALID_KINDS } from '../src/core/config.js'
+import { clearConfigCache, DEFAULT_REQUIRED_SECTIONS, inspectRspConfig, loadRspConfig, reconcileRspConfigDefaults, resolveKinds, resolveLanguagePolicy, resolveManagePolicy, resolveRequiredSections, VALID_KINDS } from '../src/core/config.js'
 
 afterEach(() => {
   clearConfigCache()
@@ -63,10 +63,114 @@ describe('resolveLanguagePolicy', () => {
 })
 
 describe('generated config language guidance', () => {
-  it('documents one default and an independent artifact override without forcing a language', () => {
+  it('writes every safe default as active YAML', () => {
     const template = generateConfigTemplate()
-    expect(template).toContain('# language:\n#   default: en')
-    expect(template).not.toMatch(/^language:/m)
+    expect(template).toContain('kinds: []')
+    expect(template).toContain('decisions:\n  path: .rsp/specs/decisions')
+    expect(template).toContain('language:\n  default: en\n  # artifacts: zh-CN\n  # commit: zh-CN')
+    expect(template).toContain('manage:\n  activation: auto\n  closeout: local')
+  })
+})
+
+describe('reconcileRspConfigDefaults', () => {
+  it('fills missing defaults while preserving custom values and comments', () => {
+    const result = reconcileRspConfigDefaults(`# Keep this project choice.
+kinds:
+  - lesson
+manage:
+  activation: explicit
+language:
+  default: zh-CN
+`)
+
+    expect(result.added).toEqual(['decisions.path', 'manage.closeout'])
+    expect(result.changed).toBe(true)
+    expect(result.content).toContain('# Keep this project choice.')
+    expect(result.content).toContain('kinds:\n  - lesson')
+    expect(result.content).toContain('activation: explicit')
+    expect(result.content).toContain('closeout: local')
+    expect(result.content).toContain('language:\n  default: zh-CN')
+  })
+
+  it('preserves inline comments during conservative backfill', () => {
+    const raw = `kinds: [] # Keep the built-in classification set.
+manage:
+  activation: auto
+  closeout: local
+language:
+  default: en
+`
+    const result = reconcileRspConfigDefaults(raw)
+
+    expect(result.changed).toBe(true)
+    expect(result.added).toEqual(['decisions.path'])
+    expect(result.content).toContain('kinds: [] # Keep the built-in classification set.')
+    expect(result.content).toContain('decisions:\n  path: .rsp/specs/decisions')
+  })
+
+  it('does not rewrite a complete config', () => {
+    const raw = `${generateConfigTemplate()}`
+    expect(reconcileRspConfigDefaults(raw)).toEqual({ content: raw, added: [], changed: false })
+  })
+
+  it('rebuilds generated layouts while preserving custom values', () => {
+    const result = reconcileRspConfigDefaults(`# RSP project configuration
+# Omit kinds or use [] to retain the built-in defaults.
+# A non-empty kinds list replaces the built-in defaults; it does not extend them.
+# Every entry must be a unique non-empty string.
+#
+# Built-in defaults:
+#   kinds:               feature, fix, refactor, docs, ops, research
+#
+# kinds:
+# - feature
+# - fix
+# - refactor
+# - docs
+# - ops
+# - research
+
+language:
+  default: zh-CN
+
+manage:
+  activation: explicit
+  closeout: local
+`)
+
+    expect(result.added).toEqual(['kinds', 'decisions.path'])
+    expect(result.changed).toBe(true)
+    expect(result.content).toContain('kinds: []')
+    expect(result.content).toContain('decisions:\n  path: .rsp/specs/decisions')
+    expect(result.content).toContain('language:\n  default: zh-CN')
+    expect(result.content).toContain('  # artifacts: zh-CN')
+    expect(result.content).toContain('  # commit: zh-CN')
+    expect(result.content).toContain('manage:\n  activation: explicit\n  closeout: local')
+    expect(result.content).not.toContain('# Omit kinds')
+  })
+
+  it('renders configured language overrides as active fields', () => {
+    const result = reconcileRspConfigDefaults(`language:
+  default: zh-CN
+  artifacts: en
+  commit: zh-CN
+manage:
+  activation: auto
+  closeout: local
+kinds: []
+decisions:
+  path: docs/adr
+`)
+
+    expect(result.content).toContain('language:\n  default: zh-CN\n  artifacts: en\n  commit: zh-CN')
+    expect(result.content).not.toContain('# artifacts:')
+    expect(result.content).not.toContain('# commit:')
+  })
+
+  it('rejects invalid config without producing replacement content', () => {
+    expect(() => reconcileRspConfigDefaults('manage:\n  activation: always\n')).toThrow(
+      'config.yaml field "manage.activation" must be one of: explicit, auto',
+    )
   })
 })
 

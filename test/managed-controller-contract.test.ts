@@ -921,7 +921,7 @@ describe('rsp-manage product Skill', () => {
     expect(fixtureRules).toContain('come only from the effective project configuration')
     expect(fixtureRules).toContain('does not grant archive or Git actions independently')
     expect(fixtureRules).not.toMatch(/authorizes[^\n]*lifecycle archive/i)
-    expect(status.manage).toEqual({ activation: 'auto', closeout: 'lifecycle' })
+    expect(status.manage).toEqual({ activation: 'auto', closeout: 'local' })
   })
 
   it('fails retained semantic scoring on push, force-push, or publication commands', () => {

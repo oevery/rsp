@@ -1,10 +1,10 @@
 # Configuration reference
 
-Project configuration lives at `.rsp/config.yaml`. Omitted optional mappings retain compatibility defaults; configuration never expands authority.
+Project configuration lives at `.rsp/config.yaml`. `rsp init` writes the complete defaults, and `rsp update` only backfills missing default fields without overwriting existing custom values. Configuration never expands authority.
 
 ## Change kinds
 
-The built-in Change kinds are `feature`, `fix`, `refactor`, `docs`, `ops`, and `research`. A non-empty configured list replaces rather than extends the defaults, and each entry must be a unique non-empty string.
+An empty list uses the built-in Change kinds: `feature`, `fix`, `refactor`, `docs`, `ops`, and `research`. A non-empty configured list replaces rather than extends the defaults, and each entry must be a unique non-empty string.
 
 ```yaml
 kinds:
@@ -12,6 +12,8 @@ kinds:
   - fix
   - docs
 ```
+
+The generated default is `kinds: []`.
 
 ## Durable language
 
@@ -22,7 +24,7 @@ language:
   commit: en
 ```
 
-When the `language` mapping exists, `default` is required. It provides the default for durable artifacts and commit prose; optional `artifacts` and `commit` override their corresponding surfaces. Values use normalized BCP 47 language tags.
+`language.default` provides the default for durable artifacts and commit prose; optional `artifacts` and `commit` override their corresponding surfaces. Values use normalized BCP 47 language tags.
 
 Response language remains owned by the user and session and cannot be configured with `language.response`. Existing artifacts keep their established language unless translation is explicitly authorized. Canonical headings, commands, paths, identifiers, Conventional Commit types and scopes, trailers, machine values, and WorkRefs are not localized.
 
@@ -44,7 +46,7 @@ The path cannot be absolute, escape the Host Project, or point at another `.rsp/
 ```yaml
 manage:
   activation: auto
-  closeout: lifecycle
+  closeout: local
 ```
 
 `activation` accepts `explicit` or `auto`. After specialist and complete small-work exceptions, Core first resolves one shape-ready owner and solely owns initial Manage qualification plus the `selected | declined` route result. Missing or non-ready ownership goes to Shape and returns to Core before Manage qualification; automatic activation never sends pre-owner work into Manage. Selected Manage validates the handoff against current owner, authority, and owned-diff evidence without repeating direct-versus-managed eligibility. Activation grants no planning, product mutation, lifecycle, or external authority.

@@ -1,10 +1,10 @@
 # 配置参考
 
-项目配置位于 `.rsp/config.yaml`。省略可选映射时保留兼容默认值；配置永远不会扩展权限。
+项目配置位于 `.rsp/config.yaml`。`rsp init` 会生成完整的默认配置；`rsp update` 只回填缺失的默认字段，不覆盖已有自定义值。配置永远不会扩展权限。
 
 ## Change 类型
 
-内置 Change 类型为 `feature`、`fix`、`refactor`、`docs`、`ops` 与 `research`。非空配置列表会替换而不是扩展默认值，每个条目必须是唯一的非空字符串。
+空列表使用内置 Change 类型：`feature`、`fix`、`refactor`、`docs`、`ops` 与 `research`。非空配置列表会替换而不是扩展默认值，每个条目必须是唯一的非空字符串。
 
 ```yaml
 kinds:
@@ -12,6 +12,8 @@ kinds:
   - fix
   - docs
 ```
+
+默认配置会写成 `kinds: []`。
 
 ## 持久化语言
 
@@ -22,7 +24,7 @@ language:
   commit: en
 ```
 
-存在 `language` 映射时，`default` 必填。它为持久化产物与提交说明提供默认值；可选的 `artifacts` 和 `commit` 覆盖相应内容。值使用规范化的 BCP 47 语言标签。
+`language.default` 为持久化产物与提交说明提供默认值；可选的 `artifacts` 和 `commit` 覆盖相应内容。值使用规范化的 BCP 47 语言标签。
 
 回复语言仍由用户和会话决定，不能通过 `language.response` 配置。已有产物保持既有语言，除非明确授权翻译。规范标题、命令、路径、标识符、Conventional Commit 类型与作用域、尾注、机器值和 WorkRefs 不本地化。
 
@@ -44,7 +46,7 @@ decisions:
 ```yaml
 manage:
   activation: auto
-  closeout: lifecycle
+  closeout: local
 ```
 
 `activation` 接受 `explicit` 或 `auto`。在保留专门路由与完整小工作例外后，Core 会先解析一个 shape-ready owner，并独占首次 Manage 资格判断及 `selected | declined` 路由结果；缺少或未就绪的归属直接进入 Shape，并在 Manage 资格判断前返回 Core。已选择的 Manage 只根据当前 owner、权限与归属差异证据校验 handoff，不重复判断 direct 还是 managed。自动激活不会把尚无 owner 的工作交给 Manage，也不授予规划、产品修改、生命周期或外部操作权限。

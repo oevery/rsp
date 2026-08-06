@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs'
 import { mkdir, readFile } from 'node:fs/promises'
 
 import { join } from 'node:path'
-import { CHANGES_DIR, clearConfigCache, CONFIG_PATH, FOCUS_DIR, inspectRspConfig, pc, PKG_ROOT, RSP_DIR, RSP_RULES_PATH, VALID_KINDS } from '../core/config.js'
+import { CHANGES_DIR, clearConfigCache, CONFIG_PATH, FOCUS_DIR, generateConfigTemplate, inspectRspConfig, pc, PKG_ROOT, reconcileRspConfigDefaults, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
 import { ensureDecisionRecordsDirectory, resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { detectProjectName, generateChangeContent, generateDesignContent, upsertRspAgentsBlock } from '../core/helpers.js'
 import { withRspLock } from '../core/lock.js'
@@ -12,39 +12,7 @@ import { resolveFocusMarkerPath, resolveWorkRef } from '../core/work-ref.js'
 import { removeLegacyArchiveIndex } from './archive-index-migration.js'
 import { buildSpecsIndex } from './specs-index.js'
 
-export function generateConfigTemplate(): string {
-  const fmtList = (items: string[], indent: number) => items.map(i => `${' '.repeat(indent)}# - ${i}`).join('\n')
-  return `# RSP project configuration
-# Omit kinds or use [] to retain the built-in defaults.
-# A non-empty kinds list replaces the built-in defaults; it does not extend them.
-# Every entry must be a unique non-empty string.
-#
-# Built-in defaults:
-#   kinds:               ${VALID_KINDS.join(', ')}
-#
-# kinds:
-${fmtList(VALID_KINDS, 0)}
-
-# Set one shared project default for durable artifact and commit prose.
-# Optional artifacts or commit values override that durable surface independently.
-# Response language remains user/session-owned and is never read from this project mapping.
-# Omit this mapping to keep durable language selection under scoped project authority.
-# language:
-#   default: en
-
-# New projects default to automatic Manage routing with lifecycle-only closeout.
-# Use activation: explicit to require a named managed request.
-# closeout accepts manual, lifecycle, or local; local routes a qualified clean terminal non-small boundary to one local commit but never push or publication.
-manage:
-  activation: auto
-  closeout: lifecycle
-
-# Decision Records default to .rsp/specs/decisions.
-# Set exactly one project-relative authoritative directory when the Host Project already owns Decision Records elsewhere.
-# decisions:
-#   path: docs/adr
-`
-}
+export { generateConfigTemplate }
 
 async function ensureFile(path: string, content: string): Promise<boolean> {
   return ensureManagedFile(path, content, 'managed file')
@@ -101,7 +69,17 @@ export async function initProject(args: InitArgs = {}) {
     const bundledRules = await readFile(join(PKG_ROOT, 'rules', 'rsp-rules.md'), 'utf-8')
 
     created = (await ensureFile(RSP_RULES_PATH, bundledRules)) || created
-    created = (await ensureFile(join(RSP_DIR, 'config.yaml'), generateConfigTemplate())) || created
+    if (existsSync(CONFIG_PATH)) {
+      const existing = await readFile(CONFIG_PATH, 'utf-8')
+      const reconciled = reconcileRspConfigDefaults(existing)
+      if (reconciled.changed) {
+        await writeManagedFile(CONFIG_PATH, reconciled.content, 'config file')
+        created = true
+      }
+    }
+    else {
+      created = (await ensureFile(join(RSP_DIR, 'config.yaml'), generateConfigTemplate())) || created
+    }
     clearConfigCache()
     const configInspection = await inspectRspConfig()
     if (configInspection.issues.length > 0)

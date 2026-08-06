@@ -68,7 +68,7 @@ Manage 是符合条件的长时间运行、恢复、多切片、反复收敛、�
 ```yaml
 manage:
   activation: auto
-  closeout: lifecycle
+  closeout: local
 ```
 
 `activation` 控制选择方式：

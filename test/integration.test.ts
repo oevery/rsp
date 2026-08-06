@@ -3195,9 +3195,12 @@ describe('change groups', () => {
     const config = await readFile(join(initDir, '.rsp', 'config.yaml'), 'utf-8')
     expect(config).toContain('A non-empty kinds list replaces the built-in defaults; it does not extend them.')
     expect(config).toContain('Every entry must be a unique non-empty string.')
-    expect(config).toContain('manage:\n  activation: auto\n  closeout: lifecycle')
+    expect(config).toContain('manage:\n  activation: auto\n  closeout: local')
+    expect(config).toContain('kinds: []')
+    expect(config).toContain('decisions:\n  path: .rsp/specs/decisions')
+    expect(config).toContain('language:\n  default: en\n  # artifacts: zh-CN\n  # commit: zh-CN')
     expect(config).toContain('local routes a qualified clean terminal non-small boundary to one local commit but never push or publication')
-    expect(config).toContain('Set exactly one project-relative authoritative directory')
+    expect(config).toContain('Decision Records default to .rsp/specs/decisions.')
   })
 
   it('rejects a grouped Change until its Group Brief exists', async () => {

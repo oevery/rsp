@@ -68,7 +68,7 @@ Manage is a controller for eligible long-running, recovery, multi-slice, repeate
 ```yaml
 manage:
   activation: auto
-  closeout: lifecycle
+  closeout: local
 ```
 
 `activation` controls selection:

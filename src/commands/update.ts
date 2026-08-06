@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs'
 import { mkdir, readFile, rm, rmdir } from 'node:fs/promises'
 import { join } from 'node:path'
 
-import { CHANGES_DIR, clearConfigCache, inspectRspConfig, OBSOLETE_RSP_RULES_PATH, pc, PKG_ROOT, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
+import { CHANGES_DIR, clearConfigCache, CONFIG_PATH, generateConfigTemplate, inspectRspConfig, OBSOLETE_RSP_RULES_PATH, pc, PKG_ROOT, reconcileRspConfigDefaults, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
 import { ensureDecisionRecordsDirectory, resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { detectProjectName, inspectUnsupportedRules, upsertRspAgentsBlock } from '../core/helpers.js'
 import { withRspLock } from '../core/lock.js'
@@ -57,6 +57,24 @@ export async function updateProject(options: UpdateOptions = {}): Promise<Update
     const decisionRecordsFilesystemIssue = await validateDecisionRecordsFilesystemPath(decisionRecordsPath)
     if (decisionRecordsFilesystemIssue)
       throw new Error(decisionRecordsFilesystemIssue)
+
+    const configFileInspection = inspectManagedFile(CONFIG_PATH, 'config file', { allowMissing: true })
+    if (configFileInspection.issue)
+      throw configFileInspection.issue
+    const configContent = configFileInspection.exists ? await readFile(CONFIG_PATH, 'utf-8') : null
+    const reconciledConfig = configContent === null
+      ? { content: generateConfigTemplate(), added: ['all defaults'], changed: true }
+      : reconcileRspConfigDefaults(configContent)
+    if (reconciledConfig.changed) {
+      await writeManagedFile(CONFIG_PATH, reconciledConfig.content, 'config file')
+      const detail = reconciledConfig.added.length > 0
+        ? `defaults added: ${reconciledConfig.added.join(', ')}`
+        : 'generated layout normalized'
+      actions.push(`config.yaml ${detail}`)
+      if (!options.quiet)
+        console.log(`  ${pc.green('✓')} config.yaml ${detail}`)
+      updated = true
+    }
 
     const changesInspection = inspectManagedDirectory(CHANGES_DIR, 'open work root', { allowMissing: true })
     if (changesInspection.issue)
