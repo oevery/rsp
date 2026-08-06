@@ -23,6 +23,8 @@ export const DEFAULT_PACKAGED_SKILL_NAMES = [
   'rsp-review',
   'rsp-shape',
   'rsp-tdd',
+  'rsp-workspace',
+  'rsp-land',
 ] as const
 
 const OBSOLETE_PACKAGED_SKILL_RENAMES = {

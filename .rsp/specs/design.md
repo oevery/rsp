@@ -10,7 +10,7 @@
 - The canonical domain Specs are:
   - [Core Model](./core-model.md): artifacts, WorkRefs, Change Groups, lifecycle, dependencies, focus, and durable writeback.
   - [CLI Contracts](./cli-contracts.md): deterministic commands, filesystem safety, inspection, JSON, history, indexes, and repair.
-  - [Skill System](./skill-system.md): the default eleven-Skill suite, optional project Skills, orthogonal distribution/role/invocation classification, composition, progressive disclosure, Core-owned ready-owner routing, bounded managed execution-frontier behavior, and authority boundaries.
+  - [Skill System](./skill-system.md): the default thirteen-Skill suite, optional project Skills, orthogonal distribution/role/invocation classification, composition, progressive disclosure, Core-owned ready-owner routing, isolated workspace and landing boundaries, bounded managed execution-frontier behavior, and authority boundaries.
   - [Skill Control Model](./skill-control-model.md): canonical transient route, work-owner, frontier, stop/resume, acceptance, and closeout vocabulary shared across Core, Shape, Disciplines, and Manage.
   - [Interactive TUI](./tui.md): dashboard routing, state, presentation, localization, history, layout, and terminal lifecycle.
   - [Distribution and Maintainer Research](./distribution.md): package inventory, Skill installation, releases, evaluation provenance, repository layering, and upstream research.
@@ -28,7 +28,7 @@
 | Repository area | Directories | Ownership |
 | --- | --- | --- |
 | Product runtime | `src/`, `bin/` | CLI registration, commands, domain interpretation, status/history inspection, filesystem safety, diagnostics, and interactive UI |
-| Product distribution | `rules/`, `skills/` | Bundled fallback source, the default eleven-Skill suite, and independently installed optional project Skills |
+| Product distribution | `rules/`, `skills/` | Bundled fallback source, the default thirteen-Skill suite, and independently installed optional project Skills |
 | Project host integration | `.agents/skills/` | Live published-Skill projections and maintainer-only research capability |
 | Maintainer tooling | `scripts/` | Deterministic repository and upstream maintenance workflows |
 | Public guidance | `docs/site/` | Paired English and Simplified Chinese user guides rendered by VitePress |
@@ -43,6 +43,7 @@ Key runtime owners:
 - `src/commands/` owns command coordination and mutations; `src/core/` owns shared filesystem, configuration, output, helpers, locking, WorkRef classification, and Group interpretation.
 - `src/status/` owns the internal project snapshot, filesystem-backed inspection, pure derivation, exact public JSON adapter, and plain presentation.
 - `src/history/` owns presentation-neutral archive-history inspection, validation, filtering, bounds, and detail projection.
+- `src/workspace/` owns isolated Git worktree records, bounded fact inspection, recoverable host-activity registration and cooperative resource leases, exact local landing, and safe disposal; project-semantic planning and command execution remain outside the CLI.
 - `src/tui/` owns interactive routing state, Ink presentation, localization, layout, and terminal lifecycle.
 - `scripts/upstreams.mjs`, `.agents/skills/distill-upstream/`, and `research/` are maintainer-only owners; `rules/rsp-rules.md` and `skills/` are published sources.
 

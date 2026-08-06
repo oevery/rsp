@@ -1,6 +1,6 @@
 # Skills 与受管工作
 
-RSP 发布一个由十一项与宿主无关的 Skill 组成的默认套件，供按需加载。每项 Skill 都有明确且狭窄的权限边界，并把结果返回已有的项目或 RSP 归属位置。
+RSP 发布一个由十三项与宿主无关的 Skill 组成的默认套件，供按需加载。每项 Skill 都有明确且狭窄的权限边界，并把结果返回已有的项目或 RSP 归属位置。
 
 | Skill | 职责 |
 |---|---|
@@ -15,6 +15,8 @@ RSP 发布一个由十一项与宿主无关的 Skill 组成的默认套件，供
 | `rsp-commit` | 创建一个已授权、范围精确的本地提交。 |
 | `rsp-release-docs` | 起草、审计、定稿或校准明确的发布文档范围。 |
 | `rsp-manage` | 协调符合条件的长时间运行、恢复或多切片延续工作。 |
+| `rsp-workspace` | 为已选 WorkRef 准备隔离 worktree，通过已有 RSP 契约协调宿主原生执行，并保留可恢复的 activity 状态。 |
+| `rsp-land` | 把 RSP workspace 中一个精确且已授权的 commit 列表回迁到记录的本地目标。 |
 
 `rsp-structural-audit` 是可选的纯报告项目 Skill，在授予实现权限前审计一个边界明确的仓库或子树。
 
@@ -27,6 +29,8 @@ RSP 发布一个由十一项与宿主无关的 Skill 组成的默认套件，供
 | Design、Implement、Diagnose、TDD、Review、Resolve Findings 与 Release Docs | 默认 | Discipline | 由 Core 路由为专门能力，或接受边界明确的显式请求 |
 | `rsp-commit` | 默认 | 本地交付 Discipline | 在精确边界获得授权后由 Core 或 Manage 路由 |
 | `rsp-manage` | 默认 | Controller | Core 根据显式请求或有效项目策略选择 |
+| `rsp-workspace` | 默认 | 执行基础设施 | 隔离具有明确价值时由 Core 或 Manage 选择 |
+| `rsp-land` | 默认 | 本地回迁 Discipline | 有明确目标、commit 列表和回迁权限时由 Core 或 Manage 路由 |
 | `rsp-structural-audit` | 可选 | Discovery | 显式纯报告请求 |
 
 “默认”表示随套件安装，并不表示自动调用。普通 Discipline Skill 不递归编排面向用户的流程；只有通过 Core 资格判断的 Manage Controller 才能组合有边界的 worker lanes。
@@ -39,6 +43,8 @@ RSP 发布一个由十一项与宿主无关的 Skill 组成的默认套件，供
 - 仅在显式要求，或具体的变更风险使修改前的 RED 明显更安全时选择 TDD。
 - Review 保持只读；Resolve Findings 拥有已接受修正的修改权限。
 - Release Docs 要求显式确认的发布操作。
+- Workspace 隔离只为可执行 WorkRef 选择；普通临时工作保留在当前分支。Workspace Skill 复用调用方已有的控制与结果契约，只追加 workspace 上下文和观察事实，使用宿主原生能力执行，并只把可恢复的 worktree/activity 机械操作留给 CLI。
+- Commit 与 Land 保持独立权限；回迁冲突会保留两个 worktree，等待显式恢复。
 - 任何 Skill 都不推断提交、推送、发布、部署、批准或人工验收权限。
 
 ## 控制结果

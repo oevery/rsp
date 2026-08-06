@@ -1,6 +1,6 @@
 # Skills and managed work
 
-RSP publishes a default suite of eleven host-neutral Skills for on-demand loading. Each has a narrow authority boundary and returns its result to an existing project or RSP owner.
+RSP publishes a default suite of thirteen host-neutral Skills for on-demand loading. Each has a narrow authority boundary and returns its result to an existing project or RSP owner.
 
 | Skill | Responsibility |
 |---|---|
@@ -15,6 +15,8 @@ RSP publishes a default suite of eleven host-neutral Skills for on-demand loadin
 | `rsp-commit` | Create one authorized exact-scope local commit. |
 | `rsp-release-docs` | Draft, audit, finalize, or reconcile an explicit release documentation surface. |
 | `rsp-manage` | Coordinate one eligible long-running, recovery, or multi-slice continuation. |
+| `rsp-workspace` | Prepare an isolated worktree, coordinate host-native operation through existing RSP contracts, and retain recoverable activity state. |
+| `rsp-land` | Transfer one exact authorized commit list from an RSP workspace to its recorded local target. |
 
 `rsp-structural-audit` is an optional report-only project Skill. It audits one bounded repository or subtree before implementation authority is granted.
 
@@ -27,6 +29,8 @@ Installation, runtime role, and invocation are separate:
 | Design, implementation, diagnosis, TDD, review, finding resolution, and Release Docs | default | Discipline | Core-routed specialist or explicit bounded request |
 | `rsp-commit` | default | local-delivery Discipline | Core- or Manage-routed after an authorized exact boundary |
 | `rsp-manage` | default | Controller | Core-selected from an explicit request or effective project policy |
+| `rsp-workspace` | default | execution infrastructure | Core- or Manage-selected when isolation is materially useful |
+| `rsp-land` | default | local-transfer Discipline | Core- or Manage-routed with explicit target, commits, and landing authority |
 | `rsp-structural-audit` | optional | Discovery | explicit report-only request |
 
 `default` means installed with the suite; it does not mean automatically invoked. Ordinary Discipline Skills do not recursively orchestrate user-facing flows. Only a Core-qualified Manage controller composes bounded worker lanes.
@@ -39,6 +43,8 @@ Installation, runtime role, and invocation are separate:
 - TDD is selected only when explicitly required or when a concrete changed risk makes pre-mutation RED materially safer.
 - Review remains read-only; Resolve Findings owns accepted correction.
 - Release Docs requires an explicit confirmed release operation.
+- Workspace isolation is selected only for an executable WorkRef; ordinary temporary work stays in the current branch. The Workspace Skill reuses the invoking control and result contracts, appends only workspace context and observations, uses host-native execution, and leaves only recoverable worktree/activity mechanics to the CLI.
+- Commit and Land remain separate authorities. Landing conflicts preserve both worktrees for explicit recovery.
 - No Skill infers commit, push, publication, deployment, approval, or human-acceptance authority.
 
 ## Control outcomes

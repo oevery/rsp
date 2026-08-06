@@ -44,6 +44,27 @@ rsp reopen <name> --reason <text> [--from <archive-path>]
 
 `rsp ready` and `rsp show` expose deterministic readiness and semantic-review signals. They never turn those signals into archive approval. `rsp archive --dry-run` remains a deprecated compatibility alias for `rsp ready` and does not move a Change.
 
+## Isolated workspaces
+
+```text
+rsp workspace prepare <work-ref> [--target <branch>] [--json]
+rsp workspace status <work-ref> [--json]
+rsp workspace inspect <work-ref> [--json]
+rsp workspace activity register <work-ref> --id <id> --pid <pid>
+    [--label <text>] [--process-group <pgid>] [--resources <ids>] [--json]
+rsp workspace activity stop <work-ref> --id <id> [--json]
+rsp workspace dispose <work-ref> [--discard] [--json]
+rsp land <work-ref> --target <branch> --commits <sha[,sha...]> [--cleanup] [--json]
+```
+
+Workspace preparation is opt-in for an existing executable WorkRef. It creates or resumes branch `rsp/<work-ref>` in a stable cache worktree; ordinary temporary work remains in the current branch. `inspect` returns bounded repository facts without classifying the project stack.
+
+The `rsp-workspace` Skill or a human interprets project semantics and uses the host's existing file, shell, package, browser, and process capabilities. The Skill reuses the invoking RSP control and result contracts and appends only workspace context and observations; the CLI does not parse AI response text or provide a universal execution-plan DSL.
+
+Long-running processes are started and verified by the host. `activity register` records an observed PID with its stable process-start identity, an optional verified process group, and opaque cooperative resource names so a later session can stop or dispose them safely. Stop and disposal revalidate that identity and fail closed rather than signal a reused PID or process group. Registration is coordination rather than sandboxing and grants no network, credential, external-state, deployment, or publication authority.
+
+Disposal refuses dirty workspaces and commits that remain ahead of the target. `--discard` explicitly authorizes losing both. Landing requires an exact target and ordered commit list. Conflicts preserve the source workspace and target cherry-pick state; `--cleanup` runs only after successful landing and only when the list covers every workspace commit ahead of the target.
+
 ## Inspection
 
 ```text

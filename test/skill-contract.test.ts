@@ -12,6 +12,7 @@ const publishedSkillNames = [
   'rsp-design',
   'rsp-diagnose',
   'rsp-implement',
+  'rsp-land',
   'rsp-manage',
   'rsp-release-docs',
   'rsp-resolve-findings',
@@ -19,6 +20,7 @@ const publishedSkillNames = [
   'rsp-shape',
   'rsp-structural-audit',
   'rsp-tdd',
+  'rsp-workspace',
 ]
 const reviewSkill = join(root, 'skills', 'rsp-review')
 const reviewCode = readFileSync(join(reviewSkill, 'references', 'code-review.md'), 'utf8')
@@ -115,6 +117,14 @@ describe('rsp Skill contract', () => {
     expect(discovered).toEqual(publishedSkillNames)
     for (const name of discovered)
       expectPortableSkill(join(skillsRoot, name))
+  })
+
+  it('keeps published Skills independent from repository-only Specs and cross-Skill files', () => {
+    for (const name of publishedSkillNames) {
+      const { body } = readSkill(join(skillsRoot, name))
+      expect(body).not.toContain('.rsp/specs/skill-control-model.md')
+      expect(body).not.toMatch(/\]\([^)]*\.rsp\/specs\//u)
+    }
   })
 
   it('publishes the canonical review Skill contract', () => {

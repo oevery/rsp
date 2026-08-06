@@ -4,6 +4,20 @@
 - Define the canonical transient vocabulary used to explain how Core, Shape, Disciplines, and Manage route work, stop safely, resume, accept evidence, and derive closeout eligibility.
 - Keep control decisions observable without adding a persisted controller, workflow state machine, ticket map, run registry, or runtime glossary dependency.
 
+## Distribution Boundary
+- This Spec is maintainer-facing durable truth for the RSP repository. It is not included in the published package and is never a runtime dependency of an installed Skill.
+- Installed Skills must not read, link to, or require this `.rsp/` path. Exact-name Skill installation creates no implicit dependency on another installed Skill or repository-only artifact.
+- Runtime contracts remain locally owned by their published Skills:
+
+| Contract | Runtime owner |
+| --- | --- |
+| `ControlOutcome`, `RouteDisposition`, `StopDisposition`, and Continuation | `rsp` |
+| `WorkerEnvelope`, managed common receipt, frontier, acceptance, and closeout | `rsp-manage` |
+| Discipline-specific result and stop conditions | The owning Discipline Skill |
+| Workspace context and observations | `rsp-workspace` |
+
+- Non-owner Skills may name an invoking contract and append their own bounded fields, but must not redefine the complete common contract.
+
 ## Control Outcome
 - A `ControlOutcome` is response-only derived coordination data for one current phase. It contains:
   - `phase`

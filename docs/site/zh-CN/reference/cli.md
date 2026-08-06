@@ -44,6 +44,27 @@ rsp reopen <name> --reason <text> [--from <archive-path>]
 
 `rsp ready` 和 `rsp show` 提供确定性的就绪信息与语义审查信号，但不会把这些信号视为归档批准。`rsp archive --dry-run` 作为 `rsp ready` 已弃用的兼容别名保留，不会移动 Change。
 
+## 隔离 Workspace
+
+```text
+rsp workspace prepare <work-ref> [--target <branch>] [--json]
+rsp workspace status <work-ref> [--json]
+rsp workspace inspect <work-ref> [--json]
+rsp workspace activity register <work-ref> --id <id> --pid <pid>
+    [--label <text>] [--process-group <pgid>] [--resources <ids>] [--json]
+rsp workspace activity stop <work-ref> --id <id> [--json]
+rsp workspace dispose <work-ref> [--discard] [--json]
+rsp land <work-ref> --target <branch> --commits <sha[,sha...]> [--cleanup] [--json]
+```
+
+Workspace 只为一个已有且可执行的 WorkRef 显式启用。准备命令在稳定缓存目录中创建或恢复 `rsp/<work-ref>` 分支；普通临时工作仍在当前分支完成。`inspect` 只返回有界仓库事实，不判断项目技术栈。
+
+`rsp-workspace` Skill 或人类负责理解项目语义，并使用宿主现有的文件、shell、包管理、浏览器和进程能力。该 Skill 复用调用方已有的 RSP 控制与结果契约，只追加 workspace 上下文和观察事实；CLI 不解析 AI 响应文本，也不提供通用执行计划 DSL。
+
+长运行进程由宿主启动并验证。`activity register` 登记已观察到的 PID 及其稳定进程启动身份、可选且已核验的进程组，以及不透明的协作式资源名称，使后续会话可以安全停止或清理。停止和清理前会重新验证该身份；如果 PID 或进程组已被复用则安全失败，不会发送信号。登记属于协作协调，不是沙箱，也不会授予网络、凭证、外部状态、部署或发布权限。
+
+清理会拒绝存在未提交修改或仍领先目标分支的 commit；`--discard` 才显式授权丢弃两者。回迁要求精确目标分支和有序 commit 列表。冲突会保留来源 workspace 和目标 cherry-pick 状态；只有回迁成功且列表覆盖 workspace 相对目标领先的全部 commit 时，`--cleanup` 才会继续清理。
+
 ## 检查与查询
 
 ```text

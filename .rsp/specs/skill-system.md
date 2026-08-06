@@ -1,10 +1,10 @@
 # Skill System
 
 ## Purpose
-- Define composition, ownership, authority, progressive-disclosure, and completion contracts for the default eleven-Skill suite and explicitly selected optional project Skills.
+- Define composition, ownership, authority, progressive-disclosure, and completion contracts for the default thirteen-Skill suite and explicitly selected optional project Skills.
 
 ## Stable Facts
-- The published default suite contains `rsp`, `rsp-shape`, `rsp-design`, `rsp-implement`, `rsp-diagnose`, `rsp-tdd`, `rsp-review`, `rsp-resolve-findings`, `rsp-commit`, `rsp-release-docs`, and `rsp-manage`.
+- The published default suite contains `rsp`, `rsp-shape`, `rsp-design`, `rsp-implement`, `rsp-diagnose`, `rsp-tdd`, `rsp-review`, `rsp-resolve-findings`, `rsp-commit`, `rsp-release-docs`, `rsp-manage`, `rsp-workspace`, and `rsp-land`.
 - `rsp-structural-audit` is an independently invoked, report-only project Skill. It audits one explicit repository or subtree boundary for evidenced ownership, dependency, production-path, change-amplification, or verification risks; it neither requires nor creates a Change and never enters implementation or lifecycle routing. In a broad boundary, history selects only the smallest current behavior chain and never proves a Finding. Suspected shallow indirection is evaluated by whether removal eliminates complexity or disperses required caller knowledge, while every retained Finding still requires a reachable trigger and concrete impact.
 - Structural Audit behavior holdouts separately qualify a real Finding, heuristic false positives, history-only selection, specialist routing, and mutation refusal. Deterministic package tests score result values, Finding bounds, required evidence fields, and forbidden claims; provider execution remains optional evidence rather than an ordinary test dependency.
 - Skill classification has three orthogonal axes. Distribution kind is the existing machine contract `default | optional`; runtime role explains Core, Shape, Discipline, Controller, or Discovery ownership; invocation mode explains direct entry, Core routing, policy selection, or explicit-only selection. Installation never implies invocation or mutation authority, and role remains a documented semantic classification rather than another runtime manifest or JSON field.
@@ -16,6 +16,8 @@
 | `rsp-design`, `rsp-implement`, `rsp-diagnose`, `rsp-tdd`, `rsp-review`, `rsp-resolve-findings`, `rsp-release-docs` | default | Discipline | Core-routed specialist or explicit bounded request |
 | `rsp-commit` | default | Discipline: local delivery | Core- or Manage-routed after an authorized exact boundary |
 | `rsp-manage` | default | Controller | Core-selected from explicit request or effective project policy |
+| `rsp-workspace` | default | Discipline: isolated execution | Core-selected for one explicit ready WorkRef when isolation is materially useful |
+| `rsp-land` | default | Discipline: local integration | Core- or Manage-routed after an authorized exact workspace commit set |
 | `rsp-structural-audit` | optional | Discovery | explicit report-only request |
 
 - Skills are independently selectable within their invocation contract and return to an existing project, Change, Spec, Decision Record, archive, or release-artifact owner. Report-only Pre-Change Design and Structural Audit may instead return one bounded result to the user without creating an artifact owner. A `specialist` route ends at one explicitly bounded Discipline result. A `direct` route is one non-managed completion orchestration and may name exactly one Discipline executor without making it a controller. Ordinary Discipline Skills never recursively orchestrate other user-facing flows; only a Core-qualified Manage controller may compose bounded worker lanes and review convergence. The suite adds no runtime overlay, hidden state, general recursive orchestration, or implicit Git/publication authority.
@@ -44,6 +46,8 @@
 - Commit consumes one Core/Manage-derived Change, integration wave, Group closeout, or confirmed release boundary only after exact paths, decisive evidence, lifecycle state, and local commit authority are known. It owns exact staging, repository-consistent Conventional message construction, one local commit, and complete post-commit observation; it never infers lifecycle, remote, publication, approval, or history-rewrite authority.
 - Commit-message language follows explicit current instruction, configured effective commit language, nearest repository authority, then clear recent non-merge history rather than response/artifact language or cross-repository memory. Non-trivial messages carry two to four outcome/boundary bullets and only truthful `RSP-WorkRef:`, `RSP-Group:`, external-reference, or actual `BREAKING CHANGE:` trailers.
 - Commit may project each owned issue relationship as a canonical non-closing `Issue:` reference. Only a terminal commit for completed acceptance may additionally use provider-supported closing syntax for an explicit `closes` relationship; checkpoints, `relates`, ambiguous ownership, and unresolved provider or repository identity never produce closing syntax, and file diffs never select the issue owner.
+- Workspace prepares, resumes, inspects, operates, recovers, or disposes one isolated worktree only after Core or Manage selects isolation for an explicit ready WorkRef. It reuses the invoking `ControlOutcome`, `WorkerEnvelope`, common receipt, bounded Discipline result, or Continuation instead of defining parallel decision, disposition, authority, result, next-owner, or stop contracts; it appends only workspace context and observations. It uses the host's existing file, shell, package, browser, and process capabilities for project-semantic execution, and leaves worktree ownership, recoverable activity registration, cooperative resources, and cleanup to deterministic CLI primitives. It grants no implementation, verification, Commit, Land, external-state, or discard authority.
+- Land transfers only an explicit ordered commit set from one recorded workspace into its exact recorded local target branch. It preserves unrelated target changes and conflict state, separates successful landing from follow-up cleanup failure, and grants no conflict resolution, abort, cleanup, push, publication, or deployment authority beyond explicitly supplied inputs.
 - Release Docs confirms identity only from explicit instruction or authoritative release configuration, never version ordering, prior prereleases, commits, or planned prose. Before confirmation, work remains version-neutral and does not mutate versioned release surfaces.
 - A confirmed mechanical release needs no RSP Change. Use an optional Release Change only for material version/range, migration, rollback, security, compatibility, cross-team/repository, multi-stage, recovery, blocker, or acceptance decisions.
 - Release Docs requires finalization against an exact clean candidate before explicit tag, hosted release, or registry handoff. Its evidence ledger and publication/authentication progress remain transient; shipped surfaces stay publication-invariant; published immutable history is not rewritten.
@@ -67,7 +71,7 @@
 - In scope:
   - Skill selection, discipline behavior, artifact return paths, conditional references, managed qualification/convergence, and authority separation.
 - Out of scope:
-  - Host scheduling/worktree implementation, hidden runtime orchestration, automatic retry, persisted controller state, general host permissions, remote Git/publication authority, and project-specific product decisions.
+  - Host scheduling, hidden runtime orchestration, automatic retry, persisted controller state, general host permissions, remote Git/publication authority, and project-specific product decisions.
 
 ## Constraints
 - Keep safety, authority, readiness, verification, and completion criteria checkable even when compacting prompts.

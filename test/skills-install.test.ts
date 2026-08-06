@@ -24,12 +24,14 @@ const expectedSkills = [
   'rsp-design',
   'rsp-diagnose',
   'rsp-implement',
+  'rsp-land',
   'rsp-manage',
   'rsp-release-docs',
   'rsp-resolve-findings',
   'rsp-review',
   'rsp-shape',
   'rsp-tdd',
+  'rsp-workspace',
 ]
 const optionalSkill = 'rsp-structural-audit'
 

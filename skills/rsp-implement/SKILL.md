@@ -19,6 +19,8 @@ Require an explicit WorkRef or one unambiguous focus marker. A Group Brief is co
 
 Read nearest instructions, Core or fallback, Change and Brief, relevant Specs and decisions, worktree, then the smallest owning code/test chain. Use normal repository discovery; do not guess owners.
 
+When Core or Manage supplied an `rsp-workspace`, operate only in that exact path and reuse it for all same-WorkRef implementation evidence. Do not create, switch, land, or dispose a worktree from Implement.
+
 ## Preserve authority
 
 Identify outcome, owners, verification, and pre-existing work. Modify only Change requirements, Tasks, Verify, and Blockers. Preserve unrelated modified, staged, and untracked work. Stop when overlap would discard, guess, or rewrite pre-existing intent.

@@ -71,6 +71,8 @@ When dispatch cannot satisfy a required worker obligation, apply the AcceptanceD
 
 For a Group, dispatch child WorkRefs only in the current derived `plan.waves` wave. Assume shared paths, lockfiles, generated artifacts, integration state, real hosts, provider sessions, and hardware resources overlap unless an authorized isolated workspace and verification boundary exist. Keep blockers, later waves, overlaps, and dependent verification sequential. Dispatch in parallel only for isolated mutation paths and verification resources; delegation never implies concurrency. Workers receive no implied focus, lifecycle, Git, publication, deployment, or approval authority. Choose the cheapest decisive check and at most one integration gate.
 
+When isolation is selected, request one `rsp-workspace` session per executable WorkRef before dispatch and pass its exact path and branch in every worker envelope. All lanes for the same WorkRef reuse that session. Different worktrees do not prove host resources, external state, generated state, provider sessions, or real execution environments are independent; require explicit shared-resource evidence and register cooperative leases for recoverable host activities, or keep those checks sequential. Workspace preparation, activity registration, landing, and disposal consume no worker dispatch slot, but each retains its own authority and stop boundary.
+
 ## Continue from evidence
 
 Inspect diff and verification before accepting results; rerun `rsp status --json`. For a Group restrict it to declared children.

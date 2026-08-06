@@ -12,12 +12,14 @@ import { focusChange, unfocusChange } from './commands/focus.js'
 import { closeChangeGroup, createChangeGroup, reopenChangeGroup } from './commands/group.js'
 import { showHistory } from './commands/history.js'
 import { initProject } from './commands/init.js'
+import { landWorkspaceCommand } from './commands/land.js'
 import { showReady } from './commands/ready.js'
 import { reopenChange } from './commands/reopen.js'
 import { showChange } from './commands/show.js'
 import { inspectPackagedSkillInventory, installPackagedSkills, printPackagedSkillInventory, printSkillInstallResult } from './commands/skills.js'
 import { showStatus } from './commands/status.js'
 import { updateProject } from './commands/update.js'
+import { disposeWorkspaceCommand, inspectWorkspaceCommand, prepareWorkspaceCommand, registerWorkspaceActivityCommand, showWorkspaceCommand, stopWorkspaceActivityCommand } from './commands/workspace.js'
 import { getVersion } from './core/config.js'
 import { emitJson } from './core/output.js'
 import { toStatusJsonError } from './status/v3-json.js'
@@ -195,6 +197,236 @@ const addCommand = defineCommand({
   },
   subCommands: {
     spec: addSpecCommand,
+  },
+})
+
+const workspaceCommand = defineCommand({
+  meta: {
+    name: 'workspace',
+    description: 'Prepare isolated worktrees and track recoverable host activities',
+  },
+  subCommands: {
+    prepare: defineCommand({
+      meta: {
+        name: 'prepare',
+        description: 'Create or resume branch rsp/<workref> in an isolated worktree',
+      },
+      args: {
+        workref: {
+          type: 'positional',
+          description: 'Existing executable RSP WorkRef',
+          required: true,
+        },
+        target: {
+          type: 'string',
+          description: 'Target local branch (default: current branch)',
+        },
+        json: {
+          type: 'boolean',
+          description: 'Print machine-readable JSON output',
+          default: false,
+        },
+      },
+      async run({ args }: { args: { workref: string, target?: string, json: boolean } }) {
+        await prepareWorkspaceCommand(args.workref, { targetBranch: args.target, json: Boolean(args.json) })
+      },
+    }),
+    status: defineCommand({
+      meta: {
+        name: 'status',
+        description: 'Inspect one recorded RSP workspace',
+      },
+      args: {
+        workref: {
+          type: 'positional',
+          description: 'Existing workspace WorkRef',
+          required: true,
+        },
+        json: {
+          type: 'boolean',
+          description: 'Print machine-readable JSON output',
+          default: false,
+        },
+      },
+      async run({ args }: { args: { workref: string, json: boolean } }) {
+        await showWorkspaceCommand(args.workref, { json: Boolean(args.json) })
+      },
+    }),
+    inspect: defineCommand({
+      meta: {
+        name: 'inspect',
+        description: 'Return bounded workspace and repository facts without project-semantic interpretation',
+      },
+      args: {
+        workref: {
+          type: 'positional',
+          description: 'Existing workspace WorkRef',
+          required: true,
+        },
+        json: {
+          type: 'boolean',
+          description: 'Print machine-readable JSON output',
+          default: false,
+        },
+      },
+      async run({ args }: { args: { workref: string, json: boolean } }) {
+        await inspectWorkspaceCommand(args.workref, { json: Boolean(args.json) })
+      },
+    }),
+    activity: defineCommand({
+      meta: {
+        name: 'activity',
+        description: 'Register or stop host-started workspace activities',
+      },
+      subCommands: {
+        register: defineCommand({
+          meta: {
+            name: 'register',
+            description: 'Register a host-started process for workspace cleanup and resource ownership',
+          },
+          args: {
+            'workref': {
+              type: 'positional',
+              description: 'Existing workspace WorkRef',
+              required: true,
+            },
+            'id': {
+              type: 'string',
+              description: 'Stable activity id',
+              required: true,
+            },
+            'pid': {
+              type: 'string',
+              description: 'Running process id',
+              required: true,
+            },
+            'label': {
+              type: 'string',
+              description: 'Optional human-readable activity label',
+            },
+            'process-group': {
+              type: 'string',
+              description: 'Optional verified process group id to stop as one unit',
+            },
+            'resources': {
+              type: 'string',
+              description: 'Optional comma-separated exclusive resource ids',
+            },
+            'json': {
+              type: 'boolean',
+              description: 'Print machine-readable JSON output',
+              default: false,
+            },
+          },
+          async run({ args }: { args: { 'workref': string, 'id': string, 'pid': string, 'label'?: string, 'process-group'?: string, 'resources'?: string, 'json': boolean } }) {
+            await registerWorkspaceActivityCommand(args.workref, {
+              id: args.id,
+              pid: Number(args.pid),
+              label: args.label,
+              processGroupId: args['process-group'] === undefined ? undefined : Number(args['process-group']),
+              resources: args.resources,
+              json: Boolean(args.json),
+            })
+          },
+        }),
+        stop: defineCommand({
+          meta: {
+            name: 'stop',
+            description: 'Stop one recorded workspace activity and release its resources',
+          },
+          args: {
+            workref: {
+              type: 'positional',
+              description: 'Existing workspace WorkRef',
+              required: true,
+            },
+            id: {
+              type: 'string',
+              description: 'Exact recorded activity id',
+              required: true,
+            },
+            json: {
+              type: 'boolean',
+              description: 'Print machine-readable JSON output',
+              default: false,
+            },
+          },
+          async run({ args }: { args: { workref: string, id: string, json: boolean } }) {
+            await stopWorkspaceActivityCommand(args.workref, args.id, { json: Boolean(args.json) })
+          },
+        }),
+      },
+    }),
+    dispose: defineCommand({
+      meta: {
+        name: 'dispose',
+        description: 'Remove a safe completed workspace or explicitly discard it',
+      },
+      args: {
+        workref: {
+          type: 'positional',
+          description: 'Existing workspace WorkRef',
+          required: true,
+        },
+        discard: {
+          type: 'boolean',
+          description: 'Explicitly discard uncommitted changes and unlanded commits',
+          default: false,
+        },
+        json: {
+          type: 'boolean',
+          description: 'Print machine-readable JSON output',
+          default: false,
+        },
+      },
+      async run({ args }: { args: { workref: string, discard: boolean, json: boolean } }) {
+        await disposeWorkspaceCommand(args.workref, { discard: Boolean(args.discard), json: Boolean(args.json) })
+      },
+    }),
+  },
+})
+
+const landCommand = defineCommand({
+  meta: {
+    name: 'land',
+    description: 'Cherry-pick explicit workspace commits into its recorded target branch',
+  },
+  args: {
+    workref: {
+      type: 'positional',
+      description: 'Existing workspace WorkRef',
+      required: true,
+    },
+    target: {
+      type: 'string',
+      description: 'Exact recorded target local branch',
+      required: true,
+    },
+    commits: {
+      type: 'string',
+      description: 'Comma-separated exact commits to cherry-pick in order',
+      required: true,
+    },
+    cleanup: {
+      type: 'boolean',
+      description: 'Dispose the source workspace after a successful landing',
+      default: false,
+    },
+    json: {
+      type: 'boolean',
+      description: 'Print machine-readable JSON output',
+      default: false,
+    },
+  },
+  async run({ args }: { args: { workref: string, target: string, commits: string, cleanup: boolean, json: boolean } }) {
+    const result = await landWorkspaceCommand(args.workref, {
+      targetBranch: args.target,
+      commits: args.commits,
+      cleanup: Boolean(args.cleanup),
+      json: Boolean(args.json),
+    })
+    if (!result.ok)
+      process.exitCode = 1
   },
 })
 
@@ -690,6 +922,8 @@ export async function runCli(rawArgs = process.argv.slice(2)) {
     subCommands: {
       init: initCommand,
       add: addCommand,
+      workspace: workspaceCommand,
+      land: landCommand,
       create: createCommand,
       group: groupCommand,
       focus: focusCommand,
