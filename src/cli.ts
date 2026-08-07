@@ -28,6 +28,11 @@ import { isInteractiveTerminal, shouldAutoLaunchUi, shouldLaunchSkillsUi, valida
 
 const COMPACT_JSON_COMMANDS = new Set(['status', 'show', 'ready', 'check', 'doctor', 'history'])
 
+function exitOnWorkspaceCommandFailure(result: unknown): void {
+  if (typeof result === 'object' && result !== null && 'ok' in result && result.ok === false)
+    process.exitCode = 1
+}
+
 function validateCompactInvocation(rawArgs: string[]): void {
   if (!rawArgs.includes('--compact'))
     return
@@ -228,7 +233,8 @@ const workspaceCommand = defineCommand({
         },
       },
       async run({ args }: { args: { workref: string, target?: string, json: boolean } }) {
-        await prepareWorkspaceCommand(args.workref, { targetBranch: args.target, json: Boolean(args.json) })
+        const result = await prepareWorkspaceCommand(args.workref, { targetBranch: args.target, json: Boolean(args.json) })
+        exitOnWorkspaceCommandFailure(result)
       },
     }),
     status: defineCommand({
@@ -249,7 +255,8 @@ const workspaceCommand = defineCommand({
         },
       },
       async run({ args }: { args: { workref: string, json: boolean } }) {
-        await showWorkspaceCommand(args.workref, { json: Boolean(args.json) })
+        const result = await showWorkspaceCommand(args.workref, { json: Boolean(args.json) })
+        exitOnWorkspaceCommandFailure(result)
       },
     }),
     inspect: defineCommand({
@@ -270,7 +277,8 @@ const workspaceCommand = defineCommand({
         },
       },
       async run({ args }: { args: { workref: string, json: boolean } }) {
-        await inspectWorkspaceCommand(args.workref, { json: Boolean(args.json) })
+        const result = await inspectWorkspaceCommand(args.workref, { json: Boolean(args.json) })
+        exitOnWorkspaceCommandFailure(result)
       },
     }),
     activity: defineCommand({
@@ -319,7 +327,7 @@ const workspaceCommand = defineCommand({
             },
           },
           async run({ args }: { args: { 'workref': string, 'id': string, 'pid': string, 'label'?: string, 'process-group'?: string, 'resources'?: string, 'json': boolean } }) {
-            await registerWorkspaceActivityCommand(args.workref, {
+            const result = await registerWorkspaceActivityCommand(args.workref, {
               id: args.id,
               pid: Number(args.pid),
               label: args.label,
@@ -327,6 +335,7 @@ const workspaceCommand = defineCommand({
               resources: args.resources,
               json: Boolean(args.json),
             })
+            exitOnWorkspaceCommandFailure(result)
           },
         }),
         stop: defineCommand({
@@ -352,7 +361,8 @@ const workspaceCommand = defineCommand({
             },
           },
           async run({ args }: { args: { workref: string, id: string, json: boolean } }) {
-            await stopWorkspaceActivityCommand(args.workref, args.id, { json: Boolean(args.json) })
+            const result = await stopWorkspaceActivityCommand(args.workref, args.id, { json: Boolean(args.json) })
+            exitOnWorkspaceCommandFailure(result)
           },
         }),
       },
@@ -380,7 +390,8 @@ const workspaceCommand = defineCommand({
         },
       },
       async run({ args }: { args: { workref: string, discard: boolean, json: boolean } }) {
-        await disposeWorkspaceCommand(args.workref, { discard: Boolean(args.discard), json: Boolean(args.json) })
+        const result = await disposeWorkspaceCommand(args.workref, { discard: Boolean(args.discard), json: Boolean(args.json) })
+        exitOnWorkspaceCommandFailure(result)
       },
     }),
   },
