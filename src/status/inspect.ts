@@ -6,7 +6,7 @@ import { inspectChangeGroups } from '../core/change-group.js'
 import { CONFIG_PATH, inspectRspConfig, resolveLanguagePolicy, resolveManagePolicy, resolveWorkspacePolicy } from '../core/config.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
 import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionBody, getDocumentTitle, parseRspDocument } from '../core/document-model.js'
-import { collectArchiveReadiness, countCheckboxes, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter } from '../core/helpers.js'
+import { collectArchiveReadiness, countCheckboxes, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, toArchiveReadinessOutput } from '../core/helpers.js'
 import { IssueRelationshipError, parseIssueRelationships } from '../core/issue-relationship.js'
 import { toErrorMessage } from '../core/output.js'
 import { inspectArchiveTree, inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
@@ -154,22 +154,7 @@ export async function inspectProjectStatus(options: { nowMs?: number } = {}): Pr
         done = taskCheckboxes.done + details.verifyCriticality.required.done
         total = taskCheckboxes.total + details.verifyCriticality.required.total
         progressKnown = true
-        readiness = {
-          incompleteTasks: details.taskTodos.length,
-          incompleteVerify: details.verifyTodos.length,
-          incompleteRequiredVerify: details.requiredVerifyTodos.length,
-          incompleteOptionalVerify: details.optionalVerifyTodos.length,
-          requiredVerify: details.verifyCriticality.required,
-          optionalVerify: details.verifyCriticality.optional,
-          legacyVerify: details.verifyCriticality.legacy,
-          completionGate: details.archiveReady === 'no' ? 'blocked' : 'pass',
-          coverageWarnings: details.optionalVerifyTodos.length,
-          activeBlockers: details.activeBlockers,
-          missingScenarios: details.missingScenarios,
-          deterministic: details.deterministic,
-          semantic: details.semantic,
-          archiveReady: details.archiveReady,
-        }
+        readiness = toArchiveReadinessOutput(details)
       }
       catch (error) {
         diagnostics.push({

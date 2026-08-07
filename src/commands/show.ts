@@ -6,7 +6,7 @@ import { inspectRspConfig, pc } from '../core/config.js'
 import { resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
 import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionBody, parseRspDocument } from '../core/document-model.js'
-import { buildDurableReviewGuidance, collectArchiveReadiness, countCheckboxes, getDurableReviewCandidateTargets, guardRspInitialized, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, parseScenarios } from '../core/helpers.js'
+import { buildDurableReviewGuidance, collectArchiveReadiness, countCheckboxes, getDurableReviewCandidateTargets, guardRspInitialized, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, parseScenarios, toArchiveReadinessOutput } from '../core/helpers.js'
 import { IssueRelationshipError, parseIssueRelationships } from '../core/issue-relationship.js'
 import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
 import { inspectFocusTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
@@ -148,22 +148,7 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
     total: taskCheckboxes.total + readinessDetails.verifyCriticality.required.total,
   }
 
-  const readiness = {
-    incompleteTasks: readinessDetails.taskTodos.length,
-    incompleteVerify: readinessDetails.verifyTodos.length,
-    incompleteRequiredVerify: readinessDetails.requiredVerifyTodos.length,
-    incompleteOptionalVerify: readinessDetails.optionalVerifyTodos.length,
-    requiredVerify: readinessDetails.verifyCriticality.required,
-    optionalVerify: readinessDetails.verifyCriticality.optional,
-    legacyVerify: readinessDetails.verifyCriticality.legacy,
-    completionGate: readinessDetails.archiveReady === 'no' ? 'blocked' as const : 'pass' as const,
-    coverageWarnings: readinessDetails.optionalVerifyTodos.length,
-    activeBlockers: readinessDetails.activeBlockers,
-    missingScenarios: readinessDetails.missingScenarios,
-    deterministic: readinessDetails.deterministic,
-    semantic: readinessDetails.semantic,
-    archiveReady: readinessDetails.archiveReady,
-  }
+  const readiness = toArchiveReadinessOutput(readinessDetails)
 
   const factCandidateTargets = getDurableReviewCandidateTargets()
   let decisionRecordsPath: string

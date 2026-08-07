@@ -20,6 +20,7 @@ const publishedSkillNames = [
   'rsp-shape',
   'rsp-structural-audit',
   'rsp-tdd',
+  'rsp-verify',
   'rsp-workspace',
 ]
 const reviewSkill = join(root, 'skills', 'rsp-review')
@@ -158,6 +159,22 @@ describe('rsp Skill contract', () => {
     expect(body).toContain('conversation language')
     expect(body).toContain('shapes as semantic field order rather than fixed English wording')
     expect(body).toContain('`accepted`, `rejected`, and `needs-clarification`')
+  })
+
+  it('keeps verification as a standalone read-only Discipline while Manage owns orchestration', () => {
+    const verify = readSkill(join(skillsRoot, 'rsp-verify')).body
+    const manage = readSkill(join(skillsRoot, 'rsp-manage')).body
+
+    expect(verify).toContain('Run one bounded, read-only verification pass')
+    expect(verify).toContain('Do not edit product files')
+    for (const result of ['pass', 'failed-with-new-evidence', 'failed-without-new-evidence', 'unavailable', 'boundary-changed'])
+      expect(verify).toContain(`\`${result}\``)
+    expect(verify).toContain('does not prove semantic review')
+    expect(verify).toContain('does not grant lifecycle, Git, publication, or acceptance authority')
+    expect(manage).toContain('delegates its read-only result and evidence contract to `rsp-verify`')
+    expect(manage).toContain('worker identity')
+    expect(manage).toContain('independence: established | unavailable')
+    expect(manage).not.toContain('`StopDisposition` is exactly')
   })
 
   it('publishes the complete assisted suite while keeping research outside package roots', () => {

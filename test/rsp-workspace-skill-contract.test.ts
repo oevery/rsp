@@ -28,8 +28,8 @@ describe('rsp workspace Skills', () => {
       '`explicit` permits selection only for the explicit-request signal',
       '`disabled` denies RSP workspace selection',
       'Evaluating policy and signals does not load `rsp-workspace`',
-      'An explicit direct request still enters Core for this selection',
-      'A selected workspace remains execution infrastructure for that direct route',
+      'An explicit workspace request handled through this Skill still enters Core for semantic selection',
+      'The public `rsp workspace` CLI remains a lower-level explicit infrastructure executor',
     ])
       expect(core).toContain(fragment)
     expect(core.indexOf('Before applying the small-work exclusion')).toBeLessThan(core.indexOf('Return tiny settled work directly'))
@@ -44,10 +44,10 @@ describe('rsp workspace Skills', () => {
     ])
       expect(manage).toContain(fragment)
 
-    expect(workspace).toContain('selected only by Core')
+    expect(workspace).toContain('selected by Core for AI-orchestrated work')
     expect(workspace).toContain('policy-compliant selected isolation boundary')
     expect(workspace).toContain('`disabled` never enters this Skill')
-    expect(workspace).toContain('An explicit direct request routes through Core')
+    expect(workspace).toContain('A human may invoke the low-level CLI explicitly')
     expect(workspace).not.toContain('selected by Core or qualified Manage')
     expect(spec).toContain('Core keeps selection, routing, ownership, safety')
     expect(spec).toContain('effective `workspace.activation`')

@@ -1,6 +1,6 @@
 # Skills and managed work
 
-RSP publishes a default suite of thirteen host-neutral Skills for on-demand loading. Each has a narrow authority boundary and returns its result to an existing project or RSP owner.
+RSP publishes a default suite of fourteen host-neutral Skills for on-demand loading. Each has a narrow authority boundary and returns its result to an existing project or RSP owner.
 
 | Skill | Responsibility |
 |---|---|
@@ -10,6 +10,7 @@ RSP publishes a default suite of thirteen host-neutral Skills for on-demand load
 | `rsp-implement` | Implement one selected ready Change with fresh verification. |
 | `rsp-diagnose` | Establish a cause, or return a truthful unresolved diagnosis, before correction. |
 | `rsp-tdd` | Drive one justified behavior through RED, GREEN, and safe REFACTOR. |
+| `rsp-verify` | Run one bounded read-only verification pass against a selected Change's declared evidence boundary. |
 | `rsp-review` | Review a fixed code, document, or mixed comparison without mutation. |
 | `rsp-resolve-findings` | Dispose fixed findings, correct accepted ones, verify, and request re-review. |
 | `rsp-commit` | Create one authorized exact-scope local commit. |
@@ -26,7 +27,7 @@ Installation, runtime role, and invocation are separate:
 |---|---|---|---|
 | `rsp` | default | Core | direct project entry |
 | `rsp-shape` | default | Shape | Core-routed or explicit shaping |
-| Design, implementation, diagnosis, TDD, review, finding resolution, and Release Docs | default | Discipline | Core-routed specialist or explicit bounded request |
+| Design, implementation, diagnosis, TDD, verification, review, finding resolution, and Release Docs | default | Discipline | Core-routed specialist or explicit bounded request |
 | `rsp-commit` | default | local-delivery Discipline | Core- or Manage-routed after an authorized exact boundary |
 | `rsp-manage` | default | Controller | Core-selected from an explicit request or effective project policy |
 | `rsp-workspace` | default | Infrastructure | Core-selected for one explicit ready WorkRef when isolation is materially useful |
@@ -41,6 +42,7 @@ Installation, runtime role, and invocation are separate:
 - Design answers one material question and returns to that owner.
 - Diagnose precedes TDD when a failure is unexplained.
 - TDD is selected only when explicitly required or when a concrete changed risk makes pre-mutation RED materially safer.
+- Verify executes one declared read-only evidence boundary; Manage retains worker identity, independence, acceptance, and closeout.
 - Review remains read-only; Resolve Findings owns accepted correction.
 - Release Docs requires an explicit confirmed release operation.
 - Core alone selects Workspace isolation for an executable WorkRef and within the project `workspace.activation` ceiling. `auto` permits the established material signals, `explicit` requires a current explicit request, and `disabled` prevents selection. Core evaluates policy and signals without loading the Workspace Skill; ordinary temporary work therefore stays in the current branch without paying Workspace context cost. After selection, direct execution or Manage loads Workspace only to prepare and reuse sessions. The Workspace Skill reuses the invoking control and result contracts, appends only workspace context and observations, uses host-native execution, and leaves only recoverable worktree/activity mechanics to the CLI.
@@ -80,7 +82,7 @@ Core resolves one unambiguous shape-ready Change or shallow Group as the `WorkOw
 
 During managed execution, newly surfaced uncertainty is classified in fail-closed order as out-of-goal, owner decision, fog, factual evidence needed, or ready to execute. Each transient worker packet fixes the WorkRef, lane objective, current hypothesis and evidence, allowed paths/actions/commands, prohibited actions, comparison baseline, result schema, and stop conditions. Token counts and limits never control dispatch, routing, authority, completion, or acceptance.
 
-Diagnose and private Inspect lanes are read-only; Fix is the sole writer at its mutation boundary. Private Verify is independently executed only when a worker identity distinct from Fix can be established; otherwise Manage reports independence as unavailable and does not claim independent verification. Optional evidence work cannot consume dispatch capacity already required by the current Fix/Verify acceptance path, and a corrective retry starts only when decisive verification remains possible. Lane state, packets, receipts, counts, and chronology remain transient.
+Diagnose and private Inspect lanes are read-only; Fix is the sole writer at its mutation boundary. Manage routes verification through the `rsp-verify` result contract and may claim independent verification only when a worker identity distinct from Fix can be established; otherwise it reports independence as unavailable. Optional evidence work cannot consume dispatch capacity already required by the current Fix/Verify acceptance path, and a corrective retry starts only when decisive verification remains possible. Lane state, packets, receipts, counts, and chronology remain transient.
 
 `closeout` sets a ceiling after Manage has actually been selected and qualified:
 

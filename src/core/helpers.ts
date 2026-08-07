@@ -1,4 +1,4 @@
-import type { CheckboxCount, DeltaSections, Frontmatter, IssueRelationship, RuntimeDiagnostic, ScenarioBlock, VerifyCriticalitySummary } from '../types.js'
+import type { ArchiveReadinessOutput, CheckboxCount, DeltaSections, Frontmatter, IssueRelationship, RuntimeDiagnostic, ScenarioBlock, VerifyCriticalitySummary } from '../types.js'
 import { existsSync } from 'node:fs'
 import { readdir, readFile, rmdir } from 'node:fs/promises'
 
@@ -621,6 +621,26 @@ export function collectArchiveReadiness(content: string, options: { activeBlocke
     semantic: 'needs-review',
     archiveReady,
     warnings,
+  }
+}
+
+/** Project deterministic readiness details into the stable command-output shape. */
+export function toArchiveReadinessOutput(readiness: ArchiveReadiness): ArchiveReadinessOutput {
+  return {
+    incompleteTasks: readiness.taskTodos.length,
+    incompleteVerify: readiness.verifyTodos.length,
+    incompleteRequiredVerify: readiness.requiredVerifyTodos.length,
+    incompleteOptionalVerify: readiness.optionalVerifyTodos.length,
+    requiredVerify: readiness.verifyCriticality.required,
+    optionalVerify: readiness.verifyCriticality.optional,
+    legacyVerify: readiness.verifyCriticality.legacy,
+    completionGate: readiness.archiveReady === 'no' ? 'blocked' : 'pass',
+    coverageWarnings: readiness.optionalVerifyTodos.length,
+    activeBlockers: readiness.activeBlockers,
+    missingScenarios: readiness.missingScenarios,
+    deterministic: readiness.deterministic,
+    semantic: readiness.semantic,
+    archiveReady: readiness.archiveReady,
   }
 }
 

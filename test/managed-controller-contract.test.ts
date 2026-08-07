@@ -435,7 +435,7 @@ describe('rsp-manage product Skill', () => {
     expect(findSemanticUnit(lanes, ['Diagnose', '`rsp-diagnose`', 'read-only', 'no-cause result'])).toBeDefined()
     expect(findSemanticUnit(lanes, ['Inspect', 'private Manager-only', 'read-only lane'])).toBeDefined()
     expect(findSemanticUnit(lanes, ['Fix', '`rsp-implement`', 'sole product writer'])).toBeDefined()
-    expect(findSemanticUnit(lanes, ['Verify', 'private Manager-only', 'read-only lane', 'Change-declared risk', 'failed correction'])).toBeDefined()
+    expect(findSemanticUnit(lanes, ['Verify', 'delegates', 'rsp-verify', 'read-only', 'Change-declared risk', 'failed correction'])).toBeDefined()
     expect(findSemanticUnit(lanes, ['Fixed-scope review', '`rsp-review`'])).toBeDefined()
     expect(findSemanticUnit(lanes, ['human-facing receipt prose', 'response language', 'Inspect', 'Verify'])).toBeDefined()
     expect(findSemanticUnit(lanes, ['localize', 'primary result explanation', 'exact result', 'secondary'])).toBeDefined()
@@ -447,11 +447,12 @@ describe('rsp-manage product Skill', () => {
     ])
     expect(inlineCodeValues(markdownListItem(lanes, 'Inspect'))).toEqual(['confirmed-same-scope', 'unresolved-same-scope', 'boundary-changed'])
     expect(inlineCodeValues(markdownListItem(lanes, 'Fix'))).toEqual(['rsp-implement', 'changed-same-scope', 'no-change', 'boundary-changed', 'worker identity'])
-    expect(inlineCodeValues(markdownListItem(lanes, 'Verify'))).toEqual(['pass', 'failed-with-new-evidence', 'failed-without-new-evidence', 'unavailable', 'boundary-changed', 'worker identity', 'independence: established | unavailable', 'rsp-review'])
+    expect(inlineCodeValues(markdownListItem(lanes, 'Verify'))).toEqual(['rsp-verify', 'worker identity', 'independence: established | unavailable', 'rsp-review'])
     expect(body).not.toMatch(/token\s+(?:budget|limit)|(?:budget|limit)[^\n.]*token/i)
     expect(body).not.toMatch(/token[^\n.]*rout|rout[^\n.]*token/i)
     expect(existsSync(join(root, 'skills', 'rsp-inspect'))).toBe(false)
-    expect(existsSync(join(root, 'skills', 'rsp-verify'))).toBe(false)
+    expect(existsSync(join(root, 'skills', 'rsp-verify'))).toBe(true)
+    expect(readFileSync(join(root, 'skills', 'rsp-verify', 'SKILL.md'), 'utf8')).toContain('Run one bounded, read-only verification pass')
   })
 
   it('scores localized Chinese receipt narration without a fixed result translation table', () => {
@@ -536,7 +537,7 @@ describe('rsp-manage product Skill', () => {
     )
     const reassignedFixOwner = lanes
       .replace('and is the sole product writer at its mutation boundary', 'at its mutation boundary')
-      .replace('Verify is a private Manager-only read-only lane', 'Verify is the sole product writer and a private Manager-only read-only lane')
+      .replace('Verify delegates its read-only result and evidence contract to `rsp-verify`', 'Verify is the sole product writer and delegates its read-only result and evidence contract to `rsp-verify`')
 
     expect(canonicalEnum(withoutReviewClean, 'AcceptanceDisposition')).not.toEqual(['incomplete', 'evidence-complete', 'review-clean'])
     expect(findSemanticUnit(reassignedQualification, ['Core', 'solely own', 'initial Manage qualification'])).toBeUndefined()

@@ -22,6 +22,7 @@ const EXPECTED_DEFAULT_SKILLS = [
   'rsp-review',
   'rsp-shape',
   'rsp-tdd',
+  'rsp-verify',
   'rsp-workspace',
 ]
 const OPTIONAL_SKILL = 'rsp-structural-audit'

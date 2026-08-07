@@ -18,6 +18,7 @@ const currentSkills = [
   'rsp-shape',
   'rsp-structural-audit',
   'rsp-tdd',
+  'rsp-verify',
   'rsp-workspace',
 ]
 

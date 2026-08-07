@@ -13,6 +13,7 @@
 | --- | --- |
 | `ControlOutcome`, `RouteDisposition`, `StopDisposition`, and Continuation | `rsp` |
 | `WorkerEnvelope`, managed common receipt, frontier, acceptance, and closeout | `rsp-manage` |
+| Verification result and evidence fields | `rsp-verify` |
 | Discipline-specific result and stop conditions | The owning Discipline Skill |
 | Workspace context and observations | `rsp-workspace` |
 
@@ -80,7 +81,7 @@
 ## Execution Evidence
 - Specialist Disciplines and managed lanes retain their own exact result schemas. The control model does not replace Diagnose, Inspect, Fix, Verify, Review, or Resolve Findings results with a generic execution enum.
 - Only a missing optional Discipline Skill may use that Discipline's bounded manual fallback against the same owner. A manual fallback never substitutes for a required managed worker or required independent Verify.
-- A managed WorkerEnvelope and its receipt are transient execution evidence. Every envelope carries the response language and the localized control-narration rule: human-facing receipt narration uses that response language, while an exact result value remains unchanged only as a secondary parenthesized or code-formatted token. This applies equally to private Inspect and Verify lanes that have no standalone Skill.
+- A managed WorkerEnvelope and its receipt are transient execution evidence. Every envelope carries the response language and the localized control-narration rule: human-facing receipt narration uses that response language, while an exact result value remains unchanged only as a secondary parenthesized or code-formatted token. Private Inspect uses the managed contract directly; managed Verify consumes the `rsp-verify` result and appends worker identity and independence.
 - A same-goal receipt whose WorkRef, topology, route, scope, behavior, acceptance, interface, and authority remain unchanged is revalidated inside Manage. It does not return to Core merely to repeat route selection or qualification.
 - A required worker obligation is satisfied only when the worker was actually created and returned a valid result within its declared authority and schema.
 - A required worker that cannot be created, returns no valid receipt, reports unavailable or changed boundaries, or cannot satisfy required independent verification produces `capability-unavailable` or the more specific evidenced stop and keeps acceptance `incomplete`. The controller cannot replace the missing receipt with an assumption, a generic manual fallback, or its own undeclared work.

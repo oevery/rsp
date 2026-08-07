@@ -18,6 +18,7 @@ const publishedSkills = [
   'rsp-shape',
   'rsp-structural-audit',
   'rsp-tdd',
+  'rsp-verify',
   'rsp-workspace',
 ]
 describe('project Skill dogfooding', () => {

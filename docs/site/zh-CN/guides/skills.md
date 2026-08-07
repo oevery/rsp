@@ -1,6 +1,6 @@
 # Skills 与受管工作
 
-RSP 发布一个由十三项与宿主无关的 Skill 组成的默认套件，供按需加载。每项 Skill 都有明确且狭窄的权限边界，并把结果返回已有的项目或 RSP 归属位置。
+RSP 发布一个由十四项与宿主无关的 Skill 组成的默认套件，供按需加载。每项 Skill 都有明确且狭窄的权限边界，并把结果返回已有的项目或 RSP 归属位置。
 
 | Skill | 职责 |
 |---|---|
@@ -10,6 +10,7 @@ RSP 发布一个由十三项与宿主无关的 Skill 组成的默认套件，供
 | `rsp-implement` | 实现一个已选定且就绪的 Change，并提供最新验证。 |
 | `rsp-diagnose` | 在修正前确认原因，或如实返回尚未解决的诊断。 |
 | `rsp-tdd` | 让一个合理的行为经过 RED、GREEN 与安全的 REFACTOR。 |
+| `rsp-verify` | 针对已选 Change 声明的证据边界执行一次有界、只读验证。 |
 | `rsp-review` | 对固定的代码、文档或混合比较范围做只读审查。 |
 | `rsp-resolve-findings` | 处置固定的审查发现，修正已接受的项目，验证并请求复审。 |
 | `rsp-commit` | 创建一个已授权、范围精确的本地提交。 |
@@ -26,7 +27,7 @@ RSP 发布一个由十三项与宿主无关的 Skill 组成的默认套件，供
 |---|---|---|---|
 | `rsp` | 默认 | Core | 直接作为项目入口 |
 | `rsp-shape` | 默认 | Shape | 由 Core 路由，或显式请求塑形 |
-| Design、Implement、Diagnose、TDD、Review、Resolve Findings 与 Release Docs | 默认 | Discipline | 由 Core 路由为专门能力，或接受边界明确的显式请求 |
+| Design、Implement、Diagnose、TDD、Verify、Review、Resolve Findings 与 Release Docs | 默认 | Discipline | 由 Core 路由为专门能力，或接受边界明确的显式请求 |
 | `rsp-commit` | 默认 | 本地交付 Discipline | 在精确边界获得授权后由 Core 或 Manage 路由 |
 | `rsp-manage` | 默认 | Controller | Core 根据显式请求或有效项目策略选择 |
 | `rsp-workspace` | 默认 | Infrastructure（基础设施） | 隔离具有明确价值时由 Core 为一个明确且就绪的 WorkRef 选择 |
@@ -41,6 +42,7 @@ RSP 发布一个由十三项与宿主无关的 Skill 组成的默认套件，供
 - Design 回答一个实质性问题并返回该归属位置。
 - 失败原因不明时，Diagnose 优先于 TDD。
 - 仅在显式要求，或具体的变更风险使修改前的 RED 明显更安全时选择 TDD。
+- Verify 只执行一个已声明的只读证据边界；worker identity、独立性、验收与收尾仍由 Manage 拥有。
 - Review 保持只读；Resolve Findings 拥有已接受修正的修改权限。
 - Release Docs 要求显式确认的发布操作。
 - Workspace 隔离只由 Core 为可执行 WorkRef 选择，并受项目 `workspace.activation` 上限约束。`auto` 允许既有实质信号，`explicit` 要求当前显式请求，`disabled` 则阻止选择。Core 无需加载 Workspace Skill 即可判断策略与隔离信号，因此普通临时工作仍保留在当前分支，也不会承担 Workspace 上下文成本。选择完成后，直接执行路径或 Manage 才加载 Workspace 来准备并复用 session。Workspace Skill 复用调用方已有的控制与结果契约，只追加 workspace 上下文和观察事实，使用宿主原生能力执行，并只把可恢复的 worktree/activity 机械操作留给 CLI。
@@ -80,7 +82,7 @@ Core 先把一个明确的 shape-ready Change 或浅层 Group 解析为 `WorkOwn
 
 受管执行会按失败关闭顺序把新出现的不确定性分类为超出目标、归属者决策、尚不可精确描述的 fog、需要事实证据，或可执行。每个临时 worker packet 都固定 WorkRef、lane 目标、当前假设与证据、允许路径/动作/命令、禁止动作、比较基线、结果 schema 和停止条件。Token 数量或限制永远不参与派发、路由、权限、完成或验收判断。
 
-Diagnose 与私有 Inspect lane 保持只读；Fix 是其修改边界内的唯一写入者。只有能够确认 Verify 使用了不同于 Fix 的 worker identity 时，才可声称独立验证；否则 Manage 必须报告 independence unavailable，不能把普通只读验证表述为独立验证。可选证据工作不能消耗当前 Fix/Verify 验收路径已需要的派发容量；只有剩余容量仍能形成决定性验收证据时，才可启动 corrective retry。lane 状态、packet、receipt、计数与过程时间线始终保持临时。
+Diagnose 与私有 Inspect lane 保持只读；Fix 是其修改边界内的唯一写入者。Manage 通过 `rsp-verify` 的结果契约路由验证，且只有能够确认 Verify 使用了不同于 Fix 的 worker identity 时，才可声称独立验证；否则必须报告 independence unavailable。可选证据工作不能消耗当前 Fix/Verify 验收路径已需要的派发容量；只有剩余容量仍能形成决定性验收证据时，才可启动 corrective retry。lane 状态、packet、receipt、计数与过程时间线始终保持临时。
 
 `closeout` 设置 Manage 已被实际选择并通过资格判断后的收尾上限：
 

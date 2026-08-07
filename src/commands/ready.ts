@@ -5,7 +5,7 @@ import { resolveExecutableChange } from '../core/change-group.js'
 import { inspectRspConfig, pc } from '../core/config.js'
 import { resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
-import { buildDurableReviewGuidance, collectArchiveReadiness, getDurableReviewCandidateTargets, guardRspInitialized, normalizeLogicalPath } from '../core/helpers.js'
+import { buildDurableReviewGuidance, collectArchiveReadiness, getDurableReviewCandidateTargets, guardRspInitialized, normalizeLogicalPath, toArchiveReadinessOutput } from '../core/helpers.js'
 import { emitJson, toErrorMessage } from '../core/output.js'
 import { WorkRefError } from '../core/work-ref.js'
 
@@ -79,22 +79,7 @@ export async function showReady(name: string, options: CommandRunOptions = {}): 
     activeBlockers: dependencyInspection.activeBlockers.get(name),
   })
   const checklist = readinessDetails.warnings
-  const readiness = {
-    incompleteTasks: readinessDetails.taskTodos.length,
-    incompleteVerify: readinessDetails.verifyTodos.length,
-    incompleteRequiredVerify: readinessDetails.requiredVerifyTodos.length,
-    incompleteOptionalVerify: readinessDetails.optionalVerifyTodos.length,
-    requiredVerify: readinessDetails.verifyCriticality.required,
-    optionalVerify: readinessDetails.verifyCriticality.optional,
-    legacyVerify: readinessDetails.verifyCriticality.legacy,
-    completionGate: readinessDetails.archiveReady === 'no' ? 'blocked' as const : 'pass' as const,
-    coverageWarnings: readinessDetails.optionalVerifyTodos.length,
-    activeBlockers: readinessDetails.activeBlockers,
-    missingScenarios: readinessDetails.missingScenarios,
-    deterministic: readinessDetails.deterministic,
-    semantic: readinessDetails.semantic,
-    archiveReady: readinessDetails.archiveReady,
-  }
+  const readiness = toArchiveReadinessOutput(readinessDetails)
   let decisionRecordsPath: string
   try {
     const configInspection = await inspectRspConfig()

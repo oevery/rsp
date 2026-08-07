@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
-import { classifyVerifyCheckboxes, collectArchiveChecklist, collectArchiveReadiness, countCheckboxes, detectDeltaSections, generateChangeContent, generateDesignContent, generateSpecContent, getDurableReviewCandidateTargets, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, parseScenarios, parseYamlLines, renderRspAgentsBlock } from '../src/core/helpers.js'
+import { classifyVerifyCheckboxes, collectArchiveChecklist, collectArchiveReadiness, countCheckboxes, detectDeltaSections, generateChangeContent, generateDesignContent, generateSpecContent, getDurableReviewCandidateTargets, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, parseScenarios, parseYamlLines, renderRspAgentsBlock, toArchiveReadinessOutput } from '../src/core/helpers.js'
 
 describe('parseYamlLines', () => {
   it('parses key-value pairs', () => {
@@ -637,6 +637,50 @@ kind: feature
     expect(readiness.activeBlockers).toBe(false)
     expect(readiness.missingScenarios).toBe(false)
     expect(readiness.scenarioCount).toBe(1)
+  })
+
+  it('projects the shared readiness shape used by command surfaces', () => {
+    const content = `---
+kind: feature
+---
+
+# Change: projection
+## Tasks
+- [x] task
+
+## Verify
+### Required
+- [x] required check
+### Optional
+- [ ] optional check
+
+## Spec
+### Acceptance
+#### Scenario: projection works
+- GIVEN x
+- WHEN y
+- THEN z
+
+## Blockers
+- none
+`
+    const readiness = collectArchiveReadiness(content)
+    expect(toArchiveReadinessOutput(readiness)).toEqual({
+      incompleteTasks: 0,
+      incompleteVerify: 1,
+      incompleteRequiredVerify: 0,
+      incompleteOptionalVerify: 1,
+      requiredVerify: { todo: 0, progress: 0, done: 1, dropped: 0, total: 1 },
+      optionalVerify: { todo: 1, progress: 0, done: 0, dropped: 0, total: 1 },
+      legacyVerify: false,
+      completionGate: 'pass',
+      coverageWarnings: 1,
+      activeBlockers: false,
+      missingScenarios: false,
+      deterministic: 'warnings',
+      semantic: 'needs-review',
+      archiveReady: 'yes',
+    })
   })
 })
 

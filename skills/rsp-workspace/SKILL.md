@@ -9,11 +9,11 @@ metadata:
 
 # RSP Workspace
 
-Operate one isolated workspace selected only by Core. Manage may allocate or reuse sessions only after that selection. This Skill is execution infrastructure, not a WorkOwner, project adapter, completion controller, Discipline, or Git delivery grant.
+Operate one isolated workspace selected by Core for AI-orchestrated work. Manage may allocate or reuse sessions only after that selection. The public `rsp workspace` CLI is a lower-level explicit infrastructure executor: it validates local policy and mechanical ownership invariants but does not infer or attest Core selection, Change readiness, Manage qualification, product acceptance, or authority. This Skill is execution infrastructure, not a WorkOwner, project adapter, completion controller, Discipline, or Git delivery grant.
 
 ## Require a selected boundary
 
-Require one executable open WorkRef, explicit workspace authority, the target local branch, and Core's policy-compliant selected isolation boundary. Under `workspace.activation: auto`, Core may select from parallel Changes, unrelated dirty work, an independent runtime boundary, or an explicit user request; under `explicit`, only the explicit-request signal permits selection; `disabled` never enters this Skill. An explicit direct request routes through Core and never selects this Skill by itself. Ordinary temporary work remains in the current worktree. Without an RSP WorkOwner, create no implicit or host-branded branch.
+For Skill-driven operation, require one executable open WorkRef, explicit workspace authority, the target local branch, and Core's policy-compliant selected isolation boundary. Under `workspace.activation: auto`, Core may select from parallel Changes, unrelated dirty work, an independent runtime boundary, or an explicit user request; under `explicit`, only the explicit-request signal permits selection; `disabled` never enters this Skill. An explicit request handled by Core does not select this Skill by itself. A human may invoke the low-level CLI explicitly, but that invocation supplies only command authority and never becomes evidence of semantic selection or readiness. Ordinary temporary work remains in the current worktree. Without an RSP WorkOwner, create no implicit or host-branded branch.
 
 Before mutation inspect the selected Change and Group Brief when any, current branch and HEAD, existing `rsp/<workref>` branch, registered worktrees, target dirty paths, and any existing workspace record. Stop on identity, ownership, path, target, or authority ambiguity.
 

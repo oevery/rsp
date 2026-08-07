@@ -31,6 +31,7 @@ const expectedSkills = [
   'rsp-review',
   'rsp-shape',
   'rsp-tdd',
+  'rsp-verify',
   'rsp-workspace',
 ]
 const optionalSkill = 'rsp-structural-audit'
