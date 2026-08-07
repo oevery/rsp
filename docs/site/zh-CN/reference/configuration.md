@@ -60,3 +60,20 @@ manage:
 省略 `manage` 时，兼容默认值解析为 `activation: explicit` 与 `closeout: local`。最近的项目限制与宿主强制规则只能缩小这些上限。RSP 有意不提供 `full` 预设；推送、标签、发布、部署、批准与人工验收保持显式。
 
 选择行为见 [Skills 与受管工作](../guides/skills.md)。
+
+## Workspace 策略
+
+```yaml
+workspace:
+  activation: auto
+```
+
+`activation` 接受：
+
+- `auto`：Core 可以在存在并行 Change、无关 dirty work、独立运行时边界或显式 workspace 请求时选择隔离。
+- `explicit`：Core 只能为当前显式 workspace 请求选择隔离。
+- `disabled`：RSP 不选择或准备隔离 workspace。
+
+生成和回填的默认值是 `auto`，用于保持现有隔离行为。没有 `workspace` 的有效旧配置同样解析为 `auto`；无效配置则让 Workspace 安全失败为 `disabled`。
+
+该设置只是策略上限，不授予 workspace 创建、实现、清理、丢弃、回迁、Git 或外部操作权限。Workspace 路径仍跟随宿主缓存位置，分支固定为 `rsp/<work-ref>`，目标分支仍由命令明确指定，破坏性清理保持显式。

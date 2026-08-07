@@ -1,4 +1,5 @@
 import type { WorkspaceActivity, WorkspaceObservation, WorkspaceRecord } from '../workspace/session.js'
+import { inspectRspConfig, resolveWorkspacePolicy } from '../core/config.js'
 import { emitJson } from '../core/output.js'
 import { inspectWorkspaceFacts } from '../workspace/facts.js'
 import {
@@ -40,6 +41,11 @@ export async function prepareWorkspaceCommand(
   workRef: string,
   options: { targetBranch?: string, json?: boolean } = {},
 ) {
+  const configInspection = await inspectRspConfig()
+  if (configInspection.issues.length > 0)
+    throw new Error(configInspection.issues.join('; '))
+  if (resolveWorkspacePolicy(configInspection.config).activation === 'disabled')
+    throw new Error('workspace activation is disabled by project configuration')
   const result = await prepareWorkspace(workRef, { targetBranch: options.targetBranch })
   if (options.json) {
     emitJson({ command: 'workspace prepare', ok: true, resumed: result.resumed, workspace: publicRecord(result.record) })

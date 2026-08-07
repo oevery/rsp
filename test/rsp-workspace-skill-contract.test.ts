@@ -23,8 +23,11 @@ describe('rsp workspace Skills', () => {
 
     for (const fragment of [
       'Before applying the small-work exclusion',
-      'Core alone selects whether workspace isolation is materially useful',
-      'Evaluating those signals does not load `rsp-workspace`',
+      'Core reads the effective `workspace.activation`',
+      '`auto` permits selection from exactly four signals',
+      '`explicit` permits selection only for the explicit-request signal',
+      '`disabled` denies RSP workspace selection',
+      'Evaluating policy and signals does not load `rsp-workspace`',
       'An explicit direct request still enters Core for this selection',
       'A selected workspace remains execution infrastructure for that direct route',
     ])
@@ -42,14 +45,19 @@ describe('rsp workspace Skills', () => {
       expect(manage).toContain(fragment)
 
     expect(workspace).toContain('selected only by Core')
+    expect(workspace).toContain('policy-compliant selected isolation boundary')
+    expect(workspace).toContain('`disabled` never enters this Skill')
     expect(workspace).toContain('An explicit direct request routes through Core')
     expect(workspace).not.toContain('selected by Core or qualified Manage')
     expect(spec).toContain('Core keeps selection, routing, ownership, safety')
-    expect(spec).toContain('evaluating those signals does not load `rsp-workspace`')
+    expect(spec).toContain('effective `workspace.activation`')
+    expect(spec).toContain('`disabled` denies RSP workspace selection')
+    expect(spec).toContain('Evaluating policy and signals does not load `rsp-workspace`')
     expect(spec).toContain('Manage allocates or reuses workspace sessions only after Core selection')
     expect(spec).not.toContain('after Core or Manage selects isolation')
-    expect(fallback).toContain('As the Core fallback, evaluate workspace isolation before the small-work decision')
-    expect(fallback).toContain('Evaluating those signals does not load the Workspace capability')
+    expect(fallback).toContain('As the Core fallback, read the effective `workspace.activation` before the small-work decision')
+    expect(fallback).toContain('under `disabled`, never select or prepare an RSP workspace')
+    expect(fallback).toContain('Evaluating policy and signals does not load the Workspace capability')
   })
 
   it('keeps workspace infrastructure separate from ownership and delivery authority', () => {

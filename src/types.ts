@@ -79,6 +79,12 @@ export interface ManagePolicy {
   closeout: ManageCloseout
 }
 
+export type WorkspaceActivation = 'auto' | 'explicit' | 'disabled'
+
+export interface WorkspacePolicy {
+  activation: WorkspaceActivation
+}
+
 export interface ProjectLanguageConfig {
   default: string
   artifacts?: string
@@ -102,6 +108,10 @@ export interface RspConfig {
   manage?: {
     activation?: ManageActivation
     closeout?: ManageCloseout
+  }
+  /** Project policy ceiling for RSP-managed workspace isolation. */
+  workspace?: {
+    activation?: WorkspaceActivation
   }
   /** Project language policy for durable artifact and commit prose. */
   language?: ProjectLanguageConfig
@@ -232,6 +242,7 @@ export interface StatusJsonShape {
   command: 'status'
   ok: boolean
   manage: ManagePolicy
+  workspace: WorkspacePolicy
   language: EffectiveLanguagePolicy
   filters: {
     focused: boolean

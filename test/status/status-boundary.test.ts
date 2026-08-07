@@ -54,6 +54,7 @@ function record(overrides: Partial<StatusRecordOutput> & Pick<StatusRecordOutput
 function snapshot(records: ProjectStatusSnapshot['records'] = [], plan: ChangeDependencyPlanOutput = { nodes: [], ready: [], edges: [], blocked: [], waves: [] }): ProjectStatusSnapshot {
   return {
     manage: { activation: 'explicit', closeout: 'local' },
+    workspace: { activation: 'auto' },
     language: { artifacts: null, commit: null },
     focused: records.filter(item => item.output.isFocused).map(item => item.output.name),
     records,
@@ -101,6 +102,7 @@ describe('project status boundary', () => {
       command: 'status',
       ok: true,
       manage: { activation: 'explicit', closeout: 'local' },
+      workspace: { activation: 'auto' },
       language: { artifacts: null, commit: null },
       filters: { focused: false, blocked: false, stale: null },
       focused: [],
@@ -117,6 +119,7 @@ describe('project status boundary', () => {
       command: 'status',
       ok: false,
       manage: { activation: 'explicit', closeout: 'manual' },
+      workspace: { activation: 'disabled' },
       language: { artifacts: null, commit: null },
       filters: { focused: true, blocked: false, stale: null },
       focused: [],
@@ -217,6 +220,7 @@ summary: Frontmatter summary
     }
 
     expect(output).toContain('  Manage: activation explicit · closeout local')
+    expect(output).toContain('  Workspace: activation auto')
     expect(output).toContain('  Dependency graph')
     expect(output).toContain('  Legend: ◎ focused/open  ● ready  ○ waiting  ✓ resolved prerequisite  ! blocked')
   })
@@ -235,6 +239,7 @@ summary: Frontmatter summary
       clearConfigCache()
       const configured = await inspectProjectStatus()
       expect(configured.manage).toEqual({ activation: 'auto', closeout: 'lifecycle' })
+      expect(configured.workspace).toEqual({ activation: 'auto' })
       expect(configured.language).toEqual({ artifacts: null, commit: null })
       expect(configured.diagnostics).not.toContainEqual(expect.objectContaining({ code: 'invalid_config' }))
 
@@ -242,6 +247,7 @@ summary: Frontmatter summary
       clearConfigCache()
       const invalid = await inspectProjectStatus()
       expect(invalid.manage).toEqual({ activation: 'explicit', closeout: 'manual' })
+      expect(invalid.workspace).toEqual({ activation: 'disabled' })
       expect(invalid.language).toEqual({ artifacts: null, commit: null })
       expect(invalid.diagnostics).toContainEqual(expect.objectContaining({
         code: 'invalid_config',
@@ -256,11 +262,13 @@ summary: Frontmatter summary
         log.mockRestore()
       }
       expect(output).toContain('  Manage: activation explicit · closeout manual')
+      expect(output).toContain('  Workspace: activation disabled')
 
       await writeFile(configPath, 'manage: [\n')
       clearConfigCache()
       const malformed = await inspectProjectStatus()
       expect(malformed.manage).toEqual({ activation: 'explicit', closeout: 'manual' })
+      expect(malformed.workspace).toEqual({ activation: 'disabled' })
       expect(malformed.diagnostics).toContainEqual(expect.objectContaining({ code: 'invalid_config' }))
     }
     finally {
@@ -294,6 +302,38 @@ summary: Frontmatter summary
         log.mockRestore()
       }
       expect(output).toContain('  Language: artifacts en · commit zh-CN')
+    }
+    finally {
+      process.chdir(cwd)
+      clearConfigCache()
+    }
+  })
+
+  it('projects configured workspace activation through JSON and verbose plain status', async () => {
+    const projectDir = join(tmpdir(), 'rsp-status-workspace-policy-test', randomUUID())
+    await mkdir(join(projectDir, '.rsp', 'changes'), { recursive: true })
+    await mkdir(join(projectDir, '.rsp', 'focus.d'), { recursive: true })
+    await mkdir(join(projectDir, '.rsp', 'archives'), { recursive: true })
+    await writeFile(join(projectDir, '.rsp', 'config.yaml'), 'workspace:\n  activation: explicit\n')
+    const cwd = process.cwd()
+    process.chdir(projectDir)
+
+    try {
+      clearConfigCache()
+      const inspected = await inspectProjectStatus()
+      expect(inspected.workspace).toEqual({ activation: 'explicit' })
+      const view = deriveStatusView(inspected)
+      expect(toStatusJson(view).workspace).toEqual({ activation: 'explicit' })
+
+      const output: string[] = []
+      const log = vi.spyOn(console, 'log').mockImplementation((value = '') => output.push(String(value)))
+      try {
+        printStatusPlain(view, { verbose: true })
+      }
+      finally {
+        log.mockRestore()
+      }
+      expect(output).toContain('  Workspace: activation explicit')
     }
     finally {
       process.chdir(cwd)

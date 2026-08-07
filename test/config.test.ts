@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { generateConfigTemplate } from '../src/commands/init.js'
-import { clearConfigCache, DEFAULT_REQUIRED_SECTIONS, inspectRspConfig, loadRspConfig, reconcileRspConfigDefaults, resolveKinds, resolveLanguagePolicy, resolveManagePolicy, resolveRequiredSections, VALID_KINDS } from '../src/core/config.js'
+import { clearConfigCache, DEFAULT_REQUIRED_SECTIONS, inspectRspConfig, loadRspConfig, reconcileRspConfigDefaults, resolveKinds, resolveLanguagePolicy, resolveManagePolicy, resolveRequiredSections, resolveWorkspacePolicy, VALID_KINDS } from '../src/core/config.js'
 
 afterEach(() => {
   clearConfigCache()
@@ -47,6 +47,20 @@ describe('resolveManagePolicy', () => {
   })
 })
 
+describe('resolveWorkspacePolicy', () => {
+  it('preserves automatic workspace selection for valid legacy configs', () => {
+    expect(resolveWorkspacePolicy({})).toEqual({ activation: 'auto' })
+    expect(resolveWorkspacePolicy({ workspace: {} })).toEqual({ activation: 'auto' })
+  })
+
+  it('resolves configured values and fails closed when config is invalid', () => {
+    expect(resolveWorkspacePolicy({ workspace: { activation: 'explicit' } })).toEqual({ activation: 'explicit' })
+    expect(resolveWorkspacePolicy({ workspace: { activation: 'disabled' } })).toEqual({ activation: 'disabled' })
+    expect(resolveWorkspacePolicy({ workspace: { activation: 'auto' } }, { configValid: false }))
+      .toEqual({ activation: 'disabled' })
+  })
+})
+
 describe('resolveLanguagePolicy', () => {
   it('leaves every surface unset when project language is absent or config is invalid', () => {
     expect(resolveLanguagePolicy({})).toEqual({ artifacts: null, commit: null })
@@ -69,6 +83,7 @@ describe('generated config language guidance', () => {
     expect(template).toContain('decisions:\n  path: .rsp/specs/decisions')
     expect(template).toContain('language:\n  default: en\n  # artifacts: zh-CN\n  # commit: zh-CN')
     expect(template).toContain('manage:\n  activation: auto\n  closeout: local')
+    expect(template).toContain('workspace:\n  activation: auto')
   })
 })
 
@@ -83,13 +98,14 @@ language:
   default: zh-CN
 `)
 
-    expect(result.added).toEqual(['decisions.path', 'manage.closeout'])
+    expect(result.added).toEqual(['decisions.path', 'manage.closeout', 'workspace.activation'])
     expect(result.changed).toBe(true)
     expect(result.content).toContain('# Keep this project choice.')
     expect(result.content).toContain('kinds:\n  - lesson')
     expect(result.content).toContain('activation: explicit')
     expect(result.content).toContain('closeout: local')
     expect(result.content).toContain('language:\n  default: zh-CN')
+    expect(result.content).toContain('workspace:\n  activation: auto')
   })
 
   it('preserves inline comments during conservative backfill', () => {
@@ -103,9 +119,10 @@ language:
     const result = reconcileRspConfigDefaults(raw)
 
     expect(result.changed).toBe(true)
-    expect(result.added).toEqual(['decisions.path'])
+    expect(result.added).toEqual(['decisions.path', 'workspace.activation'])
     expect(result.content).toContain('kinds: [] # Keep the built-in classification set.')
     expect(result.content).toContain('decisions:\n  path: .rsp/specs/decisions')
+    expect(result.content).toContain('workspace:\n  activation: auto')
   })
 
   it('does not rewrite a complete config', () => {
@@ -138,7 +155,7 @@ manage:
   closeout: local
 `)
 
-    expect(result.added).toEqual(['kinds', 'decisions.path'])
+    expect(result.added).toEqual(['kinds', 'decisions.path', 'workspace.activation'])
     expect(result.changed).toBe(true)
     expect(result.content).toContain('kinds: []')
     expect(result.content).toContain('decisions:\n  path: .rsp/specs/decisions')
@@ -146,6 +163,7 @@ manage:
     expect(result.content).toContain('  # artifacts: zh-CN')
     expect(result.content).toContain('  # commit: zh-CN')
     expect(result.content).toContain('manage:\n  activation: explicit\n  closeout: local')
+    expect(result.content).toContain('workspace:\n  activation: auto')
     expect(result.content).not.toContain('# Omit kinds')
   })
 
@@ -160,9 +178,12 @@ manage:
 kinds: []
 decisions:
   path: docs/adr
+workspace:
+  activation: explicit
 `)
 
     expect(result.content).toContain('language:\n  default: zh-CN\n  artifacts: en\n  commit: zh-CN')
+    expect(result.content).toContain('workspace:\n  activation: explicit')
     expect(result.content).not.toContain('# artifacts:')
     expect(result.content).not.toContain('# commit:')
   })
@@ -171,6 +192,20 @@ decisions:
     expect(() => reconcileRspConfigDefaults('manage:\n  activation: always\n')).toThrow(
       'config.yaml field "manage.activation" must be one of: explicit, auto',
     )
+  })
+
+  it('preserves explicit workspace activation and custom comments while backfilling other defaults', () => {
+    const result = reconcileRspConfigDefaults(`# Keep this workspace choice nearby.
+kinds: []
+workspace:
+  # RSP may select isolation when signals warrant it.
+  activation: explicit
+`)
+
+    expect(result.added).toEqual(['decisions.path', 'language.default', 'manage.activation', 'manage.closeout'])
+    expect(result.content).toContain('# Keep this workspace choice nearby.')
+    expect(result.content).toContain('# RSP may select isolation when signals warrant it.')
+    expect(result.content).toContain('workspace:\n  # RSP may select isolation when signals warrant it.\n  activation: explicit')
   })
 })
 
@@ -190,6 +225,8 @@ language:
   default: zh-cn
   artifacts: EN
   commit: zh-cn
+workspace:
+  activation: explicit
 `)
 
     const cwd = process.cwd()
@@ -201,6 +238,7 @@ language:
         kinds: ['fix', 'docs'],
         decisions: { path: 'docs/adr' },
         manage: { activation: 'auto', closeout: 'lifecycle' },
+        workspace: { activation: 'explicit' },
         language: { default: 'zh-CN', artifacts: 'en', commit: 'zh-CN' },
       })
     }
@@ -295,6 +333,35 @@ language:
       ])
       expect(resolveManagePolicy(inspection.config, { configValid: inspection.issues.length === 0 }))
         .toEqual({ activation: 'explicit', closeout: 'manual' })
+    }
+    finally {
+      process.chdir(cwd)
+    }
+  })
+
+  it('strictly validates Workspace shape, keys, and enum values', async () => {
+    const configDir = join(tmpdir(), 'rsp-config-invalid-workspace-test', randomUUID())
+    await mkdir(join(configDir, '.rsp'), { recursive: true })
+    const configPath = join(configDir, '.rsp', 'config.yaml')
+    const cwd = process.cwd()
+    process.chdir(configDir)
+
+    try {
+      await writeFile(configPath, 'workspace: disabled\n')
+      await expect(loadRspConfig()).rejects.toThrow('config.yaml field "workspace" must be a YAML mapping')
+
+      clearConfigCache()
+      await writeFile(configPath, 'workspace:\n  mode: auto\n')
+      await expect(loadRspConfig()).rejects.toThrow('config.yaml field "workspace.mode" is not supported')
+
+      clearConfigCache()
+      await writeFile(configPath, 'workspace:\n  activation: always\n')
+      const inspection = await inspectRspConfig()
+      expect(inspection.issues).toEqual([
+        'config.yaml field "workspace.activation" must be one of: auto, explicit, disabled',
+      ])
+      expect(resolveWorkspacePolicy(inspection.config, { configValid: false }))
+        .toEqual({ activation: 'disabled' })
     }
     finally {
       process.chdir(cwd)

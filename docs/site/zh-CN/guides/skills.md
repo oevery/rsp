@@ -43,7 +43,7 @@ RSP 发布一个由十三项与宿主无关的 Skill 组成的默认套件，供
 - 仅在显式要求，或具体的变更风险使修改前的 RED 明显更安全时选择 TDD。
 - Review 保持只读；Resolve Findings 拥有已接受修正的修改权限。
 - Release Docs 要求显式确认的发布操作。
-- Workspace 隔离只由 Core 为可执行 WorkRef 选择。Core 无需加载 Workspace Skill 即可判断少量隔离触发条件，因此普通临时工作仍保留在当前分支，也不会承担 Workspace 上下文成本。选择完成后，直接执行路径或 Manage 才加载 Workspace 来准备并复用 session。Workspace Skill 复用调用方已有的控制与结果契约，只追加 workspace 上下文和观察事实，使用宿主原生能力执行，并只把可恢复的 worktree/activity 机械操作留给 CLI。
+- Workspace 隔离只由 Core 为可执行 WorkRef 选择，并受项目 `workspace.activation` 上限约束。`auto` 允许既有实质信号，`explicit` 要求当前显式请求，`disabled` 则阻止选择。Core 无需加载 Workspace Skill 即可判断策略与隔离信号，因此普通临时工作仍保留在当前分支，也不会承担 Workspace 上下文成本。选择完成后，直接执行路径或 Manage 才加载 Workspace 来准备并复用 session。Workspace Skill 复用调用方已有的控制与结果契约，只追加 workspace 上下文和观察事实，使用宿主原生能力执行，并只把可恢复的 worktree/activity 机械操作留给 CLI。
 - Commit 与 Land 保持独立权限；回迁冲突会保留两个 worktree，等待显式恢复。
 - 任何 Skill 都不推断提交、推送、发布、部署、批准或人工验收权限。
 

@@ -13,7 +13,7 @@ Operate one isolated workspace selected only by Core. Manage may allocate or reu
 
 ## Require a selected boundary
 
-Require one executable open WorkRef, explicit workspace authority, the target local branch, and Core's selected isolation boundary based on parallel Changes, unrelated dirty work, an independent runtime boundary, or an explicit user request. An explicit direct request routes through Core and never selects this Skill by itself. Ordinary temporary work remains in the current worktree. Without an RSP WorkOwner, create no implicit or host-branded branch.
+Require one executable open WorkRef, explicit workspace authority, the target local branch, and Core's policy-compliant selected isolation boundary. Under `workspace.activation: auto`, Core may select from parallel Changes, unrelated dirty work, an independent runtime boundary, or an explicit user request; under `explicit`, only the explicit-request signal permits selection; `disabled` never enters this Skill. An explicit direct request routes through Core and never selects this Skill by itself. Ordinary temporary work remains in the current worktree. Without an RSP WorkOwner, create no implicit or host-branded branch.
 
 Before mutation inspect the selected Change and Group Brief when any, current branch and HEAD, existing `rsp/<workref>` branch, registered worktrees, target dirty paths, and any existing workspace record. Stop on identity, ownership, path, target, or authority ambiguity.
 

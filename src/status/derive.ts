@@ -24,6 +24,7 @@ export function deriveStatusView(snapshot: ProjectStatusSnapshot, options: Statu
 
   return {
     manage: snapshot.manage,
+    workspace: snapshot.workspace ?? { activation: 'auto' },
     language: snapshot.language,
     query,
     focused: snapshot.focused,

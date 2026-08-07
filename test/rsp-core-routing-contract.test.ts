@@ -198,7 +198,7 @@ describe('rsp core routing contract', () => {
     expect(managed).toContain('configuration alone never does')
     expect(skill).toContain('](references/managed-routing.md)')
     expect(fallback).toContain('This fallback does not emulate `rsp-manage`')
-    expect(fallback).toContain('Configuration selects no capability and grants no planning, product-mutation, lifecycle, Git, publication, deployment, approval, or human-acceptance authority')
+    expect(fallback).toContain('Configuration selects no capability and grants no planning, product-mutation, workspace, lifecycle, Git, publication, deployment, approval, or human-acceptance authority')
   })
 
   it('routes missing ownership through Shape before managed execution', () => {

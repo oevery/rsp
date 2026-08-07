@@ -57,7 +57,7 @@ rsp workspace dispose <work-ref> [--discard] [--json]
 rsp land <work-ref> --target <branch> --commits <sha[,sha...]> [--cleanup] [--json]
 ```
 
-Workspace preparation is opt-in for an existing executable WorkRef. It creates or resumes branch `rsp/<work-ref>` in a stable cache worktree; ordinary temporary work remains in the current branch. `inspect` returns bounded repository facts without classifying the project stack.
+Workspace preparation is opt-in for an existing executable WorkRef and must satisfy the project `workspace.activation` policy. `auto` allows Core to select isolation from material workspace signals, `explicit` requires a current explicit request, and `disabled` denies RSP workspace selection. Preparation creates or resumes branch `rsp/<work-ref>` in a stable cache worktree; ordinary temporary work remains in the current branch. `inspect` returns bounded repository facts without classifying the project stack.
 
 The `rsp-workspace` Skill or a human interprets project semantics and uses the host's existing file, shell, package, browser, and process capabilities. The Skill reuses the invoking RSP control and result contracts and appends only workspace context and observations; the CLI does not parse AI response text or provide a universal execution-plan DSL.
 

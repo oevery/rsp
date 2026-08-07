@@ -7,6 +7,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
+import { prepareWorkspaceCommand } from '../src/commands/workspace.js'
 import { inspectWorkspaceFacts } from '../src/workspace/facts.js'
 import { landWorkspace } from '../src/workspace/land.js'
 import { disposeWorkspace, observeWorkspace, prepareWorkspace, registerWorkspaceActivity } from '../src/workspace/session.js'
@@ -125,6 +126,16 @@ afterEach(async () => {
 })
 
 describe.sequential('rsp workspace lifecycle', () => {
+  it('blocks workspace preparation when project policy is disabled', async () => {
+    await writeFile(join(repository, '.rsp', 'config.yaml'), 'workspace:\n  activation: disabled\n')
+
+    await expect(prepareWorkspaceCommand('example-change')).rejects.toThrow(
+      'workspace activation is disabled by project configuration',
+    )
+    expect(git(['branch', '--list', 'rsp/example-change'])).toBe('')
+    expect(existsSync(join(repository, '.git', 'rsp', 'workspaces'))).toBe(false)
+  })
+
   it('prepares and resumes one stable rsp/<workref> workspace', async () => {
     const first = await prepareWorkspace('example-change')
     const second = await prepareWorkspace('example-change')

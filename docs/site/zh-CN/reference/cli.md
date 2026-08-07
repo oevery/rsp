@@ -57,7 +57,7 @@ rsp workspace dispose <work-ref> [--discard] [--json]
 rsp land <work-ref> --target <branch> --commits <sha[,sha...]> [--cleanup] [--json]
 ```
 
-Workspace 只为一个已有且可执行的 WorkRef 显式启用。准备命令在稳定缓存目录中创建或恢复 `rsp/<work-ref>` 分支；普通临时工作仍在当前分支完成。`inspect` 只返回有界仓库事实，不判断项目技术栈。
+Workspace 只为一个已有且可执行的 WorkRef 显式启用，并且必须满足项目的 `workspace.activation` 策略。`auto` 允许 Core 根据实质 workspace 信号选择隔离，`explicit` 要求当前存在显式请求，`disabled` 则禁止 RSP 选择 workspace。准备命令在稳定缓存目录中创建或恢复 `rsp/<work-ref>` 分支；普通临时工作仍在当前分支完成。`inspect` 只返回有界仓库事实，不判断项目技术栈。
 
 `rsp-workspace` Skill 或人类负责理解项目语义，并使用宿主现有的文件、shell、包管理、浏览器和进程能力。该 Skill 复用调用方已有的 RSP 控制与结果契约，只追加 workspace 上下文和观察事实；CLI 不解析 AI 响应文本，也不提供通用执行计划 DSL。
 
