@@ -6,6 +6,7 @@ import { defineCommand, runMain } from 'citty'
 import { addSpec } from './commands/add-spec.js'
 import { archiveChange } from './commands/archive.js'
 import { runCheck } from './commands/check.js'
+import { commitFromMessageFile } from './commands/commit.js'
 import { createChange } from './commands/create.js'
 import { runDoctor } from './commands/doctor.js'
 import { focusChange, unfocusChange } from './commands/focus.js'
@@ -424,6 +425,30 @@ const landCommand = defineCommand({
       cleanup: Boolean(args.cleanup),
       json: Boolean(args.json),
     })
+    if (!result.ok)
+      process.exitCode = 1
+  },
+})
+
+const commitCommand = defineCommand({
+  meta: {
+    name: 'commit',
+    description: 'Create one local commit from a message file on the existing staged boundary',
+  },
+  args: {
+    'message-file': {
+      type: 'string',
+      description: 'Path to the prepared commit message file',
+      required: true,
+    },
+    'json': {
+      type: 'boolean',
+      description: 'Print machine-readable JSON output',
+      default: false,
+    },
+  },
+  async run({ args }: { args: { 'message-file': string, 'json': boolean } }) {
+    const result = await commitFromMessageFile(args['message-file'], { json: Boolean(args.json) })
     if (!result.ok)
       process.exitCode = 1
   },
@@ -924,6 +949,7 @@ export async function runCli(rawArgs = process.argv.slice(2)) {
       add: addCommand,
       workspace: workspaceCommand,
       land: landCommand,
+      commit: commitCommand,
       create: createCommand,
       group: groupCommand,
       focus: focusCommand,

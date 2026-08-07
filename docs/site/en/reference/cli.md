@@ -44,6 +44,14 @@ rsp reopen <name> --reason <text> [--from <archive-path>]
 
 `rsp ready` and `rsp show` expose the required completion gate, optional coverage warnings, and semantic-review signals. Incomplete Tasks, Required Verify items, or blockers produce `archiveReady: no`; incomplete Optional verification remains a warning. `rsp archive` fails without moving the Change when the completion gate is blocked. `rsp archive --dry-run` remains a deprecated compatibility alias for `rsp ready` and does not move a Change.
 
+## Local Git delivery
+
+```text
+rsp commit --message-file <path> [--json]
+```
+
+`rsp commit` creates one local commit from the existing staged boundary. It never stages paths, pushes, tags, publishes, amends, or creates a repair commit. The message file must contain actual line breaks; literal `\n` sequences are rejected. Git receives the message through a direct child-process stdin path with `--cleanup=verbatim`, and the complete message on `HEAD` is checked after the commit. A post-commit mismatch is reported as a failure while leaving any created commit for separately authorized history repair.
+
 ## Isolated workspaces
 
 ```text

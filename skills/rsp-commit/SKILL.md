@@ -4,7 +4,7 @@ description: Create one authorized, exact-scope local commit for an RSP-owned Ch
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.28.2"
+  version: "2026.08.07.1"
 ---
 
 # RSP Commit
@@ -41,7 +41,9 @@ Stage only the explicit allowed paths. Re-read `git status --short`, inspect the
 
 Transport a structured multiline message with actual line breaks or a safely prepared message file. Do not rely on ordinary quoted `\n` escape sequences as portable newlines; a host shell may pass those characters through literally.
 
-Create one local commit with the prepared subject, optional body, and trailers. Do not push, tag, publish, amend, rebase, or force-push. Afterward observe `HEAD`, the raw complete committed message, committed paths, remaining worktree state, and remote refs when required. A successful commit is still a post-commit mismatch when the observed message differs from the prepared message, including unintended literal `\n` sequences; report and stop without inferring amend or second-commit authority.
+When the packaged CLI is available, use `rsp commit --message-file <path> [--json]` for the exact local execution step. The command reads the prepared message file, rejects unintended literal `\n` sequences, and invokes `git commit --cleanup=verbatim -F -` through Node's direct child-process API. It operates only on the existing staged boundary; it never stages paths itself.
+
+Create one local commit with the prepared subject, optional body, and trailers. Do not push, tag, publish, amend, rebase, or force-push. Afterward observe `HEAD`, the raw complete committed message, committed paths, remaining worktree state, and remote refs when required. Compare the observed stored message with the prepared message exactly, allowing only one terminal LF difference in either direction for Git's message-file boundary. A successful commit is still a post-commit mismatch when the observed message differs from that comparison, including unintended literal `\n` sequences; report and stop without inferring amend or second-commit authority. If the command is unavailable, use a safely prepared message file with a direct non-shell Git invocation and retain the same preflight and post-commit checks.
 
 ## Return the receipt
 

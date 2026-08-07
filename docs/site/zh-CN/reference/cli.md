@@ -44,6 +44,14 @@ rsp reopen <name> --reason <text> [--from <archive-path>]
 
 `rsp ready` 和 `rsp show` 分别提供必须完成门禁、可选覆盖警告与语义审查信号。未完成的 Tasks、Required Verify 或 blocker 会产生 `archiveReady: no`；未完成的 Optional 验证只保留警告。完成门禁被阻断时，`rsp archive` 会失败且不移动 Change。`rsp archive --dry-run` 作为 `rsp ready` 已弃用的兼容别名保留，不会移动 Change。
 
+## 本地 Git 交付
+
+```text
+rsp commit --message-file <path> [--json]
+```
+
+`rsp commit` 基于当前已经暂存的边界创建一个本地 commit。它不会主动 stage、push、tag、发布、amend，也不会创建修复提交。消息文件必须包含真实换行；字面量 `\n` 会被拒绝。Git 通过直接子进程的 stdin 路径接收消息，并使用 `--cleanup=verbatim`；提交完成后还会检查 `HEAD` 的完整消息。如果提交后的消息不匹配，命令会报告失败，但保留已经创建的 commit，后续历史修复仍需单独授权。
+
 ## 隔离 Workspace
 
 ```text
