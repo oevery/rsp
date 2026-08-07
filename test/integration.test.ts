@@ -1610,6 +1610,26 @@ operator guidance
     expect(archive).not.toContain('active blockers are present')
   })
 
+  it('tolerates punctuated none variants across dependency and readiness consumers', async () => {
+    const statusDir = await createRspFixture('rsp-none-blocker-variant-test', ['specs', 'changes', 'archives', 'focus.d'])
+    const content = renderChange('complete')
+      .replaceAll('- [ ]', '- [x]')
+      .replace('## Blockers\n- none', '## Blockers\n- None.')
+    await writeFile(join(statusDir, '.rsp', 'changes', 'complete.md'), content)
+
+    const status = JSON.parse(execSync(`node ${cliPath()} status --json`, { cwd: statusDir, encoding: 'utf-8' }))
+    const show = JSON.parse(execSync(`node ${cliPath()} show complete --json`, { cwd: statusDir, encoding: 'utf-8' }))
+    const ready = JSON.parse(execSync(`node ${cliPath()} ready complete --json`, { cwd: statusDir, encoding: 'utf-8' }))
+
+    expect(status.records[0].isBlocked).toBe(false)
+    expect(status.plan.blocked).toEqual([])
+    expect(show.change.blockers).toBe(false)
+    expect(show.change.readiness.activeBlockers).toBe(false)
+    expect(ready.readiness.activeBlockers).toBe(false)
+    expect(ready.readiness.completionGate).toBe('pass')
+    expect(ready.warnings).not.toContain('active blockers are present in the change file')
+  })
+
   it('prints status JSON next actions when no focus exists', async () => {
     const statusDir = await createRspFixture('rsp-status-json-no-focus-test')
     await writeFile(join(statusDir, '.rsp', 'changes', 'unfocused-json.md'), renderChange('unfocused-json'))

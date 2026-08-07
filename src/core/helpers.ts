@@ -525,12 +525,19 @@ export function hasMeaningfulBlockers(content: string): boolean {
   return hasMeaningfulBlockerLines(extractBlockerLines(content))
 }
 
+/** Return true when one normalized Blockers line is an unambiguous empty sentinel. */
+export function isEmptyBlockerLine(line: string): boolean {
+  const normalized = line.trim()
+  return /^none[.。]?$/i.test(normalized)
+    || /^[-*]\s*(?:none[.。]?)?$/i.test(normalized)
+}
+
 /** Return true when normalized Blockers-section lines contain a real blocker entry. */
 export function hasMeaningfulBlockerLines(lines: string[]): boolean {
   if (lines.length === 0)
     return false
 
-  return lines.some(line => !/^[-*]\s*(?:none)?$/i.test(line) && !/^none$/i.test(line))
+  return lines.some(line => !isEmptyBlockerLine(line))
 }
 
 /**

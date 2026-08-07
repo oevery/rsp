@@ -145,16 +145,25 @@ describe('parseScenarios', () => {
 })
 
 describe('hasMeaningfulBlockers', () => {
-  it('returns false for none', () => {
-    const content = `## Blockers
-- none`
-    expect(hasMeaningfulBlockers(content)).toBe(false)
+  it.each([
+    '-',
+    '*',
+    '- none',
+    '- None.',
+    '* NONE。',
+    'none.',
+    '  -   NoNe。  ',
+  ])('returns false for the unambiguous none variant %j', (blocker) => {
+    expect(hasMeaningfulBlockers(`## Blockers\n${blocker}`)).toBe(false)
   })
 
-  it('returns true for a real blocker', () => {
-    const content = `## Blockers
-- waiting on api migration`
-    expect(hasMeaningfulBlockers(content)).toBe(true)
+  it.each([
+    '- waiting on api migration',
+    '- no blockers',
+    '- N/A',
+    '- 无',
+  ])('returns true for meaningful or unsupported blocker text %j', (blocker) => {
+    expect(hasMeaningfulBlockers(`## Blockers\n${blocker}`)).toBe(true)
   })
 
   it('ignores well-formed HTML comments but keeps incomplete comments fail-closed', () => {

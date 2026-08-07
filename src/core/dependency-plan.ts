@@ -4,7 +4,7 @@ import type { ArchiveTreeInspection, WorkTreeInspection } from './work-ref.js'
 import { readFile } from 'node:fs/promises'
 
 import { historyInspectionComplete, inspectArchiveHistory } from '../history/query.js'
-import { extractBlockerLines, hasMeaningfulBlockers } from './helpers.js'
+import { extractBlockerLines, hasMeaningfulBlockers, isEmptyBlockerLine } from './helpers.js'
 import { inspectArchiveTree, inspectWorkTree, isCanonicalExecutableWorkRef } from './work-ref.js'
 
 interface ParsedBlockers {
@@ -24,7 +24,6 @@ export interface ChangeDependencyInspection {
   diagnostics: CommandDiagnostic[]
 }
 
-const NONE_BLOCKER_RE = /^[-*]\s*(?:none)?$/i
 const REQUIRES_RE = /^[-*]\s+requires\s+`([^`]+)`:[ \t]*(\S.*)$/i
 
 /** Derive the current dependency projection from authoritative open Change files. */
@@ -190,7 +189,7 @@ function parseDependencyBlockers(content: string): ParsedBlockers {
   let external = false
   const malformed: string[] = []
   for (const line of extractBlockerLines(content)) {
-    if (!line || NONE_BLOCKER_RE.test(line) || /^none$/i.test(line))
+    if (!line || isEmptyBlockerLine(line))
       continue
     const dependency = line.match(REQUIRES_RE)
     if (dependency) {
