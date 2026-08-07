@@ -198,8 +198,8 @@ describe('generateChangeContent', () => {
     expect(content).not.toContain('Durable updates:')
   })
 
-  it('renders a shorter lite template with required sections', () => {
-    const content = generateChangeContent('small-fix', 'Fix small issue', 'fix', { lite: true })
+  it('renders one kind-aware template for tracked changes of every size', () => {
+    const content = generateChangeContent('small-fix', 'Fix small issue', 'fix')
     expect(content).toContain('kind: "fix"')
     expect(content).toContain('- Outcome: Fix small issue')
     expect(content).toContain('## Proposal')
@@ -462,7 +462,7 @@ describe('documentation command examples', () => {
     expect(projectDesign).toContain('[Skill System](./skill-system.md)')
     expect(projectSpecs).toContain('`rsp add spec` rewrites only changed indexes in the affected directory chain')
     expect(projectSpecs).toContain('`rsp doctor --fix` reports only real filesystem mutations')
-    expect(projectSpecs).toContain('`rsp create --lite` is for intentionally tracked small Changes')
+    expect(projectSpecs).toContain('Tracked Changes of every size use the same kind-aware scaffold')
     expect(projectSpecs).toContain('`.rsp/rsp-rules.md` is the minimal fallback')
     expect(projectSpecs).toContain('Keep safety, authority, readiness, verification, and completion criteria checkable')
     expect(readme).toContain('use `.rsp/rsp-rules.md` only when the Skill is unavailable')

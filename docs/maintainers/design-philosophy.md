@@ -232,7 +232,7 @@ RSP 采纳：
 - fixed change sections。
 - explicit `kind`。
 - lightweight `### ADDED` / `### MODIFIED` / `### REMOVED` delta markers。
-- `rsp create --lite` 作为显式 tracked 小 change 的短模板。
+- 一个按 `kind` 提示的 Change 模板，覆盖有意跟踪的不同规模工作。
 
 RSP 不采纳：
 
@@ -240,7 +240,7 @@ RSP 不采纳：
 - 自动 semantic merge。
 - 每个小任务默认创建 change。
 
-`rsp create --lite` 不把简单当前会话任务自动提升为 RSP change。
+RSP 不把简单当前会话任务自动提升为 RSP change；需要跟踪时使用普通 `rsp create`。
 
 ## 目录角色
 

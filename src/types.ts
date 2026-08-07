@@ -50,7 +50,6 @@ export interface ArchiveReadinessOutput {
 export interface CreateChangeArgs {
   name: string
   kind?: string
-  lite?: boolean
   issue?: string
   issueRelation?: string
   _: string[]

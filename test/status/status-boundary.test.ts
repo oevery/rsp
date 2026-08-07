@@ -185,7 +185,7 @@ summary: Frontmatter summary
 `)).toBeNull()
   })
 
-  it('preserves the empty-project plain presentation', () => {
+  it('preserves the compact empty-project plain presentation', () => {
     const output: string[] = []
     const log = vi.spyOn(console, 'log').mockImplementation((value = '') => output.push(String(value)))
     try {
@@ -199,19 +199,26 @@ summary: Frontmatter summary
       '',
       '  RSP status',
       '',
-      '  Manage: activation explicit · closeout local',
-      '',
       '  No focused change.',
       '    Run: rsp create <name>',
       '',
-      '  Dependency graph',
-      '  (parent requires children)',
-      '  none',
-      '  Next action: none',
-      '  Legend: ◎ focused/open  ● ready  ○ waiting  ✓ resolved prerequisite  ! blocked',
-      '',
       '  No executable changes found. Run: rsp create <name>\n',
     ])
+  })
+
+  it('keeps advanced dependency presentation behind verbose status', () => {
+    const output: string[] = []
+    const log = vi.spyOn(console, 'log').mockImplementation((value = '') => output.push(String(value)))
+    try {
+      printStatusPlain(deriveStatusView(snapshot()), { verbose: true })
+    }
+    finally {
+      log.mockRestore()
+    }
+
+    expect(output).toContain('  Manage: activation explicit · closeout local')
+    expect(output).toContain('  Dependency graph')
+    expect(output).toContain('  Legend: ◎ focused/open  ● ready  ○ waiting  ✓ resolved prerequisite  ! blocked')
   })
 
   it('inspects configured Manage policy and fails closed visibly for invalid config', async () => {
@@ -243,7 +250,7 @@ summary: Frontmatter summary
       const output: string[] = []
       const log = vi.spyOn(console, 'log').mockImplementation((value = '') => output.push(String(value)))
       try {
-        printStatusPlain(deriveStatusView(invalid))
+        printStatusPlain(deriveStatusView(invalid), { verbose: true })
       }
       finally {
         log.mockRestore()
@@ -281,7 +288,7 @@ summary: Frontmatter summary
       const output: string[] = []
       const log = vi.spyOn(console, 'log').mockImplementation((value = '') => output.push(String(value)))
       try {
-        printStatusPlain(view)
+        printStatusPlain(view, { verbose: true })
       }
       finally {
         log.mockRestore()

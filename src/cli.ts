@@ -38,6 +38,11 @@ function validateCompactInvocation(rawArgs: string[]): void {
     throw new Error('--compact requires --json')
 }
 
+function validateRemovedCreateOptions(rawArgs: string[]): void {
+  if (rawArgs[0] === 'create' && rawArgs.some(arg => arg === '--lite' || arg.startsWith('--lite=')))
+    throw new Error('create option "--lite" was removed; use the standard kind-aware Change template')
+}
+
 const initCommand = defineCommand({
   meta: {
     name: 'init',
@@ -80,11 +85,6 @@ const createCommand = defineCommand({
       type: 'string',
       description: 'Optional kind for a kind-aware template (feature, fix, refactor, docs, ops, research)',
     },
-    'lite': {
-      type: 'boolean',
-      description: 'Use a shorter change template while keeping the required RSP sections',
-      default: false,
-    },
     'issue': {
       type: 'string',
       description: 'Attach one external issue URL without fetching it',
@@ -97,7 +97,6 @@ const createCommand = defineCommand({
   async run({ args }: { args: CreateChangeArgs }) {
     const summary = Array.isArray(args._) && args._.length > 1 ? args._.slice(1).join(' ') : ''
     await createChange(args.name, summary, args.kind, {
-      lite: Boolean(args.lite),
       issue: args.issue,
       issueRelation: args.issueRelation,
     })
@@ -911,6 +910,7 @@ export async function runCli(rawArgs = process.argv.slice(2)) {
     }
   }
   validateCompactInvocation(rawArgs)
+  validateRemovedCreateOptions(rawArgs)
   const version = await getVersion()
 
   const main = defineCommand({

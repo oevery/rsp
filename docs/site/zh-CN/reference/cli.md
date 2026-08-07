@@ -23,7 +23,7 @@ rsp skills install [name] [--dry-run] [--force]
 
 ```text
 rsp add spec <name>             创建 Spec 并重建受影响的生成索引
-rsp create <name> [summary]     创建 Change；可加 --lite 使用较短模板
+rsp create <name> [summary]     创建按 kind 提示的 Change
 rsp group create <name> [goal] 创建不进入聚焦状态的 Group Brief
 rsp group close <name>         归档已完成的 Group Brief
 rsp group reopen <name> --reason <text>
@@ -76,6 +76,8 @@ rsp history <work-ref> [--json [--compact]]
 ```
 
 在真实的交互式终端中，不带子命令的 RSP 会打开与 `rsp ui` 相同的面板。CI、管道、重定向流与 `TERM=dumb` 接收静态命令输出。
+
+普通 `rsp status` 以紧凑形式保留当前聚焦、Change 与 Group 摘要、进度、阻塞项和派生的下一步。增加 `--verbose` 可查看有效 Manage 与语言策略、完整依赖森林和归档趋势。JSON 输出不受纯文本展示模式影响。
 
 `status` 从完整工作树派生精确的依赖、就绪工作、阻塞项与稳定波次。`check` 校验 Change 结构，并警告未完成的占位符或待澄清标记。`history` 直接读取保留的归档文件，默认返回 20 条、最多 100 条；筛选参数包括 `--limit`、`--since`、`--until`、`--kind`、`--group` 与 `--search`。
 

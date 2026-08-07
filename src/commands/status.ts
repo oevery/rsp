@@ -20,6 +20,6 @@ export async function showStatus(options: StatusOptions = {}, runOptions: Comman
   if (runOptions.json)
     emitJson(result, runOptions)
   else
-    printStatusPlain(view)
+    printStatusPlain(view, { verbose: runOptions.verbose })
   return result
 }

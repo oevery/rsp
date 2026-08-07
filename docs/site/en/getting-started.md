@@ -27,7 +27,7 @@ rsp show --focused
 
 Edit `.rsp/changes/improve-login.md`. Keep its canonical Proposal, Spec, Design, Tasks, Verify, and Blockers sections. A focus marker selects current work; an open Change is not automatically current merely because its file exists.
 
-For a deliberately small tracked task, `rsp create --lite <name>` uses the shorter template. Do not create persistent tracking for every trivial session task.
+Use the same kind-aware Change template for tracked work of any size. Do not create persistent tracking for every trivial session task.
 
 When no Change is focused and the user has not supplied a concrete task, ask what to work on or suggest `npx -y @oevery/rsp create <name>` for tracked work. Simple current-session tasks should not create RSP changes unless tracking is intentionally needed.
 

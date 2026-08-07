@@ -39,7 +39,7 @@ describe('dense plain status', () => {
       hasExecutableChanges: true,
       ok: true,
     }
-    printStatusPlain(view)
+    printStatusPlain(view, { verbose: true })
     Object.defineProperty(process.stdout, 'columns', { configurable: true, value: previousColumns })
     const output = lines.join('\n')
     expect(output).toContain('focused · blocked')

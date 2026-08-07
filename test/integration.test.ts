@@ -427,20 +427,32 @@ describe('change lifecycle integration', () => {
     })()
   })
 
-  it('creates a lite change template when requested', () => {
-    const createDir = join(tmpdir(), 'rsp-create-lite-test', randomUUID())
+  it('creates the single kind-aware Change template and rejects the removed lite option', () => {
+    const createDir = join(tmpdir(), 'rsp-create-single-template-test', randomUUID())
     return (async () => {
       await mkdir(createDir, { recursive: true })
       execSync(`node ${cliPath()} init`, { cwd: createDir })
-      const output = execSync(`node ${cliPath()} create tiny-fix --kind fix --lite "Fix tiny issue"`, { cwd: createDir, encoding: 'utf-8' })
+      const output = execSync(`node ${cliPath()} create tiny-fix --kind fix "Fix tiny issue"`, { cwd: createDir, encoding: 'utf-8' })
 
       const content = await readFile(join(createDir, '.rsp', 'changes', 'tiny-fix.md'), 'utf-8')
-      expect(output).toContain('fill the lite change details')
+      expect(output).toContain('fill proposal/spec/design first')
       expect(content).toContain('kind: "fix"')
       expect(content).toContain('- Outcome: Fix tiny issue')
       expect(content).toContain('- [ ] <…>')
       expect(content).not.toContain('Finalize the proposal, spec, and design details')
       expect(content).not.toContain('Exact prerequisite:')
+
+      for (const [name, option] of [
+        ['another-fix', '--lite'],
+        ['equals-true-fix', '--lite=true'],
+        ['equals-false-fix', '--lite=false'],
+      ]) {
+        const result = spawnSync('node', [cliPath(), 'create', name, '--kind', 'fix', option, 'Should fail'], { cwd: createDir, encoding: 'utf-8' })
+        expect(result.status).toBe(1)
+        expect(result.stderr).toContain('create option "--lite" was removed')
+        expect(existsSync(join(createDir, '.rsp', 'changes', `${name}.md`))).toBe(false)
+        expect(existsSync(join(createDir, '.rsp', 'focus.d', name))).toBe(false)
+      }
     })()
   })
 
@@ -1436,12 +1448,16 @@ describe('status commands', () => {
     expect(focused.plan.waves).toEqual([['research'], ['implement']])
 
     const human = execSync(`node ${cliPath()} status --focused`, { cwd: statusDir, encoding: 'utf-8' })
-    expect(human).toContain('Dependency graph')
-    expect(human).toContain('(parent requires children)')
-    expect(human).toMatch(/◎ implement\s+focused · waiting/)
-    expect(human).toMatch(/└── ● research\s+prerequisite · ready/)
-    expect(human).toContain('needs the accepted research model')
+    expect(human).not.toContain('Dependency graph')
+    expect(human).not.toContain('(parent requires children)')
     expect(human).toContain('Next action: research')
+
+    const verboseHuman = execSync(`node ${cliPath()} status --focused --verbose`, { cwd: statusDir, encoding: 'utf-8' })
+    expect(verboseHuman).toContain('Dependency graph')
+    expect(verboseHuman).toContain('(parent requires children)')
+    expect(verboseHuman).toMatch(/◎ implement\s+focused · waiting/)
+    expect(verboseHuman).toMatch(/└── ● research\s+prerequisite · ready/)
+    expect(verboseHuman).toContain('needs the accepted research model')
   })
 
   it('resolves an exact dependency when its prerequisite is archived', async () => {
@@ -1506,7 +1522,7 @@ describe('status commands', () => {
     expect(json.plan.ready).toEqual(['research'])
     expect(json.plan.waves).toEqual([['research'], ['implement-a', 'implement-b']])
 
-    const human = execSync(`node ${cliPath()} status --focused`, { cwd: statusDir, encoding: 'utf-8' })
+    const human = execSync(`node ${cliPath()} status --focused --verbose`, { cwd: statusDir, encoding: 'utf-8' })
     expect(human.match(/● research/g)).toHaveLength(2)
     expect(human.match(/↩ shared/g)).toHaveLength(1)
     expect(human).toContain('Next action: research')
@@ -1561,7 +1577,7 @@ describe('status commands', () => {
     ))
     await writeFile(join(statusDir, '.rsp', 'archives', '2026-07-20_research.md'), renderChange('research'))
 
-    const status = execSync(`node ${cliPath()} status`, { cwd: statusDir, encoding: 'utf-8' })
+    const status = execSync(`node ${cliPath()} status --verbose`, { cwd: statusDir, encoding: 'utf-8' })
     const show = JSON.parse(execSync(`node ${cliPath()} show implement --json`, { cwd: statusDir, encoding: 'utf-8' }))
     const archive = execSync(`node ${cliPath()} archive implement --dry-run`, { cwd: statusDir, encoding: 'utf-8' })
 

@@ -27,7 +27,7 @@ rsp show --focused
 
 编辑 `.rsp/changes/improve-login.md`，保留规范的 Proposal、Spec、Design、Tasks、Verify 与 Blockers 章节。聚焦标记选择当前工作；仅仅存在于 `changes/` 的未完成 Change 不会自动成为当前目标。
 
-对于有意跟踪的小任务，`rsp create --lite <name>` 使用较短模板。不要为每个简单的会话任务创建持久跟踪。
+不同规模的跟踪工作都使用同一个按 kind 提示的 Change 模板。不要为每个简单的会话任务创建持久跟踪。
 
 没有聚焦的 Change 且用户未提供具体任务时，询问要处理什么，或建议使用 `npx -y @oevery/rsp create <name>` 创建需要跟踪的工作。简单的当前会话任务默认不应创建 RSP Change，除非确实需要持久跟踪。
 

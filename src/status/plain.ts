@@ -14,14 +14,16 @@ export function printStatusRuntimeDiagnostics(runtime: RuntimeDiagnostic[]): voi
     console.error(`  ${pc.dim(`[verbose] ${diagnostic.operation} ${diagnostic.path}: ${diagnostic.message}`)}`)
 }
 
-export function printStatusPlain(view: ProjectStatusView): void {
+export function printStatusPlain(view: ProjectStatusView, options: { verbose?: boolean } = {}): void {
   console.log()
   console.log(`  ${pc.bold('RSP status')}`)
   console.log()
-  console.log(`  ${pc.bold('Manage:')} activation ${view.manage.activation} · closeout ${view.manage.closeout}`)
-  if (view.language.artifacts !== null || view.language.commit !== null)
+  if (options.verbose)
+    console.log(`  ${pc.bold('Manage:')} activation ${view.manage.activation} · closeout ${view.manage.closeout}`)
+  if (options.verbose && (view.language.artifacts !== null || view.language.commit !== null))
     console.log(`  ${pc.bold('Language:')} artifacts ${view.language.artifacts ?? 'unset'} · commit ${view.language.commit ?? 'unset'}`)
-  console.log()
+  if (options.verbose)
+    console.log()
 
   for (const diagnostic of view.diagnostics) {
     const label = diagnostic.change ?? diagnostic.path
@@ -42,7 +44,8 @@ export function printStatusPlain(view: ProjectStatusView): void {
   }
 
   printChangeGroups(view.groups)
-  printDependencyPlan(view.plan, view.records)
+  if (options.verbose)
+    printDependencyPlan(view.plan, view.records)
 
   if (!view.hasExecutableChanges) {
     if (view.ok)
@@ -87,8 +90,10 @@ export function printStatusPlain(view: ProjectStatusView): void {
 
   console.log()
   console.log(`  ${pc.bold('Summary:')} ${view.summary.total} change(s), ${view.summary.focused} focused, ${pc.yellow(String(view.summary.blocked))} blocked`)
+  console.log(`  ${pc.dim('Next action:')} ${formatDependencyNextAction(view.plan, view.records)}`)
   console.log()
-  printArchiveTrend(view.archiveTrend)
+  if (options.verbose)
+    printArchiveTrend(view.archiveTrend)
 }
 
 function printChangeGroups(groups: ChangeGroupStatusOutput[]): void {
@@ -130,19 +135,21 @@ function printDependencyPlan(plan: ChangeDependencyPlanOutput, records: ProjectS
   const external = plan.blocked.filter(blocker => blocker.external).map(blocker => blocker.change)
   if (external.length > 0)
     console.log(`  ${pc.dim('External blockers:')} ${external.join(', ')}`)
+  console.log(`  ${pc.dim('Legend:')} ◎ focused/open  ● ready  ○ waiting  ✓ resolved prerequisite  ! blocked`)
+  console.log()
+}
+
+function formatDependencyNextAction(plan: ChangeDependencyPlanOutput, records: ProjectStatusView['records']): string {
   const implementationReady = plan.ready.filter((name) => {
     const record = records.find(candidate => candidate.output.name === name)
     return !record || record.readiness.incompleteTasks > 0 || record.readiness.incompleteRequiredVerify > 0
   })
   const completedReady = plan.ready.filter(name => !implementationReady.includes(name))
-  const next = implementationReady.length > 0
-    ? implementationReady.join(', ')
-    : completedReady.length > 0
-      ? `review for durable update/archive: ${completedReady.join(', ')}`
-      : pc.dim('none')
-  console.log(`  ${pc.dim('Next action:')} ${next}`)
-  console.log(`  ${pc.dim('Legend:')} ◎ focused/open  ● ready  ○ waiting  ✓ resolved prerequisite  ! blocked`)
-  console.log()
+  if (implementationReady.length > 0)
+    return implementationReady.join(', ')
+  if (completedReady.length > 0)
+    return `review for durable update/archive: ${completedReady.join(', ')}`
+  return pc.dim('none')
 }
 
 function printArchiveTrend(trend: Array<{ month: string, count: number }>): void {

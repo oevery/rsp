@@ -198,7 +198,7 @@ export function normalizeLogicalPath(pathValue: string): string {
 }
 
 /** Generate a change file content from the built-in single-file template. */
-export function generateChangeContent(name: string, summary = '', kind?: string, options: { lite?: boolean, issues?: IssueRelationship[] } = {}): string {
+export function generateChangeContent(name: string, summary = '', kind?: string, options: { issues?: IssueRelationship[] } = {}): string {
   const placeholder = '<…>'
   const proposalSummary = summary || placeholder
   const issueFrontmatter = renderIssueFrontmatter(options.issues ?? [])
@@ -266,9 +266,6 @@ ${changeSectionHeading('blockers')}
   }
 
   const frontmatterKind = kind ?? '<choose: feature | fix | refactor | docs | ops | research>'
-  if (options.lite)
-    return generateLiteChangeContent(name, proposalSummary, frontmatterKind, issueFrontmatter)
-
   const template = getChangeTemplateByKind(kind)
 
   return `---
@@ -313,62 +310,6 @@ ${changeSectionHeading('verify')}
 ### Optional
 - Manual or environment:
   - [ ] ${template.manualVerify}
-- Coverage:
-  - ${placeholder}
-
-${changeSectionHeading('blockers')}
-- none
-`
-}
-
-function generateLiteChangeContent(name: string, proposalSummary: string, frontmatterKind: string, issueFrontmatter: string): string {
-  const placeholder = '<…>'
-  return `---
-kind: "${frontmatterKind}"
-${issueFrontmatter}---
-
-${renderDocumentTitle(CHANGE_DOCUMENT_SCHEMA, name)}
-
-${changeSectionHeading('proposal')}
-- Outcome: ${proposalSummary}
-- Why:
-  - ${placeholder}
-- Scope:
-  - ${placeholder}
-- Non-goals:
-  - none
-
-${changeSectionHeading('spec')}
-### MODIFIED
-- Requirement: ${placeholder}
-  - ${placeholder}
-
-### Acceptance
-#### Scenario: ${placeholder}
-- GIVEN ${placeholder}
-- WHEN ${placeholder}
-- THEN ${placeholder}
-
-${changeSectionHeading('design')}
-- Approach:
-  - ${placeholder}
-- Boundaries:
-  - ${placeholder}
-- Affected areas:
-  - ${placeholder}
-- Constraints:
-  - ${placeholder}
-
-${changeSectionHeading('tasks')}
-- [ ] ${placeholder}
-
-${changeSectionHeading('verify')}
-### Required
-- Automated:
-  - [ ] ${placeholder} — proves: ${placeholder}
-### Optional
-- Manual or environment:
-  - [ ] ${placeholder}
 - Coverage:
   - ${placeholder}
 

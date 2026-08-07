@@ -11,7 +11,7 @@ import { writeManagedFile } from '../core/managed-path.js'
 import { resolveFocusMarkerPath, WorkRefError } from '../core/work-ref.js'
 
 /** Create a new single-file change under .rsp/changes/<name>.md and focus it when newly created. */
-export async function createChange(name: string, summary = '', kind?: string, options: { lite?: boolean, issue?: string, issueRelation?: string } = {}) {
+export async function createChange(name: string, summary = '', kind?: string, options: { issue?: string, issueRelation?: string } = {}) {
   if (!name) {
     console.error(`  ${pc.red('Usage:')} rsp create <name> [summary]`)
     process.exit(1)
@@ -31,7 +31,7 @@ export async function createChange(name: string, summary = '', kind?: string, op
         throw new Error(`Change already exists; --issue cannot update ${workRef.name}`)
       if (!existed) {
         const focusEntry = resolveFocusMarkerPath(workRef)
-        const content = generateChangeContent(workRef.name, summary, kind, { lite: Boolean(options.lite), issues })
+        const content = generateChangeContent(workRef.name, summary, kind, { issues })
         await mkdir(dirname(changePath), { recursive: true })
         let changeCreated = false
         try {
@@ -61,7 +61,7 @@ export async function createChange(name: string, summary = '', kind?: string, op
         console.log(`  ${pc.dim('Unchanged focus.')} Run: rsp focus ${workRef.name}`)
       else
         console.log(`  ${pc.dim('focused via focus.d')} → ${workRef.name}`)
-      console.log(`  ${pc.cyan('Next:')} ${options.lite ? 'fill the lite change details, then implement and verify' : 'fill proposal/spec/design first, then implement and complete the tasks'}\n`)
+      console.log(`  ${pc.cyan('Next:')} fill proposal/spec/design first, then implement and complete the tasks\n`)
     })
   }
   catch (error) {
