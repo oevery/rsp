@@ -3,7 +3,7 @@ import type { ArchiveHistoryQuery } from '../history/query.js'
 import type { CommandDiagnostic, CommandRunOptions, HistoryDetailOutput, HistoryRecordOutput, RuntimeDiagnostic } from '../types.js'
 
 import { pc } from '../core/config.js'
-import { guardRspInitialized } from '../core/helpers.js'
+import { guardRspInitialized } from '../core/filesystem.js'
 import { emitJson } from '../core/output.js'
 import { normalizeExecutableWorkRef, normalizeWorkRefSegment } from '../core/work-ref.js'
 import { ArchiveHistoryError, HISTORY_DEFAULT_LIMIT, HISTORY_MAX_LIMIT, historyInspectionComplete, inspectArchiveHistory, queryArchiveHistory, readArchiveHistoryDetail, selectArchiveHistoryRecord } from '../history/query.js'

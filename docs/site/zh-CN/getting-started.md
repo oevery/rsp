@@ -1,6 +1,6 @@
 # 五分钟入门
 
-RSP 3.1 需要 Node.js 22 或更高版本。接入和维护命令使用当前稳定版本。
+RSP 需要 Node.js 22 或更高版本。接入和维护命令使用当前稳定版本。
 
 ## 初始化项目
 
@@ -12,6 +12,7 @@ npx -y @oevery/rsp@latest init --with-project-setup
 
 ```bash
 npx -y @oevery/rsp@latest doctor
+npx -y @oevery/rsp@latest status --json
 npx -y @oevery/rsp@latest status
 ```
 

@@ -3,7 +3,10 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
-import { classifyVerifyCheckboxes, collectArchiveChecklist, collectArchiveReadiness, countCheckboxes, detectDeltaSections, generateChangeContent, generateDesignContent, generateSpecContent, getDurableReviewCandidateTargets, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, parseScenarios, parseYamlLines, renderRspAgentsBlock, toArchiveReadinessOutput } from '../src/core/helpers.js'
+import { generateChangeContent, generateDesignContent, generateSpecContent, renderRspAgentsBlock } from '../src/core/artifacts.js'
+import { classifyVerifyCheckboxes, countCheckboxes, detectDeltaSections, hasMeaningfulBlockers, parseFrontmatter, parseScenarios, parseYamlLines } from '../src/core/content.js'
+import { normalizeLogicalPath } from '../src/core/filesystem.js'
+import { collectArchiveChecklist, collectArchiveReadiness, getDurableReviewCandidateTargets, toArchiveReadinessOutput } from '../src/core/readiness.js'
 
 describe('parseYamlLines', () => {
   it('parses key-value pairs', () => {
@@ -411,8 +414,8 @@ describe('documentation command examples', () => {
     expect(contract).toContain('Do not directly create command-owned files')
     expect(contract).toMatch(/does not execute archive or grant staging, commit, push, publication/)
     expect(skill).not.toContain('Minimal example:')
-    expect(skill).toContain('`### Required` owns evidence necessary to prove acceptance')
-    expect(skill).toContain('`### Optional` owns additional environment, compatibility, scale, or confidence coverage')
+    expect(skill).toContain('Required verification proves acceptance or changed material risk')
+    expect(skill).toContain('Optional verification adds environment, compatibility, scale, or confidence coverage')
     expect(rules).toContain('legacy unclassified items are Required')
     expect(manage).toContain('require `completionGate: pass` plus `archiveReady: yes`')
     expect(commit).toContain('stop before staging when a Task or Required Verify item remains incomplete')

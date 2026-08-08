@@ -1,8 +1,9 @@
 import { mkdir, unlink, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
+import { generateDesignContent, generateSpecContent } from '../core/artifacts.js'
 import { inspectRspConfig, pc, RSP_DIR } from '../core/config.js'
-import { cleanupEmptyParentDirs, detectProjectName, generateDesignContent, generateSpecContent, guardRspInitialized, isValidSpecName } from '../core/helpers.js'
+import { cleanupEmptyParentDirs, detectProjectName, guardRspInitialized, isValidSpecName } from '../core/filesystem.js'
 import { withRspLock } from '../core/lock.js'
 import { inspectManagedFileTree, resolveManagedDirectoryChain } from '../core/managed-path.js'
 import { toErrorMessage } from '../core/output.js'

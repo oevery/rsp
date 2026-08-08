@@ -21,13 +21,14 @@ RSP 把模糊意图转化为经过塑造、实现、审查和验证的软件变�
 
 ## 五分钟入门
 
-RSP 3.1 需要 Node.js 22 或更高版本。使用当前稳定版本：
+RSP 需要 Node.js 22 或更高版本。使用当前稳定版本：
 
 ```bash
 npx -y @oevery/rsp@latest init --with-project-setup
 # 填写 .rsp/changes/project-setup.md
 # 填写 .rsp/specs/design.md
 npx -y @oevery/rsp@latest doctor
+npx -y @oevery/rsp@latest status --json
 ```
 
 然后创建并聚焦一个受跟踪变更：

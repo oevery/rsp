@@ -22,17 +22,15 @@ describe('rsp workspace Skills', () => {
     const fallback = projectFile('rules/rsp-rules.md')
 
     for (const fragment of [
-      'Before applying the small-work exclusion',
-      'Core reads the effective `workspace.activation`',
-      '`auto` permits selection from exactly four signals',
-      '`explicit` permits selection only for the explicit-request signal',
-      '`disabled` denies RSP workspace selection',
-      'Evaluating policy and signals does not load `rsp-workspace`',
-      'An explicit workspace request handled through this Skill still enters Core for semantic selection',
-      'The public `rsp workspace` CLI remains a lower-level explicit infrastructure executor',
+      'Before the small-work decision',
+      'Core alone evaluates `workspace.activation`',
+      '`auto` permits parallel Changes, unrelated dirty work, an independent runtime boundary, or an explicit request',
+      '`explicit` permits only the explicit request',
+      '`disabled` denies RSP isolation',
+      'Load `rsp-workspace` only after selection',
     ])
       expect(core).toContain(fragment)
-    expect(core.indexOf('Before applying the small-work exclusion')).toBeLessThan(core.indexOf('Return tiny settled work directly'))
+    expect(core.indexOf('Before the small-work decision')).toBeLessThan(core.indexOf('Return `RouteDisposition: direct`'))
 
     for (const fragment of [
       'Core resolves ownership before this Skill is entered and also resolves workspace-isolation selection',
@@ -49,11 +47,11 @@ describe('rsp workspace Skills', () => {
     expect(workspace).toContain('`disabled` never enters this Skill')
     expect(workspace).toContain('A human may invoke the low-level CLI explicitly')
     expect(workspace).not.toContain('selected by Core or qualified Manage')
-    expect(spec).toContain('Core keeps selection, routing, ownership, safety')
-    expect(spec).toContain('effective `workspace.activation`')
-    expect(spec).toContain('`disabled` denies RSP workspace selection')
-    expect(spec).toContain('Evaluating policy and signals does not load `rsp-workspace`')
-    expect(spec).toContain('Manage allocates or reuses workspace sessions only after Core selection')
+    expect(spec).toContain('`rsp` owns project entry, current-action routing')
+    expect(spec).toContain('`rsp-workspace` is isolated execution infrastructure selected by Core')
+    expect(spec).toContain('Detailed procedures are loaded from the owning Skill or a conditional reference')
+    expect(spec).toContain('Core conditionally loads')
+    expect(spec).toContain('Neither grants product, lifecycle, Git, remote, publication')
     expect(spec).not.toContain('after Core or Manage selects isolation')
     expect(fallback).toContain('As the Core fallback, read the effective `workspace.activation` before the small-work decision')
     expect(fallback).toContain('under `disabled`, never select or prepare an RSP workspace')

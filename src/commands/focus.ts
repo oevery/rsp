@@ -4,7 +4,7 @@ import { dirname } from 'node:path'
 
 import { resolveExecutableChange } from '../core/change-group.js'
 import { FOCUS_DIR, pc } from '../core/config.js'
-import { cleanupEmptyParentDirs, guardRspInitialized } from '../core/helpers.js'
+import { cleanupEmptyParentDirs, guardRspInitialized } from '../core/filesystem.js'
 import { withRspLock } from '../core/lock.js'
 import { writeManagedFile } from '../core/managed-path.js'
 import { resolveFocusMarkerPath, resolveWorkRef, WorkRefError } from '../core/work-ref.js'

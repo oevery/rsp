@@ -3,12 +3,14 @@ import { readFile } from 'node:fs/promises'
 
 import { resolveExecutableChange } from '../core/change-group.js'
 import { inspectRspConfig, pc } from '../core/config.js'
+import { countCheckboxes, hasMeaningfulBlockers, parseFrontmatter, parseScenarios } from '../core/content.js'
 import { resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
 import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionBody, parseRspDocument } from '../core/document-model.js'
-import { buildDurableReviewGuidance, collectArchiveReadiness, countCheckboxes, getDurableReviewCandidateTargets, guardRspInitialized, hasMeaningfulBlockers, normalizeLogicalPath, parseFrontmatter, parseScenarios, toArchiveReadinessOutput } from '../core/helpers.js'
+import { guardRspInitialized, normalizeLogicalPath } from '../core/filesystem.js'
 import { IssueRelationshipError, parseIssueRelationships } from '../core/issue-relationship.js'
 import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
+import { buildDurableReviewGuidance, collectArchiveReadiness, getDurableReviewCandidateTargets, toArchiveReadinessOutput } from '../core/readiness.js'
 import { inspectFocusTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 
 interface ShowResult {

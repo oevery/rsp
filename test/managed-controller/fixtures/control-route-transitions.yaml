@@ -1,6 +1,7 @@
 id: control-route-transitions
 sources:
   - skills/rsp/SKILL.md
+  - .rsp/specs/skill-control-model.md
   - skills/rsp/references/managed-routing.md
   - skills/rsp-shape/SKILL.md
   - skills/rsp-shape/references/deep-clarification.md
@@ -10,16 +11,16 @@ evidence:
   - Shape always returns ready ownership through Core.
   - Selected Manage returns only at a true boundary.
 required_contract:
-  - '`RouteDisposition` is exactly `specialist`, `direct`, `managed`, `shape`, or `stop`'
-  - one response-only transient `ControlOutcome`
+  - 'Core owns `RouteDisposition`, whose values are exactly'
+  - '`ControlOutcome` is response-only derived coordination data'
   - '`WorkOwner` means the selected shape-ready Change or shallow Group'
   - 'Missing or non-ready ownership uses `RouteDisposition: shape`'
   - canonical `FrontierDisposition` is exactly `out-of-goal`, `owner-decision`, `fog`, `evidence-needed`, or `executable`
-  - '`StopDisposition` is exactly `ask-owner`, `return-to-shape`, `reroute`, `retry-with-evidence`, `environment-blocked`, `verification-blocked`, or `capability-unavailable`'
+  - '`StopDisposition` values are exactly:'
   - returning a ready WorkOwner to Core for fresh route derivation
   - it never resumes Manage directly
   - Return to Core only when owner identity, topology, requested route, behavior, acceptance, public interface, scope, mutation authority, or external-action authority changes
-  - Perform no Manage handoff or WorkerEnvelope
+  - no Manage handoff or WorkerEnvelope
 prohibited_actions:
   - persist ControlOutcome
   - resume Manage directly from Shape

@@ -2,8 +2,9 @@ import { readFile, unlink } from 'node:fs/promises'
 import { basename, dirname, isAbsolute, join, relative, sep } from 'node:path'
 
 import { inspectRspConfig, pc, RSP_DIR } from '../core/config.js'
+import { parseFrontmatter } from '../core/content.js'
 import { DEFAULT_DECISION_RECORDS_PATH, resolveDecisionRecordsPath } from '../core/decisions.js'
-import { normalizeLogicalPath, parseFrontmatter } from '../core/helpers.js'
+import { normalizeLogicalPath } from '../core/filesystem.js'
 import { withRspLock } from '../core/lock.js'
 import { inspectManagedFileTree, writeManagedFile } from '../core/managed-path.js'
 

@@ -1,6 +1,6 @@
 # Five-minute start
 
-RSP 3.1 requires Node.js 22 or later. Use the current stable release for setup and maintenance commands.
+RSP requires Node.js 22 or later. Use the current stable release for setup and maintenance commands.
 
 ## Initialize a project
 
@@ -12,6 +12,7 @@ This creates the `.rsp/` foundation, ensures the RSP entry in `AGENTS.md`, and c
 
 ```bash
 npx -y @oevery/rsp@latest doctor
+npx -y @oevery/rsp@latest status --json
 npx -y @oevery/rsp@latest status
 ```
 

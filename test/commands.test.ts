@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { SPEC_NAME_RE } from '../src/core/helpers.js'
+import { SPEC_NAME_RE } from '../src/core/filesystem.js'
 
 describe('additional spec name validation', () => {
   it('allows simple kebab-case names', () => {

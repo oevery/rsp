@@ -5,9 +5,10 @@ import { basename, join } from 'node:path'
 import { resolveExecutableChange } from '../core/change-group.js'
 import { CHANGES_DIR, FOCUS_DIR, pc } from '../core/config.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
-import { cleanupEmptyParentDirs, collectArchiveReadiness, guardRspInitialized } from '../core/helpers.js'
+import { cleanupEmptyParentDirs, guardRspInitialized } from '../core/filesystem.js'
 import { withRspLock } from '../core/lock.js'
 import { toErrorMessage } from '../core/output.js'
+import { collectArchiveReadiness } from '../core/readiness.js'
 import { resolveArchiveDirectory, resolveFocusMarkerPath, WorkRefError } from '../core/work-ref.js'
 
 /** Archive a change and clear its focus marker after the deterministic completion gate passes. */

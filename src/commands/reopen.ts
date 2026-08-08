@@ -5,7 +5,7 @@ import { dirname } from 'node:path'
 
 import { CHANGES_DIR, FOCUS_DIR, pc } from '../core/config.js'
 import { appendDocumentSectionItem, CHANGE_DOCUMENT_SCHEMA, DocumentSectionCardinalityError, parseRspDocument } from '../core/document-model.js'
-import { cleanupEmptyParentDirs, guardRspInitialized } from '../core/helpers.js'
+import { cleanupEmptyParentDirs, guardRspInitialized } from '../core/filesystem.js'
 import { withRspLock } from '../core/lock.js'
 import { writeManagedFile } from '../core/managed-path.js'
 import { normalizeExecutableWorkRef, resolveFocusMarkerPath, resolveWorkRef, WorkRefError } from '../core/work-ref.js'

@@ -2,7 +2,7 @@ import { readFile, unlink } from 'node:fs/promises'
 import { join } from 'node:path'
 
 import { ARCHIVES_DIR } from '../core/config.js'
-import { parseFrontmatter } from '../core/helpers.js'
+import { parseFrontmatter } from '../core/content.js'
 import { inspectManagedFile } from '../core/managed-path.js'
 
 /** Remove only the legacy generated Archive Index whose metadata proves RSP ownership. */

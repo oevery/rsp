@@ -1,6 +1,7 @@
 id: owner-preflight-routing
 sources:
   - skills/rsp/SKILL.md
+  - .rsp/specs/skill-control-model.md
   - skills/rsp-manage/SKILL.md
   - skills/rsp/references/managed-routing.md
 evidence:
@@ -9,12 +10,12 @@ evidence:
   - Core solely owns initial qualification and selected or declined routing.
   - rsp-manage has no pre-owner Intake.
 required_contract:
-  - Route an explicit report-only review with fixed scope
-  - Route an explicit release-documentation, finalization, publication, or reconciliation operation
-  - Route one explicit isolated material domain, module/seam, or evidence-seeking design question
-  - Return tiny settled work directly only when
-  - Core resolves whether one unambiguous shape-ready Change or shallow Group is the `WorkOwner`
-  - 'Missing or non-ready ownership reports `RouteDisposition: shape`'
+  - Route explicit fixed-scope review to `rsp-review`
+  - release finalization or reconciliation to `rsp-release-docs`
+  - one bounded design question to installed `rsp-design`
+  - 'Return `RouteDisposition: direct` only for one ready owner'
+  - Core resolves one unambiguous shape-ready `WorkOwner` before Manage qualification
+  - 'Missing or non-ready ownership uses `RouteDisposition: shape`'
   - Shape returns the ready WorkOwner to Core
   - Core derives one ownership `ControlOutcome`
   - Manage has no pre-owner Intake

@@ -1,6 +1,6 @@
 import type { ParsedRspDocument } from './document-model.js'
+import { parseFrontmatter } from './content.js'
 import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionBody, GROUP_BRIEF_DOCUMENT_SCHEMA, parseRspDocument } from './document-model.js'
-import { parseFrontmatter } from './helpers.js'
 
 const PLACEHOLDER_SUMMARY = '<…>'
 

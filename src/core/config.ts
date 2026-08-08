@@ -4,9 +4,9 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import pc from 'picocolors'
 import { parseDocument, stringify, visit } from 'yaml'
+import { parseYamlText } from './content.js'
 import { getDecisionRecordsConfigIssue, normalizeDecisionRecordsPath, validateDecisionRecordsPath } from './decisions.js'
 import { CHANGE_DOCUMENT_SCHEMA, getCanonicalSectionHeadings } from './document-model.js'
-import { parseYamlText } from './helpers.js'
 import { inspectManagedFile } from './managed-path.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))

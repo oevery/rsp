@@ -89,6 +89,7 @@ describe('rsp-manage research candidate', () => {
     ].sort())
     expect(cases.find(item => item.id === 'owner-preflight-routing')?.sources).toEqual([
       'skills/rsp/SKILL.md',
+      '.rsp/specs/skill-control-model.md',
       'skills/rsp-manage/SKILL.md',
       'skills/rsp/references/managed-routing.md',
     ])
@@ -594,7 +595,7 @@ describe('rsp-manage product Skill', () => {
     expect(managedRouting).toContain('`rsp-manage` solely owns same-goal revalidation, interruption and resume, review convergence, acceptance, lifecycle closeout, commit eligibility and orchestration')
     expect(managedRouting).toContain('Exact staging, message construction, local commit execution, and post-commit observation remain owned by `rsp-commit`')
     expect(durableReview).toContain('A `manage.closeout` preset applies only when Core selected and qualified Manage for the current continuation')
-    expect(coreSkill).toContain('declined, unavailable, or unselected Manage leaves Core advisory even under `lifecycle` or `local`')
+    expect(coreSkill).toContain('Detailed Manage closeout, local Commit, Workspace, Land, conflict, and recovery rules remain in their owning Skills or conditional references')
     expect(body).toContain('Closeout requires a Core-selected and qualified handoff that remains valid under current evidence')
     expect(body).toContain('For declined, unavailable, unselected, incomplete, or drifted handoffs, every `manage.closeout` preset is dormant')
     expect(body).toContain('Earlier qualification does not carry forward across a new continuation')

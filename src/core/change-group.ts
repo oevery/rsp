@@ -4,8 +4,9 @@ import { readFile } from 'node:fs/promises'
 import { dirname, join, relative } from 'node:path'
 
 import { ARCHIVES_DIR } from './config.js'
+import { countCheckboxes, hasMeaningfulBlockerBody, parseFrontmatter } from './content.js'
 import { CHANGE_DOCUMENT_SCHEMA, getCanonicalSectionHeadings, getDocumentSectionBody, getDocumentTitle, GROUP_BRIEF_DOCUMENT_SCHEMA, parseRspDocument, renderDocumentSectionHeading, renderDocumentTitle } from './document-model.js'
-import { countCheckboxes, hasMeaningfulBlockerBody, normalizeLogicalPath, parseFrontmatter } from './helpers.js'
+import { normalizeLogicalPath } from './filesystem.js'
 import { GROUP_BRIEF_FILENAME, inspectArchiveTree, inspectFocusTree, inspectWorkTree, isCanonicalExecutableWorkRef, resolveWorkRef, WorkRefError } from './work-ref.js'
 import { extractGroupSummary } from './work-summary.js'
 

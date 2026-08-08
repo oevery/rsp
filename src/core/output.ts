@@ -1,5 +1,5 @@
 import type { RuntimeDiagnostic } from '../types.js'
-import { pc } from './config.js'
+import pc from 'picocolors'
 
 export function toErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error)

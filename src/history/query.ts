@@ -2,8 +2,8 @@ import type { HistoryDetailOutput, HistoryEvidenceListOutput, HistoryRecordOutpu
 import type { ArchivedGroupBriefRecord, ArchiveHistoryInspection, ArchiveHistoryListResult, ArchiveHistoryQuery, ArchiveHistoryRecord } from './model.js'
 import { readFile } from 'node:fs/promises'
 
+import { countCheckboxes, parseScenarios } from '../core/content.js'
 import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionBody, parseRspDocument } from '../core/document-model.js'
-import { countCheckboxes, parseScenarios } from '../core/helpers.js'
 import { normalizeWorkRefSegment } from '../core/work-ref.js'
 import { boundText } from './inspect.js'
 import { ArchiveHistoryError, HISTORY_DEFAULT_LIMIT, HISTORY_MAX_EVIDENCE_ITEMS, HISTORY_MAX_LIMIT } from './model.js'

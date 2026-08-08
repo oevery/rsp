@@ -39,6 +39,7 @@ const EXPECTED_CORE_REFERENCES = [
   'managed-routing.md',
   'release-operations.md',
   'reopen-recovery.md',
+  'response-language.md',
   'setup-repair.md',
 ]
 const EXPECTED_RELEASE_REFERENCES = [

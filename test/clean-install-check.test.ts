@@ -67,6 +67,7 @@ describe('clean install package check', () => {
         'managed-routing.md',
         'release-operations.md',
         'reopen-recovery.md',
+        'response-language.md',
         'setup-repair.md',
       ])
       expect(report.prepareReleaseNotesReferences).toEqual([
@@ -88,6 +89,7 @@ describe('clean install package check', () => {
         'skills/rsp/references/managed-routing.md',
         'skills/rsp/references/release-operations.md',
         'skills/rsp/references/reopen-recovery.md',
+        'skills/rsp/references/response-language.md',
         'skills/rsp/references/setup-repair.md',
         'skills/rsp-release-docs/references/evidence-and-surfaces.md',
         'skills/rsp-release-docs/references/publication-lifecycle.md',

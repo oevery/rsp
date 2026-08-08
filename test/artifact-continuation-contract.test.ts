@@ -146,12 +146,14 @@ describe('rsp artifact routing and continuation contract', () => {
     })
 
     const core = readFileSync(join(root, 'skills', 'rsp', 'SKILL.md'), 'utf8')
+    const language = readFileSync(join(root, 'skills', 'rsp', 'references', 'response-language.md'), 'utf8')
     const fallback = readFileSync(join(root, 'rules', 'rsp-rules.md'), 'utf8')
-    expect(core).toContain('Keep response language user/session-owned and durable project language repository-owned')
-    expect(core).toContain('project `.rsp/config.yaml` never selects it')
-    expect(core).toContain('configured effective artifact language')
-    expect(core).toContain('configured effective commit language')
-    expect(core).toContain('Configuration changes never rewrite existing artifacts')
+    expect(core).toContain('[response language](references/response-language.md)')
+    expect(language).toContain('Response prose is user/session-owned')
+    expect(language).toContain('project `.rsp/config.yaml` never selects response language')
+    expect(language).toContain('configured effective artifact language')
+    expect(language).toContain('configured effective commit language')
+    expect(language).toContain('configuration changes never rewrite them')
     expect(core).toMatch(/localized continuation with these semantic fields in order/)
     expect(core).toMatch(/Localize headings and labels|localized continuation/)
     expect(core).toMatch(/Preserve technical values/)
@@ -170,20 +172,14 @@ describe('rsp artifact routing and continuation contract', () => {
   })
 
   it('localizes observable control narration while preserving canonical values as secondary tokens', () => {
-    const skillSystem = readFileSync(join(root, '.rsp', 'specs', 'skill-system.md'), 'utf8')
     const core = readFileSync(join(root, 'skills', 'rsp', 'SKILL.md'), 'utf8')
+    const language = readFileSync(join(root, 'skills', 'rsp', 'references', 'response-language.md'), 'utf8')
     const fallback = readFileSync(join(root, 'rules', 'rsp-rules.md'), 'utf8')
 
-    for (const [source, body] of [
-      ['.rsp/specs/skill-system.md', skillSystem],
-      ['skills/rsp/SKILL.md', core],
-    ] as const) {
-      expect(body, source).toContain('Every user-visible RSP progress update, phase or stage description, control result, worker receipt, stop reason, and handoff')
-      expect(body, source).toMatch(/natural-language narration selected by (?:that|the response-language) precedence/)
-      expect(body, source).toMatch(/canonical technical value remains unchanged in parentheses or code formatting|retain a canonical technical value unchanged in parentheses or code formatting/)
-      expect(body, source).toMatch(/must not stand alone as the human-facing label|never stands alone as the human-facing label/)
-      expect(body, source).toContain('does not change persisted artifact language or host-owned hidden reasoning summaries')
-    }
+    expect(core).toContain('[response language](references/response-language.md)')
+    expect(language).toContain('Use natural-language narration for progress, phases, control results, receipts, stop reasons, and handoffs')
+    expect(language).toContain('preserve it unchanged only as a secondary parenthesized or code-formatted value')
+    expect(language).toContain('Durable artifact prose is repository-owned')
     expect(fallback).toContain('Use the response language for user-visible narration')
     expect(fallback).toContain('preserving exact WorkRefs, paths, commands, headings, and machine values')
 

@@ -5,8 +5,9 @@ import { resolveExecutableChange } from '../core/change-group.js'
 import { inspectRspConfig, pc } from '../core/config.js'
 import { resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
-import { buildDurableReviewGuidance, collectArchiveReadiness, getDurableReviewCandidateTargets, guardRspInitialized, normalizeLogicalPath, toArchiveReadinessOutput } from '../core/helpers.js'
+import { guardRspInitialized, normalizeLogicalPath } from '../core/filesystem.js'
 import { emitJson, toErrorMessage } from '../core/output.js'
+import { buildDurableReviewGuidance, collectArchiveReadiness, getDurableReviewCandidateTargets, toArchiveReadinessOutput } from '../core/readiness.js'
 import { WorkRefError } from '../core/work-ref.js'
 
 interface ReadyResult {

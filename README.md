@@ -21,13 +21,14 @@ intent → shape → design when needed → diagnose | TDD | implement
 
 ## Five-minute start
 
-RSP 3.1 requires Node.js 22 or later. Use the current stable release:
+RSP requires Node.js 22 or later. Use the current stable release:
 
 ```bash
 npx -y @oevery/rsp@latest init --with-project-setup
 # fill .rsp/changes/project-setup.md
 # fill .rsp/specs/design.md
 npx -y @oevery/rsp@latest doctor
+npx -y @oevery/rsp@latest status --json
 ```
 
 Then create and focus one tracked change:

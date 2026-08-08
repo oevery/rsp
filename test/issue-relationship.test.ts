@@ -6,7 +6,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterAll, describe, expect, it } from 'vitest'
-import { generateChangeContent, parseFrontmatter } from '../src/core/helpers.js'
+import { generateChangeContent } from '../src/core/artifacts.js'
+import { parseFrontmatter } from '../src/core/content.js'
 import { parseIssueRelationships } from '../src/core/issue-relationship.js'
 
 const repoRoot = fileURLToPath(new URL('..', import.meta.url))
