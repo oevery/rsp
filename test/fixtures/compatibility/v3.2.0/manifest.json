@@ -1,0 +1,32 @@
+{
+  "package": "@oevery/rsp@3.2.0",
+  "tag": "v3.2.0",
+  "tagCommit": "3205aba11ac665dcf791b2339f19d53789c1fe21",
+  "tagTree": "87e9e9389364d7267cf90c2d5909e6aab9180fc9",
+  "generatedOn": "2026-08-09",
+  "generation": "git archive v3.2.0; build the tagged sources with the repository toolchain; run bin/rsp.mjs init in a directory whose package name is rsp-v3-2-published-fixture",
+  "sourceBlobs": {
+    "src/commands/specs-index.ts": "6e39c0c4ae3a2df954a779e6b5a5c335bbec9d9b",
+    "test/integration.test.ts": "a764e809ae041efe77d0fadbf6a050e3a932dad1",
+    "rules/rsp-rules.md": "ee176dcf839efbbc48967e0eda629fa1d8192a38"
+  },
+  "directories": [
+    ".rsp",
+    ".rsp/archives",
+    ".rsp/changes",
+    ".rsp/focus.d",
+    ".rsp/specs",
+    ".rsp/specs/decisions"
+  ],
+  "sha256": {
+    ".rsp/.gitignore": "69425b3e7665cd8cd92cc39aecfaf215afedf7927dd391397a58e5f997f1734a",
+    ".rsp/changes/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".rsp/focus.d/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".rsp/rsp-rules.md": "2373338a45d13e100cb6fab0dd8d405c4e42581b29ca76a0e823e0234d74a2d4",
+    ".rsp/specs/00-index.md": "f5a5631ff68ddb40cc44a8e2275580a3ff60a0382212d298183b8149544403f3",
+    ".rsp/specs/decisions/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".rsp/specs/design.md": "a12d2f4b533ca1b4863e3a2f356f045f5e624f482726cc7aa388e7ed6f9e94f2",
+    ".rsp/config.yaml": "d63c31593e1e57a27c175cb25a1a85db474a3f3c6cc860a3eab59d8d290e50a9",
+    "AGENTS.md": "faf29e0129563aa01998d19ef065317df81c8b50399d10c448dbb7273ae082ef"
+  }
+}

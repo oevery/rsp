@@ -338,7 +338,7 @@ describe('documentation command examples', () => {
 
     const custom = metadata.metadata as Record<string, unknown>
     expect(custom.author).toBe('oevery')
-    expect(custom.version).toBe('2026.08.06.1')
+    expect(custom.version).toBe('2026.08.09.1')
     expect(Object.values(custom).every(value => typeof value === 'string')).toBe(true)
     expect(custom.version).toMatch(/^\d{4}\.\d{2}\.\d{2}(?:\.\d+)?$/)
   })
@@ -365,7 +365,7 @@ describe('documentation command examples', () => {
     expect(chineseGuide).toContain('建议使用 `npx -y @oevery/rsp create <name>` 创建需要跟踪的工作')
   })
 
-  it('marks the canonical-only protocol release as a breaking version', () => {
+  it('keeps the current published identity and historical breaking release record exact', () => {
     const root = fileURLToPath(new URL('..', import.meta.url))
     const packageJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf-8')) as { version: string }
     const changelog = readFileSync(join(root, 'CHANGELOG.md'), 'utf-8')
@@ -405,7 +405,7 @@ describe('documentation command examples', () => {
     expect(skill).toMatch(/Do not use it for unrelated coding or create a Change for a simple session task/)
     expect(skill).toContain('metadata:')
     expect(skill).toContain('author: oevery')
-    expect(skill).toContain('version: "2026.08.06.1"')
+    expect(skill).toContain('version: "2026.08.09.1"')
     expect(contract).toContain('Executable WorkRefs are `<change>` or one direct `<group>/<change>` child.')
     expect(contract).toContain('`<group>/brief`, stored as `<group>/00-brief.md`, is not executable or focusable.')
     expect(contract).toContain('`plan.nodes`, `ready`, `edges`, `blocked`, and `waves`')
@@ -472,7 +472,8 @@ describe('documentation command examples', () => {
     expect(zhGettingStarted).toContain('简单的当前会话任务默认不应创建 RSP Change')
     expect(projectDesign).toContain('[CLI Contracts](./cli-contracts.md)')
     expect(projectDesign).toContain('[Skill System](./skill-system.md)')
-    expect(projectSpecs).toContain('`rsp add spec` rewrites only changed indexes in the affected directory chain')
+    expect(projectSpecs).toContain('`rsp update` and therefore `rsp doctor --fix` remove only reserved root `INDEX.md` or any `00-index.md`')
+    expect(projectSpecs).toContain('direct `rsp specs` tree, detail, and search remain the navigation authority after removal')
     expect(projectSpecs).toContain('`rsp doctor --fix` reports only real filesystem mutations')
     expect(projectSpecs).toContain('Tracked Changes of every size use the same kind-aware scaffold')
     expect(projectSpecs).toContain('`.rsp/rsp-rules.md` is the minimal fallback')

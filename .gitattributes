@@ -1,1 +1,2 @@
 research/evaluations/rsp-native-design-composition/**/real-runs/** -whitespace
+test/fixtures/compatibility/** -whitespace

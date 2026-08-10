@@ -18,6 +18,7 @@ import { showReady } from './commands/ready.js'
 import { reopenChange } from './commands/reopen.js'
 import { showChange } from './commands/show.js'
 import { inspectPackagedSkillInventory, installPackagedSkills, printPackagedSkillInventory, printSkillInstallResult } from './commands/skills.js'
+import { showSpecs } from './commands/specs.js'
 import { showStatus } from './commands/status.js'
 import { updateProject } from './commands/update.js'
 import { disposeWorkspaceCommand, inspectWorkspaceCommand, prepareWorkspaceCommand, registerWorkspaceActivityCommand, showWorkspaceCommand, stopWorkspaceActivityCommand } from './commands/workspace.js'
@@ -26,7 +27,7 @@ import { emitJson } from './core/output.js'
 import { toStatusJsonError } from './status/v3-json.js'
 import { isInteractiveTerminal, shouldAutoLaunchUi, shouldLaunchSkillsUi, validateUiArgs } from './tui/route.js'
 
-const COMPACT_JSON_COMMANDS = new Set(['status', 'show', 'ready', 'check', 'doctor', 'history'])
+const COMPACT_JSON_COMMANDS = new Set(['status', 'show', 'ready', 'check', 'doctor', 'history', 'specs'])
 
 function exitOnWorkspaceCommandFailure(result: unknown): void {
   if (typeof result === 'object' && result !== null && 'ok' in result && result.ok === false)
@@ -46,7 +47,7 @@ function validateCompactInvocation(rawArgs: string[]): void {
 
 function validateRemovedCreateOptions(rawArgs: string[]): void {
   if (rawArgs[0] === 'create' && rawArgs.some(arg => arg === '--lite' || arg.startsWith('--lite=')))
-    throw new Error('create option "--lite" was removed; use the standard kind-aware Change template')
+    throw new Error('create option "--lite" was removed in RSP 4.0; rerun without "--lite" to use the standard kind-aware Change template')
 }
 
 const initCommand = defineCommand({
@@ -181,7 +182,7 @@ const groupCommand = defineCommand({
 const addSpecCommand = defineCommand({
   meta: {
     name: 'spec',
-    description: 'Create .rsp/specs/<name>.md and refresh local Specs indexes',
+    description: 'Create .rsp/specs/<name>.md for direct Specs queries',
   },
   args: {
     name: {
@@ -202,6 +203,150 @@ const addCommand = defineCommand({
   },
   subCommands: {
     spec: addSpecCommand,
+  },
+})
+
+const specsCommand = defineCommand({
+  meta: {
+    name: 'specs',
+    description: 'Inspect current Specs and Decision Records or run bounded literal search',
+  },
+  args: {
+    path: {
+      type: 'positional',
+      description: 'Optional exact project-relative document path from rsp specs',
+      required: false,
+    },
+    search: {
+      type: 'string',
+      description: 'Case-insensitive literal search over current Specs and Decision Records',
+    },
+    limit: {
+      type: 'string',
+      description: 'Maximum search matches from 1 through 100 (default: 20)',
+    },
+    excerpt: {
+      type: 'string',
+      description: 'Search excerpt bound from 40 through 1000 code points (default: 240)',
+    },
+    json: {
+      type: 'boolean',
+      description: 'Print machine-readable JSON output',
+      default: false,
+    },
+    compact: {
+      type: 'boolean',
+      description: 'Print JSON without indentation (requires --json)',
+      default: false,
+    },
+  },
+  async run({ args }: { args: { path?: string, search?: string, limit?: string, excerpt?: string, json: boolean, compact: boolean, _?: string[] } }) {
+    const result = await showSpecs({
+      path: args.path,
+      search: args.search,
+      limit: args.limit,
+      excerpt: args.excerpt,
+      positionalCount: args._?.length ?? (args.path ? 1 : 0),
+    }, {
+      json: Boolean(args.json),
+      compact: Boolean(args.compact),
+    })
+    if (!result.ok)
+      process.exitCode = 1
+  },
+})
+
+const brokerCommand = defineCommand({
+  meta: {
+    name: 'broker',
+    description: 'Control the optional user-level local Broker',
+  },
+  subCommands: {
+    start: defineCommand({
+      meta: {
+        name: 'start',
+        description: 'Start or reuse one compatible user-level Broker',
+      },
+      args: {
+        json: {
+          type: 'boolean',
+          description: 'Print machine-readable JSON output',
+          default: false,
+        },
+      },
+      async run({ args }: { args: { json: boolean } }) {
+        const { startBrokerCommand } = await import('./commands/broker.js')
+        const result = await startBrokerCommand({ json: Boolean(args.json) })
+        if (!result.ok)
+          process.exitCode = 1
+      },
+    }),
+    status: defineCommand({
+      meta: {
+        name: 'status',
+        description: 'Inspect Broker discovery, health, compatibility, and loaded-session count without starting it',
+      },
+      args: {
+        json: {
+          type: 'boolean',
+          description: 'Print machine-readable JSON output',
+          default: false,
+        },
+      },
+      async run({ args }: { args: { json: boolean } }) {
+        const { statusBrokerCommand } = await import('./commands/broker.js')
+        const result = await statusBrokerCommand({ json: Boolean(args.json) })
+        if (!result.ok)
+          process.exitCode = 1
+      },
+    }),
+    stop: defineCommand({
+      meta: {
+        name: 'stop',
+        description: 'Stop the healthy compatible Broker through its owned loopback endpoint',
+      },
+      args: {
+        json: {
+          type: 'boolean',
+          description: 'Print machine-readable JSON output',
+          default: false,
+        },
+      },
+      async run({ args }: { args: { json: boolean } }) {
+        const { stopBrokerCommand } = await import('./commands/broker.js')
+        const result = await stopBrokerCommand({ json: Boolean(args.json) })
+        if (!result.ok)
+          process.exitCode = 1
+      },
+    }),
+  },
+})
+
+const webCommand = defineCommand({
+  meta: {
+    name: 'web',
+    description: 'Open the local read-only Web Observatory for the current checkout',
+  },
+  args: {
+    'json': {
+      type: 'boolean',
+      description: 'Print a safe non-interactive registration result without opening a browser or exposing a bootstrap',
+      default: false,
+    },
+    'print-url': {
+      type: 'boolean',
+      description: 'Print one short-lived bootstrap URL to an interactive terminal instead of opening a browser',
+      default: false,
+    },
+  },
+  async run({ args }: { args: { 'json': boolean, 'print-url': boolean } }) {
+    const { runWebCommand } = await import('./commands/web.js')
+    const result = await runWebCommand({
+      json: Boolean(args.json),
+      printUrl: Boolean(args['print-url']),
+    })
+    if (!result.ok)
+      process.exitCode = 1
   },
 })
 
@@ -958,6 +1103,9 @@ export async function runCli(rawArgs = process.argv.slice(2)) {
     subCommands: {
       init: initCommand,
       add: addCommand,
+      specs: specsCommand,
+      broker: brokerCommand,
+      web: webCommand,
       workspace: workspaceCommand,
       land: landCommand,
       commit: commitCommand,

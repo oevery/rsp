@@ -30,10 +30,11 @@
     "bin/",
     "dist/",
     "rules/",
-    "skills/"
+    "skills/",
+    "web/"
   ],
   "engines": {
-    "node": ">=22"
+    "node": ">=22.13.0"
   },
   "scripts": {
     "prepare": "pnpm run build",

@@ -1,13 +1,12 @@
-import { mkdir, unlink, writeFile } from 'node:fs/promises'
+import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
 import { generateDesignContent, generateSpecContent } from '../core/artifacts.js'
 import { inspectRspConfig, pc, RSP_DIR } from '../core/config.js'
-import { cleanupEmptyParentDirs, detectProjectName, guardRspInitialized, isValidSpecName } from '../core/filesystem.js'
+import { detectProjectName, guardRspInitialized, isValidSpecName } from '../core/filesystem.js'
 import { withRspLock } from '../core/lock.js'
 import { inspectManagedFileTree, resolveManagedDirectoryChain } from '../core/managed-path.js'
 import { toErrorMessage } from '../core/output.js'
-import { buildSpecsIndex } from './specs-index.js'
 
 export async function addSpec(name: string, projectName = 'project') {
   if (!name || !isValidSpecName(name)) {
@@ -19,7 +18,7 @@ export async function addSpec(name: string, projectName = 'project') {
     process.exit(1)
   }
   if (['index', '00-index'].includes(name.split('/').at(-1) || '')) {
-    console.error(`  ${pc.red('Error:')} spec name "index" is reserved for generated local navigation`)
+    console.error(`  ${pc.red('Error:')} spec name "index" is reserved for Specs migration compatibility`)
     process.exit(1)
   }
   guardRspInitialized()
@@ -48,22 +47,10 @@ export async function addSpec(name: string, projectName = 'project') {
     await mkdir(parent, { recursive: true })
     const resolvedProjectName = projectName === 'project' ? await detectProjectName() : projectName
     const content = name === 'design' ? generateDesignContent(resolvedProjectName) : generateSpecContent(name)
-    let created = false
     try {
       await writeFile(path, content, { flag: 'wx' })
-      created = true
-      await buildSpecsIndex({ acquireLock: false, affectedDirectory: parent })
     }
     catch (error) {
-      if (created) {
-        try {
-          await unlink(path)
-          await cleanupEmptyParentDirs(path, specsDir)
-        }
-        catch {
-          // Preserve the original failure; doctor will report any residual path.
-        }
-      }
       if ((error as NodeJS.ErrnoException).code === 'EEXIST')
         throw new Error(`spec file already exists: .rsp/specs/${name}.md`)
       throw error

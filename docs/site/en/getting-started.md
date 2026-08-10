@@ -1,6 +1,6 @@
 # Five-minute start
 
-RSP requires Node.js 22 or later. Use the current stable release for setup and maintenance commands.
+RSP requires Node.js 22 (`>=22.13.0`). Use the current stable release for setup and maintenance commands.
 
 ## Initialize a project
 

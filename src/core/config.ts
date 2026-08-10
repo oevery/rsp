@@ -1,6 +1,6 @@
 import type { ChangeKind, EffectiveLanguagePolicy, ManageActivation, ManageCloseout, ManagePolicy, ProjectLanguageConfig, RspConfig, WorkspaceActivation, WorkspacePolicy } from '../types.js'
 import { readFile } from 'node:fs/promises'
-import { dirname, join } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import pc from 'picocolors'
 import { parseDocument, stringify, visit } from 'yaml'
@@ -255,12 +255,13 @@ export async function loadRspConfig(): Promise<RspConfig> {
 }
 
 /** Load typed config plus semantic issues needed by routing commands. */
-export async function inspectRspConfig(): Promise<RspConfigInspection> {
-  const cwd = process.cwd()
+export async function inspectRspConfig(cwd = process.cwd()): Promise<RspConfigInspection> {
+  cwd = resolve(cwd)
   if (_configCache?.cwd === cwd)
     return _configCache.inspection
 
-  const configFile = inspectManagedFile(CONFIG_PATH, 'config file', { allowMissing: true })
+  const configPath = join(cwd, CONFIG_PATH)
+  const configFile = inspectManagedFile(configPath, 'config file', { allowMissing: true })
   if (configFile.issue)
     throw configFile.issue
   if (!configFile.exists) {
@@ -269,7 +270,7 @@ export async function inspectRspConfig(): Promise<RspConfigInspection> {
     return inspection
   }
 
-  const raw = await readFile(CONFIG_PATH, 'utf-8')
+  const raw = await readFile(configPath, 'utf-8')
   const parsed = parseYamlText(raw)
   const issues = validateRspConfig(parsed)
   const decisions = parsed.decisions && typeof parsed.decisions === 'object' && !Array.isArray(parsed.decisions)

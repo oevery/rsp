@@ -19,6 +19,7 @@
 - The detail presenter shares physical rows across evidence headings and content after dynamic chrome is deducted. It prefers whitespace word boundaries with grapheme/display-cell fallback, bounds complete rows and identity fields by display-cell width, and marks source or viewport omission as truncated on the last allocated content row.
 - `src/tui/` owns dashboard state and shared terminal/display primitives; `src/skills-tui/` owns the Skill selector and its typed labels. Each dynamically loads only after its interactive route succeeds.
 - The TUI consumes status and presentation-neutral archive-history query/detail seams as sibling presenters. Status, history, and core do not depend on TUI modules.
+- Any TUI Specs presentation consumes the shared presentation-neutral current-file tree/detail/search projection; it does not parse generated indexes, duplicate query semantics, or make browser/TUI state authoritative.
 - React, Ink, and Yoga remain outside ordinary command evaluation.
 - The terminal host requires dual TTYs, enters and leaves alternate-screen mode safely, restores cursor/input state on every exit path, handles resize and signals, and preserves non-TUI stdout/stderr behavior.
 

@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process'
 import { chmodSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { delimiter, join } from 'node:path'
+import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
@@ -24,6 +25,29 @@ const expectedSkills = [
   'rsp-verify',
   'rsp-workspace',
 ]
+
+function processExists(pid: number): boolean {
+  try {
+    process.kill(pid, 0)
+    return true
+  }
+  catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ESRCH')
+      return false
+    throw error
+  }
+}
+
+function waitForProcessExit(pid: number, timeoutMs = 2000): boolean {
+  const deadline = Date.now() + timeoutMs
+  const sleeper = new Int32Array(new SharedArrayBuffer(4))
+  while (Date.now() < deadline) {
+    if (!processExists(pid))
+      return true
+    Atomics.wait(sleeper, 0, 0, 25)
+  }
+  return !processExists(pid)
+}
 
 describe('clean install package check', () => {
   it('packs, installs, validates, reports, and cleans the exact package', () => {
@@ -48,6 +72,35 @@ describe('clean install package check', () => {
         optionalSkillInstall: true,
         optionalSkillInstallIdempotent: true,
         statusJson: true,
+        specsJson: true,
+        runtimeStore: {
+          schema: '1.3',
+          eventCount: 1,
+          manageCapability: 'rsp.manage-runtime@1.0',
+          manageRunId: 'package-manage-run',
+          manageSourceSequence: 1,
+          disposal: 'absent',
+          sqliteDisabled: 'runtime_sqlite_unavailable',
+          ordinaryCliWithoutSqlite: true,
+        },
+        brokerLifecycle: {
+          before: 'absent',
+          start: 'running',
+          reused: false,
+          status: 'running',
+          stop: true,
+          processExited: true,
+          after: 'absent',
+        },
+        webObservatory: {
+          commandSafe: true,
+          page: 200,
+          assets: true,
+          projection: '1.1',
+          managed: true,
+          projectIsolation: true,
+          securityHeaders: true,
+        },
         nonTtyUi: { exitCode: 1, stderr: 'Error: rsp ui requires an interactive terminal; use rsp status or rsp status --json instead' },
         invalidLocale: { exitCode: 1, stderr: 'Error: --lang must be auto, en, or zh-CN' },
       })
@@ -82,6 +135,13 @@ describe('clean install package check', () => {
       expect(report.inventory.files).toContain('skills/rsp-release-docs/SKILL.md')
       expect(report.inventory.files).toContain('skills/rsp-structural-audit/SKILL.md')
       expect(report.inventory.files).toContain('skills/rsp-structural-audit/references/structural-lenses.md')
+      expect(report.inventory.files).toContain('dist/broker-daemon.mjs')
+      expect(report.inventory.files).toContain('dist/manage-runtime.mjs')
+      expect(report.inventory.files).toContain('dist/runtime-store.mjs')
+      expect(report.inventory.files).toContain('dist/web-projector.mjs')
+      expect(report.inventory.files).toContain('web/static/index.html')
+      expect(report.inventory.files).toContain('web/static/app.css')
+      expect(report.inventory.files).toContain('web/static/app.js')
       for (const path of [
         'skills/rsp/references/conflict-handling.md',
         'skills/rsp/references/durable-review.md',
@@ -96,6 +156,64 @@ describe('clean install package check', () => {
       ])
         expect(report.inventory.files).toContain(path)
       expect(report.inventory.files.some((path: string) => /^(?:research|\.rsp|\.agents|\.codex|scripts|\.cache)(?:\/|$)/u.test(path))).toBe(false)
+      expect(readdirSync(temporaryRoot)).toEqual([])
+    }
+    finally {
+      rmSync(temporaryRoot, { force: true, recursive: true })
+    }
+  }, 120_000)
+
+  it('cleans a started Broker when start output validation fails', () => {
+    const temporaryRoot = mkdtempSync(join(tmpdir(), 'rsp-package-check-broker-failure-'))
+    const packageTemporaryRoot = join(temporaryRoot, 'package-workspaces')
+    const pidPath = join(temporaryRoot, 'broker.pid')
+    mkdirSync(packageTemporaryRoot)
+    let brokerPid: number | undefined
+    try {
+      const result = spawnSync(process.execPath, [join(root, 'scripts', 'clean-install-check.mjs'), '--json'], {
+        cwd: root,
+        encoding: 'utf8',
+        env: {
+          ...process.env,
+          RSP_PACKAGE_CHECK_TEST_BROKER_IDLE_MS: '60000',
+          RSP_PACKAGE_CHECK_TEST_BROKER_PID_FILE: pidPath,
+          RSP_PACKAGE_CHECK_TEST_BROKER_START_OUTPUT: 'invalid-json',
+          RSP_PACKAGE_CHECK_TMP_ROOT: packageTemporaryRoot,
+        },
+      })
+
+      expect(result.status).toBe(1)
+      expect(result.stderr).toContain('Clean install invalid: Installed rsp broker start did not return valid JSON')
+      brokerPid = Number.parseInt(readFileSync(pidPath, 'utf8').trim(), 10)
+      expect(Number.isSafeInteger(brokerPid)).toBe(true)
+      expect(waitForProcessExit(brokerPid)).toBe(true)
+      expect(readdirSync(packageTemporaryRoot)).toEqual([])
+    }
+    finally {
+      if (brokerPid && processExists(brokerPid)) {
+        process.kill(brokerPid, 'SIGTERM')
+        waitForProcessExit(brokerPid)
+      }
+      rmSync(temporaryRoot, { force: true, recursive: true })
+    }
+  }, 120_000)
+
+  it('rejects an undeclared file even when it is under an allowed package root', () => {
+    const temporaryRoot = mkdtempSync(join(tmpdir(), 'rsp-package-check-inventory-'))
+    try {
+      const result = spawnSync(process.execPath, [join(root, 'scripts', 'clean-install-check.mjs'), '--json'], {
+        cwd: root,
+        encoding: 'utf8',
+        env: {
+          ...process.env,
+          RSP_PACKAGE_CHECK_TEST_INVENTORY_EXTRA: 'web/static/unexpected.tmp',
+          RSP_PACKAGE_CHECK_TMP_ROOT: temporaryRoot,
+        },
+      })
+
+      expect(result.status).toBe(1)
+      expect(result.stderr).toContain('Package inventory does not match the declared release inventory')
+      expect(result.stderr).toContain('unexpected: web/static/unexpected.tmp')
       expect(readdirSync(temporaryRoot)).toEqual([])
     }
     finally {

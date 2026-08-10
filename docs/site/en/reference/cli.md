@@ -19,16 +19,57 @@ rsp skills install [name] [--dry-run] [--force]
 
 `rsp doctor --fix` reports only real filesystem mutations; a healthy project returns `fixed: []` and explains that no safe repair was needed.
 
+For the generated-index compatibility migration, `rsp update` removes only root `.rsp/specs/INDEX.md` or any `.rsp/specs/**/00-index.md` whose metadata identifies an RSP-generated Specs index and whose `source_dir` exactly matches the owning directory. It preflights all candidates before mutation and rolls quarantined files back if post-migration direct Specs inspection fails. Owner-controlled, unreadable, or replaced reserved content stops the update without overwrite or deletion. Fresh initialization and `rsp add spec` never create generated indexes.
+
+`rsp doctor` remains read-only unless `--fix` is explicit. It reports recognized indexes that still require `rsp update`, plus absent, healthy, stale, invalid, unhealthy, or incompatible Broker discovery; absent, healthy, migration-required, incompatible, incomplete, or corrupt checkout runtime state; and bounded fresh or stale disposable context packets. It does not start or register with Broker, create an absent cache, delete a runtime database, or block Markdown recovery because context is stale.
+
 ## Specs and work creation
 
 ```text
-rsp add spec <name>             Create a Spec and rebuild affected generated indexes
+rsp specs [path] [--json [--compact]]
+                                Derive the current tree or inspect one exact returned path
+rsp specs --search <literal> [--limit 1..100] [--excerpt 40..1000]
+                                Search current Specs and Decision Records with bounded excerpts
+rsp add spec <name>             Create a Spec for direct current-file queries
 rsp create <name> [summary]     Create a kind-aware Change
 rsp group create <name> [goal] Create a non-focused Group Brief
 rsp group close <name>         Archive a completed Group Brief
 rsp group reopen <name> --reason <text>
                                 Restore one retained Group Brief as open work
 ```
+
+`rsp specs` reads current regular Markdown directly without a daemon, database, or generated navigation file. Tree, detail, and search JSON identify the checkout, exact project-relative source paths, document kind, limits, and diagnostics. Search is case-insensitive literal matching, defaults to 20 results and 240-code-point excerpts, and fails closed on invalid Specs trees or owner-controlled reserved index content. After migration this command is the supported navigation replacement for generated indexes. Re-read the returned source before a material decision or mutation.
+
+## Optional local Broker
+
+```text
+rsp broker status [--json]     Inspect discovery and compatibility without starting a service
+rsp broker start [--json]      Start or reuse one compatible user-level Broker
+rsp broker stop [--json]       Cooperatively stop the compatible Broker or clean stale metadata
+rsp web [--json] [--print-url] Open the read-only Observatory for the current checkout
+```
+
+The Broker is optional operational transport for later runtime and Web capabilities. Ordinary `status`, `check`, `show`, `ready`, `specs`, lifecycle, Git, and repair commands remain one-shot: they neither require the Broker nor create its cache. `broker status` also stays cache-free when no Broker exists and reports absence successfully.
+
+Repository migration and runtime-cache disposal are separate. Update and doctor do not remove runtime databases or sidecars. If disposal is explicitly authorized, close the exact Broker/session/store owner, then import `resolveRuntimeDisposalTarget()` and `disposeRuntimeDatabase()` from `@oevery/rsp/dist/runtime-store.mjs`; derive the current checkout's exact cache/projects/namespace target and pass that complete target back to disposal. Never hand-delete runtime files, delete the whole Broker cache root, guess a project identity, copy a database between checkouts, or signal a recorded PID manually.
+
+Concurrent starts serialize through one complete-record user-level lock and return the same healthy instance and endpoint. A one-time startup claim transfers atomically from the launching client to exactly one daemon; a delayed loser exits instead of replacing discovery. Package versions may reuse the process when managed-observability-capable Broker protocol `1.2` and the required runtime schema `1.1` are compatible; an older required minor is rejected while a compatible newer minor may be reused. An incompatible client never starts a hidden side-by-side service; it returns the exact action for stopping the existing Broker with a compatible package before retrying the intended version.
+
+The service binds only exact `http://127.0.0.1:<port>`, checks loopback peer, `Host`, optional browser `Origin`, and bearer tokens, and never prints control or project tokens in CLI output. Canonical Git checkout path plus filesystem identity keeps repositories and separate worktrees in different project sessions, tokens, and namespaces; concurrent registration of one checkout returns its one canonical loaded token. JSON responses are checked before headers against the 64 KiB limit, and status preserves the exact session count while bounding its optional session list. Inactive sessions unload after five minutes by default without deleting repository files or making runtime state authoritative.
+
+`rsp web` is the explicit operation that may start the Broker and register the current checkout. It opens a URL with a one-minute, one-use bootstrap in the URL fragment; the initial document and bundled assets never receive that fragment, the browser removes it before API access, and the exact Broker origin exchanges it for a separate in-memory Web bearer. Normal output and `--json` show only the credential-free project URL. Non-interactive execution does not mint a bootstrap. Use `--print-url` only in a human-controlled interactive terminal when browser opening is unavailable; that output is an expiring credential and should not be redirected or copied into logs.
+
+The Observatory is English-only for presentation labels and provides compact responsive Overview, Specs, History, Runs, and Attention views. Overview derives current work, goal, state, blockers, diagnostics, and next action on the server. Specs and History reuse the same bounded current-file query/detail projections as the CLI. Runs and Attention consume only non-authoritative Manage-owned projections and remain explicitly unavailable when compatible runtime state is absent. The browser never parses Markdown, stores no credential in cookies or browser storage, and exposes no write, lifecycle, command, Git, runtime-mutation, account, cloud, or remote route.
+
+Refresh replaces one complete projection-version `1.1` snapshot only after all sections succeed. Managed SSE reconnect uses bounded replay or an explicit gap-to-fresh-snapshot recovery. If refresh fails or the bundle receives an incompatible projection, the previous complete snapshot remains visible and is marked stale with a bounded error. Close the page to stop its lightweight session heartbeat and managed stream; the project session then unloads through the normal idle policy. `rsp broker stop` shuts down the optional service explicitly. Broker or Web unavailability never blocks ordinary `rsp status`, `rsp specs`, `rsp history`, readiness, lifecycle, or Git workflows.
+
+An explicit runtime consumer lazily opens `runtime-v1.sqlite` inside that exact project namespace through the packaged `dist/runtime-store.mjs` adapter. The current database identity is schema major `1`, migration version `3`; this is distinct from Broker protocol `1.2` and runtime-schema compatibility identity `1.1`. The store uses built-in `node:sqlite`, WAL, short transactions, idempotent delivery, transactional sequence allocation, guarded checkpoints, bounded context, retention, and project-local disposal. It records runtime observations only and never owns planning, blockers, readiness, acceptance, lifecycle, Git, or publication.
+
+Hosts may import packaged `dist/manage-runtime.mjs` and consume optional capability `rsp.manage-runtime@1.0` either directly against an accepted store or through project-token-scoped Broker endpoints. Broker discovery for this capability is non-starting. The adapter records only host-confirmed runs, exact dispatch and worker identities, structured events and receipts, attention, pause/resume, explicit terminal boundaries, and context. Every new observation, including dispatch, advances one committed run sequence; duplicate delivery retains its original effect and sequence. Worker events require an existing matching dispatch, while missing, unavailable, or boundary-changing receipts remain incomplete. Run and attention projections are non-authoritative, source-referenced, and capped at 32 items. `terminalDeliveryObserved` is also non-authoritative and requires an explicit terminal boundary, at least one dispatch, no truncation, and safe retained delivery for every observed dispatch. Context packets are capped at 12 KiB and 24 hours; public save and hydrate requests expose no caller clock, and any later committed observation makes the prior packet non-fresh. Resume always rereads current authority and changed sources, while stale authority or checkout identity forces full reread. Runtime absence or failure is diagnostic only and preserves the canonical no-runtime Manage result.
+
+The package requires Node.js `>=22.13.0` and declares no native SQLite addon. Starting Node with `--no-experimental-sqlite` makes runtime opening return `runtime_sqlite_unavailable`; ordinary one-shot CLI commands remain usable because they do not import SQLite.
+
+Discovery uses `RSP_BROKER_CACHE_HOME` when explicitly set; otherwise it follows XDG cache on supported Unix hosts, `LOCALAPPDATA` on Windows, the macOS user cache directory, or `~/.cache` as the fallback. Stop revalidates process-start and metadata identity: dead or reused PIDs cause metadata cleanup only and are never signaled, while an unavailable identity fails closed.
 
 ## Focus, readiness, and lifecycle
 
@@ -79,6 +120,7 @@ Disposal refuses dirty workspaces and commits that remain ahead of the target. `
 rsp ui [--lang auto|en|zh-CN]   Open the read-only interactive dashboard
 rsp status [--focused|--blocked|--stale <days>] [--json [--compact]] [--verbose]
 rsp check [--focused] [--json [--compact]] [--verbose]
+rsp specs [path|--search <literal>] [--json [--compact]]
 rsp history [filters] [--json [--compact]]
 rsp history <work-ref> [--json [--compact]]
 ```
@@ -89,7 +131,7 @@ Plain `rsp status` keeps current focus, Change and Group summaries, progress, bl
 
 `status` derives exact dependencies, ready work, blockers, and stable waves from the complete work tree. `check` validates Change structure and warns about unfinished placeholders or clarification markers. `history` reads retained archive files directly and defaults to 20 results, with a maximum of 100; filters include `--limit`, `--since`, `--until`, `--kind`, `--group`, and `--search`.
 
-Commands that produce JSON—`status`, `show`, `ready`, `check`, `doctor`, and `history`—accept `--json --compact` for the same value serialized on one LF-terminated line. `--compact` without `--json` is invalid.
+Commands that produce JSON—`status`, `show`, `ready`, `check`, `doctor`, `specs`, and `history`—accept `--json --compact` for the same value serialized on one LF-terminated line. `--compact` without `--json` is invalid.
 
 ## Dashboard keys
 

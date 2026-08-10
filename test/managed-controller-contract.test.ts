@@ -83,6 +83,8 @@ describe('rsp-manage research candidate', () => {
       'owner-release',
       'progress-continues',
       'required-worker-closeout',
+      'runtime-observability',
+      'runtime-resume-hydration',
       'shape-requalification',
       'control-route-transitions',
       'transient-execution-bounds',
@@ -190,6 +192,55 @@ describe('rsp-manage research candidate', () => {
     ])
     expect(prepared.prompt).toContain('handoff-pointer')
     expect(readFileSync(join(prepared.workspace, '.rsp', 'focus.d', 'normalize-checkpoint'), 'utf8').trim()).toBe('')
+  })
+
+  it('prepares and deterministically scores static runtime-available and runtime-absent prompt holdouts', ({ onTestFinished }) => {
+    const outputRoot = mkdtempSync(join(tmpdir(), 'rsp-manage-runtime-holdouts-'))
+    onTestFinished(() => rmSync(outputRoot, { force: true, recursive: true }))
+
+    const available = prepareManagedControllerRun({
+      caseId: 'runtime-observability-available',
+      outputRoot,
+      root,
+      variant: 'product',
+    })
+    expect(available.manifest.runtime_observability).toEqual({
+      state: 'available',
+      capability: 'rsp.manage-runtime@1.0',
+      run_id: 'run-runtime-observability',
+      dispatches: [{
+        dispatch_id: 'dispatch-fixture-implement',
+        worker_id: 'worker-fixture-implement',
+      }],
+    })
+    expect(available.prompt).toContain('Only these fixture-supplied host-confirmed dispatch identities may be correlated after simulated creation')
+    expect(available.prompt).toContain('This holdout proves only deterministic prompt-contract behavior, not real-host execution')
+    expect(available.prompt).toContain('`dispatch-fixture-implement` -> `worker-fixture-implement`')
+    expect(scoreManagedControllerOutput(
+      available.manifest,
+      [
+        'Route selected; dispatch sequential; npm test passed.',
+        'Optional rsp.manage-runtime@1.0 correlation: run-runtime-observability,',
+        'dispatch-fixture-implement, worker-fixture-implement.',
+        'The runtime projection remains non-authoritative.',
+      ].join(' '),
+    )).toEqual({ expected_missing: [], forbidden_present: [] })
+
+    const absent = prepareManagedControllerRun({
+      caseId: 'runtime-observability-absent',
+      outputRoot,
+      root,
+      variant: 'product',
+    })
+    expect(absent.manifest.runtime_observability).toEqual({
+      state: 'absent',
+      diagnostic: 'manage_runtime_broker_absent',
+    })
+    expect(absent.prompt).toContain('Continue through the unchanged no-runtime control path')
+    expect(scoreManagedControllerOutput(
+      absent.manifest,
+      'Route selected; dispatch sequential; npm test passed. manage_runtime_broker_absent; no-runtime behavior was preserved.',
+    )).toEqual({ expected_missing: [], forbidden_present: [] })
   })
 
   it('scores ordered continuation fields and selected-goal resume evidence', () => {
@@ -424,6 +475,7 @@ describe('rsp-manage product Skill', () => {
       'response language',
       'localized control-narration rule',
       'stop conditions',
+      'runtime correlation',
     ])
     expect(inlineCodeValuesInUnit(lanes, ['Every receipt', 'common fields'])).toEqual([
       'WorkRef',
@@ -432,6 +484,7 @@ describe('rsp-manage product Skill', () => {
       'result',
       'decisive evidence',
       'stop boundary',
+      'runtime correlation',
     ])
     expect(findSemanticUnit(lanes, ['Diagnose', '`rsp-diagnose`', 'read-only', 'no-cause result'])).toBeDefined()
     expect(findSemanticUnit(lanes, ['Inspect', 'private Manager-only', 'read-only lane'])).toBeDefined()

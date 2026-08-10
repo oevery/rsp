@@ -5,7 +5,6 @@ import { chmod, mkdir, readdir, readFile, rm, symlink, writeFile } from 'node:fs
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { parseFrontmatter } from '../../src/core/content.js'
 import { archivePath, changesPath, cliPath, completeOpenChange, completeReopenChange, createRspFixture, focusDPath, renderChange, renderGeneratedIndexMetadata, renderGroupBrief } from './harness.js'
 
 describe('change lifecycle integration', () => {
@@ -261,7 +260,9 @@ describe('change lifecycle integration', () => {
       ]) {
         const result = spawnSync('node', [cliPath(), 'create', name, '--kind', 'fix', option, 'Should fail'], { cwd: createDir, encoding: 'utf-8' })
         expect(result.status).toBe(1)
-        expect(result.stderr).toContain('create option "--lite" was removed')
+        expect(result.stderr.trim()).toBe(
+          'Error: create option "--lite" was removed in RSP 4.0; rerun without "--lite" to use the standard kind-aware Change template',
+        )
         expect(existsSync(join(createDir, '.rsp', 'changes', `${name}.md`))).toBe(false)
         expect(existsSync(join(createDir, '.rsp', 'focus.d', name))).toBe(false)
       }
@@ -649,80 +650,167 @@ describe('history command', () => {
   })
 })
 
-describe('specs index behavior', () => {
-  it('creates root direct-child navigation with design.md on init', async () => {
-    const initDir = join(tmpdir(), 'rsp-specs-index-init-test', randomUUID())
+describe('Specs query behavior', () => {
+  it('derives the root tree on init without creating a generated index', async () => {
+    const initDir = join(tmpdir(), 'rsp-specs-query-init-test', randomUUID())
     await mkdir(initDir, { recursive: true })
 
     execSync(`node ${cliPath()} init`, { cwd: initDir })
+    const output = execSync(`node ${cliPath()} specs --json`, { cwd: initDir, encoding: 'utf-8' })
+    const result = JSON.parse(output)
 
-    const index = await readFile(join(initDir, '.rsp', 'specs', '00-index.md'), 'utf-8')
-    const metadata = parseFrontmatter(index)
-    expect(metadata?.kind).toBe('generated-index')
-    expect(metadata?.index_type).toBe('specs')
-    expect(metadata?.entry_count).toBe(1)
-    expect(index).toContain('[design.md](design.md)')
-    expect(existsSync(join(initDir, '.rsp', 'specs', 'INDEX.md'))).toBe(false)
+    expect(existsSync(join(initDir, '.rsp', 'specs', '00-index.md'))).toBe(false)
+    expect(result).toEqual(expect.objectContaining({
+      command: 'specs',
+      ok: true,
+      mode: 'tree',
+      documents: [expect.objectContaining({ path: '.rsp/specs/design.md', kind: 'spec' })],
+      generatedIndexes: [],
+    }))
   })
 
-  it('creates direct-child indexes and keeps unrelated indexes byte-identical', async () => {
-    const specDir = join(tmpdir(), 'rsp-specs-index-add-spec-test', randomUUID())
+  it('queries newly added and manually nested Specs directly from current files', async () => {
+    const specDir = join(tmpdir(), 'rsp-specs-query-add-test', randomUUID())
     await mkdir(specDir, { recursive: true })
-
     execSync(`node ${cliPath()} init`, { cwd: specDir })
     execSync(`node ${cliPath()} add spec cli/base`, { cwd: specDir })
-    execSync(`node ${cliPath()} add spec skill-system/base`, { cwd: specDir })
-    const rootBefore = await readFile(join(specDir, '.rsp', 'specs', '00-index.md'), 'utf-8')
-    const skillBefore = await readFile(join(specDir, '.rsp', 'specs', 'skill-system', '00-index.md'), 'utf-8')
-
-    execSync(`node ${cliPath()} add spec cli/history-output`, { cwd: specDir })
-
-    const index = await readFile(join(specDir, '.rsp', 'specs', 'cli', '00-index.md'), 'utf-8')
-    const metadata = parseFrontmatter(index)
-    expect(metadata?.kind).toBe('generated-index')
-    expect(metadata?.index_type).toBe('specs')
-    expect(metadata?.entry_count).toBe(2)
-    expect(index).toContain('[base.md](base.md)')
-    expect(index).toContain('[history-output.md](history-output.md)')
-    expect(await readFile(join(specDir, '.rsp', 'specs', '00-index.md'), 'utf-8')).toBe(rootBefore)
-    expect(await readFile(join(specDir, '.rsp', 'specs', 'skill-system', '00-index.md'), 'utf-8')).toBe(skillBefore)
-  })
-
-  it('adds a new domain to its local index and the root index', async () => {
-    const specDir = join(tmpdir(), 'rsp-specs-index-new-domain-test', randomUUID())
-    await mkdir(specDir, { recursive: true })
-    execSync(`node ${cliPath()} init`, { cwd: specDir })
-
-    execSync(`node ${cliPath()} add spec runtime/lifecycle`, { cwd: specDir })
-
-    const root = await readFile(join(specDir, '.rsp', 'specs', '00-index.md'), 'utf-8')
-    const runtime = await readFile(join(specDir, '.rsp', 'specs', 'runtime', '00-index.md'), 'utf-8')
-    expect(root).toContain('[runtime/](runtime/00-index.md)')
-    expect(runtime).toContain('[lifecycle.md](lifecycle.md)')
-  })
-
-  it('fully reconciles nested direct-child navigation without flattening descendants', async () => {
-    const specDir = join(tmpdir(), 'rsp-specs-index-full-reconcile-test', randomUUID())
-    await mkdir(specDir, { recursive: true })
-    execSync(`node ${cliPath()} init`, { cwd: specDir })
     await mkdir(join(specDir, '.rsp', 'specs', 'platform', 'api'), { recursive: true })
     await writeFile(join(specDir, '.rsp', 'specs', 'platform', 'api', 'endpoint.md'), '# Endpoint contract\n\nStable endpoint facts.\n')
 
-    execSync(`node ${cliPath()} update`, { cwd: specDir })
-
-    const root = await readFile(join(specDir, '.rsp', 'specs', '00-index.md'), 'utf-8')
-    const platform = await readFile(join(specDir, '.rsp', 'specs', 'platform', '00-index.md'), 'utf-8')
-    const api = await readFile(join(specDir, '.rsp', 'specs', 'platform', 'api', '00-index.md'), 'utf-8')
-    expect(root).toContain('[platform/](platform/00-index.md)')
-    expect(root).not.toContain('endpoint.md')
-    expect(platform).toContain('[api/](api/00-index.md)')
-    expect(platform).not.toContain('endpoint.md')
-    expect(api).toContain('[endpoint.md](endpoint.md)')
+    const result = JSON.parse(execSync(`node ${cliPath()} specs --json`, { cwd: specDir, encoding: 'utf-8' }))
+    expect(result.documents).toEqual(expect.arrayContaining([
+      expect.objectContaining({ path: '.rsp/specs/cli/base.md' }),
+      expect.objectContaining({ path: '.rsp/specs/platform/api/endpoint.md' }),
+    ]))
+    expect(result.tree.directories).toEqual(expect.arrayContaining([
+      expect.objectContaining({ name: 'cli' }),
+      expect.objectContaining({
+        name: 'platform',
+        directories: [expect.objectContaining({ name: 'api' })],
+      }),
+    ]))
   })
 
-  it('migrates only a recognized legacy root Specs index', async () => {
-    const recognizedDir = join(tmpdir(), 'rsp-specs-index-legacy-recognized-test', randomUUID())
-    const customDir = join(tmpdir(), 'rsp-specs-index-legacy-custom-test', randomUUID())
+  it('returns current detail and bounded literal search with stable source attribution', async () => {
+    const specDir = join(tmpdir(), 'rsp-specs-query-cli-search-test', randomUUID())
+    await mkdir(specDir, { recursive: true })
+    execSync(`node ${cliPath()} init`, { cwd: specDir })
+    await writeFile(join(specDir, '.rsp', 'specs', 'design.md'), '# Project Design\n\n## Runtime\nCurrentNeedle lives here.\n')
+
+    const detail = JSON.parse(execSync(`node ${cliPath()} specs .rsp/specs/design.md --json`, { cwd: specDir, encoding: 'utf-8' }))
+    const search = JSON.parse(execSync(`node ${cliPath()} specs --search currentneedle --limit 1 --json`, { cwd: specDir, encoding: 'utf-8' }))
+
+    expect(detail.document).toEqual(expect.objectContaining({
+      path: '.rsp/specs/design.md',
+      content: expect.stringContaining('CurrentNeedle'),
+      contentTruncated: false,
+    }))
+    expect(search.matches).toEqual([
+      expect.objectContaining({
+        path: '.rsp/specs/design.md',
+        heading: 'Runtime',
+        line: 4,
+        excerpt: expect.stringContaining('CurrentNeedle'),
+      }),
+    ])
+    expect(search.summary).toEqual({ candidates: 1, searched: 1, matched: 1, returned: 1, hasMore: false })
+  })
+
+  it('renders stable human tree, detail, and search projections with titles and source paths', async () => {
+    const specDir = join(tmpdir(), 'rsp-specs-query-human-test', randomUUID())
+    await mkdir(specDir, { recursive: true })
+    execFileSync('node', [cliPath(), 'init'], { cwd: specDir })
+    await writeFile(join(specDir, '.rsp', 'specs', 'design.md'), '# Project Design\n\n## Runtime\nHumanNeedle is current.\n')
+    await writeFile(join(specDir, '.rsp', 'specs', 'decisions', 'runtime.md'), '# Runtime choice\n\nKeep direct reads.\n')
+
+    const tree = execFileSync('node', [cliPath(), 'specs'], { cwd: specDir, encoding: 'utf-8' })
+    const detail = execFileSync('node', [cliPath(), 'specs', '.rsp/specs/design.md'], { cwd: specDir, encoding: 'utf-8' })
+    const search = execFileSync('node', [cliPath(), 'specs', '--search', 'humanneedle'], { cwd: specDir, encoding: 'utf-8' })
+
+    expect(tree).toContain('.rsp/specs/design.md [spec] — Project Design')
+    expect(tree).toContain('.rsp/specs/decisions/runtime.md [decision-record] — Runtime choice')
+    expect(detail).toContain('Path: .rsp/specs/design.md')
+    expect(detail).toContain('HumanNeedle is current.')
+    expect(search).toContain('.rsp/specs/design.md:4 [spec]')
+    expect(search).toContain('Project Design')
+    expect(search).toContain('Runtime')
+  })
+
+  it('keeps compact JSON stable and rejects invalid CLI query shapes before inspection', async () => {
+    const specDir = join(tmpdir(), 'rsp-specs-query-invalid-cli-test', randomUUID())
+    await mkdir(specDir, { recursive: true })
+    execFileSync('node', [cliPath(), 'init'], { cwd: specDir })
+
+    const compact = execFileSync('node', [cliPath(), 'specs', '--json', '--compact'], { cwd: specDir, encoding: 'utf-8' })
+    expect(compact.trim().split('\n')).toHaveLength(1)
+    expect(JSON.parse(compact)).toEqual(expect.objectContaining({ command: 'specs', ok: true, mode: 'tree' }))
+
+    const invalidCases = [
+      ['specs', '.rsp/specs/design.md', '--search', 'design', '--json'],
+      ['specs', '--limit', '1', '--json'],
+      ['specs', '--search', '', '--json'],
+      ['specs', '--search', 'design', '--limit', '0', '--json'],
+      ['specs', '--search', 'design', '--limit', '101', '--json'],
+      ['specs', '--search', 'design', '--excerpt', '39', '--json'],
+      ['specs', '--search', 'design', '--excerpt', '1001', '--json'],
+      ['specs', '.rsp/specs/design.md', 'extra', '--json'],
+    ]
+    for (const args of invalidCases) {
+      const result = spawnSync('node', [cliPath(), ...args], { cwd: specDir, encoding: 'utf-8' })
+      expect(result.status, args.join(' ')).toBe(1)
+      const output = JSON.parse(result.stdout)
+      expect(output).toEqual(expect.objectContaining({ command: 'specs', ok: false }))
+      expect(output.query).not.toHaveProperty('positionalCount')
+    }
+  })
+
+  it('bounds search records, excerpts, and detail content in JSON output', async () => {
+    const specDir = join(tmpdir(), 'rsp-specs-query-cli-bounds-test', randomUUID())
+    await mkdir(specDir, { recursive: true })
+    execFileSync('node', [cliPath(), 'init'], { cwd: specDir })
+    await writeFile(
+      join(specDir, '.rsp', 'specs', 'design.md'),
+      `# Project Design\n\n## Bounds\n${'prefix '.repeat(20)}Needle${' suffix'.repeat(20)}\nNeedle again.\n\n${'z'.repeat(13000)}\n`,
+    )
+
+    const search = JSON.parse(execFileSync(
+      'node',
+      [cliPath(), 'specs', '--search', 'needle', '--limit', '1', '--excerpt', '40', '--json'],
+      { cwd: specDir, encoding: 'utf-8' },
+    ))
+    const detail = JSON.parse(execFileSync(
+      'node',
+      [cliPath(), 'specs', '.rsp/specs/design.md', '--json'],
+      { cwd: specDir, encoding: 'utf-8' },
+    ))
+
+    expect(search.matches).toHaveLength(1)
+    expect([...search.matches[0].excerpt].length).toBeLessThanOrEqual(42)
+    expect(search.summary).toEqual(expect.objectContaining({ matched: 2, returned: 1, hasMore: true }))
+    expect([...detail.document.content]).toHaveLength(12000)
+    expect(detail.document.contentTruncated).toBe(true)
+  })
+
+  it('rejects detail paths that are not exact current projection records', async () => {
+    const specDir = join(tmpdir(), 'rsp-specs-query-detail-path-test', randomUUID())
+    await mkdir(specDir, { recursive: true })
+    execFileSync('node', [cliPath(), 'init'], { cwd: specDir })
+
+    for (const path of ['../outside.md', '/tmp/outside.md', '.rsp/specs/missing.md', '.rsp/specs/00-index.md']) {
+      const result = spawnSync('node', [cliPath(), 'specs', path, '--json'], { cwd: specDir, encoding: 'utf-8' })
+      expect(result.status, path).toBe(1)
+      expect(JSON.parse(result.stdout)).toEqual(expect.objectContaining({
+        ok: false,
+        error: expect.objectContaining({
+          code: path.includes('outside') ? 'invalid_specs_path' : 'specs_document_not_found',
+        }),
+      }))
+    }
+  })
+
+  it('classifies recognized generated indexes without removing them and fails closed on owner-controlled reserved content', async () => {
+    const recognizedDir = join(tmpdir(), 'rsp-specs-query-recognized-index-test', randomUUID())
+    const customDir = join(tmpdir(), 'rsp-specs-query-custom-index-test', randomUUID())
     await mkdir(recognizedDir, { recursive: true })
     await mkdir(customDir, { recursive: true })
     execSync(`node ${cliPath()} init`, { cwd: recognizedDir })
@@ -730,27 +818,40 @@ describe('specs index behavior', () => {
     await writeFile(join(recognizedDir, '.rsp', 'specs', 'INDEX.md'), renderGeneratedIndexMetadata('specs'))
     await writeFile(join(customDir, '.rsp', 'specs', 'INDEX.md'), '# Project-owned notes\n')
 
-    execSync(`node ${cliPath()} update`, { cwd: recognizedDir })
-    const custom = spawnSync('node', [cliPath(), 'update'], { cwd: customDir, encoding: 'utf-8' })
+    const recognized = JSON.parse(execSync(`node ${cliPath()} specs --json`, { cwd: recognizedDir, encoding: 'utf-8' }))
+    const custom = spawnSync('node', [cliPath(), 'specs', '--json'], { cwd: customDir, encoding: 'utf-8' })
 
-    expect(existsSync(join(recognizedDir, '.rsp', 'specs', 'INDEX.md'))).toBe(false)
-    expect(existsSync(join(recognizedDir, '.rsp', 'specs', '00-index.md'))).toBe(true)
-    expect(custom.status).not.toBe(0)
-    expect(`${custom.stdout}${custom.stderr}`).toContain('reserved Specs index is not recognized generated content')
+    expect(existsSync(join(recognizedDir, '.rsp', 'specs', 'INDEX.md'))).toBe(true)
+    expect(recognized.generatedIndexes).toEqual([
+      expect.objectContaining({ path: '.rsp/specs/INDEX.md', classification: 'safe-removal' }),
+    ])
+    expect(custom.status).toBe(1)
+    expect(JSON.parse(custom.stdout)).toEqual(expect.objectContaining({
+      ok: false,
+      error: expect.objectContaining({ code: 'specs_inspection_incomplete' }),
+      generatedIndexes: [
+        expect.objectContaining({ path: '.rsp/specs/INDEX.md', classification: 'owner-controlled' }),
+      ],
+    }))
     expect(await readFile(join(customDir, '.rsp', 'specs', 'INDEX.md'), 'utf-8')).toBe('# Project-owned notes\n')
   })
 
-  it('removes only recognized obsolete local indexes during full update', async () => {
-    const specDir = join(tmpdir(), 'rsp-specs-index-obsolete-test', randomUUID())
+  it('does not create or rewrite generated indexes and removes only recognized migration inputs during update', async () => {
+    const specDir = join(tmpdir(), 'rsp-specs-query-command-independence-test', randomUUID())
     await mkdir(specDir, { recursive: true })
-    execSync(`node ${cliPath()} init`, { cwd: specDir })
-    const emptyDir = join(specDir, '.rsp', 'specs', 'empty')
-    await mkdir(emptyDir)
-    await writeFile(join(emptyDir, '00-index.md'), renderGeneratedIndexMetadata('specs').replace('source_dir: .rsp/specs', 'source_dir: .rsp/specs/empty'))
+    execFileSync('node', [cliPath(), 'init'], { cwd: specDir })
+    const indexPath = join(specDir, '.rsp', 'specs', '00-index.md')
+    const recognized = renderGeneratedIndexMetadata('specs')
+    await writeFile(indexPath, recognized)
 
-    execSync(`node ${cliPath()} update`, { cwd: specDir })
+    execFileSync('node', [cliPath(), 'add', 'spec', 'runtime/current'], { cwd: specDir })
+    execFileSync('node', [cliPath(), 'update'], { cwd: specDir })
+    execFileSync('node', [cliPath(), 'doctor', '--fix'], { cwd: specDir })
 
-    expect(existsSync(join(emptyDir, '00-index.md'))).toBe(false)
+    expect(existsSync(indexPath)).toBe(false)
+    const result = JSON.parse(execFileSync('node', [cliPath(), 'specs', '--json'], { cwd: specDir, encoding: 'utf-8' }))
+    expect(result.documents).toContainEqual(expect.objectContaining({ path: '.rsp/specs/runtime/current.md' }))
+    expect(result.generatedIndexes).toEqual([])
   })
 
   it('reserves local index identities from add spec', async () => {
@@ -761,7 +862,7 @@ describe('specs index behavior', () => {
     for (const name of ['index', 'cli/index', '00-index', 'cli/00-index']) {
       const result = spawnSync('node', [cliPath(), 'add', 'spec', name], { cwd: specDir, encoding: 'utf-8' })
       expect(result.status).not.toBe(0)
-      expect(result.stderr).toContain('reserved for generated local navigation')
+      expect(result.stderr).toContain('reserved for Specs migration compatibility')
     }
   })
 
@@ -781,21 +882,24 @@ describe('specs index behavior', () => {
     expect(existsSync(join(specDir, '.rsp', '.lock'))).toBe(false)
   })
 
-  it('does not index a symlinked Markdown Spec', async () => {
-    const specDir = join(tmpdir(), 'rsp-specs-index-file-symlink-test', randomUUID())
-    const externalDir = join(tmpdir(), 'rsp-specs-index-file-external-test', randomUUID())
+  it('does not query a symlinked Markdown Spec', async () => {
+    const specDir = join(tmpdir(), 'rsp-specs-query-file-symlink-test', randomUUID())
+    const externalDir = join(tmpdir(), 'rsp-specs-query-file-external-test', randomUUID())
     await mkdir(specDir, { recursive: true })
     await mkdir(externalDir, { recursive: true })
     execSync(`node ${cliPath()} init`, { cwd: specDir })
     await writeFile(join(externalDir, 'secret.md'), '---\ntitle: External Secret Title\n---\n')
     await symlink(join(externalDir, 'secret.md'), join(specDir, '.rsp', 'specs', 'leak.md'))
 
-    const result = spawnSync('node', [cliPath(), 'update'], { cwd: specDir, encoding: 'utf-8' })
-    const index = await readFile(join(specDir, '.rsp', 'specs', '00-index.md'), 'utf-8')
+    const result = spawnSync('node', [cliPath(), 'specs', '--json'], { cwd: specDir, encoding: 'utf-8' })
 
     expect(result.status).toBe(1)
-    expect(`${result.stdout}${result.stderr}`).toContain('unsupported entry in the Specs tree')
-    expect(index).not.toContain('External Secret Title')
+    expect(JSON.parse(result.stdout)).toEqual(expect.objectContaining({
+      ok: false,
+      diagnostics: expect.arrayContaining([
+        expect.objectContaining({ code: 'specs_tree_invalid' }),
+      ]),
+    }))
     expect(existsSync(join(specDir, '.rsp', '.lock'))).toBe(false)
   })
 })

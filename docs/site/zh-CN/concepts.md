@@ -8,7 +8,6 @@ RSP 把未完成工作、持久化事实、长期理由、作用域指令和已�
 .rsp/
 ├── rsp-rules.md
 ├── specs/
-│   ├── 00-index.md
 │   ├── design.md
 │   └── decisions/
 ├── changes/
@@ -17,13 +16,33 @@ RSP 把未完成工作、持久化事实、长期理由、作用域指令和已�
 ```
 
 - `.rsp/rsp-rules.md` 是生成的、与工具无关的后备协议；Skill 可用时优先使用 `rsp` Skill。
-- `.rsp/specs/` 保存持久化的当前事实与已达成共识的设计。所有 `00-index.md` 都是生成的直接子项导航，不是可编辑事实的归属位置。
+- `.rsp/specs/` 保存持久化的当前事实与已达成共识的设计。使用 `rsp specs` 可直接从可读 Markdown 派生当前树、查看一个精确文档，或执行有界字面搜索。
 - `.rsp/specs/decisions/` 是默认的权威 Decision Record 目录，保存长期理由、备选方案、权衡和后果。
 - `.rsp/changes/` 保存未完成工作。每个可执行 Change 都是单个 Markdown 文件。
 - `.rsp/focus.d/` 包含选择当前工作的空标记文件。
 - `.rsp/archives/` 保留已完成 Change 的历史。
 
 稳定且有作用域的工作流与验证指令属于最近的项目自有 `AGENTS.md`，位于 RSP 受管区块之外。
+
+直接 Specs 查询只读且不依赖服务。它会单独标识 Decision Records，返回 checkout 与源路径归属，并且查询结果永远不能取代源文件本身的权威性。全新初始化与创建 Spec 不会生成 Specs 索引。在兼容迁移中，`rsp update` 与 `rsp doctor --fix` 只会在完整预检及直接查询 postcheck 后移除元数据可识别的保留索引；项目自有的保留内容会安全失败并被保留。
+
+## 可选 runtime
+
+RSP 可以显式启动一个兼容的用户级 Broker，供 runtime 与 Web 能力使用。Broker 是本地 loopback 传输层和惰性 checkout session 宿主，不是另一套工作流引擎或事实源。每个规范化仓库或 worktree 都有独立的 project identity、内存 access token 与可丢弃 namespace；session 空闲卸载不会修改仓库文件。
+
+普通 CLI 工作仍不依赖服务。`rsp status`、`rsp check`、`rsp show`、`rsp ready`、`rsp specs`、生命周期、Git 与修复命令不会启动 Broker，也不会创建其缓存。Protocol 或 runtime-schema 不兼容时会安全失败，而不是自动创建 side-by-side 服务。
+
+Doctor 可以只读检查已有 discovery、runtime 与有界 context 状态。Stale context 只是可丢弃信息；incompatible 或 corrupt runtime 状态会携带有界恢复指导。仓库迁移不会静默处置缓存；显式处置必须先关闭精确 owner，并且只作用于一个已解析 checkout namespace。
+
+当 runtime 操作需要保留观察记录时，对应 Broker session 会惰性打开一个 checkout 作用域的 SQLite 数据库。Dispatch、event 与 receipt 只记录 runtime 实际观察到的事实；每个新边界推进一次 committed run sequence，duplicate delivery 则保留原 effect 与 sequence。带保护的 checkpoint 和有界 context packet 都是可丢弃投影。可选的 `rsp.manage-runtime@1.0` adapter 只关联宿主已确认的 managed run、精确 dispatch 与 worker identity、结构化 event 与 receipt、attention、pause/resume、显式 terminal boundary 和有界 context。Worker event 必须对应已存在且 identity 匹配的 dispatch。Context save 与 hydration 只使用 runtime service clock，任何后续 committed observation 都会使旧 packet 失鲜。它不会解析 worker prose、创建 worker、调度 retry，也不拥有 routing、acceptance、closeout 或 Git。
+
+Managed run 与 attention projection 最多返回 32 个带 source reference 的条目，并明确保持非权威。Resume context 上限为 12 KiB、24 小时。Hydration 必须重新验证 checkout、WorkRef、Git、dirty paths、authority、过期时间与完整 source identity，重新读取当前 authority 指针并加载变化的 evidence；authority 或 checkout drift 会要求完整重读。删除或丢失数据库只会移除 runtime 便利能力；Markdown 工作、历史、就绪性、生命周期和无 runtime 的 Manage 行为保持不变。
+
+软件包使用 Node.js 内置的 `node:sqlite`，要求 Node.js `>=22.13.0`，且不安装 native SQLite addon。显式禁用 SQLite 时，runtime 打开会返回精确诊断，而普通 CLI 检查仍然可用。
+
+`rsp web` 会显式启动或复用兼容 Broker，并为精确的当前 checkout 打开本地只读 Overview、Specs、History、Runs 与 Attention shell。一个短期、仅可使用一次的 URL-fragment bootstrap 会建立内存浏览器 session，不会把 project token 放入正常输出、assets、Referer、仓库状态、cookie 或浏览器存储。每次成功刷新都是一份有界、带 source identity 的完整 snapshot；刷新失败或投影不兼容时，上一份 snapshot 会保留并明确标记为 stale。
+
+Runs 与 Attention 只渲染 Manage-owned runtime projection：actor topology、dispatch、receipt、duplicate delivery 次数、evidence reference、changed path、stop boundary、freshness 与 committed-sequence timeline。缺失 receipt、stale repository relationship、truncation 和 runtime unavailable 都会保持显式，且绝不表示 completion 或 acceptance。Web-bearer SSE 使用有界 replay，并在 sequence gap 时回退到一次 fresh atomic snapshot。浏览器没有 mutation route 或工作流 authority；runtime 缺失或不兼容时，Overview、Specs 与 History 仍可使用。
 
 ## 一个 Change，一个结果
 

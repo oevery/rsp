@@ -482,9 +482,71 @@ function readHoldout(root, caseId) {
     if (JSON.stringify(contract.ordered_fields) !== JSON.stringify(canonicalFields))
       throw new Error(`${caseId}.continuation_contract.ordered_fields must use the canonical seven-field order`)
   }
+  validateRuntimeObservability(manifest.runtime_observability, caseId)
   if (!['decline', 'execute'].includes(manifest.expected_mode ?? 'execute'))
     throw new Error(`${caseId}.expected_mode must be decline or execute`)
   return { baseDirectory, directory, manifest }
+}
+
+function validateRuntimeObservability(value, caseId) {
+  if (value === undefined)
+    return
+  if (!value || typeof value !== 'object' || Array.isArray(value))
+    throw new Error(`${caseId}.runtime_observability must be a mapping`)
+  const state = value.state
+  if (!['available', 'absent'].includes(state))
+    throw new Error(`${caseId}.runtime_observability.state must be available or absent`)
+  const allowed = state === 'available'
+    ? ['capability', 'dispatches', 'run_id', 'state']
+    : ['diagnostic', 'state']
+  if (Object.keys(value).some(key => !allowed.includes(key)))
+    throw new Error(`${caseId}.runtime_observability fields do not match ${state} state`)
+  if (state === 'absent') {
+    assertHoldoutIdentity(value.diagnostic, `${caseId}.runtime_observability.diagnostic`)
+    return
+  }
+  if (value.capability !== 'rsp.manage-runtime@1.0')
+    throw new Error(`${caseId}.runtime_observability.capability must be rsp.manage-runtime@1.0`)
+  assertHoldoutIdentity(value.run_id, `${caseId}.runtime_observability.run_id`)
+  if (!Array.isArray(value.dispatches) || value.dispatches.length < 1 || value.dispatches.length > 4)
+    throw new Error(`${caseId}.runtime_observability.dispatches must contain from one through four exact identities`)
+  const dispatchIds = new Set()
+  const workerIds = new Set()
+  for (const [index, dispatch] of value.dispatches.entries()) {
+    if (!dispatch || typeof dispatch !== 'object' || Array.isArray(dispatch)
+      || JSON.stringify(Object.keys(dispatch).sort()) !== JSON.stringify(['dispatch_id', 'worker_id'])) {
+      throw new Error(`${caseId}.runtime_observability.dispatches[${index}] must contain only dispatch_id and worker_id`)
+    }
+    assertHoldoutIdentity(dispatch.dispatch_id, `${caseId}.runtime_observability.dispatches[${index}].dispatch_id`)
+    assertHoldoutIdentity(dispatch.worker_id, `${caseId}.runtime_observability.dispatches[${index}].worker_id`)
+    if (dispatchIds.has(dispatch.dispatch_id) || workerIds.has(dispatch.worker_id))
+      throw new Error(`${caseId}.runtime_observability dispatch and worker identities must be unique`)
+    dispatchIds.add(dispatch.dispatch_id)
+    workerIds.add(dispatch.worker_id)
+  }
+}
+
+function assertHoldoutIdentity(value, label) {
+  if (typeof value !== 'string' || !value || value.length > 512 || /[\0\r\n]/u.test(value))
+    throw new Error(`${label} must be a bounded identity`)
+}
+
+function runtimeObservabilityPrompt(contract) {
+  if (contract.state === 'absent') {
+    return [
+      `The optional managed runtime is absent with diagnostic \`${contract.diagnostic}\`.`,
+      'Continue through the unchanged no-runtime control path. Do not start a Broker, invent observations, or change routing, authority, dispatch obligations, acceptance, closeout, or continuation.',
+    ].join(' ')
+  }
+  const dispatches = contract.dispatches
+    .map(dispatch => `\`${dispatch.dispatch_id}\` -> \`${dispatch.worker_id}\``)
+    .join(', ')
+  return [
+    `The host exposes optional observability capability \`${contract.capability}\` with run identity \`${contract.run_id}\`.`,
+    `Only these fixture-supplied host-confirmed dispatch identities may be correlated after simulated creation: ${dispatches}.`,
+    'This holdout proves only deterministic prompt-contract behavior, not real-host execution.',
+    'Observations are non-authoritative; never infer them from prose or let them change routing, authority, worker obligations, acceptance, closeout, or continuation.',
+  ].join(' ')
 }
 
 function readRetainedScoringManifest(root, matrixPath, caseId) {
@@ -682,6 +744,9 @@ export function prepareManagedControllerRun({ caseId, outputRoot, root, variant 
         : 'Use $rsp-manage installed in this workspace to carry out the request.'
       : 'Carry out the request using your normal repository workflow; no managed-controller skill is installed.',
     manifest.request,
+    ...(manifest.runtime_observability
+      ? [runtimeObservabilityPrompt(manifest.runtime_observability)]
+      : []),
     ...(manifest.continuation_contract
       ? [
           `Return the incomplete continuation with these labels exactly once and in this order: ${manifest.continuation_contract.ordered_fields.join(', ')}.`,

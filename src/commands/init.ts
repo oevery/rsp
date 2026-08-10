@@ -11,7 +11,6 @@ import { withRspLock } from '../core/lock.js'
 import { ensureManagedFile, inspectManagedFile, requireManagedDirectory, writeManagedFile } from '../core/managed-path.js'
 import { resolveFocusMarkerPath, resolveWorkRef } from '../core/work-ref.js'
 import { removeLegacyArchiveIndex } from './archive-index-migration.js'
-import { buildSpecsIndex } from './specs-index.js'
 
 export { generateConfigTemplate }
 
@@ -102,7 +101,6 @@ export async function initProject(args: InitArgs = {}) {
       created = (await ensureFile(focusMarker, '')) || created
     }
 
-    created = (await buildSpecsIndex({ acquireLock: false })) || created
     const title = toTitle(projectName)
     let agentsUpdated = false
 

@@ -1,0 +1,21 @@
+id: runtime-resume-hydration
+sources:
+  - skills/rsp/SKILL.md
+  - skills/rsp-manage/references/interruption-recovery.md
+evidence:
+  - A paused managed goal resumes with a bounded runtime context packet or without runtime.
+required_contract:
+  - observe pause only after active workers have stopped
+  - Context save and hydration supply no caller timestamp
+  - compare the packet source sequence with the current committed run revision
+  - Any later committed dispatch, receipt, attention, pause, resume, or other observation makes the prior packet non-fresh.
+  - Validate any bounded context packet against the exact checkout, WorkRef, Git HEAD, dirty paths, schema, expiry, authority hash, authority references, and complete source identities.
+  - may reuse only unchanged evidence summaries while current authority and selected changed sources are reread
+  - An absent, unavailable, incompatible, or fully stale packet requires the ordinary full reread
+  - revalidate the selected handoff before mutation or worker dispatch, and only then observe resume
+  - Current authority always wins.
+  - stale context yields diagnostics or history only
+prohibited_actions:
+  - resume from cached authority
+  - skip changed-source reread
+  - persist paused controller state

@@ -8,7 +8,6 @@ RSP separates open work, durable truth, lasting rationale, scoped instructions, 
 .rsp/
 ├── rsp-rules.md
 ├── specs/
-│   ├── 00-index.md
 │   ├── design.md
 │   └── decisions/
 ├── changes/
@@ -17,13 +16,33 @@ RSP separates open work, durable truth, lasting rationale, scoped instructions, 
 ```
 
 - `.rsp/rsp-rules.md` is the generated, tool-agnostic fallback protocol. Prefer the `rsp` Skill when it is available.
-- `.rsp/specs/` stores durable current facts and agreed design. Every `00-index.md` is generated direct-child navigation, not an editable fact owner.
+- `.rsp/specs/` stores durable current facts and agreed design. Use `rsp specs` to derive its current tree, inspect one exact document, or run bounded literal search directly from readable Markdown.
 - `.rsp/specs/decisions/` is the default authoritative Decision Record directory. It stores lasting rationale, alternatives, tradeoffs, and consequences.
 - `.rsp/changes/` stores open work. Each executable Change is one Markdown file.
 - `.rsp/focus.d/` contains empty marker files selecting current work.
 - `.rsp/archives/` retains completed Change history.
 
 Stable scoped workflow and validation instructions belong in the nearest project-owned `AGENTS.md`, outside the managed RSP block.
+
+Direct Specs queries are read-only and service-independent. They identify Decision Records separately, return checkout and source-path attribution, and never make a query result authoritative over the source file. Fresh initialization and Spec creation generate no Specs indexes. During compatibility migration, `rsp update` and `rsp doctor --fix` remove only metadata-recognized reserved indexes after complete preflight and direct-query postcheck; owner-controlled reserved content fails closed and is preserved.
+
+## Optional runtime
+
+RSP can explicitly start one compatible user-level Broker for runtime and Web capabilities. The Broker is a local loopback transport and lazy checkout-session host, not another workflow engine or source of truth. Each canonical repository or worktree receives a distinct project identity, in-memory access token, and disposable namespace; idle sessions unload without changing repository files.
+
+Ordinary CLI work remains service-independent. `rsp status`, `rsp check`, `rsp show`, `rsp ready`, `rsp specs`, lifecycle, Git, and repair commands do not start the Broker or create its cache. Protocol or runtime-schema incompatibility fails closed instead of creating an automatic side-by-side service.
+
+Doctor may inspect existing discovery, runtime, and bounded context state read-only. Stale context is disposable information, while incompatible or corrupt runtime state carries bounded recovery guidance. Repository migration never silently disposes cache state; explicit disposal is scoped to one resolved checkout namespace after the exact owner is closed.
+
+When a runtime operation needs retained observations, its Broker session lazily opens one checkout-scoped SQLite database. Dispatches, events, and receipts record what the runtime actually observed; every new boundary advances one committed run sequence while duplicate delivery retains the original effect and sequence. Guarded checkpoints and bounded context packets are disposable projections. The optional `rsp.manage-runtime@1.0` adapter correlates only host-confirmed managed runs, exact dispatch and worker identities, structured events and receipts, attention, pause/resume, an explicit terminal boundary, and bounded context. Worker events require an existing matching dispatch. Context save and hydration use only the runtime service clock, and a packet becomes stale after any later committed observation. It never parses worker prose, creates workers, schedules retries, or owns routing, acceptance, closeout, or Git.
+
+Managed run and attention projections return at most 32 source-referenced items and remain explicitly non-authoritative. Resume context is bounded to 12 KiB and 24 hours. Hydration always revalidates checkout, WorkRef, Git, dirty paths, authority, expiry, and complete source identities, rereads current authority pointers, and reloads changed evidence; authority or checkout drift requires a full reread. Removing or losing the database removes runtime convenience only—Markdown work, history, readiness, lifecycle, and no-runtime Manage behavior remain unchanged.
+
+The package uses the built-in `node:sqlite` module and requires Node.js `>=22.13.0`; it installs no native SQLite addon. Disabling SQLite makes explicit runtime opening fail with a precise diagnostic while ordinary CLI inspection remains available.
+
+`rsp web` explicitly starts or reuses the compatible Broker and opens a local read-only Overview, Specs, History, Runs, and Attention shell for the exact current checkout. A short-lived one-use URL-fragment bootstrap establishes an in-memory browser session without putting project tokens in normal output, assets, Referer values, repository state, cookies, or browser storage. Every successful refresh is one bounded source-identified snapshot; a failed or incompatible refresh preserves the previous snapshot as visibly stale.
+
+Runs and Attention render only Manage-owned runtime projections: actor topology, dispatches, receipts, duplicate delivery counts, evidence references, changed paths, stop boundaries, freshness, and committed-sequence timelines. Missing receipts, stale repository relationships, truncation, and unavailable runtime remain explicit and never imply completion or acceptance. A Web-bearer SSE stream uses bounded replay and an explicit gap-to-fresh-snapshot recovery path. The browser has no mutation route or workflow authority, and Overview, Specs, and History remain usable when runtime state is absent or incompatible.
 
 ## One Change, one outcome
 

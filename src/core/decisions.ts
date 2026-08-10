@@ -70,9 +70,10 @@ export async function ensureDecisionRecordsDirectory(pathValue: string): Promise
   return !existed
 }
 
-export async function validateDecisionRecordsFilesystemPath(pathValue: string): Promise<string | null> {
-  const projectRoot = await realpath('.')
-  let existingAncestor = resolve(pathValue)
+export async function validateDecisionRecordsFilesystemPath(pathValue: string, cwd = process.cwd()): Promise<string | null> {
+  const projectRoot = await realpath(cwd)
+  const targetPath = resolve(projectRoot, pathValue)
+  let existingAncestor = targetPath
 
   while (!existsSync(existingAncestor)) {
     const parent = dirname(existingAncestor)
@@ -86,7 +87,7 @@ export async function validateDecisionRecordsFilesystemPath(pathValue: string): 
   if (rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel))
     return `Decision Record path "${pathValue}" resolves outside the Host Project through ${existingAncestor}`
 
-  if (existsSync(resolve(pathValue)) && !(await stat(resolve(pathValue))).isDirectory())
+  if (existsSync(targetPath) && !(await stat(targetPath)).isDirectory())
     return `Decision Record path "${pathValue}" must be a directory`
 
   return null

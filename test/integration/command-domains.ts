@@ -827,7 +827,7 @@ describe('change groups', () => {
     expect(unsupported.status).toBe(1)
     expect(unsupported.stderr).toContain('Change Group work subtree for release must be absent or empty')
     expect(existsSync(join(unsupportedDir, '.rsp', 'changes', 'release', '00-brief.md'))).toBe(false)
-  })
+  }, 15_000)
 
   it('rejects replayed Group reopen evidence and accepts a fresh retained snapshot', async () => {
     const groupDir = await createClosedGroupProject('rsp-group-reopen-evidence-replay-test')

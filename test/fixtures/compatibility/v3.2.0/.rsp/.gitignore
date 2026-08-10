@@ -1,0 +1,2 @@
+# Transient files that should not be committed
+.lock

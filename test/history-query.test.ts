@@ -1,9 +1,11 @@
+import type { FileHandle } from 'node:fs/promises'
+import { Buffer } from 'node:buffer'
 import { randomUUID } from 'node:crypto'
-import { chmod, mkdir, writeFile } from 'node:fs/promises'
+import { appendFile, chmod, lstat, mkdir, open, rename, rm, symlink, utimes, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { inspectArchiveHistory, queryArchiveHistory, readArchiveHistoryDetail, selectArchiveHistoryRecord } from '../src/history/query.js'
 
@@ -155,6 +157,148 @@ describe('archive history query', () => {
     expect(detail.evidence.tasks.truncated).toBe(true)
     expect(detail.scenarioCount).toBe(1)
     expect(detail.checkboxes.tasks.done).toBe(22)
+  })
+
+  it('rejects an inspected archive replaced by a symlink before detail reads', async ({ onTestFinished }) => {
+    const root = await fixture()
+    onTestFinished(() => rm(root, { recursive: true, force: true }))
+    const inspection = await inspectArchiveHistory({ archivesDir: join(root, '.rsp', 'archives') })
+    const selected = selectArchiveHistoryRecord(inspection.records, { workRef: 'flat' })
+    const external = join(tmpdir(), 'rsp-history-external', randomUUID())
+    await mkdir(join(tmpdir(), 'rsp-history-external'), { recursive: true })
+    await writeFile(external, archivedChange('external', 'feature', 'must not escape'))
+    onTestFinished(() => rm(external, { force: true }))
+    await rm(selected.sourcePath)
+    await symlink(external, selected.sourcePath)
+
+    await expect(readArchiveHistoryDetail(selected)).rejects.toEqual(expect.objectContaining({
+      code: 'archive_file_changed',
+    }))
+  })
+
+  it('rejects a same-inode archive rewrite between inspection and detail without rejecting a stable read', async ({ onTestFinished }) => {
+    const root = await fixture()
+    onTestFinished(() => rm(root, { recursive: true, force: true }))
+    const inspection = await inspectArchiveHistory({ archivesDir: join(root, '.rsp', 'archives') })
+    const selected = selectArchiveHistoryRecord(inspection.records, { workRef: 'flat' })
+
+    await expect(readArchiveHistoryDetail(selected)).resolves.toEqual(expect.objectContaining({
+      workRef: 'flat',
+      summary: 'flat summary',
+    }))
+
+    const before = await lstat(selected.sourcePath, { bigint: true })
+    const rewritten = archivedChange('flat', 'docs', 'evil summary')
+    expect(Buffer.byteLength(rewritten)).toBe(Number(before.size))
+    await writeFile(selected.sourcePath, rewritten)
+    await utimes(selected.sourcePath, new Date('2026-01-01T00:00:00.000Z'), new Date('2026-01-01T00:00:00.000Z'))
+    const after = await lstat(selected.sourcePath, { bigint: true })
+    expect({ dev: after.dev, ino: after.ino, size: after.size }).toEqual({
+      dev: before.dev,
+      ino: before.ino,
+      size: before.size,
+    })
+
+    await expect(readArchiveHistoryDetail(selected)).rejects.toEqual(expect.objectContaining({
+      code: 'archive_file_changed',
+    }))
+  })
+
+  it('rejects symlink and regular-file replacement after the archive handle starts reading', async ({ onTestFinished }) => {
+    for (const replacementKind of ['symlink', 'regular'] as const) {
+      const root = await fixture()
+      onTestFinished(() => rm(root, { recursive: true, force: true }))
+      const inspection = await inspectArchiveHistory({ archivesDir: join(root, '.rsp', 'archives') })
+      const selected = selectArchiveHistoryRecord(inspection.records, { workRef: 'flat' })
+      const replacement = join(root, `${replacementKind}-replacement.md`)
+      await writeFile(replacement, archivedChange('flat', 'docs', `${replacementKind} replacement`))
+      const probe = await open(selected.sourcePath, 'r')
+      const prototype = Object.getPrototypeOf(probe) as { read: FileHandle['read'] }
+      await probe.close()
+      const originalRead = prototype.read
+      let replaced = false
+      const readSpy = vi.spyOn(prototype, 'read').mockImplementation((async function (
+        this: FileHandle,
+        buffer: Buffer,
+        offset: number,
+        length: number,
+        position: number,
+      ) {
+        const result = await Reflect.apply(originalRead, this, [buffer, offset, length, position])
+        if (!replaced && result.bytesRead > 0) {
+          replaced = true
+          if (replacementKind === 'symlink') {
+            await rm(selected.sourcePath)
+            await symlink(replacement, selected.sourcePath)
+          }
+          else {
+            await rename(replacement, selected.sourcePath)
+          }
+        }
+        return result
+      }) as FileHandle['read'])
+      try {
+        await expect(readArchiveHistoryDetail(selected)).rejects.toEqual(expect.objectContaining({
+          code: 'archive_file_changed',
+        }))
+        expect(replaced).toBe(true)
+      }
+      finally {
+        readSpy.mockRestore()
+      }
+    }
+  })
+
+  it('reapplies the archive byte bound after inspection and detects growth after handle validation', async ({ onTestFinished }) => {
+    const root = await fixture()
+    onTestFinished(() => rm(root, { recursive: true, force: true }))
+    const path = join(root, '.rsp', 'archives', '2026-07-25_growing.md')
+    await writeFile(path, archivedChange('growing'))
+    const inspection = await inspectArchiveHistory({
+      archivesDir: join(root, '.rsp', 'archives'),
+      maxFileBytes: 2_048,
+    })
+    const selected = selectArchiveHistoryRecord(inspection.records, { workRef: 'growing' })
+    await appendFile(path, 'x'.repeat(4_096))
+    await expect(readArchiveHistoryDetail(selected)).rejects.toEqual(expect.objectContaining({
+      code: 'archive_file_too_large',
+    }))
+
+    const growthRoot = join(tmpdir(), 'rsp-history-growth', randomUUID())
+    onTestFinished(() => rm(growthRoot, { recursive: true, force: true }))
+    const archivesDir = join(growthRoot, '.rsp', 'archives')
+    await mkdir(archivesDir, { recursive: true })
+    const growthPath = join(archivesDir, '2026-07-25_growing.md')
+    await writeFile(growthPath, archivedChange('growing'))
+    const probe = await open(growthPath, 'r')
+    const prototype = Object.getPrototypeOf(probe) as { stat: FileHandle['stat'] }
+    await probe.close()
+    const originalStat = prototype.stat
+    let grewAfterStat = false
+    const statSpy = vi.spyOn(prototype, 'stat').mockImplementation((async function (
+      this: FileHandle,
+      options?: Parameters<FileHandle['stat']>[0],
+    ) {
+      const info = await Reflect.apply(originalStat, this, options === undefined ? [] : [options])
+      if (!grewAfterStat) {
+        grewAfterStat = true
+        await appendFile(growthPath, 'x'.repeat(2_048))
+      }
+      return info
+    }) as FileHandle['stat'])
+    try {
+      const growingInspection = await inspectArchiveHistory({
+        archivesDir,
+        maxFileBytes: 1_024,
+      })
+      expect(grewAfterStat).toBe(true)
+      expect(growingInspection.diagnostics).toContainEqual(expect.objectContaining({
+        code: 'archive_file_too_large',
+      }))
+    }
+    finally {
+      statSpy.mockRestore()
+    }
   })
 
   it('fails closed on inconsistent identities and reports duplicate WorkRefs as ambiguous', async () => {

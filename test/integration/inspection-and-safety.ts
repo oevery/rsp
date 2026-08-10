@@ -1002,14 +1002,16 @@ describe('init and doctor', () => {
     const output = execSync(`node ${cliPath()} doctor --fix --json`, { cwd: doctorDir, encoding: 'utf-8' })
     const result = JSON.parse(output)
     const agents = await readFile(join(doctorDir, 'AGENTS.md'), 'utf-8')
-    const specsIndex = await readFile(join(doctorDir, '.rsp', 'specs', '00-index.md'), 'utf-8')
 
     expect(result.command).toBe('doctor')
     expect(result.ok).toBe(true)
     expect(result.fixed).toContain('AGENTS.md managed block refreshed')
-    expect(result.fixed).toContain('generated Specs indexes reconciled')
+    expect(result.fixed).toContain('generated Specs indexes removed: .rsp/specs/00-index.md')
     expect(agents).toContain('<!-- rsp:begin -->')
-    expect(specsIndex).toContain('kind: generated-index')
+    expect(existsSync(join(doctorDir, '.rsp', 'specs', '00-index.md'))).toBe(false)
+    expect(result.checks).not.toContainEqual(expect.objectContaining({
+      code: 'generated_specs_indexes_require_migration',
+    }))
   })
 
   it('does not report fixed actions for healthy doctor --fix', async () => {
@@ -1038,7 +1040,7 @@ describe('init and doctor', () => {
     expect(output).not.toContain('Fixed:')
   })
 
-  it('flags the generated Specs index with missing metadata and ignores an unrecognized legacy Archive Index', async () => {
+  it('flags owner-controlled reserved Specs content and ignores an unrecognized legacy Archive Index', async () => {
     const doctorDir = join(tmpdir(), 'rsp-doctor-generated-index-metadata-test', randomUUID())
     await mkdir(doctorDir, { recursive: true })
 
@@ -1057,7 +1059,7 @@ describe('init and doctor', () => {
 
     expect(result.ok).toBe(false)
     expect(result.checks).toEqual(expect.arrayContaining([
-      expect.objectContaining({ status: 'issue', label: 'hierarchical Specs indexes are current generated files' }),
+      expect.objectContaining({ status: 'issue', label: 'Specs tree is directly queryable' }),
     ]))
     expect(result.checks.some((check: { label: string }) => check.label.includes('archives/INDEX.md'))).toBe(false)
   })

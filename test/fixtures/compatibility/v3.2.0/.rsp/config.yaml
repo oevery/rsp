@@ -1,0 +1,34 @@
+# RSP project configuration
+# Omit kinds or use [] to retain the built-in defaults.
+# A non-empty kinds list replaces the built-in defaults; it does not extend them.
+# Every entry must be a unique non-empty string.
+#
+# Built-in defaults:
+#   kinds:               feature, fix, refactor, docs, ops, research
+#
+# kinds:
+# - feature
+# - fix
+# - refactor
+# - docs
+# - ops
+# - research
+
+# Set one shared project default for durable artifact and commit prose.
+# Optional artifacts or commit values override that durable surface independently.
+# Response language remains user/session-owned and is never read from this project mapping.
+# Omit this mapping to keep durable language selection under scoped project authority.
+# language:
+#   default: en
+
+# New projects default to automatic Manage routing with lifecycle-only closeout.
+# Use activation: explicit to require a named managed request.
+# closeout accepts manual, lifecycle, or local; local routes a qualified clean terminal non-small boundary to one local commit but never push or publication.
+manage:
+  activation: auto
+  closeout: lifecycle
+
+# Decision Records default to .rsp/specs/decisions.
+# Set exactly one project-relative authoritative directory when the Host Project already owns Decision Records elsewhere.
+# decisions:
+#   path: docs/adr

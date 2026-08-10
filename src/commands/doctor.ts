@@ -1,4 +1,5 @@
 import type { CommandRunOptions, RuntimeDiagnostic } from '../types.js'
+import type { UpdateOptions } from './update.js'
 import { existsSync } from 'node:fs'
 import { readdir, readFile, stat } from 'node:fs/promises'
 import { basename, join, relative } from 'node:path'
@@ -12,8 +13,9 @@ import { inspectUnsupportedRules, normalizeLogicalPath, walkMarkdownFiles } from
 import { inspectManagedFile } from '../core/managed-path.js'
 import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
 import { GROUP_BRIEF_FILENAME, inspectArchiveTree, inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
-import { inspectSpecsIndexHealth } from './specs-index.js'
-import { updateProject } from './update.js'
+import { inspectSpecs, specsInspectionComplete } from '../specs/query.js'
+import { inspectDoctorRuntime } from './doctor-runtime.js'
+import { updateProject, UpdateTransactionError } from './update.js'
 
 interface DoctorCheck {
   status: 'ok' | 'issue' | 'info'
@@ -36,6 +38,7 @@ interface DoctorResult {
 
 export interface DoctorOptions extends CommandRunOptions {
   fix?: boolean
+  testing?: UpdateOptions['testing']
 }
 
 export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResult> {
@@ -44,10 +47,19 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
 
   if (options.fix && existsSync(RSP_DIR)) {
     try {
-      const update = await updateProject({ quiet: Boolean(options.json) })
+      const update = await updateProject({
+        quiet: Boolean(options.json),
+        testing: options.testing,
+      })
       fixed.push(...update.actions)
     }
     catch (error) {
+      if (error instanceof UpdateTransactionError) {
+        fixed.push(
+          ...error.rollback.retainedMutations.map(path => `partial update mutation retained: ${path}`),
+          ...error.rollback.recoveryPaths.map(path => `update recovery copy retained: ${path}`),
+        )
+      }
       repairIssue = `safe deterministic repair could not run: ${toErrorMessage(error)}`
     }
   }
@@ -71,7 +83,7 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
   reportCheck(checks, 'specs/design.md exists', existsSync(designPath), 'Run: rsp init')
 
   await checkAgents(checks, reportRuntime)
-  await checkSpecsIndexes(checks, reportRuntime)
+  await checkSpecsTree(checks, reportRuntime)
   await checkArchiveNaming(checks)
   const decisionRecordsConfigValid = await checkConfigSemantics(checks, reportRuntime)
   if (decisionRecordsConfigValid) {
@@ -79,6 +91,27 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
     await checkInactiveDefaultDecisionRecords(checks, reportRuntime)
   }
   await checkActiveChangeConsistency(checks)
+  try {
+    const runtimeInspection = await inspectDoctorRuntime()
+    checks.push(...runtimeInspection.checks)
+    runtime.push(...runtimeInspection.runtime)
+  }
+  catch (error) {
+    const message = toErrorMessage(error)
+    reportRuntime({
+      code: 'doctor_runtime_inspection_failed',
+      operation: 'inspectDoctorRuntime',
+      path: '.',
+      message,
+    })
+    checks.push({
+      status: 'issue',
+      code: 'doctor_runtime_inspection_failed',
+      label: 'optional Broker and runtime cache are inspectable',
+      message,
+      hint: 'Preserve the cache for diagnostics, restore exact path access, and rerun rsp doctor. Do not start Broker or delete cache state as a repair guess.',
+    })
+  }
 
   const result: DoctorResult = {
     command: 'doctor',
@@ -245,32 +278,47 @@ async function checkAgents(checks: DoctorCheck[], reportRuntime: (diagnostic: Ru
   checks.push({ status: 'issue', label: 'AGENTS.md contains managed RSP block', message: 'AGENTS.md missing managed RSP block', hint: 'Run: rsp init' })
 }
 
-async function checkSpecsIndexes(checks: DoctorCheck[], reportRuntime: (diagnostic: RuntimeDiagnostic) => void): Promise<void> {
-  const health = await inspectSpecsIndexHealth()
-  if (health.ok) {
-    checks.push({ status: 'ok', label: 'hierarchical Specs indexes are current generated files' })
-    return
+async function checkSpecsTree(checks: DoctorCheck[], reportRuntime: (diagnostic: RuntimeDiagnostic) => void): Promise<void> {
+  try {
+    const inspection = await inspectSpecs()
+    for (const diagnostic of inspection.runtime)
+      reportRuntime(diagnostic)
+    if (!specsInspectionComplete(inspection)) {
+      checks.push({
+        status: 'issue',
+        label: 'Specs tree is directly queryable',
+        message: inspection.diagnostics.map(diagnostic => diagnostic.message).join('; '),
+        hint: 'Resolve the reported Specs path, file, or reserved-content issue, then run rsp doctor again.',
+      })
+      return
+    }
+    checks.push({ status: 'ok', label: 'Specs tree is directly queryable' })
+    const removable = inspection.generatedIndexes.filter(index => index.classification === 'safe-removal')
+    if (removable.length > 0) {
+      checks.push({
+        status: 'issue',
+        code: 'generated_specs_indexes_require_migration',
+        label: 'generated Specs indexes are migrated to direct navigation',
+        message: `${removable.length} metadata-recognized generated Specs index path(s) remain: ${removable.map(index => index.path).join(', ')}`,
+        hint: 'Run: rsp update. It removes only metadata-recognized generated Specs indexes; owner-controlled reserved content remains fail-closed.',
+      })
+    }
   }
-
-  for (const message of health.issues) {
+  catch (error) {
+    const message = toErrorMessage(error)
     reportRuntime({
-      code: 'specs_index_inspection_failed',
-      operation: 'inspectSpecsIndexHealth',
+      code: 'specs_query_inspection_failed',
+      operation: 'inspectSpecs',
       path: '.rsp/specs',
       message,
     })
+    checks.push({
+      status: 'issue',
+      label: 'Specs tree is directly queryable',
+      message,
+      hint: 'Resolve the reported config or Specs filesystem issue, then run rsp doctor again.',
+    })
   }
-  const details = [
-    ...health.issues,
-    health.stalePaths.length > 0 ? `missing or stale: ${health.stalePaths.join(', ')}` : '',
-    health.obsoletePaths.length > 0 ? `recognized obsolete indexes: ${health.obsoletePaths.join(', ')}` : '',
-  ].filter(Boolean)
-  checks.push({
-    status: 'issue',
-    label: 'hierarchical Specs indexes are current generated files',
-    message: details.join('; '),
-    hint: 'Run: rsp update',
-  })
 }
 
 async function checkArchiveNaming(checks: DoctorCheck[]): Promise<void> {

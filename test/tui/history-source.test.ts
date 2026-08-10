@@ -13,6 +13,15 @@ function record(path: string, summary: string): ArchiveHistoryRecord {
     summaryTruncated: false,
     path,
     sourcePath: `/fixture/${path}`,
+    archivesDir: '/fixture/.rsp/archives',
+    sourceSnapshot: {
+      device: 1n,
+      inode: 2n,
+      size: 100n,
+      mtimeNs: 200n,
+      ctimeNs: 300n,
+    },
+    maxFileBytes: 512 * 1024,
   }
 }
 

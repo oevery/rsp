@@ -6,6 +6,7 @@ export const HISTORY_MAX_TEXT_CODE_POINTS = 500
 export const HISTORY_MAX_EVIDENCE_ITEMS = 20
 export const HISTORY_MAX_DIAGNOSTICS = 20
 export const HISTORY_MAX_CANDIDATES = 20
+export const HISTORY_MAX_FILE_BYTES = 512 * 1024
 
 export interface BoundedCollectionSummary {
   total: number
@@ -15,6 +16,15 @@ export interface BoundedCollectionSummary {
 
 export interface ArchiveHistoryRecord extends HistoryRecordOutput {
   sourcePath: string
+  archivesDir: string
+  sourceSnapshot: {
+    device: bigint
+    inode: bigint
+    size: bigint
+    mtimeNs: bigint
+    ctimeNs: bigint
+  }
+  maxFileBytes: number
   searchSummary?: string
 }
 

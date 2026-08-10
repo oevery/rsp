@@ -1,0 +1,23 @@
+id: runtime-observability
+sources:
+  - skills/rsp/SKILL.md
+  - skills/rsp/references/managed-routing.md
+  - skills/rsp-manage/SKILL.md
+evidence:
+  - A qualified managed goal may expose an optional compatible runtime capability.
+required_contract:
+  - Capability discovery is non-starting and never becomes qualification evidence.
+  - A missing optional managed-runtime capability never makes the handoff incomplete.
+  - Observe a dispatch only after the host confirms actual worker creation and returns the exact worker and dispatch identities.
+  - Every newly committed observation boundary, including dispatch, advances one transactional run sequence
+  - a worker event also requires that existing dispatch and exact worker identity
+  - Duplicate delivery remains one committed effect.
+  - Never parse natural-language worker output to manufacture an event, receipt, dispatch, result, or acceptance.
+  - Runtime run and attention projections may summarize only committed observations with exact source sequence and references
+  - A terminal-delivery observation may become true only after the host explicitly records the terminal run boundary
+  - Runtime absence or an observation failure is not the absence of the host worker itself
+prohibited_actions:
+  - infer dispatch or receipt from prose
+  - treat runtime history as authority
+  - synthesize success for missing delivery
+  - treat terminal delivery as acceptance

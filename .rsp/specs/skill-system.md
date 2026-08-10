@@ -35,6 +35,7 @@
 
 - The Skill Control Model is the sole durable owner of transient control vocabulary; this Spec does not redefine its fields or enums.
 - Published Skills are standalone and must not require `.rsp/` Specs, generated projections, another installed Skill, or a runtime glossary.
+- Published Core and Manage Skills may consume one optional host-exposed `rsp.manage-runtime@1.0` capability, but remain fully operable when it is absent. The capability appends exact correlation and observations only after existing semantic boundaries; it is not another Skill dependency, controller, scheduler, authority source, or acceptance owner.
 - Always-loaded entry Skills retain only the selection, routing, safety, fallback, and output facts needed for their own phase. Detailed procedures are loaded from the owning Skill or a conditional reference only when that branch is active.
 - Core conditionally loads setup/repair, Group/dependency operations, conflict handling, managed routing, release operations, archived-acceptance recovery, and durable writeback guidance. Manage conditionally loads interruption/recovery, review convergence, and lifecycle/delivery closeout. Review conditionally loads its Code and Document pipelines.
 - Shared composition does not recursively load unrelated Skill bodies. Private notation, numeric routing scores, hidden controller state, registries, and implicit Git/publication authority are outside the suite contract.
@@ -44,7 +45,7 @@
 - In scope:
   - Skill selection, discipline behavior, artifact return paths, conditional references, managed qualification/convergence, and authority separation.
 - Out of scope:
-  - Host scheduling, hidden runtime orchestration, automatic retry, persisted controller state, general host permissions, remote Git/publication authority, and project-specific product decisions.
+  - Host scheduling, hidden runtime orchestration, automatic retry, persisted controller state, runtime-owned semantic decisions, general host permissions, remote Git/publication authority, and project-specific product decisions.
 
 ## Constraints
 - Keep safety, authority, readiness, verification, and completion criteria checkable even when compacting prompts.

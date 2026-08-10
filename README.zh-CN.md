@@ -21,7 +21,7 @@ RSP 把模糊意图转化为经过塑造、实现、审查和验证的软件变�
 
 ## 五分钟入门
 
-RSP 需要 Node.js 22 或更高版本。使用当前稳定版本：
+RSP 需要 Node.js 22（`>=22.13.0`）。使用当前稳定版本：
 
 ```bash
 npx -y @oevery/rsp@latest init --with-project-setup

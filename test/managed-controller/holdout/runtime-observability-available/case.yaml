@@ -1,0 +1,56 @@
+id: runtime-observability-available
+base_case: auto-multisurface-routing
+automatic_activation: true
+expected_mode: execute
+installed_skills:
+  - rsp
+  - rsp-manage
+  - rsp-implement
+runtime_observability:
+  state: available
+  capability: rsp.manage-runtime@1.0
+  run_id: run-runtime-observability
+  dispatches:
+    - dispatch_id: dispatch-fixture-implement
+      worker_id: worker-fixture-implement
+request: >-
+  Complete the focused tracked Change `refresh-status-guidance` under automatic managed routing.
+  The shared terminology surfaces require one sequential implementation writer. This deterministic
+  prompt-contract fixture supplies the optional runtime observation contract below and exact
+  host-confirmed identities after simulated worker creation; it is not real-host execution evidence.
+  Correlate only that run, dispatch, and worker identity. Runtime observation remains non-authoritative
+  and must not alter routing, authority, worker obligations, acceptance, closeout, or no-runtime
+  behavior. Modify only the allowed paths, run npm test, and update the Change truthfully. Do not
+  archive, stage, commit, push, publish, start another Broker, create `.rsp` run state, or infer events
+  from worker prose. In the final response report `selected`, `sequential`, `npm test`, the capability
+  and exact correlation identities, and that the runtime projection is non-authoritative.
+allowed_changes:
+  - .rsp/changes/refresh-status-guidance.md
+  - .rsp/specs/status-presentation.md
+  - src/status-card.mjs
+  - docs/en/status.md
+  - docs/zh-CN/status.md
+  - test/status-card.test.mjs
+  - test/docs-sync.test.mjs
+required_changes:
+  - .rsp/changes/refresh-status-guidance.md
+  - .rsp/specs/status-presentation.md
+  - src/status-card.mjs
+  - docs/en/status.md
+  - docs/zh-CN/status.md
+verification:
+  - npm
+  - test
+expected_output:
+  - selected
+  - sequential
+  - npm test
+  - rsp.manage-runtime@1.0
+  - run-runtime-observability
+  - dispatch-fixture-implement
+  - worker-fixture-implement
+  - non-authoritative
+forbidden_output:
+  - runtime authorized
+  - planned worker identity
+  - controller state created

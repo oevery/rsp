@@ -1,10 +1,10 @@
 import type { HistoryDetailOutput, HistoryEvidenceListOutput, HistoryRecordOutput } from '../types.js'
 import type { ArchivedGroupBriefRecord, ArchiveHistoryInspection, ArchiveHistoryListResult, ArchiveHistoryQuery, ArchiveHistoryRecord } from './model.js'
-import { readFile } from 'node:fs/promises'
 
 import { countCheckboxes, parseScenarios } from '../core/content.js'
 import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionBody, parseRspDocument } from '../core/document-model.js'
 import { normalizeWorkRefSegment } from '../core/work-ref.js'
+import { readCurrentArchiveFile } from './current-file.js'
 import { boundText } from './inspect.js'
 import { ArchiveHistoryError, HISTORY_DEFAULT_LIMIT, HISTORY_MAX_EVIDENCE_ITEMS, HISTORY_MAX_LIMIT } from './model.js'
 
@@ -89,11 +89,19 @@ export function selectArchivedGroupBrief(records: ArchivedGroupBriefRecord[], se
 }
 
 export async function readArchiveHistoryDetail(record: ArchiveHistoryRecord): Promise<HistoryDetailOutput> {
-  let content: string
+  let content
   try {
-    content = await readFile(record.sourcePath, 'utf-8')
+    content = (await readCurrentArchiveFile({
+      sourcePath: record.sourcePath,
+      archivesDir: record.archivesDir,
+      projectPath: record.path,
+      maxFileBytes: record.maxFileBytes,
+      expectedSnapshot: record.sourceSnapshot,
+    })).content
   }
   catch (error) {
+    if (error instanceof ArchiveHistoryError)
+      throw error
     throw new ArchiveHistoryError('archive_read_failed', `unable to read archived Change ${record.path}: ${error instanceof Error ? error.message : String(error)}`)
   }
 
@@ -121,7 +129,14 @@ export function historyInspectionComplete(inspection: ArchiveHistoryInspection):
 }
 
 function toOutputRecord(record: ArchiveHistoryRecord): HistoryRecordOutput {
-  const { searchSummary: _searchSummary, sourcePath: _sourcePath, ...output } = record
+  const {
+    searchSummary: _searchSummary,
+    sourcePath: _sourcePath,
+    archivesDir: _archivesDir,
+    sourceSnapshot: _sourceSnapshot,
+    maxFileBytes: _maxFileBytes,
+    ...output
+  } = record
   return output
 }
 

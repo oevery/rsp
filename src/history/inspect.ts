@@ -1,8 +1,7 @@
 import type { ArchiveTreeInspection } from '../core/work-ref.js'
 import type { CommandDiagnostic, IssueRelationship, RuntimeDiagnostic } from '../types.js'
 import type { ArchivedGroupBriefRecord, ArchiveHistoryInspection, ArchiveHistoryRecord } from './model.js'
-import { readFile } from 'node:fs/promises'
-import { basename, dirname, relative } from 'node:path'
+import { basename, dirname, relative, resolve } from 'node:path'
 
 import { ARCHIVES_DIR } from '../core/config.js'
 import { parseFrontmatter } from '../core/content.js'
@@ -12,12 +11,18 @@ import { parseIssueRelationships } from '../core/issue-relationship.js'
 import { toErrorMessage } from '../core/output.js'
 import { inspectArchiveTree, isCanonicalExecutableWorkRef, isCanonicalWorkRefSegment } from '../core/work-ref.js'
 import { extractChangeSummary } from '../core/work-summary.js'
-import { HISTORY_MAX_DIAGNOSTICS, HISTORY_MAX_TEXT_CODE_POINTS } from './model.js'
+import { readCurrentArchiveFile } from './current-file.js'
+import { ArchiveHistoryError, HISTORY_MAX_DIAGNOSTICS, HISTORY_MAX_FILE_BYTES, HISTORY_MAX_TEXT_CODE_POINTS } from './model.js'
 
 const ARCHIVE_NAME_RE = /^(\d{4}-\d{2}-\d{2})_(.+)\.md$/
 
-export async function inspectArchiveHistory(options: { archivesDir?: string, archiveTree?: ArchiveTreeInspection } = {}): Promise<ArchiveHistoryInspection> {
-  const archivesDir = options.archivesDir ?? ARCHIVES_DIR
+export async function inspectArchiveHistory(options: {
+  archivesDir?: string
+  archiveTree?: ArchiveTreeInspection
+  maxFileBytes?: number
+} = {}): Promise<ArchiveHistoryInspection> {
+  const archivesDir = resolve(options.archivesDir ?? ARCHIVES_DIR)
+  const maxFileBytes = options.maxFileBytes ?? HISTORY_MAX_FILE_BYTES
   const tree = options.archiveTree ?? await inspectArchiveTree({ archivesDir })
   const diagnostics: CommandDiagnostic[] = tree.diagnostics.map(diagnostic => ({
     severity: 'error',
@@ -40,17 +45,25 @@ export async function inspectArchiveHistory(options: { archivesDir?: string, arc
 
   for (const sourcePath of tree.files) {
     const path = archiveOutputPath(sourcePath, archivesDir)
-    let content: string
+    let current
     try {
-      content = await readFile(sourcePath, 'utf-8')
+      current = await readCurrentArchiveFile({
+        sourcePath,
+        archivesDir,
+        projectPath: path,
+        maxFileBytes,
+      })
     }
     catch (error) {
-      const message = toErrorMessage(error)
-      diagnostics.push({ severity: 'error', code: 'archive_read_failed', path, message: `unable to read archived work: ${message}` })
+      const code = error instanceof ArchiveHistoryError ? error.code : 'archive_read_failed'
+      const message = error instanceof ArchiveHistoryError
+        ? error.message
+        : `unable to read archived work: ${toErrorMessage(error)}`
+      diagnostics.push({ severity: 'error', code, path, message })
       continue
     }
 
-    const parsed = parseArchiveEntry(sourcePath, path, archivesDir, content)
+    const parsed = parseArchiveEntry(current, path, maxFileBytes)
     if (parsed.diagnostic)
       diagnostics.push(parsed.diagnostic)
     if (parsed.record)
@@ -78,7 +91,12 @@ export async function inspectArchiveHistory(options: { archivesDir?: string, arc
   }
 }
 
-function parseArchiveEntry(sourcePath: string, path: string, archivesDir: string, content: string): { record?: ArchiveHistoryRecord, groupBrief?: ArchivedGroupBriefRecord, diagnostic?: CommandDiagnostic } {
+function parseArchiveEntry(
+  current: Awaited<ReturnType<typeof readCurrentArchiveFile>>,
+  path: string,
+  maxFileBytes: number,
+): { record?: ArchiveHistoryRecord, groupBrief?: ArchivedGroupBriefRecord, diagnostic?: CommandDiagnostic } {
+  const { sourcePath, archivesDir, content } = current
   const nameMatch = basename(sourcePath).match(ARCHIVE_NAME_RE)
   if (!nameMatch || !isCalendarDate(nameMatch[1])) {
     return { diagnostic: errorDiagnostic('archive_name_invalid', path, 'archive filename must use a valid YYYY-MM-DD_name.md date') }
@@ -154,6 +172,9 @@ function parseArchiveEntry(sourcePath: string, path: string, archivesDir: string
       path,
       ...(issues === undefined ? {} : { issues }),
       sourcePath,
+      archivesDir,
+      sourceSnapshot: current.snapshot,
+      maxFileBytes,
       searchSummary: rawSummary,
     },
   }
@@ -176,11 +197,11 @@ function isCalendarDate(value: string): boolean {
 }
 
 function archiveOutputPath(sourcePath: string, archivesDir: string): string {
-  return `.rsp/archives/${normalizeLogicalPath(relative(archivesDir, sourcePath))}`
+  return `.rsp/archives/${normalizeLogicalPath(relative(resolve(archivesDir), resolve(sourcePath)))}`
 }
 
 function normalizeOutputPath(path: string, archivesDir: string): string {
-  const relativePath = normalizeLogicalPath(relative(archivesDir, path))
+  const relativePath = normalizeLogicalPath(relative(resolve(archivesDir), resolve(path)))
   return relativePath === '' ? '.rsp/archives' : `.rsp/archives/${relativePath}`
 }
 
