@@ -77,8 +77,8 @@ export interface BrokerErrorResponse {
 }
 
 export const BROKER_DISCOVERY_SCHEMA = 1 as const
-export const BROKER_MAX_JSON_RESPONSE_BYTES = 64 * 1024
-export const BROKER_PROTOCOL_VERSION: BrokerVersionIdentity = Object.freeze({ major: 1, minor: 2 })
+export const BROKER_MAX_JSON_RESPONSE_BYTES = 16 * 1024 * 1024
+export const BROKER_PROTOCOL_VERSION: BrokerVersionIdentity = Object.freeze({ major: 1, minor: 3 })
 export const BROKER_RUNTIME_SCHEMA_VERSION: BrokerVersionIdentity = Object.freeze({ major: 1, minor: 1 })
 export const BROKER_CLIENT_COMPATIBILITY: BrokerCompatibilityRequirement = Object.freeze({
   protocol: BROKER_PROTOCOL_VERSION,
@@ -112,7 +112,7 @@ export function evaluateBrokerCompatibility(
     return {
       compatible: false,
       reason: 'protocol-minor',
-      action: incompatibleAction(
+      action: restartableAction(
         `Broker protocol ${broker.protocol.major}.${broker.protocol.minor} is older than the client minimum ${client.protocol.major}.${client.protocol.minor}`,
       ),
     }
@@ -121,7 +121,7 @@ export function evaluateBrokerCompatibility(
     return {
       compatible: false,
       reason: 'runtime-schema-major',
-      action: incompatibleAction(
+      action: restartableAction(
         `Broker runtime schema major ${broker.runtimeSchema.major} does not match client schema major ${client.runtimeSchema.major}`,
       ),
     }
@@ -130,7 +130,7 @@ export function evaluateBrokerCompatibility(
     return {
       compatible: false,
       reason: 'runtime-schema-minor',
-      action: incompatibleAction(
+      action: restartableAction(
         `Broker runtime schema ${broker.runtimeSchema.major}.${broker.runtimeSchema.minor} is older than the client minimum ${client.runtimeSchema.major}.${client.runtimeSchema.minor}`,
       ),
     }
@@ -140,6 +140,10 @@ export function evaluateBrokerCompatibility(
 
 function incompatibleAction(reason: string): string {
   return `${reason}; run "rsp broker stop" with a compatible RSP package, then retry with the intended package version`
+}
+
+function restartableAction(reason: string): string {
+  return `${reason}; run "rsp broker restart" with the intended package to replace the verified same-protocol-major owner`
 }
 
 export function publicBrokerIdentity(record: BrokerDiscoveryRecord): BrokerPublicIdentity {

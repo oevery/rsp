@@ -74,7 +74,7 @@ describe('clean install package check', () => {
         statusJson: true,
         specsJson: true,
         runtimeStore: {
-          schema: '1.3',
+          schema: '1.4',
           eventCount: 1,
           manageCapability: 'rsp.manage-runtime@1.0',
           manageRunId: 'package-manage-run',
@@ -194,6 +194,31 @@ describe('clean install package check', () => {
         process.kill(brokerPid, 'SIGTERM')
         waitForProcessExit(brokerPid)
       }
+      rmSync(temporaryRoot, { force: true, recursive: true })
+    }
+  }, 120_000)
+
+  it('retains decisive child-process diagnostics when the installed Web smoke fails', () => {
+    const temporaryRoot = mkdtempSync(join(tmpdir(), 'rsp-package-check-web-smoke-failure-'))
+    try {
+      const result = spawnSync(process.execPath, [join(root, 'scripts', 'clean-install-check.mjs'), '--json'], {
+        cwd: root,
+        encoding: 'utf8',
+        env: {
+          ...process.env,
+          RSP_PACKAGE_CHECK_TEST_BROKER_IDLE_MS: '60000',
+          RSP_PACKAGE_CHECK_TEST_WEB_SMOKE_FAILURE: 'exit-17',
+          RSP_PACKAGE_CHECK_TMP_ROOT: temporaryRoot,
+        },
+      })
+
+      expect(result.status).toBe(1)
+      expect(result.stderr).toContain(
+        'Installed Web Observatory smoke failed: status=17; signal=none; stdout="web-smoke-stdout"; stderr="web-smoke-stderr"',
+      )
+      expect(readdirSync(temporaryRoot)).toEqual([])
+    }
+    finally {
       rmSync(temporaryRoot, { force: true, recursive: true })
     }
   }, 120_000)

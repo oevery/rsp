@@ -37,6 +37,13 @@ kind: group
 - `rsp-4-runtime/web-observatory`: add the local read-only Web shell and snapshot projections over current project state, Specs, and history.
 - `rsp-4-runtime/managed-run-observatory`: add managed run topology, receipts, attention, evidence, and timeline views over accepted runtime observations.
 - `rsp-4-runtime/compatibility-migration`: retain the existing removed-option diagnostic, remove recognized generated Specs indexes, migrate supported projects, and reconcile runtime/cache diagnostics.
+- `rsp-4-runtime/web-localization`: add English and Simplified Chinese Web-owned labels with browser-local locale selection while preserving projected repository content and canonical identities.
+- `rsp-4-runtime/web-react-foundation`: migrate the authored browser bundle to one typed React root with behavior parity, deterministic assets, and unchanged local authentication and projection boundaries.
+- `rsp-4-runtime/parallel-run-visualization`: add a bounded SVG swimlane projection for manager and dispatch branches while retaining committed sequence as the audit order.
+- `rsp-4-runtime/managed-run-invocation-tree`: replace the default managed-run swimlane with an invocation-identity tree that preserves repeated worker calls, explicit parent invocation relationships, host-observed worker labels, and sequence-owned audit views.
+- `rsp-4-runtime/markdown-document-presentation`: render current Specs and Decision Records from a bounded server-owned safe Markdown block projection without allowing repository HTML or browser-side semantic parsing.
+- `rsp-4-runtime/web-content-presentation`: present normal-size Specs and archived Changes completely through shared safe Markdown rendering and a modern lightweight responsive shell, while retaining generous fail-closed resource ceilings.
+- `rsp-4-runtime/broker-restart`: add one serialized Broker restart operation that safely replaces the current same-protocol-major singleton, including an older compatible-control minor, without creating a side-by-side process.
 - `rsp-4-runtime/release-4-0`: reconcile the accepted feature and migration outcomes into the exact 4.0 package, documentation, and local release candidate.
 
 ## Completion Conditions
@@ -49,6 +56,13 @@ kind: group
 - [x] Runtime-present and runtime-absent execution derive the same authority, routing, acceptance, and closeout results from current repository evidence.
 - [x] Markdown and current checkout evidence remain authoritative; every runtime or Web projection is identifiable, bounded, freshness-aware, and disposable.
 - [x] Existing recognized `00-index.md` files migrate safely, unrecognized reserved content is preserved for owner review, and direct Specs navigation and search cover fresh clones.
+- [x] The Web Observatory supports complete English and Simplified Chinese presentation-owned labels without translating projected repository content, paths, WorkRefs, or canonical identities.
+- [x] The packaged Web Observatory renders through one typed React root while preserving its exact local authentication, projection, localization, refresh, accessibility, and responsive behavior.
+- [x] Parallel managed dispatches are readable as a bounded sequence-owned SVG swimlane with explicit branches, receipts, anomalies, and an accessible textual audit fallback.
+- [x] Managed runs default to an invocation-identity tree that keeps repeated calls distinct, resolves parent invocation relationships without semantic invention, records optional host-observed worker labels and roles, and retains committed sequence as the exact audit order.
+- [x] Current Specs and Decision Records render from a bounded server-owned safe Markdown block projection with exact source fallback and no executable repository HTML or remote embedded content.
+- [x] Normal-size Specs and archived Changes remain complete and readable through one modern lightweight Web presentation, with truncation reserved for exceptional resource bounds rather than ordinary documents.
+- [x] One `rsp broker restart` operation atomically stops or recovers the current same-protocol-major singleton and starts a fresh compatible Broker without a side-by-side race.
 - [ ] 3.x projects receive explicit 4.0 migration guidance for removed `--lite`, generated Specs indexes, runtime caches, and supported Node/package behavior.
 - [ ] Full build, typecheck, lint, tests, documentation checks, clean-install package checks, Broker concurrency/recovery tests, and local browser acceptance pass on the exact release candidate.
 

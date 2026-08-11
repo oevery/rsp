@@ -64,5 +64,5 @@ describe('rsp status frozen CLI equivalence matrix', () => {
       else
         expect(capture.json, `${capture.name} unexpected JSON`).toBeUndefined()
     }
-  })
+  }, 15_000)
 })

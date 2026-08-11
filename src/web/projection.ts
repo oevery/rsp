@@ -21,7 +21,8 @@ import type {
 } from './model.js'
 import type { WebRedactionContext } from './redaction.js'
 import { createHash } from 'node:crypto'
-import { historyInspectionComplete, queryArchiveHistory, readArchiveHistoryDetail, selectArchiveHistoryRecord } from '../history/query.js'
+import { parseFrontmatter } from '../core/content.js'
+import { ArchiveHistoryError, historyInspectionComplete, queryArchiveHistory, readArchiveHistoryDocument } from '../history/query.js'
 import {
   parseCurrentSpecsDocument,
   readCurrentSpecsDocument,
@@ -29,6 +30,7 @@ import {
   specsInspectionComplete,
   SpecsQueryError,
 } from '../specs/query.js'
+import { projectSafeMarkdown } from './markdown.js'
 import {
   WEB_MAX_DIAGNOSTICS,
   WEB_MAX_HISTORY_RECORDS,
@@ -185,6 +187,7 @@ export function projectWebHistory(
   const listed = queryArchiveHistory(inspection.records, { limit: WEB_MAX_HISTORY_RECORDS })
   return {
     records: listed.records.map(record => ({
+      lookupId: historyArchiveLookupId(record.path),
       date: record.date,
       workRef: record.workRef,
       group: record.group,
@@ -339,6 +342,17 @@ export function projectWebManagedRunDetail(
       dispatchId: boundWebText(dispatch.dispatchId, 200, context),
       lane: boundWebText(dispatch.lane, 160, context),
       workerId: boundWebText(dispatch.workerId, 160, context),
+      workerDisplayName: dispatch.workerDisplayName
+        ? boundWebText(dispatch.workerDisplayName, 160, context)
+        : null,
+      workerRole: dispatch.workerRole
+        ? boundWebText(dispatch.workerRole, 160, context)
+        : null,
+      parentRef: dispatch.parentRef ? boundWebText(dispatch.parentRef, 200, context) : null,
+      parentDispatchId: dispatch.parentDispatchId
+        ? boundWebText(dispatch.parentDispatchId, 200, context)
+        : null,
+      createdAt: dispatch.createdAt ? boundWebText(dispatch.createdAt, 64, context) : undefined,
       objectiveRef: dispatch.objectiveRef ? boundWebText(dispatch.objectiveRef, 500, context) : null,
       evidenceRefs: boundedManagedItems(dispatch.evidenceRefs, context),
       stopBoundary: dispatch.stopBoundary ? boundWebText(dispatch.stopBoundary, 500, context) : null,
@@ -358,6 +372,8 @@ export function projectWebManagedRunDetail(
       changedPaths: receipt.changedPaths.map(path => safeProjectPath(path) ?? '[REDACTED]'),
       verificationRefs: boundedManagedItems(receipt.verificationRefs, context),
       stopBoundary: receipt.stopBoundary ? boundWebText(receipt.stopBoundary, 500, context) : null,
+      parentRef: receipt.parentRef ? boundWebText(receipt.parentRef, 200, context) : null,
+      observedAt: receipt.observedAt ? boundWebText(receipt.observedAt, 64, context) : undefined,
       source: projectManagedSourceReference(receipt.source, context),
     })),
     events: run.events.map(event => ({
@@ -370,6 +386,8 @@ export function projectWebManagedRunDetail(
       evidenceRefs: boundedManagedItems(event.evidenceRefs, context),
       sourceRefs: boundedManagedItems(event.sourceRefs, context),
       stopBoundary: event.stopBoundary ? boundWebText(event.stopBoundary, 500, context) : null,
+      parentRef: event.parentRef ? boundWebText(event.parentRef, 200, context) : null,
+      observedAt: event.observedAt ? boundWebText(event.observedAt, 64, context) : undefined,
       source: projectManagedSourceReference(event.source, context),
     })),
     timeline: run.timeline.slice(0, WEB_MAX_MANAGED_TIMELINE).map(item => ({
@@ -379,6 +397,18 @@ export function projectWebManagedRunDetail(
       dispatchId: item.dispatchId ? boundWebText(item.dispatchId, 200, context) : null,
       kind: boundWebText(item.kind, 160, context),
       summary: item.summary ? boundWebText(item.summary, 600, context) : null,
+      parentRef: item.parentRef ? boundWebText(item.parentRef, 200, context) : null,
+      parentDispatchId: item.parentDispatchId
+        ? boundWebText(item.parentDispatchId, 200, context)
+        : null,
+      workerDisplayName: item.workerDisplayName
+        ? boundWebText(item.workerDisplayName, 160, context)
+        : null,
+      workerRole: item.workerRole
+        ? boundWebText(item.workerRole, 160, context)
+        : null,
+      createdAt: item.createdAt ? boundWebText(item.createdAt, 64, context) : undefined,
+      observedAt: item.observedAt ? boundWebText(item.observedAt, 64, context) : undefined,
       source: projectManagedSourceReference(item.source, context),
     })),
     truncated: run.truncated || run.timeline.length > WEB_MAX_MANAGED_TIMELINE,
@@ -485,6 +515,7 @@ export async function projectWebSpecsDetail(
     checkoutRoots: [inspection.source.root],
   })
   const sourceContent = current.content.replace(/\0/gu, '')
+  const metadata = parseFrontmatter(sourceContent)
   const safeContent = redactWebText(sourceContent, redactionContext)
   const safeDocument = parseCurrentSpecsDocument(
     safeContent,
@@ -492,17 +523,20 @@ export async function projectWebSpecsDetail(
     current.path,
     current.kind,
   )
-  const contentLimit = inspection.limits.detailContentCodePoints
-  const contentTruncated = [...sourceContent].length > contentLimit
-    || [...safeContent].length > contentLimit
+  const content = safeContent
   const document = {
     path: safeDocument.path,
     kind: safeDocument.kind,
     title: boundWebText(safeDocument.title, 300, redactionContext),
     summary: safeDocument.summary ? boundWebText(safeDocument.summary, 500, redactionContext) : null,
     bytes: safeDocument.bytes,
-    content: boundWebText(safeContent, contentLimit, redactionContext),
-    contentTruncated,
+    content,
+    contentTruncated: false,
+    markdown: projectSafeMarkdown(content, redactionContext),
+    metadata: {
+      kind: boundedMetadataValue(metadata?.kind, 80, redactionContext),
+      status: boundedMetadataValue(metadata?.status, 80, redactionContext),
+    },
   }
   return {
     mode: 'detail',
@@ -578,16 +612,20 @@ export async function projectWebSpecsSearch(
 
 export async function projectWebHistoryDetail(
   inspection: ArchiveHistoryInspection,
-  workRef: string,
+  lookupId: string,
   context: WebRedactionContext = {},
 ): Promise<WebHistoryDetailProjection> {
   if (!historyInspectionComplete(inspection))
     throw new Error('Archive history inspection is incomplete')
-  const selected = selectArchiveHistoryRecord(inspection.records, { workRef })
-  const record = await readArchiveHistoryDetail(selected)
+  const selected = inspection.records.find(record => historyArchiveLookupId(record.path) === lookupId)
+  if (!selected)
+    throw new ArchiveHistoryError('archive_not_found', `archived Change lookup not found: ${lookupId}`)
+  const archive = await readArchiveHistoryDocument(selected)
+  const record = archive.detail
   const redactionContext = mergeWebRedactionContexts(context, {
     sensitiveUrls: collectHistoryIssueUrls(inspection),
   })
+  const content = redactWebText(archive.content.replace(/\0/gu, ''), redactionContext)
   return {
     mode: 'detail',
     record: {
@@ -605,7 +643,17 @@ export async function projectWebHistoryDetail(
         blockers: redactEvidence(record.evidence.blockers, redactionContext),
       },
     },
+    document: {
+      path: selected.path,
+      content,
+      contentTruncated: false,
+      markdown: projectSafeMarkdown(content, redactionContext),
+    },
   }
+}
+
+export function historyArchiveLookupId(path: string): string {
+  return createHash('sha256').update(path).digest('hex')
 }
 
 function detailSource(
@@ -625,6 +673,16 @@ function detailSource(
       managed: identity,
     },
   }
+}
+
+function boundedMetadataValue(
+  value: unknown,
+  limit: number,
+  context: WebRedactionContext,
+): string | null {
+  return typeof value === 'string' && value.trim() !== ''
+    ? boundWebText(value.trim(), limit, context)
+    : null
 }
 
 function redactEvidence(

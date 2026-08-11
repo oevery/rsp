@@ -61,6 +61,8 @@ describe.sequential('managed runtime integration', () => {
       idempotencyKey: 'idem-dispatch-real-fix-worker',
       lane: 'fix',
       workerId: 'worker-host-019fe-real',
+      workerDisplayName: 'silent-panda',
+      workerRole: 'implementation',
       objectiveRef: 'task-runtime-adapter',
       evidenceRefs: ['change-task-1'],
       stopBoundary: 'boundary-changed',
@@ -103,6 +105,9 @@ describe.sequential('managed runtime integration', () => {
       idempotencyKey: 'idem-dispatch-required-verify-missing',
       lane: 'verify',
       workerId: 'worker-host-verify-missing',
+      workerDisplayName: 'blue-otter',
+      workerRole: 'verification',
+      parentEventId: 'event-worker-returned',
       objectiveRef: 'required-independent-verification',
       evidenceRefs: [],
       stopBoundary: 'capability-unavailable',
@@ -255,11 +260,18 @@ describe.sequential('managed runtime integration', () => {
         dispatchId: 'dispatch-real-fix-worker',
         receiptState: 'received',
         workerId: 'worker-host-019fe-real',
+        workerDisplayName: 'silent-panda',
+        workerRole: 'implementation',
+        relationship: 'root',
       }),
       expect.objectContaining({
         dispatchId: 'dispatch-required-verify-missing',
+        parentDispatchId: 'dispatch-real-fix-worker',
         receiptState: 'missing',
+        relationship: 'resolved',
         workerId: 'worker-host-verify-missing',
+        workerDisplayName: 'blue-otter',
+        workerRole: 'verification',
       }),
       expect.objectContaining({
         dispatchId: 'dispatch-boundary-changed',
@@ -495,7 +507,7 @@ describe.sequential('managed runtime integration', () => {
     if (!discovered.available)
       throw new Error(discovered.diagnostic.message)
     expect(discovered.capability.descriptor.version).toEqual(MANAGE_RUNTIME_CAPABILITY_VERSION)
-    expect(BROKER_PROTOCOL_VERSION).toEqual({ major: 1, minor: 2 })
+    expect(BROKER_PROTOCOL_VERSION).toEqual({ major: 1, minor: 3 })
 
     const observation = await useOptionalManageRuntime(discovered, capability => capability.observeRun({
       runId: 'run-broker-managed',

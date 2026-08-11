@@ -21,7 +21,6 @@ import { open } from 'node:fs/promises'
 import { createServer } from 'node:http'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { normalizeExecutableWorkRef } from '../core/work-ref.js'
 import {
   executeManageRuntimeServiceRequest,
   MANAGE_RUNTIME_DESCRIPTOR,
@@ -49,7 +48,9 @@ import { BrokerProjectSessions, DEFAULT_BROKER_PROJECT_IDLE_MS, safeTokenEqual }
 import { readBrokerJson, unlinkBrokerFileIfIdentity, writeBrokerJsonExclusiveAtomic } from './storage.js'
 
 const MAX_REQUEST_BYTES = 16 * 1024
-const MAX_STATIC_ASSET_BYTES = 128 * 1024
+const MAX_WEB_HTML_BYTES = 1024 * 1024
+const MAX_WEB_CSS_BYTES = 2 * 1024 * 1024
+const MAX_WEB_JAVASCRIPT_BYTES = 8 * 1024 * 1024
 
 export interface BrokerServerOptions {
   paths: BrokerPaths
@@ -180,17 +181,28 @@ export async function startBrokerServer(options: BrokerServerOptions): Promise<B
       requireMethod(request, 'GET')
       if (!sessions.has(webPageMatch[1]!))
         throw new BrokerHttpError(404, 'web_project_not_found', 'Web project session is not loaded')
-      await writeStaticAsset(response, join(webAssetsRoot, 'index.html'), 'text/html; charset=utf-8')
+      await writeStaticAsset(
+        response,
+        join(webAssetsRoot, 'index.html'),
+        'text/html; charset=utf-8',
+        MAX_WEB_HTML_BYTES,
+      )
       return
     }
-    if (url.pathname === '/web/assets/app.js' || url.pathname === '/web/assets/app.css') {
+    if (url.pathname === '/web/assets/app.js'
+      || url.pathname === '/web/assets/app.css') {
       requireExactQuery(url, [])
       requireMethod(request, 'GET')
-      const filename = url.pathname.endsWith('.js') ? 'app.js' : 'app.css'
+      const filename = url.pathname.slice('/web/assets/'.length)
       const contentType = filename.endsWith('.js')
         ? 'text/javascript; charset=utf-8'
         : 'text/css; charset=utf-8'
-      await writeStaticAsset(response, join(webAssetsRoot, filename), contentType)
+      await writeStaticAsset(
+        response,
+        join(webAssetsRoot, filename),
+        contentType,
+        filename.endsWith('.js') ? MAX_WEB_JAVASCRIPT_BYTES : MAX_WEB_CSS_BYTES,
+      )
       return
     }
     if (url.pathname === '/v1/web/bootstrap') {
@@ -349,12 +361,12 @@ export async function startBrokerServer(options: BrokerServerOptions): Promise<B
     const webHistoryDetailMatch = url.pathname.match(/^\/v1\/web\/projects\/([a-f0-9]{64})\/history\/detail$/u)
     if (webHistoryDetailMatch) {
       requireMethod(request, 'GET')
-      requireExactQuery(url, ['workRef'])
-      const workRef = requiredWorkRefQuery(url, 'workRef')
+      requireExactQuery(url, ['historyId'])
+      const historyId = requiredOpaqueLookupQuery(url, 'historyId')
       const project = sessions.authorizeWeb(webHistoryDetailMatch[1]!, bearerToken(request))
       writeJson(response, 200, {
         ok: true,
-        projection: await webService.historyDetail(project, workRef),
+        projection: await webService.historyDetail(project, historyId),
       })
       return
     }
@@ -679,7 +691,12 @@ function applyResponseHeaders(response: ServerResponse): void {
   response.setHeader('Permissions-Policy', 'camera=(), display-capture=(), geolocation=(), microphone=(), payment=(), usb=()')
 }
 
-async function writeStaticAsset(response: ServerResponse, path: string, contentType: string): Promise<void> {
+async function writeStaticAsset(
+  response: ServerResponse,
+  path: string,
+  contentType: string,
+  maximumBytes: number,
+): Promise<void> {
   const noFollow = constants.O_NOFOLLOW ?? 0
   let handle
   try {
@@ -692,8 +709,8 @@ async function writeStaticAsset(response: ServerResponse, path: string, contentT
     const before = await handle.stat({ bigint: true })
     if (!before.isFile())
       throw new BrokerHttpError(404, 'web_asset_not_found', 'Web asset is not available')
-    if (before.size > BigInt(MAX_STATIC_ASSET_BYTES))
-      throw new BrokerHttpError(500, 'web_asset_too_large', 'Web asset exceeds the package bound')
+    if (before.size > BigInt(maximumBytes))
+      throw new BrokerHttpError(500, 'web_asset_too_large', 'Web asset exceeds its configured package bound')
     const buffer = Buffer.alloc(Number(before.size) + 1)
     const { bytesRead } = await handle.read(buffer, 0, buffer.byteLength, 0)
     const after = await handle.stat({ bigint: true })
@@ -765,14 +782,11 @@ function requiredProjectPathQuery(url: URL, name: string, maximumCodePoints: num
   return value
 }
 
-function requiredWorkRefQuery(url: URL, name: string): string {
-  const value = requiredBoundedQuery(url, name, WEB_MAX_QUERY_CODE_POINTS)
-  try {
-    return normalizeExecutableWorkRef(value)
-  }
-  catch {
-    throw new BrokerHttpError(400, 'web_query_invalid', `Web query ${name} must be one executable WorkRef`)
-  }
+function requiredOpaqueLookupQuery(url: URL, name: string): string {
+  const value = requiredBoundedQuery(url, name, 64)
+  if (!/^[a-f0-9]{64}$/u.test(value))
+    throw new BrokerHttpError(400, 'web_query_invalid', `${name} must be one exact opaque lookup identity`)
+  return value
 }
 
 function boundedIntegerQuery(url: URL, name: string, minimum: number, maximum: number, fallback: number): number {

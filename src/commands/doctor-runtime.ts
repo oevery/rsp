@@ -13,6 +13,7 @@ import { isAbsolute, relative, resolve, sep } from 'node:path'
 import { inspectBroker } from '../broker/client.js'
 import { resolveBrokerPaths } from '../broker/host.js'
 import { brokerProjectNamespace, discoverBrokerProject } from '../broker/project.js'
+import { BROKER_PROTOCOL_VERSION } from '../broker/protocol.js'
 import {
   inspectRuntimeContextPackets,
   inspectRuntimeDatabase,
@@ -191,14 +192,17 @@ function brokerCheck(inspection: BrokerInspection): DoctorRuntimeCheck {
   }
   if (inspection.state === 'incompatible') {
     const version = inspection.record?.packageVersion
+    const sameProtocolMajor = inspection.record?.protocol.major === BROKER_PROTOCOL_VERSION.major
     return {
       status: 'issue',
       code: 'broker_incompatible',
       label: 'optional Broker is compatible',
       message: inspection.reason ?? 'Broker protocol or runtime schema is incompatible.',
-      hint: version
-        ? `Run: npx -y @oevery/rsp@${version} broker stop --json, then rerun the intended package's rsp doctor. Do not start a side-by-side Broker.`
-        : 'Use the package compatible with the running Broker to stop it cooperatively, then rerun the intended package. Do not signal the PID manually.',
+      hint: sameProtocolMajor
+        ? 'Run: rsp broker restart --json. It cooperatively replaces the verified same-protocol-major owner under one startup lock, then rerun rsp doctor.'
+        : version
+          ? `Run: npx -y @oevery/rsp@${version} broker stop --json, then rerun the intended package's rsp doctor. Do not start a side-by-side Broker.`
+          : 'Use the package compatible with the running Broker to stop it cooperatively, then rerun the intended package. Do not signal the PID manually.',
     }
   }
   return {

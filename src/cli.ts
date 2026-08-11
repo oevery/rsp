@@ -319,6 +319,25 @@ const brokerCommand = defineCommand({
           process.exitCode = 1
       },
     }),
+    restart: defineCommand({
+      meta: {
+        name: 'restart',
+        description: 'Replace one verified same-protocol-major Broker with a fresh compatible process',
+      },
+      args: {
+        json: {
+          type: 'boolean',
+          description: 'Print machine-readable JSON output',
+          default: false,
+        },
+      },
+      async run({ args }: { args: { json: boolean } }) {
+        const { restartBrokerCommand } = await import('./commands/broker.js')
+        const result = await restartBrokerCommand({ json: Boolean(args.json) })
+        if (!result.ok)
+          process.exitCode = 1
+      },
+    }),
   },
 })
 

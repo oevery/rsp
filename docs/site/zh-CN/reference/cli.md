@@ -46,10 +46,13 @@ rsp group reopen <name> --reason <text>
 rsp broker status [--json]     检查 discovery 与兼容性，不启动服务
 rsp broker start [--json]      启动或复用一个兼容的用户级 Broker
 rsp broker stop [--json]       协作停止兼容 Broker，或清理 stale 元数据
+rsp broker restart [--json]    将已验证且协议 major 相同的 Broker 替换为新进程
 rsp web [--json] [--print-url] 打开当前 checkout 的只读 Observatory
 ```
 
 Broker 是供后续 runtime 与 Web 能力使用的可选操作传输层。普通 `status`、`check`、`show`、`ready`、`specs`、生命周期、Git 与修复命令仍是一次性路径：它们既不依赖 Broker，也不创建其缓存。Broker 不存在时，`broker status` 同样不创建缓存，并以成功状态报告 absent。
+
+`broker restart` 会在同一个 startup lock 内完成协作停止或 stale discovery 恢复，并发布新的 daemon。只要 Broker 健康、身份已验证且协议 major 相同，即使其协议 minor 或 runtime schema 与当前包不兼容，也可以直接替换。协议 major 不同或 owner 不健康时，仍必须使用兼容包处理，并且不会直接向 PID 发送信号。Restart 会丢弃已加载的 project session、Web bearer、SSE 连接与旧 endpoint；需要重新打开的页面应再次运行 `rsp web`。
 
 仓库迁移与 runtime 缓存处置是两项独立操作。Update 和 doctor 不会移除 runtime 数据库或 sidecar。只有明确授权处置并关闭精确 Broker/session/store owner 后，才从 `@oevery/rsp/dist/runtime-store.mjs` 导入 `resolveRuntimeDisposalTarget()` 与 `disposeRuntimeDatabase()`，派生当前 checkout 的精确 cache/projects/namespace target，并把这个完整 target 交回处置 API。不要手工删除 runtime 文件、删除整个 Broker 缓存根目录、猜测 project identity、在 checkout 之间复制数据库，也不要手工向记录的 PID 发送信号。
 

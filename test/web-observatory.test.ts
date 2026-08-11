@@ -4,12 +4,13 @@ import type { RuntimeProjectProjectionSnapshot } from '../src/runtime/model.js'
 import type { ProjectStatusView } from '../src/status/model.js'
 import type { WebSnapshot } from '../src/web/model.js'
 import type { WebProjectionService } from '../src/web/service.js'
+import { Buffer } from 'node:buffer'
 import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { mkdir, mkdtemp, readFile, rename, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { fileURLToPath, pathToFileURL } from 'node:url'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it, vi } from 'vitest'
 import { brokerProjectRequest, registerBrokerProject } from '../src/broker/client.js'
 import { resolveBrokerPaths } from '../src/broker/host.js'
@@ -18,7 +19,7 @@ import {
   discoverBrokerProject,
   prepareBrokerProjectPathInspection,
 } from '../src/broker/project.js'
-import { BrokerError, evaluateBrokerCompatibility } from '../src/broker/protocol.js'
+import { BROKER_MAX_JSON_RESPONSE_BYTES, BrokerError, evaluateBrokerCompatibility } from '../src/broker/protocol.js'
 import { startBrokerServer } from '../src/broker/server.js'
 import { BrokerProjectSessions } from '../src/broker/sessions.js'
 import { runWebCommand } from '../src/commands/web.js'
@@ -277,7 +278,7 @@ issues:
       context,
     )
     const history = projectWebHistory(historyInspection, context)
-    const historyDetail = await projectWebHistoryDetail(historyInspection, 'sensitive', context)
+    const historyDetail = await projectWebHistoryDetail(historyInspection, history.records[0]!.lookupId, context)
     const serialized = JSON.stringify({ specs, specsDetail, specsSearch, history, historyDetail })
     const withoutLegitimateSuffix = serialized
       .replaceAll(legitimateIssueSuffix, '')
@@ -302,7 +303,7 @@ issues:
     expect(specsDetail.document.content).toContain('Nested strike-strong private issue: ~~**[REDACTED]**~~')
   })
 
-  it('redacts complete Specs PEM ranges before Web detail truncation and search excerpts', async ({ onTestFinished }) => {
+  it('redacts complete Specs PEM ranges before complete Web detail projection and search excerpts', async ({ onTestFinished }) => {
     const fixture = await mkdtemp(join(tmpdir(), 'rsp-web-specs-pem-'))
     onTestFinished(() => rm(fixture, { recursive: true, force: true }))
     initializeGitRepository(fixture, 'web-specs-pem')
@@ -340,8 +341,9 @@ Safe suffix.
       'c'.repeat(64),
     )
 
-    expect(webDetail.document.contentTruncated).toBe(true)
+    expect(webDetail.document.contentTruncated).toBe(false)
     expect(webDetail.document.content).toContain('[REDACTED]')
+    expect(webDetail.document.content).toContain('Safe suffix.')
     expect(webDetail.document.content).not.toContain(bodyNeedle)
     expect(webDetail.document.content).not.toContain('BEGIN PRIVATE KEY')
     expect(webDetail.document.content).not.toContain('END PRIVATE KEY')
@@ -357,6 +359,213 @@ Safe suffix.
     expect(cliDetail.contentTruncated).toBe(true)
     expect(cliDetail.content).toContain(bodyNeedle)
     expect(cliBodySearch.matches[0]?.excerpt).toContain(bodyNeedle)
+  })
+
+  it('projects a normal long Spec completely beyond the former source and Markdown ceilings', async ({ onTestFinished }) => {
+    const fixture = await mkdtemp(join(tmpdir(), 'rsp-web-specs-complete-'))
+    onTestFinished(() => rm(fixture, { recursive: true, force: true }))
+    initializeGitRepository(fixture, 'web-specs-complete')
+    runCli(['init'], fixture)
+    const path = '.rsp/specs/complete-long-document.md'
+    const finalMarker = 'FINAL-COMPLETE-SPEC-PARAGRAPH'
+    const paragraphs = Array.from(
+      { length: 9000 },
+      (_, index) => `Paragraph ${index}: complete content.`,
+    )
+    await writeFile(join(fixture, path), `# Complete long document\n\n${paragraphs.join('\n\n')}\n\n${finalMarker}\n`)
+    const inspection = await inspectSpecs({ cwd: fixture })
+
+    const detail = await projectWebSpecsDetail(inspection, path, 'e'.repeat(64))
+    const markdown = JSON.stringify(detail.document.markdown)
+
+    expect(detail.document.bytes).toBeGreaterThan(100 * 1024)
+    expect(detail.document.contentTruncated).toBe(false)
+    expect(detail.document.markdown.bounded).toBe(false)
+    expect(detail.document.content).toContain(finalMarker)
+    expect(markdown).toContain(finalMarker)
+  })
+
+  it('projects representative and hostile Markdown only after redaction and bounding', async ({ onTestFinished }) => {
+    const fixture = await mkdtemp(join(tmpdir(), 'rsp-web-markdown-'))
+    onTestFinished(() => rm(fixture, { recursive: true, force: true }))
+    initializeGitRepository(fixture, 'web-markdown')
+    runCli(['init'], fixture)
+    const path = '.rsp/specs/markdown.md'
+    const privateUrl = 'https://tracker.example/private/markdown/1'
+    await writeFile(join(fixture, path), `# Safe **Markdown**
+
+Paragraph with *emphasis*, \`inline code\`, and a [safe link](https://docs.example.com/rsp "Docs").
+
+> Quoted guidance
+
+- [x] completed
+- [ ] open
+  - nested item
+
+\`\`\`ts
+const checkout = '${fixture}/secret'
+\`\`\`
+
+<script>globalThis.compromised = true</script>
+
+[unsafe](javascript:alert(1))
+
+![remote image](https://images.example/private.png)
+
+Private relationship: ${privateUrl}
+
+${'> '.repeat(12)}excessively nested
+`)
+    const inspection = await inspectSpecs({ cwd: fixture })
+    const detail = await projectWebSpecsDetail(
+      inspection,
+      path,
+      'd'.repeat(64),
+      { checkoutRoots: [fixture], sensitiveUrls: [privateUrl] },
+    )
+    const markdown = JSON.stringify(detail.document.markdown)
+
+    expect(detail.document.content).toContain('<script>globalThis.compromised = true</script>')
+    expect(detail.document.content).toContain('![remote image](https://images.example/private.png)')
+    expect(detail.document.content).toContain('[REDACTED]')
+    expect(detail.document.content).not.toContain(`${fixture}/`)
+    expect(markdown).toContain('"type":"heading"')
+    expect(markdown).toContain('"type":"strong"')
+    expect(markdown).toContain('"type":"emphasis"')
+    expect(markdown).toContain('"type":"inline-code"')
+    expect(markdown).toContain('"type":"blockquote"')
+    expect(markdown).toContain('"type":"code"')
+    expect(markdown).toContain('"checked":true')
+    expect(markdown).toContain('"checked":false')
+    expect(markdown).toContain('"href":"https://docs.example.com/rsp"')
+    expect(markdown).toContain('[CHECKOUT]')
+    expect(markdown).toContain('[REDACTED]')
+    expect(markdown).not.toContain('<script>')
+    expect(markdown).not.toContain('javascript:')
+    expect(markdown).not.toContain('images.example')
+    expect(detail.document.markdown.unsupported).toBe(true)
+    expect(detail.document.markdown.bounded).toBe(true)
+    expect(Buffer.byteLength(JSON.stringify(detail), 'utf8')).toBeLessThan(16 * 1024 * 1024)
+    const packageManifest = JSON.parse(await readFile(join(repositoryRoot, 'package.json'), 'utf8'))
+    expect(packageManifest.dependencies['mdast-util-from-markdown']).toMatch(/^\^2\./u)
+  })
+
+  it('keeps frontmatter in source while projecting metadata and benign RSP metavariables', async ({ onTestFinished }) => {
+    const fixture = await mkdtemp(join(tmpdir(), 'rsp-web-frontmatter-'))
+    onTestFinished(() => rm(fixture, { recursive: true, force: true }))
+    initializeGitRepository(fixture, 'web-frontmatter')
+    runCli(['init'], fixture)
+    const path = '.rsp/specs/decisions/rendered-metadata.md'
+    await mkdir(dirname(join(fixture, path)), { recursive: true })
+    await writeFile(join(fixture, path), `---
+title: Rendered Metadata
+summary: Metadata remains readable without becoming document content.
+kind: decision
+status: accepted
+---
+
+# Rendered Metadata
+
+Use \`- requires \\\`<change-work-ref>\\\`: <reason>\` for an exact prerequisite.
+`)
+    const inspection = await inspectSpecs({ cwd: fixture })
+    const detail = await projectWebSpecsDetail(inspection, path, 'e'.repeat(64))
+    const markdown = JSON.stringify(detail.document.markdown)
+
+    expect(detail.document.content).toContain('title: Rendered Metadata')
+    expect(detail.document.metadata).toEqual({
+      kind: 'decision',
+      status: 'accepted',
+    })
+    expect(detail.document.markdown.blocks[0]).toEqual({
+      type: 'heading',
+      depth: 1,
+      children: [{ type: 'text', value: 'Rendered Metadata' }],
+    })
+    expect(markdown).not.toContain('title: Rendered Metadata')
+    expect(markdown).toContain('"value":"<change-work-ref>"')
+    expect(markdown).toContain('"value":"<reason>"')
+    expect(detail.document.markdown.unsupported).toBe(false)
+  })
+
+  it('uses distinct opaque history lookup IDs for repeated archives of the same WorkRef', async ({ onTestFinished }) => {
+    const fixture = await mkdtemp(join(tmpdir(), 'rsp-web-history-lookup-'))
+    onTestFinished(() => rm(fixture, { recursive: true, force: true }))
+    const archivesDir = join(fixture, '.rsp', 'archives')
+    await mkdir(archivesDir, { recursive: true })
+    await writeFile(join(archivesDir, '2026-08-08_repeated.md'), `---
+kind: feature
+---
+
+# Change: repeated
+
+## Proposal
+- Outcome: First archived outcome
+
+## Spec
+### Acceptance
+#### Scenario: first archive
+- GIVEN the first archive
+- WHEN its detail is selected
+- THEN the first outcome is shown
+
+## Tasks
+- [x] First archived task
+
+## Verify
+- [x] First archived verification
+
+## Blockers
+- none
+`)
+    await writeFile(join(archivesDir, '2026-08-09_repeated.md'), `---
+kind: feature
+---
+
+# Change: repeated
+
+## Proposal
+- Outcome: Second archived outcome
+
+## Spec
+### Acceptance
+#### Scenario: second archive
+- GIVEN the second archive
+- WHEN its detail is selected
+- THEN the second outcome is shown
+
+## Tasks
+- [x] Second archived task
+
+## Verify
+- [x] Second archived verification
+
+## Blockers
+- none
+`)
+
+    const inspection = await inspectArchiveHistory({ archivesDir })
+    const history = projectWebHistory(inspection)
+    const repeated = history.records.filter(record => record.workRef === 'repeated')
+
+    expect(repeated).toHaveLength(2)
+    expect(repeated[0]!.lookupId).toMatch(/^[a-f0-9]{64}$/u)
+    expect(repeated[1]!.lookupId).toMatch(/^[a-f0-9]{64}$/u)
+    expect(repeated[0]!.lookupId).not.toBe(repeated[1]!.lookupId)
+
+    const details = await Promise.all(repeated.map(record =>
+      projectWebHistoryDetail(inspection, record.lookupId),
+    ))
+    expect(details.map(detail => detail.record.summary).sort()).toEqual([
+      'First archived outcome',
+      'Second archived outcome',
+    ])
+    expect(details.map(detail => detail.document.content)).toEqual(expect.arrayContaining([
+      expect.stringContaining('First archived task'),
+      expect.stringContaining('Second archived task'),
+    ]))
+    expect(details.every(detail => detail.document.contentTruncated === false)).toBe(true)
+    expect(details.every(detail => detail.document.markdown.blocks.length > 0)).toBe(true)
   })
 
   it('keeps the previous complete browser snapshot visibly stale after failed or incompatible refresh', async () => {
@@ -378,6 +587,244 @@ Safe suffix.
     expect(state.snapshot).toBe(snapshot)
     expect(state.error.code).toBe('web_projection_incompatible')
     expect(browser.escapeHtml('<script>"x"</script>')).toBe('&lt;script&gt;&quot;x&quot;&lt;/script&gt;')
+  })
+
+  it('keeps detail failures scoped without marking the complete snapshot stale', async () => {
+    const browser = await loadBrowserModule()
+    const snapshot = fixtureSnapshot('a'.repeat(64), 'operation-failure')
+    const state = browser.applySnapshotSuccess(browser.createInitialState(), { ok: true, snapshot })
+    const failed = browser.applyOperationFailure(state, {
+      code: 'web_query_invalid',
+      message: 'Web query parameters do not match the route contract',
+    })
+
+    expect(failed.snapshot).toBe(snapshot)
+    expect(failed.stale).toBe(false)
+    expect(failed.error).toBeNull()
+    expect(failed.notice).toMatchObject({
+      tone: 'warning',
+      code: 'web_query_invalid',
+    })
+    expect(browser.renderAppHtml(failed)).toContain('View update needs attention')
+    expect(browser.renderAppHtml(failed)).not.toContain('Stale snapshot')
+  })
+
+  it('defaults to visible auto refresh and exposes exact current and legacy History requests', async () => {
+    const browser = await loadBrowserModule()
+    const snapshot = fixtureSnapshot('a'.repeat(64), 'auto-refresh')
+    let state = browser.applySnapshotSuccess(browser.createInitialState(), { ok: true, snapshot })
+
+    expect(state.autoRefresh).toBe(true)
+    expect(browser.shouldAutoRefresh(state, 'visible')).toBe(true)
+    expect(browser.shouldAutoRefresh(state, 'hidden')).toBe(false)
+    expect(browser.shouldAutoRefresh({ ...state, detail: { mode: 'detail' } }, 'visible')).toBe(false)
+    expect(browser.shouldAutoRefresh({ ...state, search: { mode: 'search' } }, 'visible')).toBe(false)
+    state = browser.applyAutoRefreshSelection(state, false)
+    expect(browser.shouldAutoRefresh(state, 'visible')).toBe(false)
+    expect(browser.AUTO_REFRESH_INTERVAL_MS).toBe(30_000)
+
+    expect(browser.historyDetailRequestPaths(
+      'a'.repeat(64),
+      'b'.repeat(64),
+      'group/repeated archive',
+    )).toEqual({
+      current: `/v1/web/projects/${'a'.repeat(64)}/history/detail?historyId=${'b'.repeat(64)}`,
+      legacy: `/v1/web/projects/${'a'.repeat(64)}/history/detail?workRef=group%2Frepeated%20archive`,
+    })
+    expect(browser.historyDetailRequestPaths(
+      'a'.repeat(64),
+      undefined,
+      'legacy/archive',
+    )).toEqual({
+      current: `/v1/web/projects/${'a'.repeat(64)}/history/detail?workRef=legacy%2Farchive`,
+      legacy: null,
+    })
+    expect(browser.isRouteContractMismatch(Object.assign(new Error('contract'), {
+      status: 400,
+      code: 'web_query_invalid',
+    }))).toBe(true)
+    expect(browser.isRouteContractMismatch(Object.assign(new Error('missing'), {
+      status: 404,
+      code: 'archive_not_found',
+    }))).toBe(false)
+  })
+
+  it('marks repeated legacy History records ambiguous without disabling the live snapshot', async () => {
+    const browser = await loadBrowserModule()
+    const snapshot = fixtureSnapshot('a'.repeat(64), 'legacy-history')
+    snapshot.history.records = [
+      {
+        date: '2026-08-10',
+        workRef: 'repeated',
+        group: null,
+        kind: 'feature',
+        summary: 'Newer archive',
+        summaryTruncated: false,
+      },
+      {
+        date: '2026-08-08',
+        workRef: 'repeated',
+        group: null,
+        kind: 'feature',
+        summary: 'Older archive',
+        summaryTruncated: false,
+      },
+      {
+        date: '2026-08-07',
+        workRef: 'unique',
+        group: null,
+        kind: 'fix',
+        summary: 'Unique archive',
+        summaryTruncated: false,
+      },
+    ] as any
+    snapshot.history.summary = { total: 3, returned: 3, hasMore: false }
+    const state = {
+      ...browser.applySnapshotSuccess(browser.createInitialState(['zh-CN']), { ok: true, snapshot }),
+      view: 'history',
+    }
+    const html = browser.renderAppHtml(state)
+
+    expect(html.match(/data-history-ambiguous="true"/gu)).toHaveLength(2)
+    expect(html).toContain('data-history-work-ref="unique"')
+    expect(state.stale).toBe(false)
+  })
+
+  it('explains the safe recovery path when browser reload loses its in-memory authorization', async () => {
+    const browser = await loadBrowserModule()
+    const state = browser.applySnapshotFailure(browser.createInitialState(['zh-CN']), {
+      code: 'web_bootstrap_missing',
+      messageKey: 'bootstrapMissing',
+    })
+    const html = browser.renderAppHtml(state)
+
+    expect(html).toContain('网页观测台不可用')
+    expect(html).toContain('浏览器整页刷新会按设计丢弃仅存于内存的授权')
+    expect(html).toContain('<code>rsp web</code>')
+    expect(html).toContain('data-action="copy-recovery-command"')
+  })
+
+  it('resolves browser languages, keeps catalog parity, and switches locale without side effects', async () => {
+    const browser = await loadBrowserModule()
+    const i18n = await loadBrowserI18nModule()
+    expect(browser.createInitialState(['fr-FR', 'zh-Hans-SG']).locale).toBe('zh-CN')
+    expect(browser.createInitialState(['zh-SG']).locale).toBe('zh-CN')
+    expect(browser.createInitialState(['zh-CN-u-nu-hanidec']).locale).toBe('zh-CN')
+    expect(browser.createInitialState(['en-US', 'zh-CN']).locale).toBe('en')
+    expect(browser.createInitialState(['zh-TW', 'de-DE']).locale).toBe('en')
+    expect(browser.createInitialState([]).locale).toBe('en')
+    expect(Object.keys(i18n.catalogs.en).sort()).toEqual(Object.keys(i18n.catalogs['zh-CN']).sort())
+
+    const snapshot = fixtureSnapshot('a'.repeat(64), 'locale-switch')
+    const detail = { mode: 'detail', document: { path: '.rsp/specs/runtime.md' } }
+    const search = { mode: 'search', query: { literal: 'runtime' }, matches: [] }
+    const webToken = { value: 'in-memory-only' }
+    const state = {
+      ...browser.applySnapshotSuccess(browser.createInitialState(['en-US']), { ok: true, snapshot }),
+      view: 'specs',
+      detail,
+      search,
+      webToken,
+    }
+    const switched = browser.applyLocaleSelection(state, 'zh-CN')
+    expect(switched).toMatchObject({ locale: 'zh-CN', view: 'specs' })
+    expect(switched.snapshot).toBe(snapshot)
+    expect(switched.detail).toBe(detail)
+    expect(switched.search).toBe(search)
+    expect(switched.webToken).toBe(webToken)
+    expect(browser.applyLocaleSelection(switched, 'zh-CN')).toBe(switched)
+    expect(browser.applyLocaleSelection(switched, 'fr-FR')).toBe(switched)
+  })
+
+  it('renders Chinese Web text while preserving projected and canonical values', async () => {
+    const browser = await loadBrowserModule()
+    const snapshot = fixtureSnapshot('a'.repeat(64), 'localized')
+    snapshot.overview.current = {
+      workRef: 'rsp-4-runtime/web-localization',
+      goal: 'Repository-authored goal stays in English',
+      state: 'ready',
+      blockers: ['Owner-authored blocker stays exact'],
+      nextAction: 'Run focused verification',
+    }
+    snapshot.overview.records = [{
+      workRef: 'canonical/work-ref',
+      kind: 'feature',
+      goal: 'Projected summary stays exact',
+      state: 'blocked',
+      progress: { done: 1, total: 2 },
+    }]
+    snapshot.overview.recordsSummary = { total: 1, returned: 1, hasMore: false }
+    let state = browser.applySnapshotSuccess(browser.createInitialState(['zh-CN']), { ok: true, snapshot })
+    const overviewHtml = browser.renderAppHtml(state)
+    expect(overviewHtml).toContain('当前工作')
+    expect(overviewHtml).toContain('rsp-4-runtime/web-localization')
+    expect(overviewHtml).toContain('Repository-authored goal stays in English')
+    expect(overviewHtml).toContain('Owner-authored blocker stays exact')
+    expect(overviewHtml).toContain('feature · 1/2 · blocked')
+    expect(overviewHtml).toContain('class="language-switch" role="group"')
+    expect(overviewHtml).toContain('data-locale="zh-CN" aria-pressed="true"')
+    expect(overviewHtml).toContain('data-locale="en" aria-pressed="false"')
+    expect(overviewHtml).toContain('data-action="auto-refresh" aria-pressed="true"')
+    expect(overviewHtml).toContain('class="card span-4 metric-card"')
+
+    state = { ...state, view: 'runs' }
+    const unavailableHtml = browser.renderAppHtml(state)
+    expect(unavailableHtml).toContain('托管运行时不可用')
+    expect(unavailableHtml).toContain('Managed runtime storage is absent for this checkout')
+    expect(unavailableHtml).toContain('概览、规范和历史仍然可用')
+
+    const timestamp = '2026-08-08T08:00:04.000Z'
+    expect(browser.formatTimestamp(timestamp, 'zh-CN')).toBe(new Date(timestamp).toLocaleString('zh-CN'))
+  })
+
+  it('renders bounded responsive presentation owners for every browser view', async () => {
+    const browser = await loadBrowserModule()
+    const snapshot = fixtureSnapshot('a'.repeat(64), 'presentation')
+    const projection = fixtureManagedProjection()
+    snapshot.managed = projectWebManaged(projection, new Map([['run-web-managed', {
+      state: 'current',
+      sourceSequence: 4,
+      generatedAt: '2026-08-08T08:00:04.000Z',
+      reasons: [],
+    }]]))
+    let state = browser.applySnapshotSuccess(browser.createInitialState(['en-US']), { ok: true, snapshot })
+
+    state = { ...state, view: 'specs' }
+    expect(browser.renderAppHtml(state)).toContain('<section class="grid master-detail has-search">')
+    expect(browser.renderAppHtml(state)).toContain('class="card span-4 collection-card"')
+    expect(browser.renderAppHtml(state)).toContain('class="card span-8 detail-card"')
+
+    state = { ...state, view: 'history' }
+    expect(browser.renderAppHtml(state)).toContain('class="card span-4 collection-card"')
+    expect(browser.renderAppHtml(state)).toContain('class="card span-8 detail-card"')
+
+    state = { ...state, view: 'runs' }
+    expect(browser.renderAppHtml(state)).toContain('class="runs-workspace is-single-run"')
+    expect(browser.renderAppHtml(state)).toContain('class="run-workbench"')
+
+    state = { ...state, view: 'attention' }
+    const attentionHtml = browser.renderAppHtml(state)
+    expect(attentionHtml).toContain('data-view="attention" aria-current="page"')
+    expect(attentionHtml).toContain('class="card span-12 attention-card"')
+
+    const css = await readFile(join(webAssetsRoot, 'app.css'), 'utf8')
+    expect(css).toContain('grid-template-columns: repeat(2, 3.25rem)')
+    expect(css).toContain('grid-template-columns: repeat(5, minmax(0, 1fr))')
+    expect(css).toContain('height: 100dvh')
+    expect(css).toContain('overflow: hidden !important')
+    expect(css).toContain('max-height: min(32rem, 62vh)')
+    const neutralTabsRule = css.indexOf('.tabs button {')
+    const activeTabsRule = css.indexOf(`.tabs button[aria-current="page"] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}`)
+    expect(neutralTabsRule).toBeGreaterThanOrEqual(0)
+    expect(activeTabsRule).toBeGreaterThan(neutralTabsRule)
+    expect(css).toContain(`.tabs button[aria-current="page"]:hover {
+  border-color: var(--accent-hover);
+  background: var(--accent-hover);
+}`)
   })
 
   it('atomically clears detail and search projections after a successful source refresh', async () => {
@@ -544,18 +991,25 @@ Safe suffix.
     expect(runHtml).toContain('worker-web-1')
     expect(runHtml).toContain('missing')
     expect(runHtml).toContain('Objective: required verification')
-    expect(runHtml).toContain('out-of-order · duplicates 1 · conflicts 0')
-    expect(runHtml).toContain('out-of-order')
-    expect(runHtml).toContain('parent missing')
-    expect(runHtml.match(/parent missing · out-of-order/gu)).toHaveLength(2)
-    expect(runHtml).toContain('conflicts 1')
+    expect(runHtml).toContain('Invocation tree')
+    expect(runHtml).toContain('missing parent event')
+    expect(runHtml).toContain('2 anomaly/anomalies')
     expect(runHtml).toContain('source sequence 4')
-    expect(runHtml).toContain('[CHECKOUT]')
-    expect(runHtml).toContain('web/static/app.js')
-    expect(runHtml).toContain('[REDACTED]')
+    const serializedDetail = JSON.stringify(detail)
+    expect(serializedDetail).toContain('[CHECKOUT]')
+    expect(serializedDetail).toContain('web/static/app.js')
+    expect(serializedDetail).toContain('[REDACTED]')
     expect(runHtml).not.toContain('/private/project')
     expect(runHtml).not.toContain('C:\\private')
-    expect(JSON.stringify(detail)).not.toContain('sk-proj-ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+    expect(serializedDetail).not.toContain('sk-proj-ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+    expect(detail.run.dispatches[0]).toMatchObject({
+      parentRef: 'event-web-parent',
+      createdAt: '2026-08-08T08:00:02.000Z',
+    })
+    expect(detail.run.receipts[0]).toMatchObject({
+      parentRef: 'event-web-started',
+      observedAt: '2026-08-08T08:00:03.000Z',
+    })
     expect(runHtml).not.toContain('accepted')
     expect(managed.runs[0]).toMatchObject({
       runId: 'run-web-managed',
@@ -837,6 +1291,102 @@ Safe suffix.
       'incompatible',
     ])
     expect(events.map(event => event.id)).toEqual([1, 2])
+  })
+
+  it('migrates a supported runtime schema once before publishing the managed Web projection', async ({ onTestFinished }) => {
+    const fixture = await mkdtemp(join(tmpdir(), 'rsp-web-managed-migration-'))
+    const projectRoot = join(fixture, 'project')
+    initializeGitRepository(projectRoot, 'managed-migration')
+    const paths = resolveBrokerPaths({ root: join(fixture, 'cache') })
+    let openCalls = 0
+    let projectCalls = 0
+    const sessions = new BrokerProjectSessions(paths, 60_000, Date.now, {
+      open: async () => {
+        openCalls += 1
+        return { close() {} } as any
+      },
+      inspect: async () => runtimeProjectSnapshot('migration-required') as any,
+      dispose: async () => [],
+      project: async () => {
+        projectCalls += 1
+        return runtimeProjectSnapshot(openCalls === 0 ? 'migration-required' : 'ready')
+      },
+    })
+    onTestFinished(async () => {
+      sessions.close()
+      await rm(fixture, { recursive: true, force: true })
+    })
+    const registration = await sessions.register(projectRoot)
+    const bootstrap = sessions.createWebBootstrap(
+      registration.project.projectId,
+      registration.accessToken,
+    )
+    const authorization = sessions.consumeWebBootstrap(
+      registration.project.projectId,
+      bootstrap.bootstrapToken,
+    )
+
+    const first = await sessions.managedRuntimeForWeb(
+      registration.project.projectId,
+      authorization.webToken,
+    )
+    const second = await sessions.managedRuntimeForWeb(
+      registration.project.projectId,
+      authorization.webToken,
+    )
+
+    expect(first.state).toBe('ready')
+    expect(second.state).toBe('ready')
+    expect(openCalls).toBe(1)
+    expect(projectCalls).toBe(3)
+  })
+
+  it('keeps a failed migration diagnostic without retrying it on every managed Web poll', async ({ onTestFinished }) => {
+    const fixture = await mkdtemp(join(tmpdir(), 'rsp-web-managed-migration-failure-'))
+    const projectRoot = join(fixture, 'project')
+    initializeGitRepository(projectRoot, 'managed-migration-failure')
+    const paths = resolveBrokerPaths({ root: join(fixture, 'cache') })
+    let openCalls = 0
+    const sessions = new BrokerProjectSessions(paths, 60_000, Date.now, {
+      open: async () => {
+        openCalls += 1
+        throw new Error('migration failed')
+      },
+      inspect: async () => runtimeProjectSnapshot('migration-required') as any,
+      dispose: async () => [],
+      project: async () => runtimeProjectSnapshot('migration-required'),
+    })
+    onTestFinished(async () => {
+      sessions.close()
+      await rm(fixture, { recursive: true, force: true })
+    })
+    const registration = await sessions.register(projectRoot)
+    const bootstrap = sessions.createWebBootstrap(
+      registration.project.projectId,
+      registration.accessToken,
+    )
+    const authorization = sessions.consumeWebBootstrap(
+      registration.project.projectId,
+      bootstrap.bootstrapToken,
+    )
+
+    const first = await sessions.managedRuntimeForWeb(
+      registration.project.projectId,
+      authorization.webToken,
+    )
+    const second = await sessions.managedRuntimeForWeb(
+      registration.project.projectId,
+      authorization.webToken,
+    )
+
+    expect(first).toMatchObject({
+      state: 'migration-required',
+      diagnostic: {
+        code: 'runtime_migration_required',
+      },
+    })
+    expect(second.state).toBe('migration-required')
+    expect(openCalls).toBe(1)
   })
 
   it('revalidates a Web bearer after a slow managed refresh before replay or subscription', async ({ onTestFinished }) => {
@@ -1181,6 +1731,20 @@ setInterval(() => {}, 1000)
     const pageContent = await page.text()
     expect(pageContent).not.toContain(first.project.root)
     expect(pageContent).not.toContain(first.accessToken)
+    const appAsset = await fetch(`${handle.record.endpoint}/web/assets/app.js`)
+    expect(appAsset.status).toBe(200)
+    expect(appAsset.headers.get('content-type')).toContain('text/javascript')
+    const appContent = await appAsset.text()
+    expect(appContent).toContain('RSP Web Observatory')
+    expect(appContent).toContain('RSP \\u7F51\\u9875\\u89C2\\u6D4B\\u53F0')
+    expect(appContent).toContain('createRoot')
+    expect(appContent).not.toMatch(/^#!/u)
+    expect(appContent).not.toContain('sourceMappingURL')
+    expect(appContent).not.toMatch(/\bimport\s/u)
+    expect(Buffer.byteLength(appContent)).toBeLessThanOrEqual(8 * 1024 * 1024)
+    expect((await fetch(`${handle.record.endpoint}/web/assets/app.js?cache=1`)).status).toBe(400)
+    expect((await fetch(`${handle.record.endpoint}/web/assets/i18n.js`)).status).toBe(404)
+    expect((await fetch(`${handle.record.endpoint}/web/assets/messages.js`)).status).toBe(404)
 
     const bootstrapValue = await brokerProjectRequest(
       first,
@@ -1270,6 +1834,8 @@ setInterval(() => {}, 1000)
     )
     expect(specsDetail.response.status).toBe(200)
     expect(specsDetail.value.projection.document.path).toBe('.rsp/specs/design.md')
+    expect(specsDetail.value.projection.document.markdown.blocks.length).toBeGreaterThan(0)
+    expect(specsDetail.value.projection.document.markdown).not.toHaveProperty('position')
     const specsSearch = await authenticatedWebRequest(
       handle.record.endpoint,
       `/v1/web/projects/${first.project.projectId}/specs/search?q=runtime&limit=5`,
@@ -1279,11 +1845,12 @@ setInterval(() => {}, 1000)
     expect(specsSearch.value.projection.query).toEqual({ literal: 'runtime', limit: 5 })
     const historyDetail = await authenticatedWebRequest(
       handle.record.endpoint,
-      `/v1/web/projects/${first.project.projectId}/history/detail?workRef=done`,
+      `/v1/web/projects/${first.project.projectId}/history/detail?historyId=${'a'.repeat(64)}`,
       webToken,
     )
     expect(historyDetail.response.status).toBe(200)
     expect(historyDetail.value.projection.record.workRef).toBe('done')
+    expect(historyDetail.value.projection.document.markdown.blocks.length).toBeGreaterThan(0)
     const pathTraversal = await authenticatedWebRequest(
       handle.record.endpoint,
       `/v1/web/projects/${first.project.projectId}/specs/detail?path=${encodeURIComponent('../secret.md')}`,
@@ -1356,6 +1923,55 @@ setInterval(() => {}, 1000)
     })
     expect(writeAttempt.status).toBe(404)
   }, 20_000)
+
+  it('keeps static reads bounded per asset while allowing the React bundle to grow beyond the former shared ceiling', async ({ onTestFinished }) => {
+    const fixture = await mkdtemp(join(tmpdir(), 'rsp-web-asset-bounds-'))
+    const assets = join(fixture, 'assets')
+    const projectRoot = join(fixture, 'project')
+    initializeGitRepository(projectRoot, 'web-asset-bounds')
+    await mkdir(assets, { recursive: true })
+    await writeFile(join(assets, 'index.html'), 'h'.repeat(1024 * 1024))
+    await writeFile(join(assets, 'app.css'), 'c'.repeat(2 * 1024 * 1024))
+    await writeFile(join(assets, 'app.js'), 'j'.repeat(8 * 1024 * 1024))
+    const handle = await startBrokerServer({
+      paths: resolveBrokerPaths({ root: join(fixture, 'cache') }),
+      packageVersion: '0.0.0-web-asset-bounds',
+      webAssetsRoot: assets,
+    })
+    onTestFinished(async () => {
+      await handle.close()
+      await rm(fixture, { recursive: true, force: true })
+    })
+    const project = await registerBrokerProject(handle.record, projectRoot)
+    const pageUrl = `${handle.record.endpoint}/web/${project.project.projectId}/`
+
+    const exactHtml = await fetch(pageUrl)
+    const exactCss = await fetch(`${handle.record.endpoint}/web/assets/app.css`)
+    const exactJavaScript = await fetch(`${handle.record.endpoint}/web/assets/app.js`)
+    expect(exactHtml.status).toBe(200)
+    expect(exactCss.status).toBe(200)
+    expect(exactJavaScript.status).toBe(200)
+    expect((await exactHtml.arrayBuffer()).byteLength).toBe(1024 * 1024)
+    expect((await exactCss.arrayBuffer()).byteLength).toBe(2 * 1024 * 1024)
+    expect((await exactJavaScript.arrayBuffer()).byteLength).toBe(8 * 1024 * 1024)
+
+    await writeFile(join(assets, 'index.html'), 'h'.repeat(1024 * 1024 + 1))
+    await writeFile(join(assets, 'app.css'), 'c'.repeat(2 * 1024 * 1024 + 1))
+    await writeFile(join(assets, 'app.js'), 'x'.repeat(8 * 1024 * 1024 + 1))
+    for (const url of [
+      pageUrl,
+      `${handle.record.endpoint}/web/assets/app.css`,
+      `${handle.record.endpoint}/web/assets/app.js`,
+    ]) {
+      const oversized = await fetch(url)
+      expect(oversized.status).toBe(500)
+      expect(await oversized.json()).toMatchObject({
+        error: {
+          code: 'web_asset_too_large',
+        },
+      })
+    }
+  })
 
   it('expires injected-clock Web credentials and consumes a concurrent bootstrap exactly once', async ({ onTestFinished }) => {
     const fixture = await mkdtemp(join(tmpdir(), 'rsp-web-session-clock-'))
@@ -1600,9 +2216,19 @@ setInterval(() => {}, 1000)
 })
 
 async function loadBrowserModule(): Promise<{
-  createInitialState: () => any
+  AUTO_REFRESH_INTERVAL_MS: number
+  createInitialState: (languages?: string[]) => any
+  applyLocaleSelection: (state: any, locale: string) => any
+  applyAutoRefreshSelection: (state: any, enabled: boolean) => any
   applySnapshotSuccess: (state: any, envelope: any) => any
   applySnapshotFailure: (state: any, error: any) => any
+  applyOperationFailure: (state: any, error: any) => any
+  shouldAutoRefresh: (state: any, visibilityState?: string) => boolean
+  historyDetailRequestPaths: (projectId: string, lookupId: string | undefined, workRef?: string) => {
+    current: string | null
+    legacy: string | null
+  }
+  isRouteContractMismatch: (error: unknown) => boolean
   applyManagedEvent: (state: any, event: any) => { state: any, refresh: boolean }
   createSseParser: (onEvent: (event: any) => void) => {
     push: (chunk: string) => void
@@ -1612,8 +2238,15 @@ async function loadBrowserModule(): Promise<{
   applyProjectionSuccess: (state: any, kind: 'detail' | 'search', projection: any, request: any, coordinator: any) => any
   renderAppHtml: (state: any) => string
   escapeHtml: (value: string) => string
+  formatTimestamp: (value: string, locale?: string) => string
 }> {
-  return import(pathToFileURL(join(webAssetsRoot, 'app.js')).href)
+  return import('../web/src/testing.js')
+}
+
+async function loadBrowserI18nModule(): Promise<{
+  catalogs: Record<'en' | 'zh-CN', Record<string, string>>
+}> {
+  return import('../web/src/i18n.js')
 }
 
 function fixtureWebService(
@@ -1629,9 +2262,9 @@ function fixtureWebService(
         snapshot.specs.documents = [{
           path: '.rsp/specs/oversized.md',
           kind: 'spec',
-          title: 'x'.repeat(70 * 1024),
+          title: 'x'.repeat(BROKER_MAX_JSON_RESPONSE_BYTES + 1024),
           summary: null,
-          bytes: 70 * 1024,
+          bytes: BROKER_MAX_JSON_RESPONSE_BYTES + 1024,
         }]
       }
       return snapshot
@@ -1648,6 +2281,19 @@ function fixtureWebService(
           bytes: 10,
           content: '# Fixture',
           contentTruncated: false,
+          markdown: {
+            blocks: [{
+              type: 'heading',
+              depth: 1,
+              children: [{ type: 'text', value: 'Fixture' }],
+            }],
+            bounded: false,
+            unsupported: false,
+          },
+          metadata: {
+            kind: null,
+            status: null,
+          },
         },
       }
     },
@@ -1660,12 +2306,12 @@ function fixtureWebService(
         summary: { candidates: 0, searched: 0, matched: 0, returned: 0, hasMore: false },
       }
     },
-    async historyDetail(_project, workRef) {
+    async historyDetail(_project, _lookupId) {
       return {
         mode: 'detail',
         record: {
           date: '2026-08-08',
-          workRef,
+          workRef: 'done',
           group: null,
           kind: 'feature',
           summary: 'Fixture',
@@ -1679,6 +2325,20 @@ function fixtureWebService(
             tasks: { items: ['done'], truncated: false },
             verify: { items: ['passed'], truncated: false },
             blockers: { items: [], truncated: false },
+          },
+        },
+        document: {
+          path: '.rsp/archives/2026-08-08_done.md',
+          content: '# Change: done',
+          contentTruncated: false,
+          markdown: {
+            blocks: [{
+              type: 'heading',
+              depth: 1,
+              children: [{ type: 'text', value: 'Change: done' }],
+            }],
+            bounded: false,
+            unsupported: false,
           },
         },
       }
@@ -1812,6 +2472,12 @@ function fixtureManagedProjection(): ManageRuntimeProjectProjection {
         sequence: 2,
         lane: 'verify',
         workerId: 'worker-web-1',
+        workerDisplayName: null,
+        workerRole: null,
+        parentRef: 'event-web-parent',
+        parentDispatchId: null,
+        relationship: 'missing',
+        createdAt: '2026-08-08T08:00:02.000Z',
         parentState: 'missing',
         outOfOrder: true,
         objectiveRef: 'required verification',
@@ -1842,6 +2508,8 @@ function fixtureManagedProjection(): ManageRuntimeProjectProjection {
         ],
         verificationRefs: ['vitest-web-observatory'],
         stopBoundary: 'same-scope',
+        parentRef: 'event-web-started',
+        observedAt: '2026-08-08T08:00:03.000Z',
         deliveryCount: 2,
         duplicateCount: 1,
         conflictCount: 1,
@@ -1863,6 +2531,8 @@ function fixtureManagedProjection(): ManageRuntimeProjectProjection {
         evidenceRefs: [],
         sourceRefs: [],
         stopBoundary: null,
+        parentRef: 'event-web-parent',
+        observedAt: '2026-08-08T08:00:01.000Z',
         parentState: 'missing',
         outOfOrder: true,
         deliveryCount: 1,
@@ -1883,6 +2553,8 @@ function fixtureManagedProjection(): ManageRuntimeProjectProjection {
         dispatchId: null,
         kind: 'manage-run-started',
         summary: 'Managed run observed',
+        parentRef: 'event-web-parent',
+        observedAt: '2026-08-08T08:00:01.000Z',
         parentState: 'missing',
         outOfOrder: true,
         duplicateCount: 0,
@@ -1901,6 +2573,10 @@ function fixtureManagedProjection(): ManageRuntimeProjectProjection {
         dispatchId: 'dispatch-web-1',
         kind: 'dispatch',
         summary: 'required verification',
+        parentRef: 'event-web-parent',
+        createdAt: '2026-08-08T08:00:02.000Z',
+        receiptState: 'missing',
+        terminalState: 'missing',
         parentState: 'missing',
         outOfOrder: true,
         duplicateCount: 1,
@@ -1926,20 +2602,33 @@ function fixtureManagedProjection(): ManageRuntimeProjectProjection {
 }
 
 function runtimeProjectSnapshot(
-  state: 'absent' | 'incompatible',
+  state: 'absent' | 'incompatible' | 'migration-required' | 'ready',
 ): RuntimeProjectProjectionSnapshot {
+  const schema = state === 'migration-required'
+    ? { major: 1, version: 3 }
+    : state === 'ready'
+      ? { major: 1, version: 4 }
+      : null
   return {
     state,
-    schema: null,
-    diagnostic: {
-      code: state === 'absent'
-        ? 'runtime_database_absent'
-        : 'runtime_schema_incompatible',
-      message: state === 'absent'
-        ? 'Managed runtime storage is absent for this checkout'
-        : 'Managed runtime storage is incompatible for this checkout',
-      action: null,
-    },
+    schema,
+    diagnostic: state === 'ready'
+      ? null
+      : {
+          code: state === 'absent'
+            ? 'runtime_database_absent'
+            : state === 'incompatible'
+              ? 'runtime_schema_incompatible'
+              : 'runtime_migration_required',
+          message: state === 'absent'
+            ? 'Managed runtime storage is absent for this checkout'
+            : state === 'incompatible'
+              ? 'Managed runtime storage is incompatible for this checkout'
+              : 'Runtime database schema 1.3 requires migration to 1.4',
+          action: state === 'migration-required'
+            ? 'Open the checkout through a compatible RSP Broker session to migrate it atomically'
+            : null,
+        },
     runs: [],
     runsTruncated: false,
     projections: [],

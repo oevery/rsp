@@ -9,6 +9,7 @@ import { CHANGES_DIR, clearConfigCache, RSP_DIR } from '../../src/core/config.js
 
 let testDir: string
 let origCwd: string
+let originalBrokerCacheHome: string | undefined
 const repoRoot = fileURLToPath(new URL('../..', import.meta.url))
 
 export function rspPath(...parts: string[]) {
@@ -182,6 +183,8 @@ beforeAll(async () => {
   testDir = join(tmpdir(), 'rsp-int-test', randomUUID())
   await mkdir(testDir, { recursive: true })
   origCwd = process.cwd()
+  originalBrokerCacheHome = process.env.RSP_BROKER_CACHE_HOME
+  process.env.RSP_BROKER_CACHE_HOME = join(testDir, 'broker-cache')
   process.chdir(testDir)
 
   const dirs = ['specs', 'changes', 'archives', 'focus.d']
@@ -194,5 +197,9 @@ beforeAll(async () => {
 
 afterAll(() => {
   process.chdir(origCwd)
+  if (originalBrokerCacheHome === undefined)
+    delete process.env.RSP_BROKER_CACHE_HOME
+  else
+    process.env.RSP_BROKER_CACHE_HOME = originalBrokerCacheHome
   clearConfigCache()
 })

@@ -29,7 +29,7 @@
 | Repository area | Directories | Ownership |
 | --- | --- | --- |
 | Product runtime | `src/`, `bin/` | CLI registration, commands, domain interpretation, status/history inspection, filesystem safety, diagnostics, and interactive UI |
-| Product distribution | `rules/`, `skills/`, `web/static/` | Bundled fallback source, the default fourteen-Skill suite, independently installed optional project Skills, and framework-free Web Observatory assets |
+| Product distribution | `rules/`, `skills/`, `web/static/` | Bundled fallback source, the default fourteen-Skill suite, independently installed optional project Skills, and exact generated Web Observatory assets |
 | Project host integration | `.agents/skills/` | Live published-Skill projections and maintainer-only research capability |
 | Maintainer tooling | `scripts/` | Deterministic repository and upstream maintenance workflows |
 | Public guidance | `docs/site/` | Paired English and Simplified Chinese user guides rendered by VitePress |
@@ -56,7 +56,7 @@ Key runtime owners:
 - `bin/` loads built runtime. CLI registration delegates to commands, which use domain interpretation and core filesystem/output support.
 - Status may depend on core, while core does not depend on status. Pure status derivation and presenters do not inspect the filesystem or depend on commands or TUI.
 - Broker coordination may depend on core configuration and the shared process-identity adapter. Core, status, history, Specs, lifecycle, and Git commands do not depend on Broker startup or session state.
-- TUI, Broker, and Web presenters may depend on presentation-neutral status, history, and Specs seams and types; those domain modules and core do not depend on presenters. The Web bundle is authored HTML/CSS/JavaScript with no framework dependency, while React, Ink, and Yoga remain isolated to lazy terminal paths and all presentation dependencies stay outside ordinary command evaluation.
+- TUI, Broker, and Web presenters may depend on presentation-neutral status, history, and Specs seams and types; those domain modules and core do not depend on presenters. The Web presenter uses one browser-targeted React root compiled into an exact static ESM bundle, while Ink and Yoga remain isolated to lazy terminal paths and all presentation dependencies stay outside ordinary command evaluation.
 - Product runtime does not import research, caches, host Skill projections, self-hosting `.rsp/` state, or maintainer-only scripts.
 - Published rules and Skills operate without a source checkout, research corpus, or upstream cache.
 - Maintainer tooling and research may inspect product artifacts but reach product surfaces only through a selected normal RSP Change.

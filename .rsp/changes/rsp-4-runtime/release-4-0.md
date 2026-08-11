@@ -77,4 +77,10 @@ kind: "feature"
   - Push, tag, hosted release, npm publication, registry reconciliation, and exact remote installation remain outside this local Change.
 
 ## Blockers
+- requires `rsp-4-runtime/web-localization`: include the accepted bilingual browser presentation and exact shipped asset inventory before release finalization
+- requires `rsp-4-runtime/parallel-run-visualization`: include the accepted parallel managed-run graph and exact projection compatibility before release finalization
+- requires `rsp-4-runtime/managed-run-invocation-tree`: include the accepted invocation-identity hierarchy, repeated-call presentation, optional worker labels, and retained sequence audit views before release finalization
+- requires `rsp-4-runtime/markdown-document-presentation`: include the accepted safe Markdown presentation and direct parser/package inventory before release finalization
+- requires `rsp-4-runtime/web-content-presentation`: include complete Specs/History document presentation, modern responsive styling, and the final transport/asset bounds before release finalization
+- requires `rsp-4-runtime/broker-restart`: include the accepted serialized restart command and same-protocol-major upgrade replacement semantics before release finalization
 - explicit owner authority to begin release finalization, followed by a dedicated exact release commit and clean `release:candidate-check`

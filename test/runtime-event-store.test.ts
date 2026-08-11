@@ -377,6 +377,132 @@ describe.sequential('runtime event store', () => {
     })
   })
 
+  it('stores redacted worker presentation metadata and derives exact invocation relationships', async ({ onTestFinished }) => {
+    const fixture = await mkdtemp(join(tmpdir(), 'rsp-runtime-invocations-'))
+    const namespacePath = join(fixture, 'runtime')
+    const project = await runtimeProject(fixture, 'invocations')
+    onTestFinished(() => rm(fixture, { force: true, recursive: true }))
+    const store = await openRuntimeEventStore({ namespacePath, project })
+    onTestFinished(() => store.close())
+    store.ensureRun({
+      runId: 'run-invocations',
+      runKey: 'run-key-invocations',
+      workRef: 'rsp-4-runtime/managed-run-invocation-tree',
+    })
+    store.appendEvent({
+      runId: 'run-invocations',
+      eventId: 'event-manager-root',
+      idempotencyKey: 'event-key-manager-root',
+      kind: 'manage-run-started',
+      actorType: 'manager',
+      actorId: 'manager-invocations',
+    })
+    store.registerDispatch({
+      runId: 'run-invocations',
+      dispatchId: 'dispatch-parent',
+      idempotencyKey: 'dispatch-key-parent',
+      lane: 'implementation',
+      workerId: 'worker-shared',
+      workerDisplayName: 'token=supersecretvalue',
+      workerRole: 'implementation',
+      parentEventId: 'event-manager-root',
+    })
+    store.appendEvent({
+      runId: 'run-invocations',
+      eventId: 'event-parent-progress',
+      idempotencyKey: 'event-key-parent-progress',
+      kind: 'worker-progress',
+      actorType: 'worker',
+      actorId: 'worker-shared',
+      dispatchId: 'dispatch-parent',
+    })
+    store.registerDispatch({
+      runId: 'run-invocations',
+      dispatchId: 'dispatch-child',
+      idempotencyKey: 'dispatch-key-child',
+      lane: 'verification',
+      workerId: 'worker-shared',
+      workerDisplayName: 'blue-otter',
+      workerRole: 'verification',
+      parentEventId: 'event-parent-progress',
+    })
+    store.registerDispatch({
+      runId: 'run-invocations',
+      dispatchId: 'dispatch-missing',
+      idempotencyKey: 'dispatch-key-missing',
+      lane: 'review',
+      workerId: 'worker-missing',
+      parentEventId: 'event-never-retained',
+    })
+    store.registerDispatch({
+      runId: 'run-invocations',
+      dispatchId: 'dispatch-later',
+      idempotencyKey: 'dispatch-key-later',
+      lane: 'review',
+      workerId: 'worker-later',
+      parentEventId: 'event-later-manager',
+    })
+    store.appendEvent({
+      runId: 'run-invocations',
+      eventId: 'event-later-manager',
+      idempotencyKey: 'event-key-later-manager',
+      kind: 'manager-observed',
+      actorType: 'manager',
+      actorId: 'manager-invocations',
+    })
+    store.registerDispatch({
+      runId: 'run-invocations',
+      dispatchId: 'dispatch-self',
+      idempotencyKey: 'dispatch-key-self',
+      lane: 'inspect',
+      workerId: 'worker-self',
+      parentEventId: 'event-self-parent',
+    })
+    store.appendEvent({
+      runId: 'run-invocations',
+      eventId: 'event-self-parent',
+      idempotencyKey: 'event-key-self-parent',
+      kind: 'worker-progress',
+      actorType: 'worker',
+      actorId: 'worker-self',
+      dispatchId: 'dispatch-self',
+    })
+
+    const projection = store.projectRun('run-invocations')
+    expect(projection.dispatches).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        dispatchId: 'dispatch-parent',
+        workerDisplayName: '[REDACTED]',
+        workerRole: 'implementation',
+        parentDispatchId: null,
+        relationship: 'manager-root',
+        redactionCount: 1,
+      }),
+      expect.objectContaining({
+        dispatchId: 'dispatch-child',
+        workerDisplayName: 'blue-otter',
+        workerRole: 'verification',
+        parentDispatchId: 'dispatch-parent',
+        relationship: 'resolved',
+      }),
+      expect.objectContaining({
+        dispatchId: 'dispatch-missing',
+        parentDispatchId: null,
+        relationship: 'missing',
+      }),
+      expect.objectContaining({
+        dispatchId: 'dispatch-later',
+        parentDispatchId: null,
+        relationship: 'later',
+      }),
+      expect.objectContaining({
+        dispatchId: 'dispatch-self',
+        parentDispatchId: 'dispatch-self',
+        relationship: 'same-dispatch',
+      }),
+    ]))
+  })
+
   it('migrates older schemas to the current version and fails closed for newer, incomplete, and corrupt databases', async ({ onTestFinished }) => {
     const fixture = await mkdtemp(join(tmpdir(), 'rsp-runtime-migrations-'))
     const project = await runtimeProject(fixture, 'migrations')

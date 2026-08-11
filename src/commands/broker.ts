@@ -1,5 +1,5 @@
 import type { BrokerDiscoveryRecord } from '../broker/protocol.js'
-import { getBrokerStatus, inspectBroker, startBroker, stopBroker } from '../broker/client.js'
+import { getBrokerStatus, inspectBroker, restartBroker, startBroker, stopBroker } from '../broker/client.js'
 import { BrokerError } from '../broker/protocol.js'
 import { emitJson } from '../core/output.js'
 
@@ -86,8 +86,42 @@ export async function stopBrokerCommand(options: BrokerCommandOptions = {}): Pro
   }
 }
 
+export async function restartBrokerCommand(options: BrokerCommandOptions = {}): Promise<{ ok: boolean }> {
+  try {
+    const result = await restartBroker()
+    const status = await getBrokerStatus(result.record)
+    const output = {
+      command: 'broker',
+      action: 'restart',
+      ok: true,
+      state: 'running',
+      restarted: result.restarted,
+      staleRecovered: result.staleRecovered,
+      previousBroker: result.previousRecord ? commandBrokerIdentity(result.previousRecord) : null,
+      broker: commandBrokerIdentity(result.record),
+      sessionCount: status.sessionCount,
+    }
+    if (options.json) {
+      emitJson(output)
+    }
+    else if (result.restarted && result.previousRecord) {
+      console.log(`  Broker restarted: ${result.record.endpoint} (pid ${result.record.pid}, previous pid ${result.previousRecord.pid})`)
+    }
+    else if (result.staleRecovered) {
+      console.log(`  Removed stale Broker discovery metadata and started: ${result.record.endpoint} (pid ${result.record.pid})`)
+    }
+    else {
+      console.log(`  Broker was not running; started: ${result.record.endpoint} (pid ${result.record.pid})`)
+    }
+    return { ok: true }
+  }
+  catch (error) {
+    return brokerCommandFailure('restart', error, options)
+  }
+}
+
 function brokerCommandFailure(
-  action: 'start' | 'status' | 'stop',
+  action: 'start' | 'status' | 'stop' | 'restart',
   error: unknown,
   options: BrokerCommandOptions,
 ): { ok: false } {

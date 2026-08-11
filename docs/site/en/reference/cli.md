@@ -46,10 +46,13 @@ rsp group reopen <name> --reason <text>
 rsp broker status [--json]     Inspect discovery and compatibility without starting a service
 rsp broker start [--json]      Start or reuse one compatible user-level Broker
 rsp broker stop [--json]       Cooperatively stop the compatible Broker or clean stale metadata
+rsp broker restart [--json]    Replace one verified same-protocol-major Broker with a fresh process
 rsp web [--json] [--print-url] Open the read-only Observatory for the current checkout
 ```
 
 The Broker is optional operational transport for later runtime and Web capabilities. Ordinary `status`, `check`, `show`, `ready`, `specs`, lifecycle, Git, and repair commands remain one-shot: they neither require the Broker nor create its cache. `broker status` also stays cache-free when no Broker exists and reports absence successfully.
+
+`broker restart` holds one startup lock across cooperative shutdown or stale discovery recovery and fresh daemon publication. It can replace a healthy, identity-verified Broker with the same protocol major even when its protocol minor or runtime schema is incompatible with the current package. A protocol-major mismatch or unhealthy owner still requires the compatible package and is never signaled directly. Restart discards loaded project sessions, Web bearers, SSE connections, and the old endpoint; run `rsp web` again for each page you want to reopen.
 
 Repository migration and runtime-cache disposal are separate. Update and doctor do not remove runtime databases or sidecars. If disposal is explicitly authorized, close the exact Broker/session/store owner, then import `resolveRuntimeDisposalTarget()` and `disposeRuntimeDatabase()` from `@oevery/rsp/dist/runtime-store.mjs`; derive the current checkout's exact cache/projects/namespace target and pass that complete target back to disposal. Never hand-delete runtime files, delete the whole Broker cache root, guess a project identity, copy a database between checkouts, or signal a recorded PID manually.
 

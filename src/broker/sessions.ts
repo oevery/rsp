@@ -64,6 +64,7 @@ interface BrokerProjectSession {
   managedProjection: ManageRuntimeProjectProjection | null
   managedProjectionFingerprint: string | null
   managedRefreshing: Promise<ManageRuntimeProjectProjection> | null
+  runtimeMigrationAttempted: boolean
   managedEventId: number
   managedEvents: BrokerManagedProjectionEvent[]
   managedSubscribers: Set<BrokerManagedSubscriber>
@@ -514,6 +515,7 @@ export class BrokerProjectSessions {
       managedProjection: null,
       managedProjectionFingerprint: null,
       managedRefreshing: null,
+      runtimeMigrationAttempted: false,
       managedEventId: 0,
       managedEvents: [],
       managedSubscribers: new Set(),
@@ -569,10 +571,24 @@ export class BrokerProjectSessions {
   private async loadManagedProjection(
     session: BrokerProjectSession,
   ): Promise<ManageRuntimeProjectProjection> {
-    const snapshot = await (this.runtimeOperations.project ?? readRuntimeProjectProjectionSnapshot)({
+    const projectRuntime = this.runtimeOperations.project ?? readRuntimeProjectProjectionSnapshot
+    let snapshot = await projectRuntime({
       namespacePath: session.namespacePath,
       project: session.identity,
     })
+    if (snapshot.state === 'migration-required' && !session.runtimeMigrationAttempted) {
+      session.runtimeMigrationAttempted = true
+      try {
+        await this.runtimeFor(session.identity.projectId, session.accessToken)
+        snapshot = await projectRuntime({
+          namespacePath: session.namespacePath,
+          project: session.identity,
+        })
+      }
+      catch {
+        // Keep the read-only migration diagnostic visible without retrying on every poll.
+      }
+    }
     if (this.sessions.get(session.identity.projectId) !== session) {
       throw new BrokerError(
         'broker_project_unloaded',

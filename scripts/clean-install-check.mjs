@@ -149,6 +149,26 @@ function parseJsonIfPossible(content) {
   }
 }
 
+function boundedProcessDiagnostic(content) {
+  const redacted = String(content ?? '')
+    .trim()
+    .replace(/Bearer\s+[\w.~+/=-]+/giu, 'Bearer [redacted]')
+    .replace(/("(?:accessToken|bootstrapToken|controlToken|webToken)"\s*:\s*)"[^"]*"/giu, '$1"[redacted]"')
+  const maximum = 4096
+  return redacted.length <= maximum
+    ? redacted
+    : `${redacted.slice(0, maximum)}…[truncated ${redacted.length - maximum} chars]`
+}
+
+function processFailureDiagnostic(result) {
+  return [
+    `status=${result.status ?? 'null'}`,
+    `signal=${result.signal ?? 'none'}`,
+    `stdout=${JSON.stringify(boundedProcessDiagnostic(result.stdout))}`,
+    `stderr=${JSON.stringify(boundedProcessDiagnostic(result.stderr))}`,
+  ].join('; ')
+}
+
 function recordBrokerPidFromOutput(content) {
   const pid = parseJsonIfPossible(content)?.broker?.pid
   if (!Number.isSafeInteger(pid) || pid <= 0)
@@ -178,6 +198,12 @@ function runInstalledWebSmoke(options) {
     '--eval',
     [
       'const { readFile } = await import("node:fs/promises")',
+      'if (process.env.RSP_PACKAGE_CHECK_TEST_WEB_SMOKE_FAILURE === "exit-17") {',
+      '  const { writeSync } = await import("node:fs")',
+      '  writeSync(1, "web-smoke-stdout\\n")',
+      '  writeSync(2, "web-smoke-stderr\\n")',
+      '  process.exit(17)',
+      '}',
       'const record = JSON.parse(await readFile(process.env.RSP_WEB_DISCOVERY, "utf8"))',
       'const endpoint = record.endpoint',
       'const request = async (path, init = {}) => {',
@@ -276,9 +302,9 @@ function runInstalledWebSmoke(options) {
       '  css: css.status,',
       '  script: script.status,',
       '  marker: pageText.includes("RSP Web Observatory")',
+      '    && scriptText.includes("createRoot")',
       '    && scriptText.includes("Stale snapshot")',
-      '    && scriptText.includes("Managed runtime unavailable")',
-      '    && scriptText.includes("Attention"),',
+      '    && scriptText.includes("Managed runtime unavailable"),',
       '  leaked,',
       '  csp: page.headers.get("content-security-policy"),',
       '  referrer: page.headers.get("referrer-policy"),',
@@ -324,7 +350,7 @@ function runInstalledWebSmoke(options) {
     || output?.gap !== true
     || !String(output?.csp).includes(`default-src 'none'`)
     || output?.referrer !== 'no-referrer') {
-    fail(`Installed Web Observatory smoke failed: ${result.stderr.trim()}`)
+    fail(`Installed Web Observatory smoke failed: ${processFailureDiagnostic(result)}`)
   }
   return {
     commandSafe: true,
@@ -594,6 +620,7 @@ function main() {
         'const after = await runtime.inspectRuntimeDatabase(target.namespacePath, project)',
         'process.stdout.write(JSON.stringify({',
         '  schema: inspection.schema,',
+        '  supportedSchemaVersion: runtime.RUNTIME_STORE_SCHEMA_VERSION,',
         '  state: inspection.state,',
         '  eventCount: projection.events.length,',
         '  manageCapability: capability.descriptor.name + "@" + capability.descriptor.version.major + "." + capability.descriptor.version.minor,',
@@ -621,7 +648,7 @@ function main() {
     if (runtimeSmoke.status !== 0
       || runtimeSmokeOutput?.state !== 'ready'
       || runtimeSmokeOutput?.schema?.major !== 1
-      || runtimeSmokeOutput?.schema?.version !== 3
+      || runtimeSmokeOutput?.schema?.version !== runtimeSmokeOutput?.supportedSchemaVersion
       || runtimeSmokeOutput?.eventCount !== 1
       || runtimeSmokeOutput?.manageCapability !== 'rsp.manage-runtime@1.0'
       || runtimeSmokeOutput?.manageRunId !== 'package-manage-run'

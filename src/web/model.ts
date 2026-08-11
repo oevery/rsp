@@ -81,7 +81,42 @@ export interface WebSpecsProjection {
   }
 }
 
+export type WebMarkdownInline
+  = { type: 'text', value: string }
+    | { type: 'emphasis', children: WebMarkdownInline[] }
+    | { type: 'strong', children: WebMarkdownInline[] }
+    | { type: 'inline-code', value: string }
+    | { type: 'link', href: string, title: string | null, children: WebMarkdownInline[] }
+    | { type: 'break' }
+    | { type: 'unsupported', reason: 'html' | 'image' | 'unsafe-link' | 'syntax', children: WebMarkdownInline[] }
+
+export interface WebMarkdownListItem {
+  checked: boolean | null
+  blocks: WebMarkdownBlock[]
+}
+
+export type WebMarkdownBlock
+  = { type: 'heading', depth: 1 | 2 | 3 | 4 | 5 | 6, children: WebMarkdownInline[] }
+    | { type: 'paragraph', children: WebMarkdownInline[] }
+    | { type: 'list', ordered: boolean, start: number | null, items: WebMarkdownListItem[] }
+    | { type: 'blockquote', blocks: WebMarkdownBlock[] }
+    | { type: 'code', language: string | null, value: string }
+    | { type: 'thematic-break' }
+    | { type: 'unsupported', reason: 'html' | 'image' | 'unsafe-link' | 'syntax' }
+
+export interface WebMarkdownProjection {
+  blocks: WebMarkdownBlock[]
+  bounded: boolean
+  unsupported: boolean
+}
+
+export interface WebDocumentMetadata {
+  kind: string | null
+  status: string | null
+}
+
 export interface WebHistoryRecord {
+  lookupId: string
   date: string
   workRef: string
   group: string | null
@@ -144,6 +179,8 @@ export interface WebSpecsDetailProjection {
   document: WebSpecsDocument & {
     content: string
     contentTruncated: boolean
+    markdown: WebMarkdownProjection
+    metadata: WebDocumentMetadata
   }
 }
 
@@ -174,6 +211,12 @@ export interface WebSpecsSearchProjection {
 export interface WebHistoryDetailProjection {
   mode: 'detail'
   record: Omit<HistoryDetailOutput, 'path' | 'issues'>
+  document: {
+    path: string
+    content: string
+    contentTruncated: false
+    markdown: WebMarkdownProjection
+  }
 }
 
 export interface WebManagedFreshness {

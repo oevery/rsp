@@ -15,6 +15,7 @@ import {
   getBrokerStatus,
   inspectBroker,
   registerBrokerProject,
+  restartBroker,
   startBroker,
   stopBroker,
 } from '../src/broker/client.js'
@@ -93,6 +94,132 @@ describe.sequential('broker protocol and lifecycle', () => {
     expect(existsSync(paths.startLock)).toBe(false)
   }, 20_000)
 
+  it('restarts one healthy Broker as a fresh zero-session singleton through the CLI', async ({ onTestFinished }) => {
+    requireBuiltBroker()
+    const fixture = await mkdtemp(join(tmpdir(), 'rsp-broker-restart-'))
+    const paths = resolveBrokerPaths({ root: join(fixture, 'cache') })
+    const repository = join(fixture, 'repository')
+    await initializeGitRepository(repository, 'restart-fixture')
+    onTestFinished(async () => {
+      await cleanupDaemonBroker(paths)
+      await rm(fixture, { recursive: true, force: true })
+    })
+    const environment = {
+      ...process.env,
+      RSP_BROKER_CACHE_HOME: paths.root,
+    }
+    const started = await runCli(['broker', 'start', '--json'], fixture, environment)
+    expect(started.status, started.stderr || started.stdout).toBe(0)
+    const first = JSON.parse(started.stdout) as Record<string, any>
+    const inspection = await inspectBroker({ paths })
+    expect(inspection.state).toBe('running')
+    await registerBrokerProject(inspection.record!, repository)
+    expect((await getBrokerStatus(inspection.record!)).sessionCount).toBe(1)
+
+    const restarted = await runCli(['broker', 'restart', '--json'], fixture, environment)
+
+    expect(restarted.status, restarted.stderr || restarted.stdout).toBe(0)
+    const output = JSON.parse(restarted.stdout) as Record<string, any>
+    expect(output).toMatchObject({
+      command: 'broker',
+      action: 'restart',
+      ok: true,
+      state: 'running',
+      restarted: true,
+      staleRecovered: false,
+      sessionCount: 0,
+    })
+    expect(output.previousBroker.instanceId).toBe(first.broker.instanceId)
+    expect(output.previousBroker.pid).toBe(first.broker.pid)
+    expect(output.broker.instanceId).not.toBe(first.broker.instanceId)
+    expect(output.broker.pid).not.toBe(first.broker.pid)
+    const current = await inspectBroker({ paths })
+    expect(current.state).toBe('running')
+    expect(current.record?.instanceId).toBe(output.broker.instanceId)
+    expect(existsSync(paths.startLock)).toBe(false)
+  }, 20_000)
+
+  it('replaces a healthy same-major older-minor Broker without an older client', async ({ onTestFinished }) => {
+    requireBuiltBroker()
+    const fixture = await mkdtemp(join(tmpdir(), 'rsp-broker-restart-upgrade-'))
+    const paths = resolveBrokerPaths({ root: join(fixture, 'cache') })
+    const previous = await startBrokerServer({
+      paths,
+      packageVersion: '0.0.0-older-minor-fixture',
+      protocol: {
+        major: BROKER_PROTOCOL_VERSION.major,
+        minor: BROKER_PROTOCOL_VERSION.minor - 1,
+      },
+    })
+    onTestFinished(async () => {
+      await cleanupDaemonBroker(paths)
+      await previous.close()
+      await rm(fixture, { recursive: true, force: true })
+    })
+
+    const result = await restartBroker({
+      paths,
+      daemonEntry: join(repositoryRoot, 'dist', 'broker-daemon.mjs'),
+    })
+
+    expect(result.restarted).toBe(true)
+    expect(result.staleRecovered).toBe(false)
+    expect(result.previousRecord?.instanceId).toBe(previous.record.instanceId)
+    expect(result.record.instanceId).not.toBe(previous.record.instanceId)
+    expect(result.record.protocol).toEqual(BROKER_PROTOCOL_VERSION)
+    expect((await getBrokerStatus(result.record)).sessionCount).toBe(0)
+  }, 20_000)
+
+  it('starts from absence through restart and reports that no live owner was replaced', async ({ onTestFinished }) => {
+    requireBuiltBroker()
+    const fixture = await mkdtemp(join(tmpdir(), 'rsp-broker-restart-absent-'))
+    const paths = resolveBrokerPaths({ root: join(fixture, 'cache') })
+    onTestFinished(async () => {
+      await cleanupDaemonBroker(paths)
+      await rm(fixture, { recursive: true, force: true })
+    })
+
+    const result = await restartBroker({
+      paths,
+      daemonEntry: join(repositoryRoot, 'dist', 'broker-daemon.mjs'),
+    })
+
+    expect(result).toMatchObject({
+      previousRecord: null,
+      restarted: false,
+      staleRecovered: false,
+    })
+    expect((await inspectBroker({ paths })).state).toBe('running')
+  }, 20_000)
+
+  it('recovers stale discovery through restart before starting a fresh Broker', async ({ onTestFinished }) => {
+    requireBuiltBroker()
+    const fixture = await mkdtemp(join(tmpdir(), 'rsp-broker-restart-stale-'))
+    const paths = resolveBrokerPaths({ root: join(fixture, 'cache') })
+    const stale = discoveryRecord({
+      pid: 2_147_483_000,
+      processIdentity: 'dead-restart-owner',
+    })
+    await writeBrokerJsonAtomic(paths.discovery, stale)
+    onTestFinished(async () => {
+      await cleanupDaemonBroker(paths)
+      await rm(fixture, { recursive: true, force: true })
+    })
+
+    const result = await restartBroker({
+      paths,
+      daemonEntry: join(repositoryRoot, 'dist', 'broker-daemon.mjs'),
+    })
+
+    expect(result).toMatchObject({
+      previousRecord: expect.objectContaining({ instanceId: stale.instanceId }),
+      restarted: false,
+      staleRecovered: true,
+    })
+    expect(result.record.instanceId).not.toBe(stale.instanceId)
+    expect((await inspectBroker({ paths })).state).toBe('running')
+  }, 20_000)
+
   it('returns one canonical session token for concurrent registration of the same checkout', async ({ onTestFinished }) => {
     const fixture = await mkdtemp(join(tmpdir(), 'rsp-broker-register-race-'))
     const paths = resolveBrokerPaths({ root: join(fixture, 'cache') })
@@ -141,24 +268,13 @@ describe.sequential('broker protocol and lifecycle', () => {
     expect(result.record.packageVersion).toBe('0.0.0-compatible-fixture')
   })
 
-  it.each([
-    {
-      name: 'protocol major',
-      server: { protocol: { major: BROKER_PROTOCOL_VERSION.major + 1, minor: 0 } },
-      reason: 'protocol-major',
-    },
-    {
-      name: 'runtime schema major',
-      server: { runtimeSchema: { major: BROKER_RUNTIME_SCHEMA_VERSION.major + 1, minor: 0 } },
-      reason: 'runtime-schema-major',
-    },
-  ])('rejects an incompatible $name without starting a side-by-side Broker', async (fixtureCase) => {
+  it('rejects an incompatible protocol major without starting a side-by-side Broker', async () => {
     const fixture = await mkdtemp(join(tmpdir(), 'rsp-broker-incompatible-'))
     const paths = resolveBrokerPaths({ root: join(fixture, 'cache') })
     const handle = await startBrokerServer({
       paths,
       packageVersion: '0.0.0-incompatible-fixture',
-      ...fixtureCase.server,
+      protocol: { major: BROKER_PROTOCOL_VERSION.major + 1, minor: 0 },
     })
     registerTestCleanup(async () => {
       await handle.close()
@@ -168,7 +284,7 @@ describe.sequential('broker protocol and lifecycle', () => {
 
     const inspection = await inspectBroker({ paths })
     expect(inspection.state).toBe('incompatible')
-    expect(inspection.compatibility?.reason).toBe(fixtureCase.reason)
+    expect(inspection.compatibility?.reason).toBe('protocol-major')
     await expect(startBroker({
       paths,
       daemonEntry: join(fixture, 'must-not-start.mjs'),
@@ -179,9 +295,69 @@ describe.sequential('broker protocol and lifecycle', () => {
       paths,
       daemonEntry: join(fixture, 'must-not-start.mjs'),
     })).rejects.toThrow(/rsp broker stop.*intended package version/u)
+    await expect(restartBroker({
+      paths,
+      daemonEntry: join(fixture, 'must-not-start.mjs'),
+    })).rejects.toMatchObject({
+      code: 'broker_incompatible',
+    })
     expect(await readFile(paths.discovery, 'utf8')).toBe(before)
     expect(handle.sessions.sessionCount()).toBe(0)
   })
+
+  it('replaces an incompatible runtime schema when the verified control protocol major matches', async ({ onTestFinished }) => {
+    requireBuiltBroker()
+    const fixture = await mkdtemp(join(tmpdir(), 'rsp-broker-restart-runtime-schema-'))
+    const paths = resolveBrokerPaths({ root: join(fixture, 'cache') })
+    const previous = await startBrokerServer({
+      paths,
+      packageVersion: '0.0.0-runtime-schema-fixture',
+      runtimeSchema: {
+        major: BROKER_RUNTIME_SCHEMA_VERSION.major + 1,
+        minor: 0,
+      },
+    })
+    onTestFinished(async () => {
+      await cleanupDaemonBroker(paths)
+      await previous.close()
+      await rm(fixture, { recursive: true, force: true })
+    })
+    await expect(startBroker({
+      paths,
+      daemonEntry: join(fixture, 'must-not-start.mjs'),
+    })).rejects.toMatchObject({ code: 'broker_incompatible' })
+
+    const result = await restartBroker({
+      paths,
+      daemonEntry: join(repositoryRoot, 'dist', 'broker-daemon.mjs'),
+    })
+
+    expect(result.restarted).toBe(true)
+    expect(result.previousRecord?.instanceId).toBe(previous.record.instanceId)
+    expect(result.record.runtimeSchema).toEqual(BROKER_RUNTIME_SCHEMA_VERSION)
+  }, 20_000)
+
+  it('reports fresh startup failure after stopping the previous owner without starting side-by-side', async ({ onTestFinished }) => {
+    const fixture = await mkdtemp(join(tmpdir(), 'rsp-broker-restart-startup-failure-'))
+    const paths = resolveBrokerPaths({ root: join(fixture, 'cache') })
+    const previous = await startBrokerServer({
+      paths,
+      packageVersion: '0.0.0-restart-failure-fixture',
+    })
+    onTestFinished(async () => {
+      await previous.close()
+      await rm(fixture, { recursive: true, force: true })
+    })
+
+    await expect(restartBroker({
+      paths,
+      daemonEntry: join(fixture, 'missing-daemon-entry.mjs'),
+      startupTimeoutMs: 250,
+    })).rejects.toMatchObject({
+      code: 'broker_start_timeout',
+    })
+    expect((await inspectBroker({ paths })).state).toBe('absent')
+  }, 20_000)
 
   it('removes dead discovery metadata without signaling a process', async ({ onTestFinished }) => {
     const fixture = await mkdtemp(join(tmpdir(), 'rsp-broker-dead-'))
@@ -667,7 +843,7 @@ describe.sequential('broker protocol and lifecycle', () => {
   it('bounds status projection and every JSON response before sending headers', async () => {
     const sessions: BrokerProjectSessionPublic[] = Array.from({ length: 128 }, (_, index) => ({
       projectId: index.toString(16).padStart(64, '0'),
-      root: `/${'x'.repeat(4_000)}-${index}`,
+      root: `/${'x'.repeat(140_000)}-${index}`,
       filesystem: {
         device: String(index + 1),
         inode: String(index + 1),
@@ -682,7 +858,7 @@ describe.sequential('broker protocol and lifecycle', () => {
     expect(status.sessions.length).toBeLessThan(sessions.length)
     expect(encodeBrokerJsonResponse(status).byteLength).toBeLessThanOrEqual(BROKER_MAX_JSON_RESPONSE_BYTES)
     expect(() => encodeBrokerJsonResponse({ value: 'x'.repeat(BROKER_MAX_JSON_RESPONSE_BYTES) }))
-      .toThrow(/response exceeds 65536 bytes/u)
+      .toThrow(new RegExp(`response exceeds ${BROKER_MAX_JSON_RESPONSE_BYTES} bytes`, 'u'))
 
     const fixture = await mkdtemp(join(tmpdir(), 'rsp-broker-status-contract-'))
     const paths = resolveBrokerPaths({ root: join(fixture, 'cache') })

@@ -89,6 +89,13 @@ export function selectArchivedGroupBrief(records: ArchivedGroupBriefRecord[], se
 }
 
 export async function readArchiveHistoryDetail(record: ArchiveHistoryRecord): Promise<HistoryDetailOutput> {
+  return (await readArchiveHistoryDocument(record)).detail
+}
+
+export async function readArchiveHistoryDocument(record: ArchiveHistoryRecord): Promise<{
+  content: string
+  detail: HistoryDetailOutput
+}> {
   let content
   try {
     content = (await readCurrentArchiveFile({
@@ -109,7 +116,7 @@ export async function readArchiveHistoryDetail(record: ArchiveHistoryRecord): Pr
   const tasks = getDocumentSectionBody(document, 'tasks')
   const verify = getDocumentSectionBody(document, 'verify')
   const blockers = getDocumentSectionBody(document, 'blockers')
-  return {
+  const detail = {
     ...toOutputRecord(record),
     scenarioCount: parseScenarios(content).length,
     checkboxes: {
@@ -122,6 +129,7 @@ export async function readArchiveHistoryDetail(record: ArchiveHistoryRecord): Pr
       blockers: boundEvidence(blockers, true),
     },
   }
+  return { content, detail }
 }
 
 export function historyInspectionComplete(inspection: ArchiveHistoryInspection): boolean {

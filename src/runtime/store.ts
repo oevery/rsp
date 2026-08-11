@@ -186,11 +186,24 @@ export class RuntimeEventStore {
       RUNTIME_MAX_EVENT_PAYLOAD_BYTES,
       'runtime dispatch payload',
     )
+    const presentation = sanitizeRuntimePayload(
+      {
+        workerDisplayName: normalized.workerDisplayName,
+        workerRole: normalized.workerRole,
+      },
+      2 * 1024,
+      'runtime dispatch presentation metadata',
+    )
+    const presentationValue = runtimeJsonObject(presentation.value)
+    const workerDisplayName = runtimeOptionalString(presentationValue.workerDisplayName)
+    const workerRole = runtimeOptionalString(presentationValue.workerRole)
     const fingerprint = fingerprintOf([
       normalized.runId,
       normalized.dispatchId,
       normalized.lane,
       normalized.workerId,
+      workerDisplayName,
+      workerRole,
       normalized.parentEventId,
       sanitized.json,
     ])
@@ -262,22 +275,26 @@ export class RuntimeEventStore {
           sequence,
           lane,
           worker_id,
+          worker_display_name,
+          worker_role,
           parent_event_id,
           fingerprint,
           payload_json,
           redaction_count,
           created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         normalized.dispatchId,
         normalized.runId,
         sequence,
         normalized.lane,
         normalized.workerId,
+        workerDisplayName,
+        workerRole,
         normalized.parentEventId,
         fingerprint,
         sanitized.json,
-        sanitized.redactionCount,
+        sanitized.redactionCount + presentation.redactionCount,
         normalized.createdAt,
       )
       this.insertIdempotency(
@@ -1132,18 +1149,27 @@ export class RuntimeEventStore {
       `).all(run.runId, boundedLimit + 1) as unknown as RuntimeEventProjectionRow[]
       const dispatchRows = this.database.prepare(`
         SELECT
-          dispatch_id,
-          run_id,
-          sequence,
-          lane,
-          worker_id,
-          parent_event_id,
-          payload_json,
-          redaction_count,
-          created_at
-        FROM runtime_dispatches
-        WHERE run_id = ?
-        ORDER BY sequence
+          dispatch.dispatch_id,
+          dispatch.run_id,
+          dispatch.sequence,
+          dispatch.lane,
+          dispatch.worker_id,
+          dispatch.worker_display_name,
+          dispatch.worker_role,
+          dispatch.parent_event_id,
+          parent.event_id AS retained_parent_event_id,
+          parent.sequence AS parent_event_sequence,
+          parent.dispatch_id AS parent_dispatch_id,
+          parent.actor_type AS parent_actor_type,
+          dispatch.payload_json,
+          dispatch.redaction_count,
+          dispatch.created_at
+        FROM runtime_dispatches AS dispatch
+        LEFT JOIN runtime_events AS parent
+          ON parent.run_id = dispatch.run_id
+          AND parent.event_id = dispatch.parent_event_id
+        WHERE dispatch.run_id = ?
+        ORDER BY dispatch.sequence
         LIMIT ?
       `).all(run.runId, boundedLimit + 1) as unknown as RuntimeDispatchProjectionRow[]
       const receiptRows = this.database.prepare(`
@@ -1214,18 +1240,27 @@ export class RuntimeEventStore {
     const normalizedDispatchId = runtimeIdentity(dispatchId, 'dispatch id')
     const row = this.database.prepare(`
       SELECT
-        dispatch_id,
-        run_id,
-        sequence,
-        lane,
-        worker_id,
-        parent_event_id,
-        payload_json,
-        redaction_count,
-        created_at
-      FROM runtime_dispatches
-      WHERE run_id = ?
-        AND dispatch_id = ?
+        dispatch.dispatch_id,
+        dispatch.run_id,
+        dispatch.sequence,
+        dispatch.lane,
+        dispatch.worker_id,
+        dispatch.worker_display_name,
+        dispatch.worker_role,
+        dispatch.parent_event_id,
+        parent.event_id AS retained_parent_event_id,
+        parent.sequence AS parent_event_sequence,
+        parent.dispatch_id AS parent_dispatch_id,
+        parent.actor_type AS parent_actor_type,
+        dispatch.payload_json,
+        dispatch.redaction_count,
+        dispatch.created_at
+      FROM runtime_dispatches AS dispatch
+      LEFT JOIN runtime_events AS parent
+        ON parent.run_id = dispatch.run_id
+        AND parent.event_id = dispatch.parent_event_id
+      WHERE dispatch.run_id = ?
+        AND dispatch.dispatch_id = ?
     `).get(normalizedRunId, normalizedDispatchId) as RuntimeDispatchProjectionRow | undefined
     return row ? runtimeDispatchFromProjectionRow(row) : null
   }
@@ -1233,17 +1268,26 @@ export class RuntimeEventStore {
   private getDispatch(dispatchId: string): RuntimeDispatch | null {
     const row = this.database.prepare(`
       SELECT
-        dispatch_id,
-        run_id,
-        sequence,
-        lane,
-        worker_id,
-        parent_event_id,
-        payload_json,
-        redaction_count,
-        created_at
-      FROM runtime_dispatches
-      WHERE dispatch_id = ?
+        dispatch.dispatch_id,
+        dispatch.run_id,
+        dispatch.sequence,
+        dispatch.lane,
+        dispatch.worker_id,
+        dispatch.worker_display_name,
+        dispatch.worker_role,
+        dispatch.parent_event_id,
+        parent.event_id AS retained_parent_event_id,
+        parent.sequence AS parent_event_sequence,
+        parent.dispatch_id AS parent_dispatch_id,
+        parent.actor_type AS parent_actor_type,
+        dispatch.payload_json,
+        dispatch.redaction_count,
+        dispatch.created_at
+      FROM runtime_dispatches AS dispatch
+      LEFT JOIN runtime_events AS parent
+        ON parent.run_id = dispatch.run_id
+        AND parent.event_id = dispatch.parent_event_id
+      WHERE dispatch.dispatch_id = ?
     `).get(runtimeIdentity(dispatchId, 'dispatch id')) as RuntimeDispatchProjectionRow | undefined
     return row ? runtimeDispatchFromProjectionRow(row) : null
   }
@@ -2129,7 +2173,13 @@ interface RuntimeDispatchProjectionRow {
   sequence: number
   lane: string
   worker_id: string
+  worker_display_name: string | null
+  worker_role: string | null
   parent_event_id: string | null
+  retained_parent_event_id: string | null
+  parent_event_sequence: number | null
+  parent_dispatch_id: string | null
+  parent_actor_type: RuntimeEvent['actorType'] | null
   payload_json: string
   redaction_count: number
   created_at: string
@@ -2247,6 +2297,8 @@ interface NormalizedRuntimeDispatchInput {
   idempotencyKey: string
   lane: string
   workerId: string
+  workerDisplayName: string | null
+  workerRole: string | null
   parentEventId: string | null
   payload: RuntimeJson
   createdAt: string
@@ -2304,6 +2356,8 @@ function normalizeDispatchInput(
     idempotencyKey: runtimeIdentity(input.idempotencyKey, 'idempotency key'),
     lane: runtimeIdentity(input.lane, 'dispatch lane'),
     workerId: runtimeIdentity(input.workerId, 'worker id'),
+    workerDisplayName: optionalRuntimeIdentity(input.workerDisplayName, 'worker display name'),
+    workerRole: optionalRuntimeIdentity(input.workerRole, 'worker role'),
     parentEventId: optionalRuntimeIdentity(input.parentEventId, 'parent event id'),
     payload: input.payload ?? {},
     createdAt: validIsoDate(input.createdAt ?? now().toISOString(), 'dispatch creation time'),
@@ -2502,17 +2556,52 @@ function runtimeRunFromRow(row: RuntimeRunRow): RuntimeRun {
 }
 
 function runtimeDispatchFromProjectionRow(row: RuntimeDispatchProjectionRow): RuntimeDispatch {
+  const relationship = runtimeDispatchRelationship(row)
   return {
     runId: row.run_id,
     dispatchId: row.dispatch_id,
     sequence: row.sequence,
     lane: row.lane,
     workerId: row.worker_id,
+    workerDisplayName: row.worker_display_name,
+    workerRole: row.worker_role,
     parentEventId: row.parent_event_id,
+    parentDispatchId: row.parent_dispatch_id,
+    relationship,
     payload: parseRuntimeJson(row.payload_json, `dispatch ${row.dispatch_id} payload`),
     redactionCount: row.redaction_count,
     createdAt: row.created_at,
   }
+}
+
+function runtimeDispatchRelationship(
+  row: RuntimeDispatchProjectionRow,
+): RuntimeDispatch['relationship'] {
+  if (!row.parent_event_id)
+    return 'root'
+  if (!row.retained_parent_event_id)
+    return 'missing'
+  if (row.parent_event_sequence === null)
+    return 'unresolved'
+  if (row.parent_dispatch_id === row.dispatch_id)
+    return 'same-dispatch'
+  if (row.parent_event_sequence >= row.sequence)
+    return 'later'
+  if (row.parent_dispatch_id)
+    return 'resolved'
+  if (row.parent_actor_type === 'manager' || row.parent_actor_type === 'system')
+    return 'manager-root'
+  return 'unresolved'
+}
+
+function runtimeJsonObject(value: RuntimeJson): Record<string, RuntimeJson> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+    ? value
+    : {}
+}
+
+function runtimeOptionalString(value: RuntimeJson | undefined): string | null {
+  return typeof value === 'string' ? value : null
 }
 
 function runtimeReceiptFromProjectionRow(row: RuntimeReceiptProjectionRow): RuntimeReceipt {

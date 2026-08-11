@@ -497,6 +497,27 @@ index_type: archives
     finally {
       await incompatible.close()
     }
+
+    const restartable = await startBrokerServer({
+      paths,
+      packageVersion: '3.2.0-doctor-fixture',
+      protocol: {
+        major: BROKER_PROTOCOL_VERSION.major,
+        minor: BROKER_PROTOCOL_VERSION.minor - 1,
+      },
+    })
+    try {
+      await withDoctorEnvironment(fixture, paths.root, async () => {
+        expect((await inspectDoctorRuntime()).checks).toContainEqual(expect.objectContaining({
+          code: 'broker_incompatible',
+          status: 'issue',
+          hint: expect.stringContaining('rsp broker restart --json'),
+        }))
+      })
+    }
+    finally {
+      await restartable.close()
+    }
   })
 
   it('reports runtime migration, incompatibility, incomplete history, and corruption without mutating repository truth', async ({ onTestFinished }) => {

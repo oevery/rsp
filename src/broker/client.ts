@@ -23,6 +23,7 @@ import {
 import {
   BROKER_CLIENT_COMPATIBILITY,
   BROKER_MAX_JSON_RESPONSE_BYTES,
+  BROKER_PROTOCOL_VERSION,
   BrokerError,
   evaluateBrokerCompatibility,
   isBrokerErrorResponse,
@@ -52,6 +53,13 @@ export interface BrokerStopResult {
   stopped: boolean
   staleRecovered: boolean
   record: BrokerDiscoveryRecord | null
+}
+
+export interface BrokerRestartResult {
+  record: BrokerDiscoveryRecord
+  previousRecord: BrokerDiscoveryRecord | null
+  restarted: boolean
+  staleRecovered: boolean
 }
 
 export interface BrokerProjectConnection {
@@ -192,19 +200,10 @@ export async function startBroker(options: BrokerClientOptions = {}): Promise<Br
         throw new BrokerError('broker_stale_record_changed', 'Stale Broker discovery metadata changed before recovery')
     }
 
-    await spawnBrokerDaemon(paths, claim, options.daemonEntry)
-    const deadline = Date.now() + (options.startupTimeoutMs ?? 10_000)
-    while (Date.now() < deadline) {
-      const inspection = await inspectBroker({ ...options, paths })
-      if (inspection.state === 'running')
-        return { record: inspection.record!, reused: false }
-      if (inspection.state === 'incompatible')
-        throw incompatibleError(inspection)
-      if (inspection.state === 'invalid' || inspection.state === 'unhealthy')
-        throw new BrokerError(`broker_${inspection.state}`, inspection.reason ?? `Broker became ${inspection.state} during startup`)
-      await delay(25)
+    return {
+      record: await startFreshBroker(paths, claim, options),
+      reused: false,
     }
-    throw new BrokerError('broker_start_timeout', 'Broker process did not publish a healthy owned loopback endpoint before timeout')
   }, {
     processAdapter: options.processAdapter,
     timeoutMs: options.startupTimeoutMs,
@@ -230,47 +229,28 @@ export async function stopBroker(options: BrokerClientOptions = {}): Promise<Bro
   const processAdapter = options.processAdapter ?? defaultBrokerProcessAdapter
   return withBrokerStartLock(paths, 'stop', async () => {
     const inspection = await inspectBroker({ ...options, paths })
-    if (inspection.state === 'absent')
-      return { stopped: false, staleRecovered: false, record: null }
-    if (inspection.state === 'stale') {
-      if (!inspection.file || !await unlinkBrokerFileIfIdentity(paths.discovery, inspection.file))
-        throw new BrokerError('broker_stale_record_changed', 'Stale Broker discovery metadata changed before recovery')
-      return { stopped: false, staleRecovered: true, record: inspection.record }
-    }
-    if (inspection.state === 'incompatible')
-      throw incompatibleError(inspection)
-    if (inspection.state !== 'running' || !inspection.record)
-      throw new BrokerError(`broker_${inspection.state}`, inspection.reason ?? `Broker is ${inspection.state}`)
+    return stopInspectedBroker(paths, inspection, processAdapter, options)
+  }, {
+    processAdapter: options.processAdapter,
+    timeoutMs: options.startupTimeoutMs,
+  })
+}
 
-    const response = await brokerRequestJson(inspection.record, '/v1/control/stop', {
-      method: 'POST',
-      timeoutMs: options.requestTimeoutMs,
+export async function restartBroker(options: BrokerClientOptions = {}): Promise<BrokerRestartResult> {
+  const paths = options.paths ?? resolveBrokerPaths()
+  const processAdapter = options.processAdapter ?? defaultBrokerProcessAdapter
+  return withBrokerStartLock(paths, 'restart', async (claim) => {
+    const inspection = await inspectBroker({ ...options, paths })
+    const stopped = await stopInspectedBroker(paths, inspection, processAdapter, options, {
+      allowSameProtocolMajor: true,
     })
-    if (!isObject(response) || response.ok !== true || response.stopping !== true)
-      throw new BrokerError('broker_stop_invalid', 'Broker stop response does not match the public protocol')
-    const deadline = Date.now() + (options.startupTimeoutMs ?? 10_000)
-    while (Date.now() < deadline) {
-      const current = await readBrokerJson(paths.discovery).catch(() => null)
-      if (!current)
-        return { stopped: true, staleRecovered: false, record: inspection.record }
-      const currentRecord = parseBrokerDiscoveryRecord(current.value)
-      if (currentRecord.instanceId !== inspection.record.instanceId
-        || currentRecord.pid !== inspection.record.pid
-        || currentRecord.processIdentity !== inspection.record.processIdentity) {
-        throw new BrokerError('broker_stop_record_changed', 'Broker discovery metadata changed to another owner during shutdown')
-      }
-      if (!processAdapter.exists(inspection.record.pid)) {
-        await unlinkBrokerFileIfIdentity(paths.discovery, current.file)
-        return { stopped: true, staleRecovered: false, record: inspection.record }
-      }
-      const currentIdentity = await processAdapter.identity(inspection.record.pid)
-      if (currentIdentity !== null && currentIdentity !== inspection.record.processIdentity) {
-        await unlinkBrokerFileIfIdentity(paths.discovery, current.file)
-        return { stopped: true, staleRecovered: false, record: inspection.record }
-      }
-      await delay(25)
+    const record = await startFreshBroker(paths, claim, options)
+    return {
+      record,
+      previousRecord: stopped.record,
+      restarted: stopped.stopped,
+      staleRecovered: stopped.staleRecovered,
     }
-    throw new BrokerError('broker_stop_timeout', 'Broker acknowledged shutdown but its owned discovery metadata remained present')
   }, {
     processAdapter: options.processAdapter,
     timeoutMs: options.startupTimeoutMs,
@@ -345,6 +325,90 @@ async function spawnBrokerDaemon(
   })
   child.unref()
   return child
+}
+
+async function startFreshBroker(
+  paths: BrokerPaths,
+  claim: BrokerStartLockClaim,
+  options: BrokerClientOptions,
+): Promise<BrokerDiscoveryRecord> {
+  const child = await spawnBrokerDaemon(paths, claim, options.daemonEntry)
+  if (!child.pid)
+    throw new BrokerError('broker_start_failed', 'Broker process started without an observable pid')
+  const deadline = Date.now() + (options.startupTimeoutMs ?? 10_000)
+  while (Date.now() < deadline) {
+    const inspection = await inspectBroker({ ...options, paths })
+    if (inspection.state === 'running') {
+      if (inspection.record?.pid !== child.pid)
+        throw new BrokerError('broker_start_record_changed', 'Broker discovery metadata changed to another owner during startup')
+      return inspection.record
+    }
+    if (inspection.state === 'incompatible')
+      throw incompatibleError(inspection)
+    if (inspection.state === 'invalid' || inspection.state === 'unhealthy')
+      throw new BrokerError(`broker_${inspection.state}`, inspection.reason ?? `Broker became ${inspection.state} during startup`)
+    await delay(25)
+  }
+  throw new BrokerError('broker_start_timeout', 'Broker process did not publish a healthy owned loopback endpoint before timeout')
+}
+
+async function stopInspectedBroker(
+  paths: BrokerPaths,
+  inspection: BrokerInspection,
+  processAdapter: BrokerProcessAdapter,
+  options: BrokerClientOptions,
+  restartOptions: { allowSameProtocolMajor?: boolean } = {},
+): Promise<BrokerStopResult> {
+  if (inspection.state === 'absent')
+    return { stopped: false, staleRecovered: false, record: null }
+  if (inspection.state === 'stale') {
+    if (!inspection.file || !await unlinkBrokerFileIfIdentity(paths.discovery, inspection.file))
+      throw new BrokerError('broker_stale_record_changed', 'Stale Broker discovery metadata changed before recovery')
+    return { stopped: false, staleRecovered: true, record: inspection.record }
+  }
+  if (inspection.state === 'incompatible') {
+    const requiredMajor = options.compatibility?.protocol.major ?? BROKER_PROTOCOL_VERSION.major
+    if (!restartOptions.allowSameProtocolMajor
+      || !inspection.record
+      || inspection.record.protocol.major !== requiredMajor) {
+      throw incompatibleError(inspection)
+    }
+  }
+  else if (inspection.state !== 'running') {
+    throw new BrokerError(`broker_${inspection.state}`, inspection.reason ?? `Broker is ${inspection.state}`)
+  }
+  if (!inspection.record)
+    throw new BrokerError('broker_invalid', 'Broker inspection did not retain one verified owner')
+
+  const response = await brokerRequestJson(inspection.record, '/v1/control/stop', {
+    method: 'POST',
+    timeoutMs: options.requestTimeoutMs,
+  })
+  if (!isObject(response) || response.ok !== true || response.stopping !== true)
+    throw new BrokerError('broker_stop_invalid', 'Broker stop response does not match the public protocol')
+  const deadline = Date.now() + (options.startupTimeoutMs ?? 10_000)
+  while (Date.now() < deadline) {
+    const current = await readBrokerJson(paths.discovery).catch(() => null)
+    if (!current)
+      return { stopped: true, staleRecovered: false, record: inspection.record }
+    const currentRecord = parseBrokerDiscoveryRecord(current.value)
+    if (currentRecord.instanceId !== inspection.record.instanceId
+      || currentRecord.pid !== inspection.record.pid
+      || currentRecord.processIdentity !== inspection.record.processIdentity) {
+      throw new BrokerError('broker_stop_record_changed', 'Broker discovery metadata changed to another owner during shutdown')
+    }
+    if (!processAdapter.exists(inspection.record.pid)) {
+      await unlinkBrokerFileIfIdentity(paths.discovery, current.file)
+      return { stopped: true, staleRecovered: false, record: inspection.record }
+    }
+    const currentIdentity = await processAdapter.identity(inspection.record.pid)
+    if (currentIdentity !== null && currentIdentity !== inspection.record.processIdentity) {
+      await unlinkBrokerFileIfIdentity(paths.discovery, current.file)
+      return { stopped: true, staleRecovered: false, record: inspection.record }
+    }
+    await delay(25)
+  }
+  throw new BrokerError('broker_stop_timeout', 'Broker acknowledged shutdown but its owned discovery metadata remained present')
 }
 
 async function brokerRequestJson(

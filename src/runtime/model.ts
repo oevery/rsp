@@ -1,6 +1,6 @@
 export const RUNTIME_DATABASE_FILENAME = 'runtime-v1.sqlite'
 export const RUNTIME_STORE_SCHEMA_MAJOR = 1
-export const RUNTIME_STORE_SCHEMA_VERSION = 3
+export const RUNTIME_STORE_SCHEMA_VERSION = 4
 export const RUNTIME_CONTEXT_PACKET_SCHEMA_VERSION = 1
 export const RUNTIME_BUSY_TIMEOUT_MS = 5_000
 
@@ -100,10 +100,21 @@ export interface RuntimeDispatchInput {
   idempotencyKey: string
   lane: string
   workerId: string
+  workerDisplayName?: string | null
+  workerRole?: string | null
   parentEventId?: string | null
   payload?: RuntimeJson
   createdAt?: string
 }
+
+export type RuntimeDispatchRelationship
+  = | 'root'
+    | 'manager-root'
+    | 'resolved'
+    | 'same-dispatch'
+    | 'missing'
+    | 'later'
+    | 'unresolved'
 
 export interface RuntimeDispatch {
   runId: string
@@ -111,7 +122,11 @@ export interface RuntimeDispatch {
   sequence: number
   lane: string
   workerId: string
+  workerDisplayName: string | null
+  workerRole: string | null
   parentEventId: string | null
+  parentDispatchId: string | null
+  relationship: RuntimeDispatchRelationship
   payload: RuntimeJson
   redactionCount: number
   createdAt: string

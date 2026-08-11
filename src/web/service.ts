@@ -34,7 +34,7 @@ export interface WebProjectionService {
   snapshot: (project: BrokerProjectIdentity, managed: ManageRuntimeProjectProjection) => Promise<WebSnapshot>
   specsDetail: (project: BrokerProjectIdentity, path: string) => Promise<WebSpecsDetailProjection>
   specsSearch: (project: BrokerProjectIdentity, literal: string, limit: number) => Promise<WebSpecsSearchProjection>
-  historyDetail: (project: BrokerProjectIdentity, workRef: string) => Promise<WebHistoryDetailProjection>
+  historyDetail: (project: BrokerProjectIdentity, lookupId: string) => Promise<WebHistoryDetailProjection>
   runDetail: (
     project: BrokerProjectIdentity,
     managed: ManageRuntimeProjectProjection,
@@ -122,7 +122,7 @@ export function createWebProjectionService(
       }
     },
 
-    async historyDetail(project, workRef) {
+    async historyDetail(project, lookupId) {
       try {
         const [inspection, overviewResult] = await Promise.all([
           inspectArchiveHistory({
@@ -134,7 +134,7 @@ export function createWebProjectionService(
           throw new BrokerError('web_history_unavailable', 'Archive history inspection is incomplete')
         return await projectWebHistoryDetail(
           inspection,
-          workRef,
+          lookupId,
           projectRedactionContext(project, overviewResult.sensitiveUrls, inspection),
         )
       }

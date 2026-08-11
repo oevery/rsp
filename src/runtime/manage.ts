@@ -109,6 +109,8 @@ export interface ManageRuntimeDispatchObservationInput {
   idempotencyKey: string
   lane: string
   workerId: string
+  workerDisplayName?: string | null
+  workerRole?: string | null
   objectiveRef: string
   evidenceRefs: string[]
   stopBoundary: string
@@ -213,6 +215,8 @@ export interface ManageRuntimeProjectedEvent {
   evidenceRefs: string[]
   sourceRefs: string[]
   stopBoundary: string | null
+  parentRef?: string | null
+  observedAt?: string
   parentState: RuntimeEvent['parentState']
   outOfOrder: boolean
   deliveryCount: number
@@ -226,6 +230,12 @@ export interface ManageRuntimeProjectedDispatch {
   sequence: number
   lane: string
   workerId: string
+  workerDisplayName: string | null
+  workerRole: string | null
+  parentRef?: string | null
+  parentDispatchId: string | null
+  relationship: RuntimeDispatch['relationship']
+  createdAt?: string
   parentState: RuntimeEvent['parentState']
   outOfOrder: boolean
   objectiveRef: string | null
@@ -253,6 +263,8 @@ export interface ManageRuntimeProjectedReceipt {
   changedPaths: string[]
   verificationRefs: string[]
   stopBoundary: string | null
+  parentRef?: string | null
+  observedAt?: string
   deliveryCount: number
   duplicateCount: number
   conflictCount: number
@@ -275,6 +287,15 @@ export interface ManageRuntimeTimelineItem {
   dispatchId: string | null
   kind: string
   summary: string | null
+  parentRef?: string | null
+  parentDispatchId?: string | null
+  relationship?: RuntimeDispatch['relationship']
+  workerDisplayName?: string | null
+  workerRole?: string | null
+  createdAt?: string
+  observedAt?: string
+  receiptState?: ManageRuntimeProjectedDispatch['receiptState']
+  terminalState?: ManageRuntimeProjectedDispatch['terminalState']
   parentState: RuntimeEvent['parentState'] | null
   outOfOrder: boolean
   duplicateCount: number
@@ -479,7 +500,7 @@ export async function discoverBrokerManageRuntimeCapability(
         diagnostic: {
           code: 'manage_runtime_capability_incompatible',
           message: `Managed runtime capability ${descriptor.version.major}.${descriptor.version.minor} is incompatible`,
-          action: 'Stop the existing Broker with a compatible RSP package, then retry with the intended package version',
+          action: 'Run rsp broker restart with the intended package, then retry managed runtime discovery',
         },
       }
     }
@@ -558,7 +579,7 @@ export function projectManageRunSnapshot(
     const receipt = receiptsByDispatch.get(dispatch.dispatchId)
     const payload = runtimeObject(dispatch.payload)
     const delivery = deliveriesByEffect.get(deliveryKey('dispatch', dispatch.dispatchId))
-    const parentState = runtimeParentState(projection.events, dispatch.parentEventId, dispatch.sequence)
+    const parentState = dispatchParentState(dispatch.relationship)
     const receiptState = receipt
       ? 'received'
       : projection.receiptsTruncated ? 'unknown' : 'missing'
@@ -567,6 +588,12 @@ export function projectManageRunSnapshot(
       sequence: dispatch.sequence,
       lane: dispatch.lane,
       workerId: dispatch.workerId,
+      workerDisplayName: dispatch.workerDisplayName,
+      workerRole: dispatch.workerRole,
+      parentRef: dispatch.parentEventId,
+      parentDispatchId: dispatch.parentDispatchId,
+      relationship: dispatch.relationship,
+      createdAt: dispatch.createdAt,
       parentState,
       outOfOrder: parentState === 'after' || parentState === 'missing',
       objectiveRef: boundedOptionalString(payload.objectiveRef),
@@ -604,6 +631,8 @@ export function projectManageRunSnapshot(
       changedPaths: projectedStringList(payload.changedPaths),
       verificationRefs: projectedStringList(payload.verificationRefs),
       stopBoundary: boundedOptionalString(payload.stopBoundary),
+      parentRef: event?.parentEventId ?? null,
+      observedAt: receipt.observedAt,
       deliveryCount: delivery?.deliveryCount ?? 1,
       duplicateCount: delivery?.duplicateCount ?? 0,
       conflictCount: delivery?.conflictCount ?? 0,
@@ -937,6 +966,8 @@ function observeDispatch(
     idempotencyKey: normalized.idempotencyKey,
     lane: normalized.lane,
     workerId: normalized.workerId,
+    workerDisplayName: normalized.workerDisplayName,
+    workerRole: normalized.workerRole,
     parentEventId: normalized.parentEventId,
     payload: {
       objectiveRef: normalized.objectiveRef,
@@ -1110,7 +1141,7 @@ function normalizeRunObservation(value: unknown): ManageRuntimeRunObservationInp
 function normalizeDispatchObservation(value: unknown): ManageRuntimeDispatchObservationInput {
   const input = exactObject(
     value,
-    ['createdAt', 'dispatchId', 'evidenceRefs', 'idempotencyKey', 'lane', 'objectiveRef', 'parentEventId', 'runId', 'stopBoundary', 'workerId'],
+    ['createdAt', 'dispatchId', 'evidenceRefs', 'idempotencyKey', 'lane', 'objectiveRef', 'parentEventId', 'runId', 'stopBoundary', 'workerDisplayName', 'workerId', 'workerRole'],
     ['dispatchId', 'evidenceRefs', 'idempotencyKey', 'lane', 'objectiveRef', 'runId', 'stopBoundary', 'workerId'],
     'managed dispatch observation',
   )
@@ -1120,6 +1151,8 @@ function normalizeDispatchObservation(value: unknown): ManageRuntimeDispatchObse
     idempotencyKey: boundedIdentity(input.idempotencyKey, 'idempotency key'),
     lane: boundedIdentity(input.lane, 'lane'),
     workerId: boundedIdentity(input.workerId, 'worker id'),
+    workerDisplayName: optionalIdentity(input.workerDisplayName, 'worker display name'),
+    workerRole: optionalIdentity(input.workerRole, 'worker role'),
     objectiveRef: boundedReference(input.objectiveRef, 'objective reference'),
     evidenceRefs: referenceList(input.evidenceRefs, 'evidence references'),
     stopBoundary: boundedReference(input.stopBoundary, 'stop boundary'),
@@ -1288,6 +1321,8 @@ function projectEvent(
     evidenceRefs: projectedStringList(payload.evidenceRefs),
     sourceRefs: projectedStringList(payload.sourceRefs),
     stopBoundary: boundedOptionalString(payload.stopBoundary),
+    parentRef: event.parentEventId,
+    observedAt: event.observedAt,
     parentState: event.parentState,
     outOfOrder: event.outOfOrder,
     deliveryCount: delivery?.deliveryCount ?? 1,
@@ -1356,6 +1391,14 @@ function projectTimeline(
       dispatchId: dispatch.dispatchId,
       kind: 'dispatch-observed',
       summary: dispatch.objectiveRef,
+      parentRef: dispatch.parentRef,
+      parentDispatchId: dispatch.parentDispatchId,
+      relationship: dispatch.relationship,
+      workerDisplayName: dispatch.workerDisplayName,
+      workerRole: dispatch.workerRole,
+      createdAt: dispatch.createdAt,
+      receiptState: dispatch.receiptState,
+      terminalState: dispatch.terminalState,
       parentState: dispatch.parentState,
       outOfOrder: dispatch.outOfOrder,
       duplicateCount: dispatch.duplicateCount,
@@ -1371,6 +1414,8 @@ function projectTimeline(
       dispatchId: event.dispatchId,
       kind: event.kind,
       summary: event.summary,
+      parentRef: event.parentRef,
+      observedAt: event.observedAt,
       parentState: event.parentState,
       outOfOrder: event.outOfOrder,
       duplicateCount: event.duplicateCount,
@@ -1386,6 +1431,10 @@ function projectTimeline(
       dispatchId: receipt.dispatchId,
       kind: 'worker-receipt',
       summary: receipt.result,
+      parentRef: receipt.parentRef,
+      observedAt: receipt.observedAt,
+      receiptState: 'received' as const,
+      terminalState: dispatches.find(dispatch => dispatch.dispatchId === receipt.dispatchId)?.terminalState ?? 'unknown',
       parentState: projection.events.find(event => event.eventId === receipt.eventId)?.parentState ?? null,
       outOfOrder: projection.events.find(event => event.eventId === receipt.eventId)?.outOfOrder ?? false,
       duplicateCount: receipt.duplicateCount,
@@ -1407,17 +1456,22 @@ function deliveryKey(
   return `${scope}\0${effectId}`
 }
 
-function runtimeParentState(
-  events: RuntimeEvent[],
-  parentEventId: string | null,
-  sequence: number,
+function dispatchParentState(
+  relationship: RuntimeDispatch['relationship'],
 ): RuntimeEvent['parentState'] {
-  if (!parentEventId)
-    return 'none'
-  const parent = events.find(event => event.eventId === parentEventId)
-  if (!parent)
-    return 'missing'
-  return parent.sequence < sequence ? 'before' : 'after'
+  switch (relationship) {
+    case 'root':
+      return 'none'
+    case 'missing':
+      return 'missing'
+    case 'later':
+      return 'after'
+    case 'manager-root':
+    case 'resolved':
+    case 'same-dispatch':
+    case 'unresolved':
+      return 'before'
+  }
 }
 
 function sourceReference(

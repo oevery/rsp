@@ -271,6 +271,24 @@ export const RUNTIME_MIGRATIONS: readonly RuntimeMigration[] = Object.freeze([
       `)
     },
   },
+  {
+    version: 4,
+    name: 'dispatch-presentation-metadata',
+    apply(database) {
+      database.exec(`
+        DROP TRIGGER runtime_dispatches_immutable;
+        ALTER TABLE runtime_dispatches
+          ADD COLUMN worker_display_name TEXT;
+        ALTER TABLE runtime_dispatches
+          ADD COLUMN worker_role TEXT;
+        CREATE TRIGGER runtime_dispatches_immutable
+          BEFORE UPDATE ON runtime_dispatches
+          BEGIN
+            SELECT RAISE(ABORT, 'runtime dispatches are append-only');
+          END;
+      `)
+    },
+  },
 ])
 
 export function migrateRuntimeDatabase(
