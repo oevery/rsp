@@ -1,6 +1,6 @@
 # Five-minute start
 
-RSP requires Node.js 22 (`>=22.13.0`). Use the current stable release for setup and maintenance commands.
+RSP requires Node.js 22 (`>=22`). The optional SQLite runtime requires Node.js `>=22.13.0`; setup, maintenance, and ordinary one-shot CLI commands do not open it. Use the current stable release for setup and maintenance commands.
 
 ## Initialize a project
 
@@ -29,6 +29,8 @@ rsp show --focused
 Edit `.rsp/changes/improve-login.md`. Keep its canonical Proposal, Spec, Design, Tasks, Verify, and Blockers sections. A focus marker selects current work; an open Change is not automatically current merely because its file exists.
 
 Use the same kind-aware Change template for tracked work of any size. Do not create persistent tracking for every trivial session task.
+
+During the current compatibility cycle, RSP accepts the legacy `rsp create --lite`, `--lite=true`, and `--lite=false` forms. They emit a deprecation warning and use this same standard kind-aware template; there is no separate lite renderer.
 
 When no Change is focused and the user has not supplied a concrete task, ask what to work on or suggest `npx -y @oevery/rsp create <name>` for tracked work. Simple current-session tasks should not create RSP changes unless tracking is intentionally needed.
 

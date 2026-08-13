@@ -28,7 +28,7 @@ Direct Specs queries are read-only and service-independent. They identify Decisi
 
 ## Optional runtime
 
-RSP can explicitly start one compatible user-level Broker for runtime and Web capabilities. The Broker is a local loopback transport and lazy checkout-session host, not another workflow engine or source of truth. Each canonical repository or worktree receives a distinct project identity, in-memory access token, and disposable namespace; idle sessions unload without changing repository files.
+RSP can explicitly start one compatible user-level Broker for runtime capabilities. The Broker is a local loopback transport and lazy checkout-session host, not another workflow engine or source of truth. Each canonical repository or worktree receives a distinct project identity, in-memory access token, and disposable namespace; idle sessions unload without changing repository files.
 
 Ordinary CLI work remains service-independent. `rsp status`, `rsp check`, `rsp show`, `rsp ready`, `rsp specs`, lifecycle, Git, and repair commands do not start the Broker or create its cache. Protocol or runtime-schema incompatibility fails closed instead of creating an automatic side-by-side service.
 
@@ -38,11 +38,9 @@ When a runtime operation needs retained observations, its Broker session lazily 
 
 Managed run and attention projections return at most 32 source-referenced items and remain explicitly non-authoritative. Resume context is bounded to 12 KiB and 24 hours. Hydration always revalidates checkout, WorkRef, Git, dirty paths, authority, expiry, and complete source identities, rereads current authority pointers, and reloads changed evidence; authority or checkout drift requires a full reread. Removing or losing the database removes runtime convenience only—Markdown work, history, readiness, lifecycle, and no-runtime Manage behavior remain unchanged.
 
-The package uses the built-in `node:sqlite` module and requires Node.js `>=22.13.0`; it installs no native SQLite addon. Disabling SQLite makes explicit runtime opening fail with a precise diagnostic while ordinary CLI inspection remains available.
+The package installation and ordinary Markdown/CLI boundary is Node.js `>=22`. The optional runtime lazily uses the built-in `node:sqlite` module and requires Node.js `>=22.13.0`; it installs no native SQLite addon. An older Node 22 runtime or explicit SQLite disablement makes runtime opening fail with a precise diagnostic while ordinary CLI inspection remains available.
 
-`rsp web` explicitly starts or reuses the compatible Broker and opens a local read-only Overview, Specs, History, Runs, and Attention shell for the exact current checkout. A short-lived one-use URL-fragment bootstrap establishes an in-memory browser session without putting project tokens in normal output, assets, Referer values, repository state, cookies, or browser storage. Every successful refresh is one bounded source-identified snapshot; a failed or incompatible refresh preserves the previous snapshot as visibly stale.
-
-Runs and Attention render only Manage-owned runtime projections: actor topology, dispatches, receipts, duplicate delivery counts, evidence references, changed paths, stop boundaries, freshness, and committed-sequence timelines. Missing receipts, stale repository relationships, truncation, and unavailable runtime remain explicit and never imply completion or acceptance. A Web-bearer SSE stream uses bounded replay and an explicit gap-to-fresh-snapshot recovery path. The browser has no mutation route or workflow authority, and Overview, Specs, and History remain usable when runtime state is absent or incompatible.
+The default package does not expose the retained Web Observatory source as a CLI command, Broker route, projector entry, or browser asset. Markdown artifacts, one-shot CLI queries, and optional runtime APIs remain the supported observation surfaces.
 
 ## One Change, one outcome
 

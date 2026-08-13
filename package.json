@@ -30,11 +30,10 @@
     "bin/",
     "dist/",
     "rules/",
-    "skills/",
-    "web/static/"
+    "skills/"
   ],
   "engines": {
-    "node": ">=22.13.0"
+    "node": ">=22"
   },
   "scripts": {
     "prepare": "pnpm run build",
@@ -59,10 +58,8 @@
   "dependencies": {
     "citty": "^0.2.2",
     "ink": "~7.1.1",
-    "mdast-util-from-markdown": "^2.0.3",
     "picocolors": "^1.1.1",
     "react": "~19.2.8",
-    "react-dom": "~19.2.8",
     "yaml": "^2.9.0"
   },
   "devDependencies": {
@@ -74,6 +71,8 @@
     "eslint": "^10.8.0",
     "ink-testing-library": "4.0.0",
     "jsdom": "26.1.0",
+    "mdast-util-from-markdown": "^2.0.3",
+    "react-dom": "~19.2.8",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
     "vitepress": "^1.6.4",

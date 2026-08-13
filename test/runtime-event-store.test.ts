@@ -1540,7 +1540,7 @@ describe.sequential('runtime event store', () => {
     const manifest = JSON.parse(readFileSync(join(repositoryRoot, 'package.json'), 'utf8')) as {
       engines: { node: string }
     }
-    expect(manifest.engines.node).toBe('>=22.13.0')
+    expect(manifest.engines.node).toBe('>=22')
     expect(nodeVersionAtLeast(process.versions.node, 22, 13, 0)).toBe(true)
   }, 20_000)
 })

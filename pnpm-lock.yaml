@@ -14,18 +14,12 @@ importers:
       ink:
         specifier: ~7.1.1
         version: 7.1.1(@types/react@19.2.17)(react@19.2.8)
-      mdast-util-from-markdown:
-        specifier: ^2.0.3
-        version: 2.0.3(supports-color@10.2.2)
       picocolors:
         specifier: ^1.1.1
         version: 1.1.1
       react:
         specifier: ~19.2.8
         version: 19.2.8
-      react-dom:
-        specifier: ~19.2.8
-        version: 19.2.8(react@19.2.8)
       yaml:
         specifier: ^2.9.0
         version: 2.9.0
@@ -54,6 +48,12 @@ importers:
       jsdom:
         specifier: 26.1.0
         version: 26.1.0(supports-color@10.2.2)
+      mdast-util-from-markdown:
+        specifier: ^2.0.3
+        version: 2.0.3(supports-color@10.2.2)
+      react-dom:
+        specifier: ~19.2.8
+        version: 19.2.8(react@19.2.8)
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(postcss@8.5.23)(supports-color@10.2.2)(typescript@5.9.3)(yaml@2.9.0)

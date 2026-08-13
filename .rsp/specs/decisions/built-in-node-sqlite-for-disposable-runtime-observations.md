@@ -11,7 +11,7 @@ RSP uses the built-in `node:sqlite` module behind a lazy runtime adapter because
 
 ## Consequences
 
-- The package requires Node.js `>=22.13.0`, ships a standalone `dist/runtime-store.mjs` adapter, dynamically imports `node:sqlite` only on runtime opening, and declares no SQLite addon dependency.
+- The package engine remains Node.js `>=22` for installation and ordinary Markdown/CLI use. It ships a standalone `dist/runtime-store.mjs` adapter, dynamically imports `node:sqlite` only on runtime opening, requires Node.js `>=22.13.0` at that optional boundary, and declares no SQLite addon dependency.
 - Hosts using `--no-experimental-sqlite` receive an exact runtime-unavailable diagnostic. Ordinary one-shot repository commands remain SQLite-independent and continue to derive their results from Markdown and current checkout evidence.
 - Each canonical checkout or worktree owns one database under its exact Broker project namespace. Stored project path and filesystem identity prevent moving or reusing that database across namespaces.
 - Database schema major `1` and migration version `3` are storage identities distinct from Broker protocol `1.2` and runtime-schema compatibility identity `1.1`. Migration `3` adds the unified managed observation revision without changing Markdown authority or the Broker runtime-schema identity. Compatible Broker minors may share the runtime contract; incompatible majors, older required minors, newer database versions, incomplete history, and corruption fail closed.

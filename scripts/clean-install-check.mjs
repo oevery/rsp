@@ -67,7 +67,6 @@ const EXPECTED_DIST_ENTRIES = [
   'dist/cli.mjs',
   'dist/manage-runtime.mjs',
   'dist/runtime-store.mjs',
-  'dist/web-projector.mjs',
 ]
 const EXPECTED_STATIC_PACKAGE_FILES = [
   'LICENSE',
@@ -85,9 +84,6 @@ const EXPECTED_STATIC_PACKAGE_FILES = [
   ...EXPECTED_REVIEW_REFERENCES.map(name => `skills/rsp-review/references/${name}`),
   ...EXPECTED_SHAPE_REFERENCES.map(name => `skills/rsp-shape/references/${name}`),
   'skills/rsp-structural-audit/references/structural-lenses.md',
-  'web/static/app.css',
-  'web/static/app.js',
-  'web/static/index.html',
 ].sort()
 const FORBIDDEN_PACKAGE_ROOTS = ['.agents', '.cache', '.codex', '.rsp', 'research', 'scripts']
 const PORTABLE_FRONTMATTER_KEYS = new Set(['description', 'license', 'metadata', 'name'])
@@ -192,174 +188,112 @@ function brokerStartOutputForValidation(content) {
   fail(`Unsupported Broker start output test injection: ${injection}`)
 }
 
-function runInstalledWebSmoke(options) {
+function runInstalledBrokerSurfaceSmoke(options) {
   const result = runResult(process.execPath, [
     '--input-type=module',
     '--eval',
     [
       'const { readFile } = await import("node:fs/promises")',
-      'if (process.env.RSP_PACKAGE_CHECK_TEST_WEB_SMOKE_FAILURE === "exit-17") {',
-      '  const { writeSync } = await import("node:fs")',
-      '  writeSync(1, "web-smoke-stdout\\n")',
-      '  writeSync(2, "web-smoke-stderr\\n")',
-      '  process.exit(17)',
-      '}',
-      'const record = JSON.parse(await readFile(process.env.RSP_WEB_DISCOVERY, "utf8"))',
+      'const record = JSON.parse(await readFile(process.env.RSP_BROKER_DISCOVERY, "utf8"))',
       'const endpoint = record.endpoint',
       'const request = async (path, init = {}) => {',
       '  const response = await fetch(endpoint + path, { redirect: "error", ...init })',
       '  const value = await response.json().catch(() => null)',
       '  return { response, value }',
       '}',
-      'const sseBuffers = new WeakMap()',
-      'const readSse = async (reader) => {',
-      '  const decoder = new TextDecoder()',
-      '  let content = sseBuffers.get(reader) || ""',
-      '  while (!content.includes("\\n\\n")) {',
-      '    const result = await reader.read()',
-      '    if (result.done) throw new Error("managed SSE ended before one event")',
-      '    content += decoder.decode(result.value, { stream: true })',
-      '  }',
-      '  const boundary = content.indexOf("\\n\\n")',
-      '  const block = content.slice(0, boundary)',
-      '  sseBuffers.set(reader, content.slice(boundary + 2))',
-      '  const data = block.split("\\n").filter(line => line.startsWith("data: ")).map(line => line.slice(6)).join("\\n")',
-      '  return { block, value: JSON.parse(data) }',
-      '}',
+      'const controlHeaders = { Authorization: "Bearer " + record.controlToken }',
+      'const health = await request("/v1/health", { headers: controlHeaders })',
       'const registered = await request("/v1/projects/register", {',
       '  method: "POST",',
-      '  headers: { Authorization: "Bearer " + record.controlToken, "Content-Type": "application/json" },',
-      '  body: JSON.stringify({ root: process.env.RSP_WEB_PROJECT_ROOT }),',
+      '  headers: { ...controlHeaders, "Content-Type": "application/json" },',
+      '  body: JSON.stringify({ root: process.env.RSP_BROKER_PROJECT_ROOT }),',
       '})',
       'if (registered.response.status !== 200 || registered.value?.ok !== true)',
       '  throw new Error("project registration failed")',
       'const projectId = registered.value.project.projectId',
       'const accessToken = registered.value.accessToken',
-      'const pageUrl = endpoint + "/web/" + projectId + "/"',
-      'const page = await fetch(pageUrl, { redirect: "error" })',
-      'const pageText = await page.text()',
-      'const css = await fetch(endpoint + "/web/assets/app.css", { redirect: "error" })',
-      'const cssText = await css.text()',
-      'const script = await fetch(endpoint + "/web/assets/app.js", { redirect: "error" })',
-      'const scriptText = await script.text()',
-      'const minted = await request("/v1/projects/" + projectId + "/web/bootstrap", {',
+      'const projectHeaders = { Authorization: "Bearer " + accessToken }',
+      'const project = await request("/v1/projects/" + projectId, { headers: projectHeaders })',
+      'const capability = await request("/v1/projects/" + projectId + "/runtime/manage/capability", { headers: projectHeaders })',
+      'const observed = await request("/v1/projects/" + projectId + "/runtime/manage", {',
       '  method: "POST",',
-      '  headers: { Authorization: "Bearer " + accessToken },',
+      '  headers: { ...projectHeaders, "Content-Type": "application/json" },',
+      '  body: JSON.stringify({ operation: "observe-run", input: {',
+      '    runId: "package-broker-run", runKey: "package-broker-run-key", workRef: "package-smoke",',
+      '    managerId: "package-broker-manager", eventId: "package-broker-event",',
+      '    idempotencyKey: "package-broker-event-key", phase: "verification",',
+      '    authorityRefs: ["AGENTS.md"], evidenceRefs: ["package-broker-smoke"],',
+      '  } }),',
       '})',
-      'const authorized = await request("/v1/web/bootstrap", {',
+      'const projected = await request("/v1/projects/" + projectId + "/runtime/manage", {',
       '  method: "POST",',
-      '  headers: { Origin: endpoint, "Content-Type": "application/json" },',
-      '  body: JSON.stringify({ projectId, bootstrapToken: minted.value?.bootstrapToken }),',
+      '  headers: { ...projectHeaders, "Content-Type": "application/json" },',
+      '  body: JSON.stringify({ operation: "project-run", input: { runId: "package-broker-run" } }),',
       '})',
-      'const webHeaders = { Origin: endpoint, Authorization: "Bearer " + authorized.value?.webToken }',
-      'const stream = await fetch(endpoint + "/v1/web/projects/" + projectId + "/events", {',
-      '  headers: { ...webHeaders, Accept: "text/event-stream" },',
-      '  redirect: "error",',
-      '})',
-      'const streamReader = stream.body.getReader()',
-      'const initialEvent = await readSse(streamReader)',
-      'const snapshot = await request("/v1/web/projects/" + projectId + "/snapshot", {',
-      '  headers: webHeaders,',
-      '})',
-      'const observe = async (operation, input) => request("/v1/projects/" + projectId + "/runtime/manage", {',
-      '  method: "POST",',
-      '  headers: { Authorization: "Bearer " + accessToken, "Content-Type": "application/json" },',
-      '  body: JSON.stringify({ operation, input }),',
-      '})',
-      'await observe("observe-run", {',
-      '  runId: "package-web-run", runKey: "package-web-run-key", workRef: "package-smoke",',
-      '  managerId: "package-web-manager", eventId: "package-web-start", idempotencyKey: "package-web-start-key",',
-      '  phase: "verification", authorityRefs: ["AGENTS.md"], evidenceRefs: ["package-web-smoke"],',
-      '})',
-      'const liveEvent = await readSse(streamReader)',
-      'const dispatchInput = {',
-      '  runId: "package-web-run", dispatchId: "package-web-dispatch", idempotencyKey: "package-web-dispatch-key",',
-      '  lane: "verify", workerId: "package-web-worker", objectiveRef: "installed managed Web smoke",',
-      '  evidenceRefs: ["package-web-smoke"], stopBoundary: "same-scope",',
+      'const legacyWebRoutes = [',
+      '  { method: "GET", path: "/web/" + projectId + "/" },',
+      '  { method: "GET", path: "/web/assets/app.css" },',
+      '  { method: "GET", path: "/web/assets/app.js" },',
+      '  { method: "POST", path: "/v1/web/bootstrap" },',
+      '  { method: "POST", path: "/v1/projects/" + projectId + "/web/bootstrap" },',
+      '  { method: "GET", path: "/v1/web/projects/" + projectId + "/snapshot" },',
+      '  { method: "POST", path: "/v1/web/projects/" + projectId + "/refresh" },',
+      '  { method: "GET", path: "/v1/web/projects/" + projectId + "/session" },',
+      '  { method: "GET", path: "/v1/web/projects/" + projectId + "/specs/detail?path=.rsp%2Fspecs%2Fdesign.md" },',
+      '  { method: "GET", path: "/v1/web/projects/" + projectId + "/specs/search?q=runtime" },',
+      '  { method: "GET", path: "/v1/web/projects/" + projectId + "/history/detail?historyId=legacy-history" },',
+      '  { method: "GET", path: "/v1/web/projects/" + projectId + "/runs/detail?runId=legacy-run" },',
+      '  { method: "GET", path: "/v1/web/projects/" + projectId + "/events" },',
+      ']',
+      'const absentRoutes = []',
+      'for (const route of legacyWebRoutes) {',
+      '  const projectScoped = route.path.startsWith("/v1/projects/") || route.path.startsWith("/v1/web/projects/")',
+      '  const bootstrapExchange = route.path === "/v1/web/bootstrap"',
+      '  const response = await fetch(endpoint + route.path, {',
+      '    method: route.method,',
+      '    headers: bootstrapExchange',
+      '      ? { "Content-Type": "application/json", Origin: endpoint }',
+      '      : projectScoped ? projectHeaders : {},',
+      '    ...(bootstrapExchange ? {',
+      '      body: JSON.stringify({ projectId, bootstrapToken: "x".repeat(32) }),',
+      '    } : {}),',
+      '    redirect: "error",',
+      '  })',
+      '  const value = await response.json().catch(() => null)',
+      '  absentRoutes.push({ status: response.status, code: value?.error?.code })',
       '}',
-      'await observe("observe-dispatch", dispatchInput)',
-      'await observe("observe-dispatch", dispatchInput)',
-      'const refreshed = await request("/v1/web/projects/" + projectId + "/refresh", {',
-      '  method: "POST", headers: webHeaders,',
-      '})',
-      'const lookupId = refreshed.value?.snapshot?.managed?.runs?.[0]?.lookupId',
-      'const detail = await request("/v1/web/projects/" + projectId + "/runs/detail?runId=" + encodeURIComponent(lookupId), {',
-      '  headers: webHeaders,',
-      '})',
-      'const gapStream = await fetch(endpoint + "/v1/web/projects/" + projectId + "/events", {',
-      '  headers: { ...webHeaders, Accept: "text/event-stream", "Last-Event-ID": "999" },',
-      '  redirect: "error",',
-      '})',
-      'const gapReader = gapStream.body.getReader()',
-      'const gapEvent = await readSse(gapReader)',
-      'await gapReader.cancel()',
-      'await streamReader.cancel()',
-      'const leaked = [pageText, cssText, scriptText].some(content => content.includes(accessToken)',
-      '  || content.includes(record.controlToken)',
-      '  || content.includes(process.env.RSP_WEB_PROJECT_ROOT))',
       'process.stdout.write(JSON.stringify({',
-      '  page: page.status,',
-      '  css: css.status,',
-      '  script: script.status,',
-      '  marker: pageText.includes("RSP Web Observatory")',
-      '    && scriptText.includes("createRoot")',
-      '    && scriptText.includes("Stale snapshot")',
-      '    && scriptText.includes("Managed runtime unavailable"),',
-      '  leaked,',
-      '  csp: page.headers.get("content-security-policy"),',
-      '  referrer: page.headers.get("referrer-policy"),',
-      '  snapshot: snapshot.response.status,',
-      '  projection: snapshot.value?.snapshot?.projection,',
-      '  projectMatch: snapshot.value?.snapshot?.source?.projectId === projectId,',
-      '  managedUnavailable: snapshot.value?.snapshot?.managed?.available === false,',
-      '  managedRuns: refreshed.value?.snapshot?.managed?.runs?.length,',
-      '  detail: detail.response.status,',
-      '  detailFreshness: detail.value?.projection?.freshness?.state,',
-      '  duplicate: detail.value?.projection?.run?.dispatches?.[0]?.duplicateCount,',
-      '  timelineDispatches: detail.value?.projection?.run?.timeline?.filter(item => item.type === "dispatch").length,',
-      '  sse: stream.status === 200 && initialEvent.value?.type === "managed-projection" && liveEvent.value?.type === "managed-projection",',
-      '  gap: gapEvent.value?.type === "managed-gap",',
+      '  health: health.response.status,',
+      '  project: project.response.status,',
+      '  capability: capability.value?.capability?.name + "@" + capability.value?.capability?.version?.major + "." + capability.value?.capability?.version?.minor,',
+      '  observed: observed.response.status,',
+      '  projectedRunId: projected.value?.result?.run?.runId,',
+      '  webAbsent: absentRoutes.every(route => route.status === 404 && route.code === "broker_route_not_found"),',
       '}))',
     ].join('\n'),
   ], {
     cwd: options.projectRoot,
     env: {
       ...process.env,
-      RSP_WEB_DISCOVERY: options.discovery,
-      RSP_WEB_PROJECT_ROOT: options.projectRoot,
+      RSP_BROKER_DISCOVERY: options.discovery,
+      RSP_BROKER_PROJECT_ROOT: options.projectRoot,
     },
   })
   const output = result.status === 0 ? parseJsonIfPossible(result.stdout) : null
   if (result.status !== 0
-    || output?.page !== 200
-    || output?.css !== 200
-    || output?.script !== 200
-    || output?.marker !== true
-    || output?.leaked !== false
-    || output?.snapshot !== 200
-    || output?.projection?.major !== 1
-    || output?.projection?.minor !== 1
-    || output?.projectMatch !== true
-    || output?.managedUnavailable !== true
-    || output?.managedRuns !== 1
-    || output?.detail !== 200
-    || output?.detailFreshness !== 'stale'
-    || output?.duplicate !== 1
-    || output?.timelineDispatches !== 1
-    || output?.sse !== true
-    || output?.gap !== true
-    || !String(output?.csp).includes(`default-src 'none'`)
-    || output?.referrer !== 'no-referrer') {
-    fail(`Installed Web Observatory smoke failed: ${processFailureDiagnostic(result)}`)
+    || output?.health !== 200
+    || output?.project !== 200
+    || output?.capability !== 'rsp.manage-runtime@1.0'
+    || output?.observed !== 200
+    || output?.projectedRunId !== 'package-broker-run'
+    || output?.webAbsent !== true) {
+    fail(`Installed Broker surface smoke failed: ${processFailureDiagnostic(result)}`)
   }
   return {
-    commandSafe: true,
-    page: output.page,
-    assets: true,
-    projection: '1.1',
-    managed: true,
-    projectIsolation: true,
-    securityHeaders: true,
+    health: true,
+    project: true,
+    runtimeManage: true,
+    webAbsent: true,
   }
 }
 
@@ -521,8 +455,13 @@ function main() {
     const installedRoot = join(projectRoot, 'node_modules', '@oevery', 'rsp')
     const installedBin = join(installedRoot, 'bin', 'rsp.mjs')
     const help = run(process.execPath, [installedBin, '--help'], { cwd: projectRoot })
-    if (!help.includes('rsp'))
+    if (!help.includes('rsp') || /(?:^|\s)web(?:\s|$)/mu.test(help))
       fail('Installed rsp executable did not return its help output')
+    const removedWebCommand = runResult(process.execPath, [installedBin, 'web', '--json'], { cwd: projectRoot })
+    if (removedWebCommand.status === 0
+      || parseJsonIfPossible(removedWebCommand.stdout)?.command === 'web') {
+      fail('Installed rsp unexpectedly exposes the removed Web command')
+    }
     const version = run(process.execPath, [installedBin, '--version'], { cwd: projectRoot })
     if (version !== packResult.version)
       fail(`Installed rsp version mismatch: expected ${packResult.version}, received ${version}`)
@@ -716,7 +655,7 @@ function main() {
     let brokerCleanupArmed = false
     let brokerPid
     let brokerLifecycle
-    let webObservatory
+    let brokerSurface
     try {
       const brokerBefore = runResult(process.execPath, [installedBin, 'broker', 'status', '--json'], {
         cwd: projectRoot,
@@ -755,21 +694,7 @@ function main() {
         fail('Installed rsp broker status did not reuse the started Broker identity')
       }
 
-      const webCommand = runResult(process.execPath, [installedBin, 'web', '--json'], {
-        cwd: projectRoot,
-        env: brokerEnvironment,
-      })
-      const webCommandOutput = webCommand.status === 0 ? parseJsonIfPossible(webCommand.stdout) : null
-      if (webCommand.status !== 0
-        || webCommandOutput?.command !== 'web'
-        || webCommandOutput?.ok !== true
-        || webCommandOutput?.opened !== false
-        || typeof webCommandOutput?.url !== 'string'
-        || webCommandOutput.url.includes('#')
-        || webCommand.stdout.includes(brokerStartOutput.controlToken ?? 'never-present')) {
-        fail(`Installed rsp web safe non-interactive command failed: ${webCommand.stderr.trim()}`)
-      }
-      webObservatory = runInstalledWebSmoke({
+      brokerSurface = runInstalledBrokerSurfaceSmoke({
         discovery: join(brokerCacheRoot, 'discovery.json'),
         projectRoot,
       })
@@ -833,6 +758,20 @@ function main() {
     const installedManifest = JSON.parse(readFileSync(join(installedRoot, 'package.json'), 'utf8'))
     if (installedManifest.name !== packResult.name || installedManifest.version !== packResult.version)
       fail(`Installed package identity mismatch: ${installedManifest.name}@${installedManifest.version}`)
+    if (installedManifest.engines?.node !== '>=22')
+      fail(`Installed package Node engine mismatch: ${installedManifest.engines?.node ?? 'missing'}`)
+    for (const dependency of ['mdast-util-from-markdown', 'react-dom']) {
+      if (installedManifest.dependencies?.[dependency] !== undefined
+        || existsSync(join(projectRoot, 'node_modules', dependency))) {
+        fail(`Installed production dependency graph unexpectedly contains ${dependency}`)
+      }
+    }
+    if (installedManifest.files?.some(path => String(path).startsWith('web/')))
+      fail('Installed package manifest unexpectedly includes Web assets')
+    if (existsSync(join(installedRoot, 'dist', 'web-projector.mjs'))
+      || existsSync(join(installedRoot, 'web'))) {
+      fail('Installed package unexpectedly contains Web delivery artifacts')
+    }
     const skillRoot = join(installedRoot, 'skills')
     const installedSkills = readdirSync(skillRoot, { withFileTypes: true })
       .filter(entry => entry.isDirectory())
@@ -896,7 +835,12 @@ function main() {
           ordinaryCliWithoutSqlite: true,
         },
         brokerLifecycle,
-        webObservatory,
+        brokerSurface,
+        webCommandAbsent: true,
+        compatibilityBoundary: {
+          nodeEngine: installedManifest.engines.node,
+          webOnlyProductionDependenciesAbsent: true,
+        },
         nonTtyUi: { exitCode: nonTtyUi.status, stderr: nonTtyUi.stderr.trim() },
         invalidLocale: { exitCode: invalidLocale.status, stderr: invalidLocale.stderr.trim() },
       },

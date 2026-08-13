@@ -21,7 +21,7 @@ intent → shape → design when needed → diagnose | TDD | implement
 
 ## Five-minute start
 
-RSP requires Node.js 22 (`>=22.13.0`). Use the current stable release:
+RSP requires Node.js 22 (`>=22`). The optional SQLite runtime requires Node.js `>=22.13.0`; ordinary Markdown and one-shot CLI workflows do not open it. Use the current stable release:
 
 ```bash
 npx -y @oevery/rsp@latest init --with-project-setup

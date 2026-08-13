@@ -16,8 +16,6 @@ export {
   createSseParser,
   escapeHtml,
   formatTimestamp,
-  historyDetailRequestPaths,
-  isRouteContractMismatch,
   shouldAutoRefresh,
   WebRequestError,
 } from './state.js'

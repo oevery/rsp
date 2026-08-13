@@ -12,11 +12,18 @@ import { writeManagedFile } from '../core/managed-path.js'
 import { resolveFocusMarkerPath, WorkRefError } from '../core/work-ref.js'
 
 /** Create a new single-file change under .rsp/changes/<name>.md and focus it when newly created. */
-export async function createChange(name: string, summary = '', kind?: string, options: { issue?: string, issueRelation?: string } = {}) {
+export async function createChange(
+  name: string,
+  summary = '',
+  kind?: string,
+  options: { issue?: string, issueRelation?: string, deprecatedLite?: boolean } = {},
+) {
   if (!name) {
     console.error(`  ${pc.red('Usage:')} rsp create <name> [summary]`)
     process.exit(1)
   }
+  if (options.deprecatedLite)
+    console.warn(`  ${pc.yellow('Warning:')} create option "--lite" is deprecated and ignored; using the standard kind-aware Change template`)
   const hasIssueOption = options.issue !== undefined
   if (options.issueRelation && !hasIssueOption)
     throw new Error('--issue-relation requires --issue')

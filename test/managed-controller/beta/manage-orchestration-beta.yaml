@@ -9,7 +9,7 @@ product_skill_names:
   - rsp
   - rsp-manage
   - rsp-implement
-product_composition_sha256: 45f52bda22a0a85ba7b346b9e9413fb34ea4145aa9406525bd220ca0783c1459
+product_composition_sha256: 42054712972043e279f4862f755854647fdb9e318f97ce2a36dc770647e6d927
 prior_retained_evidence:
   - path: research/evaluations/rsp-manage/2026-08-04-manage-orchestration-beta/report.md
     sha256: 4c4d7ff94bbdfbfc6988e9d264cff05de89a37f6dcc9e19f555536ba02011dc1

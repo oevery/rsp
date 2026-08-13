@@ -28,7 +28,7 @@ RSP 把未完成工作、持久化事实、长期理由、作用域指令和已�
 
 ## 可选 runtime
 
-RSP 可以显式启动一个兼容的用户级 Broker，供 runtime 与 Web 能力使用。Broker 是本地 loopback 传输层和惰性 checkout session 宿主，不是另一套工作流引擎或事实源。每个规范化仓库或 worktree 都有独立的 project identity、内存 access token 与可丢弃 namespace；session 空闲卸载不会修改仓库文件。
+RSP 可以显式启动一个兼容的用户级 Broker，供 runtime 能力使用。Broker 是本地 loopback 传输层和惰性 checkout session 宿主，不是另一套工作流引擎或事实源。每个规范化仓库或 worktree 都有独立的 project identity、内存 access token 与可丢弃 namespace；session 空闲卸载不会修改仓库文件。
 
 普通 CLI 工作仍不依赖服务。`rsp status`、`rsp check`、`rsp show`、`rsp ready`、`rsp specs`、生命周期、Git 与修复命令不会启动 Broker，也不会创建其缓存。Protocol 或 runtime-schema 不兼容时会安全失败，而不是自动创建 side-by-side 服务。
 
@@ -38,11 +38,9 @@ Doctor 可以只读检查已有 discovery、runtime 与有界 context 状态。S
 
 Managed run 与 attention projection 最多返回 32 个带 source reference 的条目，并明确保持非权威。Resume context 上限为 12 KiB、24 小时。Hydration 必须重新验证 checkout、WorkRef、Git、dirty paths、authority、过期时间与完整 source identity，重新读取当前 authority 指针并加载变化的 evidence；authority 或 checkout drift 会要求完整重读。删除或丢失数据库只会移除 runtime 便利能力；Markdown 工作、历史、就绪性、生命周期和无 runtime 的 Manage 行为保持不变。
 
-软件包使用 Node.js 内置的 `node:sqlite`，要求 Node.js `>=22.13.0`，且不安装 native SQLite addon。显式禁用 SQLite 时，runtime 打开会返回精确诊断，而普通 CLI 检查仍然可用。
+软件包安装与普通 Markdown/CLI 的边界是 Node.js `>=22`。可选 runtime 惰性使用 Node.js 内置的 `node:sqlite`，并要求 Node.js `>=22.13.0`，且不安装 native SQLite addon。使用更早的 Node 22 版本或显式禁用 SQLite 时，runtime 打开会返回精确诊断，而普通 CLI 检查仍然可用。
 
-`rsp web` 会显式启动或复用兼容 Broker，并为精确的当前 checkout 打开本地只读 Overview、Specs、History、Runs 与 Attention shell。一个短期、仅可使用一次的 URL-fragment bootstrap 会建立内存浏览器 session，不会把 project token 放入正常输出、assets、Referer、仓库状态、cookie 或浏览器存储。每次成功刷新都是一份有界、带 source identity 的完整 snapshot；刷新失败或投影不兼容时，上一份 snapshot 会保留并明确标记为 stale。
-
-Runs 与 Attention 只渲染 Manage-owned runtime projection：actor topology、dispatch、receipt、duplicate delivery 次数、evidence reference、changed path、stop boundary、freshness 与 committed-sequence timeline。缺失 receipt、stale repository relationship、truncation 和 runtime unavailable 都会保持显式，且绝不表示 completion 或 acceptance。Web-bearer SSE 使用有界 replay，并在 sequence gap 时回退到一次 fresh atomic snapshot。浏览器没有 mutation route 或工作流 authority；runtime 缺失或不兼容时，Overview、Specs 与 History 仍可使用。
+默认软件包不会把保留的 Web Observatory 源码暴露为 CLI 命令、Broker route、projector entry 或浏览器 asset。Markdown artifacts、一次性 CLI 查询与可选 runtime API 仍是受支持的观测面。
 
 ## 一个 Change，一个结果
 

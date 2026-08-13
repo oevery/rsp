@@ -45,9 +45,19 @@ function validateCompactInvocation(rawArgs: string[]): void {
     throw new Error('--compact requires --json')
 }
 
-function validateRemovedCreateOptions(rawArgs: string[]): void {
-  if (rawArgs[0] === 'create' && rawArgs.some(arg => arg === '--lite' || arg.startsWith('--lite=')))
-    throw new Error('create option "--lite" was removed in RSP 4.0; rerun without "--lite" to use the standard kind-aware Change template')
+function normalizeLegacyCreateOptions(rawArgs: string[]): { rawArgs: string[], deprecatedLite: boolean } {
+  if (rawArgs[0] !== 'create')
+    return { rawArgs, deprecatedLite: false }
+
+  const legacyLiteOptions = new Set(['--lite', '--lite=true', '--lite=false'])
+  const invalidLegacyLite = rawArgs.find(arg => arg.startsWith('--lite=') && !legacyLiteOptions.has(arg))
+  if (invalidLegacyLite)
+    throw new Error(`create option "${invalidLegacyLite}" is invalid; use --lite, --lite=true, or --lite=false`)
+  const deprecatedLite = rawArgs.some(arg => legacyLiteOptions.has(arg))
+  return {
+    rawArgs: deprecatedLite ? rawArgs.filter(arg => !legacyLiteOptions.has(arg)) : rawArgs,
+    deprecatedLite,
+  }
 }
 
 const initCommand = defineCommand({
@@ -77,38 +87,41 @@ const initCommand = defineCommand({
   },
 })
 
-const createCommand = defineCommand({
-  meta: {
-    name: 'create',
-    description: 'Create .rsp/changes/<name>.md [summary]',
-  },
-  args: {
-    'name': {
-      type: 'positional',
-      description: 'Change name',
-      required: true,
+function createCreateCommand(deprecatedLite: boolean) {
+  return defineCommand({
+    meta: {
+      name: 'create',
+      description: 'Create .rsp/changes/<name>.md [summary]',
     },
-    'kind': {
-      type: 'string',
-      description: 'Optional kind for a kind-aware template (feature, fix, refactor, docs, ops, research)',
+    args: {
+      'name': {
+        type: 'positional',
+        description: 'Change name',
+        required: true,
+      },
+      'kind': {
+        type: 'string',
+        description: 'Optional kind for a kind-aware template (feature, fix, refactor, docs, ops, research)',
+      },
+      'issue': {
+        type: 'string',
+        description: 'Attach one external issue URL without fetching it',
+      },
+      'issue-relation': {
+        type: 'string',
+        description: 'Issue relationship: relates (default) or closes; requires --issue',
+      },
     },
-    'issue': {
-      type: 'string',
-      description: 'Attach one external issue URL without fetching it',
+    async run({ args }: { args: CreateChangeArgs }) {
+      const summary = Array.isArray(args._) && args._.length > 1 ? args._.slice(1).join(' ') : ''
+      await createChange(args.name, summary, args.kind, {
+        issue: args.issue,
+        issueRelation: args.issueRelation,
+        deprecatedLite,
+      })
     },
-    'issue-relation': {
-      type: 'string',
-      description: 'Issue relationship: relates (default) or closes; requires --issue',
-    },
-  },
-  async run({ args }: { args: CreateChangeArgs }) {
-    const summary = Array.isArray(args._) && args._.length > 1 ? args._.slice(1).join(' ') : ''
-    await createChange(args.name, summary, args.kind, {
-      issue: args.issue,
-      issueRelation: args.issueRelation,
-    })
-  },
-})
+  })
+}
 
 const groupCreateCommand = defineCommand({
   meta: {
@@ -338,34 +351,6 @@ const brokerCommand = defineCommand({
           process.exitCode = 1
       },
     }),
-  },
-})
-
-const webCommand = defineCommand({
-  meta: {
-    name: 'web',
-    description: 'Open the local read-only Web Observatory for the current checkout',
-  },
-  args: {
-    'json': {
-      type: 'boolean',
-      description: 'Print a safe non-interactive registration result without opening a browser or exposing a bootstrap',
-      default: false,
-    },
-    'print-url': {
-      type: 'boolean',
-      description: 'Print one short-lived bootstrap URL to an interactive terminal instead of opening a browser',
-      default: false,
-    },
-  },
-  async run({ args }: { args: { 'json': boolean, 'print-url': boolean } }) {
-    const { runWebCommand } = await import('./commands/web.js')
-    const result = await runWebCommand({
-      json: Boolean(args.json),
-      printUrl: Boolean(args['print-url']),
-    })
-    if (!result.ok)
-      process.exitCode = 1
   },
 })
 
@@ -1110,7 +1095,7 @@ export async function runCli(rawArgs = process.argv.slice(2)) {
     }
   }
   validateCompactInvocation(rawArgs)
-  validateRemovedCreateOptions(rawArgs)
+  const normalizedCreate = normalizeLegacyCreateOptions(rawArgs)
   const version = await getVersion()
 
   const main = defineCommand({
@@ -1124,11 +1109,10 @@ export async function runCli(rawArgs = process.argv.slice(2)) {
       add: addCommand,
       specs: specsCommand,
       broker: brokerCommand,
-      web: webCommand,
       workspace: workspaceCommand,
       land: landCommand,
       commit: commitCommand,
-      create: createCommand,
+      create: createCreateCommand(normalizedCreate.deprecatedLite),
       group: groupCommand,
       focus: focusCommand,
       unfocus: unfocusCommand,
@@ -1145,7 +1129,7 @@ export async function runCli(rawArgs = process.argv.slice(2)) {
     },
   })
 
-  await runMain(main, { rawArgs })
+  await runMain(main, { rawArgs: normalizedCreate.rawArgs })
 }
 
 export async function runCliMain(rawArgs = process.argv.slice(2)): Promise<void> {

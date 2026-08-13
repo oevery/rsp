@@ -4,7 +4,6 @@ export default antfu({
   ignores: [
     'node_modules/',
     '.git/',
-    'web/static/app.js',
     'test/skill-behavior/fixtures/',
     'research/evaluations/rsp-skill-runtime-context/*/inputs/**/prompt.md',
     'research/evaluations/rsp-skill-runtime-context/*/runs/**/final.json',

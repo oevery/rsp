@@ -1976,6 +1976,35 @@ export async function readRuntimeRunProjection(options: {
   }
 }
 
+function projectRuntimeProjectProjectionSnapshot(
+  store: RuntimeEventStore,
+  options: {
+    runLimit?: number
+    eventLimit?: number
+  } = {},
+): RuntimeProjectProjectionSnapshot {
+  const runLimit = positiveBound(
+    options.runLimit ?? RUNTIME_MAX_PROJECTION_RUNS,
+    RUNTIME_MAX_PROJECTION_RUNS,
+    'runtime projection run limit',
+  )
+  const eventLimit = positiveBound(
+    options.eventLimit ?? RUNTIME_MAX_PROJECTION_EVENTS,
+    RUNTIME_MAX_PROJECTION_EVENTS,
+    'runtime projection event limit',
+  )
+  const listed = store.listRuns(runLimit)
+  const projections = listed.runs.map(run => store.projectRun(run.runId, eventLimit))
+  return {
+    state: 'ready',
+    schema: { ...store.schema },
+    diagnostic: null,
+    runs: listed.runs,
+    runsTruncated: listed.truncated,
+    projections,
+  }
+}
+
 export async function readRuntimeProjectProjectionSnapshot(options: {
   namespacePath: string
   project: RuntimeProjectIdentity
@@ -2045,16 +2074,7 @@ export async function readRuntimeProjectProjectionSnapshot(options: {
           schema,
           options.now ?? (() => new Date()),
         )
-        const listed = store.listRuns(runLimit)
-        const projections = listed.runs.map(run => store.projectRun(run.runId, eventLimit))
-        return {
-          state: 'ready',
-          schema,
-          diagnostic: null,
-          runs: listed.runs,
-          runsTruncated: listed.truncated,
-          projections,
-        }
+        return projectRuntimeProjectProjectionSnapshot(store, { runLimit, eventLimit })
       }
       finally {
         database.close()

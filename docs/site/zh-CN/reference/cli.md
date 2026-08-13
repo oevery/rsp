@@ -40,6 +40,8 @@ rsp group reopen <name> --reason <text>
 
 `rsp specs` 直接读取当前常规 Markdown，不依赖 daemon、数据库或生成导航文件。树、详情与搜索 JSON 会标识 checkout、精确项目相对源路径、文档种类、限制与诊断。搜索采用不区分大小写的字面匹配，默认最多返回 20 条、摘录上限为 240 个 Unicode code points；Specs 树无效或保留索引路径包含项目自有内容时会安全失败。迁移后，该命令就是生成索引的受支持导航替代。进行实质决策或修改前，仍需重新读取返回的源文件。
 
+在下一次兼容发布的一个兼容周期内，`rsp create --lite`、`--lite=true` 与 `--lite=false` 仍会被接受。每种形式都会输出有界弃用提示，并创建同一套标准 kind-aware 六章节 Change；其他 `--lite=` 值会在修改前失败，且不存在单独的 lite 模板。
+
 ## 可选本地 Broker
 
 ```text
@@ -47,12 +49,11 @@ rsp broker status [--json]     检查 discovery 与兼容性，不启动服务
 rsp broker start [--json]      启动或复用一个兼容的用户级 Broker
 rsp broker stop [--json]       协作停止兼容 Broker，或清理 stale 元数据
 rsp broker restart [--json]    将已验证且协议 major 相同的 Broker 替换为新进程
-rsp web [--json] [--print-url] 打开当前 checkout 的只读 Observatory
 ```
 
-Broker 是供后续 runtime 与 Web 能力使用的可选操作传输层。普通 `status`、`check`、`show`、`ready`、`specs`、生命周期、Git 与修复命令仍是一次性路径：它们既不依赖 Broker，也不创建其缓存。Broker 不存在时，`broker status` 同样不创建缓存，并以成功状态报告 absent。
+Broker 是供 runtime 能力使用的可选操作传输层。普通 `status`、`check`、`show`、`ready`、`specs`、生命周期、Git 与修复命令仍是一次性路径：它们既不依赖 Broker，也不创建其缓存。Broker 不存在时，`broker status` 同样不创建缓存，并以成功状态报告 absent。默认软件包不会把保留的 Web Observatory 源码暴露为命令、Broker route、projector entry 或浏览器 asset。
 
-`broker restart` 会在同一个 startup lock 内完成协作停止或 stale discovery 恢复，并发布新的 daemon。只要 Broker 健康、身份已验证且协议 major 相同，即使其协议 minor 或 runtime schema 与当前包不兼容，也可以直接替换。协议 major 不同或 owner 不健康时，仍必须使用兼容包处理，并且不会直接向 PID 发送信号。Restart 会丢弃已加载的 project session、Web bearer、SSE 连接与旧 endpoint；需要重新打开的页面应再次运行 `rsp web`。
+`broker restart` 会在同一个 startup lock 内完成协作停止或 stale discovery 恢复，并发布新的 daemon。只要 Broker 健康、身份已验证且协议 major 相同，即使其协议 minor 或 runtime schema 与当前包不兼容，也可以直接替换。协议 major 不同或 owner 不健康时，仍必须使用兼容包处理，并且不会直接向 PID 发送信号。Restart 会丢弃已加载的 project session 与旧 endpoint。
 
 仓库迁移与 runtime 缓存处置是两项独立操作。Update 和 doctor 不会移除 runtime 数据库或 sidecar。只有明确授权处置并关闭精确 Broker/session/store owner 后，才从 `@oevery/rsp/dist/runtime-store.mjs` 导入 `resolveRuntimeDisposalTarget()` 与 `disposeRuntimeDatabase()`，派生当前 checkout 的精确 cache/projects/namespace target，并把这个完整 target 交回处置 API。不要手工删除 runtime 文件、删除整个 Broker 缓存根目录、猜测 project identity、在 checkout 之间复制数据库，也不要手工向记录的 PID 发送信号。
 
@@ -60,17 +61,11 @@ Broker 是供后续 runtime 与 Web 能力使用的可选操作传输层。普�
 
 服务只绑定精确的 `http://127.0.0.1:<port>`，并检查 loopback peer、`Host`、可选浏览器 `Origin` 与 bearer token；CLI 输出永远不打印 control token 或 project token。规范化 Git checkout 路径加文件系统身份会把不同仓库和同一 Git 仓库的不同 worktree 隔离为不同 project session、token 与 namespace；同一 checkout 的并发注册返回该已加载 session 的唯一规范 token。所有 JSON 响应都会在发送 headers 前检查 64 KiB 上限，status 在限制可选 session 列表的同时保留精确总数。非活跃 session 默认五分钟后卸载，但不会删除仓库文件，也不会让 runtime 状态成为权威事实。
 
-`rsp web` 是唯一会显式启动 Broker 并注册当前 checkout 的基础浏览器操作。它打开的 URL 只在 fragment 中携带一个一分钟有效、仅可使用一次的 bootstrap；初始文档和随包 assets 不会收到该 fragment，浏览器会在 API 访问前把它移除，并由精确 Broker origin 兑换独立的内存 Web bearer。正常输出和 `--json` 只显示无凭据 project URL；非交互执行不会生成 bootstrap。仅在无法打开浏览器时，于人类控制的交互终端使用 `--print-url`；该输出属于短期凭据，不应重定向或复制到日志。
-
-Observatory 的少量界面标签仅使用英文，并以紧凑响应式布局提供 Overview、Specs、History、Runs 与 Attention。Overview 在服务端派生当前工作、目标、状态、blockers、diagnostics 与 next action；Specs 和 History 复用 CLI 的有界当前文件查询与详情投影。Runs 和 Attention 只消费非权威的 Manage-owned projection；兼容 runtime state 缺失时会明确显示 unavailable。浏览器不解析 Markdown，不把凭据写入 cookie 或浏览器存储，也不存在写入、生命周期、命令、Git、runtime mutation、账号、云端或远程路由。
-
-只有全部 section 成功后，refresh 才会整体替换 projection version `1.1` 的完整 snapshot。Managed SSE reconnect 使用有界 replay，或在 sequence gap 时执行一次 fresh snapshot recovery。刷新失败或 bundle 收到不兼容投影时，上一份完整 snapshot 会继续显示并明确标记为 stale，同时展示有界错误。关闭页面后轻量 session heartbeat 与 managed stream 会停止，project session 随正常 idle policy 卸载；`rsp broker stop` 可显式关闭该可选服务。Broker 或 Web 不可用时，普通 `rsp status`、`rsp specs`、`rsp history`、readiness、生命周期与 Git 工作仍不受影响。
-
-显式 runtime 消费者会通过随包的 `dist/runtime-store.mjs` adapter，在对应 project namespace 中惰性打开 `runtime-v1.sqlite`。当前数据库 identity 是 schema major `1`、migration version `3`，它与 Broker protocol `1.2` 和 runtime-schema compatibility identity `1.1` 相互独立。Store 使用内置 `node:sqlite`、WAL、短事务、幂等投递、事务化 sequence 分配、带保护 checkpoint、有界 context、retention 与 project-local disposal。它只记录 runtime observations，不拥有规划、blocker、readiness、acceptance、生命周期、Git 或发布。
+显式 runtime 消费者会通过随包的 `dist/runtime-store.mjs` adapter，在对应 project namespace 中惰性打开 `runtime-v1.sqlite`。当 Broker session 持有这个 live store 时，只能通过随包的 runtime 或 Broker API 进行 observation 与 projection；在 owning session 释放数据库之前，不支持直接访问 SQLite。当前数据库 identity 是 schema major `1`、migration version `3`，它与 Broker protocol `1.2` 和 runtime-schema compatibility identity `1.1` 相互独立。Store 使用内置 `node:sqlite`、WAL、短事务、幂等投递、事务化 sequence 分配、带保护 checkpoint、有界 context、retention 与 project-local disposal。它只记录 runtime observations，不拥有规划、blocker、readiness、acceptance、生命周期、Git 或发布。
 
 宿主可以 import 随包的 `dist/manage-runtime.mjs`，通过已接受的 store 直接使用，或经 project-token-scoped Broker endpoint 使用可选 capability `rsp.manage-runtime@1.0`。该 capability 的 Broker discovery 不会启动服务。Adapter 只记录宿主已确认的 run、精确 dispatch 与 worker identity、结构化 event 与 receipt、attention、pause/resume、显式 terminal boundary 和 context。每个新 observation（包括 dispatch）推进一次 committed run sequence；duplicate delivery 保留原 effect 与 sequence。Worker event 必须对应已存在且 identity 匹配的 dispatch，missing、unavailable 或 boundary-changing receipt 始终保持 incomplete。Run 与 attention projection 非权威、带 source reference，且最多 32 项。`terminalDeliveryObserved` 同样 non-authoritative，只在存在显式 terminal boundary、至少一个 dispatch、无 truncation 且每个 observed dispatch 都有安全 retained delivery 时为 true。Context packet 上限为 12 KiB、24 小时；public save/hydrate request 不暴露 caller clock，任何后续 committed observation 都会使旧 packet 失鲜。Resume 始终重读当前 authority 与变化的 source，authority 或 checkout identity stale 时执行完整重读。Runtime 缺失或失败只产生诊断，并保留规范的无 runtime Manage 结果。
 
-软件包要求 Node.js `>=22.13.0`，且不声明 native SQLite addon。以 `--no-experimental-sqlite` 启动 Node 时，runtime 打开返回 `runtime_sqlite_unavailable`；普通一次性 CLI 命令不会 import SQLite，因此仍可使用。
+软件包 engine 接受 Node.js `>=22`，且不声明 native SQLite addon。可选 SQLite runtime 打开要求 Node.js `>=22.13.0`；更早的 Node 22 版本或 `--no-experimental-sqlite` 会返回 `runtime_sqlite_unavailable`。普通一次性 CLI 命令不会 import SQLite，因此仍可使用。
 
 显式设置时 discovery 使用 `RSP_BROKER_CACHE_HOME`；否则在支持的 Unix 主机上遵循 XDG cache，在 Windows 上使用 `LOCALAPPDATA`，在 macOS 上使用用户缓存目录，其余主机回退到 `~/.cache`。停止前会重新验证进程启动身份与元数据文件身份：dead 或已复用 PID 只触发元数据清理，绝不会收到信号；身份不可观察时则安全失败。
 

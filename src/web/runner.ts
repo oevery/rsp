@@ -1,6 +1,5 @@
 import type { WebProjector } from './model.js'
 import { execFile } from 'node:child_process'
-import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 import { BrokerError } from '../broker/protocol.js'
 import { isWebOverviewProjection } from './model.js'
@@ -10,7 +9,7 @@ const WEB_PROJECTOR_MAX_BYTES = 128 * 1024
 const WEB_PROJECTOR_TIMEOUT_MS = 5_000
 
 export function createWebProjector(
-  entry = fileURLToPath(new URL('./web-projector.mjs', import.meta.url)),
+  entry: string,
   options: {
     maxBufferBytes?: number
     timeoutMs?: number

@@ -238,7 +238,7 @@ describe('change lifecycle integration', () => {
     })()
   })
 
-  it('creates the single kind-aware Change template and rejects the removed lite option', () => {
+  it('creates the single kind-aware Change template and accepts deprecated lite compatibility forms', () => {
     const createDir = join(tmpdir(), 'rsp-create-single-template-test', randomUUID())
     return (async () => {
       await mkdir(createDir, { recursive: true })
@@ -258,13 +258,22 @@ describe('change lifecycle integration', () => {
         ['equals-true-fix', '--lite=true'],
         ['equals-false-fix', '--lite=false'],
       ]) {
-        const result = spawnSync('node', [cliPath(), 'create', name, '--kind', 'fix', option, 'Should fail'], { cwd: createDir, encoding: 'utf-8' })
-        expect(result.status).toBe(1)
+        const result = spawnSync('node', [cliPath(), 'create', name, '--kind', 'fix', option, 'Compatible scaffold'], { cwd: createDir, encoding: 'utf-8' })
+        expect(result.status, result.stderr || result.stdout).toBe(0)
         expect(result.stderr.trim()).toBe(
-          'Error: create option "--lite" was removed in RSP 4.0; rerun without "--lite" to use the standard kind-aware Change template',
+          'Warning: create option "--lite" is deprecated and ignored; using the standard kind-aware Change template',
         )
-        expect(existsSync(join(createDir, '.rsp', 'changes', `${name}.md`))).toBe(false)
-        expect(existsSync(join(createDir, '.rsp', 'focus.d', name))).toBe(false)
+        const legacyContent = await readFile(join(createDir, '.rsp', 'changes', `${name}.md`), 'utf-8')
+        expect(legacyContent).toContain('kind: "fix"')
+        expect(legacyContent).toContain('- Outcome: Compatible scaffold')
+        expect(legacyContent).toContain('## Proposal')
+        expect(legacyContent).toContain('## Spec')
+        expect(legacyContent).toContain('## Design')
+        expect(legacyContent).toContain('## Tasks')
+        expect(legacyContent).toContain('## Verify')
+        expect(legacyContent).toContain('## Blockers')
+        expect(legacyContent).not.toContain('lite')
+        expect(existsSync(join(createDir, '.rsp', 'focus.d', name))).toBe(true)
       }
     })()
   })

@@ -58,9 +58,9 @@ import { processIdentityFor } from '../src/workspace/process.js'
 const repositoryRoot = fileURLToPath(new URL('..', import.meta.url))
 const v320FixtureRoot = join(repositoryRoot, 'test', 'fixtures', 'compatibility', 'v3.2.0')
 const builtCli = join(repositoryRoot, 'dist', 'cli.mjs')
-const removedLiteGuidance = 'Error: create option "--lite" was removed in RSP 4.0; rerun without "--lite" to use the standard kind-aware Change template'
+const deprecatedLiteGuidance = 'Warning: create option "--lite" is deprecated and ignored; using the standard kind-aware Change template'
 
-describe.sequential('rsp 4.0 compatibility migration', () => {
+describe.sequential('rsp 3.x compatible-release migration', () => {
   it('pins supported 3.x migration evidence to the published v3.2.0 tag fixture', async () => {
     const manifest = JSON.parse(await readFile(join(v320FixtureRoot, 'manifest.json'), 'utf8')) as {
       tagCommit: string
@@ -90,17 +90,43 @@ describe.sequential('rsp 4.0 compatibility migration', () => {
     expect(actualFiles.sort()).toEqual(Object.keys(manifest.sha256).sort())
   })
 
-  it('rejects every removed --lite spelling before creating any RSP state', async ({ onTestFinished }) => {
-    const fixture = await mkdtemp(join(tmpdir(), 'rsp-compat-lite-'))
+  it('accepts every legacy --lite boolean form through the standard kind-aware scaffold', async ({ onTestFinished }) => {
+    const fixture = await createGitRspProject('rsp-compat-lite-')
     onTestFinished(() => rm(fixture, { recursive: true, force: true }))
 
-    for (const option of ['--lite', '--lite=true', '--lite=false']) {
-      const result = runCli(['create', `legacy-${option.replaceAll(/[^a-z]/gu, '')}`, option], fixture)
+    for (const [index, option] of ['--lite', '--lite=true', '--lite=false'].entries()) {
+      const name = `legacy-compatible-${index + 1}`
+      const result = runCli(['create', name, '--kind', 'fix', option, 'Compatible scaffold'], fixture)
+      expect(result.status, result.stderr || result.stdout).toBe(0)
+      expect(result.stderr.trim()).toBe(deprecatedLiteGuidance)
+      const content = await readFile(join(fixture, '.rsp', 'changes', `${name}.md`), 'utf8')
+      expect(content).toContain('kind: "fix"')
+      expect(content).toContain('- Outcome: Compatible scaffold')
+      expect(content).toContain('## Proposal')
+      expect(content).toContain('## Spec')
+      expect(content).toContain('## Design')
+      expect(content).toContain('## Tasks')
+      expect(content).toContain('## Verify')
+      expect(content).toContain('## Blockers')
+      expect(content).not.toContain('## Lite')
+      expect(existsSync(join(fixture, '.rsp', 'focus.d', name))).toBe(true)
+    }
+  })
+
+  it('rejects unsupported --lite values before Change or focus mutation', async ({ onTestFinished }) => {
+    const fixture = await createGitRspProject('rsp-compat-invalid-lite-')
+    onTestFinished(() => rm(fixture, { recursive: true, force: true }))
+
+    for (const [index, option] of ['--lite=yes', '--lite=1', '--lite=TRUE', '--lite='].entries()) {
+      const name = `invalid-lite-${index + 1}`
+      const result = runCli(['create', name, '--kind', 'fix', option, 'Must not mutate'], fixture)
       expect(result.status).toBe(1)
-      expect(result.stderr.trim()).toBe(removedLiteGuidance)
       expect(result.stdout).toBe('')
-      expect(existsSync(join(fixture, '.rsp'))).toBe(false)
-      expect(existsSync(join(fixture, 'AGENTS.md'))).toBe(false)
+      expect(result.stderr.trim()).toBe(
+        `Error: create option "${option}" is invalid; use --lite, --lite=true, or --lite=false`,
+      )
+      expect(existsSync(join(fixture, '.rsp', 'changes', `${name}.md`))).toBe(false)
+      expect(existsSync(join(fixture, '.rsp', 'focus.d', name))).toBe(false)
     }
   })
 
@@ -158,8 +184,8 @@ describe.sequential('rsp 4.0 compatibility migration', () => {
     expect(existsSync(cacheRoot)).toBe(false)
   })
 
-  it('creates a fresh 4.0 project without root or nested generated Specs indexes', async ({ onTestFinished }) => {
-    const fixture = await mkdtemp(join(tmpdir(), 'rsp-compat-fresh-4-'))
+  it('creates a fresh compatible-release project without root or nested generated Specs indexes', async ({ onTestFinished }) => {
+    const fixture = await mkdtemp(join(tmpdir(), 'rsp-compat-fresh-'))
     onTestFinished(() => rm(fixture, { recursive: true, force: true }))
 
     expect(runCli(['init'], fixture).status).toBe(0)

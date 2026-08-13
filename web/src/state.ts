@@ -395,34 +395,6 @@ export function validateSnapshotEnvelope(envelope: SnapshotEnvelope):
   return { ok: true, snapshot: envelope.snapshot }
 }
 
-export function historyDetailRequestPaths(
-  projectId: string,
-  lookupId: string | undefined,
-  workRef?: string,
-): { current: string | null, legacy: string | null } {
-  const legacy = typeof workRef === 'string' && workRef
-    ? `/v1/web/projects/${encodeURIComponent(projectId)}/history/detail?workRef=${encodeURIComponent(workRef)}`
-    : null
-  if (!validOpaqueLookup(lookupId)) {
-    return {
-      current: legacy,
-      legacy: null,
-    }
-  }
-  return {
-    current: `/v1/web/projects/${encodeURIComponent(projectId)}/history/detail?historyId=${encodeURIComponent(lookupId)}`,
-    legacy,
-  }
-}
-
-export function isRouteContractMismatch(error: unknown): boolean {
-  return error instanceof Error
-    && 'status' in error
-    && 'code' in error
-    && error.status === 400
-    && error.code === 'web_query_invalid'
-}
-
 export function formatTimestamp(value: string, locale: string = 'en'): string {
   const parsed = new Date(value)
   return Number.isFinite(parsed.getTime()) ? parsed.toLocaleString(normalizeLocale(locale) ?? 'en') : value
@@ -493,10 +465,6 @@ function snapshotRequestIdentity(snapshot: WebSnapshot | null): string {
     projectId: snapshot.source?.projectId,
     identities: snapshot.source?.identities,
   })
-}
-
-function validOpaqueLookup(value: unknown): value is string {
-  return typeof value === 'string' && /^[a-f0-9]{64}$/u.test(value)
 }
 
 function isObject(value: unknown): value is Record<string, unknown> {

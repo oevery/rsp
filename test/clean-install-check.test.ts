@@ -92,14 +92,16 @@ describe('clean install package check', () => {
           processExited: true,
           after: 'absent',
         },
-        webObservatory: {
-          commandSafe: true,
-          page: 200,
-          assets: true,
-          projection: '1.1',
-          managed: true,
-          projectIsolation: true,
-          securityHeaders: true,
+        brokerSurface: {
+          health: true,
+          project: true,
+          runtimeManage: true,
+          webAbsent: true,
+        },
+        webCommandAbsent: true,
+        compatibilityBoundary: {
+          nodeEngine: '>=22',
+          webOnlyProductionDependenciesAbsent: true,
         },
         nonTtyUi: { exitCode: 1, stderr: 'Error: rsp ui requires an interactive terminal; use rsp status or rsp status --json instead' },
         invalidLocale: { exitCode: 1, stderr: 'Error: --lang must be auto, en, or zh-CN' },
@@ -138,10 +140,8 @@ describe('clean install package check', () => {
       expect(report.inventory.files).toContain('dist/broker-daemon.mjs')
       expect(report.inventory.files).toContain('dist/manage-runtime.mjs')
       expect(report.inventory.files).toContain('dist/runtime-store.mjs')
-      expect(report.inventory.files).toContain('dist/web-projector.mjs')
-      expect(report.inventory.files).toContain('web/static/index.html')
-      expect(report.inventory.files).toContain('web/static/app.css')
-      expect(report.inventory.files).toContain('web/static/app.js')
+      expect(report.inventory.files).not.toContain('dist/web-projector.mjs')
+      expect(report.inventory.files.some((path: string) => path.startsWith('web/'))).toBe(false)
       for (const path of [
         'skills/rsp/references/conflict-handling.md',
         'skills/rsp/references/durable-review.md',
@@ -198,31 +198,6 @@ describe('clean install package check', () => {
     }
   }, 120_000)
 
-  it('retains decisive child-process diagnostics when the installed Web smoke fails', () => {
-    const temporaryRoot = mkdtempSync(join(tmpdir(), 'rsp-package-check-web-smoke-failure-'))
-    try {
-      const result = spawnSync(process.execPath, [join(root, 'scripts', 'clean-install-check.mjs'), '--json'], {
-        cwd: root,
-        encoding: 'utf8',
-        env: {
-          ...process.env,
-          RSP_PACKAGE_CHECK_TEST_BROKER_IDLE_MS: '60000',
-          RSP_PACKAGE_CHECK_TEST_WEB_SMOKE_FAILURE: 'exit-17',
-          RSP_PACKAGE_CHECK_TMP_ROOT: temporaryRoot,
-        },
-      })
-
-      expect(result.status).toBe(1)
-      expect(result.stderr).toContain(
-        'Installed Web Observatory smoke failed: status=17; signal=none; stdout="web-smoke-stdout"; stderr="web-smoke-stderr"',
-      )
-      expect(readdirSync(temporaryRoot)).toEqual([])
-    }
-    finally {
-      rmSync(temporaryRoot, { force: true, recursive: true })
-    }
-  }, 120_000)
-
   it('rejects an undeclared file even when it is under an allowed package root', () => {
     const temporaryRoot = mkdtempSync(join(tmpdir(), 'rsp-package-check-inventory-'))
     try {
@@ -231,14 +206,14 @@ describe('clean install package check', () => {
         encoding: 'utf8',
         env: {
           ...process.env,
-          RSP_PACKAGE_CHECK_TEST_INVENTORY_EXTRA: 'web/static/unexpected.tmp',
+          RSP_PACKAGE_CHECK_TEST_INVENTORY_EXTRA: 'dist/unexpected.tmp',
           RSP_PACKAGE_CHECK_TMP_ROOT: temporaryRoot,
         },
       })
 
       expect(result.status).toBe(1)
       expect(result.stderr).toContain('Package inventory does not match the declared release inventory')
-      expect(result.stderr).toContain('unexpected: web/static/unexpected.tmp')
+      expect(result.stderr).toContain('unexpected: dist/unexpected.tmp')
       expect(readdirSync(temporaryRoot)).toEqual([])
     }
     finally {

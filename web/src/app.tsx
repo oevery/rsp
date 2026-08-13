@@ -41,7 +41,6 @@ export interface AppActions {
   onHistory: (record: WebHistoryRecord, ambiguous: boolean) => void
   onRun: (lookupId: string) => void
   onSearch: (query: string) => void
-  onCopyRecoveryCommand: () => void
 }
 
 const noopActions: AppActions = {
@@ -53,7 +52,6 @@ const noopActions: AppActions = {
   onHistory: () => undefined,
   onRun: () => undefined,
   onSearch: () => undefined,
-  onCopyRecoveryCommand: () => undefined,
 }
 
 export function ObservatoryApp({
@@ -73,12 +71,6 @@ export function ObservatoryApp({
         <h1>{translate(messages, 'unavailableTitle')}</h1>
         <p>{renderErrorMessage(state.error, messages, 'noSnapshot')}</p>
         <p>{translate(messages, 'reloadRecovery')}</p>
-        <div className="recovery-command">
-          <code>rsp web</code>
-          <button type="button" data-action="copy-recovery-command" onClick={actions.onCopyRecoveryCommand}>
-            {translate(messages, 'copyCommand')}
-          </button>
-        </div>
       </section>
     )
   }

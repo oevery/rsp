@@ -43,6 +43,7 @@ This file is the minimal fallback protocol for agents that cannot load the `rsp`
 ## Safety ceiling
 
 - This fallback does not emulate `rsp-manage`, ready-owner qualification, worker dispatch, convergence loops, managed resume, workspace selection, or configured closeout. Configuration selects no capability and grants no planning, product-mutation, workspace, lifecycle, Git, publication, deployment, approval, or human-acceptance authority. `workspace.activation` is a ceiling consumed by Core when the full Skill is available; this fallback never prepares a worktree.
+- While a Broker session owns a live runtime store, use only packaged runtime or Broker APIs for observation and projection. Direct SQLite access is unsupported until the owning session releases the database.
 - Do not create or repair command-owned RSP files directly. Do not create archives or restore archived content by editing files; use the owning RSP command only with explicit lifecycle authority.
 - This fallback never archives, closes a Group, stages, commits, tags, pushes, publishes, deploys, deletes unrelated work, or records external approval. Those actions require their own explicit authority and available owning capability.
 - It also never lands commits between worktrees or discards a workspace without the exact local authority and owning capability.

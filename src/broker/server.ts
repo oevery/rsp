@@ -1,7 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { AddressInfo } from 'node:net'
-import type { WebManagedSseEvent } from '../web/model.js'
-import type { WebProjectionService } from '../web/service.js'
 import type { BrokerPaths } from './host.js'
 import type { BrokerStartLockClaim } from './lock.js'
 
@@ -16,22 +14,12 @@ import type {
 import type { BrokerSessionEvent } from './sessions.js'
 import { Buffer } from 'node:buffer'
 import { randomBytes, randomUUID } from 'node:crypto'
-import { constants } from 'node:fs'
-import { open } from 'node:fs/promises'
 import { createServer } from 'node:http'
-import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import {
   executeManageRuntimeServiceRequest,
   MANAGE_RUNTIME_DESCRIPTOR,
 } from '../runtime/manage.js'
 import { RuntimeStoreError } from '../runtime/model.js'
-import {
-  WEB_MAX_DETAIL_PATH_CODE_POINTS,
-  WEB_MAX_QUERY_CODE_POINTS,
-} from '../web/model.js'
-import { createWebProjector } from '../web/runner.js'
-import { createWebProjectionService } from '../web/service.js'
 import { processIdentityFor } from '../workspace/process.js'
 import { isLoopbackPeer, parseLoopbackEndpoint } from './host.js'
 import { assertBrokerStartLockClaim, releaseBrokerStartLockClaim } from './lock.js'
@@ -48,9 +36,6 @@ import { BrokerProjectSessions, DEFAULT_BROKER_PROJECT_IDLE_MS, safeTokenEqual }
 import { readBrokerJson, unlinkBrokerFileIfIdentity, writeBrokerJsonExclusiveAtomic } from './storage.js'
 
 const MAX_REQUEST_BYTES = 16 * 1024
-const MAX_WEB_HTML_BYTES = 1024 * 1024
-const MAX_WEB_CSS_BYTES = 2 * 1024 * 1024
-const MAX_WEB_JAVASCRIPT_BYTES = 8 * 1024 * 1024
 
 export interface BrokerServerOptions {
   paths: BrokerPaths
@@ -59,9 +44,6 @@ export interface BrokerServerOptions {
   protocol?: BrokerVersionIdentity
   runtimeSchema?: BrokerVersionIdentity
   startupClaim?: BrokerStartLockClaim
-  webAssetsRoot?: string
-  webProjectorEntry?: string
-  webService?: WebProjectionService
 }
 
 export interface BrokerServerHandle {
@@ -82,10 +64,6 @@ export async function startBrokerServer(options: BrokerServerOptions): Promise<B
     options.paths,
     options.idleMs ?? DEFAULT_BROKER_PROJECT_IDLE_MS,
   )
-  const webAssetsRoot = options.webAssetsRoot
-    ?? fileURLToPath(new URL('../web/static', import.meta.url))
-  const webService = options.webService
-    ?? createWebProjectionService(createWebProjector(options.webProjectorEntry))
   const sseResponses = new Set<ServerResponse>()
   let closePromise: Promise<void> | null = null
   let resolveStopped: (() => void) | null = null
@@ -175,60 +153,6 @@ export async function startBrokerServer(options: BrokerServerOptions): Promise<B
     const url = new URL(request.url ?? '/', record.endpoint)
     if (url.origin !== endpointIdentity.endpoint)
       throw new BrokerHttpError(400, 'broker_request_target_invalid', 'Broker request target must use the bound loopback origin')
-    const webPageMatch = url.pathname.match(/^\/web\/([a-f0-9]{64})\/$/u)
-    if (webPageMatch) {
-      requireExactQuery(url, [])
-      requireMethod(request, 'GET')
-      if (!sessions.has(webPageMatch[1]!))
-        throw new BrokerHttpError(404, 'web_project_not_found', 'Web project session is not loaded')
-      await writeStaticAsset(
-        response,
-        join(webAssetsRoot, 'index.html'),
-        'text/html; charset=utf-8',
-        MAX_WEB_HTML_BYTES,
-      )
-      return
-    }
-    if (url.pathname === '/web/assets/app.js'
-      || url.pathname === '/web/assets/app.css') {
-      requireExactQuery(url, [])
-      requireMethod(request, 'GET')
-      const filename = url.pathname.slice('/web/assets/'.length)
-      const contentType = filename.endsWith('.js')
-        ? 'text/javascript; charset=utf-8'
-        : 'text/css; charset=utf-8'
-      await writeStaticAsset(
-        response,
-        join(webAssetsRoot, filename),
-        contentType,
-        filename.endsWith('.js') ? MAX_WEB_JAVASCRIPT_BYTES : MAX_WEB_CSS_BYTES,
-      )
-      return
-    }
-    if (url.pathname === '/v1/web/bootstrap') {
-      requireExactQuery(url, [])
-      requireMethod(request, 'POST')
-      requireExactOrigin(request, endpointIdentity.endpoint)
-      const body = await readJsonBody(request)
-      if (!isObject(body)
-        || Object.keys(body).sort().join(',') !== 'bootstrapToken,projectId'
-        || typeof body.projectId !== 'string'
-        || !/^[a-f0-9]{64}$/u.test(body.projectId)
-        || typeof body.bootstrapToken !== 'string'
-        || body.bootstrapToken.length < 32
-        || body.bootstrapToken.length > 128
-        || /\s/u.test(body.bootstrapToken)) {
-        throw new BrokerHttpError(400, 'web_bootstrap_request_invalid', 'Web bootstrap request is invalid')
-      }
-      const authorization = sessions.consumeWebBootstrap(body.projectId, body.bootstrapToken)
-      writeJson(response, 200, {
-        ok: true,
-        projectId: body.projectId,
-        webToken: authorization.webToken,
-        expiresAt: authorization.expiresAt,
-      })
-      return
-    }
     if (request.method === 'GET' && url.pathname === '/v1/health') {
       requireBearer(request, record.controlToken, 'broker_control_unauthorized')
       const body: BrokerHealthResponse = { ok: true, broker: publicBrokerIdentity(record) }
@@ -273,181 +197,6 @@ export async function startBrokerServer(options: BrokerServerOptions): Promise<B
       writeJson(response, 200, { ok: true, project })
       return
     }
-    const webBootstrapMatch = url.pathname.match(/^\/v1\/projects\/([a-f0-9]{64})\/web\/bootstrap$/u)
-    if (webBootstrapMatch) {
-      requireExactQuery(url, [])
-      requireMethod(request, 'POST')
-      const accessToken = bearerToken(request)
-      const bootstrap = sessions.createWebBootstrap(webBootstrapMatch[1]!, accessToken)
-      writeJson(response, 200, {
-        ok: true,
-        projectId: webBootstrapMatch[1],
-        bootstrapToken: bootstrap.bootstrapToken,
-        expiresAt: bootstrap.expiresAt,
-      })
-      return
-    }
-    const webSnapshotMatch = url.pathname.match(/^\/v1\/web\/projects\/([a-f0-9]{64})\/(snapshot|refresh)$/u)
-    if (webSnapshotMatch) {
-      requireExactQuery(url, [])
-      requireMethod(request, webSnapshotMatch[2] === 'refresh' ? 'POST' : 'GET')
-      const projectId = webSnapshotMatch[1]!
-      const webToken = bearerToken(request)
-      try {
-        const snapshot = await sessions.webSnapshotFor(projectId, webToken, {
-          refresh: webSnapshotMatch[2] === 'refresh',
-          load: async (project) => {
-            const managed = await sessions.managedRuntimeForWeb(projectId, webToken)
-            const snapshot = await webService.snapshot(project, managed)
-            encodeBrokerJsonResponse({ ok: true, snapshot })
-            return snapshot
-          },
-        })
-        writeJson(response, 200, { ok: true, snapshot })
-      }
-      catch (error) {
-        const stale = safeCachedSnapshot(sessions, projectId, webToken)
-        if (error instanceof BrokerError && error.code === 'web_session_unauthorized')
-          throw error
-        const code = error instanceof BrokerError ? error.code : 'web_refresh_failed'
-        const message = error instanceof BrokerError ? error.message : 'Web snapshot refresh failed'
-        writeJson(response, 503, {
-          ok: false,
-          error: { code, message },
-          stale: stale
-            ? { snapshotId: stale.snapshotId, generatedAt: stale.generatedAt }
-            : null,
-        })
-      }
-      return
-    }
-    const webHeartbeatMatch = url.pathname.match(/^\/v1\/web\/projects\/([a-f0-9]{64})\/session$/u)
-    if (webHeartbeatMatch) {
-      requireExactQuery(url, [])
-      requireMethod(request, 'GET')
-      const project = sessions.authorizeWeb(webHeartbeatMatch[1]!, bearerToken(request))
-      writeJson(response, 200, {
-        ok: true,
-        projectId: project.projectId,
-        at: new Date().toISOString(),
-      })
-      return
-    }
-    const webSpecsDetailMatch = url.pathname.match(/^\/v1\/web\/projects\/([a-f0-9]{64})\/specs\/detail$/u)
-    if (webSpecsDetailMatch) {
-      requireMethod(request, 'GET')
-      requireExactQuery(url, ['path'])
-      const path = requiredProjectPathQuery(url, 'path', WEB_MAX_DETAIL_PATH_CODE_POINTS)
-      const project = sessions.authorizeWeb(webSpecsDetailMatch[1]!, bearerToken(request))
-      writeJson(response, 200, {
-        ok: true,
-        projection: await webService.specsDetail(project, path),
-      })
-      return
-    }
-    const webSpecsSearchMatch = url.pathname.match(/^\/v1\/web\/projects\/([a-f0-9]{64})\/specs\/search$/u)
-    if (webSpecsSearchMatch) {
-      requireMethod(request, 'GET')
-      requireAllowedQuery(url, ['limit', 'q'], ['q'])
-      const literal = requiredBoundedQuery(url, 'q', WEB_MAX_QUERY_CODE_POINTS)
-      const limit = boundedIntegerQuery(url, 'limit', 1, 20, 20)
-      const project = sessions.authorizeWeb(webSpecsSearchMatch[1]!, bearerToken(request))
-      writeJson(response, 200, {
-        ok: true,
-        projection: await webService.specsSearch(project, literal, limit),
-      })
-      return
-    }
-    const webHistoryDetailMatch = url.pathname.match(/^\/v1\/web\/projects\/([a-f0-9]{64})\/history\/detail$/u)
-    if (webHistoryDetailMatch) {
-      requireMethod(request, 'GET')
-      requireExactQuery(url, ['historyId'])
-      const historyId = requiredOpaqueLookupQuery(url, 'historyId')
-      const project = sessions.authorizeWeb(webHistoryDetailMatch[1]!, bearerToken(request))
-      writeJson(response, 200, {
-        ok: true,
-        projection: await webService.historyDetail(project, historyId),
-      })
-      return
-    }
-    const webRunDetailMatch = url.pathname.match(/^\/v1\/web\/projects\/([a-f0-9]{64})\/runs\/detail$/u)
-    if (webRunDetailMatch) {
-      requireMethod(request, 'GET')
-      requireExactQuery(url, ['runId'])
-      const runId = requiredBoundedQuery(url, 'runId', WEB_MAX_QUERY_CODE_POINTS)
-      const projectId = webRunDetailMatch[1]!
-      const webToken = bearerToken(request)
-      const project = sessions.authorizeWeb(projectId, webToken)
-      const managed = await sessions.managedRuntimeForWeb(projectId, webToken)
-      writeJson(response, 200, {
-        ok: true,
-        projection: await webService.runDetail(project, managed, runId),
-      })
-      return
-    }
-    const webEventsMatch = url.pathname.match(/^\/v1\/web\/projects\/([a-f0-9]{64})\/events$/u)
-    if (webEventsMatch) {
-      requireExactQuery(url, [])
-      requireMethod(request, 'GET')
-      const projectId = webEventsMatch[1]!
-      const webToken = bearerToken(request)
-      const afterEventId = parseLastEventId(request)
-      sessions.authorizeWeb(projectId, webToken)
-      response.statusCode = 200
-      response.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
-      response.setHeader('Connection', 'keep-alive')
-      response.flushHeaders()
-      sseResponses.add(response)
-      const project = sessions.authorizeWeb(projectId, webToken)
-      let writeQueue = Promise.resolve()
-      const subscription = await sessions.subscribeManagedWeb(
-        projectId,
-        webToken,
-        afterEventId,
-        (event) => {
-          writeQueue = writeQueue.then(async () => {
-            if (event.type !== 'managed-projection' || !event.projection) {
-              writeManagedSse(response, {
-                id: event.id,
-                type: event.type,
-                projectId: event.projectId,
-                at: event.at,
-                ...(event.expectedAfter === undefined ? {} : { expectedAfter: event.expectedAfter }),
-                ...(event.replayFrom === undefined ? {} : { replayFrom: event.replayFrom }),
-              })
-              return
-            }
-            const projection = await webService.managed(project, event.projection)
-            writeManagedSse(response, { ...event, projection })
-          }).catch(() => {
-            if (!response.destroyed)
-              response.destroy()
-          })
-        },
-        () => {
-          if (!response.destroyed)
-            response.end()
-        },
-      )
-      const refresh = setInterval(() => {
-        void sessions.managedRuntimeForWeb(projectId, webToken).catch(() => undefined)
-      }, 1_000)
-      refresh.unref()
-      const keepAlive = setInterval(() => {
-        if (!response.destroyed)
-          response.write(': keepalive\n\n')
-      }, 15_000)
-      keepAlive.unref()
-      response.once('close', cleanup)
-      return
-
-      function cleanup(): void {
-        clearInterval(refresh)
-        clearInterval(keepAlive)
-        subscription.unsubscribe()
-        sseResponses.delete(response)
-      }
-    }
     const manageRuntimeCapabilityMatch = url.pathname.match(
       /^\/v1\/projects\/([a-f0-9]{64})\/runtime\/manage\/capability$/u,
     )
@@ -472,7 +221,6 @@ export async function startBrokerServer(options: BrokerServerOptions): Promise<B
       const body = await readJsonBody(request)
       const store = await sessions.runtimeFor(projectId, accessToken)
       const result = executeManageRuntimeServiceRequest(store, body)
-      await sessions.publishManagedRuntime(projectId, accessToken)
       writeJson(response, 200, {
         ok: true,
         capability: MANAGE_RUNTIME_DESCRIPTOR,
@@ -602,29 +350,6 @@ function writeSse(response: ServerResponse, event: BrokerSessionEvent): void {
     response.end()
 }
 
-function writeManagedSse(response: ServerResponse, event: WebManagedSseEvent): void {
-  if (response.destroyed)
-    return
-  const content = encodeBrokerJsonResponse(event).toString('utf8').trimEnd()
-  response.write(`id: ${event.id}\n`)
-  response.write(`event: ${event.type}\n`)
-  response.write(`data: ${content}\n\n`)
-  if (event.type === 'broker-stopping' || event.type === 'session-unloaded')
-    response.end()
-}
-
-function parseLastEventId(request: IncomingMessage): number | null {
-  const value = request.headers['last-event-id']
-  if (value === undefined)
-    return null
-  if (typeof value !== 'string' || !/^(?:0|[1-9]\d*)$/u.test(value))
-    throw new BrokerHttpError(400, 'web_event_cursor_invalid', 'Web event cursor is invalid')
-  const parsed = Number(value)
-  if (!Number.isSafeInteger(parsed) || parsed < 0)
-    throw new BrokerHttpError(400, 'web_event_cursor_invalid', 'Web event cursor is invalid')
-  return parsed
-}
-
 function writeJson(response: ServerResponse, status: number, value: unknown): void {
   const content = encodeBrokerJsonResponse(value)
   response.statusCode = status
@@ -640,8 +365,6 @@ function writeError(response: ServerResponse, error: unknown): void {
       ? runtimeErrorStatus(error)
       : error instanceof BrokerError && (
         error.code === 'broker_project_unauthorized'
-        || error.code === 'web_bootstrap_invalid'
-        || error.code === 'web_session_unauthorized'
       )
         ? 401
         : 500
@@ -691,126 +414,19 @@ function applyResponseHeaders(response: ServerResponse): void {
   response.setHeader('Permissions-Policy', 'camera=(), display-capture=(), geolocation=(), microphone=(), payment=(), usb=()')
 }
 
-async function writeStaticAsset(
-  response: ServerResponse,
-  path: string,
-  contentType: string,
-  maximumBytes: number,
-): Promise<void> {
-  const noFollow = constants.O_NOFOLLOW ?? 0
-  let handle
-  try {
-    handle = await open(path, constants.O_RDONLY | noFollow)
-  }
-  catch {
-    throw new BrokerHttpError(404, 'web_asset_not_found', 'Web asset is not available')
-  }
-  try {
-    const before = await handle.stat({ bigint: true })
-    if (!before.isFile())
-      throw new BrokerHttpError(404, 'web_asset_not_found', 'Web asset is not available')
-    if (before.size > BigInt(maximumBytes))
-      throw new BrokerHttpError(500, 'web_asset_too_large', 'Web asset exceeds its configured package bound')
-    const buffer = Buffer.alloc(Number(before.size) + 1)
-    const { bytesRead } = await handle.read(buffer, 0, buffer.byteLength, 0)
-    const after = await handle.stat({ bigint: true })
-    if (bytesRead !== Number(before.size)
-      || after.dev !== before.dev
-      || after.ino !== before.ino
-      || after.size !== before.size
-      || after.mtimeNs !== before.mtimeNs) {
-      throw new BrokerHttpError(500, 'web_asset_changed', 'Web asset changed while it was being served')
-    }
-    const content = buffer.subarray(0, bytesRead)
-    response.statusCode = 200
-    response.setHeader('Content-Type', contentType)
-    response.setHeader('Content-Length', content.byteLength)
-    response.end(content)
-  }
-  finally {
-    await handle.close()
-  }
-}
-
-function requireExactOrigin(request: IncomingMessage, expected: string): void {
-  if (request.headers.origin !== expected)
-    throw new BrokerHttpError(403, 'web_origin_required', 'Web bootstrap requires the exact Broker origin')
-}
-
 function requireMethod(request: IncomingMessage, expected: 'GET' | 'POST'): void {
   if (request.method !== expected)
-    throw new BrokerHttpError(405, 'web_method_not_allowed', `Web route requires ${expected}`)
+    throw new BrokerHttpError(405, 'broker_method_not_allowed', `Broker route requires ${expected}`)
 }
 
 function requireExactQuery(url: URL, names: string[]): void {
   const actual = [...new Set(url.searchParams.keys())].sort()
   const expected = [...names].sort()
   if (actual.join(',') !== expected.join(','))
-    throw new BrokerHttpError(400, 'web_query_invalid', 'Web query parameters do not match the route contract')
+    throw new BrokerHttpError(400, 'broker_query_invalid', 'Broker query parameters do not match the route contract')
   for (const name of actual) {
     if (url.searchParams.getAll(name).length !== 1)
-      throw new BrokerHttpError(400, 'web_query_invalid', 'Web query parameters must not be repeated')
-  }
-}
-
-function requireAllowedQuery(url: URL, allowedNames: string[], requiredNames: string[]): void {
-  const actual = [...new Set(url.searchParams.keys())].sort()
-  const allowed = new Set(allowedNames)
-  if (actual.some(name => !allowed.has(name)) || requiredNames.some(name => !actual.includes(name)))
-    throw new BrokerHttpError(400, 'web_query_invalid', 'Web query parameters do not match the route contract')
-  for (const name of actual) {
-    if (url.searchParams.getAll(name).length !== 1)
-      throw new BrokerHttpError(400, 'web_query_invalid', 'Web query parameters must not be repeated')
-  }
-}
-
-function requiredBoundedQuery(url: URL, name: string, maximumCodePoints: number): string {
-  const value = url.searchParams.get(name)
-  if (!value || value.trim() !== value || [...value].length > maximumCodePoints || /[\0\r\n]/u.test(value))
-    throw new BrokerHttpError(400, 'web_query_invalid', `Web query ${name} is invalid`)
-  return value
-}
-
-function requiredProjectPathQuery(url: URL, name: string, maximumCodePoints: number): string {
-  const value = requiredBoundedQuery(url, name, maximumCodePoints)
-  const segments = value.split('/')
-  if (value.startsWith('/')
-    || value.includes('\\')
-    || segments.some(segment => !segment || segment === '.' || segment === '..')) {
-    throw new BrokerHttpError(400, 'web_query_invalid', `Web query ${name} must be a safe project-relative path`)
-  }
-  return value
-}
-
-function requiredOpaqueLookupQuery(url: URL, name: string): string {
-  const value = requiredBoundedQuery(url, name, 64)
-  if (!/^[a-f0-9]{64}$/u.test(value))
-    throw new BrokerHttpError(400, 'web_query_invalid', `${name} must be one exact opaque lookup identity`)
-  return value
-}
-
-function boundedIntegerQuery(url: URL, name: string, minimum: number, maximum: number, fallback: number): number {
-  const value = url.searchParams.get(name)
-  if (value === null)
-    return fallback
-  if (!/^[1-9]\d*$/u.test(value))
-    throw new BrokerHttpError(400, 'web_query_invalid', `Web query ${name} is invalid`)
-  const parsed = Number(value)
-  if (!Number.isSafeInteger(parsed) || parsed < minimum || parsed > maximum)
-    throw new BrokerHttpError(400, 'web_query_invalid', `Web query ${name} must be from ${minimum} through ${maximum}`)
-  return parsed
-}
-
-function safeCachedSnapshot(
-  sessions: BrokerProjectSessions,
-  projectId: string,
-  webToken: string,
-) {
-  try {
-    return sessions.cachedWebSnapshot(projectId, webToken)
-  }
-  catch {
-    return null
+      throw new BrokerHttpError(400, 'broker_query_invalid', 'Broker query parameters must not be repeated')
   }
 }
 
