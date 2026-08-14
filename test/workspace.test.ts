@@ -129,9 +129,14 @@ describe.sequential('rsp workspace lifecycle', () => {
   it('blocks workspace preparation when project policy is disabled', async () => {
     await writeFile(join(repository, '.rsp', 'config.yaml'), 'workspace:\n  activation: disabled\n')
 
-    await expect(prepareWorkspaceCommand('example-change')).rejects.toThrow(
-      'workspace activation is disabled by project configuration',
-    )
+    await expect(prepareWorkspaceCommand('example-change')).resolves.toEqual({
+      command: 'workspace prepare',
+      ok: false,
+      error: {
+        code: 'workspace_activation_disabled',
+        message: 'workspace activation is disabled by project configuration',
+      },
+    })
     expect(git(['branch', '--list', 'rsp/example-change'])).toBe('')
     expect(existsSync(join(repository, '.git', 'rsp', 'workspaces'))).toBe(false)
   })

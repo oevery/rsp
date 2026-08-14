@@ -1,10 +1,8 @@
 import type { BoundedCollectionSummary } from '../history/model.js'
 import type { ArchiveHistoryQuery } from '../history/query.js'
-import type { CommandDiagnostic, CommandRunOptions, HistoryDetailOutput, HistoryRecordOutput, RuntimeDiagnostic } from '../types.js'
+import type { CommandDiagnostic, HistoryDetailOutput, HistoryRecordOutput, RuntimeDiagnostic } from '../types.js'
 
-import { pc } from '../core/config.js'
 import { guardRspInitialized } from '../core/filesystem.js'
-import { emitJson } from '../core/output.js'
 import { normalizeExecutableWorkRef, normalizeWorkRefSegment } from '../core/work-ref.js'
 import { ArchiveHistoryError, HISTORY_DEFAULT_LIMIT, HISTORY_MAX_LIMIT, historyInspectionComplete, inspectArchiveHistory, queryArchiveHistory, readArchiveHistoryDetail, selectArchiveHistoryRecord } from '../history/query.js'
 
@@ -21,7 +19,7 @@ export interface HistoryCliQuery {
   positionalCount?: number
 }
 
-interface HistoryListResult {
+export interface HistoryListResult {
   command: 'history'
   ok: true
   mode: 'list'
@@ -33,7 +31,7 @@ interface HistoryListResult {
   runtime: RuntimeDiagnostic[]
 }
 
-interface HistoryDetailResult {
+export interface HistoryDetailResult {
   command: 'history'
   ok: true
   mode: 'detail'
@@ -44,7 +42,7 @@ interface HistoryDetailResult {
   runtime: RuntimeDiagnostic[]
 }
 
-interface HistoryErrorResult {
+export interface HistoryErrorResult {
   command: 'history'
   ok: false
   mode: 'list' | 'detail'
@@ -57,19 +55,21 @@ interface HistoryErrorResult {
   error: { code: string, message: string, candidates?: string[], candidateSummary?: BoundedCollectionSummary }
 }
 
-export async function showHistory(input: HistoryCliQuery = {}, options: CommandRunOptions = {}): Promise<HistoryListResult | HistoryDetailResult | HistoryErrorResult> {
+export type HistoryResult = HistoryListResult | HistoryDetailResult | HistoryErrorResult
+
+export async function showHistory(input: HistoryCliQuery = {}): Promise<HistoryResult> {
   guardRspInitialized()
   const mode = input.workRef ? 'detail' as const : 'list' as const
   const validation = validateHistoryQuery(input)
   if (!validation.ok)
-    return emitHistoryError(mode, input, validation.error, [], emptyCollectionSummary(), [], options)
+    return createHistoryError(mode, input, validation.error, [], emptyCollectionSummary(), [])
 
   const inspection = await inspectArchiveHistory()
   if (!historyInspectionComplete(inspection)) {
-    return emitHistoryError(mode, input, {
+    return createHistoryError(mode, input, {
       code: 'archive_inspection_incomplete',
       message: 'archive history inspection is incomplete; resolve the reported diagnostics before querying history',
-    }, inspection.diagnostics, inspection.diagnosticSummary, inspection.runtime, options)
+    }, inspection.diagnostics, inspection.diagnosticSummary, inspection.runtime)
   }
 
   if (validation.workRef) {
@@ -86,22 +86,18 @@ export async function showHistory(input: HistoryCliQuery = {}, options: CommandR
         diagnosticSummary: emptyCollectionSummary(),
         runtime: inspection.runtime,
       }
-      if (options.json)
-        emitJson(result, options)
-      else
-        printHistoryDetail(result)
       return result
     }
     catch (error) {
       if (error instanceof ArchiveHistoryError) {
-        return emitHistoryError(mode, input, {
+        return createHistoryError(mode, input, {
           code: error.code,
           message: error.message,
           candidates: error.candidates.length > 0 ? error.candidates : undefined,
           candidateSummary: error.candidateTotal > 0
             ? { total: error.candidateTotal, returned: error.candidates.length, hasMore: error.candidatesTruncated }
             : undefined,
-        }, [], emptyCollectionSummary(), inspection.runtime, options)
+        }, [], emptyCollectionSummary(), inspection.runtime)
       }
       throw error
     }
@@ -127,10 +123,6 @@ export async function showHistory(input: HistoryCliQuery = {}, options: CommandR
     diagnosticSummary: emptyCollectionSummary(),
     runtime: inspection.runtime,
   }
-  if (options.json)
-    emitJson(result, options)
-  else
-    printHistoryList(result)
   return result
 }
 
@@ -197,14 +189,13 @@ function isCalendarDate(value: string): boolean {
   return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value
 }
 
-function emitHistoryError(
+function createHistoryError(
   mode: 'list' | 'detail',
   query: HistoryCliQuery,
   error: { code: string, message: string, candidates?: string[], candidateSummary?: BoundedCollectionSummary },
   diagnostics: CommandDiagnostic[],
   diagnosticSummary: BoundedCollectionSummary,
   runtime: RuntimeDiagnostic[],
-  options: CommandRunOptions,
 ): HistoryErrorResult {
   const result: HistoryErrorResult = {
     command: 'history',
@@ -223,69 +214,9 @@ function emitHistoryError(
       ...(error.candidateSummary && { candidateSummary: error.candidateSummary }),
     },
   }
-  if (options.json) {
-    emitJson(result, options)
-  }
-  else {
-    console.error(`  ${pc.red('Error:')} ${error.message}`)
-    for (const diagnostic of diagnostics)
-      console.error(`  ${pc.dim(`${diagnostic.path ?? 'archive'} — ${diagnostic.message}`)}`)
-    if (diagnosticSummary.hasMore)
-      console.error(`  ${pc.dim(`${diagnosticSummary.total - diagnosticSummary.returned} additional diagnostic(s) omitted`)}`)
-    for (const candidate of error.candidates ?? [])
-      console.error(`  ${pc.dim(candidate)}`)
-    if (error.candidateSummary?.hasMore)
-      console.error(`  ${pc.dim(`${error.candidateSummary.total - error.candidateSummary.returned} additional candidate(s) omitted`)}`)
-  }
   return result
 }
 
 function emptyCollectionSummary(): BoundedCollectionSummary {
   return { total: 0, returned: 0, hasMore: false }
-}
-
-function printHistoryList(result: HistoryListResult): void {
-  console.log()
-  console.log(`  ${pc.bold('Archived Changes')}`)
-  console.log()
-  if (result.records.length === 0) {
-    console.log(`  ${pc.dim('No archived Changes match the query.')}\n`)
-    return
-  }
-  for (const record of result.records) {
-    console.log(`  ${pc.dim(record.date)}  ${pc.cyan(record.workRef)}  ${pc.dim(`[${record.kind}]`)}`)
-    console.log(`    ${record.summary}${record.summaryTruncated ? '…' : ''}`)
-    console.log(`    ${pc.dim(record.path)}`)
-  }
-  console.log()
-  console.log(`  ${pc.dim(`${result.summary.returned}/${result.summary.matched} matching archive(s) returned${result.summary.hasMore ? '; narrow filters or raise --limit for more' : ''}.`)}\n`)
-}
-
-function printHistoryDetail(result: HistoryDetailResult): void {
-  const record = result.record
-  console.log()
-  console.log(`  ${pc.bold('Archived Change:')} ${pc.cyan(record.workRef)}`)
-  console.log(`  ${pc.dim('Date:')} ${record.date}`)
-  console.log(`  ${pc.dim('Kind:')} ${record.kind}`)
-  console.log(`  ${pc.dim('Path:')} ${record.path}`)
-  console.log(`  ${pc.dim('Summary:')} ${record.summary}${record.summaryTruncated ? '…' : ''}`)
-  if ((record.issues?.length ?? 0) > 0) {
-    console.log(`  ${pc.dim('Issues:')}`)
-    for (const issue of record.issues ?? [])
-      console.log(`    ${issue.relation} ${issue.url}`)
-  }
-  console.log(`  ${pc.dim('Scenarios:')} ${record.scenarioCount}`)
-  console.log(`  ${pc.dim('Tasks:')} ${record.checkboxes.tasks.done}/${record.checkboxes.tasks.total}`)
-  console.log(`  ${pc.dim('Verify:')} ${record.checkboxes.verify.done}/${record.checkboxes.verify.total}`)
-  for (const [label, evidence] of Object.entries(record.evidence)) {
-    console.log()
-    console.log(`  ${pc.bold(`${label[0].toUpperCase()}${label.slice(1)}:`)}`)
-    if (evidence.items.length === 0)
-      console.log(`    ${pc.dim('none')}`)
-    else
-      evidence.items.forEach(item => console.log(`    ${item}`))
-    if (evidence.truncated)
-      console.log(`    ${pc.dim('(truncated)')}`)
-  }
-  console.log()
 }

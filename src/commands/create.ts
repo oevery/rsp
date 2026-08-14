@@ -4,11 +4,11 @@ import { dirname } from 'node:path'
 
 import { generateChangeContent } from '../core/artifacts.js'
 import { resolveExecutableChange } from '../core/change-group.js'
-import { CHANGES_DIR, FOCUS_DIR, pc } from '../core/config.js'
-import { cleanupEmptyParentDirs, guardRspInitialized } from '../core/filesystem.js'
+import { CHANGES_DIR, FOCUS_DIR, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
+import { cleanupEmptyParentDirs } from '../core/filesystem.js'
 import { createIssueRelationship } from '../core/issue-relationship.js'
 import { withRspLock } from '../core/lock.js'
-import { writeManagedFile } from '../core/managed-path.js'
+import { inspectManagedFile, writeManagedFile } from '../core/managed-path.js'
 import { resolveFocusMarkerPath, WorkRefError } from '../core/work-ref.js'
 
 /** Create a new single-file change under .rsp/changes/<name>.md and focus it when newly created. */
@@ -17,18 +17,20 @@ export async function createChange(
   summary = '',
   kind?: string,
   options: { issue?: string, issueRelation?: string, deprecatedLite?: boolean } = {},
-) {
+): Promise<CreateChangeResult> {
   if (!name) {
-    console.error(`  ${pc.red('Usage:')} rsp create <name> [summary]`)
-    process.exit(1)
+    return { ok: false, kind: 'usage', message: 'rsp create <name> [summary]' }
   }
-  if (options.deprecatedLite)
-    console.warn(`  ${pc.yellow('Warning:')} create option "--lite" is deprecated and ignored; using the standard kind-aware Change template`)
+  const warning = options.deprecatedLite
+    ? 'create option "--lite" is deprecated and ignored; using the standard kind-aware Change template'
+    : undefined
   const hasIssueOption = options.issue !== undefined
   if (options.issueRelation && !hasIssueOption)
     throw new Error('--issue-relation requires --issue')
   const issues = options.issue !== undefined ? [createIssueRelationship(options.issue, options.issueRelation)] : []
-  guardRspInitialized()
+  const initialization = inspectInitialization()
+  if (initialization)
+    return { ok: false, kind: 'error', message: initialization, warning }
 
   try {
     return await withRspLock('create-change', async () => {
@@ -63,20 +65,26 @@ export async function createChange(
         }
       }
 
-      const label = existed ? 'Using' : pc.green('Created')
-      console.log(`  ${label}: ${changePath}`)
-      if (existed)
-        console.log(`  ${pc.dim('Unchanged focus.')} Run: rsp focus ${workRef.name}`)
-      else
-        console.log(`  ${pc.dim('focused via focus.d')} → ${workRef.name}`)
-      console.log(`  ${pc.cyan('Next:')} fill proposal/spec/design first, then implement and complete the tasks\n`)
+      return { ok: true, existed, changePath, workRef: workRef.name, warning }
     })
   }
   catch (error) {
     if (error instanceof WorkRefError) {
-      console.error(`  ${pc.red('Error:')} ${error.message}`)
-      process.exit(1)
+      return { ok: false, kind: 'error', message: error.message, warning }
     }
     throw error
   }
+}
+
+export type CreateChangeResult
+  = | { ok: true, existed: boolean, changePath: string, workRef: string, warning?: string }
+    | { ok: false, kind: 'usage' | 'error', message: string, warning?: string }
+
+function inspectInitialization(): string | undefined {
+  const rules = inspectManagedFile(RSP_RULES_PATH, 'fallback protocol', { allowMissing: true })
+  const design = inspectManagedFile(`${RSP_DIR}/specs/design.md`, 'design Spec', { allowMissing: true })
+  if (!rules.issue && !design.issue && rules.exists && design.exists)
+    return undefined
+  const initialized = existsSync(RSP_DIR)
+  return `${initialized ? 'RSP project requires an update' : 'RSP is not initialized in this project'}\n  ${initialized ? 'Run: rsp update' : 'Run: rsp init'}`
 }

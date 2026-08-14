@@ -6,22 +6,27 @@ import { basename, dirname, join } from 'node:path'
 import { TextDecoder } from 'node:util'
 
 import { resolveExecutableChange } from '../core/change-group.js'
-import { FOCUS_DIR, MAX_FOCUS_CAPSULE_BYTES, pc } from '../core/config.js'
-import { cleanupEmptyParentDirs, guardRspInitialized } from '../core/filesystem.js'
+import { FOCUS_DIR, MAX_FOCUS_CAPSULE_BYTES, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
+import { cleanupEmptyParentDirs } from '../core/filesystem.js'
 import { withRspLock } from '../core/lock.js'
-import { ensureManagedFile, requireManagedFile } from '../core/managed-path.js'
+import { ensureManagedFile, inspectManagedFile, requireManagedFile } from '../core/managed-path.js'
 import { resolveFocusMarkerPath, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 
 interface FocusOptions {
   capsuleFile?: string
 }
 
-export async function focusChange(name: string, options: FocusOptions = {}) {
+export type FocusResult
+  = | { ok: true, action: 'focus' | 'unfocus', workRef: string }
+    | { ok: false, kind: 'usage' | 'error' | 'not-found', message: string }
+
+export async function focusChange(name: string, options: FocusOptions = {}): Promise<FocusResult> {
   if (!name) {
-    console.error(`  ${pc.red('Usage:')} rsp focus <name>`)
-    process.exit(1)
+    return { ok: false, kind: 'usage', message: 'rsp focus <name>' }
   }
-  guardRspInitialized()
+  const initialization = inspectInitialization()
+  if (initialization)
+    return { ok: false, kind: 'error', message: initialization }
 
   try {
     return await withRspLock('focus-change', async () => {
@@ -34,13 +39,11 @@ export async function focusChange(name: string, options: FocusOptions = {}) {
       else
         await replaceFocusCapsule(focusEntry, await readCapsule(options.capsuleFile))
 
-      console.log(`  ${pc.green('Focused:')} ${workRef.name}`)
-      console.log(`  ${pc.dim('focus.d')} → ${workRef.name}`)
-      console.log()
+      return { ok: true, action: 'focus', workRef: workRef.name } as const
     })
   }
   catch (error) {
-    exitWorkRefError(error)
+    return workRefFailure(error)
   }
 }
 
@@ -110,12 +113,13 @@ async function readBoundedStdin(): Promise<Buffer> {
   return Buffer.concat(chunks, size)
 }
 
-export async function unfocusChange(name: string) {
+export async function unfocusChange(name: string): Promise<FocusResult> {
   if (!name) {
-    console.error(`  ${pc.red('Usage:')} rsp unfocus <name>`)
-    process.exit(1)
+    return { ok: false, kind: 'usage', message: 'rsp unfocus <name>' }
   }
-  guardRspInitialized()
+  const initialization = inspectInitialization()
+  if (initialization)
+    return { ok: false, kind: 'error', message: initialization }
 
   try {
     return await withRspLock('unfocus-change', async () => {
@@ -126,23 +130,28 @@ export async function unfocusChange(name: string) {
       await unlink(focusEntry)
       await cleanupEmptyParentDirs(focusEntry, FOCUS_DIR)
 
-      console.log(`  ${pc.green('Unfocused:')} ${workRef.name}`)
-      console.log(`  ${pc.dim('focus.d cleared')} → ${workRef.name}`)
-      console.log()
+      return { ok: true, action: 'unfocus', workRef: workRef.name } as const
     })
   }
   catch (error) {
-    exitWorkRefError(error)
+    return workRefFailure(error)
   }
 }
 
-function exitWorkRefError(error: unknown): never {
+function workRefFailure(error: unknown): FocusResult {
   if (error instanceof WorkRefError) {
     if (error.code === 'focus_marker_not_found')
-      console.error(`  ${pc.red('Focus marker not found:')} ${error.message}`)
-    else
-      console.error(`  ${pc.red('Error:')} ${error.message}`)
-    process.exit(1)
+      return { ok: false, kind: 'not-found', message: error.message }
+    return { ok: false, kind: 'error', message: error.message }
   }
   throw error
+}
+
+function inspectInitialization(): string | undefined {
+  const rules = inspectManagedFile(RSP_RULES_PATH, 'fallback protocol', { allowMissing: true })
+  const design = inspectManagedFile(`${RSP_DIR}/specs/design.md`, 'design Spec', { allowMissing: true })
+  if (!rules.issue && !design.issue && rules.exists && design.exists)
+    return undefined
+  const initialized = existsSync(RSP_DIR)
+  return `${initialized ? 'RSP project requires an update' : 'RSP is not initialized in this project'}\n  ${initialized ? 'Run: rsp update' : 'Run: rsp init'}`
 }

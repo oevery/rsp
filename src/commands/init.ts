@@ -4,7 +4,7 @@ import { mkdir, readFile } from 'node:fs/promises'
 
 import { join } from 'node:path'
 import { generateChangeContent, generateDesignContent, upsertRspAgentsBlock } from '../core/artifacts.js'
-import { CHANGES_DIR, clearConfigCache, CONFIG_PATH, FOCUS_DIR, generateConfigTemplate, inspectRspConfig, pc, PKG_ROOT, reconcileRspConfigDefaults, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
+import { CHANGES_DIR, clearConfigCache, CONFIG_PATH, FOCUS_DIR, generateConfigTemplate, inspectRspConfig, PKG_ROOT, reconcileRspConfigDefaults, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
 import { ensureDecisionRecordsDirectory, resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { detectProjectName } from '../core/filesystem.js'
 import { withRspLock } from '../core/lock.js'
@@ -22,14 +22,25 @@ function toTitle(projectName: string): string {
   return projectName.startsWith('@') ? projectName.split('/')[1] || projectName : projectName
 }
 
-export async function initProject(args: InitArgs = {}) {
+export type InitProjectResult
+  = | { ok: false, message: string }
+    | {
+      ok: true
+      isNew: boolean
+      created: boolean
+      decisionRecordsPath: string
+      withProjectSetup: boolean
+      agentsUpdated: boolean
+      managedAgents?: string
+    }
+
+export async function initProject(args: InitArgs = {}): Promise<InitProjectResult> {
   const isNew = !existsSync(RSP_DIR)
   const projectName = await detectProjectName()
 
   const mode = args.agentsMode ?? 'managed'
   if (mode !== 'managed' && mode !== 'print') {
-    console.error(`  ${pc.red('Error:')} unsupported --agents-mode "${mode}". Use: managed or print`)
-    process.exit(1)
+    return { ok: false, message: `unsupported --agents-mode "${mode}". Use: managed or print` }
   }
 
   const agentsPath = 'AGENTS.md'
@@ -119,27 +130,14 @@ export async function initProject(args: InitArgs = {}) {
       }
     }
 
-    if (mode === 'print') {
-      const managed = await readFile(agentsPath, 'utf-8')
-      console.log(`\n${managed}\n`)
-    }
-
-    if (isNew) {
-      const createdProjectSetup = args.withProjectSetup ? '\n           .rsp/changes/project-setup.md\n           .rsp/focus.d/project-setup' : ''
-      const createdAgents = agentsUpdated ? '\n           AGENTS.md' : ''
-      const next = args.withProjectSetup ? 'fill .rsp/changes/project-setup.md' : 'rsp create project-setup'
-      console.log(`
-  ${pc.green('RSP scaffolded.')}\n`)
-      console.log(`  Created: .rsp/rsp-rules.md\n           .rsp/specs/\n           ${decisionRecordsPath}/\n           .rsp/changes/\n           .rsp/focus.d/\n           .rsp/archives/\n           .rsp/.gitignore\n           .rsp/config.yaml\n           .rsp/specs/design.md${createdProjectSetup}${createdAgents}\n`)
-      console.log(`  ${pc.cyan('Next:')} ${next}\n  ${pc.dim('Then:')} fill .rsp/specs/design.md\n  ${pc.dim('Also:')} rsp status  rsp check\n`)
-    }
-    else if (created) {
-      console.log(`
-  ${pc.green('RSP initialized.')}\n`)
-    }
-    else {
-      console.log(`
-  ${pc.yellow('RSP already initialized — nothing changed.')}\n`)
+    return {
+      ok: true,
+      isNew,
+      created,
+      decisionRecordsPath,
+      withProjectSetup: Boolean(args.withProjectSetup),
+      agentsUpdated,
+      managedAgents: mode === 'print' ? await readFile(agentsPath, 'utf-8') : undefined,
     }
   })
 }

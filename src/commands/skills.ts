@@ -237,23 +237,6 @@ export async function inspectPackagedSkillInventory(
   }
 }
 
-export function printPackagedSkillInventory(inventory: PackagedSkillInventory): void {
-  console.log(`  ${inventory.package.name}@${inventory.package.version}`)
-  console.log(`  target: ${inventory.target}`)
-  for (const group of [
-    { heading: 'Default suite Skills', kind: 'default' },
-    { heading: 'Optional project Skills', kind: 'optional' },
-  ] as const) {
-    console.log('')
-    console.log(`  ${group.heading}`)
-    const skills = inventory.skills.filter(skill => skill.kind === group.kind)
-    if (skills.length === 0)
-      console.log('    none')
-    for (const skill of skills)
-      console.log(`    ${skill.name}  ${skill.status}`)
-  }
-}
-
 async function copySkillTree(source: SkillTree, targetRoot: string): Promise<void> {
   await mkdir(targetRoot, { recursive: true })
   for (const path of source.files) {
@@ -441,10 +424,4 @@ export async function installPackagedSkills(
   return result
 }
 
-export function printSkillInstallResult(result: SkillInstallResult, dryRun = false): void {
-  const prefix = dryRun ? 'would be ' : ''
-  for (const status of ['installed', 'unchanged', 'replaced', 'removed'] as const) {
-    if (result[status].length > 0)
-      console.log(`  ${prefix}${status}: ${result[status].join(', ')}`)
-  }
-}
+export { presentPackagedSkillInventory as printPackagedSkillInventory, presentSkillInstallResult as printSkillInstallResult } from '../cli/presenters/skills.js'

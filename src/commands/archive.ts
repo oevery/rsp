@@ -3,21 +3,27 @@ import { mkdir, readFile, rename, unlink } from 'node:fs/promises'
 import { basename, join } from 'node:path'
 
 import { resolveExecutableChange } from '../core/change-group.js'
-import { CHANGES_DIR, FOCUS_DIR, pc } from '../core/config.js'
+import { CHANGES_DIR, FOCUS_DIR, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
-import { cleanupEmptyParentDirs, guardRspInitialized } from '../core/filesystem.js'
+import { cleanupEmptyParentDirs } from '../core/filesystem.js'
 import { withRspLock } from '../core/lock.js'
+import { inspectManagedFile } from '../core/managed-path.js'
 import { toErrorMessage } from '../core/output.js'
 import { collectArchiveReadiness } from '../core/readiness.js'
 import { resolveArchiveDirectory, resolveFocusMarkerPath, WorkRefError } from '../core/work-ref.js'
 
 /** Archive a change and clear its focus marker after the deterministic completion gate passes. */
-export async function archiveChange(name: string) {
+export type ArchiveChangeResult
+  = | { ok: true, archiveName: string, focusCleared: boolean, readinessWarnings: string[], cleanupWarnings: string[], git: boolean }
+    | { ok: false, kind: 'usage' | 'error' | 'blocked', message: string, warnings?: string[] }
+
+export async function archiveChange(name: string): Promise<ArchiveChangeResult> {
   if (!name) {
-    console.error(`  ${pc.red('Usage:')} rsp archive <name>`)
-    process.exit(1)
+    return { ok: false, kind: 'usage', message: 'rsp archive <name>' }
   }
-  guardRspInitialized()
+  const initialization = inspectInitialization()
+  if (initialization)
+    return { ok: false, kind: 'error', message: initialization }
 
   try {
     return await withRspLock('archive-change', async () => {
@@ -35,15 +41,14 @@ export async function archiveChange(name: string) {
       })
       const checklist = readiness.warnings
 
-      for (const line of checklist)
-        console.log(`  ${pc.yellow('⚠')} ${line}`)
       if (readiness.archiveReady === 'no') {
-        console.error(`  ${pc.red('Archive blocked:')} complete all Tasks and required Verify items, and resolve active blockers.`)
-        process.exitCode = 1
-        return
+        return {
+          ok: false,
+          kind: 'blocked',
+          message: 'complete all Tasks and required Verify items, and resolve active blockers.',
+          warnings: checklist,
+        }
       }
-      if (checklist.length > 0)
-        console.log(`  ${pc.dim('Archive will continue. Review the warnings above before treating this work as fully closed.')}\n`)
 
       await mkdir(archiveSubdir, { recursive: true })
       await rename(srcPath, join(archiveSubdir, archiveName))
@@ -69,29 +74,24 @@ export async function archiveChange(name: string) {
         postArchiveWarnings.push(`changes directory cleanup failed: ${toErrorMessage(error)}`)
       }
 
-      const clearedMsg = focusCleared ? `  ${pc.dim('focus marker cleared')}\n` : ''
-      console.log(`  ${pc.green('Archived:')} ${archiveName}\n${clearedMsg}`)
-
-      for (const warning of postArchiveWarnings)
-        console.log(`  ${pc.yellow('⚠')} ${warning}`)
-      if (postArchiveWarnings.length > 0)
-        console.log(`  ${pc.dim('Archive completed, but follow-up cleanup was only partially successful.')}\n`)
-
-      if (existsSync('.git')) {
-        console.log(`  ${pc.cyan('Git delivery:')}\n`)
-        console.log(`    git status --short`)
-        console.log(`    Inspect the complete archive transition; stage and commit only with separate Git authority.`)
-        console.log()
-      }
+      return { ok: true, archiveName, focusCleared, readinessWarnings: checklist, cleanupWarnings: postArchiveWarnings, git: existsSync('.git') }
     })
   }
   catch (error) {
     if (error instanceof WorkRefError) {
-      console.error(`  ${pc.red('Error:')} ${error.message}`)
-      process.exit(1)
+      return { ok: false, kind: 'error', message: error.message }
     }
     throw error
   }
+}
+
+function inspectInitialization(): string | undefined {
+  const rules = inspectManagedFile(RSP_RULES_PATH, 'fallback protocol', { allowMissing: true })
+  const design = inspectManagedFile(join(RSP_DIR, 'specs', 'design.md'), 'design Spec', { allowMissing: true })
+  if (!rules.issue && !design.issue && rules.exists && design.exists)
+    return undefined
+  const initialized = existsSync(RSP_DIR)
+  return `${initialized ? 'RSP project requires an update' : 'RSP is not initialized in this project'}\n  ${initialized ? 'Run: rsp update' : 'Run: rsp init'}`
 }
 
 /** Resolve a unique archive filename. First collision gets a "-2" suffix to keep "-1" unambiguous. */

@@ -2,7 +2,7 @@ import { execFile, spawn } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
 import { promisify } from 'node:util'
 
-import { emitJson, toErrorMessage } from '../core/output.js'
+import { toErrorMessage } from '../core/output.js'
 
 const execFileAsync = promisify(execFile)
 
@@ -68,27 +68,27 @@ async function runGitCommit(message: string): Promise<{ ok: true, stdout: string
   })
 }
 
-export async function commitFromMessageFile(messageFile: string, options: { json?: boolean } = {}): Promise<CommitResult> {
+export async function commitFromMessageFile(messageFile: string): Promise<CommitResult> {
   let preparedMessage: string
   try {
     preparedMessage = await readFile(messageFile, 'utf8')
   }
   catch (error) {
-    return reportCommitResult({
+    return {
       ok: false,
       command: 'commit',
       code: 'message_file_read_failed',
       message: `unable to read message file: ${toErrorMessage(error)}`,
-    }, options)
+    }
   }
 
   if (preparedMessage.includes('\\n')) {
-    return reportCommitResult({
+    return {
       ok: false,
       command: 'commit',
       code: 'literal_newline_escape',
       message: 'message file contains literal \\\\n; use actual line breaks',
-    }, options)
+    }
   }
 
   let stagedPaths: string[]
@@ -96,30 +96,30 @@ export async function commitFromMessageFile(messageFile: string, options: { json
     stagedPaths = await readStagedPaths()
   }
   catch (error) {
-    return reportCommitResult({
+    return {
       ok: false,
       command: 'commit',
       code: 'no_staged_boundary',
       message: `unable to inspect staged boundary: ${toErrorMessage(error)}`,
-    }, options)
+    }
   }
   if (stagedPaths.length === 0) {
-    return reportCommitResult({
+    return {
       ok: false,
       command: 'commit',
       code: 'no_staged_boundary',
       message: 'no staged boundary exists',
-    }, options)
+    }
   }
 
   const commitResult = await runGitCommit(preparedMessage)
   if (!commitResult.ok) {
-    return reportCommitResult({
+    return {
       ok: false,
       command: 'commit',
       code: 'git_commit_failed',
       message: commitResult.message,
-    }, options)
+    }
   }
 
   let commit: string
@@ -133,17 +133,17 @@ export async function commitFromMessageFile(messageFile: string, options: { json
     observedMessage = extractCommittedMessage(observed.stdout)
   }
   catch (error) {
-    return reportCommitResult({
+    return {
       ok: false,
       command: 'commit',
       code: 'message_mismatch',
       message: `commit created but could not observe its complete message: ${toErrorMessage(error)}`,
       preparedLength: preparedMessage.length,
-    }, options)
+    }
   }
 
   if (!messagesMatch(preparedMessage, observedMessage)) {
-    return reportCommitResult({
+    return {
       ok: false,
       command: 'commit',
       code: 'message_mismatch',
@@ -151,25 +151,12 @@ export async function commitFromMessageFile(messageFile: string, options: { json
       commit,
       preparedLength: preparedMessage.length,
       observedLength: observedMessage.length,
-    }, options)
+    }
   }
 
-  return reportCommitResult({
+  return {
     ok: true,
     command: 'commit',
     commit,
-  }, options)
-}
-
-function reportCommitResult(result: CommitResult, options: { json?: boolean }): CommitResult {
-  if (options.json) {
-    emitJson(result)
   }
-  else if (result.ok) {
-    console.log(`  Committed: ${result.commit}`)
-  }
-  else {
-    console.error(`  Commit stopped: ${result.message}`)
-  }
-  return result
 }

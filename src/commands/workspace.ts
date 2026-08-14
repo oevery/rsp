@@ -1,6 +1,6 @@
 import type { WorkspaceActivity, WorkspaceObservation, WorkspaceRecord } from '../workspace/session.js'
 import { inspectRspConfig, resolveWorkspacePolicy } from '../core/config.js'
-import { emitJson, toErrorMessage } from '../core/output.js'
+import { toErrorMessage } from '../core/output.js'
 import { inspectWorkspaceFacts } from '../workspace/facts.js'
 import {
   disposeWorkspace,
@@ -10,16 +10,32 @@ import {
   stopWorkspaceActivity,
 } from '../workspace/session.js'
 
-interface WorkspaceCommandError {
+export interface WorkspaceCommandError {
   command: string
   ok: false
-  error: {
-    code: string
-    message: string
-  }
+  error: { code: string, message: string }
 }
 
-function publicActivity(activity: WorkspaceActivity) {
+export type PrepareWorkspaceCommandResult
+  = | { command: 'workspace prepare', ok: true, resumed: boolean, record: WorkspaceRecord }
+    | WorkspaceCommandError
+export type ShowWorkspaceCommandResult
+  = | { command: 'workspace status', ok: true, observation: WorkspaceObservation }
+    | WorkspaceCommandError
+export type InspectWorkspaceCommandResult
+  = | { command: 'workspace inspect', ok: true, facts: Awaited<ReturnType<typeof inspectWorkspaceFacts>> }
+    | WorkspaceCommandError
+export type RegisterWorkspaceActivityCommandResult
+  = | { command: 'workspace activity register', ok: true, workRef: string, activity: WorkspaceActivity }
+    | WorkspaceCommandError
+export type StopWorkspaceActivityCommandResult
+  = | { command: 'workspace activity stop', ok: true, workRef: string, activity: WorkspaceActivity }
+    | WorkspaceCommandError
+export type DisposeWorkspaceCommandResult
+  = | { command: 'workspace dispose', ok: true, workRef: string, record: WorkspaceRecord }
+    | WorkspaceCommandError
+
+export function publicActivity(activity: WorkspaceActivity) {
   return {
     id: activity.id,
     label: activity.label,
@@ -30,7 +46,7 @@ function publicActivity(activity: WorkspaceActivity) {
   }
 }
 
-function publicRecord(record: WorkspaceRecord) {
+export function publicRecord(record: WorkspaceRecord) {
   return {
     ...record,
     activities: Object.fromEntries(
@@ -39,11 +55,8 @@ function publicRecord(record: WorkspaceRecord) {
   }
 }
 
-function publicObservation(observation: WorkspaceObservation) {
-  return {
-    ...observation,
-    record: publicRecord(observation.record),
-  }
+export function publicObservation(observation: WorkspaceObservation) {
+  return { ...observation, record: publicRecord(observation.record) }
 }
 
 function workspaceErrorCode(error: unknown): string {
@@ -61,30 +74,14 @@ function workspaceErrorCode(error: unknown): string {
   return 'workspace_command_failed'
 }
 
-function workspaceCommandError(
-  command: string,
-  error: unknown,
-  options: { json?: boolean },
-): WorkspaceCommandError {
-  if (!options.json)
-    throw error
-
-  const result: WorkspaceCommandError = {
-    command,
-    ok: false,
-    error: {
-      code: workspaceErrorCode(error),
-      message: toErrorMessage(error),
-    },
-  }
-  emitJson(result)
-  return result
+function workspaceCommandError(command: string, error: unknown): WorkspaceCommandError {
+  return { command, ok: false, error: { code: workspaceErrorCode(error), message: toErrorMessage(error) } }
 }
 
 export async function prepareWorkspaceCommand(
   workRef: string,
-  options: { targetBranch?: string, json?: boolean } = {},
-): Promise<{ resumed: boolean, record: WorkspaceRecord } | WorkspaceCommandError> {
+  options: { targetBranch?: string } = {},
+): Promise<PrepareWorkspaceCommandResult> {
   try {
     const configInspection = await inspectRspConfig()
     if (configInspection.issues.length > 0)
@@ -92,78 +89,35 @@ export async function prepareWorkspaceCommand(
     if (resolveWorkspacePolicy(configInspection.config).activation === 'disabled')
       throw new Error('workspace activation is disabled by project configuration')
     const result = await prepareWorkspace(workRef, { targetBranch: options.targetBranch })
-    if (options.json) {
-      emitJson({ command: 'workspace prepare', ok: true, resumed: result.resumed, workspace: publicRecord(result.record) })
-      return result
-    }
-    console.log(`  ${result.resumed ? 'Resumed' : 'Prepared'}: ${result.record.workRef}`)
-    console.log(`  branch: ${result.record.branch}`)
-    console.log(`  path: ${result.record.path}`)
-    console.log(`  target: ${result.record.targetBranch} @ ${result.record.baseCommit}`)
-    return result
+    return { command: 'workspace prepare', ok: true, resumed: result.resumed, record: result.record }
   }
   catch (error) {
-    return workspaceCommandError('workspace prepare', error, options)
+    return workspaceCommandError('workspace prepare', error)
   }
 }
 
-export async function showWorkspaceCommand(
-  workRef: string,
-  options: { json?: boolean } = {},
-): Promise<WorkspaceObservation | WorkspaceCommandError> {
+export async function showWorkspaceCommand(workRef: string): Promise<ShowWorkspaceCommandResult> {
   try {
-    const observation = await observeWorkspace(workRef)
-    if (options.json) {
-      emitJson({ command: 'workspace status', ok: true, workspace: publicObservation(observation) })
-      return observation
-    }
-    console.log(`  Workspace: ${observation.record.workRef}`)
-    console.log(`  branch: ${observation.record.branch}`)
-    console.log(`  path: ${observation.record.path}`)
-    console.log(`  registered: ${observation.registered ? 'yes' : 'no'}`)
-    console.log(`  dirty paths: ${observation.dirty.length}`)
-    console.log(`  commits ahead of ${observation.record.targetBranch}: ${observation.aheadOfTarget}`)
-    console.log(`  activities: ${Object.keys(observation.record.activities ?? {}).join(', ') || 'none'}`)
-    return observation
+    return { command: 'workspace status', ok: true, observation: await observeWorkspace(workRef) }
   }
   catch (error) {
-    return workspaceCommandError('workspace status', error, options)
+    return workspaceCommandError('workspace status', error)
   }
 }
 
-export async function inspectWorkspaceCommand(
-  workRef: string,
-  options: { json?: boolean } = {},
-): Promise<Awaited<ReturnType<typeof inspectWorkspaceFacts>> | WorkspaceCommandError> {
+export async function inspectWorkspaceCommand(workRef: string): Promise<InspectWorkspaceCommandResult> {
   try {
-    const facts = await inspectWorkspaceFacts(workRef)
-    if (options.json) {
-      emitJson({ command: 'workspace inspect', ok: true, facts })
-      return facts
-    }
-    console.log(`  Workspace facts: ${workRef}`)
-    console.log(`  tracked paths: ${facts.repository.trackedPaths.length}${facts.repository.trackedPathsTruncated ? '+' : ''}`)
-    console.log(`  local-only paths: ${facts.repository.localOnlyPaths.length}${facts.repository.localOnlyPathsTruncated ? '+' : ''}`)
-    console.log(`  changed paths: ${facts.repository.changedPaths.length}`)
-    console.log(`  commits ahead of ${facts.workspace.targetBranch}: ${facts.repository.commitsAheadOfTarget}`)
-    return facts
+    return { command: 'workspace inspect', ok: true, facts: await inspectWorkspaceFacts(workRef) }
   }
   catch (error) {
-    return workspaceCommandError('workspace inspect', error, options)
+    return workspaceCommandError('workspace inspect', error)
   }
 }
 
 export async function registerWorkspaceActivityCommand(
   workRef: string,
-  options: {
-    id: string
-    pid: number
-    label?: string
-    processGroupId?: number
-    resources?: string
-    json?: boolean
-  },
-): Promise<WorkspaceActivity | WorkspaceCommandError> {
+  options: { id: string, pid: number, label?: string, processGroupId?: number, resources?: string },
+): Promise<RegisterWorkspaceActivityCommandResult> {
   try {
     const activity = await registerWorkspaceActivity(workRef, {
       id: options.id,
@@ -172,58 +126,30 @@ export async function registerWorkspaceActivityCommand(
       processGroupId: options.processGroupId,
       resources: options.resources?.split(',').map(value => value.trim()).filter(Boolean),
     })
-    if (options.json) {
-      emitJson({ command: 'workspace activity register', ok: true, workRef, activity: publicActivity(activity) })
-      return activity
-    }
-    console.log(`  Registered activity: ${activity.id}`)
-    console.log(`  pid: ${activity.pid}`)
-    if (activity.processGroupId)
-      console.log(`  process group: ${activity.processGroupId}`)
-    console.log(`  resources: ${activity.resources.join(', ') || 'none'}`)
-    return activity
+    return { command: 'workspace activity register', ok: true, workRef, activity }
   }
   catch (error) {
-    return workspaceCommandError('workspace activity register', error, options)
+    return workspaceCommandError('workspace activity register', error)
   }
 }
 
-export async function stopWorkspaceActivityCommand(
-  workRef: string,
-  activityId: string,
-  options: { json?: boolean } = {},
-): Promise<WorkspaceActivity | WorkspaceCommandError> {
+export async function stopWorkspaceActivityCommand(workRef: string, activityId: string): Promise<StopWorkspaceActivityCommandResult> {
   try {
-    const activity = await stopWorkspaceActivity(workRef, activityId)
-    if (options.json) {
-      emitJson({ command: 'workspace activity stop', ok: true, workRef, activity: publicActivity(activity) })
-      return activity
-    }
-    console.log(`  Stopped activity: ${activity.id}`)
-    console.log(`  pid: ${activity.pid}`)
-    return activity
+    return { command: 'workspace activity stop', ok: true, workRef, activity: await stopWorkspaceActivity(workRef, activityId) }
   }
   catch (error) {
-    return workspaceCommandError('workspace activity stop', error, options)
+    return workspaceCommandError('workspace activity stop', error)
   }
 }
 
 export async function disposeWorkspaceCommand(
   workRef: string,
-  options: { discard?: boolean, json?: boolean } = {},
-): Promise<WorkspaceRecord | WorkspaceCommandError> {
+  options: { discard?: boolean } = {},
+): Promise<DisposeWorkspaceCommandResult> {
   try {
-    const record = await disposeWorkspace(workRef, { discard: options.discard })
-    if (options.json) {
-      emitJson({ command: 'workspace dispose', ok: true, workRef, branch: record.branch, path: record.path })
-      return record
-    }
-    console.log(`  Disposed: ${workRef}`)
-    console.log(`  removed branch: ${record.branch}`)
-    console.log(`  removed worktree: ${record.path}`)
-    return record
+    return { command: 'workspace dispose', ok: true, workRef, record: await disposeWorkspace(workRef, { discard: options.discard }) }
   }
   catch (error) {
-    return workspaceCommandError('workspace dispose', error, options)
+    return workspaceCommandError('workspace dispose', error)
   }
 }

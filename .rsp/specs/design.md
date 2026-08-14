@@ -39,8 +39,9 @@
 
 Key runtime owners:
 
-- `src/cli.ts` registers the CLI and owns argument validation, command-error emission, and exit decisions.
-- `src/commands/` owns command coordination and mutations; `src/core/` owns shared filesystem, configuration, output, helpers, locking, WorkRef classification, and Group interpretation.
+- `src/cli.ts` owns process entry, TTY routing, compatibility preprocessing, and the top-level error boundary.
+- `src/cli/` owns Citty registration, command capability metadata, argument mapping, presentation, and exit decisions through one typed adapter boundary.
+- `src/commands/` owns presentation-neutral typed command coordination and mutations; `src/core/` owns shared filesystem, configuration, output helpers, locking, WorkRef classification, and Group interpretation.
 - `src/status/` owns the internal project snapshot, filesystem-backed inspection, pure derivation, exact public JSON adapter, and plain presentation.
 - `src/history/` owns presentation-neutral archive-history inspection, validation, filtering, bounds, and detail projection.
 - `src/specs/` owns presentation-neutral current-file Specs and Decision Record inspection, tree/detail/search projections, bounds, diagnostics, source identity, and generated-index migration classification.
@@ -50,7 +51,7 @@ Key runtime owners:
 - `scripts/upstreams.mjs`, `.agents/skills/distill-upstream/`, and `research/` are maintainer-only owners; `rules/rsp-rules.md` and `skills/` are published sources.
 
 ## Dependency Direction
-- `bin/` loads built runtime. CLI registration delegates to commands, which use domain interpretation and core filesystem/output support.
+- `bin/` loads built runtime. The CLI entry routes terminal modes, the registry selects one command adapter, and the adapter invokes one typed command operation before CLI-owned presentation and exit handling.
 - Status may depend on core, while core does not depend on status. Pure status derivation and presenters do not inspect the filesystem or depend on commands or TUI.
 - The TUI may depend on presentation-neutral status, history, and Specs seams; those domain modules and core do not depend on presenters. Ink and Yoga remain isolated to lazy terminal paths and all presentation dependencies stay outside ordinary command evaluation.
 - Product runtime does not import research, caches, host Skill projections, self-hosting `.rsp/` state, or maintainer-only scripts.

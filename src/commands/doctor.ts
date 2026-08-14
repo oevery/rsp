@@ -1,4 +1,4 @@
-import type { CommandRunOptions, RuntimeDiagnostic } from '../types.js'
+import type { RuntimeDiagnostic } from '../types.js'
 import type { UpdateOptions } from './update.js'
 import { existsSync } from 'node:fs'
 import { readdir, readFile, stat } from 'node:fs/promises'
@@ -6,17 +6,17 @@ import { basename, join, relative } from 'node:path'
 
 import { hasRspAgentsBlock } from '../core/artifacts.js'
 import { inspectChangeGroups } from '../core/change-group.js'
-import { clearConfigCache, inspectRspConfig, loadRspConfig, OBSOLETE_RSP_RULES_PATH, pc, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
+import { clearConfigCache, inspectRspConfig, loadRspConfig, OBSOLETE_RSP_RULES_PATH, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
 import { DEFAULT_DECISION_RECORDS_PATH, resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
 import { inspectUnsupportedRules, normalizeLogicalPath, walkMarkdownFiles } from '../core/filesystem.js'
 import { inspectManagedFile } from '../core/managed-path.js'
-import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
+import { toErrorMessage } from '../core/output.js'
 import { GROUP_BRIEF_FILENAME, inspectArchiveTree, inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 import { inspectSpecs, specsInspectionComplete } from '../specs/query.js'
 import { updateProject, UpdateTransactionError } from './update.js'
 
-interface DoctorCheck {
+export interface DoctorCheck {
   status: 'ok' | 'issue' | 'info'
   code?: string
   label: string
@@ -24,7 +24,7 @@ interface DoctorCheck {
   hint?: string
 }
 
-interface DoctorResult {
+export interface DoctorResult {
   command: 'doctor'
   ok: boolean
   fixed: string[]
@@ -35,7 +35,7 @@ interface DoctorResult {
   }
 }
 
-export interface DoctorOptions extends CommandRunOptions {
+export interface DoctorOptions {
   fix?: boolean
   testing?: UpdateOptions['testing']
 }
@@ -46,10 +46,7 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
 
   if (options.fix && existsSync(RSP_DIR)) {
     try {
-      const update = await updateProject({
-        quiet: Boolean(options.json),
-        testing: options.testing,
-      })
+      const update = await updateProject({ testing: options.testing })
       fixed.push(...update.actions)
     }
     catch (error) {
@@ -73,7 +70,7 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
     })
   }
   const runtime: RuntimeDiagnostic[] = []
-  const reportRuntime = (diagnostic: RuntimeDiagnostic) => recordRuntimeDiagnostic(runtime, diagnostic, Boolean(options.verbose) && !options.json)
+  const reportRuntime = (diagnostic: RuntimeDiagnostic) => runtime.push(diagnostic)
 
   const designPath = join(RSP_DIR, 'specs', 'design.md')
   reportCheck(checks, '.rsp exists', existsSync(RSP_DIR), 'Run: rsp init')
@@ -100,30 +97,6 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
       issues: checks.filter(check => check.status === 'issue').length,
     },
   }
-
-  if (options.json) {
-    emitJson(result, options)
-    return result
-  }
-
-  console.log()
-  console.log(`  ${pc.bold('RSP doctor')}`)
-  console.log()
-  if (fixed.length > 0) {
-    console.log(`  ${pc.green('Fixed:')} ${fixed.join(', ')}`)
-    console.log()
-  }
-  else if (options.fix && !repairIssue && existsSync(RSP_DIR)) {
-    console.log(`  ${pc.dim('No safe fixes needed.')}`)
-    console.log()
-  }
-  for (const check of checks)
-    printDoctorCheck(check)
-
-  if (result.summary.issues === 0)
-    console.log(`\n  ${pc.green('✓')} RSP setup looks healthy.\n`)
-  else
-    console.log(`\n  ${pc.yellow(String(result.summary.issues))} issue(s) detected.\n`)
 
   return result
 }
@@ -196,23 +169,6 @@ function reportCheck(checks: DoctorCheck[], label: string, ok: boolean, fixHint?
     return
   }
   checks.push({ status: 'issue', label, hint: fixHint })
-}
-
-function printDoctorCheck(check: DoctorCheck): void {
-  if (check.status === 'ok') {
-    console.log(`  ${pc.green('✓')} ${check.label}`)
-    return
-  }
-  if (check.status === 'info') {
-    console.log(`  ${pc.dim(`Info: ${check.message || check.label}`)}`)
-    if (check.hint)
-      console.log(`    ${pc.dim(check.hint)}`)
-    return
-  }
-
-  console.log(`  ${pc.yellow('!')} ${check.message || check.label}`)
-  if (check.hint)
-    console.log(`    ${pc.dim(check.hint)}`)
 }
 
 async function checkAgents(checks: DoctorCheck[], reportRuntime: (diagnostic: RuntimeDiagnostic) => void): Promise<void> {

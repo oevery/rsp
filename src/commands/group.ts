@@ -4,11 +4,11 @@ import { link, mkdir, readdir, readFile, rename, unlink, writeFile } from 'node:
 import { join } from 'node:path'
 
 import { generateGroupBriefContent, getGroupReopenEvidence, GROUP_REOPEN_COMPLETION_PREFIX, hasArchivedGroupBrief, inspectChangeGroups } from '../core/change-group.js'
-import { CHANGES_DIR, FOCUS_DIR, pc, RSP_DIR } from '../core/config.js'
+import { CHANGES_DIR, FOCUS_DIR, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
 import { appendDocumentSectionItem, getDocumentSectionBody, getDocumentSections, getDocumentTitles, GROUP_BRIEF_DOCUMENT_SCHEMA, parseRspDocument } from '../core/document-model.js'
-import { cleanupEmptyParentDirs, guardRspInitialized } from '../core/filesystem.js'
+import { cleanupEmptyParentDirs } from '../core/filesystem.js'
 import { withRspLock } from '../core/lock.js'
-import { ManagedPathError, requireManagedDirectory, resolveManagedDirectoryChain } from '../core/managed-path.js'
+import { inspectManagedFile, ManagedPathError, requireManagedDirectory, resolveManagedDirectoryChain } from '../core/managed-path.js'
 import { toErrorMessage } from '../core/output.js'
 import { normalizeWorkRefSegment, resolveArchiveDirectory, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 import { ArchiveHistoryError, historyInspectionComplete, inspectArchiveHistory, selectArchivedGroupBrief } from '../history/query.js'
@@ -18,15 +18,22 @@ class ChangeGroupError extends Error {
   override name = 'ChangeGroupError'
 }
 
-export async function createChangeGroup(name: string, goal = ''): Promise<void> {
+export type ChangeGroupResult
+  = | { ok: true, action: 'create', groupName: string, path: string }
+    | { ok: true, action: 'close', groupName: string, archivePath: string, warnings: string[] }
+    | { ok: true, action: 'reopen', groupName: string, archivePath: string, path: string, warnings: string[] }
+    | { ok: false, kind: 'usage' | 'error', message: string, candidates: string[], remainingCandidates: number }
+
+export async function createChangeGroup(name: string, goal = ''): Promise<ChangeGroupResult> {
   if (!name) {
-    console.error(`  ${pc.red('Usage:')} rsp group create <name> [goal]`)
-    process.exit(1)
+    return failure('usage', 'rsp group create <name> [goal]')
   }
-  guardRspInitialized()
+  const initialization = inspectInitialization()
+  if (initialization)
+    return failure('error', initialization)
 
   try {
-    await withRspLock('create-change-group', async () => {
+    return await withRspLock('create-change-group', async () => {
       const ref = resolveWorkRef(`${name}/brief`)
       if (ref.kind !== 'group-brief')
         throw new WorkRefError('invalid_work_ref', `invalid Change Group name: ${name}`, name)
@@ -45,29 +52,27 @@ export async function createChangeGroup(name: string, goal = ''): Promise<void> 
         throw error
       }
 
-      console.log(`  ${pc.green('Created Change Group:')} ${groupName}`)
-      console.log(`  ${pc.dim('Unfocused Group Brief:')} ${ref.path}`)
-      console.log(`  ${pc.cyan('Next:')} fill the brief, then create direct child Changes with rsp create ${groupName}/<change>\n`)
+      return { ok: true, action: 'create', groupName, path: ref.path } as const
     })
   }
   catch (error) {
     if (error instanceof WorkRefError || error instanceof ChangeGroupError) {
-      console.error(`  ${pc.red('Error:')} ${error.message}`)
-      process.exit(1)
+      return failure('error', error.message)
     }
     throw error
   }
 }
 
-export async function closeChangeGroup(name: string): Promise<void> {
+export async function closeChangeGroup(name: string): Promise<ChangeGroupResult> {
   if (!name) {
-    console.error(`  ${pc.red('Usage:')} rsp group close <name>`)
-    process.exit(1)
+    return failure('usage', 'rsp group close <name>')
   }
-  guardRspInitialized()
+  const initialization = inspectInitialization()
+  if (initialization)
+    return failure('error', initialization)
 
   try {
-    await withRspLock('close-change-group', async () => {
+    return await withRspLock('close-change-group', async () => {
       const ref = resolveWorkRef(`${name}/brief`, { mustExist: true })
       if (ref.kind !== 'group-brief')
         throw new ChangeGroupError(`invalid Change Group name: ${name}`)
@@ -93,18 +98,12 @@ export async function closeChangeGroup(name: string): Promise<void> {
       catch (error) {
         warnings.push(`changes directory cleanup failed: ${toErrorMessage(error)}`)
       }
-      console.log(`  ${pc.green('Closed Change Group:')} ${groupName}`)
-      console.log(`  ${pc.dim('Archived Group Brief:')} ${join(archiveDirectory, archiveName)}\n`)
-      for (const warning of warnings)
-        console.log(`  ${pc.yellow('⚠')} ${warning}`)
-      if (warnings.length > 0)
-        console.log(`  ${pc.yellow('Group close completed, but follow-up cleanup was only partially successful.')}\n`)
+      return { ok: true, action: 'close', groupName, archivePath: join(archiveDirectory, archiveName), warnings } as const
     })
   }
   catch (error) {
     if (error instanceof WorkRefError || error instanceof ChangeGroupError) {
-      console.error(`  ${pc.red('Error:')} ${error.message}`)
-      process.exit(1)
+      return failure('error', error.message)
     }
     throw error
   }
@@ -116,20 +115,21 @@ export interface ReopenChangeGroupOptions {
 }
 
 /** Restore one exact archived Group Brief without reopening or focusing any child. */
-export async function reopenChangeGroup(name: string, options: ReopenChangeGroupOptions): Promise<void> {
+export async function reopenChangeGroup(name: string, options: ReopenChangeGroupOptions): Promise<ChangeGroupResult> {
   if (!name) {
-    console.error(`  ${pc.red('Usage:')} rsp group reopen <name> --reason <text> [--from <archive-path>]`)
-    process.exit(1)
+    return failure('usage', 'rsp group reopen <name> --reason <text> [--from <archive-path>]')
   }
   const reason = options.reason?.trim()
   if (!reason || /[\r\n]/.test(reason)) {
-    console.error(`  ${pc.red('Error:')} --reason must be one non-empty line`)
-    process.exit(1)
+    return failure('error', '--reason must be one non-empty line')
   }
-  guardRspInitialized()
+  const initialization = inspectInitialization()
+  if (initialization)
+    return failure('error', initialization)
 
   try {
-    await withRspLock('reopen-change-group', async () => {
+    return await withRspLock('reopen-change-group', async () => {
+      const warnings: string[] = []
       const groupName = normalizeWorkRefSegment(name)
       await requireEmptyGroupRecoverySubtree(join(CHANGES_DIR, groupName), `Change Group work subtree for ${groupName}`)
       await requireEmptyGroupRecoverySubtree(join(FOCUS_DIR, groupName), `Change Group focus subtree for ${groupName}`)
@@ -194,7 +194,7 @@ export async function reopenChangeGroup(name: string, options: ReopenChangeGroup
       }
       catch (error) {
         if (!mutationError)
-          console.log(`  ${pc.yellow('⚠')} temporary reopen file cleanup failed: ${toErrorMessage(error)}`)
+          warnings.push(`temporary reopen file cleanup failed: ${toErrorMessage(error)}`)
       }
       if (mutationError) {
         try {
@@ -208,25 +208,35 @@ export async function reopenChangeGroup(name: string, options: ReopenChangeGroup
         throw mutationError
       }
 
-      console.log(`  ${pc.green('Reopened Change Group:')} ${groupName}`)
-      console.log(`  ${pc.dim('retained archive')} → ${record.path}`)
-      console.log(`  ${pc.dim('unfocused Group Brief')} → ${ref.path}`)
-      console.log(`  ${pc.cyan('Next:')} run rsp reopen ${groupName}/<change> --reason <text> only for an incomplete archived child\n`)
+      return { ok: true, action: 'reopen', groupName, archivePath: record.path, path: ref.path, warnings } as const
     })
   }
   catch (error) {
     if (error instanceof ArchiveHistoryError || error instanceof WorkRefError || error instanceof ChangeGroupError || error instanceof ManagedPathError) {
-      console.error(`  ${pc.red('Error:')} ${error.message}`)
-      if (error instanceof ArchiveHistoryError) {
-        for (const candidate of error.candidates)
-          console.error(`    ${candidate}`)
-        if (error.candidatesTruncated)
-          console.error(`    ... ${error.candidateTotal - error.candidates.length} more`)
-      }
-      process.exit(1)
+      return failure(
+        'error',
+        error.message,
+        error instanceof ArchiveHistoryError ? error.candidates : [],
+        error instanceof ArchiveHistoryError && error.candidatesTruncated
+          ? error.candidateTotal - error.candidates.length
+          : 0,
+      )
     }
     throw error
   }
+}
+
+function failure(kind: 'usage' | 'error', message: string, candidates: string[] = [], remainingCandidates = 0): ChangeGroupResult {
+  return { ok: false, kind, message, candidates, remainingCandidates }
+}
+
+function inspectInitialization(): string | undefined {
+  const rules = inspectManagedFile(RSP_RULES_PATH, 'fallback protocol', { allowMissing: true })
+  const design = inspectManagedFile(join(RSP_DIR, 'specs', 'design.md'), 'design Spec', { allowMissing: true })
+  if (!rules.issue && !design.issue && rules.exists && design.exists)
+    return undefined
+  const initialized = existsSync(RSP_DIR)
+  return `${initialized ? 'RSP project requires an update' : 'RSP is not initialized in this project'}\n  ${initialized ? 'Run: rsp update' : 'Run: rsp init'}`
 }
 
 async function requireEmptyGroupRecoverySubtree(path: string, label: string): Promise<void> {

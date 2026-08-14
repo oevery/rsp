@@ -1,21 +1,21 @@
-import type { CommandDiagnostic, CommandRunOptions, RspConfig, RuntimeDiagnostic } from '../types.js'
+import type { CommandDiagnostic, RspConfig, RuntimeDiagnostic } from '../types.js'
 import { readFile } from 'node:fs/promises'
 import { TextDecoder } from 'node:util'
 
 import { inspectChangeGroups } from '../core/change-group.js'
-import { loadRspConfig, MAX_FOCUS_CAPSULE_BYTES, pc, resolveKinds, resolveRequiredSections } from '../core/config.js'
+import { loadRspConfig, MAX_FOCUS_CAPSULE_BYTES, resolveKinds, resolveRequiredSections } from '../core/config.js'
 import { detectDeltaSections, parseFrontmatter, parseScenarios } from '../core/content.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
 import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionDefinitionByHeading, getDocumentSections, parseRspDocument } from '../core/document-model.js'
 import { IssueRelationshipError, parseIssueRelationships } from '../core/issue-relationship.js'
-import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
+import { toErrorMessage } from '../core/output.js'
 import { inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 
-export interface CheckOptions extends CommandRunOptions {
+export interface CheckOptions {
   focused?: boolean
 }
 
-interface CheckResult {
+export interface CheckResult {
   command: 'check'
   ok: boolean
   focused: boolean
@@ -51,17 +51,13 @@ export async function runCheck(options: CheckOptions = {}): Promise<CheckResult>
       runtime,
       summary: { changeFiles: 0, errors: 1, warnings: 0 },
     }
-    if (options.json)
-      emitJson(result, options)
-    else
-      console.error(`  ${pc.red('Error:')} ${toErrorMessage(error)}`)
     return result
   }
   const validKinds = resolveKinds(config)
   const requiredSections = resolveRequiredSections(config)
   const choosePlaceholderRe = /^<choose:/i
 
-  const reportRuntime = (diagnostic: RuntimeDiagnostic) => recordRuntimeDiagnostic(runtime, diagnostic, Boolean(options.verbose) && !options.json)
+  const reportRuntime = (diagnostic: RuntimeDiagnostic) => runtime.push(diagnostic)
   const addDiagnostic = (diagnostic: CommandDiagnostic) => diagnostics.push(diagnostic)
   const focusTree = await inspectFocusTree()
   for (const diagnostic of focusTree.diagnostics) {
@@ -185,36 +181,6 @@ export async function runCheck(options: CheckOptions = {}): Promise<CheckResult>
         warnings: diagnostics.filter(d => d.severity === 'warning').length,
       },
     }
-    if (options.json) {
-      emitJson(result, options)
-      return result
-    }
-    console.log()
-    console.log(`  ${pc.bold('RSP check')}`)
-    if (options.focused)
-      console.log(`  ${pc.dim('(focused only)')}`)
-    console.log()
-    if (diagnostics.length === 0) {
-      console.log(`  ${pc.dim('No change files to check.')}\n`)
-      return result
-    }
-
-    for (const diagnostic of diagnostics) {
-      const icon = diagnostic.severity === 'error'
-        ? pc.red('✗')
-        : diagnostic.severity === 'warning'
-          ? pc.yellow('⚠')
-          : pc.dim('ℹ')
-      const label = diagnostic.change ?? diagnostic.path
-      const headline = label ? `${label} — ${diagnostic.message}` : diagnostic.message
-      console.log(`  ${icon} ${headline}`)
-      for (const detail of diagnostic.details || [])
-        console.log(`      ${pc.dim(detail)}`)
-      if (diagnostic.hint)
-        console.log(`      ${pc.dim(diagnostic.hint)}`)
-    }
-    console.log()
-    console.log(`  ${pc.red(String(result.summary.errors))} error(s), ${pc.yellow(String(result.summary.warnings))} warning(s) in 0 change file(s).\n`)
     return result
   }
 
@@ -425,38 +391,6 @@ export async function runCheck(options: CheckOptions = {}): Promise<CheckResult>
       warnings: diagnostics.filter(d => d.severity === 'warning').length,
     },
   }
-
-  if (options.json) {
-    emitJson(result, options)
-    return result
-  }
-
-  console.log()
-  console.log(`  ${pc.bold('RSP check')}`)
-  if (options.focused)
-    console.log(`  ${pc.dim('(focused only)')}`)
-  console.log()
-
-  for (const diagnostic of diagnostics) {
-    const icon = diagnostic.severity === 'error'
-      ? pc.red('✗')
-      : diagnostic.severity === 'warning'
-        ? pc.yellow('⚠')
-        : pc.dim('ℹ')
-    const label = diagnostic.change ?? diagnostic.path
-    const headline = label ? `${label} — ${diagnostic.message}` : diagnostic.message
-    console.log(`  ${icon} ${headline}`)
-    for (const detail of diagnostic.details || [])
-      console.log(`      ${pc.dim(detail)}`)
-    if (diagnostic.hint)
-      console.log(`      ${pc.dim(diagnostic.hint)}`)
-  }
-
-  console.log()
-  if (result.summary.errors === 0 && result.summary.warnings === 0)
-    console.log(`  ${pc.green('✓')} All ${changeRefs.length} change file(s) valid.\n`)
-  else
-    console.log(`  ${pc.red(String(result.summary.errors))} error(s), ${pc.yellow(String(result.summary.warnings))} warning(s) in ${changeRefs.length} change file(s).\n`)
 
   return result
 }

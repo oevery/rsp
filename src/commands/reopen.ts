@@ -3,11 +3,11 @@ import { existsSync } from 'node:fs'
 import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 
-import { CHANGES_DIR, FOCUS_DIR, pc } from '../core/config.js'
+import { CHANGES_DIR, FOCUS_DIR, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
 import { appendDocumentSectionItem, CHANGE_DOCUMENT_SCHEMA, DocumentSectionCardinalityError, parseRspDocument } from '../core/document-model.js'
-import { cleanupEmptyParentDirs, guardRspInitialized } from '../core/filesystem.js'
+import { cleanupEmptyParentDirs } from '../core/filesystem.js'
 import { withRspLock } from '../core/lock.js'
-import { writeManagedFile } from '../core/managed-path.js'
+import { inspectManagedFile, writeManagedFile } from '../core/managed-path.js'
 import { normalizeExecutableWorkRef, resolveFocusMarkerPath, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 import { ArchiveHistoryError, historyInspectionComplete, inspectArchiveHistory, selectArchiveHistoryRecord } from '../history/query.js'
 
@@ -16,20 +16,24 @@ export interface ReopenOptions {
   reason: string
 }
 /** Restore one archived executable Change as focused open work while retaining archive evidence. */
-export async function reopenChange(name: string, options: ReopenOptions): Promise<void> {
+export type ReopenChangeResult
+  = | { ok: true, workRef: string, archivePath: string, git: boolean }
+    | { ok: false, kind: 'usage' | 'error', message: string, candidates: string[], remainingCandidates: number }
+
+export async function reopenChange(name: string, options: ReopenOptions): Promise<ReopenChangeResult> {
   if (!name) {
-    console.error(`  ${pc.red('Usage:')} rsp reopen <name> --reason <text> [--from <archive-path>]`)
-    process.exit(1)
+    return { ok: false, kind: 'usage', message: 'rsp reopen <name> --reason <text> [--from <archive-path>]', candidates: [], remainingCandidates: 0 }
   }
   const reason = options.reason?.trim()
   if (!reason || /[\r\n]/.test(reason)) {
-    console.error(`  ${pc.red('Error:')} --reason must be one non-empty line`)
-    process.exit(1)
+    return { ok: false, kind: 'error', message: '--reason must be one non-empty line', candidates: [], remainingCandidates: 0 }
   }
-  guardRspInitialized()
+  const initialization = inspectInitialization()
+  if (initialization)
+    return { ok: false, kind: 'error', message: initialization, candidates: [], remainingCandidates: 0 }
 
   try {
-    await withRspLock('reopen-change', async () => {
+    return await withRspLock('reopen-change', async () => {
       const normalizedName = normalizeExecutableWorkRef(name)
       const inspection = await inspectArchiveHistory()
       if (!historyInspectionComplete(inspection)) {
@@ -98,32 +102,32 @@ export async function reopenChange(name: string, options: ReopenOptions): Promis
         throw error
       }
 
-      console.log(`  ${pc.green('Reopened:')} ${workRef.name}`)
-      console.log(`  ${pc.dim('retained archive')} → ${record.path}`)
-      console.log(`  ${pc.dim('focused via focus.d')} → ${workRef.name}`)
-      console.log(`  ${pc.cyan('Next:')} refine the reopened Task and Verify evidence, then resolve the concern\n`)
-
-      if (existsSync('.git')) {
-        console.log(`  ${pc.cyan('Git delivery:')}`)
-        console.log(`    git status --short`)
-        console.log(`    Inspect the complete reopen transition; stage and commit only with separate Git authority.`)
-        console.log()
-      }
+      return { ok: true, workRef: workRef.name, archivePath: record.path, git: existsSync('.git') }
     })
   }
   catch (error) {
     if (error instanceof ArchiveHistoryError || error instanceof WorkRefError) {
-      console.error(`  ${pc.red('Error:')} ${error.message}`)
-      if (error instanceof ArchiveHistoryError) {
-        for (const candidate of error.candidates)
-          console.error(`    ${candidate}`)
-        if (error.candidatesTruncated)
-          console.error(`    ... ${error.candidateTotal - error.candidates.length} more`)
+      return {
+        ok: false,
+        kind: 'error',
+        message: error.message,
+        candidates: error instanceof ArchiveHistoryError ? error.candidates : [],
+        remainingCandidates: error instanceof ArchiveHistoryError && error.candidatesTruncated
+          ? error.candidateTotal - error.candidates.length
+          : 0,
       }
-      process.exit(1)
     }
     throw error
   }
+}
+
+function inspectInitialization(): string | undefined {
+  const rules = inspectManagedFile(RSP_RULES_PATH, 'fallback protocol', { allowMissing: true })
+  const design = inspectManagedFile(`${RSP_DIR}/specs/design.md`, 'design Spec', { allowMissing: true })
+  if (!rules.issue && !design.issue && rules.exists && design.exists)
+    return undefined
+  const initialized = existsSync(RSP_DIR)
+  return `${initialized ? 'RSP project requires an update' : 'RSP is not initialized in this project'}\n  ${initialized ? 'Run: rsp update' : 'Run: rsp init'}`
 }
 
 function appendChecklistItem(content: string, sectionId: Extract<ChangeSectionId, 'tasks' | 'verify'>, item: string): string {

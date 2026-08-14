@@ -1,16 +1,16 @@
-import type { ArchiveReadinessOutput, CommandRunOptions, RuntimeDiagnostic } from '../types.js'
+import type { ArchiveReadinessOutput, RuntimeDiagnostic } from '../types.js'
 import { readFile } from 'node:fs/promises'
 
 import { resolveExecutableChange } from '../core/change-group.js'
-import { inspectRspConfig, pc } from '../core/config.js'
+import { inspectRspConfig } from '../core/config.js'
 import { resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
 import { guardRspInitialized, normalizeLogicalPath } from '../core/filesystem.js'
-import { emitJson, toErrorMessage } from '../core/output.js'
+import { toErrorMessage } from '../core/output.js'
 import { buildDurableReviewGuidance, collectArchiveReadiness, getDurableReviewCandidateTargets, toArchiveReadinessOutput } from '../core/readiness.js'
 import { WorkRefError } from '../core/work-ref.js'
 
-interface ReadyResult {
+export interface ReadySuccessResult {
   command: 'ready'
   ok: true
   change: string
@@ -28,29 +28,26 @@ interface ReadyResult {
   runtime: RuntimeDiagnostic[]
 }
 
-function exitReadyError(name: string, error: { code: string, message: string }, options: CommandRunOptions): never {
-  if (options.json) {
-    emitJson({
-      command: 'ready',
-      ok: false,
-      change: name || null,
-      path: null,
-      warnings: [],
-      runtime: [],
-      error,
-    }, options)
-  }
-  else {
-    console.error(`  ${pc.red('Error:')} ${error.message}`)
-  }
-  process.exit(1)
+export interface ReadyErrorResult {
+  command: 'ready'
+  ok: false
+  change: string | null
+  path: null
+  warnings: []
+  runtime: RuntimeDiagnostic[]
+  error: { code: string, message: string }
+  kind: 'usage' | 'resolution' | 'read' | 'config'
 }
 
-export async function showReady(name: string, options: CommandRunOptions = {}): Promise<ReadyResult> {
-  if (!name) {
-    console.error(`  ${pc.red('Usage:')} rsp ready <name>`)
-    process.exit(1)
-  }
+export type ReadyResult = ReadySuccessResult | ReadyErrorResult
+
+function readyError(name: string, error: ReadyErrorResult['error'], kind: ReadyErrorResult['kind']): ReadyErrorResult {
+  return { command: 'ready', ok: false, change: name || null, path: null, warnings: [], runtime: [], error, kind }
+}
+
+export async function showReady(name: string): Promise<ReadyResult> {
+  if (!name)
+    return readyError(name, { code: 'missing_change_name', message: 'rsp ready <name>' }, 'usage')
   guardRspInitialized()
 
   let workRef
@@ -59,7 +56,7 @@ export async function showReady(name: string, options: CommandRunOptions = {}): 
   }
   catch (error) {
     if (error instanceof WorkRefError)
-      exitReadyError(name, { code: error.code, message: error.message }, options)
+      return readyError(name, { code: error.code, message: error.message }, 'resolution')
     throw error
   }
   const srcPath = workRef.path
@@ -71,8 +68,7 @@ export async function showReady(name: string, options: CommandRunOptions = {}): 
     content = await readFile(srcPath, 'utf-8')
   }
   catch {
-    console.error(`  ${pc.red('Error:')} unable to read .rsp/changes/${name}.md`)
-    process.exit(1)
+    return readyError(name, { code: 'change_read_failed', message: `unable to read .rsp/changes/${name}.md` }, 'read')
   }
 
   const dependencyInspection = await inspectChangeDependencies()
@@ -85,17 +81,17 @@ export async function showReady(name: string, options: CommandRunOptions = {}): 
   try {
     const configInspection = await inspectRspConfig()
     if (configInspection.issues.length > 0)
-      exitReadyError(name, { code: 'invalid_config', message: configInspection.issues.join('; ') }, options)
+      return readyError(name, { code: 'invalid_config', message: configInspection.issues.join('; ') }, 'config')
     decisionRecordsPath = resolveDecisionRecordsPath(configInspection.config)
     const filesystemIssue = await validateDecisionRecordsFilesystemPath(decisionRecordsPath)
     if (filesystemIssue)
-      exitReadyError(name, { code: 'invalid_decision_records_path', message: filesystemIssue }, options)
+      return readyError(name, { code: 'invalid_decision_records_path', message: filesystemIssue }, 'config')
   }
   catch (error) {
-    exitReadyError(name, { code: 'invalid_config', message: `.rsp/config.yaml could not be parsed: ${toErrorMessage(error)}` }, options)
+    return readyError(name, { code: 'invalid_config', message: `.rsp/config.yaml could not be parsed: ${toErrorMessage(error)}` }, 'config')
   }
   const durableReview = buildDurableReviewGuidance(getDurableReviewCandidateTargets(), decisionRecordsPath)
-  const result: ReadyResult = {
+  const result: ReadySuccessResult = {
     command: 'ready',
     ok: true,
     change: name,
@@ -106,47 +102,5 @@ export async function showReady(name: string, options: CommandRunOptions = {}): 
     runtime,
   }
 
-  if (options.json) {
-    emitJson(result, options)
-    return result
-  }
-
-  console.log()
-  console.log(`  ${pc.bold('Archive readiness for')} ${pc.cyan(name)}`)
-  console.log()
-
-  if (checklist.length === 0) {
-    console.log(`  ${pc.green('✓')} Ready to archive. No deterministic warnings found.\n`)
-  }
-  else {
-    for (const line of checklist)
-      console.log(`  ${pc.yellow('⚠')} ${line}`)
-    console.log()
-    console.log(`  ${pc.dim('Review the warnings above before treating this work as fully closed.')}`)
-  }
-
-  console.log(`  ${pc.dim('Deterministic readiness:')} ${readiness.deterministic === 'pass' ? pc.green('pass') : pc.yellow('warnings')}`)
-  console.log(`  ${pc.dim('Completion gate:')} ${readiness.completionGate === 'pass' ? pc.green('pass') : pc.red('blocked')}`)
-  console.log(`  ${pc.dim('Required verification:')} ${readiness.requiredVerify.done}/${readiness.requiredVerify.total}`)
-  console.log(`  ${pc.dim('Optional coverage:')} ${readiness.optionalVerify.done}/${readiness.optionalVerify.total}${readiness.coverageWarnings > 0 ? pc.yellow(` · ${readiness.coverageWarnings} warning(s)`) : ''}`)
-  console.log(`  ${pc.dim('Semantic review:')} ${pc.yellow('needed')}`)
-  console.log(`  ${pc.dim('Archive ready:')} ${formatArchiveReady(readiness.archiveReady)}\n`)
-  console.log(`  ${pc.bold('Durable review:')}`)
-  console.log(`    ${pc.dim('Current-fact options:')} ${durableReview.factDecisions.join(' | ')}`)
-  console.log(`    ${pc.dim('Rationale options:')} ${durableReview.rationaleDecisions.join(' | ')}`)
-  console.log(`    ${pc.dim('Current-fact targets:')} ${durableReview.factCandidateTargets.join(', ')}`)
-  console.log(`    ${pc.dim('Decision Record path:')} ${durableReview.decisionRecordsPath}`)
-  console.log(`    ${pc.dim(durableReview.note)}\n`)
   return result
-}
-
-function formatArchiveReady(value: 'yes' | 'judgment' | 'no'): string {
-  switch (value) {
-    case 'yes':
-      return pc.green('yes')
-    case 'no':
-      return pc.yellow('no')
-    case 'judgment':
-      return pc.yellow('judgment')
-  }
 }
