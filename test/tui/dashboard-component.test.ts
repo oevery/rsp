@@ -1,4 +1,7 @@
+import type { SpecsTreeProjection } from '../../src/specs/projection.js'
 import type { ProjectStatusSnapshot } from '../../src/status/model.js'
+import type { TuiSpecsSource } from '../../src/tui/specs-source.js'
+import type { TuiWorkSource } from '../../src/tui/work-source.js'
 import type { HistoryDetailOutput, HistoryRecordOutput } from '../../src/types.js'
 import { render } from 'ink-testing-library'
 import React from 'react'
@@ -51,11 +54,28 @@ const defaultInspectors = {
   inspectHistoryDetail: async () => { throw new Error('no selected history record') },
 }
 
+function staleSpecsTree(): SpecsTreeProjection {
+  const document = { path: '.rsp/specs/design.md', kind: 'spec' as const, title: 'Project Design', summary: 'Current facts', bytes: 42, headings: [] }
+  return {
+    mode: 'tree',
+    source: { root: '/repo', gitHead: 'abc', gitBranch: 'main', dirty: false },
+    roots: { specs: '.rsp/specs', decisions: '.rsp/specs/decisions' },
+    generatedIndexes: [],
+    diagnostics: [],
+    diagnosticSummary: { total: 0, returned: 0, hasMore: false },
+    runtime: [],
+    limits: { candidates: 1000, fileBytes: 524288, results: 100, searchExcerptCodePoints: 240, detailContentCodePoints: 12000 },
+    tree: { name: 'specs', path: '.rsp/specs', directories: [], documents: [document] },
+    decisionRecords: { name: 'decisions', path: '.rsp/specs/decisions', directories: [], documents: [] },
+    documents: [document],
+  }
+}
+
 describe('dashboardApp', () => {
   it.each([
-    { locale: 'en' as const, initial: 'RSP dashboard  [Changes] Groups History', groups: 'RSP dashboard  Changes [Groups] History', history: 'RSP dashboard  Changes Groups [History]', footer: 'Tab: Changes → Groups → History' },
-    { locale: 'zh-CN' as const, initial: 'RSP 仪表盘  [变更] 变更组 历史', groups: 'RSP 仪表盘  变更 [变更组] 历史', history: 'RSP 仪表盘  变更 变更组 [历史]', footer: 'Tab：变更 → 变更组 → 历史' },
-  ])('exposes all scopes and the active scope at 40x8 in $locale', async ({ footer, groups, history, initial, locale }) => {
+    { locale: 'en' as const, initial: 'RSP dashboard  [Work] Specs History', specs: 'RSP dashboard  Work [Specs] History', history: 'RSP dashboard  Work Specs [History]', footer: 'Tab: Work → Specs → History' },
+    { locale: 'zh-CN' as const, initial: 'RSP 仪表盘  [工作] Specs 历史', specs: 'RSP 仪表盘  工作 [Specs] 历史', history: 'RSP 仪表盘  工作 Specs [历史]', footer: 'Tab：工作 → Specs → 历史' },
+  ])('exposes all scopes and the active scope at 40x8 in $locale', async ({ footer, history, initial, locale, specs }) => {
     const view = render(React.createElement(DashboardApp, {
       initialSnapshot: snapshot,
       initialDimensions: { width: 40, height: 8 },
@@ -68,7 +88,7 @@ describe('dashboardApp', () => {
 
     view.stdin.write('\t')
     await new Promise(resolve => setImmediate(resolve))
-    expect(view.lastFrame()).toContain(groups)
+    expect(view.lastFrame()).toContain(specs)
 
     view.stdin.write('\t')
     await new Promise(resolve => setImmediate(resolve))
@@ -80,8 +100,9 @@ describe('dashboardApp', () => {
 
   it('renders textual states and supports navigation, scope, search, detail, and help', async () => {
     const view = render(React.createElement(DashboardApp, { initialSnapshot: snapshot, messages: catalogs.en, ...defaultInspectors }))
-    expect(view.lastFrame()).toContain('alpha [focused · ready]')
-    expect(view.lastFrame()).toContain('beta [focused · blocked]')
+    expect(view.lastFrame()).toContain('alpha')
+    expect(view.lastFrame()).toContain('[focused · ready] [Changes]')
+    expect(view.lastFrame()).toContain('[focused · blocked] [Changes]')
     expect(view.lastFrame()).toContain('Prerequisites')
     expect(view.lastFrame()).toContain('✓ setup  resolved')
     expect(view.lastFrame()).not.toContain('◎ alpha')
@@ -101,16 +122,16 @@ describe('dashboardApp', () => {
     view.stdin.write('\r')
     await new Promise(resolve => setImmediate(resolve))
     expect(view.lastFrame()).toContain('Detail: beta')
-    expect(view.lastFrame()).not.toContain('alpha [focused · ready]')
+    expect(view.lastFrame()).not.toContain('[focused · ready] [Changes]')
     view.stdin.write('\x1B')
     await new Promise(resolve => setTimeout(resolve, 150))
-    expect(view.lastFrame()).toContain('alpha [focused · ready]')
+    expect(view.lastFrame()).toContain('[focused · ready] [Changes]')
 
-    view.stdin.write('\t')
+    view.stdin.write('j')
+    view.stdin.write('j')
     await new Promise(resolve => setImmediate(resolve))
-    expect(view.lastFrame()).toContain('Groups')
     expect(view.lastFrame()).toContain('delivery: delivery')
-    expect(view.lastFrame()).toContain('[waiting]')
+    expect(view.lastFrame()).toContain('[waiting] [Groups]')
     expect(view.lastFrame()).toContain('delivery/api (open)')
     expect(view.lastFrame()).toContain('○ delivery/api')
     expect(view.lastFrame()).toContain('└── ○ foundation')
@@ -134,10 +155,59 @@ describe('dashboardApp', () => {
     view.cleanup()
   })
 
+  it('toggles Work status and History summary to exact Markdown documents', async () => {
+    const workSource: TuiWorkSource = { document: vi.fn(async path => ({ path, content: '# Work Document\n\nWorkDocumentNeedle' })) }
+    const historyRecord: HistoryRecordOutput = { date: '2026-08-14', workRef: 'archived', group: null, kind: 'feature', summary: 'Archived summary', summaryTruncated: false, path: '.rsp/archives/2026-08-14_archived.md' }
+    const inspectHistoryDocument = vi.fn(async (path: string) => ({ path, content: '# Archive Document\n\nArchiveDocumentNeedle' }))
+    const view = render(React.createElement(DashboardApp, {
+      initialSnapshot: snapshot,
+      messages: catalogs.en,
+      workSource,
+      inspectHistoryDocument,
+      inspectStatus: vi.fn(async () => snapshot),
+      inspectHistory: vi.fn(async () => ({ records: [historyRecord], summary: { matched: 1, returned: 1, hasMore: false } })),
+      inspectHistoryDetail: vi.fn(),
+    }))
+
+    view.stdin.write('\r')
+    await new Promise(resolve => setImmediate(resolve))
+    view.stdin.write('v')
+    await new Promise(resolve => setImmediate(resolve))
+    await new Promise(resolve => setImmediate(resolve))
+    expect(view.lastFrame()).toContain('WorkDocumentNeedle')
+    expect(workSource.document).toHaveBeenCalledWith('.rsp/changes/alpha.md')
+    view.stdin.write('v')
+    await new Promise(resolve => setImmediate(resolve))
+    expect(view.lastFrame()).toContain('Prerequisites')
+    view.cleanup()
+
+    const historyView = render(React.createElement(DashboardApp, {
+      initialSnapshot: snapshot,
+      messages: catalogs.en,
+      inspectHistoryDocument,
+      inspectStatus: vi.fn(async () => snapshot),
+      inspectHistory: vi.fn(async () => ({ records: [historyRecord], summary: { matched: 1, returned: 1, hasMore: false } })),
+      inspectHistoryDetail: vi.fn(),
+    }))
+    historyView.stdin.write('\t')
+    await new Promise(resolve => setImmediate(resolve))
+    historyView.stdin.write('\t')
+    await new Promise(resolve => setImmediate(resolve))
+    await new Promise(resolve => setImmediate(resolve))
+    historyView.stdin.write('\r')
+    await new Promise(resolve => setImmediate(resolve))
+    historyView.stdin.write('v')
+    await new Promise(resolve => setImmediate(resolve))
+    await new Promise(resolve => setImmediate(resolve))
+    expect(historyView.lastFrame()).toContain('ArchiveDocumentNeedle')
+    expect(inspectHistoryDocument).toHaveBeenCalledWith(historyRecord.path)
+    historyView.cleanup()
+  })
+
   it('keeps the Chinese primary view monolingual and canonical states discoverable in help', async () => {
     const view = render(React.createElement(DashboardApp, { initialSnapshot: snapshot, messages: catalogs['zh-CN'], ...defaultInspectors }))
     expect(view.lastFrame()).toContain('RSP 仪表盘')
-    expect(view.lastFrame()).toContain('alpha [已聚焦 · 就绪]')
+    expect(view.lastFrame()).toContain('[已聚焦 · 就绪] [变更]')
     expect(view.lastFrame()).not.toContain('(focused)')
     expect(view.lastFrame()).not.toContain('(ready)')
     view.stdin.write('?')
@@ -167,7 +237,8 @@ describe('dashboardApp', () => {
     expect(view.lastFrame()).toContain('摘要: 组合听说题型')
     view.stdin.write('\x1B')
     await new Promise(resolve => setTimeout(resolve, 150))
-    view.stdin.write('\t')
+    view.stdin.write('j')
+    view.stdin.write('j')
     await new Promise(resolve => setImmediate(resolve))
     expect(view.lastFrame()).toContain('delivery — 交付')
     view.stdin.write('\r')
@@ -175,6 +246,143 @@ describe('dashboardApp', () => {
     expect(view.lastFrame()).toContain('详情: delivery')
     expect(view.lastFrame()).toContain('摘要: 交付 API 与 UI')
     expect(view.lastFrame()!.split('\n').every(line => displayWidth(line) <= 40)).toBe(true)
+    view.cleanup()
+  })
+
+  it('lazy-loads Specs, opens current detail, and submits content search', async () => {
+    const document = { path: '.rsp/specs/design.md', kind: 'spec' as const, title: 'Project Design', summary: 'Current facts', bytes: 42, headings: [{ depth: 1, title: 'Project Design', line: 1 }] }
+    const tree = {
+      command: 'specs' as const,
+      ok: true as const,
+      mode: 'tree' as const,
+      source: { root: '/repo', gitHead: 'abc', gitBranch: 'main', dirty: true },
+      roots: { specs: '.rsp/specs', decisions: '.rsp/specs/decisions' },
+      generatedIndexes: [],
+      diagnostics: [],
+      diagnosticSummary: { total: 0, returned: 0, hasMore: false },
+      runtime: [],
+      limits: { candidates: 1000, fileBytes: 524288, results: 100, searchExcerptCodePoints: 240, detailContentCodePoints: 12000 },
+      tree: { name: 'specs', path: '.rsp/specs', directories: [], documents: [document] },
+      decisionRecords: { name: 'decisions', path: '.rsp/specs/decisions', directories: [], documents: [] },
+      documents: [document],
+    }
+    const detail = { ...tree, mode: 'detail' as const, document: { ...document, content: '# Project Design\n\nCurrentNeedle', contentTruncated: false } }
+    const search = { ...tree, mode: 'search' as const, query: { literal: 'CurrentNeedle', limit: 20, excerptCodePoints: 240 }, matches: [{ path: document.path, kind: document.kind, title: document.title, heading: 'Project Design', line: 3, excerpt: 'CurrentNeedle' }], summary: { candidates: 1, searched: 1, matched: 1, returned: 1, hasMore: false } }
+    const specsSource: TuiSpecsSource = { tree: vi.fn(async () => tree), detail: vi.fn(async () => detail), search: vi.fn(async () => search) }
+    const view = render(React.createElement(DashboardApp, { initialSnapshot: snapshot, messages: catalogs.en, specsSource, ...defaultInspectors }))
+
+    expect(specsSource.tree).not.toHaveBeenCalled()
+    view.stdin.write('\t')
+    await new Promise(resolve => setImmediate(resolve))
+    await new Promise(resolve => setImmediate(resolve))
+    expect(specsSource.tree).toHaveBeenCalledTimes(1)
+    expect(view.lastFrame()).toContain('Project Design')
+
+    view.stdin.write('j')
+    await new Promise(resolve => setImmediate(resolve))
+    view.stdin.write('\r')
+    await new Promise(resolve => setImmediate(resolve))
+    await new Promise(resolve => setImmediate(resolve))
+    expect(specsSource.detail).toHaveBeenCalledWith(document.path)
+    expect(view.lastFrame()).toContain('CurrentNeedle')
+    view.stdin.write('\x1B')
+    await new Promise(resolve => setImmediate(resolve))
+    view.stdin.write('s')
+    await new Promise(resolve => setImmediate(resolve))
+    view.stdin.write('CurrentNeedle')
+    await new Promise(resolve => setImmediate(resolve))
+    view.stdin.write('\r')
+    await new Promise(resolve => setImmediate(resolve))
+    await new Promise(resolve => setImmediate(resolve))
+    expect(specsSource.search).toHaveBeenCalledWith('CurrentNeedle')
+    expect(view.lastFrame()).toContain('.rsp/specs/design.md:3')
+    view.cleanup()
+  })
+
+  it('scrolls Specs Markdown detail identically with arrows and j/k', async () => {
+    const document = { path: '.rsp/specs/scroll.md', kind: 'spec' as const, title: 'Scroll Spec', summary: null, bytes: 200, headings: [] }
+    const tree = {
+      ...staleSpecsTree(),
+      tree: { name: 'specs', path: '.rsp/specs', directories: [], documents: [document] },
+      documents: [document],
+    }
+    const detail = {
+      ...tree,
+      mode: 'detail' as const,
+      document: {
+        ...document,
+        content: Array.from({ length: 20 }, (_, index) => `body ${String(index + 1).padStart(2, '0')}`).join('\n'),
+        contentTruncated: false,
+      },
+    }
+    const specsSource: TuiSpecsSource = { tree: vi.fn(async () => tree), detail: vi.fn(async () => detail), search: vi.fn() }
+    const view = render(React.createElement(DashboardApp, {
+      initialSnapshot: snapshot,
+      initialDimensions: { width: 80, height: 14 },
+      messages: catalogs.en,
+      specsSource,
+      ...defaultInspectors,
+    }))
+
+    view.stdin.write('\t')
+    await new Promise(resolve => setImmediate(resolve))
+    await new Promise(resolve => setImmediate(resolve))
+    view.stdin.write('j')
+    await new Promise(resolve => setImmediate(resolve))
+    view.stdin.write('\r')
+    await new Promise(resolve => setImmediate(resolve))
+    await new Promise(resolve => setImmediate(resolve))
+    expect(view.lastFrame()).toContain('body 01')
+
+    view.stdin.write('\u001B[B')
+    await new Promise(resolve => setImmediate(resolve))
+    expect(view.lastFrame()).not.toContain('body 01')
+    expect(view.lastFrame()).toContain('body 02')
+
+    view.stdin.write('k')
+    await new Promise(resolve => setImmediate(resolve))
+    expect(view.lastFrame()).toContain('body 01')
+
+    view.stdin.write('j')
+    await new Promise(resolve => setImmediate(resolve))
+    expect(view.lastFrame()).not.toContain('body 01')
+    view.stdin.write('\u001B[A')
+    await new Promise(resolve => setImmediate(resolve))
+    expect(view.lastFrame()).toContain('body 01')
+
+    for (let index = 0; index < 20; index++) {
+      view.stdin.write('j')
+      await new Promise(resolve => setImmediate(resolve))
+    }
+    expect(view.lastFrame()).toContain('body 20')
+    expect(view.lastFrame()).not.toContain('body 13')
+
+    view.stdin.write('j')
+    await new Promise(resolve => setImmediate(resolve))
+    view.stdin.write('k')
+    await new Promise(resolve => setImmediate(resolve))
+    expect(view.lastFrame()).toContain('body 13')
+    view.cleanup()
+  })
+
+  it('keeps the last valid Specs tree visibly stale after refresh failure', async () => {
+    const tree = staleSpecsTree()
+    const specsSource: TuiSpecsSource = {
+      tree: vi.fn().mockResolvedValueOnce(tree).mockRejectedValueOnce(new Error('specs unreadable')),
+      detail: vi.fn(),
+      search: vi.fn(),
+    }
+    const view = render(React.createElement(DashboardApp, { initialSnapshot: snapshot, messages: catalogs.en, specsSource, ...defaultInspectors }))
+    view.stdin.write('\t')
+    await new Promise(resolve => setImmediate(resolve))
+    await new Promise(resolve => setImmediate(resolve))
+    expect(view.lastFrame()).toContain('Project Design')
+    view.stdin.write('r')
+    await new Promise(resolve => setImmediate(resolve))
+    await new Promise(resolve => setImmediate(resolve))
+    expect(view.lastFrame()).toContain('Specs refresh failed')
+    expect(view.lastFrame()).toContain('[stale]')
+    expect(view.lastFrame()).toContain('Project Design')
     view.cleanup()
   })
 
@@ -224,8 +432,7 @@ describe('dashboardApp', () => {
     expect(view.lastFrame()).toContain('Detail: repeat')
     expect(view.lastFrame()).toContain(records[1].path)
     expect(view.lastFrame()).toContain('Scenarios: 2')
-    expect(view.lastFrame()).not.toContain('task hidden 9')
-    expect(view.lastFrame()).toContain('(truncated)')
+    expect(view.lastFrame()).toContain('1–')
     view.cleanup()
   })
 
@@ -253,8 +460,10 @@ describe('dashboardApp', () => {
     expect(view.lastFrame()).toContain('正在加载归档历史')
     resolveFirst({ records: [record], summary: { matched: 1, returned: 1, hasMore: false } })
     await new Promise(resolve => setImmediate(resolve))
+    await new Promise(resolve => setImmediate(resolve))
     expect(view.lastFrame()).toContain('done')
     view.stdin.write('r')
+    await new Promise(resolve => setImmediate(resolve))
     await new Promise(resolve => setImmediate(resolve))
     expect(view.lastFrame()).toContain('归档历史刷新失败')
     expect(view.lastFrame()).toContain('done')
@@ -341,6 +550,12 @@ describe('dashboardApp', () => {
     await new Promise(resolve => setImmediate(resolve))
     expect(view.lastFrame()).toContain('first detail failed')
 
+    view.stdin.write('\t')
+    await new Promise(resolve => setImmediate(resolve))
+    view.stdin.write('\t')
+    await new Promise(resolve => setImmediate(resolve))
+    view.stdin.write('\t')
+    await new Promise(resolve => setImmediate(resolve))
     view.stdin.write('j')
     await new Promise(resolve => setImmediate(resolve))
     expect(view.lastFrame()).toContain('Detail: second')
@@ -478,7 +693,8 @@ describe('dashboardApp', () => {
     view.stdin.write('\r')
     await new Promise(resolve => setImmediate(resolve))
     await new Promise(resolve => setImmediate(resolve))
-    expect(view.lastFrame()).toContain('Resize to at least 12 rows to view History detail.')
+    expect(view.lastFrame()).toContain('/')
+    expect(view.lastFrame()).not.toContain('Resize to at least 12 rows to view History detail.')
     expect(view.lastFrame()!.split('\n')).toHaveLength(height)
     view.cleanup()
   })
@@ -524,6 +740,7 @@ describe('dashboardApp', () => {
     view.stdin.write('r')
     await new Promise(resolve => setImmediate(resolve))
     expect(view.lastFrame()).toContain('Loading archive history')
+    expect(view.lastFrame()).toContain('Detail: dynamic')
     expect(view.lastFrame()!.split('\n')).toHaveLength(20)
     expect(view.lastFrame()!.split('\n').every(line => displayWidth(line) <= 40)).toBe(true)
 
@@ -531,11 +748,39 @@ describe('dashboardApp', () => {
     await new Promise(resolve => setImmediate(resolve))
     await new Promise(resolve => setImmediate(resolve))
     expect(view.lastFrame()).toContain('Archive history refresh failed')
+    expect(view.lastFrame()).toContain('Detail: dynamic')
     const errorFrame = view.lastFrame()!
     const errorLine = errorFrame.split('\n').find(line => line.includes('Archive history refresh failed'))
     expect(errorLine).toContain('…')
     expect(errorFrame.split('\n')).toHaveLength(20)
     expect(errorFrame.split('\n').every(line => displayWidth(line) <= 40)).toBe(true)
+    view.cleanup()
+  })
+
+  it('keeps Work detail identity visible while refresh and diagnostics add dynamic chrome', async () => {
+    const diagnosticSnapshot: ProjectStatusSnapshot = {
+      ...snapshot,
+      diagnostics: [{ severity: 'warning', code: 'work-warning', path: '.rsp/changes/alpha.md', message: 'warning' }],
+    }
+    const inspectStatus = vi.fn(() => new Promise<ProjectStatusSnapshot>(() => {}))
+    const view = render(React.createElement(DashboardApp, {
+      initialSnapshot: diagnosticSnapshot,
+      initialDimensions: { width: 40, height: 16 },
+      messages: catalogs.en,
+      inspectStatus,
+      inspectHistory: defaultInspectors.inspectHistory,
+      inspectHistoryDetail: defaultInspectors.inspectHistoryDetail,
+    }))
+    view.stdin.write('\r')
+    await new Promise(resolve => setImmediate(resolve))
+    view.stdin.write('r')
+    await new Promise(resolve => setImmediate(resolve))
+
+    expect(view.lastFrame()).toContain('Refreshing')
+    expect(view.lastFrame()).toContain('Diagnostics: work-warning')
+    expect(view.lastFrame()).toContain('Detail: alpha')
+    expect(view.lastFrame()!.split('\n')).toHaveLength(16)
+    expect(view.lastFrame()!.split('\n').every(line => displayWidth(line) <= 40)).toBe(true)
     view.cleanup()
   })
 
@@ -594,20 +839,22 @@ describe('dashboardApp', () => {
     view.stdin.write('\r')
     await new Promise(resolve => setImmediate(resolve))
     await new Promise(resolve => setImmediate(resolve))
-    const frame = view.lastFrame()!
-    expect(frame.match(/^Tasks:/gm)).toHaveLength(1)
-    expect(frame.match(/^Verify:/gm)).toHaveLength(1)
-    expect(frame.match(/^Blockers:/gm)).toHaveLength(1)
-    expect(frame).toContain('Tasks: 1/1')
-    expect(frame).toContain('Verify: 0/1')
-    expect(frame).toContain('Blockers:')
-    expect(frame).toContain('  ✓')
-    expect(frame).toContain('  •')
-    expect(frame).toContain('  −')
-    expect(frame).toContain('(truncated)')
-    expect(frame.split('\n').some(line => line.startsWith('    '))).toBe(true)
-    expect(frame.split('\n')).toHaveLength(height)
-    expect(frame.split('\n').every(line => displayWidth(line) <= width)).toBe(true)
+    let frames = view.lastFrame()!
+    for (let index = 0; index < 24; index++) {
+      view.stdin.write('j')
+      await new Promise(resolve => setImmediate(resolve))
+      frames += `\n${view.lastFrame()!}`
+    }
+    expect(frames).toContain('Tasks: 1/1')
+    expect(frames).toContain('Verify: 0/1')
+    expect(frames).toContain('Blockers:')
+    expect(frames).toContain('  ✓')
+    expect(frames).toContain('  •')
+    expect(frames).toContain('  −')
+    expect(frames).toContain('(truncated)')
+    expect(frames.split('\n').some(line => line.startsWith('    '))).toBe(true)
+    expect(view.lastFrame()!.split('\n')).toHaveLength(height)
+    expect(frames.split('\n').every(line => displayWidth(line) <= width)).toBe(true)
     view.cleanup()
   })
 })

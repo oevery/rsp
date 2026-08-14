@@ -7,8 +7,8 @@
 - Bare `rsp` opens the dashboard only when stdin and stdout are TTYs, `TERM` is not `dumb`, and `CI` is absent or exactly `false`; otherwise root help stays non-interactive. `rsp ui` is the explicit dual-TTY entry.
 - Existing subcommands, root help/version/error paths, plain output, and JSON contracts remain deterministic and non-interactive.
 - TUI-owned labels support only `en` and `zh-CN`. WorkRefs, paths, commands, canonical states, existing CLI output, JSON, Skills, and persisted artifacts are not localized.
-- The primary scopes are `Changes`, `Groups`, and `History` in cycle order. The active scope is textual, and the bounded footer places the complete Tab path first so navigation remains visible at the 40-column minimum.
-- The dashboard is read-only. It presents status, deterministic next commands, and lazy default-bounded history without mutating project state.
+- The primary scopes are `Work`, `Specs`, and `History` in cycle order. Work combines Changes and Groups while retaining exact WorkRef identity and a visible kind label. The active scope is textual, and the bounded footer places the complete Tab path first so navigation remains visible at the 40-column minimum.
+- The dashboard is read-only. It presents status, deterministic next commands, lazy current-file Specs navigation, and lazy default-bounded history without mutating project state.
 - Bare `rsp skills` is a separate dual-TTY entry. Its component owns only optional selection and confirmation; it closes the terminal session before the CLI invokes the presentation-neutral atomic installer once. It is not part of the read-only dashboard.
 - Default suite and optional project Skills render as separate groups. Defaults are selected and locked, optionals start unselected, and divergent selected targets require a separate replacement confirmation. Cancellation or declining replacement returns no mutation plan.
 - `ProjectStatusSnapshot` is an immutable rich internal snapshot. The public status JSON uses an exact adapter and remains flat; TUI state does not leak into it.
@@ -20,12 +20,16 @@
 - `src/tui/` owns dashboard state and shared terminal/display primitives; `src/skills-tui/` owns the Skill selector and its typed labels. Each dynamically loads only after its interactive route succeeds.
 - The TUI consumes status and presentation-neutral archive-history query/detail seams as sibling presenters. Status, history, and core do not depend on TUI modules.
 - Any TUI Specs presentation consumes the shared presentation-neutral current-file tree/detail/search projection; it does not parse generated indexes, duplicate query semantics, or make browser/TUI state authoritative.
+- Specs and Decision Records remain separate roots. Tree inspection loads only on first visit, exact detail and literal content search are demand-driven, paths own selection identity, and a failed refresh may retain a prior valid projection only with an explicit stale warning.
+- Specs document detail uses a bounded, display-cell-safe terminal Markdown projection for headings, paragraphs, lists and task items, blockquotes, code, emphasis, links, and thematic breaks. YAML frontmatter is hidden, raw HTML remains inert text, terminal controls are removed, and the viewport scrolls rendered physical lines with either `↑`/`↓` or `k`/`j`; the TUI adds no query cache authority.
+- Work and History preserve semantic Status and Summary as their default detail views. In detail, `v` toggles the exact bounded current or archived Markdown document; all document views reuse the same rendered-line viewport, boundary-clamped scrolling, loading, error, and position behavior.
+- Terminal Markdown supports repository-evidenced GFM pipe tables, using aligned columns when they fit and stacked `field: value` rows when narrow. Strict no-attribute lowercase hyphenated RSP metavariables and `<reason>` render as inert inline code; arbitrary HTML remains inert text.
 - React, Ink, and Yoga remain outside ordinary command evaluation.
 - The terminal host requires dual TTYs, enters and leaves alternate-screen mode safely, restores cursor/input state on every exit path, handles resize and signals, and preserves non-TUI stdout/stderr behavior.
 
 ## Boundaries
 - In scope:
-  - Interactive routing, read-only dashboard state/presentation, localization, display-cell layout, history navigation, and terminal cleanup.
+  - Interactive routing, read-only dashboard state/presentation, localization, display-cell layout, Work/Specs/History navigation, and terminal cleanup.
 - Out of scope:
   - Dashboard mutation, TUI-owned filesystem mutation, CLI contract localization, persisted UI state, alternative archive semantics, and loading UI dependencies on non-interactive paths.
 

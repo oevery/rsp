@@ -1,20 +1,23 @@
 import type { ArchiveHistoryInspection, ArchiveHistoryListResult, ArchiveHistoryRecord } from '../history/model.js'
 import type { HistoryDetailOutput } from '../types.js'
-import { ArchiveHistoryError, historyInspectionComplete, inspectArchiveHistory, queryArchiveHistory, readArchiveHistoryDetail } from '../history/query.js'
+import { ArchiveHistoryError, historyInspectionComplete, inspectArchiveHistory, queryArchiveHistory, readArchiveHistoryDetail, readArchiveHistoryDocument } from '../history/query.js'
 
 export interface TuiHistorySource {
   list: () => Promise<ArchiveHistoryListResult>
   detail: (path: string) => Promise<HistoryDetailOutput>
+  document: (path: string) => Promise<{ path: string, content: string }>
 }
 
 export interface TuiHistorySourceDependencies {
   inspect: () => Promise<ArchiveHistoryInspection>
   readDetail: (record: ArchiveHistoryRecord) => Promise<HistoryDetailOutput>
+  readDocument?: (record: ArchiveHistoryRecord) => Promise<{ content: string }>
 }
 
 const defaultDependencies: TuiHistorySourceDependencies = {
   inspect: inspectArchiveHistory,
   readDetail: readArchiveHistoryDetail,
+  readDocument: readArchiveHistoryDocument,
 }
 
 export function createTuiHistorySource(dependencies: TuiHistorySourceDependencies = defaultDependencies): TuiHistorySource {
@@ -37,6 +40,14 @@ export function createTuiHistorySource(dependencies: TuiHistorySourceDependencie
       if (!record)
         throw new ArchiveHistoryError('archive_not_found', `archived Change is not present in the last successful bounded TUI result: ${path}`)
       return dependencies.readDetail(record)
+    },
+    async document(path) {
+      const record = recordsByPath.get(path)
+      if (!record)
+        throw new ArchiveHistoryError('archive_not_found', `archived Change is not present in the last successful bounded TUI result: ${path}`)
+      if (!dependencies.readDocument)
+        throw new ArchiveHistoryError('archive_read_failed', `archive document reader is unavailable: ${path}`)
+      return { path, content: (await dependencies.readDocument(record)).content }
     },
   }
 }

@@ -106,7 +106,9 @@ Commands that produce JSON—`status`, `show`, `ready`, `check`, `doctor`, `spec
 
 ## Dashboard keys
 
-- `Tab`: switch Changes, Groups, and History.
+- `Tab`: switch Work, Specs, and History. Work combines Changes and Groups with visible kind labels.
+- `s` in Specs: submit a bounded literal content search; `Enter` opens a safe terminal-rendered Markdown detail, and `↑`/`↓` or `k`/`j` scroll its rendered lines. Frontmatter is hidden and raw HTML is not executed.
+- `v` in Work or History detail: toggle the semantic Status/Summary and the exact bounded Markdown document. Tables adapt to terminal width and strict RSP metavariables remain inert.
 - Arrow keys or `j`/`k`: move selection.
 - `/`: filter the current scope.
 - `Enter`: open full-width details.

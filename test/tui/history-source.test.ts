@@ -55,12 +55,15 @@ describe('tUI history source', () => {
         blockers: { items: [], truncated: false },
       },
     }))
-    const source = createTuiHistorySource({ inspect, readDetail })
+    const readDocument = vi.fn(async () => ({ content: '# Archived document\n' }))
+    const source = createTuiHistorySource({ inspect, readDetail, readDocument })
 
     await source.list()
     await source.detail(first.path)
     expect(inspect).toHaveBeenCalledTimes(1)
     expect(readDetail).toHaveBeenCalledWith(first)
+    await expect(source.document(first.path)).resolves.toEqual({ path: first.path, content: '# Archived document\n' })
+    expect(readDocument).toHaveBeenCalledWith(first)
 
     await expect(source.list()).rejects.toThrow('archive_inspection_incomplete')
     await source.detail(first.path)

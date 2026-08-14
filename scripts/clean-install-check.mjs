@@ -338,7 +338,13 @@ function main() {
       fail(`Installed package identity mismatch: ${installedManifest.name}@${installedManifest.version}`)
     if (installedManifest.engines?.node !== '>=22')
       fail(`Installed package Node engine mismatch: ${installedManifest.engines?.node ?? 'missing'}`)
-    for (const dependency of ['mdast-util-from-markdown', 'react-dom']) {
+    for (const dependency of ['mdast-util-from-markdown', 'mdast-util-gfm', 'micromark-extension-gfm']) {
+      if (typeof installedManifest.dependencies?.[dependency] !== 'string'
+        || !existsSync(join(projectRoot, 'node_modules', dependency))) {
+        fail(`Installed production dependency graph is missing ${dependency}`)
+      }
+    }
+    for (const dependency of ['react-dom']) {
       if (installedManifest.dependencies?.[dependency] !== undefined
         || existsSync(join(projectRoot, 'node_modules', dependency))) {
         fail(`Installed production dependency graph unexpectedly contains ${dependency}`)

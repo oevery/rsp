@@ -58,12 +58,16 @@
   "dependencies": {
     "citty": "^0.2.2",
     "ink": "~7.1.1",
+    "mdast-util-from-markdown": "2.0.3",
+    "mdast-util-gfm": "3.1.0",
+    "micromark-extension-gfm": "3.0.0",
     "picocolors": "^1.1.1",
     "react": "~19.2.8",
     "yaml": "^2.9.0"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^9.2.0",
+    "@types/mdast": "4.0.4",
     "@types/node": "^22.20.1",
     "@types/react": "19.2.17",
     "eslint": "^10.8.0",

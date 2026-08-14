@@ -106,7 +106,9 @@ rsp history <work-ref> [--json [--compact]]
 
 ## 面板快捷键
 
-- `Tab`：切换“变更”“变更组”与“历史”视图。
+- `Tab`：切换“工作”“Specs”与“历史”视图；“工作”用明确类型标签合并展示 Change 和 Group。
+- 在 Specs 中按 `s` 提交有界字面正文搜索；`Enter` 打开经过安全终端渲染的 Markdown 详情，`↑`/`↓` 或 `k`/`j` 按渲染后的行滚动。Frontmatter 会隐藏，raw HTML 不会执行。
+- 在 Work 或 History 详情中按 `v`，可在语义化的 Status/Summary 与精确有界 Markdown 文档之间切换。表格会适配终端宽度，严格 RSP metavariable 保持惰性展示。
 - 方向键或 `j`/`k`：移动选择。
 - `/`：筛选当前范围。
 - `Enter`：打开全宽详情。

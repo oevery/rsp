@@ -1,4 +1,6 @@
 import type { HistoryDetailOutput } from '../types.js'
+import type { TuiMessages } from './i18n/messages.js'
+import type { MarkdownLine } from './markdown-presentation.js'
 import { appendHistoryTruncationMarker, formatHistoryEvidenceLines } from './history-display.js'
 
 export type HistoryEvidenceKey = keyof HistoryDetailOutput['evidence']
@@ -23,6 +25,23 @@ const EVIDENCE_KEYS: HistoryEvidenceKey[] = ['tasks', 'verify', 'blockers']
 const HISTORY_DETAIL_FIXED_ROWS = 9
 const HISTORY_EVIDENCE_MIN_ROWS = EVIDENCE_KEYS.length * 2
 export const HISTORY_DETAIL_MIN_HEIGHT = 12
+
+export function projectHistoryDetailLines(detail: HistoryDetailOutput, messages: TuiMessages, width: number): MarkdownLine[] {
+  const lines: MarkdownLine[] = [
+    { spans: [{ text: `${messages.summary}: ${detail.summary}${detail.summaryTruncated ? '…' : ''}` }] },
+    { spans: [{ text: `${messages.scenarios}: ${detail.scenarioCount}` }] },
+  ]
+  for (const key of EVIDENCE_KEYS) {
+    const heading = key === 'tasks' ? `${messages.tasks}: ${detail.checkboxes.tasks.done}/${detail.checkboxes.tasks.total}` : key === 'verify' ? `${messages.verify}: ${detail.checkboxes.verify.done}/${detail.checkboxes.verify.total}` : `${messages.blockers}:`
+    lines.push({ spans: [{ text: heading, bold: true }] })
+    const evidence = detail.evidence[key]
+    const values = formatHistoryEvidenceLines(evidence.items, messages.none, width)
+    if (evidence.truncated && values.length)
+      values[values.length - 1] = appendHistoryTruncationMarker(values.at(-1)!, messages.truncated, width)
+    lines.push(...values.map(text => ({ spans: [{ text }] })))
+  }
+  return lines
+}
 
 export function projectHistoryEvidence(evidence: HistoryDetailOutput['evidence'], options: HistoryEvidenceProjectionOptions): ProjectedHistoryEvidence[] {
   const { dynamicRows = 0, headings, height, none, truncationMarker, width } = options

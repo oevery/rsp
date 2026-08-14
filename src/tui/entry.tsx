@@ -7,7 +7,9 @@ import { inspectProjectStatus } from '../status/inspect.js'
 import { DashboardApp } from './app.js'
 import { createTuiHistorySource } from './history-source.js'
 import { catalogs } from './i18n/messages.js'
+import { createTuiSpecsSource } from './specs-source.js'
 import { openTerminalSession } from './terminal.js'
+import { createTuiWorkSource } from './work-source.js'
 
 const signalExitCodes: Partial<Record<NodeJS.Signals, number>> = {
   SIGHUP: 129,
@@ -32,6 +34,9 @@ export interface TuiRuntime {
   inspect: typeof inspectProjectStatus
   inspectHistory: () => ReturnType<ReturnType<typeof createTuiHistorySource>['list']>
   inspectHistoryDetail: (path: string) => ReturnType<ReturnType<typeof createTuiHistorySource>['detail']>
+  inspectHistoryDocument?: (path: string) => ReturnType<ReturnType<typeof createTuiHistorySource>['document']>
+  specsSource?: ReturnType<typeof createTuiSpecsSource>
+  workSource?: ReturnType<typeof createTuiWorkSource>
   render: (element: React.ReactElement, options: { exitOnCtrlC: boolean, patchConsole: boolean }) => TuiInstance
   openSession: typeof openTerminalSession
   host: TuiHost
@@ -39,11 +44,16 @@ export interface TuiRuntime {
 }
 
 const defaultHistorySource = createTuiHistorySource()
+const defaultSpecsSource = createTuiSpecsSource()
+const defaultWorkSource = createTuiWorkSource()
 
 const defaultRuntime: TuiRuntime = {
   inspect: inspectProjectStatus,
   inspectHistory: defaultHistorySource.list,
   inspectHistoryDetail: defaultHistorySource.detail,
+  inspectHistoryDocument: defaultHistorySource.document,
+  specsSource: defaultSpecsSource,
+  workSource: defaultWorkSource,
   render,
   openSession: openTerminalSession,
   host: process,
@@ -74,6 +84,9 @@ export async function runTui(locale: UiLocale, runtime: TuiRuntime = defaultRunt
       inspectStatus: runtime.inspect,
       inspectHistory: runtime.inspectHistory,
       inspectHistoryDetail: runtime.inspectHistoryDetail,
+      inspectHistoryDocument: runtime.inspectHistoryDocument,
+      specsSource: runtime.specsSource,
+      workSource: runtime.workSource,
     }), {
       exitOnCtrlC: false,
       patchConsole: false,
