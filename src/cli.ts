@@ -269,91 +269,6 @@ const specsCommand = defineCommand({
   },
 })
 
-const brokerCommand = defineCommand({
-  meta: {
-    name: 'broker',
-    description: 'Control the optional user-level local Broker',
-  },
-  subCommands: {
-    start: defineCommand({
-      meta: {
-        name: 'start',
-        description: 'Start or reuse one compatible user-level Broker',
-      },
-      args: {
-        json: {
-          type: 'boolean',
-          description: 'Print machine-readable JSON output',
-          default: false,
-        },
-      },
-      async run({ args }: { args: { json: boolean } }) {
-        const { startBrokerCommand } = await import('./commands/broker.js')
-        const result = await startBrokerCommand({ json: Boolean(args.json) })
-        if (!result.ok)
-          process.exitCode = 1
-      },
-    }),
-    status: defineCommand({
-      meta: {
-        name: 'status',
-        description: 'Inspect Broker discovery, health, compatibility, and loaded-session count without starting it',
-      },
-      args: {
-        json: {
-          type: 'boolean',
-          description: 'Print machine-readable JSON output',
-          default: false,
-        },
-      },
-      async run({ args }: { args: { json: boolean } }) {
-        const { statusBrokerCommand } = await import('./commands/broker.js')
-        const result = await statusBrokerCommand({ json: Boolean(args.json) })
-        if (!result.ok)
-          process.exitCode = 1
-      },
-    }),
-    stop: defineCommand({
-      meta: {
-        name: 'stop',
-        description: 'Stop the healthy compatible Broker through its owned loopback endpoint',
-      },
-      args: {
-        json: {
-          type: 'boolean',
-          description: 'Print machine-readable JSON output',
-          default: false,
-        },
-      },
-      async run({ args }: { args: { json: boolean } }) {
-        const { stopBrokerCommand } = await import('./commands/broker.js')
-        const result = await stopBrokerCommand({ json: Boolean(args.json) })
-        if (!result.ok)
-          process.exitCode = 1
-      },
-    }),
-    restart: defineCommand({
-      meta: {
-        name: 'restart',
-        description: 'Replace one verified same-protocol-major Broker with a fresh compatible process',
-      },
-      args: {
-        json: {
-          type: 'boolean',
-          description: 'Print machine-readable JSON output',
-          default: false,
-        },
-      },
-      async run({ args }: { args: { json: boolean } }) {
-        const { restartBrokerCommand } = await import('./commands/broker.js')
-        const result = await restartBrokerCommand({ json: Boolean(args.json) })
-        if (!result.ok)
-          process.exitCode = 1
-      },
-    }),
-  },
-})
-
 const workspaceCommand = defineCommand({
   meta: {
     name: 'workspace',
@@ -1112,7 +1027,6 @@ export async function runCli(rawArgs = process.argv.slice(2)) {
       init: initCommand,
       add: addCommand,
       specs: specsCommand,
-      broker: brokerCommand,
       workspace: workspaceCommand,
       land: landCommand,
       commit: commitCommand,

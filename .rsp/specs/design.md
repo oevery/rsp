@@ -10,7 +10,6 @@
 - The canonical domain Specs are:
   - [Core Model](./core-model.md): artifacts, WorkRefs, Change Groups, lifecycle, dependencies, focus, and durable writeback.
   - [CLI Contracts](./cli-contracts.md): deterministic commands, filesystem safety, inspection, JSON, history, indexes, and repair.
-  - [Local Runtime and Broker](./runtime.md): optional user-level Broker discovery, compatibility, checkout sessions, transport security, disposable runtime state, and bounded managed-observation projections.
   - [Skill System](./skill-system.md): the default fourteen-Skill suite, optional project Skills, orthogonal distribution/role/invocation classification, composition, progressive disclosure, Core-owned ready-owner routing, isolated workspace and landing boundaries, bounded managed execution-frontier behavior, and authority boundaries.
   - [Skill Control Model](./skill-control-model.md): canonical transient route, work-owner, frontier, stop/resume, acceptance, and closeout vocabulary shared across Core, Shape, Disciplines, and Manage.
   - [Interactive TUI](./tui.md): dashboard routing, state, presentation, localization, history, layout, and terminal lifecycle.
@@ -30,7 +29,6 @@
 | --- | --- | --- |
 | Product runtime | `src/`, `bin/` | CLI registration, commands, domain interpretation, status/history inspection, filesystem safety, diagnostics, and interactive UI |
 | Product distribution | `rules/`, `skills/` | Bundled fallback source, the default fourteen-Skill suite, and independently installed optional project Skills |
-| Retained Web source | `src/web/`, `web/src/` | Non-delivered projection and browser sources retained for possible future re-evaluation |
 | Project host integration | `.agents/skills/` | Live published-Skill projections and maintainer-only research capability |
 | Maintainer tooling | `scripts/` | Deterministic repository and upstream maintenance workflows |
 | Public guidance | `docs/site/` | Paired English and Simplified Chinese user guides rendered by VitePress |
@@ -46,9 +44,7 @@ Key runtime owners:
 - `src/status/` owns the internal project snapshot, filesystem-backed inspection, pure derivation, exact public JSON adapter, and plain presentation.
 - `src/history/` owns presentation-neutral archive-history inspection, validation, filtering, bounds, and detail projection.
 - `src/specs/` owns presentation-neutral current-file Specs and Decision Record inspection, tree/detail/search projections, bounds, diagnostics, source identity, and generated-index migration classification.
-- `src/commands/specs-index-migration.ts` owns recognized-only generated Specs-index removal, quarantine/postcheck, and rollback; `src/commands/doctor-runtime.ts` owns non-starting Broker/runtime/context diagnostics and bounded recovery guidance.
-- `src/broker/` owns optional user-level discovery, compatibility, process lifecycle, exact checkout identity, isolated lazy sessions, loopback HTTP/SSE transport, tokens, and path scoping; it owns no repository semantics or workflow authority.
-- `src/web/` and `web/src/` retain bounded projection and browser implementation sources, but the default build, package, CLI, and Broker do not expose them as a supported product surface.
+- `src/commands/specs-index-migration.ts` owns recognized-only generated Specs-index removal, quarantine/postcheck, and rollback.
 - `src/workspace/` owns isolated Git worktree records, bounded fact inspection, recoverable host-activity registration and cooperative resource leases, exact local landing, and safe disposal; project-semantic planning and command execution remain outside the CLI.
 - `src/tui/` owns interactive routing state, Ink presentation, localization, layout, and terminal lifecycle.
 - `scripts/upstreams.mjs`, `.agents/skills/distill-upstream/`, and `research/` are maintainer-only owners; `rules/rsp-rules.md` and `skills/` are published sources.
@@ -56,8 +52,7 @@ Key runtime owners:
 ## Dependency Direction
 - `bin/` loads built runtime. CLI registration delegates to commands, which use domain interpretation and core filesystem/output support.
 - Status may depend on core, while core does not depend on status. Pure status derivation and presenters do not inspect the filesystem or depend on commands or TUI.
-- Broker coordination may depend on core configuration and the shared process-identity adapter. Core, status, history, Specs, lifecycle, and Git commands do not depend on Broker startup or session state.
-- TUI and Broker adapters may depend on presentation-neutral status, history, Specs, and runtime seams and types; those domain modules and core do not depend on presenters. Retained Web sources may depend on those presentation-neutral seams but do not enter the default build or package. Ink and Yoga remain isolated to lazy terminal paths and all presentation dependencies stay outside ordinary command evaluation.
+- The TUI may depend on presentation-neutral status, history, and Specs seams; those domain modules and core do not depend on presenters. Ink and Yoga remain isolated to lazy terminal paths and all presentation dependencies stay outside ordinary command evaluation.
 - Product runtime does not import research, caches, host Skill projections, self-hosting `.rsp/` state, or maintainer-only scripts.
 - Published rules and Skills operate without a source checkout, research corpus, or upstream cache.
 - Maintainer tooling and research may inspect product artifacts but reach product surfaces only through a selected normal RSP Change.

@@ -6,7 +6,7 @@ import { existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSyn
 import { tmpdir } from 'node:os'
 import { basename, dirname, join, relative, resolve, sep } from 'node:path'
 import process from 'node:process'
-import { fileURLToPath, pathToFileURL } from 'node:url'
+import { fileURLToPath } from 'node:url'
 import { parse as parseYaml } from 'yaml'
 
 const EXPECTED_DEFAULT_SKILLS = [
@@ -63,10 +63,7 @@ const EXPECTED_SHAPE_REFERENCES = [
   'external-issue-input.md',
 ]
 const EXPECTED_DIST_ENTRIES = [
-  'dist/broker-daemon.mjs',
   'dist/cli.mjs',
-  'dist/manage-runtime.mjs',
-  'dist/runtime-store.mjs',
 ]
 const EXPECTED_STATIC_PACKAGE_FILES = [
   'LICENSE',
@@ -113,187 +110,12 @@ function runResult(command, args, options = {}) {
   })
 }
 
-function processExists(pid) {
-  try {
-    process.kill(pid, 0)
-    return true
-  }
-  catch (error) {
-    if (error?.code === 'ESRCH')
-      return false
-    throw error
-  }
-}
-
-function waitForProcessExit(pid, timeoutMs = 2000) {
-  const deadline = Date.now() + timeoutMs
-  const sleeper = new Int32Array(new SharedArrayBuffer(4))
-  while (Date.now() < deadline) {
-    if (!processExists(pid))
-      return true
-    Atomics.wait(sleeper, 0, 0, 25)
-  }
-  return !processExists(pid)
-}
-
 function parseJsonIfPossible(content) {
   try {
     return JSON.parse(content)
   }
   catch {
     return undefined
-  }
-}
-
-function boundedProcessDiagnostic(content) {
-  const redacted = String(content ?? '')
-    .trim()
-    .replace(/Bearer\s+[\w.~+/=-]+/giu, 'Bearer [redacted]')
-    .replace(/("(?:accessToken|bootstrapToken|controlToken|webToken)"\s*:\s*)"[^"]*"/giu, '$1"[redacted]"')
-  const maximum = 4096
-  return redacted.length <= maximum
-    ? redacted
-    : `${redacted.slice(0, maximum)}…[truncated ${redacted.length - maximum} chars]`
-}
-
-function processFailureDiagnostic(result) {
-  return [
-    `status=${result.status ?? 'null'}`,
-    `signal=${result.signal ?? 'none'}`,
-    `stdout=${JSON.stringify(boundedProcessDiagnostic(result.stdout))}`,
-    `stderr=${JSON.stringify(boundedProcessDiagnostic(result.stderr))}`,
-  ].join('; ')
-}
-
-function recordBrokerPidFromOutput(content) {
-  const pid = parseJsonIfPossible(content)?.broker?.pid
-  if (!Number.isSafeInteger(pid) || pid <= 0)
-    return undefined
-  const observationPath = process.env.RSP_PACKAGE_CHECK_TEST_BROKER_PID_FILE
-  if (observationPath)
-    writeFileSync(observationPath, `${pid}\n`)
-  return pid
-}
-
-function brokerStartOutputForValidation(content) {
-  const injection = process.env.RSP_PACKAGE_CHECK_TEST_BROKER_START_OUTPUT
-  if (!injection)
-    return content
-  if (injection === 'invalid-json')
-    return '{'
-  if (injection === 'invalid-fields') {
-    const output = parseJsonIfPossible(content)
-    return JSON.stringify({ ...output, state: 'invalid' })
-  }
-  fail(`Unsupported Broker start output test injection: ${injection}`)
-}
-
-function runInstalledBrokerSurfaceSmoke(options) {
-  const result = runResult(process.execPath, [
-    '--input-type=module',
-    '--eval',
-    [
-      'const { readFile } = await import("node:fs/promises")',
-      'const record = JSON.parse(await readFile(process.env.RSP_BROKER_DISCOVERY, "utf8"))',
-      'const endpoint = record.endpoint',
-      'const request = async (path, init = {}) => {',
-      '  const response = await fetch(endpoint + path, { redirect: "error", ...init })',
-      '  const value = await response.json().catch(() => null)',
-      '  return { response, value }',
-      '}',
-      'const controlHeaders = { Authorization: "Bearer " + record.controlToken }',
-      'const health = await request("/v1/health", { headers: controlHeaders })',
-      'const registered = await request("/v1/projects/register", {',
-      '  method: "POST",',
-      '  headers: { ...controlHeaders, "Content-Type": "application/json" },',
-      '  body: JSON.stringify({ root: process.env.RSP_BROKER_PROJECT_ROOT }),',
-      '})',
-      'if (registered.response.status !== 200 || registered.value?.ok !== true)',
-      '  throw new Error("project registration failed")',
-      'const projectId = registered.value.project.projectId',
-      'const accessToken = registered.value.accessToken',
-      'const projectHeaders = { Authorization: "Bearer " + accessToken }',
-      'const project = await request("/v1/projects/" + projectId, { headers: projectHeaders })',
-      'const capability = await request("/v1/projects/" + projectId + "/runtime/manage/capability", { headers: projectHeaders })',
-      'const observed = await request("/v1/projects/" + projectId + "/runtime/manage", {',
-      '  method: "POST",',
-      '  headers: { ...projectHeaders, "Content-Type": "application/json" },',
-      '  body: JSON.stringify({ operation: "observe-run", input: {',
-      '    runId: "package-broker-run", runKey: "package-broker-run-key", workRef: "package-smoke",',
-      '    managerId: "package-broker-manager", eventId: "package-broker-event",',
-      '    idempotencyKey: "package-broker-event-key", phase: "verification",',
-      '    authorityRefs: ["AGENTS.md"], evidenceRefs: ["package-broker-smoke"],',
-      '  } }),',
-      '})',
-      'const projected = await request("/v1/projects/" + projectId + "/runtime/manage", {',
-      '  method: "POST",',
-      '  headers: { ...projectHeaders, "Content-Type": "application/json" },',
-      '  body: JSON.stringify({ operation: "project-run", input: { runId: "package-broker-run" } }),',
-      '})',
-      'const legacyWebRoutes = [',
-      '  { method: "GET", path: "/web/" + projectId + "/" },',
-      '  { method: "GET", path: "/web/assets/app.css" },',
-      '  { method: "GET", path: "/web/assets/app.js" },',
-      '  { method: "POST", path: "/v1/web/bootstrap" },',
-      '  { method: "POST", path: "/v1/projects/" + projectId + "/web/bootstrap" },',
-      '  { method: "GET", path: "/v1/web/projects/" + projectId + "/snapshot" },',
-      '  { method: "POST", path: "/v1/web/projects/" + projectId + "/refresh" },',
-      '  { method: "GET", path: "/v1/web/projects/" + projectId + "/session" },',
-      '  { method: "GET", path: "/v1/web/projects/" + projectId + "/specs/detail?path=.rsp%2Fspecs%2Fdesign.md" },',
-      '  { method: "GET", path: "/v1/web/projects/" + projectId + "/specs/search?q=runtime" },',
-      '  { method: "GET", path: "/v1/web/projects/" + projectId + "/history/detail?historyId=legacy-history" },',
-      '  { method: "GET", path: "/v1/web/projects/" + projectId + "/runs/detail?runId=legacy-run" },',
-      '  { method: "GET", path: "/v1/web/projects/" + projectId + "/events" },',
-      ']',
-      'const absentRoutes = []',
-      'for (const route of legacyWebRoutes) {',
-      '  const projectScoped = route.path.startsWith("/v1/projects/") || route.path.startsWith("/v1/web/projects/")',
-      '  const bootstrapExchange = route.path === "/v1/web/bootstrap"',
-      '  const response = await fetch(endpoint + route.path, {',
-      '    method: route.method,',
-      '    headers: bootstrapExchange',
-      '      ? { "Content-Type": "application/json", Origin: endpoint }',
-      '      : projectScoped ? projectHeaders : {},',
-      '    ...(bootstrapExchange ? {',
-      '      body: JSON.stringify({ projectId, bootstrapToken: "x".repeat(32) }),',
-      '    } : {}),',
-      '    redirect: "error",',
-      '  })',
-      '  const value = await response.json().catch(() => null)',
-      '  absentRoutes.push({ status: response.status, code: value?.error?.code })',
-      '}',
-      'process.stdout.write(JSON.stringify({',
-      '  health: health.response.status,',
-      '  project: project.response.status,',
-      '  capability: capability.value?.capability?.name + "@" + capability.value?.capability?.version?.major + "." + capability.value?.capability?.version?.minor,',
-      '  observed: observed.response.status,',
-      '  projectedRunId: projected.value?.result?.run?.runId,',
-      '  webAbsent: absentRoutes.every(route => route.status === 404 && route.code === "broker_route_not_found"),',
-      '}))',
-    ].join('\n'),
-  ], {
-    cwd: options.projectRoot,
-    env: {
-      ...process.env,
-      RSP_BROKER_DISCOVERY: options.discovery,
-      RSP_BROKER_PROJECT_ROOT: options.projectRoot,
-    },
-  })
-  const output = result.status === 0 ? parseJsonIfPossible(result.stdout) : null
-  if (result.status !== 0
-    || output?.health !== 200
-    || output?.project !== 200
-    || output?.capability !== 'rsp.manage-runtime@1.0'
-    || output?.observed !== 200
-    || output?.projectedRunId !== 'package-broker-run'
-    || output?.webAbsent !== true) {
-    fail(`Installed Broker surface smoke failed: ${processFailureDiagnostic(result)}`)
-  }
-  return {
-    health: true,
-    project: true,
-    runtimeManage: true,
-    webAbsent: true,
   }
 }
 
@@ -455,12 +277,12 @@ function main() {
     const installedRoot = join(projectRoot, 'node_modules', '@oevery', 'rsp')
     const installedBin = join(installedRoot, 'bin', 'rsp.mjs')
     const help = run(process.execPath, [installedBin, '--help'], { cwd: projectRoot })
-    if (!help.includes('rsp') || /(?:^|\s)web(?:\s|$)/mu.test(help))
+    if (!help.includes('rsp') || /(?:^|\s)(?:broker|web)(?:\s|$)/mu.test(help))
       fail('Installed rsp executable did not return its help output')
-    const removedWebCommand = runResult(process.execPath, [installedBin, 'web', '--json'], { cwd: projectRoot })
-    if (removedWebCommand.status === 0
-      || parseJsonIfPossible(removedWebCommand.stdout)?.command === 'web') {
-      fail('Installed rsp unexpectedly exposes the removed Web command')
+    for (const removedCommand of ['broker', 'web']) {
+      const result = runResult(process.execPath, [installedBin, removedCommand, '--json'], { cwd: projectRoot })
+      if (result.status === 0 || parseJsonIfPossible(result.stdout)?.command === removedCommand)
+        fail(`Installed rsp unexpectedly exposes the removed ${removedCommand} command`)
     }
     const version = run(process.execPath, [installedBin, '--version'], { cwd: projectRoot })
     if (version !== packResult.version)
@@ -502,250 +324,6 @@ function main() {
     }
     if (existsSync(join(projectRoot, '.rsp', 'specs', '00-index.md')))
       fail('Installed rsp init unexpectedly created a generated Specs index')
-    if (!existsSync(join(installedRoot, 'dist', 'broker-daemon.mjs')))
-      fail('Installed package is missing the Broker daemon entry')
-    const installedRuntimeEntry = join(installedRoot, 'dist', 'runtime-store.mjs')
-    if (!existsSync(installedRuntimeEntry))
-      fail('Installed package is missing the runtime store entry')
-    const installedManageRuntimeEntry = join(installedRoot, 'dist', 'manage-runtime.mjs')
-    if (!existsSync(installedManageRuntimeEntry))
-      fail('Installed package is missing the managed runtime entry')
-
-    const projectIdentity = lstatSync(projectRoot)
-    const runtimeProject = {
-      root: projectRoot,
-      filesystem: {
-        device: String(projectIdentity.dev),
-        inode: String(projectIdentity.ino),
-      },
-    }
-    const runtimeSmoke = runResult(process.execPath, [
-      '--input-type=module',
-      '--eval',
-      [
-        'const runtime = await import(process.env.RSP_PACKAGE_RUNTIME_ENTRY)',
-        'const manage = await import(process.env.RSP_PACKAGE_MANAGE_RUNTIME_ENTRY)',
-        'const options = JSON.parse(process.env.RSP_PACKAGE_RUNTIME_OPTIONS)',
-        'const target = await runtime.resolveRuntimeDisposalTarget({ cwd: options.project.root, cacheRoot: options.cacheRoot })',
-        'const project = { ...options.project, projectId: target.projectId }',
-        'const store = await runtime.openRuntimeEventStore({ namespacePath: target.namespacePath, project })',
-        'store.ensureRun({ runId: "package-run", runKey: "package-run-key", workRef: "package-smoke" })',
-        'store.appendEvent({',
-        '  runId: "package-run",',
-        '  eventId: "package-event",',
-        '  idempotencyKey: "package-event-key",',
-        '  kind: "package-smoke",',
-        '  actorType: "system",',
-        '  actorId: "package-check",',
-        '  payload: { retained: true },',
-        '})',
-        'const projection = store.projectRun("package-run")',
-        'const capability = manage.createStoreManageRuntimeCapability(store)',
-        'const managed = await capability.observeRun({',
-        '  runId: "package-manage-run",',
-        '  runKey: "package-manage-run-key",',
-        '  workRef: "package-smoke",',
-        '  managerId: "package-manager",',
-        '  eventId: "package-manage-event",',
-        '  idempotencyKey: "package-manage-event-key",',
-        '  phase: "implementation",',
-        '  authorityRefs: ["AGENTS.md"],',
-        '  evidenceRefs: ["package-smoke"],',
-        '})',
-        'const managedProjection = await capability.projectRun(managed.run.runId)',
-        'store.close()',
-        'const inspection = await runtime.inspectRuntimeDatabase(target.namespacePath, project)',
-        'const removed = await runtime.disposeRuntimeDatabase(target)',
-        'const after = await runtime.inspectRuntimeDatabase(target.namespacePath, project)',
-        'process.stdout.write(JSON.stringify({',
-        '  schema: inspection.schema,',
-        '  supportedSchemaVersion: runtime.RUNTIME_STORE_SCHEMA_VERSION,',
-        '  state: inspection.state,',
-        '  eventCount: projection.events.length,',
-        '  manageCapability: capability.descriptor.name + "@" + capability.descriptor.version.major + "." + capability.descriptor.version.minor,',
-        '  manageRunId: managedProjection.run?.runId,',
-        '  manageSourceSequence: managedProjection.freshness.sourceSequence,',
-        '  removed: removed.length,',
-        '  after: after.state,',
-        '}))',
-      ].join('\n'),
-    ], {
-      cwd: projectRoot,
-      env: {
-        ...process.env,
-        RSP_PACKAGE_MANAGE_RUNTIME_ENTRY: pathToFileURL(installedManageRuntimeEntry).href,
-        RSP_PACKAGE_RUNTIME_ENTRY: pathToFileURL(installedRuntimeEntry).href,
-        RSP_PACKAGE_RUNTIME_OPTIONS: JSON.stringify({
-          cacheRoot: workspace,
-          project: runtimeProject,
-        }),
-      },
-    })
-    const runtimeSmokeOutput = runtimeSmoke.status === 0
-      ? parseJsonIfPossible(runtimeSmoke.stdout)
-      : null
-    if (runtimeSmoke.status !== 0
-      || runtimeSmokeOutput?.state !== 'ready'
-      || runtimeSmokeOutput?.schema?.major !== 1
-      || runtimeSmokeOutput?.schema?.version !== runtimeSmokeOutput?.supportedSchemaVersion
-      || runtimeSmokeOutput?.eventCount !== 1
-      || runtimeSmokeOutput?.manageCapability !== 'rsp.manage-runtime@1.0'
-      || runtimeSmokeOutput?.manageRunId !== 'package-manage-run'
-      || runtimeSmokeOutput?.manageSourceSequence !== 1
-      || runtimeSmokeOutput?.removed < 1
-      || runtimeSmokeOutput?.after !== 'absent') {
-      fail(`Installed runtime store smoke failed: ${runtimeSmoke.stderr.trim()}`)
-    }
-
-    const runtimeDisabledNamespace = join(workspace, 'runtime-disabled-smoke')
-    mkdirSync(runtimeDisabledNamespace)
-    const disabledRuntime = runResult(process.execPath, [
-      '--no-experimental-sqlite',
-      '--input-type=module',
-      '--eval',
-      [
-        'const runtime = await import(process.env.RSP_PACKAGE_RUNTIME_ENTRY)',
-        'const options = JSON.parse(process.env.RSP_PACKAGE_RUNTIME_OPTIONS)',
-        'try {',
-        '  await runtime.openRuntimeEventStore(options)',
-        '  process.stdout.write(JSON.stringify({ opened: true }))',
-        '} catch (error) {',
-        '  process.stdout.write(JSON.stringify({ code: error.code }))',
-        '}',
-      ].join('\n'),
-    ], {
-      cwd: projectRoot,
-      env: {
-        ...process.env,
-        RSP_PACKAGE_RUNTIME_ENTRY: pathToFileURL(installedRuntimeEntry).href,
-        RSP_PACKAGE_RUNTIME_OPTIONS: JSON.stringify({
-          namespacePath: runtimeDisabledNamespace,
-          project: {
-            ...runtimeProject,
-            projectId: '0'.repeat(64),
-          },
-        }),
-      },
-    })
-    const disabledRuntimeOutput = disabledRuntime.status === 0
-      ? parseJsonIfPossible(disabledRuntime.stdout)
-      : null
-    if (disabledRuntime.status !== 0
-      || disabledRuntimeOutput?.code !== 'runtime_sqlite_unavailable'
-      || existsSync(join(runtimeDisabledNamespace, 'runtime-v1.sqlite'))) {
-      fail(`Installed runtime did not fail closed when node:sqlite was disabled: ${disabledRuntime.stderr.trim()}`)
-    }
-    const statusWithoutSqlite = runResult(process.execPath, [
-      '--no-experimental-sqlite',
-      installedBin,
-      'status',
-      '--json',
-    ], { cwd: projectRoot })
-    if (statusWithoutSqlite.status !== 0
-      || parseJsonIfPossible(statusWithoutSqlite.stdout)?.command !== 'status') {
-      fail('Installed ordinary CLI did not remain usable when node:sqlite was disabled')
-    }
-
-    const brokerCacheRoot = join(workspace, 'broker-cache')
-    const brokerEnvironment = {
-      ...process.env,
-      RSP_BROKER_CACHE_HOME: brokerCacheRoot,
-      RSP_BROKER_IDLE_MS: process.env.RSP_PACKAGE_CHECK_TEST_BROKER_IDLE_MS || '50',
-    }
-    let brokerCleanupArmed = false
-    let brokerPid
-    let brokerLifecycle
-    let brokerSurface
-    try {
-      const brokerBefore = runResult(process.execPath, [installedBin, 'broker', 'status', '--json'], {
-        cwd: projectRoot,
-        env: brokerEnvironment,
-      })
-      const brokerBeforeOutput = brokerBefore.status === 0 ? JSON.parse(brokerBefore.stdout) : null
-      if (brokerBefore.status !== 0 || brokerBeforeOutput?.state !== 'absent' || existsSync(brokerCacheRoot))
-        fail('Installed rsp broker status did not remain absent and cache-free')
-
-      brokerCleanupArmed = true
-      const brokerStart = runResult(process.execPath, [installedBin, 'broker', 'start', '--json'], {
-        cwd: projectRoot,
-        env: brokerEnvironment,
-      })
-      const brokerStartStdout = brokerStartOutputForValidation(brokerStart.stdout)
-      brokerPid = recordBrokerPidFromOutput(brokerStartStdout)
-      if (brokerStart.status !== 0)
-        fail(`Installed rsp broker start failed: ${brokerStart.stderr.trim()}`)
-      const brokerStartOutput = parseJsonIfPossible(brokerStartStdout)
-      if (!brokerStartOutput)
-        fail('Installed rsp broker start did not return valid JSON')
-      if (brokerStartOutput.state !== 'running'
-        || brokerStartOutput?.reused !== false
-        || typeof brokerStartOutput?.broker?.instanceId !== 'string') {
-        fail(`Installed rsp broker start failed: ${brokerStart.stderr.trim()}`)
-      }
-
-      const brokerStatus = runResult(process.execPath, [installedBin, 'broker', 'status', '--json'], {
-        cwd: projectRoot,
-        env: brokerEnvironment,
-      })
-      const brokerStatusOutput = brokerStatus.status === 0 ? JSON.parse(brokerStatus.stdout) : null
-      if (brokerStatus.status !== 0
-        || brokerStatusOutput?.state !== 'running'
-        || brokerStatusOutput?.broker?.instanceId !== brokerStartOutput.broker.instanceId) {
-        fail('Installed rsp broker status did not reuse the started Broker identity')
-      }
-
-      brokerSurface = runInstalledBrokerSurfaceSmoke({
-        discovery: join(brokerCacheRoot, 'discovery.json'),
-        projectRoot,
-      })
-
-      const brokerStop = runResult(process.execPath, [installedBin, 'broker', 'stop', '--json'], {
-        cwd: projectRoot,
-        env: brokerEnvironment,
-      })
-      const brokerStopOutput = brokerStop.status === 0 ? JSON.parse(brokerStop.stdout) : null
-      if (brokerStop.status !== 0 || brokerStopOutput?.stopped !== true)
-        fail(`Installed rsp broker stop failed: ${brokerStop.stderr.trim()}`)
-      if (!Number.isSafeInteger(brokerPid) || !waitForProcessExit(brokerPid))
-        fail('Installed rsp broker process remained alive after explicit stop')
-
-      const brokerAfter = runResult(process.execPath, [installedBin, 'broker', 'status', '--json'], {
-        cwd: projectRoot,
-        env: brokerEnvironment,
-      })
-      const brokerAfterOutput = brokerAfter.status === 0 ? JSON.parse(brokerAfter.stdout) : null
-      if (brokerAfter.status !== 0
-        || brokerAfterOutput?.state !== 'absent'
-        || existsSync(join(brokerCacheRoot, 'discovery.json'))) {
-        fail('Installed rsp broker shutdown did not remove its owned discovery metadata')
-      }
-      brokerLifecycle = {
-        before: brokerBeforeOutput.state,
-        start: brokerStartOutput.state,
-        reused: brokerStartOutput.reused,
-        status: brokerStatusOutput.state,
-        stop: brokerStopOutput.stopped,
-        processExited: true,
-        after: brokerAfterOutput.state,
-      }
-    }
-    finally {
-      if (brokerCleanupArmed) {
-        if (!Number.isSafeInteger(brokerPid)) {
-          const cleanupStatus = runResult(process.execPath, [installedBin, 'broker', 'status', '--json'], {
-            cwd: projectRoot,
-            env: brokerEnvironment,
-          })
-          brokerPid = recordBrokerPidFromOutput(cleanupStatus.stdout)
-        }
-        runResult(process.execPath, [installedBin, 'broker', 'stop', '--json'], {
-          cwd: projectRoot,
-          env: brokerEnvironment,
-        })
-        if (Number.isSafeInteger(brokerPid))
-          waitForProcessExit(brokerPid)
-      }
-    }
     const nonTtyUi = runResult(process.execPath, [installedBin, 'ui'], { cwd: projectRoot, env: { ...process.env, CI: 'false', TERM: 'xterm-256color' } })
     const invalidLocale = runResult(process.execPath, [installedBin, 'ui', '--lang', 'fr'], { cwd: projectRoot, env: { ...process.env, CI: 'false', TERM: 'xterm-256color' } })
     const expectedNonTtyError = '  Error: rsp ui requires an interactive terminal; use rsp status or rsp status --json instead\n'
@@ -824,22 +402,10 @@ function main() {
         optionalSkillInstallIdempotent: true,
         statusJson: true,
         specsJson: true,
-        runtimeStore: {
-          schema: `${runtimeSmokeOutput.schema.major}.${runtimeSmokeOutput.schema.version}`,
-          eventCount: runtimeSmokeOutput.eventCount,
-          manageCapability: runtimeSmokeOutput.manageCapability,
-          manageRunId: runtimeSmokeOutput.manageRunId,
-          manageSourceSequence: runtimeSmokeOutput.manageSourceSequence,
-          disposal: runtimeSmokeOutput.after,
-          sqliteDisabled: disabledRuntimeOutput.code,
-          ordinaryCliWithoutSqlite: true,
-        },
-        brokerLifecycle,
-        brokerSurface,
-        webCommandAbsent: true,
+        deferredCommandsAbsent: ['broker', 'web'],
         compatibilityBoundary: {
           nodeEngine: installedManifest.engines.node,
-          webOnlyProductionDependenciesAbsent: true,
+          deferredIntegrationDependenciesAbsent: true,
         },
         nonTtyUi: { exitCode: nonTtyUi.status, stderr: nonTtyUi.stderr.trim() },
         invalidLocale: { exitCode: invalidLocale.status, stderr: invalidLocale.stderr.trim() },

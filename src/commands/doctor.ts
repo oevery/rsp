@@ -14,7 +14,6 @@ import { inspectManagedFile } from '../core/managed-path.js'
 import { emitJson, recordRuntimeDiagnostic, toErrorMessage } from '../core/output.js'
 import { GROUP_BRIEF_FILENAME, inspectArchiveTree, inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 import { inspectSpecs, specsInspectionComplete } from '../specs/query.js'
-import { inspectDoctorRuntime } from './doctor-runtime.js'
 import { updateProject, UpdateTransactionError } from './update.js'
 
 interface DoctorCheck {
@@ -91,28 +90,6 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
     await checkInactiveDefaultDecisionRecords(checks, reportRuntime)
   }
   await checkActiveChangeConsistency(checks)
-  try {
-    const runtimeInspection = await inspectDoctorRuntime()
-    checks.push(...runtimeInspection.checks)
-    runtime.push(...runtimeInspection.runtime)
-  }
-  catch (error) {
-    const message = toErrorMessage(error)
-    reportRuntime({
-      code: 'doctor_runtime_inspection_failed',
-      operation: 'inspectDoctorRuntime',
-      path: '.',
-      message,
-    })
-    checks.push({
-      status: 'issue',
-      code: 'doctor_runtime_inspection_failed',
-      label: 'optional Broker and runtime cache are inspectable',
-      message,
-      hint: 'Preserve the cache for diagnostics, restore exact path access, and rerun rsp doctor. Do not start Broker or delete cache state as a repair guess.',
-    })
-  }
-
   const result: DoctorResult = {
     command: 'doctor',
     ok: checks.every(check => check.status !== 'issue'),

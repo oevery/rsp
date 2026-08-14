@@ -82,13 +82,9 @@
 - Specialist Disciplines and managed lanes retain their own exact result schemas. The control model does not replace Diagnose, Inspect, Fix, Verify, Review, or Resolve Findings results with a generic execution enum.
 - Only a missing optional Discipline Skill may use that Discipline's bounded manual fallback against the same owner. A manual fallback never substitutes for a required managed worker or required independent Verify.
 - A managed WorkerEnvelope and its receipt are transient execution evidence. Every envelope carries the response language and the localized control-narration rule: human-facing receipt narration uses that response language, while an exact result value remains unchanged only as a secondary parenthesized or code-formatted token. Private Inspect uses the managed contract directly; managed Verify consumes the `rsp-verify` result and appends worker identity and independence.
-- When a host exposes the optional `rsp.manage-runtime@1.0` capability, Core may pass it only after initial Manage selection and Manage may append run and exact host-returned dispatch correlation to an envelope or receipt. Capability discovery, correlation, observations, diagnostics, projections, and context hydration are transient operational evidence; they never qualify Manage or alter the canonical envelope, receipt, lane result, stop, acceptance, or closeout contract.
-- Every newly committed managed observation boundary, including dispatch, advances one transactional run sequence; a duplicate retains its original sequence. A worker-authored event requires an existing exact dispatch and matching worker identity. A terminal-delivery projection requires a host-confirmed terminal boundary, at least one observed dispatch, and non-missing, non-unavailable, non-boundary-changing receipts for all observed dispatches; it is non-authoritative delivery history, not completion or acceptance.
 - A same-goal receipt whose WorkRef, topology, route, scope, behavior, acceptance, interface, and authority remain unchanged is revalidated inside Manage. It does not return to Core merely to repeat route selection or qualification.
 - A required worker obligation is satisfied only when the worker was actually created and returned a valid result within its declared authority and schema.
 - A required worker that cannot be created, returns no valid receipt, reports unavailable or changed boundaries, or cannot satisfy required independent verification produces `capability-unavailable` or the more specific evidenced stop and keeps acceptance `incomplete`. The controller cannot replace the missing receipt with an assumption, a generic manual fallback, or its own undeclared work.
-- Runtime absence or observation failure is distinct from required worker unavailability. It yields diagnostics only; Manage continues through the same no-runtime control path unless the actual host worker, verification, environment, owner, or authority boundary independently requires a stop.
-- On pause and resume, runtime context may retain bounded source-identified evidence summaries only. Context requests provide no caller clock; the runtime service owns packet timestamps and expiry. Resume always rereads current authority and validates the packet source sequence against the current committed run revision plus checkout, WorkRef, Git, dirty paths, authority, expiry, and complete source identities; any later committed observation makes the packet non-fresh, changed evidence is reread selectively, and authority or checkout drift forces full reread. Cached runtime history never overrides current authority.
 - Token counts, token limits, and token cost are not routing, dispatch, retry, authority, completion, acceptance, or closeout inputs.
 
 ## Acceptance and Closeout
@@ -123,7 +119,6 @@
 8. Closeout is derived only after acceptance and the durable writeback decision, never directly from execution progress.
 9. Lifecycle closeout precedes any eligible local commit; remote delivery remains explicit.
 10. Same-goal resume and receipts invalidate stale control claims and are revalidated inside Manage; only a true owner, topology, route, behavior, acceptance, interface, scope, or authority boundary returns to Core.
-11. Optional runtime observation occurs only after the semantic action it records and never becomes an input that authorizes or predicts a later semantic action.
 
 ## Boundaries
 - Core owns route derivation and rerouting.
@@ -131,6 +126,5 @@
 - Each Discipline owns its bounded action, exact result, and applicable stop.
 - Core owns initial Manage qualification and the `selected | declined` route result.
 - Manage owns selected-handoff validation, selected-goal execution-frontier derivation, worker acceptance, internal current-evidence revalidation, review convergence, acceptance derivation, lifecycle closeout, and commit eligibility and orchestration after selection; it does not repeat direct-versus-managed eligibility or perform Commit's exact Git procedure.
-- The host-neutral managed-runtime adapter owns only capability discovery, exact observation transport, correlation, bounded projections, diagnostics, and context hydration. It does not own any Core, Manage, Discipline, lifecycle, Git, or acceptance result.
 - Commit owns exact staging, message construction, one local commit, and post-commit observation for a Core- or Manage-derived boundary.
 - The selected Change or shallow Group remains the only durable work owner. Changes remain only `open` or `archived`.

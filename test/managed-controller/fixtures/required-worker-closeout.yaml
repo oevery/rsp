@@ -16,7 +16,7 @@ required_contract:
   - An execution receipt never derives `review-clean` directly
   - When dispatch cannot satisfy a required worker obligation, apply the AcceptanceDisposition rule above
   - 'return `StopDisposition: capability-unavailable`, keep acceptance `incomplete`, and stop'
-  - Absence of a dispatch event or receipt is never success
+  - Absence of a confirmed dispatch or receipt is never success
   - cannot be replaced by the controller claiming the worker's result
   - '`CloseoutEligibility` independently'
   - exactly `not-eligible`, `lifecycle-ready`, or `local-commit-ready`

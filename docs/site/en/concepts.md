@@ -26,21 +26,9 @@ Stable scoped workflow and validation instructions belong in the nearest project
 
 Direct Specs queries are read-only and service-independent. They identify Decision Records separately, return checkout and source-path attribution, and never make a query result authoritative over the source file. Fresh initialization and Spec creation generate no Specs indexes. During compatibility migration, `rsp update` and `rsp doctor --fix` remove only metadata-recognized reserved indexes after complete preflight and direct-query postcheck; owner-controlled reserved content fails closed and is preserved.
 
-## Optional runtime
+## Repository-native operation
 
-RSP can explicitly start one compatible user-level Broker for runtime capabilities. The Broker is a local loopback transport and lazy checkout-session host, not another workflow engine or source of truth. Each canonical repository or worktree receives a distinct project identity, in-memory access token, and disposable namespace; idle sessions unload without changing repository files.
-
-Ordinary CLI work remains service-independent. `rsp status`, `rsp check`, `rsp show`, `rsp ready`, `rsp specs`, lifecycle, Git, and repair commands do not start the Broker or create its cache. Protocol or runtime-schema incompatibility fails closed instead of creating an automatic side-by-side service.
-
-Doctor may inspect existing discovery, runtime, and bounded context state read-only. Stale context is disposable information, while incompatible or corrupt runtime state carries bounded recovery guidance. Repository migration never silently disposes cache state; explicit disposal is scoped to one resolved checkout namespace after the exact owner is closed.
-
-When a runtime operation needs retained observations, its Broker session lazily opens one checkout-scoped SQLite database. Dispatches, events, and receipts record what the runtime actually observed; every new boundary advances one committed run sequence while duplicate delivery retains the original effect and sequence. Guarded checkpoints and bounded context packets are disposable projections. The optional `rsp.manage-runtime@1.0` adapter correlates only host-confirmed managed runs, exact dispatch and worker identities, structured events and receipts, attention, pause/resume, an explicit terminal boundary, and bounded context. Worker events require an existing matching dispatch. Context save and hydration use only the runtime service clock, and a packet becomes stale after any later committed observation. It never parses worker prose, creates workers, schedules retries, or owns routing, acceptance, closeout, or Git.
-
-Managed run and attention projections return at most 32 source-referenced items and remain explicitly non-authoritative. Resume context is bounded to 12 KiB and 24 hours. Hydration always revalidates checkout, WorkRef, Git, dirty paths, authority, expiry, and complete source identities, rereads current authority pointers, and reloads changed evidence; authority or checkout drift requires a full reread. Removing or losing the database removes runtime convenience only—Markdown work, history, readiness, lifecycle, and no-runtime Manage behavior remain unchanged.
-
-The package installation and ordinary Markdown/CLI boundary is Node.js `>=22`. The optional runtime lazily uses the built-in `node:sqlite` module and requires Node.js `>=22.13.0`; it installs no native SQLite addon. An older Node 22 runtime or explicit SQLite disablement makes runtime opening fail with a precise diagnostic while ordinary CLI inspection remains available.
-
-The default package does not expose the retained Web Observatory source as a CLI command, Broker route, projector entry, or browser asset. Markdown artifacts, one-shot CLI queries, and optional runtime APIs remain the supported observation surfaces.
+RSP derives workflow state from repository Markdown and current checkout evidence. Its CLI, package, and Skills provide no daemon, database, host synchronization adapter, Web runtime, browser observatory, or hidden runtime state.
 
 ## One Change, one outcome
 

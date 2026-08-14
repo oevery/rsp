@@ -1,6 +1,6 @@
 # Five-minute start
 
-RSP requires Node.js 22 (`>=22`). The optional SQLite runtime requires Node.js `>=22.13.0`; setup, maintenance, and ordinary one-shot CLI commands do not open it. Use the current stable release for setup and maintenance commands.
+RSP requires Node.js 22 (`>=22`). Use the current stable release for setup and maintenance commands.
 
 ## Initialize a project
 

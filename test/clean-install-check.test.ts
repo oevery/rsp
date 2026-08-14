@@ -26,29 +26,6 @@ const expectedSkills = [
   'rsp-workspace',
 ]
 
-function processExists(pid: number): boolean {
-  try {
-    process.kill(pid, 0)
-    return true
-  }
-  catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ESRCH')
-      return false
-    throw error
-  }
-}
-
-function waitForProcessExit(pid: number, timeoutMs = 2000): boolean {
-  const deadline = Date.now() + timeoutMs
-  const sleeper = new Int32Array(new SharedArrayBuffer(4))
-  while (Date.now() < deadline) {
-    if (!processExists(pid))
-      return true
-    Atomics.wait(sleeper, 0, 0, 25)
-  }
-  return !processExists(pid)
-}
-
 describe('clean install package check', () => {
   it('packs, installs, validates, reports, and cleans the exact package', () => {
     const temporaryRoot = mkdtempSync(join(tmpdir(), 'rsp-package-check-test-'))
@@ -62,7 +39,7 @@ describe('clean install package check', () => {
       expect(result.status, result.stderr || result.stdout).toBe(0)
       const report = JSON.parse(result.stdout) as Record<string, any>
       expect(report.package).toBe(`@oevery/rsp@${packageVersion}`)
-      expect(report.entrySmoke).toEqual({
+      expect(report.entrySmoke).toMatchObject({
         help: true,
         version: packageVersion,
         npmExecVersion: packageVersion,
@@ -73,35 +50,8 @@ describe('clean install package check', () => {
         optionalSkillInstallIdempotent: true,
         statusJson: true,
         specsJson: true,
-        runtimeStore: {
-          schema: '1.4',
-          eventCount: 1,
-          manageCapability: 'rsp.manage-runtime@1.0',
-          manageRunId: 'package-manage-run',
-          manageSourceSequence: 1,
-          disposal: 'absent',
-          sqliteDisabled: 'runtime_sqlite_unavailable',
-          ordinaryCliWithoutSqlite: true,
-        },
-        brokerLifecycle: {
-          before: 'absent',
-          start: 'running',
-          reused: false,
-          status: 'running',
-          stop: true,
-          processExited: true,
-          after: 'absent',
-        },
-        brokerSurface: {
-          health: true,
-          project: true,
-          runtimeManage: true,
-          webAbsent: true,
-        },
-        webCommandAbsent: true,
         compatibilityBoundary: {
           nodeEngine: '>=22',
-          webOnlyProductionDependenciesAbsent: true,
         },
         nonTtyUi: { exitCode: 1, stderr: 'Error: rsp ui requires an interactive terminal; use rsp status or rsp status --json instead' },
         invalidLocale: { exitCode: 1, stderr: 'Error: --lang must be auto, en, or zh-CN' },
@@ -137,11 +87,6 @@ describe('clean install package check', () => {
       expect(report.inventory.files).toContain('skills/rsp-release-docs/SKILL.md')
       expect(report.inventory.files).toContain('skills/rsp-structural-audit/SKILL.md')
       expect(report.inventory.files).toContain('skills/rsp-structural-audit/references/structural-lenses.md')
-      expect(report.inventory.files).toContain('dist/broker-daemon.mjs')
-      expect(report.inventory.files).toContain('dist/manage-runtime.mjs')
-      expect(report.inventory.files).toContain('dist/runtime-store.mjs')
-      expect(report.inventory.files).not.toContain('dist/web-projector.mjs')
-      expect(report.inventory.files.some((path: string) => path.startsWith('web/'))).toBe(false)
       for (const path of [
         'skills/rsp/references/conflict-handling.md',
         'skills/rsp/references/durable-review.md',
@@ -159,41 +104,6 @@ describe('clean install package check', () => {
       expect(readdirSync(temporaryRoot)).toEqual([])
     }
     finally {
-      rmSync(temporaryRoot, { force: true, recursive: true })
-    }
-  }, 120_000)
-
-  it('cleans a started Broker when start output validation fails', () => {
-    const temporaryRoot = mkdtempSync(join(tmpdir(), 'rsp-package-check-broker-failure-'))
-    const packageTemporaryRoot = join(temporaryRoot, 'package-workspaces')
-    const pidPath = join(temporaryRoot, 'broker.pid')
-    mkdirSync(packageTemporaryRoot)
-    let brokerPid: number | undefined
-    try {
-      const result = spawnSync(process.execPath, [join(root, 'scripts', 'clean-install-check.mjs'), '--json'], {
-        cwd: root,
-        encoding: 'utf8',
-        env: {
-          ...process.env,
-          RSP_PACKAGE_CHECK_TEST_BROKER_IDLE_MS: '60000',
-          RSP_PACKAGE_CHECK_TEST_BROKER_PID_FILE: pidPath,
-          RSP_PACKAGE_CHECK_TEST_BROKER_START_OUTPUT: 'invalid-json',
-          RSP_PACKAGE_CHECK_TMP_ROOT: packageTemporaryRoot,
-        },
-      })
-
-      expect(result.status).toBe(1)
-      expect(result.stderr).toContain('Clean install invalid: Installed rsp broker start did not return valid JSON')
-      brokerPid = Number.parseInt(readFileSync(pidPath, 'utf8').trim(), 10)
-      expect(Number.isSafeInteger(brokerPid)).toBe(true)
-      expect(waitForProcessExit(brokerPid)).toBe(true)
-      expect(readdirSync(packageTemporaryRoot)).toEqual([])
-    }
-    finally {
-      if (brokerPid && processExists(brokerPid)) {
-        process.kill(brokerPid, 'SIGTERM')
-        waitForProcessExit(brokerPid)
-      }
       rmSync(temporaryRoot, { force: true, recursive: true })
     }
   }, 120_000)

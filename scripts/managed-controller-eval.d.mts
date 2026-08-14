@@ -33,7 +33,6 @@ export interface ManagedControllerHoldoutManifest extends ManagedControllerOutpu
   local_bare_remote?: boolean
   request: string
   required_changes?: string[]
-  runtime_observability?: ManagedControllerRuntimeObservability
   sandbox?: 'workspace-write' | 'danger-full-access'
   verification: string[]
   commit_message?: {
@@ -45,21 +44,6 @@ export interface ManagedControllerHoldoutManifest extends ManagedControllerOutpu
     subject_pattern: string
   }
 }
-
-export type ManagedControllerRuntimeObservability
-  = | {
-    state: 'available'
-    capability: 'rsp.manage-runtime@1.0'
-    run_id: string
-    dispatches: Array<{
-      dispatch_id: string
-      worker_id: string
-    }>
-  }
-  | {
-    state: 'absent'
-    diagnostic: string
-  }
 
 export interface PreparedManagedControllerRun {
   baseSha: string
