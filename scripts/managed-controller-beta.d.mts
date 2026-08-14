@@ -117,8 +117,12 @@ export function createManagedControllerBetaSummary(
   runs: ManagedControllerBetaRunSummary[],
 ): ManagedControllerBetaSummary
 export function runManagedControllerBeta(options?: {
+  authFile?: string
   effort?: string
+  isolatedUserContext?: boolean
   model?: string
+  modelCatalogJson?: string
+  openaiBaseUrl?: string
   outputRoot?: string
   provider?: string
   timeoutMs?: number

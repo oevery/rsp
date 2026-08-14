@@ -10,8 +10,8 @@ required_contract:
   - A missing optional managed-runtime capability never makes the handoff incomplete.
   - Observe a dispatch only after the host confirms actual worker creation and returns the exact worker and dispatch identities.
   - Every newly committed observation boundary, including dispatch, advances one transactional run sequence
-  - a worker event also requires that existing dispatch and exact worker identity
-  - Duplicate delivery remains one committed effect.
+  - records only host-confirmed run, dispatch, event, receipt, attention, pause, resume, terminal, and context observations
+  - duplicate delivery retains its original sequence and adds no semantic effect
   - Never parse natural-language worker output to manufacture an event, receipt, dispatch, result, or acceptance.
   - Runtime run and attention projections may summarize only committed observations with exact source sequence and references
   - A terminal-delivery observation may become true only after the host explicitly records the terminal run boundary

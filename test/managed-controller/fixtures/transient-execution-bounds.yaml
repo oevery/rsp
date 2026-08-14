@@ -4,12 +4,12 @@ sources:
   - skills/rsp-manage/references/review-convergence.md
   - skills/rsp/references/managed-routing.md
 evidence:
-  - Same-goal evidence receipts force internal Manage revalidation before later mutation.
+  - Same-scope receipts require changed-path and local-diff inspection before later mutation.
   - Dynamic dispatch capacity protects known required Fix and Verify work without fixed lane allocations.
   - Corrective retry requires new evidence and enough remaining capacity for decisive acceptance.
   - Controller execution state remains response-only and is never durable project state.
 required_contract:
-  - After every ordinary same-goal Fix, Verify, Review, or Resolve Findings receipt, re-read status, owner, authority, diff, blockers, and decisive evidence internally before any later mutation or dispatch
+  - Before accepting an ordinary same-scope receipt, inspect the actual changed paths against the envelope, inspect the local diff
   - Do not return to Core merely to repeat route selection or qualification
   - Total worker dispatch remains at most four
   - count one Fix when accepted mutation is still required and count one Verify when the declared acceptance risk or a failed correction still requires worker verification
@@ -23,9 +23,9 @@ required_contract:
   - A failure without new evidence, or a retry that cannot still be decisively verified, stops dispatch
   - Allow at most three Resolve Findings passes per Change, separate from the worker retry limit
   - Owner transitions do not reset either limit
-  - Keep frontier classification, lane choice, envelopes, receipts, dispatch and retry counts, concurrency reasoning, and resume chronology response-only
-  - Create no frontier file, ticket map, ledger, registry, ambient hook, or numeric routing score
-  - Never persist the goal envelope, WorkSet, waves, discovery classification, or transition chronology
+  - Keep frontier classification, lane choice, envelopes, receipts, dispatch and retry counts, concurrency reasoning, invalidation mapping, and resume chronology response-only
+  - Create no frontier file, ticket map, ledger, registry, dependency graph, ambient hook, or numeric routing score
+  - Never persist the goal envelope, WorkSet, waves, invalidation graph, or discovery classification
 prohibited_actions:
   - more than four worker dispatches
   - more than one corrective retry

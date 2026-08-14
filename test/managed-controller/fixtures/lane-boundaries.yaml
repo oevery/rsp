@@ -6,9 +6,9 @@ evidence:
   - Read-only overlap requires isolated paths and verification resources while Fix remains the sole writer.
   - Independent Verify is established only by a distinct worker identity and otherwise downgrades truthfully.
 required_contract:
-  - 'Every lane receives one transient `WorkerEnvelope` with these common fields: `WorkRef`, `lane`, `objective`, `current hypothesis` when one exists, `known evidence`, `allowed paths`, `allowed actions and commands`, `prohibited actions`, `comparison baseline`, `expected result schema`, `response language`, `localized control-narration rule`, and `stop conditions`'
-  - human-facing receipt prose in the response language
-  - preserves the exact result only as a secondary parenthesized or code-formatted token
+  - 'Every lane receives one minimal transient `WorkerEnvelope` with these common fields: `WorkRef`, `lane`, `objective`, exact `authority references`, `Read Set`, `Write Set`, `Verify Set`, bounded `known facts`, `allowed and prohibited actions`, and `stop conditions`'
+  - Human-facing narration follows the response language
+  - retains an exact canonical result secondarily when needed
   - private Inspect remains Manager-only
   - Diagnose reuses `rsp-diagnose` and remains read-only
   - Inspect is a private Manager-only read-only lane
@@ -19,8 +19,7 @@ required_contract:
   - Verify delegates its read-only result and evidence contract to `rsp-verify`
   - managed receipt appends `worker identity`
   - 'independence: established | unavailable'
-  - 'Every receipt contains these common fields: `WorkRef`, `lane objective`, `effective authority`, `result`, `decisive evidence`, and `stop boundary`'
-  - localize the primary result explanation and retain the exact result only as a secondary parenthesized or code-formatted token
+  - 'Every receipt contains `result`, `changed paths`, exact `verification` with command, scope, result, and omissions, plus `boundary: unchanged | changed`'
   - Independent Verify is established only when its worker identity and the accepted Fix worker identity are both available and different
   - 'record `independence: unavailable`; ordinary read-only Verify may still run, but Manager must not claim independent verification'
 prohibited_actions:

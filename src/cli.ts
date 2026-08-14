@@ -673,14 +673,18 @@ const focusCommand = defineCommand({
     description: 'Mark an existing change as currently focused in .rsp/focus.d/',
   },
   args: {
-    name: {
+    'name': {
       type: 'positional',
       description: 'Change name',
       required: true,
     },
+    'capsule-file': {
+      type: 'string',
+      description: 'Replace the focus capsule from a regular file or standard input (-)',
+    },
   },
-  async run({ args }: { args: { name: string } }) {
-    await focusChange(args.name)
+  async run({ args }: { args: { 'name': string, 'capsule-file'?: string } }) {
+    await focusChange(args.name, { capsuleFile: args['capsule-file'] })
   },
 })
 

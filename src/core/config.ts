@@ -21,8 +21,9 @@ export const RSP_RULES_PATH = join(RSP_DIR, 'rsp-rules.md')
 export const OBSOLETE_RSP_RULES_PATH = join(RSP_DIR, 'rules', 'rsp-rules.md')
 /** Open change storage directory. */
 export const CHANGES_DIR = join(RSP_DIR, 'changes')
-/** Current focus marker directory (empty marker files, path = change name). */
+/** Current focus marker directory (path = change name, optional bounded Markdown content). */
 export const FOCUS_DIR = join(RSP_DIR, 'focus.d')
+export const MAX_FOCUS_CAPSULE_BYTES = 4096
 /** Archived change storage directory. */
 export const ARCHIVES_DIR = join(RSP_DIR, 'archives')
 /** File lock path (prevents concurrent rsp operations). */

@@ -78,9 +78,9 @@ manage:
 - `explicit`：仅在明确请求时选择 Manage。
 - `auto`：在保留 Review、发布、隔离 Design 与完整小工作例外后，Core（核心协议）先解析 ready owner，再对其余非小型完成或继续请求进行 Manage 资格判断。
 
-Core 先把一个明确的 shape-ready Change 或浅层 Group 解析为 `WorkOwner`，并独占首次 Manage 资格判断及 `selected | declined` 路由结果。缺少或未就绪的归属在独立规划产物权限下直接进入 Shape；Shape 把 ready WorkOwner 返回 Core 重新路由，绝不直接恢复 Manage。Manage 一旦被选中，只校验 handoff 完整性以及当前 owner、权限和归属差异是否漂移，不重复判断 direct 还是 managed；随后在内部重新校验同一目标下普通的 Fix、Verify、Review 和 Resolve Findings receipt。只有 owner、拓扑、路由、行为、验收、接口、范围或权限真实变化时才返回 Core。
+Core 先把一个明确的 shape-ready Change 或浅层 Group 解析为 `WorkOwner`，并独占首次 Manage 资格判断及 `selected | declined` 路由结果。缺少或未就绪的归属在独立规划产物权限下直接进入 Shape；Shape 把 ready WorkOwner 返回 Core 重新路由，绝不直接恢复 Manage。Manage 一旦被选中，只校验 handoff 完整性以及当前 owner、权限和归属差异是否漂移，不重复判断 direct 还是 managed。普通同范围 receipt 只需检查实际路径和局部 diff；正常 Fix 在已声明验收内实现行为时不会触发完整 owner 重读。只有发现或新请求改变已声明行为、验收或公共接口边界，或出现其他失效信号、跨会话恢复、closeout 时，才扩大重读并返回 Core。
 
-受管执行会按失败关闭顺序把新出现的不确定性分类为超出目标、归属者决策、尚不可精确描述的 fog、需要事实证据，或可执行。每个临时 worker packet 都固定 WorkRef、lane 目标、当前假设与证据、允许路径/动作/命令、禁止动作、比较基线、结果 schema 和停止条件。Token 数量或限制永远不参与派发、路由、权限、完成或验收判断。
+受管执行会按失败关闭顺序把新出现的不确定性分类为超出目标、归属者决策、尚不可精确描述的 fog、需要事实证据，或可执行。每个 one-shot worker packet 只携带 WorkRef、目标、精确 authority 引用、Read/Write/Verify 集合、有界已知事实、允许与禁止动作和停止条件。Worker 通过消息返回 result、changed paths、精确 verification、omissions 与 boundary status，不通过 Focus Capsule 协调。Token 数量或限制永远不参与派发、路由、权限、完成或验收判断。
 
 Diagnose 与私有 Inspect lane 保持只读；Fix 是其修改边界内的唯一写入者。Manage 通过 `rsp-verify` 的结果契约路由验证，且只有能够确认 Verify 使用了不同于 Fix 的 worker identity 时，才可声称独立验证；否则必须报告 independence unavailable。可选证据工作不能消耗当前 Fix/Verify 验收路径已需要的派发容量；只有剩余容量仍能形成决定性验收证据时，才可启动 corrective retry。lane 状态、packet、receipt、计数与过程时间线始终保持临时。
 
@@ -94,6 +94,6 @@ Manage 负责推导 commit 资格、时机和 Commit envelope；`rsp-commit` 独
 
 `activation` 永远不授予规划或产品修改权限。对于当前已选择且通过资格判断的 Manage，`closeout` 仅作为上述自动生命周期/本地 Git 权限上限，且更近的限制仍可收窄它。推送、标签、发布、部署、批准、人工验收及其他外部操作始终需要显式授权。
 
-受管工作的中断与恢复不会创建持久化控制器或暂停状态。暂停会停止进行中的工作，但保留聚焦的 WorkRef；恢复会重读权限、状态、差异、阻塞项与验证结果，再校验已选择的 handoff，而不重复路由资格判断。
+受管工作的中断与恢复不会创建持久化控制器或暂停状态。Manager 可在选中的 marker 中保存稀疏的已接受状态 Focus Capsule 作为恢复指针，但它不具备权限。字节上限内的 capsule Markdown 可以自由书写；版本注释仅为推荐，不是必需项，也不会被解析。暂停会停止进行中的工作，但保留聚焦的 WorkRef；跨会话恢复会重读权限、状态、差异、阻塞项与验证结果，再校验已选择的 handoff，而不重复路由资格判断。验证先运行 lane-local 检查，在 convergence 时运行一次 affected 或 integration gate，并在 closeout 时重新运行 Change 要求的新鲜证据。
 
 精确键见[配置](../reference/configuration.md)，普通操作见[日常工作流](./daily-workflow.md)。

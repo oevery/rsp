@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer'
 import { execFileSync, execSync, spawnSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
@@ -421,6 +422,130 @@ manage:
 
     await focusChange('auth/login')
     expect(existsSync(focusDPath('auth', 'login'))).toBe(true)
+  })
+
+  it('preserves an existing focus capsule unless replacement is explicit', async () => {
+    const root = join(tmpdir(), 'rsp-focus-capsule-preserve-test', randomUUID())
+    await mkdir(root, { recursive: true })
+    execFileSync('node', [cliPath(), 'init'], { cwd: root })
+    execFileSync('node', [cliPath(), 'create', 'capsule-change', 'Preserve focus capsule'], { cwd: root })
+    const marker = join(root, '.rsp', 'focus.d', 'capsule-change')
+    const capsule = '<!-- rsp-focus:v1 -->\n\nCurrent: verify login\n'
+    await writeFile(marker, capsule)
+
+    execFileSync('node', [cliPath(), 'focus', 'capsule-change'], { cwd: root })
+
+    expect(await readFile(marker, 'utf-8')).toBe(capsule)
+  })
+
+  it('replaces a focus capsule from a regular file or standard input', async () => {
+    const root = join(tmpdir(), 'rsp-focus-capsule-input-test', randomUUID())
+    await mkdir(root, { recursive: true })
+    execFileSync('node', [cliPath(), 'init'], { cwd: root })
+    execFileSync('node', [cliPath(), 'create', 'capsule-change', 'Exercise focus capsules'], { cwd: root })
+    const marker = join(root, '.rsp', 'focus.d', 'capsule-change')
+    const capsulePath = join(root, 'capsule.md')
+    await writeFile(capsulePath, '<!-- rsp-focus:v1 -->\n\nNext: file input\n')
+
+    execFileSync('node', [cliPath(), 'focus', 'capsule-change', '--capsule-file', capsulePath], { cwd: root })
+    expect(await readFile(marker, 'utf-8')).toContain('Next: file input')
+
+    execFileSync('node', [cliPath(), 'focus', 'capsule-change', '--capsule-file', '-'], {
+      cwd: root,
+      input: '<!-- rsp-focus:v1 -->\n\nNext: standard input\n',
+    })
+    expect(await readFile(marker, 'utf-8')).toContain('Next: standard input')
+  })
+
+  it('rejects oversized or unsafe capsule input without replacing existing content', async () => {
+    const root = join(tmpdir(), 'rsp-focus-capsule-safety-test', randomUUID())
+    await mkdir(root, { recursive: true })
+    execFileSync('node', [cliPath(), 'init'], { cwd: root })
+    execFileSync('node', [cliPath(), 'create', 'capsule-change', 'Exercise focus capsule safety'], { cwd: root })
+    const marker = join(root, '.rsp', 'focus.d', 'capsule-change')
+    const original = '<!-- rsp-focus:v1 -->\n\nNext: preserve me\n'
+    await writeFile(marker, original)
+    const oversized = join(root, 'oversized.md')
+    await writeFile(oversized, 'x'.repeat(4097))
+
+    const oversizedResult = spawnSync('node', [cliPath(), 'focus', 'capsule-change', '--capsule-file', oversized], { cwd: root, encoding: 'utf-8' })
+    expect(oversizedResult.status).not.toBe(0)
+    expect(await readFile(marker, 'utf-8')).toBe(original)
+
+    const target = join(root, 'target.md')
+    const unsafe = join(root, 'unsafe.md')
+    await writeFile(target, 'replacement')
+    await symlink(target, unsafe)
+    const unsafeResult = spawnSync('node', [cliPath(), 'focus', 'capsule-change', '--capsule-file', unsafe], { cwd: root, encoding: 'utf-8' })
+    expect(unsafeResult.status).not.toBe(0)
+    expect(await readFile(marker, 'utf-8')).toBe(original)
+  })
+
+  it('preserves the prior capsule when atomic replacement cannot create its temporary file', async () => {
+    const root = join(tmpdir(), 'rsp-focus-capsule-atomic-failure-test', randomUUID())
+    await mkdir(root, { recursive: true })
+    execFileSync('node', [cliPath(), 'init'], { cwd: root })
+    execFileSync('node', [cliPath(), 'create', 'capsule-change', 'Preserve failed replacement'], { cwd: root })
+    const focusDir = join(root, '.rsp', 'focus.d')
+    const marker = join(focusDir, 'capsule-change')
+    const capsulePath = join(root, 'replacement.md')
+    const original = 'Next: preserve prior capsule\n'
+    await writeFile(marker, original)
+    await writeFile(capsulePath, 'Next: replacement\n')
+    await chmod(focusDir, 0o555)
+
+    try {
+      const result = spawnSync('node', [cliPath(), 'focus', 'capsule-change', '--capsule-file', capsulePath], { cwd: root, encoding: 'utf-8' })
+      expect(result.status).not.toBe(0)
+      expect(await readFile(marker, 'utf-8')).toBe(original)
+    }
+    finally {
+      await chmod(focusDir, 0o755)
+    }
+  })
+
+  it('rejects malformed UTF-8 from files and standard input without replacing the prior capsule', async () => {
+    const root = join(tmpdir(), 'rsp-focus-capsule-utf8-test', randomUUID())
+    await mkdir(root, { recursive: true })
+    execFileSync('node', [cliPath(), 'init'], { cwd: root })
+    execFileSync('node', [cliPath(), 'create', 'capsule-change', 'Validate UTF-8 capsules'], { cwd: root })
+    const marker = join(root, '.rsp', 'focus.d', 'capsule-change')
+    const malformed = join(root, 'malformed.md')
+    const original = 'Next: preserve valid UTF-8\n'
+    await writeFile(marker, original)
+    await writeFile(malformed, Buffer.from([0xC3, 0x28]))
+
+    const fileResult = spawnSync('node', [cliPath(), 'focus', 'capsule-change', '--capsule-file', malformed], { cwd: root, encoding: 'utf-8' })
+    expect(fileResult.status).not.toBe(0)
+    expect(`${fileResult.stdout}${fileResult.stderr}`).toContain('valid UTF-8')
+    expect(await readFile(marker, 'utf-8')).toBe(original)
+
+    const stdinResult = spawnSync('node', [cliPath(), 'focus', 'capsule-change', '--capsule-file', '-'], {
+      cwd: root,
+      input: Buffer.from([0xE2, 0x28, 0xA1]),
+      encoding: 'utf-8',
+    })
+    expect(stdinResult.status).not.toBe(0)
+    expect(`${stdinResult.stdout}${stdinResult.stderr}`).toContain('valid UTF-8')
+    expect(await readFile(marker, 'utf-8')).toBe(original)
+  })
+
+  it('accepts exactly 4096 UTF-8 bytes of multibyte content and rejects 4097 bytes', async () => {
+    const root = join(tmpdir(), 'rsp-focus-capsule-multibyte-boundary-test', randomUUID())
+    await mkdir(root, { recursive: true })
+    execFileSync('node', [cliPath(), 'init'], { cwd: root })
+    execFileSync('node', [cliPath(), 'create', 'capsule-change', 'Validate multibyte boundary'], { cwd: root })
+    const marker = join(root, '.rsp', 'focus.d', 'capsule-change')
+    const exact = `${'界'.repeat(1365)}a`
+    expect(Buffer.byteLength(exact, 'utf-8')).toBe(4096)
+
+    const accepted = spawnSync('node', [cliPath(), 'focus', 'capsule-change', '--capsule-file', '-'], { cwd: root, input: exact, encoding: 'utf-8' })
+    expect(accepted.status).toBe(0)
+    expect(await readFile(marker, 'utf-8')).toBe(exact)
+
+    const rejected = spawnSync('node', [cliPath(), 'focus', 'capsule-change', '--capsule-file', '-'], { cwd: root, input: `${exact}a`, encoding: 'utf-8' })
+    expect(rejected.status).not.toBe(0)
+    expect(await readFile(marker, 'utf-8')).toBe(exact)
   })
 })
 

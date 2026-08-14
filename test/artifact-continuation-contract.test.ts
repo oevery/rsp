@@ -107,7 +107,7 @@ describe('rsp artifact routing and continuation contract', () => {
     expect(manage).toContain('explicit pause')
     expect(manage).toContain('release or unfocus')
     expect(manage).toContain('preserve the focused owner')
-    expect(manage).toContain('revalidate the selected handoff')
+    expect(manage).toContain('Validate the selected handoff again')
     expect(fallback).toContain('does not emulate `rsp-manage`')
     expect(fallback).toContain('managed resume')
     expect(routing).toContain('## HANDOFF AND RETURN')

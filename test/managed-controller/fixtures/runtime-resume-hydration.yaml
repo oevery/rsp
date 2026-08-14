@@ -5,14 +5,13 @@ sources:
 evidence:
   - A paused managed goal resumes with a bounded runtime context packet or without runtime.
 required_contract:
-  - observe pause only after active workers have stopped
-  - Context save and hydration supply no caller timestamp
+  - confirm they have stopped before acknowledging the pause
+  - Context save and hydration accept no caller clock
   - compare the packet source sequence with the current committed run revision
-  - Any later committed dispatch, receipt, attention, pause, resume, or other observation makes the prior packet non-fresh.
-  - Validate any bounded context packet against the exact checkout, WorkRef, Git HEAD, dirty paths, schema, expiry, authority hash, authority references, and complete source identities.
-  - may reuse only unchanged evidence summaries while current authority and selected changed sources are reread
-  - An absent, unavailable, incompatible, or fully stale packet requires the ordinary full reread
-  - revalidate the selected handoff before mutation or worker dispatch, and only then observe resume
+  - revalidate checkout, WorkRef, Git, dirty-path, authority, schema, expiry, and complete source identities
+  - reread current authority pointers and the source keys selected for hydration
+  - Runtime absence, failure, corruption, disposal, or stale context yields diagnostics or history only
+  - Validate the selected handoff again
   - Current authority always wins.
   - stale context yields diagnostics or history only
 prohibited_actions:

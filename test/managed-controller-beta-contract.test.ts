@@ -498,4 +498,68 @@ describe('managed-controller beta evidence', () => {
     expect(report).toContain('remain unchanged historical evidence')
     expect(report).toContain('no activation or release change')
   })
+
+  it('retains the focused-context-flow generation under an isolated evaluation identity', () => {
+    const generationDirectory = join(
+      root,
+      'research',
+      'evaluations',
+      'rsp-manage',
+      '2026-08-14-manage-orchestration-beta-context-flow',
+    )
+    const report = readFileSync(join(generationDirectory, 'report.md'), 'utf8')
+    const rawSummary = readFileSync(join(generationDirectory, 'summary.json'), 'utf8')
+    const summary = JSON.parse(rawSummary)
+
+    expect(hashContent(report)).toBe(
+      '481ff3532dd8b03be43a93bb59b342d2def7f7e6ed0fe69121781a29d780e12b',
+    )
+    expect(hashContent(rawSummary)).toBe(
+      'a49fb8f172c9e39572288bd03c365f88316ad5984ab474e50882e930c4ecdd0a',
+    )
+    expect(summary.product_composition.hash).toBe(
+      'b7b0871abce0ea7e591585d7bae9170ff16d16f2a8c2756121bf0b23991363da',
+    )
+    expect(summary.deterministic_contracts).toEqual({
+      passed: true,
+      cases: evaluateManagedController(root).length,
+    })
+    expect(summary.runs).toEqual([
+      expect.objectContaining({
+        variant: 'baseline',
+        outcome: 'passed',
+        completion: 'contract-passed',
+        tool_calls: 6,
+        verification_rounds: {
+          agent_observed: 2,
+          harness: 1,
+          harness_passed: true,
+        },
+        elapsed_ms: 107621,
+        unauthorized_paths: [],
+      }),
+      expect.objectContaining({
+        variant: 'product',
+        outcome: 'passed',
+        completion: 'contract-passed',
+        tool_calls: 8,
+        verification_rounds: {
+          agent_observed: 2,
+          harness: 1,
+          harness_passed: true,
+        },
+        elapsed_ms: 146161,
+        unauthorized_paths: [],
+      }),
+    ])
+    expect(rawSummary).not.toMatch(/"(?:model|provider|session|settings|token|usage|workspace)"\s*:/u)
+    expect(rawSummary).not.toContain('/tmp/')
+    expect(report).toContain('model `combo/gpt-5.6-terra`')
+    expect(report).toContain('isolated provider-only user context')
+    expect(report).toContain('all 21 current controller contracts passed')
+    expect(report).toContain('both variants reported automatic route `selected`')
+    expect(report).toContain('not a token or latency improvement claim')
+    expect(report).toContain('every earlier generation remains unchanged historical evidence')
+    expect(report).toContain('no activation or release change')
+  })
 })

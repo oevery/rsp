@@ -19,7 +19,7 @@ RSP 把未完成工作、持久化事实、长期理由、作用域指令和已�
 - `.rsp/specs/` 保存持久化的当前事实与已达成共识的设计。使用 `rsp specs` 可直接从可读 Markdown 派生当前树、查看一个精确文档，或执行有界字面搜索。
 - `.rsp/specs/decisions/` 是默认的权威 Decision Record 目录，保存长期理由、备选方案、权衡和后果。
 - `.rsp/changes/` 保存未完成工作。每个可执行 Change 都是单个 Markdown 文件。
-- `.rsp/focus.d/` 包含选择当前工作的空标记文件。
+- `.rsp/focus.d/` 包含通过路径选择当前工作的标记文件。标记可保存一个简短、可选的 Markdown Focus Capsule，用于记录 Manager 已接受的恢复指针；字节上限内的任意 Markdown 都可接受，版本注释仅为推荐，不是必需项，也不会被解析。其中的文本不是权限、生命周期状态或 worker 传输通道。
 - `.rsp/archives/` 保留已完成 Change 的历史。
 
 稳定且有作用域的工作流与验证指令属于最近的项目自有 `AGENTS.md`，位于 RSP 受管区块之外。

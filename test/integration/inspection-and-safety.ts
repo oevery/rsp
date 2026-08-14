@@ -1077,7 +1077,7 @@ describe('init and doctor', () => {
     expect(agents).toContain('2. Root `CONTEXT-MAP.md` if present, then the relevant nearest `CONTEXT.md`.')
     expect(agents).toContain('3. Use the project `rsp` Skill at `.agents/skills/rsp/SKILL.md`; hosts may load it through Skill discovery or read it directly.')
     expect(agents).toContain('Only when it is absent or cannot be used, read `.rsp/rsp-rules.md` as the fallback protocol.')
-    expect(agents).toContain('4. `.rsp/focus.d/`; for grouped work read the sibling Group Brief, then the explicitly selected focused Change.')
+    expect(agents).toContain('4. `.rsp/focus.d/`; marker paths select work, while optional bounded Markdown content is recovery guidance only. For grouped work read the sibling Group Brief, then the explicitly selected focused Change.')
     expect(agents).toContain('5. Only the relevant Specs and Decision Records under the configured authoritative path.')
     expect(agents).toContain('If `.rsp/focus.d/` is empty and the user has not provided a concrete task, ask what to work on or suggest `npx -y @oevery/rsp create <name>` for tracked work.')
     expect(agents).toContain('Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENTS.md` or `CONTEXT.md`.')
@@ -1446,6 +1446,48 @@ describe('init and doctor', () => {
       expect(result.diagnostics.some((diag: { code: string }) => diag.code === 'focus_marker_read_failed')).toBe(true)
       expect(result.runtime.some((diag: { code: string }) => diag.code === 'focus_marker_read_failed')).toBe(true)
     })()
+  })
+
+  it('accepts bounded focus capsules and rejects oversized capsule content', async () => {
+    const checkDir = await createRspFixture('rsp-check-focus-capsule-test', ['specs', 'changes', 'focus.d'])
+    await writeFile(join(checkDir, '.rsp', 'changes', 'capsule.md'), renderChange('capsule'))
+    const marker = join(checkDir, '.rsp', 'focus.d', 'capsule')
+    await writeFile(marker, '<!-- rsp-focus:v1 -->\n\nNext: continue\n')
+
+    const accepted = JSON.parse(execSync(`node ${cliPath()} check --json`, { cwd: checkDir, encoding: 'utf-8' }))
+    expect(accepted.diagnostics).not.toContainEqual(expect.objectContaining({ code: 'focus_marker_not_empty' }))
+    expect(accepted.diagnostics).not.toContainEqual(expect.objectContaining({ code: 'focus_capsule_too_large' }))
+
+    await writeFile(marker, 'x'.repeat(4097))
+    const rejected = spawnSync('node', [cliPath(), 'check', '--json'], { cwd: checkDir, encoding: 'utf-8' })
+    expect(rejected.status).toBe(1)
+    expect(JSON.parse(rejected.stdout).diagnostics).toContainEqual(expect.objectContaining({
+      code: 'focus_capsule_too_large',
+      change: 'capsule',
+    }))
+  })
+
+  it('accepts bounded arbitrary Markdown without a version comment', async () => {
+    const checkDir = await createRspFixture('rsp-check-unversioned-focus-capsule-test', ['specs', 'changes', 'focus.d'])
+    await writeFile(join(checkDir, '.rsp', 'changes', 'capsule.md'), renderChange('capsule'))
+    await writeFile(join(checkDir, '.rsp', 'focus.d', 'capsule'), '# Current\n\nContinue the accepted lane.\n')
+
+    const result = JSON.parse(execSync(`node ${cliPath()} check --json`, { cwd: checkDir, encoding: 'utf-8' }))
+    expect(result.ok).toBe(true)
+    expect(result.diagnostics).not.toContainEqual(expect.objectContaining({ code: expect.stringContaining('focus_capsule') }))
+  })
+
+  it('rejects malformed UTF-8 already present in a focus capsule', async () => {
+    const checkDir = await createRspFixture('rsp-check-invalid-focus-capsule-test', ['specs', 'changes', 'focus.d'])
+    await writeFile(join(checkDir, '.rsp', 'changes', 'capsule.md'), renderChange('capsule'))
+    await writeFile(join(checkDir, '.rsp', 'focus.d', 'capsule'), Buffer.from([0xC3, 0x28]))
+
+    const rejected = spawnSync('node', [cliPath(), 'check', '--json'], { cwd: checkDir, encoding: 'utf-8' })
+    expect(rejected.status).toBe(1)
+    expect(JSON.parse(rejected.stdout).diagnostics).toContainEqual(expect.objectContaining({
+      code: 'focus_capsule_invalid_utf8',
+      change: 'capsule',
+    }))
   })
 
   it('repairs a missing AGENTS managed block during update', async () => {

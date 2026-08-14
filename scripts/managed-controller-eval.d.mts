@@ -136,6 +136,22 @@ export interface ManagedControllerObservation {
   verification_passed: boolean
 }
 
+export interface ManagedControllerEvaluationMetadata {
+  duration_ms: number
+  events: {
+    forbidden_actions: { force_push: number, publication: number, push: number }
+    tool_calls: number
+    usage: unknown
+  }
+  output: ManagedControllerOutputScore
+  paths: { events: string, final: string, metadata: string, workspace: string }
+  recovery?: ManagedControllerRecoveryScore
+  result: 'passed' | 'failed'
+  variant: 'baseline' | 'candidate' | 'product'
+  verification: { code: number | null, passed: boolean, stderr: string, stdout: string }
+  worktree: { changed_paths: string[], missing_required_paths: string[], unauthorized_paths: string[] }
+}
+
 export function loadManagedControllerCases(root: string): ManagedControllerCase[]
 export function evaluateManagedController(root: string): Array<{ id: string, missing: string[], passed: boolean }>
 export function prepareManagedControllerRun(options: {
@@ -144,6 +160,21 @@ export function prepareManagedControllerRun(options: {
   root: string
   variant: 'baseline' | 'candidate' | 'product'
 }): PreparedManagedControllerRun
+export function runManagedControllerEvaluation(options: {
+  authFile?: string
+  caseId: string
+  codexBin?: string
+  effort: string
+  isolatedUserContext?: boolean
+  model: string
+  modelCatalogJson?: string
+  openaiBaseUrl?: string
+  outputRoot: string
+  provider?: string
+  root: string
+  timeoutMs: number
+  variant: 'baseline' | 'candidate' | 'product'
+}): Promise<ManagedControllerEvaluationMetadata>
 export function hashManagedControllerArtifact(content: string): string
 export function hashManagedControllerComposition(entries: Array<{ name: string, path: string }>): ManagedControllerComposition
 export function observeManagedControllerGit(workspace: string, baseSha: string, remoteRefsBefore?: Array<{ ref: string, sha: string }> | null): ManagedControllerGitObservation

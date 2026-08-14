@@ -310,8 +310,12 @@ export function createManagedControllerBetaSummary(plan, deterministic, runs) {
 }
 
 export async function runManagedControllerBeta({
+  authFile,
   effort,
+  isolatedUserContext = false,
   model,
+  modelCatalogJson,
+  openaiBaseUrl,
   outputRoot,
   provider,
   timeoutMs = 300000,
@@ -326,9 +330,13 @@ export async function runManagedControllerBeta({
   const runs = []
   for (const variant of plan.variants) {
     const metadata = await runManagedControllerEvaluation({
+      authFile,
       caseId: plan.case,
       effort,
+      isolatedUserContext,
       model,
+      modelCatalogJson,
+      openaiBaseUrl,
       outputRoot: rawRoot,
       provider,
       root,
@@ -379,15 +387,29 @@ async function main() {
     return
   }
   if (command === 'run') {
+    const authFile = readManagedControllerFlag(flags, '--auth-file')
     const model = readManagedControllerFlag(flags, '--model')
     const effort = readManagedControllerFlag(flags, '--effort')
+    const isolatedUserContext = flags.includes('--isolated-user-context')
+    const modelCatalogJson = readManagedControllerFlag(flags, '--model-catalog-json')
+    const openaiBaseUrl = readManagedControllerFlag(flags, '--openai-base-url')
     const provider = readManagedControllerFlag(flags, '--provider')
     const outputRoot = resolve(readManagedControllerFlag(flags, '--output-root')
       ?? join(root, '.cache', 'rsp-manage-beta-2026-08-04'))
     const timeoutMs = Number(readManagedControllerFlag(flags, '--timeout-ms') ?? 300000)
     if (!model || !effort)
       throw new Error('--model and --effort are required')
-    const result = await runManagedControllerBeta({ effort, model, outputRoot, provider, timeoutMs })
+    const result = await runManagedControllerBeta({
+      authFile,
+      effort,
+      isolatedUserContext,
+      model,
+      modelCatalogJson,
+      openaiBaseUrl,
+      outputRoot,
+      provider,
+      timeoutMs,
+    })
     console.log(JSON.stringify({
       result: result.summary.runs.some(run => ['unavailable', 'not-run'].includes(run.outcome))
         ? 'unavailable'
@@ -396,7 +418,7 @@ async function main() {
     }, null, 2))
     return
   }
-  throw new Error(`usage: ${basename(process.argv[1])} contract | run --model <model> --effort <effort> [--provider <id>] [--output-root <path>]`)
+  throw new Error(`usage: ${basename(process.argv[1])} contract | run --model <model> --effort <effort> [--provider <id>] [--isolated-user-context --auth-file <path> --openai-base-url <url> --model-catalog-json <path>] [--output-root <path>]`)
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

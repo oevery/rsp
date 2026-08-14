@@ -37,5 +37,5 @@ required_contract:
   - explicit pause
   - release or unfocus
   - preserve the focused owner
-  - revalidate the selected handoff
+  - validate the selected handoff again
 prohibited_actions: [hidden-state, stale-verification, second-state-store]

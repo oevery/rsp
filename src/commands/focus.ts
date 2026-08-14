@@ -1,15 +1,22 @@
+import { Buffer } from 'node:buffer'
+import { randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
-import { mkdir, unlink } from 'node:fs/promises'
-import { dirname } from 'node:path'
+import { mkdir, open, rename, unlink } from 'node:fs/promises'
+import { basename, dirname, join } from 'node:path'
+import { TextDecoder } from 'node:util'
 
 import { resolveExecutableChange } from '../core/change-group.js'
-import { FOCUS_DIR, pc } from '../core/config.js'
+import { FOCUS_DIR, MAX_FOCUS_CAPSULE_BYTES, pc } from '../core/config.js'
 import { cleanupEmptyParentDirs, guardRspInitialized } from '../core/filesystem.js'
 import { withRspLock } from '../core/lock.js'
-import { writeManagedFile } from '../core/managed-path.js'
+import { ensureManagedFile, requireManagedFile } from '../core/managed-path.js'
 import { resolveFocusMarkerPath, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 
-export async function focusChange(name: string) {
+interface FocusOptions {
+  capsuleFile?: string
+}
+
+export async function focusChange(name: string, options: FocusOptions = {}) {
   if (!name) {
     console.error(`  ${pc.red('Usage:')} rsp focus <name>`)
     process.exit(1)
@@ -22,7 +29,10 @@ export async function focusChange(name: string) {
       const focusEntry = resolveFocusMarkerPath(workRef)
       await mkdir(FOCUS_DIR, { recursive: true })
       await mkdir(dirname(focusEntry), { recursive: true })
-      await writeManagedFile(focusEntry, '', 'focus marker')
+      if (options.capsuleFile === undefined)
+        await ensureManagedFile(focusEntry, '', 'focus marker')
+      else
+        await replaceFocusCapsule(focusEntry, await readCapsule(options.capsuleFile))
 
       console.log(`  ${pc.green('Focused:')} ${workRef.name}`)
       console.log(`  ${pc.dim('focus.d')} → ${workRef.name}`)
@@ -32,6 +42,72 @@ export async function focusChange(name: string) {
   catch (error) {
     exitWorkRefError(error)
   }
+}
+
+async function readCapsule(source: string): Promise<string> {
+  const bytes = source === '-'
+    ? await readBoundedStdin()
+    : await readRegularCapsuleFile(source)
+  if (bytes.byteLength > MAX_FOCUS_CAPSULE_BYTES)
+    throw new Error(`focus capsule exceeds ${MAX_FOCUS_CAPSULE_BYTES} UTF-8 bytes`)
+
+  let content: string
+  try {
+    content = new TextDecoder('utf-8', { fatal: true }).decode(bytes)
+  }
+  catch {
+    throw new Error('focus capsule must contain valid UTF-8')
+  }
+  if (Buffer.byteLength(content, 'utf-8') > MAX_FOCUS_CAPSULE_BYTES)
+    throw new Error(`focus capsule exceeds ${MAX_FOCUS_CAPSULE_BYTES} UTF-8 bytes`)
+  return content
+}
+
+async function replaceFocusCapsule(path: string, content: string): Promise<void> {
+  requireManagedFile(path, 'focus marker', { allowMissing: true })
+  const temporaryPath = join(dirname(path), `.${basename(path)}.${randomUUID()}.tmp`)
+  let handle
+  try {
+    handle = await open(temporaryPath, 'wx')
+    await handle.writeFile(content, 'utf-8')
+    await handle.close()
+    handle = undefined
+    requireManagedFile(path, 'focus marker', { allowMissing: true })
+    await rename(temporaryPath, path)
+  }
+  finally {
+    await handle?.close().catch(() => {})
+    await unlink(temporaryPath).catch((error) => {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT')
+        throw error
+    })
+  }
+}
+
+async function readRegularCapsuleFile(path: string): Promise<Buffer> {
+  requireManagedFile(path, 'focus capsule input')
+  const handle = await open(path, 'r')
+  try {
+    if (!(await handle.stat()).isFile())
+      throw new Error(`focus capsule input must be a regular file: ${path}`)
+    return await handle.readFile()
+  }
+  finally {
+    await handle.close()
+  }
+}
+
+async function readBoundedStdin(): Promise<Buffer> {
+  const chunks: Buffer[] = []
+  let size = 0
+  for await (const chunk of process.stdin) {
+    const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)
+    size += buffer.byteLength
+    if (size > MAX_FOCUS_CAPSULE_BYTES)
+      throw new Error(`focus capsule exceeds ${MAX_FOCUS_CAPSULE_BYTES} UTF-8 bytes`)
+    chunks.push(buffer)
+  }
+  return Buffer.concat(chunks, size)
 }
 
 export async function unfocusChange(name: string) {

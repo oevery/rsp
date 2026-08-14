@@ -1,8 +1,9 @@
 import type { CommandDiagnostic, CommandRunOptions, RspConfig, RuntimeDiagnostic } from '../types.js'
 import { readFile } from 'node:fs/promises'
+import { TextDecoder } from 'node:util'
 
 import { inspectChangeGroups } from '../core/change-group.js'
-import { loadRspConfig, pc, resolveKinds, resolveRequiredSections } from '../core/config.js'
+import { loadRspConfig, MAX_FOCUS_CAPSULE_BYTES, pc, resolveKinds, resolveRequiredSections } from '../core/config.js'
 import { detectDeltaSections, parseFrontmatter, parseScenarios } from '../core/content.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
 import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionDefinitionByHeading, getDocumentSections, parseRspDocument } from '../core/document-model.js'
@@ -80,9 +81,9 @@ export async function runCheck(options: CheckOptions = {}): Promise<CheckResult>
   for (const marker of focusTree.markers) {
     const entryPath = marker.path
     const entryContent = marker.name
-    let markerContent = ''
+    let markerContent: Uint8Array
     try {
-      markerContent = (await readFile(entryPath, 'utf-8')).trim()
+      markerContent = await readFile(entryPath)
     }
     catch (error) {
       addDiagnostic({
@@ -101,13 +102,28 @@ export async function runCheck(options: CheckOptions = {}): Promise<CheckResult>
       })
       continue
     }
-    if (markerContent) {
+    if (markerContent.byteLength > MAX_FOCUS_CAPSULE_BYTES) {
       addDiagnostic({
-        severity: 'warning',
-        code: 'focus_marker_not_empty',
+        severity: 'error',
+        code: 'focus_capsule_too_large',
         path: `focus.d/${entryContent}`,
-        message: 'should be an empty marker file; path is the source of truth',
+        change: entryContent,
+        message: `focus capsule exceeds ${MAX_FOCUS_CAPSULE_BYTES} UTF-8 bytes`,
       })
+    }
+    else {
+      try {
+        new TextDecoder('utf-8', { fatal: true }).decode(markerContent)
+      }
+      catch {
+        addDiagnostic({
+          severity: 'error',
+          code: 'focus_capsule_invalid_utf8',
+          path: `focus.d/${entryContent}`,
+          change: entryContent,
+          message: 'focus capsule must contain valid UTF-8',
+        })
+      }
     }
     try {
       resolveWorkRef(entryContent, { executable: true, mustExist: true })

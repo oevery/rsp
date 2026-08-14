@@ -50,7 +50,7 @@ Follow the nearest `AGENTS.md`, edit the focused Change as work progresses, run 
 ├── rsp-rules.md       # minimal fallback protocol
 ├── specs/             # durable current facts
 ├── changes/           # open work
-├── focus.d/           # empty markers selecting current work
+├── focus.d/           # markers selecting work; optional short recovery capsules
 └── archives/          # completed history
 ```
 

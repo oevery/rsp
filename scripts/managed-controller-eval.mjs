@@ -2,7 +2,7 @@
 
 import { execFileSync, spawn } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
@@ -91,9 +91,9 @@ function git(workspace, args) {
   return execFileSync('git', args, { cwd: workspace, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim()
 }
 
-function runCommand({ args, command, cwd, input, timeoutMs }) {
+function runCommand({ args, command, cwd, env = process.env, input, timeoutMs }) {
   return new Promise((resolveRun) => {
-    const child = spawn(command, args, { cwd, env: process.env, stdio: ['pipe', 'pipe', 'pipe'] })
+    const child = spawn(command, args, { cwd, env, stdio: ['pipe', 'pipe', 'pipe'] })
     let stderr = ''
     let stdout = ''
     let timedOut = false
@@ -758,7 +758,7 @@ export function prepareManagedControllerRun({ caseId, outputRoot, root, variant 
   return { baseSha, installedComposition, manifest, prompt, remotePath, remoteRefsBefore, sourceComposition, workspace }
 }
 
-export async function runManagedControllerEvaluation({ caseId, codexBin = 'codex', effort, model, outputRoot, provider, root, timeoutMs, variant }) {
+export async function runManagedControllerEvaluation({ authFile, caseId, codexBin = 'codex', effort, isolatedUserContext = false, model, modelCatalogJson, openaiBaseUrl, outputRoot, provider, root, timeoutMs, variant }) {
   const prepared = prepareManagedControllerRun({ caseId, outputRoot, root, variant })
   const runDirectory = join(outputRoot, 'runs', basename(prepared.workspace))
   mkdirSync(runDirectory, { recursive: true })
@@ -768,15 +768,28 @@ export async function runManagedControllerEvaluation({ caseId, codexBin = 'codex
   const sourceRoot = managedSkillRoot(root, variant)
   const sourceHash = hashTree(sourceRoot)
   const started = new Date()
+  if (isolatedUserContext && (!authFile || !openaiBaseUrl || !modelCatalogJson))
+    throw new Error('isolated managed-controller evaluation requires authFile, openaiBaseUrl, and modelCatalogJson')
+  let isolatedHome = null
+  const isolatedConfigArgs = isolatedUserContext
+    ? [
+        '--config',
+        `openai_base_url=${JSON.stringify(openaiBaseUrl)}`,
+        '--config',
+        `model_catalog_json=${JSON.stringify(resolve(modelCatalogJson))}`,
+      ]
+    : []
   const args = [
     'exec',
     '--ephemeral',
+    ...(isolatedUserContext ? ['--ignore-rules'] : []),
     '--sandbox',
     prepared.manifest.sandbox ?? 'workspace-write',
     '--model',
     model,
     '--config',
     `model_reasoning_effort="${effort}"`,
+    ...isolatedConfigArgs,
     ...(provider ? ['--config', `model_provider="${provider}"`] : []),
     '--json',
     '--output-last-message',
@@ -785,7 +798,29 @@ export async function runManagedControllerEvaluation({ caseId, codexBin = 'codex
     prepared.workspace,
     '-',
   ]
-  const executed = await runCommand({ args, command: codexBin, cwd: prepared.workspace, input: prepared.prompt, timeoutMs })
+  let executed
+  try {
+    if (isolatedUserContext) {
+      isolatedHome = mkdtempSync(join(outputRoot, '.codex-home-'))
+      const authSource = resolve(authFile)
+      assertSafeFile(dirname(authSource), authSource, 'managed-controller auth file')
+      cpSync(authSource, join(isolatedHome, 'auth.json'))
+    }
+    executed = await runCommand({
+      args,
+      command: codexBin,
+      cwd: prepared.workspace,
+      env: isolatedHome
+        ? { ...process.env, CODEX_HOME: isolatedHome, HOME: isolatedHome }
+        : process.env,
+      input: prepared.prompt,
+      timeoutMs,
+    })
+  }
+  finally {
+    if (isolatedHome)
+      rmSync(isolatedHome, { force: true, recursive: true })
+  }
   writeFileSync(eventsPath, executed.stdout)
   if (executed.stderr)
     writeFileSync(join(runDirectory, 'stderr.log'), executed.stderr)
@@ -840,7 +875,7 @@ export async function runManagedControllerEvaluation({ caseId, codexBin = 'codex
     paths: { events: eventsPath, final: finalPath, metadata: metadataPath, workspace: prepared.workspace },
     result: score.result,
     ...(score.commit_message ? { commit_message: score.commit_message } : {}),
-    settings: { codex: execFileSync(codexBin, ['--version'], { encoding: 'utf8' }).trim(), effort, model, provider: provider ?? null, sandbox: prepared.manifest.sandbox ?? 'workspace-write', timeout_ms: timeoutMs },
+    settings: { codex: execFileSync(codexBin, ['--version'], { encoding: 'utf8' }).trim(), effort, isolated_user_context: isolatedUserContext, model, provider: provider ?? null, sandbox: prepared.manifest.sandbox ?? 'workspace-write', timeout_ms: timeoutMs },
     composition: { installed_after: installedCompositionAfter, installed_before: prepared.installedComposition, source_after: sourceCompositionAfter, source_before: prepared.sourceComposition, stable: compositionStable },
     source_hash: sourceHash,
     started_at: started.toISOString(),
