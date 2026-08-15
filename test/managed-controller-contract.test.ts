@@ -141,6 +141,31 @@ describe('rsp-manage research candidate', () => {
     expect(() => loadManagedControllerCases(fixtureRoot)).toThrow('escapes')
   })
 
+  it('fails closed when a contract fixture depends on a lifecycle-transient Change', ({ onTestFinished }) => {
+    const fixtureRoot = mkdtempSync(join(tmpdir(), 'rsp-manage-contract-change-source-'))
+    onTestFinished(() => rmSync(fixtureRoot, { force: true, recursive: true }))
+    const fixtures = join(fixtureRoot, 'test', 'managed-controller', 'fixtures')
+    const changes = join(fixtureRoot, '.rsp', 'changes')
+    mkdirSync(fixtures, { recursive: true })
+    mkdirSync(changes, { recursive: true })
+    writeFileSync(join(changes, 'temporary-contract.md'), 'temporary contract source\n')
+    writeFileSync(join(fixtures, 'transient-change-source.yaml'), [
+      'id: transient-change-source',
+      'sources:',
+      '  - .rsp/changes/temporary-contract.md',
+      'evidence:',
+      '  - Lifecycle-transient Change paths must fail closed.',
+      'required_contract:',
+      '  - temporary contract source',
+      'prohibited_actions:',
+      '  - archived fixture dependency',
+      '',
+    ].join('\n'))
+
+    expect(() => loadManagedControllerCases(fixtureRoot))
+      .toThrow('must not reference lifecycle-transient .rsp/changes files')
+  })
+
   it('fails closed when an evaluation flag has no value', () => {
     expect(readManagedControllerFlag(['--model', 'gpt-5.6-terra'], '--output-root')).toBeUndefined()
     expect(() => readManagedControllerFlag(['--output-root', '--model', 'gpt-5.6-terra'], '--output-root'))

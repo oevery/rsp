@@ -381,6 +381,10 @@ function contractSources(root, item) {
       throw new Error(`${item.id}.sources must be root-relative`)
     const path = resolve(root, source)
     assertContained(root, path, `${item.id} source ${source}`)
+    const repositoryPath = relative(root, path)
+    const changesPath = join('.rsp', 'changes')
+    if (repositoryPath === changesPath || repositoryPath.startsWith(`${changesPath}${sep}`))
+      throw new Error(`${item.id}.sources must not reference lifecycle-transient .rsp/changes files`)
     assertSafeFile(root, path, `${item.id} source ${source}`)
     return path
   })

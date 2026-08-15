@@ -1,6 +1,5 @@
 id: host-capability-downgrade
 sources:
-  - .rsp/changes/refine-managed-execution-recovery-model.md
   - .rsp/specs/skill-control-model.md
   - skills/rsp-manage/SKILL.md
   - skills/rsp-manage/references/interruption-recovery.md
