@@ -47,6 +47,7 @@ export interface ManagedControllerHoldoutManifest extends ManagedControllerOutpu
 
 export interface PreparedManagedControllerRun {
   baseSha: string
+  contractSha256: string
   installedComposition: ManagedControllerComposition
   manifest: ManagedControllerHoldoutManifest
   prompt: string
@@ -121,6 +122,8 @@ export interface ManagedControllerObservation {
 }
 
 export interface ManagedControllerEvaluationMetadata {
+  case_id: string
+  contract_sha256: string
   duration_ms: number
   events: {
     forbidden_actions: { force_push: number, publication: number, push: number }
@@ -129,6 +132,34 @@ export interface ManagedControllerEvaluationMetadata {
   }
   output: ManagedControllerOutputScore
   paths: { events: string, final: string, metadata: string, workspace: string }
+  evaluation_receipt: {
+    case_id: string
+    composition_sha256: string
+    contract_sha256: string
+    receipt_sha256: string
+  } | null
+  observation_sha256: string
+  observability: {
+    dimensions: Record<'trigger' | 'compliance' | 'boundary' | 'task_result', {
+      status: 'passed' | 'failed' | 'not-observed'
+      evidence: unknown
+    }>
+    measurements: {
+      corrections: number | null
+      first_fix_result: 'passed' | 'failed' | null
+      worker_dispatch_count: number | null
+      tool_calls: number | null
+      elapsed_ms: number | null
+      tokens: { input: number | null, output: number | null, total: number | null }
+    }
+    omissions: string[]
+  }
+  receipt_observations: {
+    correction_count: number | null
+    first_fix_result: 'passed' | 'failed' | null
+    trigger: { status: 'passed' | 'failed', evidence?: unknown } | null
+    worker_dispatch_count: number | null
+  } | null
   recovery?: ManagedControllerRecoveryScore
   result: 'passed' | 'failed'
   variant: 'baseline' | 'candidate' | 'product'
@@ -149,6 +180,7 @@ export function runManagedControllerEvaluation(options: {
   caseId: string
   codexBin?: string
   effort: string
+  env?: NodeJS.ProcessEnv
   isolatedUserContext?: boolean
   model: string
   modelCatalogJson?: string

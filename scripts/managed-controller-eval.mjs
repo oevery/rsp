@@ -7,8 +7,14 @@ import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'nod
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { parse as parseYaml } from 'yaml'
+import {
+  hashSkillEvaluationValue,
+  validateSkillEvaluationReceipt,
+} from './skill-candidate-evaluation.mjs'
+import { projectSkillEvaluationObservability } from './skill-evaluation-observability.mjs'
 
 const CASE_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+const EVALUATION_RECEIPT_PATH = '.rsp-evaluation-receipt.json'
 const VARIANTS = new Set(['baseline', 'candidate', 'product'])
 
 function assertStringArray(value, label) {
@@ -115,6 +121,17 @@ function runCommand({ args, command, cwd, env = process.env, input, timeoutMs })
     })
     child.stdin.end(input)
   })
+}
+
+function commandInvocation(command, args) {
+  return command.endsWith('.mjs')
+    ? { command: process.execPath, args: [command, ...args] }
+    : { command, args }
+}
+
+function commandVersion(command) {
+  const invocation = commandInvocation(command, ['--version'])
+  return execFileSync(invocation.command, invocation.args, { encoding: 'utf8' }).trim()
 }
 
 function shellCommands(source) {
@@ -678,7 +695,13 @@ export function prepareManagedControllerRun({ caseId, outputRoot, root, variant 
   const installedSkills = variant === 'candidate' || variant === 'product' ? manifest.installed_skills ?? ['rsp-manage'] : []
   const sourceComposition = hashManagedControllerComposition(installedSkills.map(name => ({ name, path: skillSourceRoot(root, variant, name) })))
   const installedComposition = hashManagedControllerComposition(installedSkills.map(name => ({ name, path: join(workspace, '.agents', 'skills', name) })))
+  const contractSha256 = hashContent(readFileSync(join(directory, 'case.yaml')))
   const remoteRefsBefore = remoteRefs(workspace, manifest.local_bare_remote ? 'origin' : null)
+  const receiptIdentity = {
+    case_id: caseId,
+    composition_sha256: installedComposition.hash,
+    contract_sha256: contractSha256,
+  }
   const prompt = [
     variant === 'candidate' || variant === 'product'
       ? manifest.automatic_activation
@@ -692,12 +715,41 @@ export function prepareManagedControllerRun({ caseId, outputRoot, root, variant 
           `Add one Recovery evidence line containing these exact machine tokens after the seven fields: ${manifest.continuation_contract.recovery_evidence.join(', ')}.`,
         ]
       : []),
+    `Before the final response, write ${EVALUATION_RECEIPT_PATH} as one JSON object. Copy this identity exactly: ${JSON.stringify(receiptIdentity)}.`,
+    'The only other top-level key is observations, with exactly trigger, first_fix_result, correction_count, and worker_dispatch_count. Use null when a field was not directly observed. Trigger is null or {"status":"passed|failed","evidence":<JSON>}; first_fix_result is null, passed, or failed; counts are null or non-negative integers. Do not stage or commit this transient file.',
     'Return a concise final status with completed work, fresh verification, remaining boundary, and next action.',
   ].join('\n\n')
-  return { baseSha, installedComposition, manifest, prompt, remotePath, remoteRefsBefore, sourceComposition, workspace }
+  return { baseSha, contractSha256, installedComposition, manifest, prompt, remotePath, remoteRefsBefore, sourceComposition, workspace }
 }
 
-export async function runManagedControllerEvaluation({ authFile, caseId, codexBin = 'codex', effort, isolatedUserContext = false, model, modelCatalogJson, openaiBaseUrl, outputRoot, provider, root, timeoutMs, variant }) {
+function consumeManagedControllerEvaluationReceipt(prepared, required) {
+  const path = join(prepared.workspace, EVALUATION_RECEIPT_PATH)
+  if (!existsSync(path)) {
+    if (required)
+      throw new Error(`managed-controller evaluation did not produce ${EVALUATION_RECEIPT_PATH}`)
+    return null
+  }
+  try {
+    assertSafeFile(prepared.workspace, path, 'managed-controller evaluation receipt')
+    let parsed
+    try {
+      parsed = JSON.parse(readFileSync(path, 'utf8'))
+    }
+    catch {
+      throw new Error('managed-controller evaluation receipt must contain valid JSON')
+    }
+    return validateSkillEvaluationReceipt(parsed, {
+      caseId: prepared.manifest.id,
+      compositionSha256: prepared.installedComposition.hash,
+      contractSha256: prepared.contractSha256,
+    })
+  }
+  finally {
+    rmSync(path, { force: true })
+  }
+}
+
+export async function runManagedControllerEvaluation({ authFile, caseId, codexBin = 'codex', effort, env = process.env, isolatedUserContext = false, model, modelCatalogJson, openaiBaseUrl, outputRoot, provider, root, timeoutMs, variant }) {
   const prepared = prepareManagedControllerRun({ caseId, outputRoot, root, variant })
   const runDirectory = join(outputRoot, 'runs', basename(prepared.workspace))
   mkdirSync(runDirectory, { recursive: true })
@@ -745,13 +797,14 @@ export async function runManagedControllerEvaluation({ authFile, caseId, codexBi
       assertSafeFile(dirname(authSource), authSource, 'managed-controller auth file')
       cpSync(authSource, join(isolatedHome, 'auth.json'))
     }
+    const invocation = commandInvocation(codexBin, args)
     executed = await runCommand({
-      args,
-      command: codexBin,
+      args: invocation.args,
+      command: invocation.command,
       cwd: prepared.workspace,
       env: isolatedHome
-        ? { ...process.env, CODEX_HOME: isolatedHome, HOME: isolatedHome }
-        : process.env,
+        ? { ...env, CODEX_HOME: isolatedHome, HOME: isolatedHome }
+        : env,
       input: prepared.prompt,
       timeoutMs,
     })
@@ -764,6 +817,8 @@ export async function runManagedControllerEvaluation({ authFile, caseId, codexBi
   if (executed.stderr)
     writeFileSync(join(runDirectory, 'stderr.log'), executed.stderr)
   const ended = new Date()
+  const durationMs = ended.getTime() - started.getTime()
+  const receipt = consumeManagedControllerEvaluationReceipt(prepared, executed.code === 0)
   const gitObservation = observeManagedControllerGit(prepared.workspace, prepared.baseSha, prepared.remoteRefsBefore)
   const paths = [...new Set([...gitObservation.commit_touched_paths, ...gitObservation.worktree_paths])].sort()
   let verification = { code: null, passed: false, stderr: '', stdout: '' }
@@ -802,19 +857,40 @@ export async function runManagedControllerEvaluation({ authFile, caseId, codexBi
     timed_out: executed.timedOut,
     verification_passed: verification.passed,
   })
+  const observability = projectSkillEvaluationObservability({
+    elapsedMs: durationMs,
+    outcome: score.result,
+    outputContract: score.output,
+    receiptObservations: receipt?.observations,
+    toolCalls: events.tool_calls,
+    unauthorizedPaths: score.unauthorized_paths,
+    usage: events.usage,
+  })
   const metadata = {
     case_id: caseId,
-    duration_ms: ended.getTime() - started.getTime(),
+    contract_sha256: prepared.contractSha256,
+    duration_ms: durationMs,
     ended_at: ended.toISOString(),
     events,
     exit_code: executed.code,
     final_hash: hashManagedControllerArtifact(final),
     output: score.output,
+    observation_sha256: hashSkillEvaluationValue(observability),
+    observability,
+    evaluation_receipt: receipt
+      ? {
+          case_id: receipt.case_id,
+          composition_sha256: receipt.composition_sha256,
+          contract_sha256: receipt.contract_sha256,
+          receipt_sha256: hashSkillEvaluationValue(receipt),
+        }
+      : null,
+    receipt_observations: receipt?.observations ?? null,
     ...(score.recovery ? { recovery: score.recovery } : {}),
     paths: { events: eventsPath, final: finalPath, metadata: metadataPath, workspace: prepared.workspace },
     result: score.result,
     ...(score.commit_message ? { commit_message: score.commit_message } : {}),
-    settings: { codex: execFileSync(codexBin, ['--version'], { encoding: 'utf8' }).trim(), effort, isolated_user_context: isolatedUserContext, model, provider: provider ?? null, sandbox: prepared.manifest.sandbox ?? 'workspace-write', timeout_ms: timeoutMs },
+    settings: { codex: commandVersion(codexBin), effort, isolated_user_context: isolatedUserContext, model, provider: provider ?? null, sandbox: prepared.manifest.sandbox ?? 'workspace-write', timeout_ms: timeoutMs },
     composition: { installed_after: installedCompositionAfter, installed_before: prepared.installedComposition, source_after: sourceCompositionAfter, source_before: prepared.sourceComposition, stable: compositionStable },
     source_hash: sourceHash,
     started_at: started.toISOString(),

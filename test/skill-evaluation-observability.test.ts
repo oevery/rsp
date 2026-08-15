@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+// @ts-expect-error Maintainer-only script has no standalone declaration contract.
 import { projectSkillEvaluationObservability } from '../scripts/skill-evaluation-observability.mjs'
 
 describe('skill evaluation observability', () => {
@@ -19,6 +20,8 @@ describe('skill evaluation observability', () => {
       },
       measurements: {
         corrections: null,
+        first_fix_result: null,
+        worker_dispatch_count: null,
         tool_calls: 4,
         elapsed_ms: 1200,
         tokens: { input: 100, output: 25, total: 125 },
@@ -26,6 +29,8 @@ describe('skill evaluation observability', () => {
       omissions: [
         'trigger observation is unavailable',
         'correction count is unavailable',
+        'first-fix result is unavailable',
+        'worker dispatch count is unavailable',
       ],
     })
   })
@@ -41,6 +46,8 @@ describe('skill evaluation observability', () => {
     })
     expect(result.measurements).toEqual({
       corrections: null,
+      first_fix_result: null,
+      worker_dispatch_count: null,
       tool_calls: null,
       elapsed_ms: null,
       tokens: { input: null, output: null, total: null },
@@ -66,15 +73,46 @@ describe('skill evaluation observability', () => {
     })
   })
 
-  it('retains an explicit harness trigger observation', () => {
+  it('retains explicit structured harness receipt observations independently', () => {
     const result = projectSkillEvaluationObservability({
-      triggerObservation: { status: 'passed', evidence: { selected_skill: 'rsp-review' } },
+      receiptObservations: {
+        trigger: { status: 'passed', evidence: { selected_skill: 'rsp-review' } },
+        first_fix_result: 'passed',
+        correction_count: 2,
+        worker_dispatch_count: 3,
+      },
     })
 
     expect(result.dimensions.trigger).toEqual({
       status: 'passed',
       evidence: { selected_skill: 'rsp-review' },
     })
+    expect(result.measurements).toMatchObject({
+      corrections: 2,
+      first_fix_result: 'passed',
+      worker_dispatch_count: 3,
+    })
     expect(result.omissions).not.toContain('trigger observation is unavailable')
+    expect(result.omissions).not.toContain('correction count is unavailable')
+    expect(result.omissions).not.toContain('first-fix result is unavailable')
+    expect(result.omissions).not.toContain('worker dispatch count is unavailable')
+  })
+
+  it('does not accept legacy fields or infer receipt observations from task success and tool calls', () => {
+    const result = projectSkillEvaluationObservability({
+      corrections: 0,
+      outcome: 'passed',
+      toolCalls: 7,
+      triggerObservation: { status: 'passed', evidence: { selected_skill: 'rsp-manage' } },
+    })
+
+    expect(result.dimensions.trigger.status).toBe('not-observed')
+    expect(result.dimensions.task_result.status).toBe('passed')
+    expect(result.measurements).toMatchObject({
+      corrections: null,
+      first_fix_result: null,
+      worker_dispatch_count: null,
+      tool_calls: 7,
+    })
   })
 })

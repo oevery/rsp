@@ -1,3 +1,7 @@
+import type {
+  ManagedControllerBetaRunMetadata,
+  ManagedControllerBetaRunSummary,
+} from '../scripts/managed-controller-beta.mjs'
 import { createHash } from 'node:crypto'
 import {
   cpSync,
@@ -21,12 +25,17 @@ import {
   summarizeManagedControllerBetaComparison,
   summarizeManagedControllerBetaRun,
 } from '../scripts/managed-controller-beta.mjs'
-import { evaluateManagedController } from '../scripts/managed-controller-eval.mjs'
+import { evaluateManagedController, runManagedControllerEvaluation } from '../scripts/managed-controller-eval.mjs'
+import { hashSkillEvaluationValue } from '../scripts/skill-candidate-evaluation.mjs'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 
 function hashContent(content: string) {
   return createHash('sha256').update(content).digest('hex')
+}
+
+function observabilityOf(summary: unknown) {
+  return (summary as { observability: unknown }).observability
 }
 
 function copyBetaContractProject(target: string) {
@@ -220,7 +229,7 @@ describe('managed-controller beta evidence', () => {
         verification: { passed: true },
         worktree: { unauthorized_paths: [] },
         settings: { model: 'must-not-leak', provider: 'must-not-leak' },
-      },
+      } as never,
       'Receiver acceptance remains unavailable.',
     )
 
@@ -246,10 +255,14 @@ describe('managed-controller beta evidence', () => {
       'output_contract',
       'recovery_contract',
       'unauthorized_paths',
+      'evaluation_receipt',
+      'observation_sha256',
       'observability',
     ])
-    expect(summary.omissions).toContain('first-fix result is not emitted as a structured event')
-    expect(summary.observability).toMatchObject({
+    expect(summary.omissions).toContain(
+      'first-fix result is not emitted as a structured receipt observation',
+    )
+    expect(observabilityOf(summary)).toMatchObject({
       dimensions: {
         trigger: { status: 'not-observed' },
         compliance: { status: 'passed' },
@@ -258,12 +271,158 @@ describe('managed-controller beta evidence', () => {
       },
       measurements: {
         corrections: null,
+        first_fix_result: null,
+        worker_dispatch_count: null,
         tool_calls: 4,
         elapsed_ms: 1234,
         tokens: { input: 100, output: 20, total: 120 },
       },
     })
     expect(JSON.stringify(summary)).not.toContain('must-not-leak')
+  })
+
+  it('projects only explicit structured receipt observations', ({ onTestFinished }) => {
+    const directory = mkdtempSync(join(tmpdir(), 'rsp-manage-beta-receipt-'))
+    onTestFinished(() => rmSync(directory, { force: true, recursive: true }))
+    const eventsPath = join(directory, 'events.jsonl')
+    writeFileSync(eventsPath, `${JSON.stringify({ type: 'turn.completed' })}\n`)
+    const plan = loadManagedControllerBetaPlan(root)
+    const receiptObservations = {
+      correction_count: 1,
+      first_fix_result: 'failed',
+      trigger: { status: 'passed', evidence: { selected_skill: 'rsp-manage' } },
+      worker_dispatch_count: 2,
+    } as const
+    const receipt = {
+      case_id: plan.case,
+      composition_sha256: plan.product_composition.hash,
+      contract_sha256: plan.holdout_manifest_sha256,
+      observations: receiptObservations,
+    }
+    const observability = {
+      dimensions: {
+        trigger: { status: 'passed' as const, evidence: { selected_skill: 'rsp-manage' } },
+        compliance: { status: 'passed' as const, evidence: { expected_missing: [] } },
+        boundary: { status: 'passed' as const, evidence: { forbidden_present: [], unauthorized_paths: [] } },
+        task_result: { status: 'passed' as const, evidence: { outcome: 'passed' } },
+      },
+      measurements: {
+        corrections: 1,
+        first_fix_result: 'failed' as const,
+        worker_dispatch_count: 2,
+        tool_calls: 9,
+        elapsed_ms: 500,
+        tokens: { input: 30, output: 10, total: 40 },
+      },
+      omissions: [],
+    }
+    const metadata: ManagedControllerBetaRunMetadata = {
+      case_id: plan.case,
+      contract_sha256: plan.holdout_manifest_sha256,
+      variant: 'product',
+      result: 'passed',
+      duration_ms: 500,
+      events: {
+        tool_calls: 9,
+        usage: { input_tokens: 30, output_tokens: 10 },
+      },
+      output: { expected_missing: [], forbidden_present: [] },
+      paths: { events: eventsPath },
+      composition: { installed_before: plan.product_composition },
+      evaluation_receipt: {
+        case_id: receipt.case_id,
+        composition_sha256: receipt.composition_sha256,
+        contract_sha256: receipt.contract_sha256,
+        receipt_sha256: hashSkillEvaluationValue(receipt),
+      },
+      observation_sha256: hashSkillEvaluationValue(observability),
+      observability,
+      receipt_observations: receiptObservations,
+      verification: { passed: true },
+      worktree: { unauthorized_paths: [] },
+    }
+
+    const summary = summarizeManagedControllerBetaRun(
+      plan,
+      metadata,
+      'Completed after one correction.',
+    )
+
+    expect(summary.first_fix_result).toBe('failed')
+    expect(summary.worker_dispatch_count).toBe(2)
+    expect(summary.tool_calls).toBe(9)
+    expect(observabilityOf(summary)).toMatchObject({
+      dimensions: { trigger: { status: 'passed' } },
+      measurements: {
+        corrections: 1,
+        first_fix_result: 'failed',
+        worker_dispatch_count: 2,
+        tool_calls: 9,
+      },
+    })
+    expect(summary.omissions).not.toContain(
+      'first-fix result is not emitted as a structured receipt observation',
+    )
+    expect(summary.omissions).not.toContain(
+      'worker dispatch count is not emitted as a structured receipt observation',
+    )
+
+    const contradictoryObservability = {
+      ...observability,
+      measurements: { ...observability.measurements, corrections: 2 },
+    }
+    expect(() => summarizeManagedControllerBetaRun(
+      plan,
+      {
+        ...metadata,
+        observability: contradictoryObservability,
+        observation_sha256: hashSkillEvaluationValue(contradictoryObservability),
+      },
+      'Completed after one correction.',
+    )).toThrow('managed-controller producer.observability corrections does not match its receipt observation')
+  })
+
+  it('consumes a producer receipt end to end with typed beta metadata', async ({ onTestFinished }) => {
+    const outputRoot = mkdtempSync(join(tmpdir(), 'rsp-manage-beta-producer-'))
+    onTestFinished(() => rmSync(outputRoot, { force: true, recursive: true }))
+    const plan = loadManagedControllerBetaPlan(root)
+    const produced = await runManagedControllerEvaluation({
+      caseId: plan.case,
+      codexBin: join(root, 'test', 'skill-behavior', 'fake-codex.mjs'),
+      effort: 'high',
+      env: { ...process.env, FAKE_CODEX_RECEIPT_MODE: 'valid' },
+      model: 'test-model',
+      outputRoot,
+      root,
+      timeoutMs: 5000,
+      variant: 'product',
+    })
+    expect(produced.variant).toBe('product')
+    const metadata: ManagedControllerBetaRunMetadata = {
+      ...produced,
+      variant: 'product',
+    }
+    const final = readFileSync(produced.paths.final, 'utf8')
+    const summary: ManagedControllerBetaRunSummary = summarizeManagedControllerBetaRun(
+      plan,
+      metadata,
+      final,
+    )
+
+    expect(metadata.evaluation_receipt).toMatchObject({
+      case_id: plan.case,
+      composition_sha256: plan.product_composition.hash,
+      contract_sha256: plan.holdout_manifest_sha256,
+      receipt_sha256: expect.stringMatching(/^[a-f0-9]{64}$/),
+    })
+    expect(metadata.observation_sha256).toMatch(/^[a-f0-9]{64}$/)
+    expect(summary.evaluation_receipt).toEqual(metadata.evaluation_receipt)
+    expect(summary.observation_sha256).toBe(metadata.observation_sha256)
+    expect(summary.first_fix_result).toBe('passed')
+    expect(summary.worker_dispatch_count).toBe(2)
+    expect(summary.observability.dimensions.trigger.status).toBe('passed')
+    expect(existsSync(join(produced.paths.workspace, '.rsp-evaluation-receipt.json'))).toBe(false)
+    expect(produced.worktree.changed_paths).not.toContain('.rsp-evaluation-receipt.json')
   })
 
   it('records unavailable model execution without requiring a final response', ({ onTestFinished }) => {
@@ -275,14 +434,47 @@ describe('managed-controller beta evidence', () => {
       error: { message: 'usage limit reached' },
     })}\n`)
 
+    const plan = loadManagedControllerBetaPlan(root)
+    const producerObservability = {
+      dimensions: {
+        trigger: { status: 'not-observed' as const, evidence: null },
+        compliance: { status: 'failed' as const, evidence: { expected_missing: ['npm test'] } },
+        boundary: { status: 'passed' as const, evidence: { forbidden_present: [], unauthorized_paths: [] } },
+        task_result: { status: 'failed' as const, evidence: { outcome: 'failed' } },
+      },
+      measurements: {
+        corrections: null,
+        first_fix_result: null,
+        worker_dispatch_count: null,
+        tool_calls: 0,
+        elapsed_ms: 100,
+        tokens: { input: null, output: null, total: null },
+      },
+      omissions: [
+        'trigger observation is unavailable',
+        'correction count is unavailable',
+        'first-fix result is unavailable',
+        'worker dispatch count is unavailable',
+        'input-token count is unavailable',
+        'output-token count is unavailable',
+        'total-token count is unavailable',
+      ],
+    }
     const summary = summarizeManagedControllerBetaRun(
-      loadManagedControllerBetaPlan(root),
+      plan,
       {
-        variant: 'baseline',
+        case_id: plan.case,
+        contract_sha256: plan.holdout_manifest_sha256,
+        variant: 'product',
         result: 'failed',
         duration_ms: 100,
         events: { tool_calls: 0 },
         output: { expected_missing: ['npm test'], forbidden_present: [] },
+        composition: { installed_before: plan.product_composition },
+        evaluation_receipt: null,
+        observation_sha256: hashSkillEvaluationValue(producerObservability),
+        observability: producerObservability,
+        receipt_observations: null,
         paths: { events: eventsPath },
         verification: { passed: false },
         worktree: { unauthorized_paths: [] },
@@ -297,7 +489,9 @@ describe('managed-controller beta evidence', () => {
     })
     expect(summary.omissions).toContain('model execution capability is unavailable')
     expect(summary.omissions).toContain('final response was not produced')
-    expect(summary.observability.dimensions.task_result.status).toBe('not-observed')
+    expect(observabilityOf(summary)).toMatchObject({
+      dimensions: { task_result: { status: 'not-observed' } },
+    })
   })
 
   it('does not infer capability failure from ordinary command output', ({ onTestFinished }) => {

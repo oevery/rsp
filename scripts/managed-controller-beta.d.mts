@@ -27,17 +27,32 @@ export interface ManagedControllerBetaPlan {
 }
 
 export interface ManagedControllerBetaRunMetadata {
+  case_id?: string
+  contract_sha256?: string
   variant: ManagedControllerBetaVariant
   result: 'passed' | 'failed'
   duration_ms?: number | null
   events?: {
     tool_calls?: number | null
+    usage?: unknown
   }
   output?: {
     expected_missing: string[]
     forbidden_present: string[]
   } | null
   recovery?: unknown
+  evaluation_receipt?: {
+    case_id: string
+    composition_sha256: string
+    contract_sha256: string
+    receipt_sha256: string
+  } | null
+  observation_sha256?: string
+  observability?: ManagedControllerBetaObservability
+  receipt_observations?: ManagedControllerBetaReceiptObservations | null
+  composition?: {
+    installed_before?: ManagedControllerBetaComposition
+  }
   paths?: {
     events?: string
     final?: string
@@ -60,8 +75,8 @@ export interface ManagedControllerBetaRunSummary {
   variant: ManagedControllerBetaVariant
   outcome: ManagedControllerBetaOutcome
   completion: 'contract-passed' | 'contract-failed' | 'not-observed'
-  first_fix_result: null
-  worker_dispatch_count: null
+  first_fix_result: 'passed' | 'failed' | null
+  worker_dispatch_count: number | null
   tool_calls: number | null
   verification_rounds: {
     agent_observed: number | null
@@ -74,6 +89,32 @@ export interface ManagedControllerBetaRunSummary {
   output_contract: ManagedControllerBetaRunMetadata['output']
   recovery_contract: unknown
   unauthorized_paths: string[]
+  evaluation_receipt: ManagedControllerBetaRunMetadata['evaluation_receipt']
+  observation_sha256: string | null
+  observability: ManagedControllerBetaObservability
+}
+
+export interface ManagedControllerBetaReceiptObservations {
+  correction_count: number | null
+  first_fix_result: 'passed' | 'failed' | null
+  trigger: { status: 'passed' | 'failed', evidence?: unknown } | null
+  worker_dispatch_count: number | null
+}
+
+export interface ManagedControllerBetaObservability {
+  dimensions: Record<'trigger' | 'compliance' | 'boundary' | 'task_result', {
+    status: 'passed' | 'failed' | 'not-observed'
+    evidence: unknown
+  }>
+  measurements: {
+    corrections: number | null
+    first_fix_result: 'passed' | 'failed' | null
+    worker_dispatch_count: number | null
+    tool_calls: number | null
+    elapsed_ms: number | null
+    tokens: { input: number | null, output: number | null, total: number | null }
+  }
+  omissions: string[]
 }
 
 export interface ManagedControllerBetaComparison {

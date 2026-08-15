@@ -6,6 +6,14 @@ function finiteNumber(value) {
   return Number.isFinite(value) ? value : null
 }
 
+function nonNegativeInteger(value) {
+  return Number.isInteger(value) && value >= 0 ? value : null
+}
+
+function firstFixResult(value) {
+  return value === 'passed' || value === 'failed' ? value : null
+}
+
 function tokenMeasurements(usage) {
   const input = finiteNumber(usage?.input_tokens)
   const output = finiteNumber(usage?.output_tokens)
@@ -15,12 +23,11 @@ function tokenMeasurements(usage) {
 }
 
 export function projectSkillEvaluationObservability({
-  corrections,
   elapsedMs,
   outcome,
   outputContract,
+  receiptObservations,
   toolCalls,
-  triggerObservation,
   unauthorizedPaths,
   usage,
 } = {}) {
@@ -31,6 +38,7 @@ export function projectSkillEvaluationObservability({
     ? outputContract.forbidden_present
     : null
   const unauthorized = Array.isArray(unauthorizedPaths) ? unauthorizedPaths : null
+  const triggerObservation = receiptObservations?.trigger
   const trigger = triggerObservation?.status === 'passed' || triggerObservation?.status === 'failed'
     ? dimension(triggerObservation.status, triggerObservation.evidence ?? null)
     : dimension('not-observed', null)
@@ -49,9 +57,13 @@ export function projectSkillEvaluationObservability({
     ? dimension(outcome, { outcome })
     : dimension('not-observed', outcome ? { outcome } : null)
   const tokens = tokenMeasurements(usage)
-  const correctionCount = finiteNumber(corrections)
+  const correctionCount = nonNegativeInteger(receiptObservations?.correction_count)
+  const workerDispatchCount = nonNegativeInteger(receiptObservations?.worker_dispatch_count)
+  const observedFirstFixResult = firstFixResult(receiptObservations?.first_fix_result)
   const measurements = {
     corrections: correctionCount,
+    first_fix_result: observedFirstFixResult,
+    worker_dispatch_count: workerDispatchCount,
     tool_calls: finiteNumber(toolCalls),
     elapsed_ms: finiteNumber(elapsedMs),
     tokens,
@@ -62,6 +74,8 @@ export function projectSkillEvaluationObservability({
     ...(boundary.status === 'not-observed' ? ['boundary evidence is unavailable'] : []),
     ...(taskResult.status === 'not-observed' ? ['task result is unavailable'] : []),
     ...(correctionCount === null ? ['correction count is unavailable'] : []),
+    ...(observedFirstFixResult === null ? ['first-fix result is unavailable'] : []),
+    ...(workerDispatchCount === null ? ['worker dispatch count is unavailable'] : []),
     ...(measurements.tool_calls === null ? ['tool-call count is unavailable'] : []),
     ...(measurements.elapsed_ms === null ? ['elapsed time is unavailable'] : []),
     ...(tokens.input === null ? ['input-token count is unavailable'] : []),
