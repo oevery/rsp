@@ -2,12 +2,11 @@ import type { CommandDiagnostic, RspConfig, RuntimeDiagnostic } from '../types.j
 import { readFile } from 'node:fs/promises'
 import { TextDecoder } from 'node:util'
 
+import { inspectChangeDocument } from '../core/change-document-inspection.js'
 import { inspectChangeGroups } from '../core/change-group.js'
 import { loadRspConfig, MAX_FOCUS_CAPSULE_BYTES, resolveKinds, resolveRequiredSections } from '../core/config.js'
-import { detectDeltaSections, parseFrontmatter, parseScenarios } from '../core/content.js'
+import { detectDeltaSections, parseScenarios } from '../core/content.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
-import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionDefinitionByHeading, getDocumentSections, parseRspDocument } from '../core/document-model.js'
-import { IssueRelationshipError, parseIssueRelationships } from '../core/issue-relationship.js'
 import { toErrorMessage } from '../core/output.js'
 import { inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 
@@ -55,8 +54,6 @@ export async function runCheck(options: CheckOptions = {}): Promise<CheckResult>
   }
   const validKinds = resolveKinds(config)
   const requiredSections = resolveRequiredSections(config)
-  const choosePlaceholderRe = /^<choose:/i
-
   const reportRuntime = (diagnostic: RuntimeDiagnostic) => runtime.push(diagnostic)
   const addDiagnostic = (diagnostic: CommandDiagnostic) => diagnostics.push(diagnostic)
   const focusTree = await inspectFocusTree()
@@ -202,108 +199,8 @@ export async function runCheck(options: CheckOptions = {}): Promise<CheckResult>
       continue
     }
 
-    let fm = null
-    try {
-      fm = parseFrontmatter(content)
-    }
-    catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      addDiagnostic({
-        severity: 'error',
-        code: 'invalid_frontmatter',
-        change: name,
-        path: fp,
-        message: `invalid YAML frontmatter (${message})`,
-      })
-      continue
-    }
-
-    if (!fm) {
-      addDiagnostic({
-        severity: 'error',
-        code: 'missing_frontmatter',
-        change: name,
-        path: fp,
-        message: 'missing YAML frontmatter',
-      })
-    }
-
-    const document = parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA)
-    for (const section of requiredSections) {
-      const definition = getDocumentSectionDefinitionByHeading(CHANGE_DOCUMENT_SCHEMA, section)
-      if (!definition || !getDocumentSections(document, definition.id).some(candidate => candidate.canonical)) {
-        addDiagnostic({
-          severity: 'error',
-          code: 'missing_section',
-          change: name,
-          path: fp,
-          message: `missing "## ${section}" section`,
-        })
-      }
-    }
-
-    if (fm) {
-      try {
-        parseIssueRelationships(fm)
-      }
-      catch (error) {
-        addDiagnostic({
-          severity: 'error',
-          code: error instanceof IssueRelationshipError ? error.code : 'invalid_issue_metadata',
-          change: name,
-          path: fp,
-          message: error instanceof Error ? error.message : String(error),
-        })
-      }
-      if (!('kind' in fm)) {
-        addDiagnostic({
-          severity: 'error',
-          code: 'missing_kind',
-          change: name,
-          path: fp,
-          message: 'missing frontmatter field: kind',
-        })
-      }
-      else if (choosePlaceholderRe.test(String(fm.kind))) {
-        addDiagnostic({
-          severity: 'error',
-          code: 'placeholder_kind',
-          change: name,
-          path: fp,
-          message: `kind still uses the template placeholder; choose one of: ${validKinds.join(', ')}`,
-        })
-      }
-      else if (!validKinds.includes(String(fm.kind))) {
-        addDiagnostic({
-          severity: 'error',
-          code: 'invalid_kind',
-          change: name,
-          path: fp,
-          message: `invalid kind "${fm.kind}" (valid: ${validKinds.join(', ')})`,
-        })
-      }
-    }
-
-    if (document.title !== null) {
-      if (document.title !== name) {
-        addDiagnostic({
-          severity: 'error',
-          code: 'heading_mismatch',
-          change: name,
-          path: fp,
-          message: `# Change: heading "${document.title}" differs from change name`,
-        })
-      }
-    }
-    else {
-      addDiagnostic({
-        severity: 'error',
-        code: 'missing_heading',
-        change: name,
-        path: fp,
-        message: 'missing "# Change:" heading',
-      })
-    }
+    for (const diagnostic of inspectChangeDocument(content, { name, validKinds, requiredSections }))
+      addDiagnostic({ ...diagnostic, change: name, path: fp })
 
     const deltas = detectDeltaSections(content)
     if (deltas.added || deltas.modified || deltas.removed) {

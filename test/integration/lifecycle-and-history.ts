@@ -324,7 +324,7 @@ manage:
 
   it('archives a change and clears its marker', async () => {
     const { archiveChange } = await import('../../src/commands/archive.js')
-    await writeFile(changesPath('test-change.md'), (await readFile(changesPath('test-change.md'), 'utf-8')).replaceAll('- [ ]', '- [x]'))
+    await writeFile(changesPath('test-change.md'), completeReopenChange(await readFile(changesPath('test-change.md'), 'utf-8')))
     await archiveChange('test-change')
 
     expect(existsSync(changesPath('test-change.md'))).toBe(false)
@@ -333,6 +333,30 @@ manage:
     const archiveFiles = await readdir(archivePath())
     expect(archiveFiles.some(f => f.endsWith('_test-change.md'))).toBe(true)
     expect(existsSync(archivePath('INDEX.md'))).toBe(false)
+  })
+
+  it('blocks ready and archive when a completed Change contains a duplicate canonical section', async () => {
+    const root = await createRspFixture('rsp-invalid-closeout-structure-test', ['specs', 'changes', 'archives', 'focus.d'])
+    const changePath = join(root, '.rsp', 'changes', 'duplicate.md')
+    const focusPath = join(root, '.rsp', 'focus.d', 'duplicate')
+    const content = `${renderChange('duplicate').replaceAll('- [ ]', '- [x]')}\n## Tasks\n- [ ] hidden incomplete task\n`
+    await writeFile(changePath, content)
+    await writeFile(focusPath, '')
+
+    const checkResult = spawnSync('node', [cliPath(), 'check', '--json'], { cwd: root, encoding: 'utf-8' })
+    const check = JSON.parse(checkResult.stdout)
+    const ready = JSON.parse(execSync(`node ${cliPath()} ready duplicate --json`, { cwd: root, encoding: 'utf-8' }))
+    const archive = spawnSync('node', [cliPath(), 'archive', 'duplicate'], { cwd: root, encoding: 'utf-8' })
+
+    expect(checkResult.status).toBe(1)
+    expect(check.diagnostics).toContainEqual(expect.objectContaining({ code: 'duplicate_section', change: 'duplicate' }))
+    expect(ready.readiness.completionGate).toBe('blocked')
+    expect(ready.readiness.archiveReady).toBe('no')
+    expect(ready.warnings).toContain('document must contain exactly one "## Tasks" section; found 2')
+    expect(archive.status).toBe(1)
+    expect(`${archive.stdout}${archive.stderr}`).toContain('document must contain exactly one "## Tasks" section; found 2')
+    expect(existsSync(changePath)).toBe(true)
+    expect(existsSync(focusPath)).toBe(true)
   })
 
   it('keeps post-archive Git delivery advisory and lifecycle-complete', async () => {

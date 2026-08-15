@@ -74,10 +74,10 @@ describe('archive name collisions', () => {
     const { archiveChange } = await import('../../src/commands/archive.js')
 
     await createChange('duplicate-archive', 'first pass')
-    await writeFile(changesPath('duplicate-archive.md'), (await readFile(changesPath('duplicate-archive.md'), 'utf-8')).replaceAll('- [ ]', '- [x]'))
+    await writeFile(changesPath('duplicate-archive.md'), completeReopenChange(await readFile(changesPath('duplicate-archive.md'), 'utf-8')))
     await archiveChange('duplicate-archive')
     await createChange('duplicate-archive', 'second pass')
-    await writeFile(changesPath('duplicate-archive.md'), (await readFile(changesPath('duplicate-archive.md'), 'utf-8')).replaceAll('- [ ]', '- [x]'))
+    await writeFile(changesPath('duplicate-archive.md'), completeReopenChange(await readFile(changesPath('duplicate-archive.md'), 'utf-8')))
     await archiveChange('duplicate-archive')
 
     const archiveFiles = (await readdir(archivePath())).filter(f => f !== 'INDEX.md')

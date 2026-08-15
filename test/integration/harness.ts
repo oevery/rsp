@@ -154,11 +154,13 @@ export async function createRspFixture(prefix: string, directories: string[] = [
 
 export async function completeOpenChange(root: string, name: string): Promise<void> {
   const path = join(root, '.rsp', 'changes', `${name}.md`)
-  await writeFile(path, (await readFile(path, 'utf-8')).replaceAll('- [ ]', '- [x]'))
+  await writeFile(path, completeReopenChange(await readFile(path, 'utf-8')))
 }
 
 export function completeReopenChange(content: string): string {
-  return content.replaceAll('- [ ]', '- [x]')
+  return content
+    .replace('kind: "<choose: feature | fix | refactor | docs | ops | research>"', 'kind: feature')
+    .replaceAll('- [ ]', '- [x]')
 }
 
 export async function createClosedGroupProject(prefix: string): Promise<string> {

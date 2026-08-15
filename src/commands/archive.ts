@@ -2,8 +2,9 @@ import { existsSync, readdirSync } from 'node:fs'
 import { mkdir, readFile, rename, unlink } from 'node:fs/promises'
 import { basename, join } from 'node:path'
 
+import { inspectChangeDocument } from '../core/change-document-inspection.js'
 import { resolveExecutableChange } from '../core/change-group.js'
-import { CHANGES_DIR, FOCUS_DIR, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
+import { CHANGES_DIR, FOCUS_DIR, inspectRspConfig, resolveKinds, resolveRequiredSections, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
 import { cleanupEmptyParentDirs } from '../core/filesystem.js'
 import { withRspLock } from '../core/lock.js'
@@ -35,9 +36,22 @@ export async function archiveChange(name: string): Promise<ArchiveChangeResult> 
       const base = basename(workRef.name)
       const archiveName = resolveArchiveName(archiveSubdir, date, base)
       const content = await readFile(srcPath, 'utf-8')
+      const configInspection = await inspectRspConfig()
+      if (configInspection.issues.length > 0) {
+        return {
+          ok: false,
+          kind: 'error',
+          message: `invalid RSP config: ${configInspection.issues.join('; ')}`,
+        }
+      }
       const dependencyInspection = await inspectChangeDependencies()
       const readiness = collectArchiveReadiness(content, {
         activeBlockers: dependencyInspection.activeBlockers.get(workRef.name),
+        documentDiagnostics: inspectChangeDocument(content, {
+          name: workRef.name,
+          validKinds: resolveKinds(configInspection.config),
+          requiredSections: resolveRequiredSections(configInspection.config),
+        }),
       })
       const checklist = readiness.warnings
 
@@ -45,7 +59,7 @@ export async function archiveChange(name: string): Promise<ArchiveChangeResult> 
         return {
           ok: false,
           kind: 'blocked',
-          message: 'complete all Tasks and required Verify items, and resolve active blockers.',
+          message: 'fix Change document structure, complete all Tasks and required Verify items, and resolve active blockers.',
           warnings: checklist,
         }
       }

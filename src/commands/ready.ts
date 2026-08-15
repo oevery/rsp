@@ -1,8 +1,9 @@
 import type { ArchiveReadinessOutput, RuntimeDiagnostic } from '../types.js'
 import { readFile } from 'node:fs/promises'
 
+import { inspectChangeDocument } from '../core/change-document-inspection.js'
 import { resolveExecutableChange } from '../core/change-group.js'
-import { inspectRspConfig } from '../core/config.js'
+import { inspectRspConfig, resolveKinds, resolveRequiredSections } from '../core/config.js'
 import { resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
 import { guardRspInitialized, normalizeLogicalPath } from '../core/filesystem.js'
@@ -71,15 +72,10 @@ export async function showReady(name: string): Promise<ReadyResult> {
     return readyError(name, { code: 'change_read_failed', message: `unable to read .rsp/changes/${name}.md` }, 'read')
   }
 
-  const dependencyInspection = await inspectChangeDependencies()
-  const readinessDetails = collectArchiveReadiness(content, {
-    activeBlockers: dependencyInspection.activeBlockers.get(name),
-  })
-  const checklist = readinessDetails.warnings
-  const readiness = toArchiveReadinessOutput(readinessDetails)
   let decisionRecordsPath: string
+  let configInspection: Awaited<ReturnType<typeof inspectRspConfig>>
   try {
-    const configInspection = await inspectRspConfig()
+    configInspection = await inspectRspConfig()
     if (configInspection.issues.length > 0)
       return readyError(name, { code: 'invalid_config', message: configInspection.issues.join('; ') }, 'config')
     decisionRecordsPath = resolveDecisionRecordsPath(configInspection.config)
@@ -90,6 +86,17 @@ export async function showReady(name: string): Promise<ReadyResult> {
   catch (error) {
     return readyError(name, { code: 'invalid_config', message: `.rsp/config.yaml could not be parsed: ${toErrorMessage(error)}` }, 'config')
   }
+  const dependencyInspection = await inspectChangeDependencies()
+  const readinessDetails = collectArchiveReadiness(content, {
+    activeBlockers: dependencyInspection.activeBlockers.get(name),
+    documentDiagnostics: inspectChangeDocument(content, {
+      name,
+      validKinds: resolveKinds(configInspection.config),
+      requiredSections: resolveRequiredSections(configInspection.config),
+    }),
+  })
+  const checklist = readinessDetails.warnings
+  const readiness = toArchiveReadinessOutput(readinessDetails)
   const durableReview = buildDurableReviewGuidance(getDurableReviewCandidateTargets(), decisionRecordsPath)
   const result: ReadySuccessResult = {
     command: 'ready',

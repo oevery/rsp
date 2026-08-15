@@ -1,4 +1,4 @@
-import type { ArchiveReadinessOutput, VerifyCriticalitySummary } from '../types.js'
+import type { ArchiveReadinessOutput, CommandDiagnostic, VerifyCriticalitySummary } from '../types.js'
 import { classifyVerifyCheckboxes, collectVerifyCheckboxLines, getOpenCheckboxes, hasMeaningfulBlockers, parseScenarios } from './content.js'
 import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionBody, parseRspDocument } from './document-model.js'
 
@@ -15,6 +15,7 @@ export interface ArchiveReadiness {
   semantic: 'needs-review'
   archiveReady: 'yes' | 'judgment' | 'no'
   warnings: string[]
+  documentDiagnostics: CommandDiagnostic[]
 }
 
 export interface DurableReviewGuidance {
@@ -26,8 +27,13 @@ export interface DurableReviewGuidance {
   note: string
 }
 
-export function collectArchiveReadiness(content: string, options: { activeBlockers?: boolean } = {}): ArchiveReadiness {
+export function collectArchiveReadiness(content: string, options: {
+  activeBlockers?: boolean
+  documentDiagnostics?: CommandDiagnostic[]
+} = {}): ArchiveReadiness {
   const warnings: string[] = []
+  const documentDiagnostics = options.documentDiagnostics ?? []
+  warnings.push(...documentDiagnostics.map(diagnostic => diagnostic.message))
   const document = parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA)
   const tasksSection = getDocumentSectionBody(document, 'tasks')
   const verifySection = getDocumentSectionBody(document, 'verify')
@@ -53,7 +59,12 @@ export function collectArchiveReadiness(content: string, options: { activeBlocke
   if (missingScenarios)
     warnings.push('no Scenario blocks found (some changes do not need them)')
 
-  const archiveReady = activeBlockers || taskTodos.length > 0 || requiredVerifyTodos.length > 0 ? 'no' : 'yes'
+  const archiveReady = documentDiagnostics.some(diagnostic => diagnostic.severity === 'error')
+    || activeBlockers
+    || taskTodos.length > 0
+    || requiredVerifyTodos.length > 0
+    ? 'no'
+    : 'yes'
   return {
     taskTodos,
     verifyTodos,
@@ -67,6 +78,7 @@ export function collectArchiveReadiness(content: string, options: { activeBlocke
     semantic: 'needs-review',
     archiveReady,
     warnings,
+    documentDiagnostics,
   }
 }
 
