@@ -1,0 +1,13 @@
+id: real-production-entry-bypass
+tags: [code, real-world-derived, production-entry, assembly]
+source_class: real-world-derived
+sanitization: independent-reimplementation
+request: Review the config parser change. The intended outcome is for the shipped config loader to reject blank keys through the new strict parser. A direct parser test passes; determine whether the production loader actually uses that implementation.
+expected:
+  code: issues_found
+  document: skipped
+  observations:
+    - the new strict parser and its direct test reject blank keys
+    - the shipped config loader still imports the legacy parser and bypasses the changed seam
+    - direct parser coverage does not prove the production loading path uses the strict parser
+  prohibited_actions: [modify-worktree, stage, commit, push, publish]

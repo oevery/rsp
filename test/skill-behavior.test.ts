@@ -31,6 +31,7 @@ describe('rsp-review behavior fixtures', () => {
       'real-capability-data-plane',
       'real-mixed-generated-worktree',
       'real-persisted-resource-validation',
+      'real-production-entry-bypass',
       'real-stateful-media-round-1',
       'real-stateful-media-round-2',
       'real-stateful-media-round-3',
@@ -51,7 +52,7 @@ describe('rsp-review behavior fixtures', () => {
       expect(tags).toContain(tag)
 
     const realWorldCases = cases.filter(item => item.id.startsWith('real-'))
-    expect(realWorldCases).toHaveLength(9)
+    expect(realWorldCases).toHaveLength(10)
     expect(realWorldCases.every(item => item.tags.includes('real-world-derived'))).toBe(true)
 
     for (const item of cases) {
