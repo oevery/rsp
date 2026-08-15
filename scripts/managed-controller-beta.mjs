@@ -20,6 +20,7 @@ import {
   readManagedControllerFlag,
   runManagedControllerEvaluation,
 } from './managed-controller-eval.mjs'
+import { projectSkillEvaluationObservability } from './skill-evaluation-observability.mjs'
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)))
 
@@ -247,9 +248,19 @@ export function summarizeManagedControllerBetaRun(plan, metadata, final) {
   const capabilityUnavailable = hasUnavailableCapabilityError(metadata.paths?.events)
   const receiverBoundary = /\breceiver\b/iu.test(final)
     && !/receiver-device acceptance passed/iu.test(final)
+  const outcome = capabilityUnavailable ? 'unavailable' : metadata.result
+  const observability = projectSkillEvaluationObservability({
+    corrections: metadata.corrections,
+    elapsedMs: metadata.duration_ms,
+    outcome,
+    outputContract: metadata.output,
+    toolCalls: metadata.events?.tool_calls,
+    unauthorizedPaths: metadata.worktree?.unauthorized_paths,
+    usage: metadata.events?.usage,
+  })
   return {
     variant: metadata.variant,
-    outcome: capabilityUnavailable ? 'unavailable' : metadata.result,
+    outcome,
     completion: capabilityUnavailable
       ? 'not-observed'
       : metadata.result === 'passed' ? 'contract-passed' : 'contract-failed',
@@ -273,6 +284,7 @@ export function summarizeManagedControllerBetaRun(plan, metadata, final) {
     output_contract: metadata.output,
     recovery_contract: metadata.recovery ?? null,
     unauthorized_paths: metadata.worktree?.unauthorized_paths ?? [],
+    observability,
   }
 }
 
@@ -366,6 +378,7 @@ export async function runManagedControllerBeta({
           output_contract: null,
           recovery_contract: null,
           unauthorized_paths: [],
+          observability: projectSkillEvaluationObservability({ outcome: 'not-run' }),
         })
       }
       break

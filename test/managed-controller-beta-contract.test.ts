@@ -210,7 +210,10 @@ describe('managed-controller beta evidence', () => {
         variant: 'product',
         result: 'passed',
         duration_ms: 1234,
-        events: { tool_calls: 4 },
+        events: {
+          tool_calls: 4,
+          usage: { input_tokens: 100, output_tokens: 20 },
+        },
         output: { expected_missing: [], forbidden_present: [] },
         recovery: { passed: true },
         paths: { events: eventsPath },
@@ -243,8 +246,23 @@ describe('managed-controller beta evidence', () => {
       'output_contract',
       'recovery_contract',
       'unauthorized_paths',
+      'observability',
     ])
     expect(summary.omissions).toContain('first-fix result is not emitted as a structured event')
+    expect(summary.observability).toMatchObject({
+      dimensions: {
+        trigger: { status: 'not-observed' },
+        compliance: { status: 'passed' },
+        boundary: { status: 'passed' },
+        task_result: { status: 'passed' },
+      },
+      measurements: {
+        corrections: null,
+        tool_calls: 4,
+        elapsed_ms: 1234,
+        tokens: { input: 100, output: 20, total: 120 },
+      },
+    })
     expect(JSON.stringify(summary)).not.toContain('must-not-leak')
   })
 
@@ -279,6 +297,7 @@ describe('managed-controller beta evidence', () => {
     })
     expect(summary.omissions).toContain('model execution capability is unavailable')
     expect(summary.omissions).toContain('final response was not produced')
+    expect(summary.observability.dimensions.task_result.status).toBe('not-observed')
   })
 
   it('does not infer capability failure from ordinary command output', ({ onTestFinished }) => {
