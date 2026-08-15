@@ -595,11 +595,12 @@ describe('rsp-manage product Skill', () => {
     expect(findSemanticUnit(body, ['required worker obligation', '`StopDisposition: capability-unavailable`', '`incomplete`', 'stop'])).toBeDefined()
     expect(findSemanticUnit(body, ['Absence of a confirmed dispatch or receipt', 'never success', 'controller claiming'])).toBeDefined()
 
-    expect(canonicalEnum(boundaries, 'CloseoutEligibility')).toEqual(['not-eligible', 'lifecycle-ready', 'local-commit-ready'])
-    expect(findSemanticUnit(boundaries, ['`completionGate: pass`', '`archiveReady: yes`', '`AcceptanceDisposition: review-clean`', 'fresh owner', 'authority', 'exact diff', 'decisive Required verification evidence', 'ready value'])).toBeDefined()
-    expect(findSemanticUnit(boundaries, ['Any other acceptance state', '`CloseoutEligibility: not-eligible`'])).toBeDefined()
+    expect(findSemanticUnit(boundaries, ['closeout begins', 'lifecycle and delivery closeout', 'derive `CloseoutEligibility`'])).toBeDefined()
+    expect(canonicalEnum(closeout, 'CloseoutEligibility')).toEqual(['not-eligible', 'lifecycle-ready', 'local-commit-ready'])
+    expect(findSemanticUnit(closeout, ['`completionGate: pass`', '`archiveReady: yes`', '`AcceptanceDisposition: review-clean`', 'fresh owner', 'authority', 'exact diff', 'decisive Required verification evidence', 'ready value'])).toBeDefined()
+    expect(findSemanticUnit(closeout, ['Any other acceptance state', '`CloseoutEligibility: not-eligible`'])).toBeDefined()
     expect(body.match(/A required worker that was not created, did not return a valid required receipt, returned `unavailable` or `boundary-changed`/g)).toHaveLength(1)
-    expect(findSemanticUnit(boundaries, ['neither archive nor commit runs'])).toBeDefined()
+    expect(findSemanticUnit(closeout, ['neither archive nor commit runs'])).toBeDefined()
   })
 
   it('fails semantic controller contracts when enums or qualification ownership are removed', () => {
@@ -679,11 +680,11 @@ describe('rsp-manage product Skill', () => {
     const { body } = readSkill(product)
     const boundaries = markdownSection(body, 'Preserve boundaries')
 
-    expect(findSemanticUnit(boundaries, ['short optional Markdown Focus Capsule', 'owned only by Manager'])).toBeDefined()
+    expect(findSemanticUnit(boundaries, ['interruption and recovery', 'creating, replacing, transferring, or consuming', 'Focus Capsule'])).toBeDefined()
     expect(findSemanticUnit(boundaries, ['focus marker path', 'sole selection truth', 'prose grants no authority'])).toBeDefined()
-    expect(findSemanticUnit(boundaries, ['workers communicate through messages', 'rather than the capsule'])).toBeDefined()
-    expect(findSemanticUnit(boundaries, ['Manager-accepted meaningful checkpoint', 'never after each tool call or worker message'])).toBeDefined()
-    expect(boundaries).toContain('never after each tool call or worker message')
+    expect(findSemanticUnit(readFileSync(join(product, 'references', 'interruption-recovery.md'), 'utf8'), ['short optional Markdown Focus Capsule', 'owned only by Manager'])).toBeDefined()
+    expect(findSemanticUnit(readFileSync(join(product, 'references', 'interruption-recovery.md'), 'utf8'), ['Workers communicate through messages', 'rather than the capsule'])).toBeDefined()
+    expect(findSemanticUnit(readFileSync(join(product, 'references', 'interruption-recovery.md'), 'utf8'), ['Manager-accepted meaningful checkpoint', 'never after each tool call or worker message'])).toBeDefined()
   })
 
   it('applies bounded closeout presets without inferring remote authority', () => {
@@ -726,7 +727,7 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('each worker runs the narrow lane-local check in its `Verify Set`')
     expect(body).toContain('at most one affected or integration gate')
     expect(body).toContain('Inspect changed paths, local diff, and declared verification before accepting results')
-    expect(body).toContain('During recovery, reread authority and evidence')
+    expect(readFileSync(join(product, 'references', 'interruption-recovery.md'), 'utf8')).toContain('On cross-session or cross-device resume, reread the complete current authority')
   })
 
   it('keeps dirty product and durable-truth paths with an explicit owner across transitions', () => {

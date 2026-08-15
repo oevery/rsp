@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { evaluateSkillCandidate, hashSkillEvaluationValue } from '../scripts/skill-candidate-evaluation.mjs'
+import { createSkillCandidateManifestFromManagedRuns, evaluateSkillCandidate, hashSkillEvaluationValue } from '../scripts/skill-candidate-evaluation.mjs'
 
 const currentIdentity = '1'.repeat(64)
 const candidateIdentity = '2'.repeat(64)
@@ -405,5 +405,55 @@ describe('skill candidate no-regression evaluation', () => {
     expect(malformed.status).not.toBe(0)
     expect(malformed.stdout).toBe('')
     expect(malformed.stderr).toContain('contract_sha256 must be a lowercase SHA-256 hash')
+  })
+
+  it('creates and persists one comparison from structured managed-run receipts', ({ onTestFinished }) => {
+    const directory = mkdtempSync(join(tmpdir(), 'rsp-managed-run-candidate-'))
+    onTestFinished(() => rmSync(directory, { force: true, recursive: true }))
+    const managedMetadata = (identity: string, toolCalls: number) => {
+      const bound = boundObservation('managed-unseen', identity, contractIdentity, {}, {
+        corrections: 0,
+        first_fix_result: 'passed',
+        worker_dispatch_count: 1,
+        tool_calls: toolCalls,
+      })
+      return {
+        case_id: bound.case_id,
+        contract_sha256: bound.contract_sha256,
+        evaluation_receipt: {
+          case_id: bound.case_id,
+          composition_sha256: bound.composition_sha256,
+          contract_sha256: bound.contract_sha256,
+          receipt_sha256: bound.receipt_sha256,
+        },
+        receipt_observations: bound.receipt_observations,
+        observation_sha256: bound.observation_sha256,
+        observability: bound.observability,
+      }
+    }
+    const current = managedMetadata(currentIdentity, 5)
+    const candidate = managedMetadata(candidateIdentity, 4)
+    const manifest = createSkillCandidateManifestFromManagedRuns(current, candidate)
+    expect(evaluateSkillCandidate(manifest).result).toBe('candidate-eligible')
+
+    const currentPath = join(directory, 'current.json')
+    const candidatePath = join(directory, 'candidate.json')
+    const outputPath = join(directory, 'comparison.json')
+    writeFileSync(currentPath, JSON.stringify(current))
+    writeFileSync(candidatePath, JSON.stringify(candidate))
+    const run = spawnSync(process.execPath, [
+      scriptPath,
+      'managed-runs',
+      currentPath,
+      candidatePath,
+      '--output',
+      outputPath,
+    ], { encoding: 'utf8' })
+    expect(run.status).toBe(0)
+    expect(JSON.parse(run.stdout)).toMatchObject({ result: 'candidate-eligible' })
+    expect(JSON.parse(readFileSync(outputPath, 'utf8'))).toMatchObject({
+      manifest: { current_identity: { sha256: currentIdentity }, candidate_identity: { sha256: candidateIdentity } },
+      result: { result: 'candidate-eligible' },
+    })
   })
 })

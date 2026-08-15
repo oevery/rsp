@@ -1,0 +1,10 @@
+# Manage conditional-context no-regression evaluation
+
+- Identity: current composition `d8a9d6bb5b95a470025bf44af1e617cc1b44c641f53ba8d98c0efb915e784e4f` was compared with candidate composition `f56072c531ad1f9b5b204fe0ae74d40279703630dbdaa2bae555fccb6fb042c1` on the unchanged `auto-multisurface-routing` unseen holdout and contract `5fc67db7f4b7bc54b12f86d811e89d9c384d94e1f376abfb5688d6652b794e30`.
+- Candidate: `rsp-manage/SKILL.md` moves interruption recovery, Focus Capsule, and closeout eligibility detail into its existing conditionally loaded references. The default body changes from 3028 to 2801 words; the main body plus three conditional references changes from 4053 to 4079 words, so the change is progressive disclosure rather than removal of control boundaries.
+- Behavior gate: Trigger, Compliance, Boundary, and task result passed for both current and candidate observations. The deterministic result is `candidate-eligible` with no regressions, candidate failures, or missing required dimensions.
+- Current measurements: first fix passed, zero corrections, one observed worker dispatch, 12 tool calls, 158091 ms, and 392641 total tokens.
+- Candidate measurements: first fix passed, zero corrections, worker dispatch count unavailable, 33 tool calls, 178316 ms, and 447157 total tokens.
+- Interpretation: the candidate is behavior-preserving on this holdout and may be adopted as a structural conditional-loading simplification. This run does not demonstrate lower token use, latency, or tool activity; those measurements are diagnostic and no numeric promotion threshold was pre-registered.
+- Retention: `summary.json` contains only identity-bound receipt observations, observability projections, hashes, and comparison results. Raw events, authentication, provider configuration, session identifiers, and disposable workspace paths are not retained.
+- Conclusion limits: one provider path and one unseen holdout establish neither provider-general behavior nor a performance claim. No routing suite, security gate, capability lookup, activation, release, push, or publication follows from this result.

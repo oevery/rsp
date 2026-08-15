@@ -11,6 +11,7 @@ const core = read('skills/rsp/SKILL.md')
 const responseLanguage = read('skills/rsp/references/response-language.md')
 const manage = read('skills/rsp-manage/SKILL.md')
 const manageInterruption = read('skills/rsp-manage/references/interruption-recovery.md')
+const manageReviewConvergence = read('skills/rsp-manage/references/review-convergence.md')
 const manageCloseout = read('skills/rsp-manage/references/closeout.md')
 const controlModel = read('.rsp/specs/skill-control-model.md')
 const skillSystem = read('.rsp/specs/skill-system.md')
@@ -28,7 +29,25 @@ describe('skill runtime context composition', () => {
     ]))
     expect(core).not.toContain('### Release operations')
     expect(core).not.toContain('## Handle interruption')
-    expect(findSemanticUnit(manageCloseout, ['Load this reference only', 'CloseoutEligibility'])).toBeDefined()
+    expect(findSemanticUnit(manageCloseout, ['Load this reference', 'CloseoutEligibility'])).toBeDefined()
+  })
+
+  it('keeps conditional Manage procedures reachable without loading their detail by default', () => {
+    expect(markdownLinks(manage)).toEqual(expect.arrayContaining([
+      'references/interruption-recovery.md',
+      'references/review-convergence.md',
+      'references/closeout.md',
+    ]))
+    expect(findSemanticUnit(manage, ['progress or status inquiry', 'explicit pause or release', 'resume from continuation pointers'])).toBeDefined()
+    expect(findSemanticUnit(manage, ['fixed-scope re-review returns Findings', 'bounded Resolve Findings pass'])).toBeDefined()
+    expect(findSemanticUnit(manage, ['When closeout begins', 'derive `CloseoutEligibility`', 'incomplete-or-drifted fail-safe'])).toBeDefined()
+
+    expect(manage).not.toContain('Machine heartbeat is host-level liveness evidence')
+    expect(manageInterruption).toContain('Machine heartbeat is host-level liveness evidence')
+    expect(manage).not.toContain('same Finding remains after two completed corrections')
+    expect(manageReviewConvergence).toContain('same Finding remains after two completed corrections')
+    expect(manage).not.toContain('run `rsp ready <change-work-ref> --json`')
+    expect(manageCloseout).toContain('run `rsp ready <change-work-ref> --json`')
   })
 
   it('keeps canonical control vocabulary in one durable Spec', () => {

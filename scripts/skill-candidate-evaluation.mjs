@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 import { createHash } from 'node:crypto'
-import { lstatSync, readFileSync } from 'node:fs'
-import { basename, resolve } from 'node:path'
+import { existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { basename, dirname, resolve } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { parse as parseYaml } from 'yaml'
@@ -377,10 +377,101 @@ export function loadSkillCandidateManifest(path) {
   return parseYaml(readFileSync(absolutePath, 'utf8'))
 }
 
+function loadManagedRunMetadata(path, label) {
+  const absolutePath = resolve(path)
+  const file = lstatSync(absolutePath)
+  if (file.isSymbolicLink() || !file.isFile())
+    throw new Error(`${label} metadata must be a regular non-symlink file`)
+  const metadata = JSON.parse(readFileSync(absolutePath, 'utf8'))
+  if (!isObject(metadata))
+    throw new Error(`${label} metadata must be a JSON object`)
+  return metadata
+}
+
+function boundObservationFromManagedRun(metadata, label) {
+  const receiptSummary = metadata.evaluation_receipt
+  if (!isObject(receiptSummary) || !isObject(metadata.receipt_observations))
+    throw new Error(`${label} metadata lacks structured evaluation receipt evidence`)
+  const receipt = validateSkillEvaluationReceipt({
+    case_id: metadata.case_id,
+    composition_sha256: receiptSummary.composition_sha256,
+    contract_sha256: metadata.contract_sha256,
+    observations: metadata.receipt_observations,
+  })
+  const receiptSha256 = hashSkillEvaluationValue(receipt)
+  if (receiptSummary.receipt_sha256 !== receiptSha256)
+    throw new Error(`${label} receipt hash does not match its structured content`)
+  const observationSha256 = hashSkillEvaluationValue(metadata.observability)
+  if (metadata.observation_sha256 !== observationSha256)
+    throw new Error(`${label} observability hash does not match its structured content`)
+  validateSkillEvaluationReceiptObservability(
+    receipt.observations,
+    metadata.observability,
+    `${label} observability`,
+  )
+  return {
+    case_id: receipt.case_id,
+    composition_sha256: receipt.composition_sha256,
+    contract_sha256: receipt.contract_sha256,
+    receipt_sha256: receiptSha256,
+    observation_sha256: observationSha256,
+    receipt_observations: receipt.observations,
+    observability: metadata.observability,
+  }
+}
+
+export function createSkillCandidateManifestFromManagedRuns(currentMetadata, candidateMetadata) {
+  const current = boundObservationFromManagedRun(currentMetadata, 'current run')
+  const candidate = boundObservationFromManagedRun(candidateMetadata, 'candidate run')
+  if (current.case_id !== candidate.case_id)
+    throw new Error('managed runs must use the same case_id')
+  if (current.contract_sha256 !== candidate.contract_sha256)
+    throw new Error('managed runs must use the same contract_sha256')
+  return {
+    current_identity: { sha256: current.composition_sha256 },
+    candidate_identity: { sha256: candidate.composition_sha256 },
+    cases: [{
+      id: current.case_id,
+      contract_sha256: current.contract_sha256,
+      unseen: true,
+      current,
+      candidate,
+    }],
+  }
+}
+
+function writeComparisonOutput(path, value) {
+  const absolutePath = resolve(path)
+  if (existsSync(absolutePath)) {
+    const file = lstatSync(absolutePath)
+    if (file.isSymbolicLink() || !file.isFile())
+      throw new Error('candidate comparison output must be a regular non-symlink file')
+  }
+  mkdirSync(dirname(absolutePath), { recursive: true })
+  writeFileSync(absolutePath, `${JSON.stringify(value, null, 2)}\n`)
+  return absolutePath
+}
+
 async function main() {
-  const [path, ...extra] = process.argv.slice(2)
+  const args = process.argv.slice(2)
+  if (args[0] === 'managed-runs') {
+    const outputIndex = args.indexOf('--output')
+    const positional = outputIndex === -1 ? args.slice(1) : args.slice(1, outputIndex)
+    if (positional.length !== 2 || outputIndex === -1 || outputIndex !== args.length - 2 || !args[outputIndex + 1])
+      throw new Error(`usage: ${basename(process.argv[1])} managed-runs <current-metadata.json> <candidate-metadata.json> --output <comparison.json>`)
+    const manifest = createSkillCandidateManifestFromManagedRuns(
+      loadManagedRunMetadata(positional[0], 'current run'),
+      loadManagedRunMetadata(positional[1], 'candidate run'),
+    )
+    const result = evaluateSkillCandidate(manifest)
+    const outputPath = writeComparisonOutput(args[outputIndex + 1], { manifest, result })
+    console.log(JSON.stringify({ output_path: outputPath, result: result.result }, null, 2))
+    process.exitCode = result.result === 'candidate-eligible' ? 0 : 1
+    return
+  }
+  const [path, ...extra] = args
   if (!path || extra.length > 0)
-    throw new Error(`usage: ${basename(process.argv[1])} <manifest.yaml|manifest.json>`)
+    throw new Error(`usage: ${basename(process.argv[1])} <manifest.yaml|manifest.json> | managed-runs <current-metadata.json> <candidate-metadata.json> --output <comparison.json>`)
   const result = evaluateSkillCandidate(loadSkillCandidateManifest(path))
   console.log(JSON.stringify(result, null, 2))
   process.exitCode = result.result === 'candidate-eligible' ? 0 : 1

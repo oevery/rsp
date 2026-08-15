@@ -9,12 +9,12 @@ product_skill_names:
   - rsp
   - rsp-manage
   - rsp-implement
-product_composition_sha256: d8a9d6bb5b95a470025bf44af1e617cc1b44c641f53ba8d98c0efb915e784e4f
+product_composition_sha256: f56072c531ad1f9b5b204fe0ae74d40279703630dbdaa2bae555fccb6fb042c1
 prior_retained_evidence:
-  - path: research/evaluations/rsp-manage/2026-08-04-manage-orchestration-beta/report.md
-    sha256: 4c4d7ff94bbdfbfc6988e9d264cff05de89a37f6dcc9e19f555536ba02011dc1
-  - path: research/evaluations/rsp-manage/2026-08-04-manage-orchestration-beta/summary.json
-    sha256: 2cbbde60883e17dd0bee50c0214c3a13cc6626d04b2dc5d26ed89dd1f498de8e
+  - path: research/evaluations/rsp-manage/2026-08-15-managed-context-no-regression/report.md
+    sha256: 1253d3553743d3eeb3f0c8a39247c8c0e57610f9755f308c5784ca779fe94381
+  - path: research/evaluations/rsp-manage/2026-08-15-managed-context-no-regression/summary.json
+    sha256: 29ddca301707cd81f395f4cada132fff0e467d5585f646f1abe4c7b22f880223
 observations:
   - completion outcome
   - first-fix result where observable

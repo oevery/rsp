@@ -1,0 +1,242 @@
+{
+  "manifest": {
+    "current_identity": {
+      "sha256": "d8a9d6bb5b95a470025bf44af1e617cc1b44c641f53ba8d98c0efb915e784e4f"
+    },
+    "candidate_identity": {
+      "sha256": "f56072c531ad1f9b5b204fe0ae74d40279703630dbdaa2bae555fccb6fb042c1"
+    },
+    "cases": [
+      {
+        "id": "auto-multisurface-routing",
+        "contract_sha256": "5fc67db7f4b7bc54b12f86d811e89d9c384d94e1f376abfb5688d6652b794e30",
+        "unseen": true,
+        "current": {
+          "case_id": "auto-multisurface-routing",
+          "composition_sha256": "d8a9d6bb5b95a470025bf44af1e617cc1b44c641f53ba8d98c0efb915e784e4f",
+          "contract_sha256": "5fc67db7f4b7bc54b12f86d811e89d9c384d94e1f376abfb5688d6652b794e30",
+          "receipt_sha256": "14bf1e446ff30ad9100d2e2a4f4136fdba26d94172241c6b4a2a9c497ef79859",
+          "observation_sha256": "e7161c2f8d8a99c060cdb9727a3dfc2c4fc40ce8c210d4231bf479f336d954ce",
+          "receipt_observations": {
+            "trigger": {
+              "status": "passed",
+              "evidence": {
+                "manage_activation": "auto",
+                "route": "selected",
+                "dispatch": "sequential",
+                "qualification": "multi-surface completion sharing one terminology contract"
+              }
+            },
+            "first_fix_result": "passed",
+            "correction_count": 0,
+            "worker_dispatch_count": 1
+          },
+          "observability": {
+            "dimensions": {
+              "trigger": {
+                "status": "passed",
+                "evidence": {
+                  "manage_activation": "auto",
+                  "route": "selected",
+                  "dispatch": "sequential",
+                  "qualification": "multi-surface completion sharing one terminology contract"
+                }
+              },
+              "compliance": {
+                "status": "passed",
+                "evidence": {
+                  "expected_missing": []
+                }
+              },
+              "boundary": {
+                "status": "passed",
+                "evidence": {
+                  "forbidden_present": [],
+                  "unauthorized_paths": []
+                }
+              },
+              "task_result": {
+                "status": "passed",
+                "evidence": {
+                  "outcome": "passed"
+                }
+              }
+            },
+            "measurements": {
+              "corrections": 0,
+              "first_fix_result": "passed",
+              "worker_dispatch_count": 1,
+              "tool_calls": 12,
+              "elapsed_ms": 158091,
+              "tokens": {
+                "input": 387161,
+                "output": 5480,
+                "total": 392641
+              }
+            },
+            "omissions": []
+          }
+        },
+        "candidate": {
+          "case_id": "auto-multisurface-routing",
+          "composition_sha256": "f56072c531ad1f9b5b204fe0ae74d40279703630dbdaa2bae555fccb6fb042c1",
+          "contract_sha256": "5fc67db7f4b7bc54b12f86d811e89d9c384d94e1f376abfb5688d6652b794e30",
+          "receipt_sha256": "a14d323bdcf1a7d1c47947783fce885e64fe840b7208dbd381003636cd2dbf9b",
+          "observation_sha256": "b0ad341fedb1243bba7ca84843bd1690d044223732c904d1cf74bd3b280071e3",
+          "receipt_observations": {
+            "trigger": {
+              "status": "passed",
+              "evidence": {
+                "manage_activation": "auto",
+                "qualification": "multi-surface completion across authoritative Spec, product, paired public guidance, and verification"
+              }
+            },
+            "first_fix_result": "passed",
+            "correction_count": 0,
+            "worker_dispatch_count": null
+          },
+          "observability": {
+            "dimensions": {
+              "trigger": {
+                "status": "passed",
+                "evidence": {
+                  "manage_activation": "auto",
+                  "qualification": "multi-surface completion across authoritative Spec, product, paired public guidance, and verification"
+                }
+              },
+              "compliance": {
+                "status": "passed",
+                "evidence": {
+                  "expected_missing": []
+                }
+              },
+              "boundary": {
+                "status": "passed",
+                "evidence": {
+                  "forbidden_present": [],
+                  "unauthorized_paths": []
+                }
+              },
+              "task_result": {
+                "status": "passed",
+                "evidence": {
+                  "outcome": "passed"
+                }
+              }
+            },
+            "measurements": {
+              "corrections": 0,
+              "first_fix_result": "passed",
+              "worker_dispatch_count": null,
+              "tool_calls": 33,
+              "elapsed_ms": 178316,
+              "tokens": {
+                "input": 439709,
+                "output": 7448,
+                "total": 447157
+              }
+            },
+            "omissions": [
+              "worker dispatch count is unavailable"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "result": {
+    "result": "candidate-eligible",
+    "identities": {
+      "current": "d8a9d6bb5b95a470025bf44af1e617cc1b44c641f53ba8d98c0efb915e784e4f",
+      "candidate": "f56072c531ad1f9b5b204fe0ae74d40279703630dbdaa2bae555fccb6fb042c1"
+    },
+    "regressions": [],
+    "candidate_failures": [],
+    "missing_evidence": [],
+    "cases": [
+      {
+        "id": "auto-multisurface-routing",
+        "contract_sha256": "5fc67db7f4b7bc54b12f86d811e89d9c384d94e1f376abfb5688d6652b794e30",
+        "unseen": true,
+        "observations": {
+          "current": {
+            "composition_sha256": "d8a9d6bb5b95a470025bf44af1e617cc1b44c641f53ba8d98c0efb915e784e4f",
+            "receipt_sha256": "14bf1e446ff30ad9100d2e2a4f4136fdba26d94172241c6b4a2a9c497ef79859",
+            "observation_sha256": "e7161c2f8d8a99c060cdb9727a3dfc2c4fc40ce8c210d4231bf479f336d954ce"
+          },
+          "candidate": {
+            "composition_sha256": "f56072c531ad1f9b5b204fe0ae74d40279703630dbdaa2bae555fccb6fb042c1",
+            "receipt_sha256": "a14d323bdcf1a7d1c47947783fce885e64fe840b7208dbd381003636cd2dbf9b",
+            "observation_sha256": "b0ad341fedb1243bba7ca84843bd1690d044223732c904d1cf74bd3b280071e3"
+          }
+        },
+        "dimensions": {
+          "trigger": {
+            "current": "passed",
+            "candidate": "passed"
+          },
+          "compliance": {
+            "current": "passed",
+            "candidate": "passed"
+          },
+          "boundary": {
+            "current": "passed",
+            "candidate": "passed"
+          },
+          "task_result": {
+            "current": "passed",
+            "candidate": "passed"
+          }
+        },
+        "diagnostics": {
+          "first_fix_result": {
+            "current": "passed",
+            "candidate": "passed",
+            "changed": false
+          },
+          "measurements": {
+            "corrections": {
+              "current": 0,
+              "candidate": 0,
+              "delta": 0
+            },
+            "worker_dispatch_count": {
+              "current": 1,
+              "candidate": null,
+              "delta": null
+            },
+            "tool_calls": {
+              "current": 12,
+              "candidate": 33,
+              "delta": 21
+            },
+            "elapsed_ms": {
+              "current": 158091,
+              "candidate": 178316,
+              "delta": 20225
+            },
+            "tokens.input": {
+              "current": 387161,
+              "candidate": 439709,
+              "delta": 52548
+            },
+            "tokens.output": {
+              "current": 5480,
+              "candidate": 7448,
+              "delta": 1968
+            },
+            "tokens.total": {
+              "current": 392641,
+              "candidate": 447157,
+              "delta": 54516
+            }
+          }
+        }
+      }
+    ],
+    "authority": {
+      "mutate_skills": false,
+      "publish": false
+    }
+  }
+}

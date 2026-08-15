@@ -45,7 +45,7 @@ function copyBetaContractProject(target: string) {
     ['skills', 'rsp'],
     ['skills', 'rsp-manage'],
     ['skills', 'rsp-implement'],
-    ['research', 'evaluations', 'rsp-manage', '2026-08-04-manage-orchestration-beta'],
+    ['research', 'evaluations', 'rsp-manage', '2026-08-15-managed-context-no-regression'],
   ]) {
     const source = join(root, ...path)
     const destination = join(target, ...path)
@@ -74,12 +74,12 @@ describe('managed-controller beta evidence', () => {
     })
     expect(plan.prior_retained_evidence).toEqual([
       {
-        path: 'research/evaluations/rsp-manage/2026-08-04-manage-orchestration-beta/report.md',
-        sha256: '4c4d7ff94bbdfbfc6988e9d264cff05de89a37f6dcc9e19f555536ba02011dc1',
+        path: 'research/evaluations/rsp-manage/2026-08-15-managed-context-no-regression/report.md',
+        sha256: '1253d3553743d3eeb3f0c8a39247c8c0e57610f9755f308c5784ca779fe94381',
       },
       {
-        path: 'research/evaluations/rsp-manage/2026-08-04-manage-orchestration-beta/summary.json',
-        sha256: '2cbbde60883e17dd0bee50c0214c3a13cc6626d04b2dc5d26ed89dd1f498de8e',
+        path: 'research/evaluations/rsp-manage/2026-08-15-managed-context-no-regression/summary.json',
+        sha256: '29ddca301707cd81f395f4cada132fff0e467d5585f646f1abe4c7b22f880223',
       },
     ])
     expect(plan.observations).toEqual([
@@ -117,7 +117,7 @@ describe('managed-controller beta evidence', () => {
       'research',
       'evaluations',
       'rsp-manage',
-      '2026-08-04-manage-orchestration-beta',
+      '2026-08-15-managed-context-no-regression',
       'report.md',
     )
     writeFileSync(reportPath, `${readFileSync(reportPath, 'utf8')}\nretained evidence drift\n`)
@@ -134,7 +134,7 @@ describe('managed-controller beta evidence', () => {
       'research',
       'evaluations',
       'rsp-manage',
-      '2026-08-04-manage-orchestration-beta',
+      '2026-08-15-managed-context-no-regression',
     )
     const reportPath = join(retainedDirectory, 'report.md')
     const reportCopyPath = join(retainedDirectory, 'report-copy.md')
@@ -158,7 +158,7 @@ describe('managed-controller beta evidence', () => {
       'research',
       'evaluations',
       'rsp-manage',
-      '2026-08-04-manage-orchestration-beta',
+      '2026-08-15-managed-context-no-regression',
     )
     const aliasPath = join(directory, 'retained-alias')
     const nestedOutput = join(aliasPath, 'new-generation')
@@ -181,7 +181,7 @@ describe('managed-controller beta evidence', () => {
     const plan = loadManagedControllerBetaPlan(root)
     expect(() => assertManagedControllerBetaOutputBoundary(
       plan,
-      join(root, 'research', 'evaluations', 'rsp-manage', '2026-08-04-manage-orchestration-beta'),
+      join(root, 'research', 'evaluations', 'rsp-manage', '2026-08-15-managed-context-no-regression'),
       root,
     )).toThrow('beta output resolves inside prior retained evidence generation')
     const directory = mkdtempSync(join(tmpdir(), 'rsp-manage-beta-safe-output-'))

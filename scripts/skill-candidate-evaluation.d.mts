@@ -93,6 +93,10 @@ export function evaluateSkillCandidate(
   manifest: SkillCandidateEvaluationManifest,
 ): SkillCandidateEvaluationResult
 export function loadSkillCandidateManifest(path: string): unknown
+export function createSkillCandidateManifestFromManagedRuns(
+  currentMetadata: unknown,
+  candidateMetadata: unknown,
+): SkillCandidateEvaluationManifest
 export function hashSkillEvaluationValue(value: unknown): string
 export function validateSkillEvaluationReceipt(
   receipt: unknown,

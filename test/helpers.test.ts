@@ -381,6 +381,7 @@ describe('documentation command examples', () => {
     const skill = readFileSync(join(root, 'skills', 'rsp', 'SKILL.md'), 'utf-8')
     const rules = readFileSync(join(root, 'rules', 'rsp-rules.md'), 'utf-8')
     const manage = readFileSync(join(root, 'skills', 'rsp-manage', 'SKILL.md'), 'utf-8')
+    const manageCloseout = readFileSync(join(root, 'skills', 'rsp-manage', 'references', 'closeout.md'), 'utf-8')
     const commit = readFileSync(join(root, 'skills', 'rsp-commit', 'SKILL.md'), 'utf-8')
     const coreReferences = [
       'conflict-handling.md',
@@ -417,7 +418,8 @@ describe('documentation command examples', () => {
     expect(skill).toContain('Required verification proves acceptance or changed material risk')
     expect(skill).toContain('Optional verification adds environment, compatibility, scale, or confidence coverage')
     expect(rules).toContain('legacy unclassified items are Required')
-    expect(manage).toContain('require `completionGate: pass` plus `archiveReady: yes`')
+    expect(manage).toContain('When closeout begins, read [lifecycle and delivery closeout]')
+    expect(manageCloseout).toContain('require `completionGate: pass` plus `archiveReady: yes`')
     expect(commit).toContain('stop before staging when a Task or Required Verify item remains incomplete')
   })
 
