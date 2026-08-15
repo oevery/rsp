@@ -7,3 +7,5 @@ Cross-source models are added only when two or more completed source distillatio
 - `rsp-capability-coverage.md` — exact adapt/local Skill-path classifications and the selection ledger for the minimum suite.
 - `rsp-shaping-capability.md` — the selected shaping, slicing, shallow-Group, and Change-profile contract.
 - `rsp-implementation-capability.md` — the selected standalone implementation and fresh-verification contract.
+- `skill-quality-and-governance.md` — the cross-source capability ledger for Skill discovery, routing, compliance, boundaries, optimization, security, and host evidence.
+- `upstream-acceptance-decision.md` — the reviewed revision acceptance wave and the separate product-candidate priority classification.

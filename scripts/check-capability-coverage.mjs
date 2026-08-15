@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
+import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
+import { parse as parseYaml } from 'yaml'
 
 const DECISIONS = new Set([
   'adapted',
@@ -13,7 +15,14 @@ const DECISIONS = new Set([
   'defer',
   'reject',
 ])
-const ADAPT_SOURCES = new Set(['compound-engineering', 'matt-skills', 'ponytail', 'superpowers'])
+const ADAPT_SOURCES = new Set([
+  'addy-agent-skills',
+  'anthropic-skill-creator',
+  'compound-engineering',
+  'matt-skills',
+  'ponytail',
+  'superpowers',
+])
 const MODEL_PATH = join('research', 'models', 'rsp-capability-coverage.md')
 const LOCAL_REPORT_PATH = join('research', 'local-skills', '2026-07-19.md')
 
@@ -21,21 +30,22 @@ function fail(message) {
   throw new Error(message)
 }
 
-function reportRevision(root, source) {
-  const directory = join(root, 'research', 'upstreams', source)
-  const reports = readdirSync(directory).filter(path => path.endsWith('.md'))
-  if (reports.length !== 1)
-    fail(`Expected one report for ${source}, found ${reports.length}`)
-  return reports[0].slice(0, -3)
+function globPattern(pattern) {
+  const escaped = pattern.replace(/[.+^${}()|[\]\\]/gu, '\\$&')
+  return new RegExp(`^${escaped.replaceAll('**', '\0').replaceAll('*', '[^/]*').replaceAll('\0', '.*').replaceAll('?', '[^/]')}$`, 'u')
 }
 
-function evidencePaths(root, source, revision) {
-  const path = join(root, '.cache', 'upstream-distillation', source, revision, 'files.txt')
-  if (!existsSync(path))
-    fail(`Missing prepared evidence for ${source}@${revision}: ${path}`)
-  return readFileSync(path, 'utf8')
+function inventoryPaths(root, source, revision) {
+  const manifest = parseYaml(readFileSync(join(root, 'upstreams.yaml'), 'utf8'))
+  const patterns = manifest.sources?.[source]?.paths?.map(globPattern)
+  if (!patterns?.length)
+    fail(`Missing registry paths for ${source}`)
+  const cache = join(root, '.cache', 'upstreams', source)
+  if (!existsSync(cache))
+    fail(`Missing synchronized checkout for ${source}: ${cache}`)
+  return execFileSync('git', ['-C', cache, 'ls-tree', '-r', '--name-only', revision], { encoding: 'utf8' })
     .split(/\r?\n/u)
-    .filter(path => path.endsWith('SKILL.md'))
+    .filter(path => path.endsWith('SKILL.md') && patterns.some(pattern => pattern.test(path)))
 }
 
 function localPaths(root) {
@@ -45,7 +55,7 @@ function localPaths(root) {
 
 function parseRows(model) {
   return model.split(/\r?\n/u)
-    .filter(line => /^\| C\d+ \|/u.test(line))
+    .filter(line => /^\| C\d+[a-z]? \|/u.test(line))
     .map((line) => {
       const cells = line.split('|').slice(1, -1).map(cell => cell.trim())
       if (cells.length !== 11)
@@ -94,19 +104,24 @@ function assertUniqueCoverage(rows) {
 
 function assertAdaptCoverage(root, rows, seenPaths) {
   for (const source of [...ADAPT_SOURCES].sort()) {
-    const revision = reportRevision(root, source)
     const sourceRows = rows.filter(row => row.source === source)
     if (sourceRows.length === 0)
       fail(`No coverage rows for adapt source ${source}`)
-    if (sourceRows.some(row => row.revision !== revision))
-      fail(`${source}: model revision does not match complete report ${revision}`)
-    for (const path of evidencePaths(root, source, revision)) {
+    const revisions = new Set(sourceRows.map(row => row.revision))
+    if (revisions.size !== 1)
+      fail(`${source}: coverage rows reference multiple revisions`)
+    const [revision] = revisions
+    const reportPath = join(root, 'research', 'upstreams', source, `${revision}.md`)
+    if (!existsSync(reportPath))
+      fail(`${source}: missing complete report ${reportPath}`)
+    const inventory = inventoryPaths(root, source, revision)
+    for (const path of inventory) {
       if (!seenPaths.has(`${source}:${path}`))
         fail(`Missing inventoried path: ${source}:${path}`)
     }
     for (const row of sourceRows) {
       for (const path of row.paths) {
-        if (!evidencePaths(root, source, revision).includes(path))
+        if (!inventory.includes(path))
           fail(`Coverage path is absent from prepared evidence: ${source}:${path}`)
       }
     }

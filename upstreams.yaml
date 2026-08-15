@@ -176,3 +176,87 @@ sources:
       - LICENSE*
       - skills/**
       - tests/**
+
+  addy-agent-skills:
+    repository: https://github.com/addyosmani/agent-skills.git
+    ref: main
+    tier: reference
+    strategy: adapt
+    paths:
+      - README.md
+      - LICENSE*
+      - AGENTS.md
+      - skills/**
+      - evals/**
+      - scripts/**
+
+  anthropic-skill-creator:
+    repository: https://github.com/anthropics/skills.git
+    ref: main
+    tier: reference
+    strategy: adapt
+    paths:
+      - README.md
+      - THIRD_PARTY_NOTICES.md
+      - skills/skill-creator/**
+
+  deepseek-harness:
+    repository: https://github.com/deepseek-ai/deepseek-harness.git
+    ref: master
+    tier: reference
+    strategy: model
+    paths:
+      - README.md
+      - README.zh.md
+      - LICENSE
+      - AGENTS.md
+      - .agents/**
+      - scripts/**
+
+  everything-claude-code:
+    repository: https://github.com/affaan-m/everything-claude-code.git
+    ref: main
+    tier: reference
+    strategy: model
+    paths:
+      - README.md
+      - LICENSE*
+      - skills/**
+
+  skillopt:
+    repository: https://github.com/microsoft/SkillOpt.git
+    ref: main
+    tier: reference
+    strategy: model
+    paths:
+      - README.md
+      - LICENSE
+      - docs/**
+      - plugins/**
+      - skillopt/**
+      - skillopt_sleep/**
+      - tests/**
+
+  skillspector:
+    repository: https://github.com/NVIDIA/SkillSpector.git
+    ref: main
+    tier: reference
+    strategy: tooling
+    paths:
+      - README.md
+      - LICENSE
+      - SECURITY.md
+      - docs/**
+      - skills/**
+      - src/**
+      - tests/**
+
+  skill-use-bench:
+    repository: https://github.com/JinyiHan99/Skill-Use-Bench.git
+    ref: main
+    tier: reference
+    strategy: model
+    paths:
+      - README.md
+      - benchmark/**
+      - evaluation/**

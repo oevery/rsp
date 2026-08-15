@@ -1,15 +1,22 @@
 version: 1
 revisions:
-  agent-skills-spec: 38a2ff82958afee88dadf4831509e6f7e9d8ef4e
+  addy-agent-skills: df1edb2e05487d0aa6d93c747141e0aed1187f25
+  agent-skills-spec: 69ef37e9424c0a7ea9dd2293b559e43ec8176379
   andrej-karpathy-skills: 2c606141936f1eeef17fa3043a72095b4765b9c2
   antfu-skills: a74f281a27dadc02397bc1a174b0f2c97531b6ae
-  compound-engineering: d1bff966296b687eb8509312098458e5fa2535dc
-  gsd-core: 24273e9fdf54f85af23000e7edeaa99d8b74aab9
-  matt-skills: 9603c1cc8118d08bc1b3bf34cf714f62178dea3b
+  anthropic-skill-creator: f6656c1256d5a8adfa37db9110046ef20bac644c
+  compound-engineering: 72bae536f64417335cb24c2ccc9ea0f8eb4ceaa1
+  deepseek-harness: 47f943859bef60e4160492346772ded9b24f765a
+  everything-claude-code: c9de8f5b2b3a225bca9befa2b7700aa5e3a4d1b8
+  gsd-core: 62f44f8d7c3cd9bb169ca75b1bc1da3c8096c29a
+  matt-skills: 8b78b531ab965735c5dc74f6f7a219e1e37326df
   openai-plugins: 11c74d6ba24d3a6d48f54a194cd00ef3beea18f9
-  openspec: 46a4d782229ebb104268130a16e85cb7662a2281
-  planning-with-files: ad1b6927e88359764a4f33720a46ae04e55ab120
-  ponytail: 16f29800fd2681bdf24f3eb4ccffe38be3baec6b
-  skills-cli: 1164afa5f0e21ebd01e6fc11249759353f494ad1
-  spec-kit: 57cc518d63d6f10da3dd93df1ebcadda87c59374
-  superpowers: 44c9b2d6e889982ac18c27d05a19fefe335194e1
+  openspec: 2826b8889e5223a9a8095d4428b60b56597e1020
+  planning-with-files: 9b7d0a007946ae7694216642fd5be78c2f13b6db
+  ponytail: 2ed6c52c9d7e5e56942508591085fd45dea277d3
+  skill-use-bench: b1f74886957e13b8013fa554649b210955b69980
+  skillopt: a17de4ec767eb3171b8ba10111cb74940406d2f1
+  skills-cli: c6f69c631292444cc541ac6d91e2226b0ff247da
+  skillspector: 5680c2c3008e63c9979bbbe08221ee4c2dcd17ee
+  spec-kit: bf88c9f9a82fa370c7a7257aa2b3cf10b457b65c
+  superpowers: b36e0829c6d0140e93cfef2ca599b1b07d4a7797
