@@ -1,8 +1,9 @@
 ---
 topic: skill-quality-and-governance
 status: complete
-implementation_status: proposed
-decision_status: candidate
+implementation_status: partial
+decision_status: accepted
+reconciled_on: 2026-08-15
 sources:
   - "addy-agent-skills@df1edb2e05487d0aa6d93c747141e0aed1187f25 -> research/upstreams/addy-agent-skills/df1edb2e05487d0aa6d93c747141e0aed1187f25.md"
   - "anthropic-skill-creator@f6656c1256d5a8adfa37db9110046ef20bac644c -> research/upstreams/anthropic-skill-creator/f6656c1256d5a8adfa37db9110046ef20bac644c.md"
@@ -17,7 +18,7 @@ sources:
 
 ## Purpose
 
-This model turns the reviewed sources into a queryable maintainer contract for finding, evaluating, securing, and improving Skills. It is research input for the existing G5 Skill promotion gate, not authorization to change published Skills or add a runtime dependency.
+This model turns the reviewed sources into a queryable maintainer contract for finding, evaluating, securing, and improving Skills. It is research input for the existing G5 Skill promotion gate, not authorization to change published Skills or add a runtime dependency. The accepted baseline is closed: Q1 and Q3 now have RSP-owned maintainer infrastructure, while Q2, Q4, and Q5 remain conditional research candidates rather than an implementation queue.
 
 ## Capability Ledger
 
@@ -51,13 +52,13 @@ This model turns the reviewed sources into a queryable maintainer contract for f
 | Security semantics | SkillSpector can use optional LLM analysis and live OSV data | Local static mode is the minimum gate; semantic/provider and OSV egress are explicit optional evidence |
 | Large capability catalogs | ECC favors broad availability; RSP favors a small stable suite | Keep ECC paths searchable as external/library inventory and promote only demonstrated local gaps |
 
-## Demonstrated RSP Gaps
+## Gap and Implementation Status
 
-- **QG1 — Catalog routing is not yet a deterministic gate.** Current behavior fixtures do not prove cross-Skill positive rank, hard-negative restraint, pairwise owner precedence, or description collision control.
-- **QG2 — Evaluation dimensions are aggregated.** Current reports can show task outcome and restraint, but Trigger, Compliance, and Boundary are not consistently scored as independent dimensions with triggered-only diagnosis.
-- **QG3 — Description optimization lacks a standard holdout/no-regression receipt.** A wording edit can improve known prompts while degrading unseen routing.
-- **QG4 — Skill supply-chain security is not a named promotion dimension.** Structure and packaging checks do not substitute for script, permission, egress, injection, dependency, or MCP analysis.
-- **QG5 — Capability search is source-centric.** The existing coverage ledger classifies exact adapt paths, but large library sources need family-level lookup without entering the minimum suite.
+- **QG1 — Deferred pending routing evidence.** Catalog routing is not a deterministic gate, but no observed cross-Skill misrouting or description collision currently justifies Q2 product work.
+- **QG2 — Closed by Q1 maintainer infrastructure.** Trigger, Compliance, Boundary, and task result now project independently, with explicit nullable measurements and no inferred routing evidence. See [skill-evaluation-observability](../../.rsp/archives/2026-08-15_skill-evaluation-observability.md).
+- **QG3 — Closed by Q3 maintainer infrastructure.** Current and candidate observations can now be compared on identity-bound unseen holdouts with a deterministic no-regression receipt. This establishes the gate; it does not prove that any particular Skill candidate is better. See [skill-candidate-no-regression](../../.rsp/archives/2026-08-15_skill-candidate-no-regression.md).
+- **QG4 — Deferred to a selected release-candidate security decision.** Structure and packaging checks still do not substitute for script, permission, egress, injection, dependency, or MCP analysis.
+- **QG5 — Deferred pending repeated lookup friction.** The exact-path coverage ledger is complete; a family-level lookup layer is justified only when maintainers repeatedly fail to find an existing capability.
 
 ## Rejected Ideas
 
@@ -67,14 +68,16 @@ This model turns the reviewed sources into a queryable maintainer contract for f
 - Persisting another workflow or run-state ledger beside RSP artifacts.
 - Sending Skill contents, dependency coordinates, traces, or user history to external providers without explicit scope and authority.
 
-## Candidate Recommendations
+## Recommendation Disposition
 
-- **Q1 — Extend the promotion eval schema.** Add independent Trigger, Compliance, Boundary, task success, corrections, tool calls, elapsed time, and token fields. Evidence: addy R1/R2, anthropic R1, Skill-Use R1/R2/R3. Adoption: independent reimplementation.
-- **Q2 — Add a deterministic catalog-routing suite.** Require realistic positives, hard near-miss negatives, pairwise owner precedence, and description-collision reporting. Evidence: addy R1. Adoption: independent reimplementation.
-- **Q3 — Add holdout and no-regression gates for instruction edits.** Preserve the current candidate when unseen routing or required behavior regresses. Evidence: anthropic R2, SkillOpt R1/R2. Adoption: model-only contract with RSP-owned implementation.
-- **Q4 — Add a deterministic Skill security preflight.** Check executable payloads, permissions, secrets, egress, prompt injection, dependencies, and MCP metadata; keep semantic scanning optional. Evidence: SkillSpector R1/R2/R3/R4. Adoption: evaluate external tooling, then independent implementation if needed.
-- **Q5 — Add a capability-family lookup layer to the coverage ledger.** Index large catalogs as core/library/external and link exact source paths without treating them as product gaps. Evidence: ECC R1/R2, DeepSeek R1. Adoption: model-only.
+| Recommendation | Disposition | Evidence or resume condition |
+| --- | --- | --- |
+| **Q1 — Extend the promotion eval schema.** | `implemented` | Independently reimplemented by [skill-evaluation-observability](../../.rsp/archives/2026-08-15_skill-evaluation-observability.md); deterministic local evidence covers the shared projection, not provider or candidate quality. |
+| **Q2 — Add a deterministic catalog-routing suite.** | `defer` | Resume only from an observed catalog-routing, hard-negative, pairwise-owner, or description-collision failure. Evidence: addy R1. |
+| **Q3 — Add holdout and no-regression gates for instruction edits.** | `implemented` | RSP-owned model-only contract implemented by [skill-candidate-no-regression](../../.rsp/archives/2026-08-15_skill-candidate-no-regression.md); a future concrete Skill edit still requires fresh current/candidate holdout evidence. |
+| **Q4 — Add a deterministic Skill security preflight.** | `defer` | Resume for an explicit release-candidate promotion/security decision after choosing external-tool evaluation or a bounded local preflight. Evidence: SkillSpector R1/R2/R3/R4. |
+| **Q5 — Add a capability-family lookup layer.** | `defer` | Resume only after repeated maintainer lookup friction demonstrates that exact-path coverage is insufficient. Evidence: ECC R1/R2, DeepSeek R1. |
 
 ## Promotion Boundary
 
-No recommendation above changes RSP behavior by itself. A future Change must select one observed failure, three to five non-default behaviors, one owner, exact report recommendation IDs, an adoption mode, and fresh evaluation evidence. Q1/Q2/Q3/Q4 should not be bundled automatically: each can prove a separate local gap and carry different implementation and host costs.
+No recommendation above changes published RSP behavior by itself. Q1 and Q3 are maintainer infrastructure, not evidence that a concrete Skill was optimized. Any future candidate must still select one observed failure, three to five non-default behaviors, one owner, exact report recommendation IDs, an adoption mode, and fresh evaluation evidence. Q2, Q4, and Q5 remain stopped until their stated resume conditions are observed.

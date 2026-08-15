@@ -1,7 +1,8 @@
 ---
 topic: upstream-acceptance-decision
 status: complete
-decision_status: ready-for-owner
+decision_status: accepted
+accepted_on: 2026-08-15
 sources:
   - "addy-agent-skills@df1edb2e05487d0aa6d93c747141e0aed1187f25 -> research/upstreams/addy-agent-skills/df1edb2e05487d0aa6d93c747141e0aed1187f25.md"
   - "agent-skills-spec@69ef37e9424c0a7ea9dd2293b559e43ec8176379 -> research/upstreams/agent-skills-spec/69ef37e9424c0a7ea9dd2293b559e43ec8176379.md"
@@ -26,7 +27,7 @@ sources:
 
 ## Purpose
 
-This report decides whether the 17 completed upstream revisions are ready to become the accepted research baseline. It does not select a product recommendation, modify a published Skill, or authorize Git or publication actions.
+This report records the accepted 17-revision wave that completed the current 20-source research baseline. It does not select a product recommendation, modify a published Skill, or authorize Git or publication actions.
 
 ## Acceptance Semantics
 
@@ -37,7 +38,7 @@ This report decides whether the 17 completed upstream revisions are ready to bec
 
 ## Research-Baseline Decision
 
-All 17 revisions are ready for one acceptance wave. Every source has complete research, matched path coverage, immutable revision evidence, and no unresolved report placeholder. Accepting them together removes stale or null comparison bases without combining their product recommendations.
+All 17 revisions were accepted on August 15, 2026. Together with the three already accepted sources, all 20 registered upstreams now report accepted revisions, complete research, matched path coverage, and no pending action. Acceptance removed stale or null comparison bases without combining or automatically adopting their product recommendations.
 
 | Source | Revision | Research strategy | Baseline decision | Product disposition after accept | Reason |
 | --- | --- | --- | --- | --- | --- |
@@ -59,15 +60,15 @@ All 17 revisions are ready for one acceptance wave. Every source has complete re
 | `ponytail` | `2ed6c52c9d7e5e56942508591085fd45dea277d3` | adapt | accept | no new product candidate | The revision changes host integration rather than canonical Skill behavior. |
 | `superpowers` | `b36e0829c6d0140e93cfef2ca599b1b07d4a7797` | adapt | accept | no new product candidate | Existing classifications remain valid; projection changes do not justify broader routing or Git authority. |
 
-## Product Candidate Priority
+## Product Candidate Disposition
 
-Acceptance should not automatically create product work. If the owner later selects a candidate, use this order:
+Acceptance did not automatically create product work. Two maintainer-infrastructure recommendations were subsequently selected and implemented independently:
 
-1. **Evaluation observability:** select one concrete failure covered by `skill-quality-and-governance.md` Q1, then add independent Trigger, Compliance, Boundary, and task-result fields.
-2. **Deterministic routing:** select Q2 only if catalog routing or description collision is an observed maintainer problem.
-3. **Holdout and no-regression:** select Q3 when a real Skill wording change needs comparison against current behavior.
-4. **Supply-chain security:** select Q4 as a separate Change after deciding whether the first implementation is an external scanner evaluation or a small local deterministic preflight.
-5. **Capability lookup:** retain Q5 as research infrastructure unless maintainers repeatedly fail to find an existing external capability.
+1. **Q1 evaluation observability — implemented:** independent Trigger, Compliance, Boundary, task-result, and nullable measurement projection is retained by the archived `skill-evaluation-observability` Change.
+2. **Q3 holdout and no-regression — implemented:** identity-bound current/candidate comparison is retained by the archived `skill-candidate-no-regression` Change; no concrete Skill candidate has been promoted by that infrastructure.
+3. **Q2 deterministic routing — deferred:** resume only from an observed catalog-routing or description-collision failure.
+4. **Q4 supply-chain security — deferred:** reconsider as a separate release-candidate security decision.
+5. **Q5 capability lookup — deferred:** reconsider only after repeated maintainer lookup friction.
 
 Do not combine all five into one promotion-framework project. Each candidate requires its own observed gap, owner, smallest behavior delta, and acceptance evidence.
 
@@ -79,6 +80,6 @@ Do not combine all five into one promotion-framework project. Each candidate req
 - Do not modify `openai.yaml` in this acceptance wave.
 - Do not create product Changes merely because the research baseline is accepted.
 
-## Recommended Next Action
+## Closeout State
 
-With explicit revision-acceptance authority, run one `accept all` wave for these 17 completed revisions, then verify that all 20 sources report `nextAction: none` and that only `upstreams.lock` changes beyond the already prepared research artifacts. Product candidate selection remains a later owner decision.
+The acceptance wave is complete: all 20 registered sources report accepted revisions, complete research, and no pending action. Q1 and Q3 provide the selected deterministic maintainer foundation. No further upstream-derived product candidate is implied; the next RSP optimization must begin from a newly observed product or workflow problem, while Q2, Q4, and Q5 retain their explicit resume conditions.

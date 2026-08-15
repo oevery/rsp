@@ -1,10 +1,12 @@
 ---
 topic: rsp-skill-system
 status: complete
-implementation_status: proposed
+implementation_status: superseded
 decision_status: frozen
 frozen_on: 2026-07-20
 reconciled_on: 2026-07-21
+superseded_on: 2026-08-15
+current_reconciliation: research/models/rsp-capability-coverage.md
 selected_recommendations:
   - S1
   - S2
@@ -39,6 +41,10 @@ design_inputs:
 
 # RSP Skill System Model
 
+## Current Status Boundary
+
+This is the frozen July 2026 target-design record for the 3.0 assisted suite, not a current product inventory. At that freeze boundary, `rsp-manage` was research-only with recommendation `revise` and managed orchestration remained host/external. Later RSP-owned Changes productized `rsp-manage`, renamed `rsp-address-review` to `rsp-resolve-findings`, and added verification, workspace, commit, landing, release-document, and structural-audit capabilities. Current product truth is `.rsp/specs/skill-system.md`; current upstream-derived capability status is `research/models/rsp-capability-coverage.md`; current Skill evaluation governance is `research/models/skill-quality-and-governance.md`. Historical candidate, cost, and promotion conclusions below remain unchanged as evidence of the decisions made at the model's freeze boundary.
+
 ## Position
 
 RSP should be a progressive system with a removable deterministic core:
@@ -49,7 +55,7 @@ RSP should be a progressive system with a removable deterministic core:
 4. **Managed orchestration:** an optional host or external layer may compose stable capabilities without becoming RSP product truth.
 5. **Distribution:** host projections and an optional plugin package make capabilities installable; they do not redefine behavior or project truth.
 
-This document is intermediate research with a reconciled frozen target design. It does not authorize edits to published `skills/`, `.rsp/`, CLI source, or package metadata. Implementation begins only through a normal RSP Change that selects a bounded slice of this model and its capability-specific recommendations.
+This document is intermediate historical research with a reconciled frozen target design. It does not authorize edits to published `skills/`, `.rsp/`, CLI source, or package metadata. Current implementation status must be read from the authorities named in the status boundary above.
 
 ## Reconciled Assisted Suite
 
