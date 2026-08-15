@@ -54,12 +54,14 @@ async function readWorkDocument(sourcePath: string, options: { changesDir: strin
   let rootBefore: BigIntStats
   let sourceBefore: BigIntStats
   let realRoot: string
+  let realSource: string
   try {
     rootBefore = await lstat(options.changesDir, { bigint: true })
     sourceBefore = await lstat(sourcePath, { bigint: true })
     realRoot = await realpath(options.changesDir)
-    const realSource = await realpath(sourcePath)
-    if (!rootBefore.isDirectory() || !sourceBefore.isFile() || realSource !== sourcePath || !isContained(realRoot, realSource))
+    realSource = await realpath(sourcePath)
+    const expectedRealSource = resolve(realRoot, relative(options.changesDir, sourcePath))
+    if (!rootBefore.isDirectory() || !sourceBefore.isFile() || realSource !== expectedRealSource || !isContained(realRoot, realSource))
       throw unsafe(projectPath)
   }
   catch (error) {
@@ -102,7 +104,7 @@ async function readWorkDocument(sourcePath: string, options: { changesDir: strin
     const realSourceAfter = await realpath(sourcePath)
     if (!sameIdentity(rootBefore, rootAfter)
       || realRootAfter !== realRoot
-      || realSourceAfter !== sourcePath
+      || realSourceAfter !== realSource
       || !sameIdentity(sourceAfter, final)
       || !sameSnapshot(sourceAfter, final)) {
       throw changed(projectPath)

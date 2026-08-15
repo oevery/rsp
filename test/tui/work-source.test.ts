@@ -23,6 +23,19 @@ afterEach(async () => {
 })
 
 describe('tUI Work document source', () => {
+  it('accepts a bounded Work document through an ancestor path alias', async () => {
+    const root = await fixture()
+    const alias = `${root}-alias`
+    roots.push(alias)
+    await symlink(root, alias)
+    const source = createTuiWorkSource({ changesDir: join(alias, '.rsp', 'changes'), maxFileBytes: 64 })
+
+    await expect(source.document(join(alias, '.rsp', 'changes', 'alpha.md'))).resolves.toEqual({
+      path: '.rsp/changes/alpha.md',
+      content: '# Change: alpha\n',
+    })
+  })
+
   it('reads only exact bounded Change and Group Brief paths', async () => {
     const root = await fixture()
     const source = createTuiWorkSource({ changesDir: join(root, '.rsp', 'changes'), maxFileBytes: 64 })
