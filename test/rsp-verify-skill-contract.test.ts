@@ -11,7 +11,7 @@ describe('rsp-verify Skill contract', () => {
     expect(skill).toContain('name: rsp-verify')
     expect(skill).toContain('one explicit WorkRef or one unambiguous focus marker')
     expect(skill).toContain('Do not edit product files')
-    expect(skill).toContain('Verify does not create a `WorkerEnvelope`')
+    expect(skill).toContain('Verify does not create or persist those objects')
     expect(skill).toContain('select isolation')
     expect(skill).toContain('derive `review-clean`')
     expect(skill).toContain('claim `archiveReady`')

@@ -76,7 +76,7 @@ describe('rsp core routing contract', () => {
     for (const field of ['WorkRef', 'Authority', 'Current state', 'Changed artifacts', 'Fresh verification', 'Blockers', 'Next action'])
       expect(skill).toContain(`\`${field}\``)
     expect(skill).toContain('the continuation is not a second state store')
-    expect(skill).toContain('On resume, reopen its pointers to authority and owned artifacts, inspect drift, and refresh decisive evidence')
+    expect(skill).toContain('On same-session resume, reopen its pointers to authority and owned artifacts, inspect drift, replay safety, and refresh decisive evidence')
   })
 
   it('keeps Manage and local delivery detail in owning Skills', () => {

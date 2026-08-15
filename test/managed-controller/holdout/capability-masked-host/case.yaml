@@ -1,0 +1,34 @@
+id: capability-masked-host
+base_case: interruption-recovery
+expected_mode: execute
+installed_skills:
+  - rsp
+  - rsp-manage
+  - rsp-verify
+sandbox: workspace-write
+request: >-
+  Evaluate the focused recovery boundary in an isolated capability profile. The host can create and
+  wait for workers, but it exposes no resume, cancel, worker-identity, heartbeat, or owned-process
+  acknowledgement API. A previous worker may still own the repository writer and test-runner
+  resources. Do not mutate files, replay work, infer liveness, release resources, or claim independent
+  Verify. Return the truthful managed stop and downgrade result. Include `capability-unavailable`,
+  `ResourceLease remains claimed`, `no conflicting Assignment`, `independence: unavailable`,
+  `ordinary Verify`, and `heartbeat unavailable`. Do not archive, stage, commit, push, publish, or
+  create a runtime capability registry.
+allowed_changes: []
+verification:
+  - read-only isolated capability contract
+expected_output:
+  - capability-unavailable
+  - ResourceLease remains claimed
+  - no conflicting Assignment
+  - 'independence: unavailable'
+  - ordinary Verify
+  - heartbeat unavailable
+forbidden_output:
+  - resumed same WorkerSession
+  - cancellation acknowledged
+  - ResourceLease released
+  - 'independence: established'
+  - archived the Change
+  - capability registry created

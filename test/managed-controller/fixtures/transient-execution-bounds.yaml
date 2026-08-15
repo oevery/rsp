@@ -5,31 +5,26 @@ sources:
   - skills/rsp/references/managed-routing.md
 evidence:
   - Same-scope receipts require changed-path and local-diff inspection before later mutation.
-  - Dynamic dispatch capacity protects known required Fix and Verify work without fixed lane allocations.
-  - Corrective retry requires new evidence and enough remaining capacity for decisive acceptance.
+  - Dispatch is bounded by necessary Assignments rather than one whole-run quota.
+  - Correction is Assignment-scoped and independent Verify remains a separate obligation.
   - Controller execution state remains response-only and is never durable project state.
 required_contract:
-  - Before accepting an ordinary same-scope receipt, inspect the actual changed paths against the envelope, inspect the local diff
+  - Before accepting an ordinary same-scope Receipt, inspect the actual changed paths against the Assignment, inspect the local diff
   - Do not return to Core merely to repeat route selection or qualification
-  - Total worker dispatch remains at most four
-  - count one Fix when accepted mutation is still required and count one Verify when the declared acceptance risk or a failed correction still requires worker verification
-  - Start the optional dispatch only when the remaining dispatch capacity covers that dispatch plus every known required obligation
-  - otherwise skip it and preserve the completion path, or stop when no decisive path fits
-  - dynamic capacity protection, not a fixed per-lane allocation
-  - An evidenced failed correction permits at most one corrective retry
-  - Start it only when new evidence makes another correction discriminating
-  - the remaining dispatch capacity still covers the retry and every then-required Verify dispatch
-  - those remaining resources can still produce decisive acceptance evidence
-  - A failure without new evidence, or a retry that cannot still be decisively verified, stops dispatch
+  - Do not impose one fixed dispatch ceiling across the whole managed run
+  - Every dispatch requires one necessary bounded Assignment
+  - at most three correction passes by default
+  - stops earlier when the same failure repeats without new evidence
+  - Independent Verify is a separate required acceptance obligation
+  - does not consume the Fix correction allowance
   - Allow at most three Resolve Findings passes per Change, separate from the worker retry limit
-  - Owner transitions do not reset either limit
-  - Keep frontier classification, lane choice, envelopes, receipts, dispatch and retry counts, concurrency reasoning, invalidation mapping, and resume chronology response-only
+  - Keep frontier classification, topology, assignments, receipts, dispatch and correction counts, concurrency reasoning, invalidation mapping, and resume chronology response-only
   - Create no frontier file, ticket map, ledger, registry, dependency graph, ambient hook, or numeric routing score
   - Never persist the goal envelope, WorkSet, waves, invalidation graph, or discovery classification
 prohibited_actions:
-  - more than four worker dispatches
-  - more than one corrective retry
-  - optional evidence consuming known required Fix or Verify capacity
+  - fixed whole-run dispatch quota
+  - unbounded correction
+  - correction consuming independent Verify identity
   - fixed per-lane allocations
   - more than three managed review passes
   - persisted controller state

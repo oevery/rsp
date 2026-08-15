@@ -28,9 +28,9 @@ Use `rsp workspace inspect <workref> --json` for bounded facts: workspace identi
 The active AI or human owns project-semantic interpretation. Do not create a workspace-specific decision, disposition, authority envelope, next-owner field, or stop vocabulary. Reuse the invoking owner's existing contract:
 
 - Core retains its `ControlOutcome` and canonical `StopDisposition`.
-- Manage retains its `WorkerEnvelope`, frontier classification, and authority envelope.
+- Manage retains its ExecutionFrame, Assignment and Receipt contracts, frontier classification, and authority envelope.
 
-When that contract needs workspace detail, append only a `Workspace context` containing the exact path, branch, target branch, dirty paths, commits ahead, registered activities, shared resources, and intended workspace-local actions. Keep it transient. Do not persist it, turn it into project configuration, serialize it as a universal execution plan, or ask the CLI to interpret it.
+When that contract needs workspace detail, append only a `Workspace context` containing the exact observed path, branch, target branch, dirty paths, commits ahead, registered activities, shared resources, and intended workspace-local actions. Keep it transient. A WorkerSession does not imply this context or prove that a worktree was used. Do not persist it, turn it into project configuration, serialize it as a universal execution plan, or ask the CLI to interpret it.
 
 ## Execute with host-native capabilities
 
@@ -49,7 +49,7 @@ rsp workspace activity register <workref> --id <id> --pid <pid> \
   [--label <text>] [--process-group <pgid>] [--resources <id[,id...]>]
 ```
 
-Pass `--process-group` only when the host created an independent process group and the value has been verified. Registration captures a stable process-start identity; later stop or disposal must fail closed rather than signal when that identity cannot be revalidated. Resource ids are opaque exclusive coordination names; registration prevents another RSP workspace from claiming the same name while the recorded owner identity is alive. A stale lease is not removed by a competing registration: stop or dispose its recorded activity first, then retry. It is cooperative coordination, not an operating-system sandbox or proof that an undeclared process cannot use the resource.
+Pass `--process-group` only when the host created an independent process group and the value has been verified. Registration captures a stable process-start identity; later stop or disposal must fail closed rather than signal when that identity cannot be revalidated. Resource ids are opaque exclusive coordination names; registration prevents another RSP workspace from claiming the same name while the recorded owner identity is alive. A stale cooperative lease is not removed by a competing registration: stop or dispose its recorded activity first, wait for acknowledged termination, then retry. Workspace registration is one implementation for recoverable process resources, not the universal managed ResourceLease model, an operating-system sandbox, or proof that an undeclared process cannot use the resource.
 
 Use `rsp workspace activity stop <workref> --id <id>` to stop one recorded activity and release its resources. If registration fails after the host starts a process, stop that process through the host before returning.
 

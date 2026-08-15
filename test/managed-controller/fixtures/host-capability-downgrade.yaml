@@ -1,0 +1,26 @@
+id: host-capability-downgrade
+sources:
+  - .rsp/changes/refine-managed-execution-recovery-model.md
+  - .rsp/specs/skill-control-model.md
+  - skills/rsp-manage/SKILL.md
+  - skills/rsp-manage/references/interruption-recovery.md
+evidence:
+  - Host capability absence is independent from workspace isolation and must never be inferred from worker or worktree identity.
+  - Missing resume, cancellation, identity, or heartbeat APIs produce truthful stop or downgrade behavior without fabricated acknowledgement.
+  - The isolated contract profile exercises the negative capability boundary without invoking a provider or creating a production runtime adapter.
+required_contract:
+  - Do not require hosts to expose worker identity, cancellation, heartbeat, or process APIs they do not have
+  - unavailable capabilities fail or downgrade truthfully instead of being inferred
+  - A failed creation or resume creates no synthetic dispatch or continuity claim
+  - Explicit cancellation waits for worker and owned background-process acknowledgement
+  - until acknowledgement, resources remain claimed and no conflicting Assignment starts
+  - 'record `independence: unavailable`; ordinary read-only Verify may still run, but Manager must not claim independent verification'
+  - Elapsed time, poll count, heartbeat count, progress-message count, token count, token limit, and token cost are not routing
+  - a worker identity does not imply an isolated worktree
+prohibited_actions:
+  - workspace isolation treated as host capability removal
+  - synthetic resume acknowledgement
+  - synthetic cancellation acknowledgement
+  - early ResourceLease release
+  - fabricated independent verification
+  - timer-driven worker failure

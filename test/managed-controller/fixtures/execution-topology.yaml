@@ -1,0 +1,29 @@
+id: execution-topology
+sources:
+  - skills/rsp-manage/SKILL.md
+  - skills/rsp/references/managed-routing.md
+  - skills/rsp-workspace/SKILL.md
+evidence:
+  - Worker reuse is a continuity optimization, while fresh workers establish independence or a reasoning reset.
+  - Workspace isolation is selected separately from worker dispatch.
+required_contract:
+  - ExecutionFrame
+  - WorkerSession
+  - Assignment
+  - Receipt
+  - ResourceLease
+  - direct
+  - longitudinal
+  - sequential
+  - parallel-wave
+  - read-only-fan-out
+  - bounded-correction
+  - independent-verify
+  - Reuse the same WorkerSession
+  - create a fresh WorkerSession
+  - a worker identity does not imply an isolated worktree
+  - The current checkout is valid when Core did not select workspace isolation
+prohibited_actions:
+  - persisted topology
+  - worker identity as worktree proof
+  - universal primary worker

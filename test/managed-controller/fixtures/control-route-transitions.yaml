@@ -20,7 +20,7 @@ required_contract:
   - returning a ready WorkOwner to Core for fresh route derivation
   - it never resumes Manage directly
   - Return to Core only when owner identity, topology, requested route, declared behavior, acceptance, public-interface boundary, scope, mutation authority, or external-action authority changes
-  - no Manage handoff or WorkerEnvelope
+  - no Manage handoff or managed Assignment
 prohibited_actions:
   - persist ControlOutcome
   - resume Manage directly from Shape

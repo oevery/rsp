@@ -95,8 +95,11 @@ describe('rsp-manage research candidate', () => {
       'drift-stop',
       'explicit-eligibility',
       'explicit-pause',
+      'execution-topology',
+      'focus-capsule-portability',
       'fresh-return',
       'frontier-precedence-stop',
+      'host-capability-downgrade',
       'owner-preflight-routing',
       'interruption-recovery',
       'lane-boundaries',
@@ -211,6 +214,39 @@ describe('rsp-manage research candidate', () => {
     ])
     expect(prepared.prompt).toContain('handoff-pointer')
     expect(readFileSync(join(prepared.workspace, '.rsp', 'focus.d', 'normalize-checkpoint'), 'utf8').trim()).toBe('')
+  })
+
+  it('prepares representative execution-model holdouts', ({ onTestFinished }) => {
+    const outputRoot = mkdtempSync(join(tmpdir(), 'rsp-manage-execution-model-'))
+    onTestFinished(() => rmSync(outputRoot, { force: true, recursive: true }))
+
+    const longitudinal = prepareManagedControllerRun({ caseId: 'longitudinal-worker-reuse', outputRoot, root, variant: 'product' })
+    expect(longitudinal.manifest).toMatchObject({ automatic_activation: true, base_case: 'auto-multisurface-routing' })
+    expect(longitudinal.manifest.expected_output).toEqual(expect.arrayContaining(['longitudinal', 'same WorkerSession']))
+    expect(longitudinal.prompt).toContain('reuse the same primary WorkerSession')
+
+    const fresh = prepareManagedControllerRun({ caseId: 'fresh-strategy-reset', outputRoot, root, variant: 'product' })
+    expect(fresh.manifest.base_case).toBe('multi-slice')
+    expect(fresh.manifest.expected_output).toEqual(expect.arrayContaining(['fresh WorkerSession', 'shared test runner serialized']))
+    expect(fresh.prompt).toContain('strategy is now rejected')
+
+    const recovery = prepareManagedControllerRun({ caseId: 'cross-session-reverify', outputRoot, root, variant: 'product' })
+    expect(recovery.manifest.installed_skills).toEqual(['rsp', 'rsp-manage', 'rsp-implement', 'rsp-verify'])
+    expect(recovery.manifest.expected_output).toEqual(expect.arrayContaining(['inspect-before-repeat', 'fresh Verify', 'independence']))
+    expect(recovery.prompt).toContain('previous worker identity cannot be established')
+
+    const masked = prepareManagedControllerRun({ caseId: 'capability-masked-host', outputRoot, root, variant: 'product' })
+    expect(masked.manifest).toMatchObject({
+      allowed_changes: [],
+      sandbox: 'workspace-write',
+    })
+    expect(masked.prompt).toContain('no resume, cancel, worker-identity, heartbeat')
+    expect(scoreManagedControllerOutput(masked.manifest, [
+      'StopDisposition: capability-unavailable.',
+      'The ResourceLease remains claimed and no conflicting Assignment starts.',
+      'Worker identity is absent, so independence: unavailable; ordinary Verify cannot establish independence.',
+      'Heartbeat unavailable; elapsed time is not failure evidence.',
+    ].join('\n'))).toEqual({ expected_missing: [], forbidden_present: [] })
   })
 
   it('scores ordered continuation fields and selected-goal resume evidence', () => {
@@ -401,7 +437,7 @@ describe('rsp-manage product Skill', () => {
     expect(findSemanticUnit(qualify, ['fails any one', 'non-small', 'middle case'])).toBeDefined()
     expect(findSemanticUnit(entry, ['Core', 'solely own', 'initial Manage qualification'])).toBeDefined()
     expect(findSemanticUnit(entry, ['Manage', 'never repeats', 'direct-versus-managed eligibility'])).toBeDefined()
-    expect(findSemanticUnit(entry, [/validate only handoff completeness/i, 'owner and topology', 'authority envelope', 'owned paths', 'qualification evidence'])).toBeDefined()
+    expect(findSemanticUnit(entry, [/validate only handoff completeness/i, 'owner and WorkRef topology', 'authority envelope', 'owned paths', 'qualification evidence'])).toBeDefined()
     expect(findSemanticUnit(entry, ['continue the selected managed goal', 'without repeating qualification'])).toBeDefined()
     expect(body).not.toContain('## Qualify before mutation')
     expect(body).not.toContain('Decline Manage without any mutation')
@@ -426,12 +462,12 @@ describe('rsp-manage product Skill', () => {
     expect(findSemanticUnit(frontier, ['Resume only after', 'Shape', 'ready owner', 'Core', 'rederives the route'])).toBeDefined()
   })
 
-  it('defines one minimal token-independent WorkerEnvelope and one-shot receipt schema', () => {
+  it('defines one minimal token-independent Assignment and Receipt schema', () => {
     const { body } = readSkill(product)
     const lanes = markdownSection(body, 'Resolve the execution frontier')
 
-    expect(inlineCodeValuesInUnit(lanes, ['Every lane', '`WorkerEnvelope`', 'common fields'])).toEqual([
-      'WorkerEnvelope',
+    expect(inlineCodeValuesInUnit(lanes, ['Every worker lane', '`Assignment`', 'common fields'])).toEqual([
+      'Assignment',
       'WorkRef',
       'lane',
       'objective',
@@ -442,15 +478,18 @@ describe('rsp-manage product Skill', () => {
       'known facts',
       'allowed and prohibited actions',
       'stop conditions',
+      'resume safety: idempotent | inspect-before-repeat | non-repeatable',
     ])
-    expect(inlineCodeValuesInUnit(lanes, ['Every receipt', 'contains'])).toEqual([
+    expect(inlineCodeValuesInUnit(lanes, ['Every Receipt', 'contains'])).toEqual([
+      'WorkerSession',
+      'Receipt',
       'result',
       'changed paths',
       'verification',
       'boundary: unchanged | changed',
     ])
     expect(findSemanticUnit(lanes, ['exact owner sections or paths', 'instead of copying their prose'])).toBeDefined()
-    expect(findSemanticUnit(lanes, ['one-shot workers', 'one envelope', 'one receipt', 'no conversational execution diary'])).toBeDefined()
+    expect(findSemanticUnit(lanes, ['WorkerSession', 'Receipt', 'rather than a conversational execution diary'])).toBeDefined()
     expect(findSemanticUnit(lanes, ['Diagnose', '`rsp-diagnose`', 'read-only', 'no-cause result'])).toBeDefined()
     expect(findSemanticUnit(lanes, ['Inspect', 'private Manager-only', 'read-only lane'])).toBeDefined()
     expect(findSemanticUnit(lanes, ['Fix', '`rsp-implement`', 'sole product writer'])).toBeDefined()
@@ -491,24 +530,18 @@ describe('rsp-manage product Skill', () => {
     })
   })
 
-  it('protects required Fix and Verify capacity without fixed lane allocations', () => {
+  it('bounds Assignments and correction while preserving independent Verify', () => {
     const { body } = readSkill(product)
-    const capacity = body.match(/Before starting an optional Diagnose or Inspect dispatch,[^\n]+/)?.[0] ?? ''
 
     expect(body).toContain('may run alongside another read-only lane only when paths and verification resources are demonstrably isolated')
     expect(body).toContain('otherwise keep it sequential')
     expect(body).toContain('Separate Group child mutation boundaries may overlap only under the existing isolated workspace and verification rule')
-    expect(body).toContain('Total worker dispatch remains at most four')
-    expect(capacity).toContain('count one Fix when accepted mutation is still required')
-    expect(capacity).toContain('count one Verify when the declared acceptance risk or a failed correction still requires worker verification')
-    expect(capacity).toContain('remaining dispatch capacity covers that dispatch plus every known required obligation')
-    expect(capacity).toContain('otherwise skip it and preserve the completion path')
-    expect(body).toContain('dynamic capacity protection, not a fixed per-lane allocation')
-    expect(body).toContain('at most one corrective retry')
-    expect(body).toContain('new evidence makes another correction discriminating')
-    expect(body).toContain('remaining dispatch capacity still covers the retry and every then-required Verify dispatch')
-    expect(body).toContain('can still produce decisive acceptance evidence')
-    expect(body).toContain('A failure without new evidence, or a retry that cannot still be decisively verified, stops dispatch')
+    expect(body).toContain('Do not impose one fixed dispatch ceiling across the whole managed run')
+    expect(body).toContain('Every dispatch requires one necessary bounded Assignment')
+    expect(body).toContain('at most three correction passes by default')
+    expect(body).toContain('new evidence makes it discriminating')
+    expect(body).toContain('stops earlier when the same failure repeats without new evidence')
+    expect(body).toContain('Independent Verify is a separate required acceptance obligation and does not consume the Fix correction allowance')
     expect(reviewConvergence).toContain('Allow at most three Resolve Findings passes per Change')
   })
 
@@ -565,15 +598,15 @@ describe('rsp-manage product Skill', () => {
   it('revalidates selected-goal evidence and keeps all controller execution state transient', () => {
     const { body } = readSkill(product)
 
-    expect(body).toContain('inspect the actual changed paths against the envelope')
+    expect(body).toContain('inspect the actual changed paths against the Assignment')
     expect(body).toContain('inspect the local diff')
     expect(body).toContain('Reread the complete owner, status, authority, blockers, and decisive evidence only when')
     expect(body).toContain('execution resumes across sessions, or closeout begins')
     expect(body).toContain('Do not return to Core merely to repeat route selection or qualification')
-    expect(body).toContain('frontier classification, lane choice, envelopes, receipts, dispatch and retry counts, concurrency reasoning, invalidation mapping, and resume chronology response-only')
-    expect(body).toContain('Converged requirements and design belong in the selected Change')
-    expect(body).toContain('real dependencies in `Blockers`')
-    expect(body).toContain('durable facts or rationale in the durable writeback decision')
+    expect(body).toContain('frontier classification, topology, assignments, receipts, dispatch and correction counts, concurrency reasoning, invalidation mapping, and resume chronology response-only')
+    expect(body).toContain('compress only accepted outcomes into Change Tasks')
+    expect(body).toContain('real unresolved dependencies or risks into Blockers')
+    expect(body).toContain('Durable facts or rationale remain owned by the durable writeback decision')
     expect(body).toContain('Create no frontier file, ticket map, ledger, registry, dependency graph, ambient hook, or numeric routing score')
   })
 
@@ -602,14 +635,12 @@ describe('rsp-manage product Skill', () => {
     const { body } = readSkill(product)
 
     expect(body).toContain('When the host supports workers and authorized implementation remains, dispatch at least one implementation worker')
-    expect(body).toContain('sequential execution does not permit the controller to absorb the whole implementation')
-    expect(body).toContain('The controller retains worker-result acceptance, convergence verification, review convergence, lifecycle decisions, and commit eligibility and orchestration')
+    expect(body).toContain('sequential or longitudinal execution does not permit the controller to absorb the whole implementation')
+    expect(body).toContain('The controller retains Receipt acceptance, convergence verification, review convergence, lifecycle decisions, and commit eligibility and orchestration')
     expect(body).toContain('It does not absorb Commit\'s exact Git procedure')
-    expect(body).toContain('real hosts, provider sessions, and hardware resources overlap')
-    expect(body).toContain('unless an authorized isolated workspace and verification boundary exist')
-    expect(body).toContain('Dispatch in parallel only for isolated mutation paths and verification resources')
-    expect(body).toContain('delegation never implies concurrency')
-    expect(body).toContain('concrete reason for sequential or parallel execution')
+    expect(body).toContain('provider sessions, and hardware/classroom sessions as exclusive `ResourceLease` candidates')
+    expect(body).toContain('Dispatch in parallel only for independent mutation paths and evidenced distinct resources')
+    expect(body).toContain('delegation and separate workers never imply concurrency or isolation')
     expect(body).toContain('each worker runs the narrow lane-local check in its `Verify Set`')
     expect(body).toContain('Manager runs at most one affected or integration gate for shared risk')
     expect(body).toContain('closeout always reruns the Change-required evidence fresh')
@@ -624,9 +655,9 @@ describe('rsp-manage product Skill', () => {
     const boundaries = markdownSection(body, 'Preserve boundaries')
 
     expect(findSemanticUnit(boundaries, ['short optional Markdown Focus Capsule', 'owned only by Manager'])).toBeDefined()
-    expect(findSemanticUnit(boundaries, ['marker path', 'sole focus-selection truth', 'prose grants no authority'])).toBeDefined()
+    expect(findSemanticUnit(boundaries, ['focus marker path', 'sole selection truth', 'prose grants no authority'])).toBeDefined()
     expect(findSemanticUnit(boundaries, ['workers communicate through messages', 'rather than the capsule'])).toBeDefined()
-    expect(findSemanticUnit(boundaries, ['accepted lane', 'changed next action', 'blocker transition', 'convergence', 'pause', 'session end'])).toBeDefined()
+    expect(findSemanticUnit(boundaries, ['Manager-accepted meaningful checkpoint', 'never after each tool call or worker message'])).toBeDefined()
     expect(boundaries).toContain('never after each tool call or worker message')
   })
 
@@ -663,10 +694,10 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('the complete owning Change, or the Group Brief and its children')
     expect(body).toContain('relevant Specs and Decisions')
     expect(body).toContain('`rsp status --json`, and the current worktree')
-    expect(body).toContain('Every lane receives one minimal transient `WorkerEnvelope`')
-    expect(body).toContain('four worker dispatches and one worker corrective retry')
-    expect(body).toContain('across the whole managed run')
-    expect(body).toContain('Owner transitions do not reset either limit')
+    expect(body).toContain('Every worker lane receives one minimal transient `Assignment`')
+    expect(body).toContain('Do not impose one fixed dispatch ceiling across the whole managed run')
+    expect(body).toContain('at most three correction passes by default')
+    expect(body).toContain('Independent Verify is a separate required acceptance obligation')
     expect(body).toContain('each worker runs the narrow lane-local check in its `Verify Set`')
     expect(body).toContain('at most one affected or integration gate')
     expect(body).toContain('Inspect changed paths, local diff, and declared verification before accepting results')
@@ -705,9 +736,8 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('dispatch child WorkRefs only in the current derived `plan.waves` wave')
     expect(body).toContain('Rerun `rsp status --json`')
     expect(body).toContain('restrict it to declared children')
-    expect(body).toContain('shared paths, lockfiles, generated artifacts, integration state, real hosts, provider sessions, and hardware resources overlap')
-    expect(body).toContain('unless an authorized isolated workspace and verification boundary exist')
-    expect(body).toContain('Keep blockers, later waves, overlaps, and dependent verification sequential')
+    expect(body).toContain('repository writer boundaries, the RSP control plane, test runners, generated artifacts, browsers, Brokers, provider sessions, and hardware/classroom sessions')
+    expect(body).toContain('Keep blockers, later waves, shared seams, conflicting leases, and dependent verification sequential')
     expect(body).toContain('Workers receive no implied focus')
   })
 

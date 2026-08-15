@@ -19,7 +19,7 @@ RSP separates open work, durable truth, lasting rationale, scoped instructions, 
 - `.rsp/specs/` stores durable current facts and agreed design. Use `rsp specs` to derive its current tree, inspect one exact document, or run bounded literal search directly from readable Markdown.
 - `.rsp/specs/decisions/` is the default authoritative Decision Record directory. It stores lasting rationale, alternatives, tradeoffs, and consequences.
 - `.rsp/changes/` stores open work. Each executable Change is one Markdown file.
-- `.rsp/focus.d/` contains marker files whose paths select current work. A marker may hold a short optional Markdown Focus Capsule with Manager-accepted recovery pointers; arbitrary bounded Markdown is accepted, and a version comment is recommended but not required or parsed. Its prose is not authority, lifecycle state, or worker transport.
+- `.rsp/focus.d/` contains marker files whose paths select current work. A marker may hold a short optional Markdown Focus Capsule with Manager-accepted recovery pointers. Its path is the only selection truth; its prose is not authority, lifecycle state, acceptance, or worker transport. A portable generated capsule uses a version comment plus `Current`, `Evidence`, `Next`, and exceptional `Resume check`, excludes machine/runtime data, may be committed with an open Change, and is removed by unfocus or archive.
 - `.rsp/archives/` retains completed Change history.
 
 Stable scoped workflow and validation instructions belong in the nearest project-owned `AGENTS.md`, outside the managed RSP block.

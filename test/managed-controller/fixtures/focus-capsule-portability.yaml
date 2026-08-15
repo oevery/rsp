@@ -1,0 +1,25 @@
+id: focus-capsule-portability
+sources:
+  - skills/rsp-manage/SKILL.md
+  - skills/rsp-manage/references/interruption-recovery.md
+  - .rsp/specs/core-model.md
+evidence:
+  - Open work may commit a sparse portable recovery projection without persisting runtime control state.
+required_contract:
+  - focus marker path remains the sole selection truth
+  - Current
+  - Evidence
+  - Next
+  - Resume check
+  - intermediate commit
+  - separately authorized Git transfer
+  - worker identities
+  - absolute or machine-specific workspace path
+  - raw receipts
+  - Archive or explicit unfocus removes the marker
+  - current-evidence rederivation
+  - evidence freshness
+prohibited_actions:
+  - capsule as authority
+  - runtime ledger
+  - machine-specific recovery state

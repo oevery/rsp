@@ -1,0 +1,37 @@
+id: fresh-strategy-reset
+base_case: multi-slice
+expected_mode: execute
+installed_skills:
+  - rsp
+  - rsp-manage
+  - rsp-implement
+request: >-
+  Finish the focused Change. A prior Fix worker proposed Number coercion for retry counts, but that
+  strategy is now rejected by the declared requirement that numeric strings fail. Treat the
+  rejected strategy as current-session evidence and use a fresh WorkerSession for the retry
+  correction rather than resuming that reasoning context. Header and retry paths remain disjoint,
+  but their aggregate npm test shares one test-runner resource. Modify only the allowed paths,
+  run npm test, and report `fresh WorkerSession` and `shared test runner serialized`. Do not stage,
+  commit, archive, push, publish, or persist controller state.
+allowed_changes:
+  - .rsp/changes/normalize-transport-inputs.md
+  - src/header.mjs
+  - src/retry.mjs
+  - test/header.test.mjs
+  - test/retry.test.mjs
+required_changes:
+  - .rsp/changes/normalize-transport-inputs.md
+  - src/header.mjs
+  - src/retry.mjs
+verification:
+  - npm
+  - test
+expected_output:
+  - fresh WorkerSession
+  - shared test runner serialized
+  - npm test
+forbidden_output:
+  - resumed rejected strategy
+  - parallel npm test
+  - committed the changes
+  - controller state created

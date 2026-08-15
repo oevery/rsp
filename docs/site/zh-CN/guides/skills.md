@@ -80,9 +80,9 @@ manage:
 
 Core 先把一个明确的 shape-ready Change 或浅层 Group 解析为 `WorkOwner`，并独占首次 Manage 资格判断及 `selected | declined` 路由结果。缺少或未就绪的归属在独立规划产物权限下直接进入 Shape；Shape 把 ready WorkOwner 返回 Core 重新路由，绝不直接恢复 Manage。Manage 一旦被选中，只校验 handoff 完整性以及当前 owner、权限和归属差异是否漂移，不重复判断 direct 还是 managed。普通同范围 receipt 只需检查实际路径和局部 diff；正常 Fix 在已声明验收内实现行为时不会触发完整 owner 重读。只有发现或新请求改变已声明行为、验收或公共接口边界，或出现其他失效信号、跨会话恢复、closeout 时，才扩大重读并返回 Core。
 
-受管执行会按失败关闭顺序把新出现的不确定性分类为超出目标、归属者决策、尚不可精确描述的 fog、需要事实证据，或可执行。每个 one-shot worker packet 只携带 WorkRef、目标、精确 authority 引用、Read/Write/Verify 集合、有界已知事实、允许与禁止动作和停止条件。Worker 通过消息返回 result、changed paths、精确 verification、omissions 与 boundary status，不通过 Focus Capsule 协调。Token 数量或限制永远不参与派发、路由、权限、完成或验收判断。
+受管执行会按失败关闭顺序把新出现的不确定性分类为超出目标、归属者决策、尚不可精确描述的 fog、需要事实证据，或可执行。Manage 会派生临时 `ExecutionFrame` 与最小安全拓扑：直接执行、纵向复用 worker、顺序 worker、并行 wave、只读 fan-out、有界纠正或独立 Verify。每个 `Assignment` 只携带 WorkRef、目标、精确 authority 引用、Read/Write/Verify 集合、有界已知事实、允许与禁止动作、停止条件和重放安全等级。Worker 通过消息返回包含 result、changed paths、精确 verification、omissions、boundary status、证据有效性与资源释放结果的 `Receipt`，不通过 Focus Capsule 协调。Token 数量、运行时间、轮询次数与进度消息数永远不参与派发、路由、权限、完成或验收判断。
 
-Diagnose 与私有 Inspect lane 保持只读；Fix 是其修改边界内的唯一写入者。Manage 通过 `rsp-verify` 的结果契约路由验证，且只有能够确认 Verify 使用了不同于 Fix 的 worker identity 时，才可声称独立验证；否则必须报告 independence unavailable。可选证据工作不能消耗当前 Fix/Verify 验收路径已需要的派发容量；只有剩余容量仍能形成决定性验收证据时，才可启动 corrective retry。lane 状态、packet、receipt、计数与过程时间线始终保持临时。
+Diagnose 与私有 Inspect lane 保持只读；Fix 是其修改边界内的唯一写入者。只有 owner、角色、seam、策略与 writer 边界仍兼容时，才纵向复用 primary worker；独立调查、策略重置、无关切片与独立 Verify 使用 fresh worker。Manage 通过 `rsp-verify` 的结果契约路由验证，且只有能够确认 Verify 使用了不同于 Fix 的 worker identity 时，才可声称独立验证；否则必须报告 independence unavailable。不再设置整个 managed run 的派发总配额：每次派发都必须服务于必要且有界的 Assignment；同范围 Assignment 失败后默认最多允许三次 correction pass，且在没有新证据或无法收敛时提前停止。独立 Verify 始终是单独的验收义务。frame、session、assignment、receipt、resource lease、计数与过程时间线始终保持临时。
 
 `closeout` 设置 Manage 已被实际选择并通过资格判断后的收尾上限：
 
@@ -94,6 +94,8 @@ Manage 负责推导 commit 资格、时机和 Commit envelope；`rsp-commit` 独
 
 `activation` 永远不授予规划或产品修改权限。对于当前已选择且通过资格判断的 Manage，`closeout` 仅作为上述自动生命周期/本地 Git 权限上限，且更近的限制仍可收窄它。推送、标签、发布、部署、批准、人工验收及其他外部操作始终需要显式授权。
 
-受管工作的中断与恢复不会创建持久化控制器或暂停状态。Manager 可在选中的 marker 中保存稀疏的已接受状态 Focus Capsule 作为恢复指针，但它不具备权限。字节上限内的 capsule Markdown 可以自由书写；版本注释仅为推荐，不是必需项，也不会被解析。暂停会停止进行中的工作，但保留聚焦的 WorkRef；跨会话恢复会重读权限、状态、差异、阻塞项与验证结果，再校验已选择的 handoff，而不重复路由资格判断。验证先运行 lane-local 检查，在 convergence 时运行一次 affected 或 integration gate，并在 closeout 时重新运行 Change 要求的新鲜证据。
+受管工作的中断与恢复不会创建持久化控制器或暂停状态。机器 heartbeat 与用户可见进度分离，健康运行的长 worker 或验证不会因为计时器或消息阈值而被取消。显式取消会一直保留独占资源，直到 worker 与其拥有的后台进程确认停止。Assignment 把重放安全声明为 idempotent、inspect-before-repeat 或 non-repeatable；长上下文只有在写回已接受状态并检查 diff 与证据后，才能进行语义 rollover。
+
+Manager 可在选中的 marker 中保存稀疏的已接受状态 Focus Capsule 作为恢复指针，但它不具备权限。可安全提交的 capsule 只包含版本注释以及 `Current`、`Evidence`、`Next` 和例外情况下的 `Resume check`；不得包含 worker identity、进程 handle、本机路径、lease、原始 receipt、日志、重试、拓扑或权限。未归档 Change 的普通中间提交可以包含 marker 与 capsule，但跨设备可用仍需要单独授权的 Git 传输，并重新派生权限、baseline、dirty state、阻塞项、资源与证据有效性。unfocus 或 archive 会删除 marker。验证先运行 lane-local 检查，在 convergence 时运行一次 affected 或 integration gate，并在 closeout 时重新运行 Change 要求的新鲜证据。
 
 精确键见[配置](../reference/configuration.md)，普通操作见[日常工作流](./daily-workflow.md)。

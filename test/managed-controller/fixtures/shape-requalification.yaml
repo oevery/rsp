@@ -9,7 +9,7 @@ evidence:
 required_contract:
   - 'Missing or non-ready ownership uses `RouteDisposition: shape`'
   - Shape returns only a ready `WorkOwner` to Core
-  - reopen its pointers to authority and owned artifacts, inspect drift, and refresh decisive evidence
+  - reopen its pointers to authority and owned artifacts, inspect drift, replay safety, and refresh decisive evidence
   - configuration alone never does
   - Shape returns a clarified owner
 prohibited_actions:

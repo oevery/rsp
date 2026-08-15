@@ -12,7 +12,7 @@
 | Contract | Runtime owner |
 | --- | --- |
 | `ControlOutcome`, `RouteDisposition`, `StopDisposition`, and Continuation | `rsp` |
-| `WorkerEnvelope`, managed common receipt, frontier, acceptance, and closeout | `rsp-manage` |
+| `ExecutionFrame`, `WorkerSession`, `Assignment`, `Receipt`, `ResourceLease`, frontier, acceptance, and closeout | `rsp-manage` |
 | Verification result and evidence fields | `rsp-verify` |
 | Discipline-specific result and stop conditions | The owning Discipline Skill |
 | Workspace context and observations | `rsp-workspace` |
@@ -35,7 +35,7 @@
 ## Route Disposition
 - Core owns `RouteDisposition`, whose values are exactly:
   - `specialist`: return one explicit bounded Discipline result path. The named Discipline owns that one action and returns its result without becoming a completion controller.
-  - `direct`: orchestrate one bounded non-managed completion or continuation with one decisive verification and no Manage handoff or WorkerEnvelope. It may name exactly one Discipline executor. Core may directly mutate only RSP control-plane state; product mutation belongs to Implement or the same bounded manual Discipline action.
+  - `direct`: orchestrate one bounded non-managed completion or continuation with one decisive verification and no Manage handoff or managed `Assignment`. It may name exactly one Discipline executor. Core may directly mutate only RSP control-plane state; product mutation belongs to Implement or the same bounded manual Discipline action.
   - `managed`: hand one selected shape-ready owner and bounded goal to Manage after qualification. This is the only route that composes worker lanes and review convergence.
   - `shape`: return unclear but owned work to Shape.
   - `stop`: perform no further action and name the applicable `StopDisposition`.
@@ -71,7 +71,7 @@
 | `ask-owner` | Ask one highest-impact owner decision with the evidenced tradeoff. | Core freshly derives ownership and routing, or reruns the owning Discipline, after the answer. |
 | `return-to-shape` | Shape uses ordinary clarification or explicit deep clarification without implementation. | Resume only after Shape confirms a ready owner, then freshly rederive routing and qualification. |
 | `reroute` | Core establishes a valid owner, WorkRef, topology, dirty-path boundary, or authority. | Start again at Core route derivation; do not resume the prior frontier. |
-| `retry-with-evidence` | Supply new evidence that directly addresses the failed or unresolved result. | Retry only within the owning Discipline's or Manage's declared retry bound. |
+| `retry-with-evidence` | Supply new evidence that directly addresses the failed or unresolved result. | Retry only while the owning Discipline's bound or the current managed Assignment's convergence rule permits it. |
 | `environment-blocked` | Restore the required local or external environment. | Reread authority, state, diff, blockers, and evidence before continuing. |
 | `verification-blocked` | Resolve the named verification gate or obtain the required acceptance input. | Rerun the decisive verification and rederive acceptance. |
 | `capability-unavailable` | Restore the required capability or select an explicitly valid fallback. | Freshly rederive the route or frontier; absence is never accepted as success. |
@@ -81,11 +81,22 @@
 ## Execution Evidence
 - Specialist Disciplines and managed lanes retain their own exact result schemas. The control model does not replace Diagnose, Inspect, Fix, Verify, Review, or Resolve Findings results with a generic execution enum.
 - Only a missing optional Discipline Skill may use that Discipline's bounded manual fallback against the same owner. A manual fallback never substitutes for a required managed worker or required independent Verify.
-- A managed WorkerEnvelope and its receipt are transient execution evidence. Every envelope carries the response language and the localized control-narration rule: human-facing receipt narration uses that response language, while an exact result value remains unchanged only as a secondary parenthesized or code-formatted token. Private Inspect uses the managed contract directly; managed Verify consumes the `rsp-verify` result and appends worker identity and independence.
+- Managed execution uses five transient objects and persists none of them as RSP state:
+  - `ExecutionFrame` contains the current goal, WorkOwner or WorkSet, effective authority, comparison baseline, observed execution location, current resource claims, and acceptance surfaces. Manage rederives it from current owners and evidence.
+  - `WorkerSession` identifies one worker role and its fresh or resumed context within the current frame. It is not a resource lease, does not imply an isolated worktree, and is not durable identity.
+  - `Assignment` contains one bounded objective, exact authority references, Read/Write/Verify Sets, known facts, allowed and prohibited actions, stop conditions, and `resume safety: idempotent | inspect-before-repeat | non-repeatable`.
+  - `Receipt` contains the exact lane result, actual changed paths, verification and omissions, boundary status, evidence validity, and resource-release outcome. Worker identity and independence are included only when observed and required.
+  - `ResourceLease` claims only an evidenced exclusive resource such as a repository writer boundary, RSP control plane, test runner, generated artifacts, browser, Broker, or hardware/classroom session. It is host/runtime coordination, never a general worker lock or durable project fact.
+- Every Assignment carries the response language and localized control-narration rule: human-facing Receipt narration uses that response language, while an exact result value remains unchanged only as a secondary parenthesized or code-formatted token. Private Inspect uses the managed contract directly; managed Verify consumes the `rsp-verify` result and Manage appends observed worker identity and independence.
+- Manage derives the smallest safe topology from the current ExecutionFrame: `direct`, `longitudinal`, `sequential`, `parallel-wave`, `read-only-fan-out`, `bounded-correction`, or `independent-verify`. The topology is response-only and may change only after affected authority, scope, seams, resources, replay safety, and evidence are revalidated.
+- `longitudinal` resumes one WorkerSession only when one Change, role, shared seam, writer boundary, strategy, and continuation evidence remain compatible and continuity has material value. Independent investigation or Verify, truly separate slices, a fundamentally rejected strategy, or uncertain prior identity uses a fresh WorkerSession.
 - A same-goal receipt whose WorkRef, topology, route, scope, behavior, acceptance, interface, and authority remain unchanged is revalidated inside Manage. It does not return to Core merely to repeat route selection or qualification.
 - A required worker obligation is satisfied only when the worker was actually created and returned a valid result within its declared authority and schema.
 - A required worker that cannot be created, returns no valid receipt, reports unavailable or changed boundaries, or cannot satisfy required independent verification produces `capability-unavailable` or the more specific evidenced stop and keeps acceptance `incomplete`. The controller cannot replace the missing receipt with an assumption, a generic manual fallback, or its own undeclared work.
-- Token counts, token limits, and token cost are not routing, dispatch, retry, authority, completion, acceptance, or closeout inputs.
+- No whole-run dispatch quota exists. A failed same-scope Assignment may receive at most three bounded correction passes by default, but stops earlier on repeated failure without new evidence, non-convergence, changed scope, authority, behavior, or acceptance, unavailable capability, or unsafe replay. Required independent Verify is a separate acceptance obligation and does not consume the Fix correction allowance.
+- Elapsed time, poll count, heartbeat count, progress-message count, token count, token limit, and token cost are not routing, dispatch, correction, authority, completion, acceptance, or closeout inputs. Machine heartbeat reports liveness; user-facing progress reports only a material checkpoint, decision, risk, or wait reason.
+- Explicit cancellation retains ResourceLeases until the worker and owned background processes acknowledge stop. Replay follows the Assignment's resume-safety class. When context growth threatens precision, Manage may accept the current slice, compress decisive evidence into its existing owner, inspect diff and resources, produce a minimal continuation, and rederive a fresh ExecutionFrame without copying execution chronology.
+- Raw messages, heartbeat, leases, retry chronology, unaccepted Receipts, process handles, and raw logs remain in the host session or native CI/log store. Manage compresses only accepted outcomes into Change Tasks, decisive evidence into Verify, and real unresolved dependencies or risks into Blockers.
 
 ## Acceptance and Closeout
 - Implementation verification, fixed-scope change review, and the durable writeback decision are separate gates:
@@ -114,17 +125,19 @@
 3. Core resolves one ready owner before Manage qualification; Shape returns only to Core.
 4. Frontier classification occurs only after Core selects and hands off a ready, qualified managed owner.
 5. Every stop halts mutation and names how control may resume.
-6. Every required worker obligation needs actual creation evidence and a valid receipt.
+6. Every required worker obligation needs actual creation evidence and a valid Receipt.
 7. Acceptance is derived from fresh evidence, never from the absence of a failure event.
 8. Closeout is derived only after acceptance and the durable writeback decision, never directly from execution progress.
 9. Lifecycle closeout precedes any eligible local commit; remote delivery remains explicit.
-10. Same-goal resume and receipts invalidate stale control claims and are revalidated inside Manage; only a true owner, topology, route, behavior, acceptance, interface, scope, or authority boundary returns to Core.
+10. Same-goal resume and Receipts invalidate stale control claims and are revalidated inside Manage; only a true owner, WorkRef topology, route, behavior, acceptance, interface, scope, or authority boundary returns to Core.
+11. WorkerSession continuity never proves workspace isolation or independent verification; only observed execution location and identity evidence support those claims.
+12. ResourceLease release follows observed completion or acknowledged cancellation, never elapsed time or controller assumption.
 
 ## Boundaries
 - Core owns route derivation and rerouting.
 - Shape owns clarification and ready-owner return.
 - Each Discipline owns its bounded action, exact result, and applicable stop.
 - Core owns initial Manage qualification and the `selected | declined` route result.
-- Manage owns selected-handoff validation, selected-goal execution-frontier derivation, worker acceptance, internal current-evidence revalidation, review convergence, acceptance derivation, lifecycle closeout, and commit eligibility and orchestration after selection; it does not repeat direct-versus-managed eligibility or perform Commit's exact Git procedure.
+- Manage owns selected-handoff validation, ExecutionFrame and topology derivation, WorkerSession reuse, Assignment dispatch, Receipt acceptance, ResourceLease coordination, semantic rollover, internal current-evidence revalidation, review convergence, acceptance derivation, lifecycle closeout, and commit eligibility and orchestration after selection; it does not repeat direct-versus-managed eligibility or perform Commit's exact Git procedure.
 - Commit owns exact staging, message construction, one local commit, and post-commit observation for a Core- or Manage-derived boundary.
 - The selected Change or shallow Group remains the only durable work owner. Changes remain only `open` or `archived`.

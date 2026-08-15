@@ -38,7 +38,7 @@ describe('rsp workspace Skills', () => {
       'Manage never independently selects isolation',
       'return that evidence to Core for fresh route derivation',
       'workspace-isolation evidence only when Core selected isolation',
-      'The absence of a workspace-isolation boundary is valid when Core did not select isolation',
+      'The current checkout is valid when Core did not select workspace isolation',
     ])
       expect(manage).toContain(fragment)
 
@@ -67,12 +67,12 @@ describe('rsp workspace Skills', () => {
       'never create a random session branch',
       'Do not create a workspace-specific decision',
       'Core retains its `ControlOutcome`',
-      'Manage retains its `WorkerEnvelope`',
+      'Manage retains its ExecutionFrame, Assignment and Receipt contracts',
       '`Workspace context`',
       'Do not persist it',
       'host-native capabilities',
       'rsp workspace activity register <workref>',
-      'cooperative coordination, not an operating-system sandbox',
+      'not the universal managed ResourceLease model, an operating-system sandbox',
       'Return through the invoking result contract',
       '`Workspace observations`',
       'are not redefined here',

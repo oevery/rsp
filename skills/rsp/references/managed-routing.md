@@ -14,7 +14,7 @@ Core derives one ownership `ControlOutcome`. `WorkOwner` means the selected shap
 
 A prior direct report, design, tiny, or small route is not sticky. Before later-turn mutation, rederive from the now-authorized objective and prospective work. Material expansion into cross-module implementation, multiple acceptance surfaces, repeated production-path correction, real-host validation, bounded review convergence, lifecycle delivery, or a clear ready successor requires Core to establish or reuse the smallest sufficient WorkRef and rerun owner preflight plus fresh Manage qualification before mutation. Unchanged tiny/small follow-ups remain direct; elapsed time and message count alone never trigger escalation.
 
-Owner preflight creates no Task, Blocker, worker envelope, frontier, ticket, run record, or synthetic WorkRef. Manage has no pre-owner Intake and never creates, focuses, or reshapes the durable owner.
+Owner preflight creates no Task, Blocker, ExecutionFrame, Assignment, frontier, ticket, run record, or synthetic WorkRef. Manage has no pre-owner Intake and never creates, focuses, or reshapes the durable owner.
 
 ## QUALIFY — select or decline Manage
 
@@ -30,14 +30,14 @@ Make the route observable: report `selected` with the decisive qualification sig
 
 ## HANDOFF AND RETURN — bound selected execution
 
-Core and this reference solely own initial qualification and the `selected | declined` route result. Core hands selected Manage the goal, WorkRef, authority envelope, decisive qualification evidence, closeout ceiling, exact return boundaries, and any selected workspace boundary as transient control data. Manage validates handoff completeness and current owner, authority, and diff drift, but never repeats direct-versus-managed eligibility. Selected execution remains wholly owned by `rsp-manage`.
+Core and this reference solely own initial qualification and the `selected | declined` route result. Core hands selected Manage the goal, WorkRef, authority envelope, decisive qualification evidence, closeout ceiling, exact return boundaries, and any selected workspace boundary as transient control data. Manage validates handoff completeness and current owner, authority, baseline, execution location, resources, acceptance surfaces, and diff drift, then derives its transient ExecutionFrame and smallest safe topology; it never repeats direct-versus-managed eligibility. Selected execution remains wholly owned by `rsp-manage`.
 
 - Ordinary Fix, Verify, Review, or Resolve Findings receipts remain inside Manage for fresh same-goal revalidation.
 - A clear in-scope ready successor under the unchanged owner topology and authority may continue inside the same managed goal.
 - Owner identity, topology, requested route, behavior, acceptance, public interface, scope, mutation authority, or external-action authority changes return evidence to Core for fresh ownership and routing.
 - Shape is entered only through Core when durable owner refinement is independently authorized.
 
-Never persist the goal envelope, WorkSet, waves, discovery classification, or transition chronology.
+Never persist the goal envelope, ExecutionFrame, WorkerSession, Assignment, Receipt, ResourceLease, WorkSet, topology, waves, discovery classification, or transition chronology.
 
 ## Dormant closeout fail-safe
 

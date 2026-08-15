@@ -453,7 +453,7 @@ describe('documentation command examples', () => {
     expect(skillsGuide).toContain('Missing or non-ready ownership routes directly to Shape')
     expect(skillsGuide).toContain('solely owns initial Manage qualification plus the `selected | declined` route result')
     expect(skillsGuide).toContain('without repeating direct-versus-managed eligibility')
-    expect(skillsGuide).toContain('Workers return result, changed paths, exact verification, omissions, and boundary status by message')
+    expect(skillsGuide).toContain('Workers return a `Receipt` with result, changed paths, exact verification, omissions, boundary status, evidence validity, and resource release')
     expect(skillsGuide).toContain('clean exact owned boundary')
     expect(skillsGuide).toContain('never resumes Manage directly')
     expect(skillsGuide).not.toContain('Core may invoke Shape only after `needs-shape`')

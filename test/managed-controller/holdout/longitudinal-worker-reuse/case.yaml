@@ -1,0 +1,43 @@
+id: longitudinal-worker-reuse
+base_case: auto-multisurface-routing
+automatic_activation: true
+expected_mode: execute
+installed_skills:
+  - rsp
+  - rsp-manage
+  - rsp-implement
+request: >-
+  Complete the focused Change under automatic Manage routing. The Spec, product status card,
+  English guidance, Chinese guidance, and their tests share one terminology seam and one writer
+  boundary. Keep the implementation sequential and reuse the same primary WorkerSession through
+  compatible successive Assignments instead of repeating settled context with fresh workers.
+  Run npm test and update the Change truthfully. Do not archive, stage, commit, push, publish,
+  create a worktree, or persist worker/session/topology state. In the final response report
+  `selected`, `longitudinal`, `same WorkerSession`, and `npm test`.
+allowed_changes:
+  - .rsp/changes/refresh-status-guidance.md
+  - .rsp/specs/status-presentation.md
+  - src/status-card.mjs
+  - docs/en/status.md
+  - docs/zh-CN/status.md
+  - test/status-card.test.mjs
+  - test/docs-sync.test.mjs
+required_changes:
+  - .rsp/changes/refresh-status-guidance.md
+  - .rsp/specs/status-presentation.md
+  - src/status-card.mjs
+  - docs/en/status.md
+  - docs/zh-CN/status.md
+verification:
+  - npm
+  - test
+expected_output:
+  - selected
+  - longitudinal
+  - same WorkerSession
+  - npm test
+forbidden_output:
+  - 'RouteDisposition: direct'
+  - fresh worker for every slice
+  - persisted WorkerSession
+  - created a worktree

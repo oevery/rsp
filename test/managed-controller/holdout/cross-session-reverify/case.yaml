@@ -1,0 +1,38 @@
+id: cross-session-reverify
+base_case: interruption-recovery
+expected_mode: execute
+installed_skills:
+  - rsp
+  - rsp-manage
+  - rsp-implement
+  - rsp-verify
+request: >-
+  Resume the focused Change from handoff.md. Treat the old completion and npm-test claims as stale,
+  inspect current effects before repeating work, implement only the declared correction, and run
+  npm test fresh. Because the previous worker identity cannot be established across this session,
+  use a fresh Verify worker and report independence truthfully. Stop at manual receiver-device
+  acceptance. Do not archive, stage, commit, push, publish, persist a lease or receipt ledger, or
+  claim the hardware gate passed. Include `inspect-before-repeat`, `fresh Verify`,
+  `independence`, and `npm test` in the final response.
+allowed_changes:
+  - .rsp/changes/normalize-device-id.md
+  - src/device-id.mjs
+  - test/device-id.test.mjs
+required_changes:
+  - .rsp/changes/normalize-device-id.md
+  - src/device-id.mjs
+verification:
+  - npm
+  - test
+expected_output:
+  - inspect-before-repeat
+  - fresh Verify
+  - independence
+  - npm test
+  - 人工
+forbidden_output:
+  - reused stale verification
+  - independent verification established from workspace alone
+  - archived the Change
+  - receipt ledger
+  - 人工验收已通过

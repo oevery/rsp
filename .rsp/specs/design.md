@@ -3,6 +3,7 @@
 ## Purpose
 - RSP is Reliable Software Practice, a repository-native engineering workflow for humans and AI agents.
 - Its composable Skills guide work from unclear intent through implementation, review, verification, durable review, and archive without hidden workflow state or replacement of Host Project authority.
+- Managed execution remains host-native and transient: ExecutionFrames, WorkerSessions, Assignments, Receipts, derived topology, and narrow ResourceLeases coordinate current work but are never product runtime or durable workflow state.
 - Rules, Specs, Plans is the lightweight artifact foundation beneath the workflow, not the product-name expansion.
 - The repository keeps durable knowledge, open work, product runtime, distribution, maintainer knowledge, and generated state in explicit owners.
 
@@ -46,7 +47,7 @@ Key runtime owners:
 - `src/history/` owns presentation-neutral archive-history inspection, validation, filtering, bounds, and detail projection.
 - `src/specs/` owns presentation-neutral current-file Specs and Decision Record inspection, tree/detail/search projections, bounds, diagnostics, source identity, and generated-index migration classification.
 - `src/commands/specs-index-migration.ts` owns recognized-only generated Specs-index removal, quarantine/postcheck, and rollback.
-- `src/workspace/` owns isolated Git worktree records, bounded fact inspection, recoverable host-activity registration and cooperative resource leases, exact local landing, and safe disposal; project-semantic planning and command execution remain outside the CLI.
+- `src/workspace/` owns isolated Git worktree records, bounded fact inspection, recoverable host-activity registration and cooperative leases for registered process resources, exact local landing, and safe disposal. These records do not imply that every worker used a worktree and do not replace Manage's transient ResourceLease coordination; project-semantic planning and command execution remain outside the CLI.
 - `src/tui/` owns interactive routing state, Ink presentation, localization, layout, and terminal lifecycle.
 - `scripts/upstreams.mjs`, `.agents/skills/distill-upstream/`, and `research/` are maintainer-only owners; `rules/rsp-rules.md` and `skills/` are published sources.
 
@@ -63,4 +64,5 @@ Key runtime owners:
 - Prefer the smallest model and artifact owner that correctly solves the workflow problem.
 - Create a new directory or protocol surface only for a selected capability with a distinct owner, not for symmetry or speculative future use.
 - Preserve deterministic, platform-agnostic, human-readable artifacts and machine output without introducing hidden lifecycle state.
+- Keep Focus Capsules sparse, portable, commit-safe recovery projections; ordinary open-Change commits may include them, while cross-device continuation still requires Git transfer and complete current-evidence rederivation.
 - Keep normative runtime details in their domain Spec or owning Skill; keep explanations in README and design philosophy rather than duplicating executable contracts here.

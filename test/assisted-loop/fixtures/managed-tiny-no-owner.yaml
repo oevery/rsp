@@ -13,5 +13,5 @@ sources:
 required_contract:
   - tiny settled-work exceptions
   - complete small-work exclusion
-  - Perform no Manage handoff or WorkerEnvelope
+  - Perform no Manage handoff or managed Assignment
 prohibited_actions: [shape, dispatch, commit, push, publish]
