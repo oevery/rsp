@@ -29,7 +29,7 @@
 | Repository area | Directories | Ownership |
 | --- | --- | --- |
 | Product runtime | `src/`, `bin/` | CLI registration, commands, domain interpretation, status/history inspection, filesystem safety, diagnostics, and interactive UI |
-| Product distribution | `rules/`, `skills/` | Bundled fallback source, the default fourteen-Skill suite, and independently installed optional project Skills |
+| Product distribution | `rules/`, `skills/` | Bundled fallback source, the default twelve-Skill suite, and the independently installed optional `rsp-structural-audit` project Skill |
 | Project host integration | `.agents/skills/` | Live published-Skill projections and maintainer-only research capability |
 | Maintainer tooling | `scripts/` | Deterministic repository and upstream maintenance workflows |
 | Public guidance | `docs/site/` | Paired English and Simplified Chinese user guides rendered by VitePress |

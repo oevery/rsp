@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { lstatSync } from 'node:fs'
+import { lstatSync, realpathSync } from 'node:fs'
 import { chmod, copyFile, mkdir, readdir, readFile, rename, rm } from 'node:fs/promises'
 import { dirname, join, relative } from 'node:path'
 import { PKG_ROOT } from '../core/config.js'
@@ -176,6 +176,17 @@ function inspectInventoryTarget(path: string): 'missing' | 'directory' | 'diverg
   }
 }
 
+function isCanonicalSourceProjection(sourceRoot: string, targetRoot: string): boolean {
+  try {
+    if (!lstatSync(targetRoot).isSymbolicLink())
+      return false
+    return realpathSync(targetRoot) === realpathSync(sourceRoot)
+  }
+  catch {
+    return false
+  }
+}
+
 async function treesEqual(source: SkillTree, targetRoot: string): Promise<boolean> {
   const target = await inspectManagedFileTree(targetRoot, `installed Skill ${source.name}`)
   if (target.issues.length > 0)
@@ -224,7 +235,7 @@ export async function inspectPackagedSkillInventory(
       status: targetStatus === 'missing'
         ? 'missing'
         : targetStatus === 'divergent'
-          ? 'divergent'
+          ? isCanonicalSourceProjection(skill.root, target) ? 'unchanged' : 'divergent'
           : await treesEqual(skill, target) ? 'unchanged' : 'divergent',
     })
   }

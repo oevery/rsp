@@ -11,7 +11,7 @@ required_contract:
   - Assignment
   - Receipt
   - ResourceLease
-  - direct
+  - control-action
   - longitudinal
   - sequential
   - parallel-wave

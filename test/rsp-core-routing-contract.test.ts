@@ -46,6 +46,7 @@ describe('rsp core routing contract', () => {
     expect(controlModel).toContain('`AcceptanceDisposition` values are exactly')
     expect(controlModel).toContain('`CloseoutEligibility` values are exactly')
     expect(controlModel).toContain('observed execution location')
+    expect(controlModel).toContain('`control-action`, `longitudinal`')
     expect(controlModel).not.toContain('WorkspaceSelection')
     expect(skill).toContain('Use the canonical transient control vocabulary')
     expect(skill).not.toContain('`RouteDisposition` is exactly')
@@ -100,6 +101,8 @@ describe('rsp core routing contract', () => {
   it('keeps Manage and local delivery detail in owning Skills', () => {
     expect(managed).toContain('After selection, stop using this reference for execution detail')
     expect(manage).toContain('solely owns')
+    expect(manage).toContain('`control-action` for a bounded Manager-owned control action')
+    expect(manage).not.toContain('`direct` for a bounded Manager-owned control action')
     expect(manage).toContain('references/closeout.md')
     expect(closeout).toContain('Valid selected handoff only')
     expect(closeout).toContain('`rsp-commit`')

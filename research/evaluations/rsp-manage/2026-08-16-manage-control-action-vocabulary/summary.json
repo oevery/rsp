@@ -1,0 +1,182 @@
+{
+  "id": "manage-orchestration-beta",
+  "case": "auto-multisurface-routing",
+  "plan_hash": "77b86fbcd90acf527f524348ae5dec85e79fa462d5e79178c9b01b19d988ffca",
+  "holdout_manifest_sha256": "0303b585bef27638f92f1c7b0f308fd0f63ff5b0ae92354f389d2c9fdb9c4540",
+  "base_tree_sha256": "5581fdea1ebaf6000348340e25a7b1f1d84378fced4f2ca03bfda7aa787af7cd",
+  "product_composition": {
+    "hash": "3cdec7545f6e16cc4e21e79805994774857ab219957e24dac3f84a2dc6344f74",
+    "skills": [
+      {
+        "name": "rsp",
+        "hash": "c2fe38b03cf12f806dcdf5f93e8079cf3bd1972207697bde897a7856fac5efa8"
+      },
+      {
+        "name": "rsp-manage",
+        "hash": "4ed098ba519d2342f53385dedfcc28f0bda0e091c097a015fb2260a9802e8849"
+      },
+      {
+        "name": "rsp-implement",
+        "hash": "cbf1d9e74e05ac3fc591d3be0e3e82e916963adbcba2dff31522e91570fc7516"
+      }
+    ]
+  },
+  "deterministic_contracts": {
+    "passed": true,
+    "cases": 22
+  },
+  "runs": [
+    {
+      "variant": "baseline",
+      "outcome": "passed",
+      "completion": "contract-passed",
+      "first_fix_result": "passed",
+      "worker_dispatch_count": 1,
+      "tool_calls": 11,
+      "verification_rounds": {
+        "agent_observed": 1,
+        "harness": 1,
+        "harness_passed": true
+      },
+      "elapsed_ms": 226802,
+      "human_intervention_outcome": "not-observed",
+      "omissions": [],
+      "output_contract": {
+        "expected_missing": [],
+        "forbidden_present": []
+      },
+      "recovery_contract": null,
+      "unauthorized_paths": [],
+      "evaluation_receipt": {
+        "case_id": "auto-multisurface-routing",
+        "composition_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "contract_sha256": "0303b585bef27638f92f1c7b0f308fd0f63ff5b0ae92354f389d2c9fdb9c4540",
+        "receipt_sha256": "6f5a18f658de2084b6be76dca8821166c0b1370a7e3597d51e3b7ade5eb09e7c"
+      },
+      "observation_sha256": "c240b6c893daf23116e2f12a5103fe6ef50679b5546222cf2ba6d7aef1401950",
+      "observability": {
+        "dimensions": {
+          "trigger": {
+            "status": "not-observed",
+            "evidence": null
+          },
+          "compliance": {
+            "status": "passed",
+            "evidence": {
+              "expected_missing": []
+            }
+          },
+          "boundary": {
+            "status": "passed",
+            "evidence": {
+              "forbidden_present": [],
+              "unauthorized_paths": []
+            }
+          },
+          "task_result": {
+            "status": "passed",
+            "evidence": {
+              "outcome": "passed"
+            }
+          }
+        },
+        "measurements": {
+          "corrections": 0,
+          "first_fix_result": "passed",
+          "worker_dispatch_count": 1,
+          "tool_calls": 11,
+          "elapsed_ms": 226802,
+          "tokens": {
+            "input": 615007,
+            "output": 6305,
+            "total": 621312
+          }
+        },
+        "omissions": [
+          "trigger observation is unavailable"
+        ]
+      }
+    },
+    {
+      "variant": "product",
+      "outcome": "passed",
+      "completion": "contract-passed",
+      "first_fix_result": "passed",
+      "worker_dispatch_count": 1,
+      "tool_calls": 10,
+      "verification_rounds": {
+        "agent_observed": 2,
+        "harness": 1,
+        "harness_passed": true
+      },
+      "elapsed_ms": 239341,
+      "human_intervention_outcome": "not-observed",
+      "omissions": [],
+      "output_contract": {
+        "expected_missing": [],
+        "forbidden_present": []
+      },
+      "recovery_contract": null,
+      "unauthorized_paths": [],
+      "evaluation_receipt": {
+        "case_id": "auto-multisurface-routing",
+        "composition_sha256": "3cdec7545f6e16cc4e21e79805994774857ab219957e24dac3f84a2dc6344f74",
+        "contract_sha256": "0303b585bef27638f92f1c7b0f308fd0f63ff5b0ae92354f389d2c9fdb9c4540",
+        "receipt_sha256": "195d46371a2664d3eda15e460ab9fccfdcf0fadde42cc15e95b9a9652d64d562"
+      },
+      "observation_sha256": "a8776ff062c48142ab7d03b987801316f45624fec9af5cbeb0bce7f45c829322",
+      "observability": {
+        "dimensions": {
+          "trigger": {
+            "status": "not-observed",
+            "evidence": null
+          },
+          "compliance": {
+            "status": "passed",
+            "evidence": {
+              "expected_missing": []
+            }
+          },
+          "boundary": {
+            "status": "passed",
+            "evidence": {
+              "forbidden_present": [],
+              "unauthorized_paths": []
+            }
+          },
+          "task_result": {
+            "status": "passed",
+            "evidence": {
+              "outcome": "passed"
+            }
+          }
+        },
+        "measurements": {
+          "corrections": 0,
+          "first_fix_result": "passed",
+          "worker_dispatch_count": 1,
+          "tool_calls": 10,
+          "elapsed_ms": 239341,
+          "tokens": {
+            "input": 627913,
+            "output": 8675,
+            "total": 636588
+          }
+        },
+        "omissions": [
+          "trigger observation is unavailable"
+        ]
+      }
+    }
+  ],
+  "comparison": {
+    "status": "complete",
+    "reason": null
+  },
+  "conclusion_limits": [
+    "no numeric promotion threshold",
+    "no activation or release change",
+    "no provider or real-host generality claim",
+    "unavailable measurements remain explicit omissions"
+  ]
+}

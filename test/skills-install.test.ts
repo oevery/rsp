@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterAll, afterEach, describe, expect, it } from 'vitest'
-import { installPackagedSkills } from '../src/commands/skills.js'
+import { inspectPackagedSkillInventory, installPackagedSkills } from '../src/commands/skills.js'
 
 const repoRoot = fileURLToPath(new URL('..', import.meta.url))
 const packageVersion = (JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8')) as { version: string }).version
@@ -110,6 +110,39 @@ describe('rsp skills install', () => {
       skills: [...expectedSkills.map(name => ({ name, kind: 'default', status: 'missing' })), { name: optionalSkill, kind: 'optional', status: 'missing' }].sort((a, b) => a.name.localeCompare(b.name)),
     })
     expect(await readdir(projectRoot)).toEqual([])
+  })
+
+  it('reports an exact packaged-source symlink as unchanged without making it installable', async () => {
+    const projectRoot = await temporaryRoot('rsp-skills-source-projection')
+    const targetRoot = join(projectRoot, '.agents', 'skills')
+    await mkdir(targetRoot, { recursive: true })
+    await symlink(join(repoRoot, 'skills', 'rsp'), join(targetRoot, 'rsp'))
+
+    const inventory = await inspectPackagedSkillInventory({ packageRoot: repoRoot, projectRoot })
+    expect(inventory.skills.find(skill => skill.name === 'rsp')).toEqual({
+      name: 'rsp',
+      kind: 'default',
+      status: 'unchanged',
+    })
+    await expect(
+      installPackagedSkills({ names: ['rsp'] }, { packageRoot: repoRoot, projectRoot }),
+    ).rejects.toThrow(/unsupported entry.*installed Skill rsp/)
+  })
+
+  it('reports a non-canonical Skill symlink as divergent even when its content matches', async () => {
+    const projectRoot = await temporaryRoot('rsp-skills-noncanonical-projection')
+    const externalRoot = await temporaryRoot('rsp-skills-noncanonical-source')
+    const targetRoot = join(projectRoot, '.agents', 'skills')
+    cpSync(join(repoRoot, 'skills', 'rsp'), externalRoot, { recursive: true })
+    await mkdir(targetRoot, { recursive: true })
+    await symlink(externalRoot, join(targetRoot, 'rsp'))
+
+    const inventory = await inspectPackagedSkillInventory({ packageRoot: repoRoot, projectRoot })
+    expect(inventory.skills.find(skill => skill.name === 'rsp')).toEqual({
+      name: 'rsp',
+      kind: 'default',
+      status: 'divergent',
+    })
   })
 
   it('installs the default suite inventory and is idempotent', async () => {

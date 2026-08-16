@@ -47,7 +47,7 @@ Archive does not grant Git, publication, or deployment authority. Reinspect the 
 
 ## Install project Skills
 
-Preview and install the fourteen default Skills from the exact RSP package being used:
+Preview and install the twelve default Skills from the exact RSP package being used:
 
 ```bash
 npx -y @oevery/rsp@latest skills install --dry-run

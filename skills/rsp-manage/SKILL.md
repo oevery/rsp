@@ -4,7 +4,7 @@ description: Coordinate one eligible long-running, recovery, or multi-slice RSP 
 license: MIT
 metadata:
   author: oevery
-  version: "2026.08.15.1"
+  version: "2026.08.16.1"
 ---
 
 # RSP Manage
@@ -32,7 +32,7 @@ Validate only handoff completeness: owner and WorkRef topology, authority envelo
 
 Derive one transient `ExecutionFrame` containing the current goal, WorkOwner or WorkSet, effective authority, comparison baseline, observed execution location, current resource claims, and acceptance surfaces. Preserve unrelated work, report only an execution location actually observed, and require an explicit release identity. Never persist the frame or infer isolation from worker execution.
 
-Derive the smallest safe topology from that frame: `direct` for a bounded Manager-owned control action; `longitudinal` for compatible successive Assignments to one primary WorkerSession; `sequential` for ordered distinct work; `parallel-wave` for independent mutation and verification resources; `read-only-fan-out` for independent evidence; `bounded-correction` for an accepted same-scope failure; or `independent-verify` for an acceptance obligation requiring a different worker identity. Topology is response-only and may change only after revalidating affected authority, scope, seams, resources, replay safety, and evidence.
+Derive the smallest safe topology from that frame: `control-action` for a bounded Manager-owned control action; `longitudinal` for compatible successive Assignments to one primary WorkerSession; `sequential` for ordered distinct work; `parallel-wave` for independent mutation and verification resources; `read-only-fan-out` for independent evidence; `bounded-correction` for an accepted same-scope failure; or `independent-verify` for an acceptance obligation requiring a different worker identity. Topology is response-only and may change only after revalidating affected authority, scope, seams, resources, replay safety, and evidence.
 
 ## Resolve the execution frontier
 

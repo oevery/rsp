@@ -47,7 +47,7 @@ rsp show --focused
 
 ## 安装项目 Skills
 
-从当前精确版本的 RSP 包预览并安装十四项默认 Skills：
+从当前精确版本的 RSP 包预览并安装十二项默认 Skills：
 
 ```bash
 npx -y @oevery/rsp@latest skills install --dry-run

@@ -1,0 +1,11 @@
+# Manage control-action vocabulary evaluation
+
+- Identity: the `auto-multisurface-routing` baseline/product holdout ran on August 16, 2026 with model `combo/gpt-5.6-terra`, high reasoning effort, and product composition hash `3cdec7545f6e16cc4e21e79805994774857ab219957e24dac3f84a2dc6344f74`.
+- Change under evaluation: the published `rsp-manage` contract names its bounded Manager-owned control topology `control-action`, leaving Core's non-managed `RouteDisposition: direct` lexically distinct.
+- Deterministic gate: all 22 current managed-controller contracts passed before provider execution.
+- Baseline: passed the output, boundary, changed-path, and harness verification contracts with first fix passed, one observed worker dispatch, 11 aggregate tool calls, one agent-observed verification round, one passing harness verification round, 226802 ms elapsed, and no unauthorized paths.
+- Product: passed the same contracts with first fix passed, one observed worker dispatch, 10 aggregate tool calls, two agent-observed verification rounds, one passing harness verification round, 239341 ms elapsed, and no unauthorized paths.
+- Routing evidence: both final outputs contained the required `selected`, `sequential`, and `npm test` evidence. The structured Trigger dimension remains `not-observed` because the beta receipt does not emit a separate trigger observation; this is an explicit observability omission rather than inferred success.
+- Interpretation: the current product composition completed the same bounded managed scenario without a compliance, boundary, task-result, verification, changed-path, or unauthorized-path regression. Tool, time, and token measurements are diagnostic only and support no performance claim.
+- Retention: this generation retains only `summary.json` and this report. Raw events, authentication, gateway details, provider/session identifiers, stderr, and disposable workspace paths remain under ignored `.cache/` and are not retained.
+- Conclusion limits: one model path and one holdout establish neither provider-general nor real-host-general behavior, define no numeric promotion threshold, and grant no activation, release, Git, push, or publication authority.

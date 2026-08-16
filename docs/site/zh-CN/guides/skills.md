@@ -76,7 +76,7 @@ manage:
 
 Core 先把一个明确的 shape-ready Change 或浅层 Group 解析为 `WorkOwner`，并独占首次 Manage 资格判断及 `selected | declined` 路由结果。缺少或未就绪的归属在独立规划产物权限下直接进入 Shape；Shape 把 ready WorkOwner 返回 Core 重新路由，绝不直接恢复 Manage。Manage 一旦被选中，只校验 handoff 完整性以及当前 owner、权限和归属差异是否漂移，不重复判断 direct 还是 managed。普通同范围 receipt 只需检查实际路径和局部 diff；正常 Fix 在已声明验收内实现行为时不会触发完整 owner 重读。只有发现或新请求改变已声明行为、验收或公共接口边界，或出现其他失效信号、跨会话恢复、closeout 时，才扩大重读并返回 Core。
 
-受管执行会按失败关闭顺序把新出现的不确定性分类为超出目标、归属者决策、尚不可精确描述的 fog、需要事实证据，或可执行。Manage 会派生临时 `ExecutionFrame` 与最小安全拓扑：直接执行、纵向复用 worker、顺序 worker、并行 wave、只读 fan-out、有界纠正或独立 Verify。每个 `Assignment` 只携带 WorkRef、目标、精确 authority 引用、Read/Write/Verify 集合、有界已知事实、允许与禁止动作、停止条件和重放安全等级。Worker 通过消息返回包含 result、changed paths、精确 verification、omissions、boundary status、证据有效性与资源释放结果的 `Receipt`，不通过 Focus Capsule 协调。Token 数量、运行时间、轮询次数与进度消息数永远不参与派发、路由、权限、完成或验收判断。
+受管执行会按失败关闭顺序把新出现的不确定性分类为超出目标、归属者决策、尚不可精确描述的 fog、需要事实证据，或可执行。Manage 会派生临时 `ExecutionFrame` 与最小安全拓扑：`control-action`、纵向复用 worker、顺序 worker、并行 wave、只读 fan-out、有界纠正或独立 Verify。每个 `Assignment` 只携带 WorkRef、目标、精确 authority 引用、Read/Write/Verify 集合、有界已知事实、允许与禁止动作、停止条件和重放安全等级。Worker 通过消息返回包含 result、changed paths、精确 verification、omissions、boundary status、证据有效性与资源释放结果的 `Receipt`，不通过 Focus Capsule 协调。Token 数量、运行时间、轮询次数与进度消息数永远不参与派发、路由、权限、完成或验收判断。
 
 Diagnose 与私有 Inspect lane 保持只读；Fix 是其修改边界内的唯一写入者。只有 owner、角色、seam、策略与 writer 边界仍兼容时，才纵向复用 primary worker；独立调查、策略重置、无关切片与独立 Verify 使用 fresh worker。Manage 通过 `rsp-verify` 的结果契约路由验证，且只有能够确认 Verify 使用了不同于 Fix 的 worker identity 时，才可声称独立验证；否则必须报告 independence unavailable。不再设置整个 managed run 的派发总配额：每次派发都必须服务于必要且有界的 Assignment；同范围 Assignment 失败后默认最多允许三次 correction pass，且在没有新证据或无法收敛时提前停止。独立 Verify 始终是单独的验收义务。frame、session、assignment、receipt、resource lease、计数与过程时间线始终保持临时。
 
