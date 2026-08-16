@@ -67,23 +67,26 @@ rsp commit --message-file <path> [--json]
 ## Isolated workspaces
 
 ```text
-rsp workspace prepare <work-ref> [--target <branch>] [--json]
+rsp workspace prepare <work-ref> [--target <branch>] [--allow-dirty-source] [--json]
 rsp workspace status <work-ref> [--json]
 rsp workspace inspect <work-ref> [--json]
 rsp workspace activity register <work-ref> --id <id> --pid <pid>
     [--label <text>] [--process-group <pgid>] [--resources <ids>] [--json]
 rsp workspace activity stop <work-ref> --id <id> [--json]
 rsp workspace dispose <work-ref> [--discard] [--json]
+rsp workspace prune <work-ref> [--apply] [--json]
 rsp land <work-ref> --target <branch> --commits <sha[,sha...]> [--cleanup] [--json]
 ```
 
-Workspace preparation is opt-in for an existing executable WorkRef and must satisfy the project `workspace.activation` policy. Workspace defaults to `explicit`, which requires a current explicit isolation request; `auto` is an advanced project opt-in that also permits material workspace signals, and `disabled` denies RSP workspace selection. Selection is refreshed immediately before preparation. Workspace is pre-mutation infrastructure and never silently migrates product changes already started in the source checkout. Preparation creates or resumes branch `rsp/<work-ref>` in a stable cache worktree; ordinary temporary work remains in the current branch. `inspect` returns bounded repository facts without classifying the project stack.
+Workspace preparation is opt-in for an existing executable WorkRef and must satisfy the project `workspace.activation` policy. Workspace defaults to `explicit`, which requires a current explicit isolation request; `auto` is an advanced project opt-in that also permits material workspace signals, and `disabled` denies RSP workspace selection. Selection is refreshed immediately before preparation. Workspace is pre-mutation infrastructure and never silently migrates product changes already started in the source checkout. New preparation rejects source dirty paths outside the selected owner-control files; `--allow-dirty-source` only acknowledges that Core or a human already reviewed them as unrelated. Preparation creates or resumes branch `rsp/<work-ref>` in a stable cache worktree; ordinary temporary work remains in the current branch. `inspect` returns bounded repository facts without classifying the project stack.
 
 The `rsp-workspace` Skill or a human interprets project semantics and uses the host's existing file, shell, package, browser, and process capabilities. The Skill reuses the invoking RSP control and result contracts and appends only workspace context and observations; the CLI does not parse AI response text or provide a universal execution-plan DSL.
 
 Long-running processes are started and verified by the host. `activity register` records an observed PID with its stable process-start identity, an optional verified process group, and opaque cooperative resource names so a later session can stop or dispose them safely. Stop and disposal revalidate that identity and fail closed rather than signal a reused PID or process group. Registration is coordination rather than sandboxing and grants no network, credential, external-state, deployment, or publication authority.
 
 Disposal refuses dirty workspaces and genuinely unlanded commits. A clean Workspace whose ahead commits are patch-equivalent on the target has `deliveryState: landed-equivalent` and may be disposed normally without `--discard`; patch equivalence does not prove Change acceptance. `--discard` explicitly authorizes losing dirty or unlanded work. Landing requires an exact target and ordered commit list. Conflicts preserve the source workspace and target cherry-pick state; `--cleanup` runs only after successful landing and only when the list covers every workspace commit ahead of the target.
+
+`workspace prune` reports orphan evidence by default. `--apply` removes only a valid stale record whose branch, worktree, cache path, and live activities are absent; an unparsable exact regular record under the same absence proof is quarantined. Ambiguous or present resources block mutation.
 
 ## Inspection
 
@@ -98,7 +101,7 @@ rsp history <work-ref> [--json [--compact]]
 
 Without a subcommand, RSP opens the same dashboard as `rsp ui` in a real interactive terminal. CI, pipes, redirected streams, and `TERM=dumb` receive static command output.
 
-Plain `rsp status` keeps current focus, Change and Group summaries, progress, blockers, and the derived next action compact, and also shows every active Workspace with an inspect or dispose recovery action. Add `--verbose` to inspect effective Manage and language policy, the complete dependency forest, archive trend, and detailed active Workspace recovery facts. JSON adds the stably ordered `activeWorkspaces` array with `workRef`, `branch`, `targetBranch`, `dirty`, `commitsAhead`, `activeActivityCount`, `deliveryState`, and `cleanupReady`. `deliveryState` is `clean`, `unlanded`, or `landed-equivalent`. These values are validated mechanical observations from the existing Workspace registry, not Change readiness or acceptance. Invalid records fail visibly. No machine-specific workspace path appears in default plain status, and status creates no second registry or workflow state.
+Plain `rsp status` keeps current focus, Change and Group summaries, progress, blockers, and the derived next action compact, and also shows every active Workspace with an inspect or dispose recovery action. Add `--verbose` to inspect effective Manage and language policy, the complete dependency forest, archive trend, and detailed active Workspace recovery facts. JSON adds the stably ordered `activeWorkspaces` array with `workRef`, `branch`, `targetBranch`, `dirty`, `commitsAhead`, `activeActivityCount`, `deliveryState`, and `cleanupReady`. `deliveryState` is `landed`, `unlanded`, or `landed-equivalent`; worktree dirtiness remains separate. These values are validated mechanical observations from the existing Workspace registry, not Change readiness or acceptance. Invalid records fail visibly. No machine-specific workspace path appears in default plain status, and status creates no second registry or workflow state.
 
 `status` derives exact dependencies, ready work, blockers, and stable waves from the complete work tree. `check` validates Change structure and warns about unfinished placeholders or clarification markers. `history` reads retained archive files directly and defaults to 20 results, with a maximum of 100; filters include `--limit`, `--since`, `--until`, `--kind`, `--group`, and `--search`.
 

@@ -4,6 +4,7 @@ import type {
   DisposeWorkspaceCommandResult,
   InspectWorkspaceCommandResult,
   PrepareWorkspaceCommandResult,
+  PruneWorkspaceCommandResult,
   RegisterWorkspaceActivityCommandResult,
   ShowWorkspaceCommandResult,
   StopWorkspaceActivityCommandResult,
@@ -44,7 +45,10 @@ export function presentShowWorkspace(result: ShowWorkspaceCommandResult, json: b
   console.log(`  registered: ${observation.registered ? 'yes' : 'no'}`)
   console.log(`  dirty paths: ${observation.dirty.length}`)
   console.log(`  commits ahead of ${observation.record.targetBranch}: ${observation.aheadOfTarget}`)
+  console.log(`  delivery: ${observation.deliveryState}`)
+  console.log(`  cleanup ready: ${observation.cleanupReady ? 'yes' : 'no'}`)
   console.log(`  activities: ${Object.keys(observation.record.activities ?? {}).join(', ') || 'none'}`)
+  console.log(`  next action: rsp workspace ${observation.cleanupReady ? `dispose ${observation.record.workRef}` : `inspect ${observation.record.workRef} --json`}`)
 }
 
 export function presentInspectWorkspace(result: InspectWorkspaceCommandResult, json: boolean): void {
@@ -88,6 +92,20 @@ export function presentDisposeWorkspace(result: DisposeWorkspaceCommandResult, j
   console.log(`  Disposed: ${result.workRef}`)
   console.log(`  removed branch: ${result.record.branch}`)
   console.log(`  removed worktree: ${result.record.path}`)
+}
+
+export function presentPruneWorkspace(result: PruneWorkspaceCommandResult, json: boolean): void {
+  if (!result.ok)
+    return presentWorkspaceError(result, json)
+  if (json)
+    return emitJson({ command: result.command, ok: true, ...result.result })
+  console.log(`  Workspace prune: ${result.result.workRef}`)
+  console.log(`  disposition: ${result.result.disposition}`)
+  console.log(`  applied: ${result.result.applied ? 'yes' : 'no'}`)
+  if (result.result.quarantinePath)
+    console.log(`  quarantined record: ${result.result.quarantinePath}`)
+  if (!result.result.applied && result.result.disposition !== 'blocked')
+    console.log(`  next action: rsp workspace prune ${result.result.workRef} --apply`)
 }
 
 export function presentLandWorkspace(result: LandWorkspaceCommandResult, json: boolean): void {

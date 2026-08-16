@@ -6,6 +6,7 @@ import {
   disposeWorkspace,
   observeWorkspace,
   prepareWorkspace,
+  pruneWorkspace,
   registerWorkspaceActivity,
   stopWorkspaceActivity,
 } from '../workspace/session.js'
@@ -33,6 +34,9 @@ export type StopWorkspaceActivityCommandResult
     | WorkspaceCommandError
 export type DisposeWorkspaceCommandResult
   = | { command: 'workspace dispose', ok: true, workRef: string, record: WorkspaceRecord }
+    | WorkspaceCommandError
+export type PruneWorkspaceCommandResult
+  = | { command: 'workspace prune', ok: true, result: Awaited<ReturnType<typeof pruneWorkspace>> }
     | WorkspaceCommandError
 
 export function publicActivity(activity: WorkspaceActivity) {
@@ -65,6 +69,8 @@ function workspaceErrorCode(error: unknown): string {
     return 'workspace_not_found'
   if (message.startsWith('workspace has uncommitted changes: '))
     return 'workspace_dirty'
+  if (message.startsWith('workspace source checkout has unreviewed dirty paths: '))
+    return 'workspace_source_dirty'
   if (/^workspace has \d+ commit\(s\) not present on /u.test(message))
     return 'workspace_commits_ahead'
   if (message === 'workspace activation is disabled by project configuration')
@@ -80,7 +86,7 @@ function workspaceCommandError(command: string, error: unknown): WorkspaceComman
 
 export async function prepareWorkspaceCommand(
   workRef: string,
-  options: { targetBranch?: string } = {},
+  options: { targetBranch?: string, allowDirtySource?: boolean } = {},
 ): Promise<PrepareWorkspaceCommandResult> {
   try {
     const configInspection = await inspectRspConfig()
@@ -88,7 +94,7 @@ export async function prepareWorkspaceCommand(
       throw new Error(configInspection.issues.join('; '))
     if (resolveWorkspacePolicy(configInspection.config).activation === 'disabled')
       throw new Error('workspace activation is disabled by project configuration')
-    const result = await prepareWorkspace(workRef, { targetBranch: options.targetBranch })
+    const result = await prepareWorkspace(workRef, { targetBranch: options.targetBranch, allowDirtySource: options.allowDirtySource })
     return { command: 'workspace prepare', ok: true, resumed: result.resumed, record: result.record }
   }
   catch (error) {
@@ -151,5 +157,14 @@ export async function disposeWorkspaceCommand(
   }
   catch (error) {
     return workspaceCommandError('workspace dispose', error)
+  }
+}
+
+export async function pruneWorkspaceCommand(workRef: string, options: { apply?: boolean } = {}): Promise<PruneWorkspaceCommandResult> {
+  try {
+    return { command: 'workspace prune', ok: true, result: await pruneWorkspace(workRef, options) }
+  }
+  catch (error) {
+    return workspaceCommandError('workspace prune', error)
   }
 }

@@ -1,19 +1,20 @@
 import { execFileSync, spawn } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
-import { mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises'
+import { mkdir, readdir, readFile, rm, symlink, writeFile } from 'node:fs/promises'
 import { createServer } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
+import { presentShowWorkspace } from '../src/cli/presenters/workspace.js'
 import { showStatus } from '../src/commands/status.js'
-import { prepareWorkspaceCommand } from '../src/commands/workspace.js'
+import { prepareWorkspaceCommand, showWorkspaceCommand } from '../src/commands/workspace.js'
 import { printStatusPlain } from '../src/status/plain.js'
 import { toStatusJson } from '../src/status/v3-json.js'
 import { inspectWorkspaceFacts } from '../src/workspace/facts.js'
 import { landWorkspace } from '../src/workspace/land.js'
-import { disposeWorkspace, observeWorkspace, prepareWorkspace, registerWorkspaceActivity, stopWorkspaceActivity } from '../src/workspace/session.js'
+import { disposeWorkspace, observeWorkspace, prepareWorkspace, pruneWorkspace, registerWorkspaceActivity, stopWorkspaceActivity } from '../src/workspace/session.js'
 
 let repository: string
 let previousCwd: string
@@ -158,6 +159,22 @@ describe.sequential('rsp workspace lifecycle', () => {
     expect(existsSync(first.record.path)).toBe(false)
   })
 
+  it('blocks late prepare on source product changes unless they were explicitly reviewed', async () => {
+    await writeFile(join(repository, 'owned.txt'), 'already changed\n')
+
+    await expect(prepareWorkspaceCommand('example-change')).resolves.toMatchObject({
+      command: 'workspace prepare',
+      ok: false,
+      error: { code: 'workspace_source_dirty', message: expect.stringContaining('owned.txt') },
+    })
+    expect(git(['branch', '--list', 'rsp/example-change'])).toBe('')
+
+    const acknowledged = await prepareWorkspaceCommand('example-change', { allowDirtySource: true })
+    expect(acknowledged).toMatchObject({ command: 'workspace prepare', ok: true, resumed: false })
+    if (acknowledged.ok)
+      await disposeWorkspace('example-change')
+  })
+
   it('returns bounded facts without interpreting the project stack', async () => {
     const prepared = await prepareWorkspace('example-change')
     await writeFile(join(prepared.record.path, 'changed.txt'), 'changed\n')
@@ -297,8 +314,34 @@ describe.sequential('rsp workspace lifecycle', () => {
     })])
     expect(status.nextActions[0]).toBe('Run: rsp workspace dispose example-change')
 
+    const directPlain: string[] = []
+    const log = console.log
+    try {
+      console.log = (value = '') => directPlain.push(String(value))
+      presentShowWorkspace(await showWorkspaceCommand('example-change'), false)
+    }
+    finally {
+      console.log = log
+    }
+    expect(directPlain.join('\n')).toContain('delivery: landed-equivalent')
+    expect(directPlain.join('\n')).toContain('cleanup ready: yes')
+    expect(directPlain.join('\n')).toContain('next action: rsp workspace dispose example-change')
+
     await disposeWorkspace('example-change')
     expect(existsSync(prepared.record.path)).toBe(false)
+  })
+
+  it('separates landed commit delivery from a dirty worktree', async () => {
+    const prepared = await prepareWorkspace('example-change')
+    await writeFile(join(prepared.record.path, 'pending.txt'), 'dirty\n')
+
+    const observation = await observeWorkspace('example-change')
+    expect(observation.deliveryState).toBe('landed')
+    expect(observation.cleanupReady).toBe(false)
+    const status = toStatusJson(await showStatus())
+    expect(status.activeWorkspaces[0]).toMatchObject({ deliveryState: 'landed', dirty: true, cleanupReady: false })
+
+    await disposeWorkspace('example-change', { discard: true })
   })
 
   it('fails ordinary status visibly and safely for an invalid workspace record', async () => {
@@ -352,6 +395,43 @@ describe.sequential('rsp workspace lifecycle', () => {
     }))
     expect(JSON.stringify(json)).not.toContain('must not be read')
     expect(JSON.stringify(json)).not.toContain('ignored.lock')
+  })
+
+  it('reports first and applies only mechanically orphaned workspace pruning', async () => {
+    const prepared = await prepareWorkspace('example-change')
+    git(['worktree', 'remove', '--force', prepared.record.path])
+    git(['branch', '-D', prepared.record.branch])
+
+    const report = await pruneWorkspace('example-change')
+    expect(report).toMatchObject({ disposition: 'prune-ready', applied: false })
+    expect(existsSync(prepared.record.path)).toBe(false)
+
+    const applied = await pruneWorkspace('example-change', { apply: true })
+    expect(applied).toMatchObject({ disposition: 'prune-ready', applied: true })
+    await expect(observeWorkspace('example-change')).rejects.toThrow('workspace not found')
+  })
+
+  it('quarantines rather than deletes an unparsable orphan record', async () => {
+    const prepared = await prepareWorkspace('example-change')
+    const recordsDir = join(repository, '.git', 'rsp', 'workspaces')
+    const recordName = (await readdir(recordsDir)).find(name => name.endsWith('.json'))!
+    git(['worktree', 'remove', '--force', prepared.record.path])
+    git(['branch', '-D', prepared.record.branch])
+    await writeFile(join(recordsDir, recordName), '{broken\n')
+
+    expect(await pruneWorkspace('example-change')).toMatchObject({ disposition: 'quarantine-ready', applied: false })
+    const applied = await pruneWorkspace('example-change', { apply: true })
+    expect(applied).toMatchObject({ disposition: 'quarantine-ready', applied: true, recordValid: false })
+    expect(existsSync(applied.quarantinePath!)).toBe(true)
+    expect(await readdir(recordsDir)).not.toContain(recordName)
+  })
+
+  it('refuses to prune a present healthy workspace', async () => {
+    const prepared = await prepareWorkspace('example-change')
+    expect(await pruneWorkspace('example-change')).toMatchObject({ disposition: 'healthy', applied: false })
+    await expect(pruneWorkspace('example-change', { apply: true })).rejects.toThrow('workspace prune is not applicable')
+    await disposeWorkspace('example-change')
+    expect(existsSync(prepared.record.path)).toBe(false)
   })
 
   it('reports cleanup failure separately after a successful landing', async () => {

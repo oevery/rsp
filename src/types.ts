@@ -92,7 +92,7 @@ export interface ActiveWorkspaceStatusOutput {
   dirty: boolean
   commitsAhead: number
   activeActivityCount: number
-  deliveryState: 'clean' | 'unlanded' | 'landed-equivalent'
+  deliveryState: 'landed' | 'unlanded' | 'landed-equivalent'
   cleanupReady: boolean
 }
 

@@ -1,9 +1,9 @@
 import { defineCommand } from 'citty'
 import { landWorkspaceCommand } from '../../commands/land.js'
-import { disposeWorkspaceCommand, inspectWorkspaceCommand, prepareWorkspaceCommand, registerWorkspaceActivityCommand, showWorkspaceCommand, stopWorkspaceActivityCommand } from '../../commands/workspace.js'
+import { disposeWorkspaceCommand, inspectWorkspaceCommand, prepareWorkspaceCommand, pruneWorkspaceCommand, registerWorkspaceActivityCommand, showWorkspaceCommand, stopWorkspaceActivityCommand } from '../../commands/workspace.js'
 import { executeCliCommand } from '../adapter.js'
 import { jsonArgs } from '../capabilities.js'
-import { presentDisposeWorkspace, presentInspectWorkspace, presentLandWorkspace, presentPrepareWorkspace, presentRegisterWorkspaceActivity, presentShowWorkspace, presentStopWorkspaceActivity } from '../presenters/workspace.js'
+import { presentDisposeWorkspace, presentInspectWorkspace, presentLandWorkspace, presentPrepareWorkspace, presentPruneWorkspace, presentRegisterWorkspaceActivity, presentShowWorkspace, presentStopWorkspaceActivity } from '../presenters/workspace.js'
 
 function exitCodeForResult(result: unknown): number | undefined {
   return typeof result === 'object' && result !== null && 'ok' in result && result.ok === false
@@ -23,20 +23,25 @@ const workspaceCommand = defineCommand({
         description: 'Create or resume branch rsp/<workref> in an isolated worktree',
       },
       args: {
-        workref: {
+        'workref': {
           type: 'positional',
           description: 'Existing executable RSP WorkRef',
           required: true,
         },
-        target: {
+        'target': {
           type: 'string',
           description: 'Target local branch (default: current branch)',
         },
+        'allow-dirty-source': {
+          type: 'boolean',
+          description: 'Acknowledge that source dirty paths were reviewed as unrelated',
+          default: false,
+        },
         ...jsonArgs,
       },
-      async run({ args }: { args: { workref: string, target?: string, json: boolean } }) {
+      async run({ args }: { args: { 'workref': string, 'target'?: string, 'allow-dirty-source': boolean, 'json': boolean } }) {
         await executeCliCommand({
-          execute: () => prepareWorkspaceCommand(args.workref, { targetBranch: args.target }),
+          execute: () => prepareWorkspaceCommand(args.workref, { targetBranch: args.target, allowDirtySource: Boolean(args['allow-dirty-source']) }),
           present: result => presentPrepareWorkspace(result, Boolean(args.json)),
           exitCode: exitCodeForResult,
         }, args)
@@ -189,6 +194,21 @@ const workspaceCommand = defineCommand({
         await executeCliCommand({
           execute: () => disposeWorkspaceCommand(args.workref, { discard: Boolean(args.discard) }),
           present: result => presentDisposeWorkspace(result, Boolean(args.json)),
+          exitCode: exitCodeForResult,
+        }, args)
+      },
+    }),
+    prune: defineCommand({
+      meta: { name: 'prune', description: 'Report or apply bounded cleanup of orphaned workspace records' },
+      args: {
+        workref: { type: 'positional', description: 'Exact Workspace WorkRef', required: true },
+        apply: { type: 'boolean', description: 'Apply a mechanically safe prune or quarantine', default: false },
+        ...jsonArgs,
+      },
+      async run({ args }: { args: { workref: string, apply: boolean, json: boolean } }) {
+        await executeCliCommand({
+          execute: () => pruneWorkspaceCommand(args.workref, { apply: Boolean(args.apply) }),
+          present: result => presentPruneWorkspace(result, Boolean(args.json)),
           exitCode: exitCodeForResult,
         }, args)
       },

@@ -2,7 +2,7 @@ import type { Dirent } from 'node:fs'
 import { execFile } from 'node:child_process'
 import { createHash, randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
-import { mkdir, readdir, readFile, realpath, rename, stat, unlink, writeFile } from 'node:fs/promises'
+import { lstat, mkdir, readdir, readFile, realpath, rename, stat, unlink, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path'
 import { promisify } from 'node:util'
@@ -55,7 +55,8 @@ export interface WorkspaceObservation {
   branchExists: boolean
   dirty: string[]
   aheadOfTarget: number
-  deliveryState: 'clean' | 'unlanded' | 'landed-equivalent'
+  activeActivityCount: number
+  deliveryState: 'landed' | 'unlanded' | 'landed-equivalent'
   cleanupReady: boolean
 }
 
@@ -74,6 +75,18 @@ export interface ActiveWorkspaceInspection {
   workspaces: ActiveWorkspaceObservation[]
   issues: Array<{ record: string, message: string }>
   truncated: boolean
+}
+
+export interface WorkspacePruneResult {
+  workRef: string
+  disposition: 'healthy' | 'prune-ready' | 'quarantine-ready' | 'blocked'
+  applied: boolean
+  recordValid: boolean
+  branchExists: boolean
+  worktreeExists: boolean
+  cachePathExists: boolean
+  liveActivityCount: number
+  quarantinePath?: string
 }
 
 interface GitContext {
@@ -340,14 +353,35 @@ async function copyOwnerState(source: string, destination: string, workRef: stri
   }
 }
 
-export async function prepareWorkspace(workRef: string, options: { targetBranch?: string } = {}): Promise<{ resumed: boolean, record: WorkspaceRecord }> {
-  resolveWorkRef(workRef, { executable: true, mustExist: true })
+function statusPath(line: string): string {
+  const value = line.startsWith('?? ') || line.startsWith('!! ') || line[2] === ' '
+    ? line.slice(3)
+    : line[1] === ' '
+      ? line.slice(2)
+      : line
+  const rename = value.lastIndexOf(' -> ')
+  return rename >= 0 ? value.slice(rename + 4) : value
+}
+
+export async function prepareWorkspace(workRef: string, options: { targetBranch?: string, allowDirtySource?: boolean } = {}): Promise<{ resumed: boolean, record: WorkspaceRecord }> {
+  const ref = resolveWorkRef(workRef, { executable: true, mustExist: true })
   const context = await discoverGitContext()
   return withWorkspaceLock(context.commonDir, `prepare ${workRef}`, async () => {
     const existing = await readRecord(context.commonDir, workRef)
     if (existing) {
       await assertRecordOwnership(context, existing, workRef)
       return { resumed: true, record: existing }
+    }
+
+    if (!options.allowDirtySource) {
+      const allowed = new Set([
+        ref.path,
+        join('.rsp', 'focus.d', ...workRef.split('/')),
+        ...(ref.group ? [join('.rsp', 'changes', ref.group, '00-brief.md')] : []),
+      ])
+      const dirtySourcePaths = (await git(context.sourceWorktree, ['status', '--short'])).stdout.split('\n').filter(Boolean).map(statusPath).filter(path => !allowed.has(path)).slice(0, 20)
+      if (dirtySourcePaths.length > 0)
+        throw new Error(`workspace source checkout has unreviewed dirty paths: ${dirtySourcePaths.join(', ')}`)
     }
 
     const currentBranch = (await git(context.sourceWorktree, ['branch', '--show-current'])).stdout
@@ -430,8 +464,10 @@ async function observeWorkspaceRecord(context: GitContext, record: WorkspaceReco
     ? (await git(context.repository, ['cherry', record.targetBranch, record.branch], true)).stdout
     : ''
   const unlandedCommits = cherry.split('\n').filter(line => line.startsWith('+ ')).length
+  const activityStates = await Promise.all(Object.values(record.activities ?? {}).map(activityIsActive))
+  const activeActivityCount = activityStates.filter(Boolean).length
   const deliveryState: WorkspaceObservation['deliveryState'] = aheadOfTarget === 0
-    ? 'clean'
+    ? 'landed'
     : unlandedCommits === 0
       ? 'landed-equivalent'
       : 'unlanded'
@@ -441,6 +477,7 @@ async function observeWorkspaceRecord(context: GitContext, record: WorkspaceReco
     branchExists: exists,
     dirty,
     aheadOfTarget,
+    activeActivityCount,
     deliveryState,
     cleanupReady: dirty.length === 0 && deliveryState !== 'unlanded',
   }
@@ -491,17 +528,15 @@ export async function inspectActiveWorkspaces(): Promise<ActiveWorkspaceInspecti
       if (!record)
         throw new Error('record disappeared during inspection')
       const observation = await observeWorkspaceRecord(context, record, parsed.workRef)
-      const activityStates = await Promise.all(Object.values(record.activities ?? {}).map(activityIsActive))
-      const activeActivityCount = activityStates.filter(Boolean).length
       workspaces.push({
         workRef: record.workRef,
         branch: record.branch,
         targetBranch: record.targetBranch,
         dirty: observation.dirty.length > 0,
         commitsAhead: observation.aheadOfTarget,
-        activeActivityCount,
+        activeActivityCount: observation.activeActivityCount,
         deliveryState: observation.deliveryState,
-        cleanupReady: observation.cleanupReady && activeActivityCount === 0,
+        cleanupReady: observation.cleanupReady,
       })
     }
     catch (error) {
@@ -683,6 +718,72 @@ export async function getWorkspaceRecord(workRef: string): Promise<WorkspaceReco
     throw new Error(`workspace not found for ${workRef}`)
   await assertRecordOwnership(context, record, workRef)
   return record
+}
+
+export async function pruneWorkspace(workRef: string, options: { apply?: boolean } = {}): Promise<WorkspacePruneResult> {
+  resolveWorkRef(workRef, { executable: true })
+  const context = await discoverGitContext()
+  return withWorkspaceLock(context.commonDir, `prune ${workRef}`, async () => {
+    const path = recordPath(context.commonDir, workRef)
+    const entry = await lstat(path).catch(() => null)
+    if (!entry)
+      throw new Error(`workspace not found for ${workRef}`)
+    if (!entry.isFile() || entry.isSymbolicLink())
+      throw new Error(`workspace prune record is not a regular file: ${workRef}`)
+
+    const expectedBranch = branchName(workRef)
+    const expectedPath = await canonicalPath(workspacePath(context.repository, workRef))
+    const worktrees = await listWorktrees(context.repository)
+    const branchExistsNow = await branchExists(context.repository, expectedBranch)
+    const worktreeExists = worktrees.some(item => item.branch === expectedBranch || item.path === expectedPath)
+    const cachePathExists = existsSync(expectedPath)
+    let record: WorkspaceRecord | null = null
+    try {
+      const candidate = JSON.parse(await readFile(path, 'utf8')) as WorkspaceRecord
+      if (candidate.schema === RECORD_SCHEMA && candidate.workRef === workRef && candidate.branch === expectedBranch)
+        record = candidate
+    }
+    catch {}
+    const activityStates = record
+      ? await Promise.all(Object.values(record.activities ?? {}).map(activityIsActive))
+      : []
+    const liveActivityCount = activityStates.filter(Boolean).length
+    const fullyPresent = Boolean(record && branchExistsNow && worktreeExists && cachePathExists)
+    const fullyAbsent = !branchExistsNow && !worktreeExists && !cachePathExists && liveActivityCount === 0
+    const disposition: WorkspacePruneResult['disposition'] = fullyPresent
+      ? 'healthy'
+      : fullyAbsent
+        ? record ? 'prune-ready' : 'quarantine-ready'
+        : 'blocked'
+    let quarantinePath: string | undefined
+
+    if (options.apply && disposition === 'prune-ready' && record) {
+      for (const activity of Object.values(record.activities ?? {}))
+        await releaseResourceLeases(activity.leases)
+      await unlink(path)
+    }
+    else if (options.apply && disposition === 'quarantine-ready') {
+      const directory = join(context.commonDir, 'rsp', 'workspaces-quarantine')
+      await mkdir(directory, { recursive: true })
+      quarantinePath = join(directory, `${recordKey(workRef)}.${Date.now()}.json`)
+      await rename(path, quarantinePath)
+    }
+    else if (options.apply && (disposition === 'blocked' || disposition === 'healthy')) {
+      throw new Error(`workspace prune is not applicable to a healthy or ambiguous workspace: ${workRef}`)
+    }
+
+    return {
+      workRef,
+      disposition,
+      applied: Boolean(options.apply && disposition !== 'blocked'),
+      recordValid: Boolean(record),
+      branchExists: branchExistsNow,
+      worktreeExists,
+      cachePathExists,
+      liveActivityCount,
+      ...(quarantinePath ? { quarantinePath } : {}),
+    }
+  })
 }
 
 export async function findTargetWorktree(record: WorkspaceRecord, targetBranch: string): Promise<string> {

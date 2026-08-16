@@ -19,7 +19,7 @@ Workspace is pre-mutation infrastructure. Before mutation inspect the selected C
 
 ## Prepare and inspect
 
-Use `rsp workspace prepare <workref> --target <branch>`. The default branch identity is exactly `rsp/<workref>`. Resume matching recorded ownership; never create a random session branch to bypass stale or conflicting state.
+Use `rsp workspace prepare <workref> --target <branch>`. The default branch identity is exactly `rsp/<workref>`. New preparation rejects source dirty paths outside the selected owner-control files. Use `--allow-dirty-source` only after Core or the human owner has established that those paths are unrelated; the flag never proves that classification or migrates product changes. Resume matching recorded ownership; never create a random session branch to bypass stale or conflicting state.
 
 Use `rsp workspace inspect <workref> --json` for bounded facts: workspace identity, tracked paths, local-only paths, changed paths, dirty paths, and commits ahead of the target. Facts contain no project-semantic classification. Read relevant repository files with normal host tools before deciding setup, commands, verification, or preview behavior.
 
@@ -66,7 +66,9 @@ Report what was observed, not what a planned command was expected to do. Workspa
 
 ## Dispose safely
 
-Use `rsp workspace dispose <workref>` only when the worktree is clean and every workspace commit is absent from the target or already patch-equivalent there. Ordinary disposal accepts `clean` and `landed-equivalent` delivery states, rejects `unlanded`, stops every recorded activity, releases its cooperative resources, and removes only the registered path and exact branch owned by the workspace record. Patch equivalence is mechanical delivery evidence only; it never proves Change acceptance or lifecycle closeout.
+Use `rsp workspace dispose <workref>` only when the worktree is clean and every workspace commit is absent from the target or already patch-equivalent there. Ordinary disposal accepts `landed` and `landed-equivalent` delivery states, rejects `unlanded`, stops every recorded activity, releases its cooperative resources, and removes only the registered path and exact branch owned by the workspace record. `cleanupReady` has this same meaning on direct and global status; active activities remain separately visible. Patch equivalence is mechanical delivery evidence only; it never proves Change acceptance or lifecycle closeout.
+
+Use `rsp workspace prune <workref>` to report exact orphan evidence without mutation. `--apply` requires explicit cleanup authority and may remove only a valid record whose branch, worktree, cache path, and live activities are absent, releasing only its owned leases. An unparsable exact regular record under the same absence proof is quarantined for recovery rather than deleted. Any present or ambiguous resource blocks pruning.
 
 `--discard` is destructive authority. Require an explicit request that names the workspace and accepts loss of its uncommitted changes and unlanded commits. On dirty state, unlanded commits, missing registration, changed ownership, activity-stop failure, or cleanup failure, preserve the workspace and report the exact recovery condition.
 

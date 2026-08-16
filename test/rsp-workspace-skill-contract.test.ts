@@ -113,6 +113,8 @@ describe('rsp workspace Skills', () => {
     expect(workspace).toContain('Workspace is pre-mutation infrastructure')
     expect(workspace).toContain('require an explicit owner-directed handoff')
     expect(workspace).toContain('Never copy only RSP control files and silently continue')
+    expect(workspace).toContain('`--allow-dirty-source`')
+    expect(workspace).toContain('established that those paths are unrelated')
   })
 
   it('documents bounded active Workspace recovery without semantic promotion', () => {
@@ -127,6 +129,8 @@ describe('rsp workspace Skills', () => {
     }
     expect(cliSpec).toContain('mechanical observations')
     expect(cliSpec).toContain('not Change readiness or acceptance')
+    expect(cliSpec).toContain('`landed | unlanded | landed-equivalent`')
+    expect(cliSpec).toContain('`rsp workspace prune <work-ref>` is report-only by default')
     expect(english).toContain('No machine-specific workspace path appears in default plain status')
     expect(chinese).toContain('默认纯文本 status 不显示机器相关的 Workspace 路径')
   })

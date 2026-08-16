@@ -19,6 +19,7 @@ export const CLI_COMMAND_CAPABILITIES = {
   'workspace activity register': { json: true, compact: false },
   'workspace activity stop': { json: true, compact: false },
   'workspace dispose': { json: true, compact: false },
+  'workspace prune': { json: true, compact: false },
   'land': { json: true, compact: false },
   'commit': { json: true, compact: false },
   'skills list': { json: true, compact: false },
