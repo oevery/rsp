@@ -10,7 +10,6 @@ const currentSkills = [
   'rsp-design',
   'rsp-diagnose',
   'rsp-implement',
-  'rsp-land',
   'rsp-manage',
   'rsp-release-docs',
   'rsp-resolve-findings',
@@ -19,7 +18,6 @@ const currentSkills = [
   'rsp-structural-audit',
   'rsp-tdd',
   'rsp-verify',
-  'rsp-workspace',
 ]
 
 function read(path: string): string {

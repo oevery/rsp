@@ -1,5 +1,4 @@
 import type {
-  ActiveWorkspaceStatusOutput,
   ArchiveReadinessOutput,
   ChangeDependencyPlanOutput,
   ChangeGroupStatusOutput,
@@ -8,7 +7,6 @@ import type {
   ManagePolicy,
   RuntimeDiagnostic,
   StatusRecordOutput,
-  WorkspacePolicy,
 } from '../types.js'
 
 export interface StatusOptions {
@@ -27,10 +25,6 @@ export interface ProjectStatusRecord {
 
 export interface ProjectStatusSnapshot {
   manage: ManagePolicy
-  /** Optional only for compatibility with in-memory callers predating the workspace policy. */
-  workspace?: WorkspacePolicy
-  /** Optional only for compatibility with in-memory callers predating active Workspace observations. */
-  activeWorkspaces?: ActiveWorkspaceStatusOutput[]
   language: EffectiveLanguagePolicy
   focused: string[]
   records: ProjectStatusRecord[]
@@ -43,8 +37,6 @@ export interface ProjectStatusSnapshot {
 
 export interface ProjectStatusView {
   manage: ManagePolicy
-  workspace: WorkspacePolicy
-  activeWorkspaces: ActiveWorkspaceStatusOutput[]
   language: EffectiveLanguagePolicy
   query: Required<Pick<StatusOptions, 'focused' | 'blocked'>> & { stale: number | null }
   focused: string[]

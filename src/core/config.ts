@@ -1,4 +1,4 @@
-import type { ChangeKind, EffectiveLanguagePolicy, ManageActivation, ManageCloseout, ManagePolicy, ProjectLanguageConfig, RspConfig, WorkspaceActivation, WorkspacePolicy } from '../types.js'
+import type { ChangeKind, EffectiveLanguagePolicy, ManageActivation, ManageCloseout, ManagePolicy, ProjectLanguageConfig, RspConfig } from '../types.js'
 import { readFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -40,21 +40,17 @@ export const VALID_KINDS: ChangeKind[] = ['feature', 'fix', 'refactor', 'docs', 
 export const DEFAULT_REQUIRED_SECTIONS = getCanonicalSectionHeadings(CHANGE_DOCUMENT_SCHEMA)
 export const LEGACY_MISSING_CONFIG_MANAGE_POLICY: ManagePolicy = { activation: 'explicit', closeout: 'local' }
 export const INVALID_CONFIG_MANAGE_POLICY: ManagePolicy = { activation: 'explicit', closeout: 'manual' }
-export const LEGACY_MISSING_CONFIG_WORKSPACE_POLICY: WorkspacePolicy = { activation: 'explicit' }
-export const INVALID_CONFIG_WORKSPACE_POLICY: WorkspacePolicy = { activation: 'disabled' }
 export const CONFIG_DEFAULTS = {
   kinds: [] as string[],
   decisions: { path: '.rsp/specs/decisions' },
   language: { default: 'en' },
   manage: { activation: 'auto' as const, closeout: 'local' as const },
-  workspace: { activation: 'explicit' as const },
 }
 
 export function generateConfigTemplate(config: RspConfig = {}): string {
   const kinds = config.kinds ?? CONFIG_DEFAULTS.kinds
   const decisions = { ...CONFIG_DEFAULTS.decisions, ...config.decisions }
   const manage = { ...CONFIG_DEFAULTS.manage, ...config.manage }
-  const workspace = { ...CONFIG_DEFAULTS.workspace, ...config.workspace }
   const language = { ...CONFIG_DEFAULTS.language, ...config.language }
   const kindsYaml = stringify(kinds).trimEnd()
   const renderedKinds = kinds.length === 0
@@ -88,11 +84,6 @@ manage:
   activation: ${manage.activation}
   closeout: ${manage.closeout}
 
-# Workspace defaults to explicit requests; auto is an advanced project opt-in.
-# Use activation: disabled to prevent RSP-managed worktrees.
-workspace:
-  activation: ${workspace.activation}
-
 # Set one shared project default for durable artifact and commit prose.
 # Response language remains user/session-owned and is never read from this project mapping.
 language:
@@ -104,7 +95,6 @@ ${commitLine}
 
 const MANAGE_ACTIVATIONS: ManageActivation[] = ['explicit', 'auto']
 const MANAGE_CLOSEOUTS: ManageCloseout[] = ['manual', 'lifecycle', 'local']
-const WORKSPACE_ACTIVATIONS: WorkspaceActivation[] = ['auto', 'explicit', 'disabled']
 
 export interface RspConfigInspection {
   config: RspConfig
@@ -163,12 +153,6 @@ function collectMissingConfigDefaults(parsed: Record<string, unknown>): string[]
     if (!hasNestedKey(parsed.manage, 'closeout'))
       added.push('manage.closeout')
   }
-  if (!('workspace' in parsed)) {
-    added.push('workspace.activation')
-  }
-  else if (!hasNestedKey(parsed.workspace, 'activation')) {
-    added.push('workspace.activation')
-  }
   return added
 }
 
@@ -190,10 +174,6 @@ function backfillConfigDocument(document: ReturnType<typeof parseDocument>, pars
     if (!hasNestedKey(parsed.manage, 'closeout'))
       document.setIn(['manage', 'closeout'], CONFIG_DEFAULTS.manage.closeout)
   }
-  if (!('workspace' in parsed))
-    document.set('workspace', { ...CONFIG_DEFAULTS.workspace })
-  else if (!hasNestedKey(parsed.workspace, 'activation'))
-    document.setIn(['workspace', 'activation'], CONFIG_DEFAULTS.workspace.activation)
 }
 
 function hasNestedKey(value: unknown, key: string): boolean {
@@ -281,9 +261,6 @@ export async function inspectRspConfig(cwd = process.cwd()): Promise<RspConfigIn
   const manageValue = parsed.manage && typeof parsed.manage === 'object' && !Array.isArray(parsed.manage)
     ? parsed.manage as Record<string, unknown>
     : undefined
-  const workspaceValue = parsed.workspace && typeof parsed.workspace === 'object' && !Array.isArray(parsed.workspace)
-    ? parsed.workspace as Record<string, unknown>
-    : undefined
   const languageValue = parsed.language && typeof parsed.language === 'object' && !Array.isArray(parsed.language)
     ? parsed.language as Record<string, unknown>
     : undefined
@@ -292,9 +269,6 @@ export async function inspectRspConfig(cwd = process.cwd()): Promise<RspConfigIn
     : undefined
   const closeout = MANAGE_CLOSEOUTS.includes(manageValue?.closeout as ManageCloseout)
     ? manageValue?.closeout as ManageCloseout
-    : undefined
-  const workspaceActivation = WORKSPACE_ACTIVATIONS.includes(workspaceValue?.activation as WorkspaceActivation)
-    ? workspaceValue?.activation as WorkspaceActivation
     : undefined
   const kinds = Array.isArray(parsed.kinds) && parsed.kinds.every(value => typeof value === 'string' && value.trim() !== '')
     ? parsed.kinds.map(value => value.trim())
@@ -308,7 +282,6 @@ export async function inspectRspConfig(cwd = process.cwd()): Promise<RspConfigIn
         ? { path: normalizeDecisionRecordsPath(String(decisionPath)) }
         : undefined,
       manage: manageValue ? { activation, closeout } : undefined,
-      workspace: workspaceValue ? { activation: workspaceActivation } : undefined,
       language: parseLanguageConfig(languageValue),
     },
     issues,
@@ -321,7 +294,7 @@ export async function inspectRspConfig(cwd = process.cwd()): Promise<RspConfigIn
 /** Validate the complete supported .rsp/config.yaml contract without coercing invalid input. */
 export function validateRspConfig(parsed: Record<string, unknown>): string[] {
   const issues: string[] = []
-  const supported = new Set(['kinds', 'decisions', 'manage', 'workspace', 'language'])
+  const supported = new Set(['kinds', 'decisions', 'manage', 'language'])
 
   for (const key of Object.keys(parsed)) {
     if (key === 'required_sections') {
@@ -366,21 +339,6 @@ export function validateRspConfig(parsed: Record<string, unknown>): string[] {
         issues.push('config.yaml field "manage.activation" must be one of: explicit, auto')
       if ('closeout' in manage && !MANAGE_CLOSEOUTS.includes(manage.closeout as ManageCloseout))
         issues.push('config.yaml field "manage.closeout" must be one of: manual, lifecycle, local')
-    }
-  }
-
-  if ('workspace' in parsed) {
-    if (!parsed.workspace || typeof parsed.workspace !== 'object' || Array.isArray(parsed.workspace)) {
-      issues.push('config.yaml field "workspace" must be a YAML mapping')
-    }
-    else {
-      const workspace = parsed.workspace as Record<string, unknown>
-      for (const key of Object.keys(workspace)) {
-        if (key !== 'activation')
-          issues.push(`config.yaml field "workspace.${key}" is not supported`)
-      }
-      if ('activation' in workspace && !WORKSPACE_ACTIVATIONS.includes(workspace.activation as WorkspaceActivation))
-        issues.push('config.yaml field "workspace.activation" must be one of: auto, explicit, disabled')
     }
   }
 
@@ -429,15 +387,6 @@ export function resolveManagePolicy(config: RspConfig, options: { configValid?: 
   return {
     activation: config.manage?.activation ?? LEGACY_MISSING_CONFIG_MANAGE_POLICY.activation,
     closeout: config.manage?.closeout ?? LEGACY_MISSING_CONFIG_MANAGE_POLICY.closeout,
-  }
-}
-
-/** Resolve effective workspace policy, preserving legacy auto behavior and failing closed for invalid config. */
-export function resolveWorkspacePolicy(config: RspConfig, options: { configValid?: boolean } = {}): WorkspacePolicy {
-  if (options.configValid === false)
-    return { ...INVALID_CONFIG_WORKSPACE_POLICY }
-  return {
-    activation: config.workspace?.activation ?? LEGACY_MISSING_CONFIG_WORKSPACE_POLICY.activation,
   }
 }
 

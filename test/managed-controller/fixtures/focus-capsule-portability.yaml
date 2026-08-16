@@ -14,7 +14,7 @@ required_contract:
   - intermediate commit
   - separately authorized Git transfer
   - worker identities
-  - absolute or machine-specific workspace path
+  - absolute or machine-specific execution paths
   - raw receipts
   - Archive or explicit unfocus removes the marker
   - current-evidence rederivation

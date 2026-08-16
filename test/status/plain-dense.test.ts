@@ -13,8 +13,6 @@ describe('dense plain status', () => {
     const longName = 'cli-machine-output/a-very-long-work-reference-that-does-not-fit'
     const view: ProjectStatusView = {
       manage: { activation: 'auto', closeout: 'lifecycle' },
-      workspace: { activation: 'auto' },
-      activeWorkspaces: [],
       language: { artifacts: null, commit: null },
       query: { focused: false, blocked: false, stale: null },
       focused: [longName],

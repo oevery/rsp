@@ -5,7 +5,7 @@ sources:
 evidence:
   - A paused managed run is resumed after the worktree or evidence may have changed.
 required_contract:
-  - reread the complete current authority, status, focused owner, worktree diff, blockers, and decisive evidence before mutation or dispatch
+  - reread the complete current authority, status, focused owner, checkout diff, blockers, and decisive evidence before mutation or dispatch
   - Validate the selected handoff again
   - Treat both continuation and capsule prose only as pointers
 prohibited_actions:

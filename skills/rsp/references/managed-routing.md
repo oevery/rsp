@@ -31,7 +31,7 @@ Make the route observable: report `selected` with the decisive qualification sig
 
 ## HANDOFF AND RETURN — bound selected execution
 
-Core and this reference solely own initial qualification and the `selected | declined` route result. Core hands selected Manage the goal, WorkRef, authority envelope, decisive qualification evidence, closeout ceiling, exact return boundaries, and any four-field `WorkspaceSelection` as transient control data. Manage validates that selection and forwards it unchanged to Workspace, while observed path, branch, dirty state, commits ahead, and activities remain separate Workspace observations. Manage also validates the current owner, authority, baseline, resources, acceptance surfaces, and diff drift, then derives its transient ExecutionFrame and smallest safe topology; it never repeats direct-versus-managed eligibility. Selected execution remains wholly owned by `rsp-manage`.
+Core and this reference solely own initial qualification and the `selected | declined` route result. Core hands selected Manage the goal, WorkRef, authority envelope, decisive qualification evidence, closeout ceiling, and exact return boundaries as transient control data. Manage validates the current owner, authority, baseline, observed execution location, resources, acceptance surfaces, and diff drift, then derives its transient ExecutionFrame and smallest safe topology; it never repeats direct-versus-managed eligibility. Selected execution remains wholly owned by `rsp-manage`.
 
 - Ordinary Fix, Verify, Review, or Resolve Findings receipts remain inside Manage for fresh same-goal revalidation.
 - A clear in-scope ready successor under the unchanged owner topology and authority may continue inside the same managed goal.

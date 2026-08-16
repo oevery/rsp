@@ -56,7 +56,7 @@ describe('rsp-commit Skill contract', () => {
       'Stage only the explicit allowed paths',
       'complete cached path list and cached diff',
       'Create one local commit',
-      'Do not push, tag, publish, amend, rebase, or force-push',
+      'Do not cherry-pick, clean another checkout, push, tag, publish, amend, rebase, or force-push',
       'complete committed message',
       'parsed subject/body/trailers',
       'remaining worktree paths',

@@ -12,7 +12,6 @@ const publishedSkillNames = [
   'rsp-design',
   'rsp-diagnose',
   'rsp-implement',
-  'rsp-land',
   'rsp-manage',
   'rsp-release-docs',
   'rsp-resolve-findings',
@@ -21,7 +20,6 @@ const publishedSkillNames = [
   'rsp-structural-audit',
   'rsp-tdd',
   'rsp-verify',
-  'rsp-workspace',
 ]
 const reviewSkill = join(root, 'skills', 'rsp-review')
 const reviewCode = readFileSync(join(reviewSkill, 'references', 'code-review.md'), 'utf8')
@@ -120,13 +118,14 @@ describe('rsp Skill contract', () => {
       expectPortableSkill(join(skillsRoot, name))
   })
 
-  it('keeps Workspace in the default published suite after role classification', () => {
+  it('keeps execution-environment ownership outside the published suite', () => {
     const packageJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as { files: string[] }
     const skillSystem = readFileSync(join(root, '.rsp', 'specs', 'skill-system.md'), 'utf8')
 
-    expect(publishedSkillNames).toContain('rsp-workspace')
+    expect(publishedSkillNames).not.toContain('rsp-workspace')
+    expect(publishedSkillNames).not.toContain('rsp-land')
     expect(packageJson.files).toContain('skills/')
-    expect(skillSystem).toContain('| `rsp-workspace` | default | Infrastructure: isolated execution |')
+    expect(skillSystem).toContain('no Skill selects, prepares, persists, lands, or cleans an execution environment')
   })
 
   it('keeps published Skills independent from repository-only Specs and cross-Skill files', () => {

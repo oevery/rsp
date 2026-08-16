@@ -45,15 +45,27 @@ afterEach(() => {
 describe('rsp commit transport', () => {
   it('preserves a multiline body through the public CLI', () => {
     const repository = createRepository()
+    const headBefore = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repository, encoding: 'utf8' }).trim()
     writeFileSync(join(repository, 'tracked.txt'), 'changed\n')
     execFileSync('git', ['add', 'tracked.txt'], { cwd: repository })
+    writeFileSync(join(repository, 'remaining.txt'), 'unrelated\n')
     const message = 'fix(commit): preserve body\n\n- first bullet\n- second bullet\n- third bullet'
     const messageFile = join(repository, 'message.txt')
     writeFileSync(messageFile, message)
 
     const result = runCommit(repository, messageFile)
     expect(result.status).toBe(0)
-    expect(JSON.parse(result.stdout)).toMatchObject({ ok: true, command: 'commit' })
+    const receipt = JSON.parse(result.stdout)
+    expect(receipt).toMatchObject({
+      ok: true,
+      command: 'commit',
+      headBefore,
+      headAfter: receipt.commit,
+      storedMessage: message,
+      committedPaths: ['tracked.txt'],
+      remainingWorktreePaths: ['message.txt', 'remaining.txt'],
+    })
+    expect(receipt.headAfter).not.toBe(headBefore)
     expect(execFileSync('git', ['show', '-s', '--format=%B', 'HEAD'], { cwd: repository, encoding: 'utf8' }))
       .toBe(`${message}\n`)
     expect(execFileSync('git', ['diff', '--cached', '--name-only'], { cwd: repository, encoding: 'utf8' })).toBe('')
@@ -72,6 +84,23 @@ describe('rsp commit transport', () => {
     expect(JSON.parse(result.stdout)).toMatchObject({ ok: true, command: 'commit' })
     const commitText = execFileSync('git', ['cat-file', 'commit', 'HEAD'], { cwd: repository, encoding: 'utf8' })
     expect(commitText.endsWith(`\n${message}`)).toBe(true)
+  })
+
+  it('observes a staged rename with the same exact path semantics before and after commit', () => {
+    const repository = createRepository()
+    execFileSync('git', ['mv', 'tracked.txt', 'renamed.txt'], { cwd: repository })
+    const message = 'refactor(commit): preserve rename boundary'
+    const messageFile = join(repository, 'message.txt')
+    writeFileSync(messageFile, message)
+
+    const result = runCommit(repository, messageFile)
+    expect(result.status).toBe(0)
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      ok: true,
+      command: 'commit',
+      storedMessage: message,
+      committedPaths: ['renamed.txt', 'tracked.txt'],
+    })
   })
 
   it('rejects a literal newline escape before invoking Git', () => {
@@ -99,6 +128,27 @@ describe('rsp commit transport', () => {
     expect(result.status).not.toBe(0)
     expect(JSON.parse(result.stdout)).toMatchObject({ ok: false, code: 'no_staged_boundary' })
     expect(execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repository, encoding: 'utf8' }).trim()).toBe(headBefore)
+  })
+
+  it('refuses an in-progress Git operation before invoking commit', () => {
+    const repository = createRepository()
+    writeFileSync(join(repository, 'tracked.txt'), 'changed\n')
+    execFileSync('git', ['add', 'tracked.txt'], { cwd: repository })
+    const headBefore = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repository, encoding: 'utf8' }).trim()
+    const gitDir = execFileSync('git', ['rev-parse', '--absolute-git-dir'], { cwd: repository, encoding: 'utf8' }).trim()
+    writeFileSync(join(gitDir, 'MERGE_HEAD'), `${headBefore}\n`)
+    const messageFile = join(repository, 'message.txt')
+    writeFileSync(messageFile, 'fix(commit): refuse merge state')
+
+    const result = runCommit(repository, messageFile)
+    expect(result.status).not.toBe(0)
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      ok: false,
+      code: 'git_operation_in_progress',
+      operation: 'merge',
+    })
+    expect(execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repository, encoding: 'utf8' }).trim()).toBe(headBefore)
+    expect(execFileSync('git', ['diff', '--cached', '--name-only'], { cwd: repository, encoding: 'utf8' })).toBe('tracked.txt\n')
   })
 
   it('fails closed when a hook changes the committed message', () => {

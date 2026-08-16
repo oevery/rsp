@@ -18,7 +18,7 @@ import {
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const skills = ['rsp', 'rsp-shape', 'rsp-design', 'rsp-implement', 'rsp-review']
-const publishedSkills = ['rsp', 'rsp-commit', 'rsp-design', 'rsp-diagnose', 'rsp-implement', 'rsp-land', 'rsp-manage', 'rsp-release-docs', 'rsp-resolve-findings', 'rsp-review', 'rsp-shape', 'rsp-structural-audit', 'rsp-tdd', 'rsp-verify', 'rsp-workspace']
+const publishedSkills = ['rsp', 'rsp-commit', 'rsp-design', 'rsp-diagnose', 'rsp-implement', 'rsp-manage', 'rsp-release-docs', 'rsp-resolve-findings', 'rsp-review', 'rsp-shape', 'rsp-structural-audit', 'rsp-tdd', 'rsp-verify']
 const realRuns = join(root, 'research', 'evaluations', 'rsp-native-design-composition', '2026-07-22', 'real-runs')
 const retainedRun = join(realRuns, 'device-discovery-boundary-reopen-archived-change-review-fix-2026-07-27')
 const correctedAttempt = join(realRuns, 'device-discovery-boundary-layer-archive-closeout', 'invalid-attempts', 'failed-1784788188154')

@@ -11,7 +11,7 @@
 - The canonical domain Specs are:
   - [Core Model](./core-model.md): artifacts, WorkRefs, Change Groups, lifecycle, dependencies, focus, and durable writeback.
   - [CLI Contracts](./cli-contracts.md): deterministic commands, filesystem safety, inspection, JSON, history, indexes, and repair.
-  - [Skill System](./skill-system.md): the default fourteen-Skill suite, optional project Skills, orthogonal distribution/role/invocation classification, composition, progressive disclosure, Core-owned ready-owner routing, isolated workspace and landing boundaries, bounded managed execution-frontier behavior, and authority boundaries.
+  - [Skill System](./skill-system.md): the default twelve-Skill suite, optional project Skills, orthogonal distribution/role/invocation classification, composition, progressive disclosure, Core-owned ready-owner routing, host-owned execution-location boundaries, bounded managed execution-frontier behavior, and authority boundaries.
   - [Skill Control Model](./skill-control-model.md): canonical transient route, work-owner, frontier, stop/resume, acceptance, and closeout vocabulary shared across Core, Shape, Disciplines, and Manage.
   - [Interactive TUI](./tui.md): dashboard routing, state, presentation, localization, history, layout, and terminal lifecycle.
   - [Distribution and Maintainer Research](./distribution.md): package inventory, Skill installation, releases, evaluation provenance, repository layering, and upstream research.
@@ -47,7 +47,7 @@ Key runtime owners:
 - `src/history/` owns presentation-neutral archive-history inspection, validation, filtering, bounds, and detail projection.
 - `src/specs/` owns presentation-neutral current-file Specs and Decision Record inspection, tree/detail/search projections, bounds, diagnostics, source identity, and generated-index migration classification.
 - `src/commands/specs-index-migration.ts` owns recognized-only generated Specs-index removal, quarantine/postcheck, and rollback.
-- `src/workspace/` owns isolated Git worktree records, bounded fact inspection, recoverable host-activity registration and cooperative leases for registered process resources, exact local landing, and safe disposal. These records do not imply that every worker used a worktree and do not replace Manage's transient ResourceLease coordination; project-semantic planning and command execution remain outside the CLI.
+- Execution-location selection and cross-branch integration remain outside the product. Manage observes the current host-provided checkout transiently, while `src/commands/commit.ts` owns one exact local commit from an already reviewed staged boundary and returns the complete local receipt.
 - `src/tui/` owns interactive routing state, Ink presentation, localization, layout, and terminal lifecycle.
 - `scripts/upstreams.mjs`, `.agents/skills/distill-upstream/`, and `research/` are maintainer-only owners; `rules/rsp-rules.md` and `skills/` are published sources.
 

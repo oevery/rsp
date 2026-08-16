@@ -19,7 +19,7 @@ required_contract:
   - Shape returns the ready WorkOwner to Core
   - Core derives one ownership `ControlOutcome`
   - Manage has no pre-owner Intake
-  - never creates, focuses, or reshapes a durable owner
+  - never creates, focuses, reshapes a durable owner
   - solely own initial qualification and the `selected | declined` route result
   - never repeats the direct-versus-managed eligibility
   - goal, WorkRef, authority envelope, decisive qualification evidence, closeout ceiling, and return boundaries

@@ -19,11 +19,6 @@ manage:
   activation: auto
   closeout: local
 
-# Workspace defaults to explicit requests; auto is an advanced project opt-in.
-# Use activation: disabled to prevent RSP-managed worktrees.
-workspace:
-  activation: explicit
-
 # Set one shared project default for durable artifact and commit prose.
 # Response language remains user/session-owned and is never read from this project mapping.
 language:

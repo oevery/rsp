@@ -10,7 +10,6 @@ const publishedSkills = [
   'rsp-design',
   'rsp-diagnose',
   'rsp-implement',
-  'rsp-land',
   'rsp-manage',
   'rsp-release-docs',
   'rsp-resolve-findings',
@@ -19,7 +18,6 @@ const publishedSkills = [
   'rsp-structural-audit',
   'rsp-tdd',
   'rsp-verify',
-  'rsp-workspace',
 ]
 describe('project Skill dogfooding', () => {
   it('projects every published Skill to its canonical authored directory', () => {

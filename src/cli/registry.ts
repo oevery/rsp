@@ -3,7 +3,6 @@ import { inspectionCommands } from './commands/inspection.js'
 import { setupCommands } from './commands/setup.js'
 import { skillsCommands } from './commands/skills.js'
 import { createWorkCommands } from './commands/work.js'
-import { workspaceCommands } from './commands/workspace.js'
 
 export interface RootCommandOptions {
   version: string
@@ -23,8 +22,6 @@ export function createRootCommand(options: RootCommandOptions) {
       init: setupCommands.init,
       add: setupCommands.add,
       specs: inspectionCommands.specs,
-      workspace: workspaceCommands.workspace,
-      land: workspaceCommands.land,
       commit: workCommands.commit,
       create: workCommands.create,
       group: workCommands.group,

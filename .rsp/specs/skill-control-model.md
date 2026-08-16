@@ -12,11 +12,9 @@
 | Contract | Runtime owner |
 | --- | --- |
 | `ControlOutcome`, `RouteDisposition`, `StopDisposition`, and Continuation | `rsp` |
-| `WorkspaceSelection` | `rsp` Core |
 | `ExecutionFrame`, `WorkerSession`, `Assignment`, `Receipt`, `ResourceLease`, frontier, acceptance, and closeout | `rsp-manage` |
 | Verification result and evidence fields | `rsp-verify` |
 | Discipline-specific result and stop conditions | The owning Discipline Skill |
-| Workspace context and observations | `rsp-workspace` |
 
 - Non-owner Skills may name an invoking contract and append their own bounded fields, but must not redefine the complete common contract.
 
@@ -42,17 +40,6 @@
   - `stop`: perform no further action and name the applicable `StopDisposition`.
 - Direct execution requires one ready owner, one writer, one execution phase, one integrated decisive check, no recovery, no independent acceptance obligation, no managed lifecycle coordination, and no ready successor. Multiple files, Specs, product presentation, public documentation, or verification files do not by themselves make the route managed.
 - If any direct-execution condition ceases to hold, Core freshly rederives the route. Direct execution does not silently expand into managed execution.
-
-## Workspace Selection
-- A `WorkspaceSelection` is the unique response-only isolation handoff produced by Core after policy and material-signal evaluation. Its fields are exactly:
-  - `WorkRef`
-  - `materialSelectionReason`
-  - `exactTargetBranch`
-  - `authorityReference`
-- Core produces it, Manage validates and forwards it unchanged, and Workspace consumes it without redefining it. Workspace appends only separately observed path, branch, target, dirty state, commits ahead, activity, resource, and cleanup facts through the invoking result contract.
-- Workspace defaults to `explicit`; Core freshly derives the decision immediately before Workspace preparation from a current explicit isolation request. `auto` is an advanced project opt-in that also permits current parallel work, unrelated dirty or overlapping product paths, or an independent runtime. Workspace is pre-mutation infrastructure, so a late switch stops for an explicit owner-directed handoff rather than silently splitting selected product changes across checkouts.
-- It contains no observed machine path, prepared branch fact, activity, dirty state, commits-ahead count, readiness, acceptance, lifecycle, Git, or execution result. It is never persisted or added to a CLI manifest, Change, Group Brief, Spec, Decision Record, Focus Capsule, registry, status projection, or hidden host ledger.
-- If any of the four fields is missing, ambiguous, stale, or inconsistent with current evidence, Manage or Workspace stops and returns the discrepancy to Core rather than repairing or reselecting isolation.
 
 ## Work Ownership and Frontier Dispositions
 - Core resolves one unambiguous shape-ready `WorkOwner` before Manage qualification. Missing or non-ready ownership uses `RouteDisposition: shape` only when independently granted planning-artifact authority permits Shape; a material product or authority decision uses `StopDisposition: ask-owner`, and an invalid WorkRef, topology, route, dirty-path, scope, or authority boundary uses `StopDisposition: reroute`.
@@ -95,7 +82,7 @@
 - Only a missing optional Discipline Skill may use that Discipline's bounded manual fallback against the same owner. A manual fallback never substitutes for a required managed worker or required independent Verify.
 - Managed execution uses five transient objects and persists none of them as RSP state:
   - `ExecutionFrame` contains the current goal, WorkOwner or WorkSet, effective authority, comparison baseline, observed execution location, current resource claims, and acceptance surfaces. Manage rederives it from current owners and evidence.
-  - `WorkerSession` identifies one worker role and its fresh or resumed context within the current frame. It is not a resource lease, does not imply an isolated worktree, and is not durable identity.
+  - `WorkerSession` identifies one worker role and its fresh or resumed context within the current frame. It is not a resource lease, does not imply an isolated execution environment, and is not durable identity.
   - `Assignment` contains one bounded objective, exact authority references, Read/Write/Verify Sets, known facts, allowed and prohibited actions, stop conditions, and `resume safety: idempotent | inspect-before-repeat | non-repeatable`.
   - `Receipt` contains the exact lane result, actual changed paths, verification and omissions, boundary status, evidence validity, and resource-release outcome. Worker identity and independence are included only when observed and required.
   - `ResourceLease` claims only an evidenced exclusive resource such as a repository writer boundary, RSP control plane, test runner, generated artifacts, browser, Broker, or hardware/classroom session. It is host/runtime coordination, never a general worker lock or durable project fact.
@@ -143,9 +130,8 @@
 8. Closeout is derived only after acceptance and the durable writeback decision, never directly from execution progress.
 9. Lifecycle closeout precedes any eligible local commit; remote delivery remains explicit.
 10. Same-goal resume and Receipts invalidate stale control claims and are revalidated inside Manage; only a true owner, WorkRef topology, route, behavior, acceptance, interface, scope, or authority boundary returns to Core.
-11. WorkerSession continuity never proves workspace isolation or independent verification; only observed execution location and identity evidence support those claims.
+11. WorkerSession continuity never proves execution-environment isolation or independent verification; only observed execution location and identity evidence support those claims.
 12. ResourceLease release follows observed completion or acknowledged cancellation, never elapsed time or controller assumption.
-13. WorkspaceSelection remains the four-field Core handoff; Workspace observations never mutate or persist it.
 
 ## Boundaries
 - Core owns route derivation and rerouting.

@@ -1,6 +1,6 @@
 # Skills and managed work
 
-RSP publishes a default suite of fourteen host-neutral Skills for on-demand loading. Each has a narrow authority boundary and returns its result to an existing project or RSP owner.
+RSP publishes a default suite of twelve host-neutral Skills for on-demand loading. Each has a narrow authority boundary and returns its result to an existing project or RSP owner.
 
 | Skill | Responsibility |
 |---|---|
@@ -16,8 +16,6 @@ RSP publishes a default suite of fourteen host-neutral Skills for on-demand load
 | `rsp-commit` | Create one authorized exact-scope local commit. |
 | `rsp-release-docs` | Draft, audit, finalize, or reconcile an explicit release documentation surface. |
 | `rsp-manage` | Coordinate one eligible long-running, recovery, or multi-slice continuation. |
-| `rsp-workspace` | Prepare an isolated worktree, coordinate host-native operation through existing RSP contracts, and retain recoverable activity state. |
-| `rsp-land` | Transfer one exact authorized commit list from an RSP workspace to its recorded local target. |
 
 `rsp-structural-audit` is an optional report-only project Skill. It audits one bounded repository or subtree before implementation authority is granted.
 
@@ -30,8 +28,6 @@ Installation, runtime role, and invocation are separate:
 | Design, implementation, diagnosis, TDD, verification, review, finding resolution, and Release Docs | default | Discipline | Core-routed specialist or explicit bounded request |
 | `rsp-commit` | default | local-delivery Discipline | Core- or Manage-routed after an authorized exact boundary |
 | `rsp-manage` | default | Controller | Core-selected from an explicit request or effective project policy |
-| `rsp-workspace` | default | Infrastructure | Core-selected for one explicit ready WorkRef when isolation is materially useful |
-| `rsp-land` | default | local-transfer Discipline | Core- or Manage-routed with explicit target, commits, and landing authority |
 | `rsp-structural-audit` | optional | Discovery | explicit report-only request |
 
 `default` means installed with the suite; it does not mean automatically invoked. Ordinary Discipline Skills do not recursively orchestrate user-facing flows. Only a Core-qualified Manage controller composes bounded worker lanes.
@@ -45,8 +41,8 @@ Installation, runtime role, and invocation are separate:
 - Verify executes one declared read-only evidence boundary; Manage retains worker identity, independence, acceptance, and closeout.
 - Review remains read-only; Resolve Findings owns accepted correction.
 - Release Docs requires an explicit confirmed release operation.
-- Core alone selects Workspace isolation for an executable WorkRef and within the project `workspace.activation` ceiling. Workspace defaults to `explicit`, which requires a current explicit isolation request; `auto` is an advanced project opt-in for the established material signals, and `disabled` prevents selection. Core refreshes selection immediately before preparation and emits one response-only `WorkspaceSelection` containing only WorkRef, material selection reason, exact target branch, and authority reference. Workspace is pre-mutation infrastructure: a late switch after product mutation stops for an explicit owner-directed handoff. Manage validates and forwards the selection unchanged; Workspace appends observed path, branch, dirty, commit, activity, delivery, and cleanup facts separately. Neither surface is persisted or added to a CLI manifest.
-- Commit and Land remain separate authorities. Landing conflicts preserve both worktrees for explicit recovery.
+- The host, user, and Git own execution-location selection and cross-branch integration. Manage operates only in the checkout or environment it actually observes; no canonical Skill selects or lands an execution environment.
+- Commit owns one exact local commit in the current checkout and never absorbs cherry-pick, cleanup, or cross-branch integration.
 - No Skill infers commit, push, publication, deployment, approval, or human-acceptance authority.
 
 ## Control outcomes

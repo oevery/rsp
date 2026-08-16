@@ -5,7 +5,7 @@
 
 ## Suite composition
 
-- The published default suite contains `rsp`, `rsp-shape`, `rsp-design`, `rsp-implement`, `rsp-diagnose`, `rsp-tdd`, `rsp-verify`, `rsp-review`, `rsp-resolve-findings`, `rsp-commit`, `rsp-release-docs`, `rsp-manage`, `rsp-workspace`, and `rsp-land`.
+- The published default suite contains `rsp`, `rsp-shape`, `rsp-design`, `rsp-implement`, `rsp-diagnose`, `rsp-tdd`, `rsp-verify`, `rsp-review`, `rsp-resolve-findings`, `rsp-commit`, `rsp-release-docs`, and `rsp-manage`.
 - `rsp-structural-audit` is an independently invoked, report-only project Skill. It audits one explicit repository or subtree boundary for evidenced ownership, dependency, production-path, change-amplification, or verification risks; it neither requires nor creates a Change and never enters implementation or lifecycle routing. In a broad boundary, history selects only the smallest current behavior chain and never proves a Finding. Suspected shallow indirection is evaluated by whether removal eliminates complexity or disperses required caller knowledge, while every retained Finding still requires a reachable trigger and concrete impact.
 - Structural Audit behavior holdouts separately qualify a real Finding, heuristic false positives, history-only selection, specialist routing, and mutation refusal. Deterministic package tests score result values, Finding bounds, required evidence fields, and forbidden claims; provider execution remains optional evidence rather than an ordinary test dependency.
 - Skill classification has three orthogonal axes. Distribution kind is the existing machine contract `default | optional`; runtime role explains Core, Shape, Discipline, Infrastructure, Controller, or Discovery ownership; invocation mode explains direct entry, Core routing, policy selection, or explicit-only selection. Installation never implies invocation or mutation authority, and role remains documentation rather than another runtime manifest or JSON field.
@@ -17,19 +17,17 @@
 | `rsp-design`, `rsp-implement`, `rsp-diagnose`, `rsp-tdd`, `rsp-verify`, `rsp-review`, `rsp-resolve-findings`, `rsp-release-docs` | default | Discipline | Core-routed specialist or explicit bounded request |
 | `rsp-commit` | default | Discipline: local delivery | Core- or Manage-routed after an authorized exact boundary |
 | `rsp-manage` | default | Controller | Core-selected from explicit request or effective project policy |
-| `rsp-workspace` | default | Infrastructure: isolated execution | Core-selected for one explicit ready WorkRef when isolation is materially useful |
-| `rsp-land` | default | Discipline: local integration | Core- or Manage-routed after an authorized exact workspace commit set |
 | `rsp-structural-audit` | optional | Discovery | explicit report-only request |
 
 ## Capability ownership
 
 - Skills are independently selectable and return to an existing project, Change, Spec, Decision Record, archive, or release-artifact owner. Report-only Pre-Change Design and Structural Audit may return one bounded result directly to the user without creating an artifact owner.
 - `rsp` owns project entry, current-action routing, durable-artifact routing, and the output contract required before another capability is loaded.
-- Core alone produces the response-only four-field `WorkspaceSelection` and freshly derives it immediately before Workspace preparation. Workspace defaults to `explicit`; `auto` is an advanced project opt-in. `rsp-manage` validates the current request and pre-mutation boundary before forwarding the selection unchanged, while `rsp-workspace` appends only observed mechanical workspace facts through the invoking contract. No Skill persists the selection or adds it to CLI manifests or status state.
+- Core and Manage use only the execution location actually supplied by the host. Manage may include that observed location in its transient ExecutionFrame, but no Skill selects, prepares, persists, lands, or cleans an execution environment.
 - `rsp-shape` owns clarification and ready-owner planning artifacts; `rsp-design` owns one bounded report-only design question.
 - `rsp-implement`, `rsp-diagnose`, `rsp-tdd`, `rsp-verify`, `rsp-review`, `rsp-resolve-findings`, `rsp-commit`, and `rsp-release-docs` remain standalone bounded capabilities within their declared result and authority contracts.
 - `rsp-manage` is the only suite capability that composes worker lanes, selected-goal execution, review convergence, lifecycle closeout, and local Commit orchestration after Core selection.
-- `rsp-workspace` is isolated execution infrastructure selected by Core; `rsp-land` is local integration for an explicit ordered workspace commit set. Neither grants product, lifecycle, Git, remote, publication, deployment, approval, or human-acceptance authority beyond its owning contract.
+- `rsp-commit` owns exact local commit creation and its receipt only. Host or user Git tooling owns any later cross-branch handoff, cherry-pick, cleanup, remote delivery, or publication.
 - Each capability has one detailed procedure owner. Non-owner capabilities may invoke or append bounded fields, but do not redefine another capability's complete contract.
 
 ## Progressive disclosure

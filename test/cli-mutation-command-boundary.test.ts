@@ -11,13 +11,11 @@ const operationFiles = [
   'focus.ts',
   'group.ts',
   'init.ts',
-  'land.ts',
   'reopen.ts',
   'skills.ts',
   'update.ts',
-  'workspace.ts',
 ]
-const cliCommandFiles = ['setup.ts', 'work.ts', 'workspace.ts', 'skills.ts']
+const cliCommandFiles = ['setup.ts', 'work.ts', 'skills.ts']
 
 describe('cli mutation command boundary', () => {
   it('keeps mutation operations presentation-neutral and process-neutral', () => {

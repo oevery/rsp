@@ -3,7 +3,7 @@ import type { ProjectStatusRecord, ProjectStatusSnapshot } from './model.js'
 import { readFile, stat } from 'node:fs/promises'
 
 import { inspectChangeGroups } from '../core/change-group.js'
-import { CONFIG_PATH, inspectRspConfig, resolveLanguagePolicy, resolveManagePolicy, resolveWorkspacePolicy } from '../core/config.js'
+import { CONFIG_PATH, inspectRspConfig, resolveLanguagePolicy, resolveManagePolicy } from '../core/config.js'
 import { countCheckboxes, hasMeaningfulBlockers, parseFrontmatter } from '../core/content.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
 import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionBody, getDocumentTitle, parseRspDocument } from '../core/document-model.js'
@@ -14,19 +14,16 @@ import { collectArchiveReadiness, toArchiveReadinessOutput } from '../core/readi
 import { inspectArchiveTree, inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 import { extractChangeSummary } from '../core/work-summary.js'
 import { historyInspectionComplete, inspectArchiveHistory } from '../history/query.js'
-import { inspectActiveWorkspaces } from '../workspace/session.js'
 
 export async function inspectProjectStatus(options: { nowMs?: number } = {}): Promise<ProjectStatusSnapshot> {
   const runtime: RuntimeDiagnostic[] = []
   const diagnostics: CommandDiagnostic[] = []
   let manage = resolveManagePolicy({})
-  let workspace = resolveWorkspacePolicy({})
   let language = resolveLanguagePolicy({})
   try {
     const configInspection = await inspectRspConfig()
     const configValid = configInspection.issues.length === 0
     manage = resolveManagePolicy(configInspection.config, { configValid })
-    workspace = resolveWorkspacePolicy(configInspection.config, { configValid })
     language = resolveLanguagePolicy(configInspection.config, { configValid })
     if (!configValid) {
       diagnostics.push({
@@ -39,7 +36,6 @@ export async function inspectProjectStatus(options: { nowMs?: number } = {}): Pr
   }
   catch (error) {
     manage = resolveManagePolicy({}, { configValid: false })
-    workspace = resolveWorkspacePolicy({}, { configValid: false })
     language = resolveLanguagePolicy({}, { configValid: false })
     diagnostics.push({
       severity: 'error',
@@ -83,28 +79,6 @@ export async function inspectProjectStatus(options: { nowMs?: number } = {}): Pr
   const workTree = await inspectWorkTree()
   const archiveTree = await inspectArchiveTree()
   const historyInspection = await inspectArchiveHistory({ archiveTree })
-  const workspaceInspection = await inspectActiveWorkspaces()
-  for (const issue of workspaceInspection.issues) {
-    diagnostics.push({
-      severity: 'error',
-      code: 'workspace_record_invalid',
-      message: `unable to inspect workspace record ${issue.record}`,
-      hint: issue.message,
-    })
-    runtime.push({
-      code: 'workspace_record_invalid',
-      operation: 'inspectWorkspaceRecord',
-      path: `.git/rsp/workspaces/${issue.record}`,
-      message: issue.message,
-    })
-  }
-  if (workspaceInspection.truncated) {
-    diagnostics.push({
-      severity: 'error',
-      code: 'workspace_records_truncated',
-      message: 'active Workspace inspection exceeded its bounded record limit',
-    })
-  }
   diagnostics.push(...workTree.diagnostics.map(diagnostic => ({
     severity: 'error' as const,
     code: diagnostic.code,
@@ -258,8 +232,6 @@ export async function inspectProjectStatus(options: { nowMs?: number } = {}): Pr
 
   return {
     manage,
-    workspace,
-    activeWorkspaces: workspaceInspection.workspaces,
     language,
     focused: [...focusedSet].sort(),
     records,

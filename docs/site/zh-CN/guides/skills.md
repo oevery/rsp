@@ -1,6 +1,6 @@
 # Skills 与受管工作
 
-RSP 发布一个由十四项与宿主无关的 Skill 组成的默认套件，供按需加载。每项 Skill 都有明确且狭窄的权限边界，并把结果返回已有的项目或 RSP 归属位置。
+RSP 发布一个由十二项与宿主无关的 Skill 组成的默认套件，供按需加载。每项 Skill 都有明确且狭窄的权限边界，并把结果返回已有的项目或 RSP 归属位置。
 
 | Skill | 职责 |
 |---|---|
@@ -16,8 +16,6 @@ RSP 发布一个由十四项与宿主无关的 Skill 组成的默认套件，供
 | `rsp-commit` | 创建一个已授权、范围精确的本地提交。 |
 | `rsp-release-docs` | 起草、审计、定稿或校准明确的发布文档范围。 |
 | `rsp-manage` | 协调符合条件的长时间运行、恢复或多切片延续工作。 |
-| `rsp-workspace` | 为已选 WorkRef 准备隔离 worktree，通过已有 RSP 契约协调宿主原生执行，并保留可恢复的 activity 状态。 |
-| `rsp-land` | 把 RSP workspace 中一个精确且已授权的 commit 列表回迁到记录的本地目标。 |
 
 `rsp-structural-audit` 是可选的纯报告项目 Skill，在授予实现权限前审计一个边界明确的仓库或子树。
 
@@ -30,8 +28,6 @@ RSP 发布一个由十四项与宿主无关的 Skill 组成的默认套件，供
 | Design、Implement、Diagnose、TDD、Verify、Review、Resolve Findings 与 Release Docs | 默认 | Discipline | 由 Core 路由为专门能力，或接受边界明确的显式请求 |
 | `rsp-commit` | 默认 | 本地交付 Discipline | 在精确边界获得授权后由 Core 或 Manage 路由 |
 | `rsp-manage` | 默认 | Controller | Core 根据显式请求或有效项目策略选择 |
-| `rsp-workspace` | 默认 | Infrastructure（基础设施） | 隔离具有明确价值时由 Core 为一个明确且就绪的 WorkRef 选择 |
-| `rsp-land` | 默认 | 本地回迁 Discipline | 有明确目标、commit 列表和回迁权限时由 Core 或 Manage 路由 |
 | `rsp-structural-audit` | 可选 | Discovery | 显式纯报告请求 |
 
 “默认”表示随套件安装，并不表示自动调用。普通 Discipline Skill 不递归编排面向用户的流程；只有通过 Core 资格判断的 Manage Controller 才能组合有边界的 worker lanes。
@@ -45,8 +41,8 @@ RSP 发布一个由十四项与宿主无关的 Skill 组成的默认套件，供
 - Verify 只执行一个已声明的只读证据边界；worker identity、独立性、验收与收尾仍由 Manage 拥有。
 - Review 保持只读；Resolve Findings 拥有已接受修正的修改权限。
 - Release Docs 要求显式确认的发布操作。
-- Workspace 隔离只由 Core 为可执行 WorkRef 选择，并受项目 `workspace.activation` 上限约束。Workspace 默认是 `explicit`，要求当前明确请求隔离；`auto` 是为既有实质信号主动启用的高级选项，`disabled` 则阻止选择。Core 会在准备前重新确认选择，并只产生一个 response-only `WorkspaceSelection`，字段仅为 WorkRef、实质选择理由、精确目标分支和权限引用。Workspace 属于修改前基础设施；产品修改开始后的后期切换必须停下并由 owner 明确交接。Manage 原样校验并转交该选择；Workspace 另行追加观察到的路径、分支、dirty、commit、activity、delivery 与 cleanup 事实。两者都不持久化，也不进入 CLI manifest。
-- Commit 与 Land 保持独立权限；回迁冲突会保留两个 worktree，等待显式恢复。
+- 执行位置选择和跨分支集成由宿主、用户与 Git 负责。Manage 只在实际观察到的 checkout 或环境中工作；不存在负责选择或回迁执行环境的规范 Skill。
+- Commit 只负责当前 checkout 中一个边界精确的本地提交，不吸收 cherry-pick、cleanup 或跨分支集成。
 - 任何 Skill 都不推断提交、推送、发布、部署、批准或人工验收权限。
 
 ## 控制结果

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 const root = join(import.meta.dirname, '..')
 const inspectionOperations = ['status.ts', 'show.ts', 'ready.ts', 'check.ts', 'doctor.ts', 'history.ts', 'specs.ts']
-const cliCommandDomains = ['inspection.ts', 'setup.ts', 'work.ts', 'workspace.ts', 'skills.ts']
+const cliCommandDomains = ['inspection.ts', 'setup.ts', 'work.ts', 'skills.ts']
 
 describe('cli inspection command boundary', () => {
   it('keeps every command operation presentation-neutral and process-neutral', () => {

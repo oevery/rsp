@@ -14,7 +14,6 @@ const expectedSkills = [
   'rsp-design',
   'rsp-diagnose',
   'rsp-implement',
-  'rsp-land',
   'rsp-manage',
   'rsp-release-docs',
   'rsp-resolve-findings',
@@ -23,7 +22,6 @@ const expectedSkills = [
   'rsp-structural-audit',
   'rsp-tdd',
   'rsp-verify',
-  'rsp-workspace',
 ]
 
 describe('clean install package check', () => {

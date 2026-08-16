@@ -47,7 +47,6 @@ describe('cli command boundary foundation', () => {
     expect(registrySource).toContain('from \'./commands/inspection.js\'')
     expect(registrySource).toContain('from \'./commands/setup.js\'')
     expect(registrySource).toContain('from \'./commands/work.js\'')
-    expect(registrySource).toContain('from \'./commands/workspace.js\'')
     expect(registrySource).toContain('from \'./commands/skills.js\'')
   })
 
@@ -59,8 +58,6 @@ describe('cli command boundary foundation', () => {
       'init',
       'add',
       'specs',
-      'workspace',
-      'land',
       'commit',
       'create',
       'group',
@@ -122,7 +119,6 @@ describe('cli command boundary foundation', () => {
       'src/cli/commands/inspection.ts',
       'src/cli/commands/setup.ts',
       'src/cli/commands/work.ts',
-      'src/cli/commands/workspace.ts',
       'src/cli/commands/skills.ts',
     ].map(path => readFileSync(join(root, path), 'utf8')).join('\n')
 

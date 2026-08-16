@@ -15,7 +15,6 @@ const EXPECTED_DEFAULT_SKILLS = [
   'rsp-design',
   'rsp-diagnose',
   'rsp-implement',
-  'rsp-land',
   'rsp-manage',
   'rsp-release-docs',
   'rsp-resolve-findings',
@@ -23,7 +22,6 @@ const EXPECTED_DEFAULT_SKILLS = [
   'rsp-shape',
   'rsp-tdd',
   'rsp-verify',
-  'rsp-workspace',
 ]
 const OPTIONAL_SKILL = 'rsp-structural-audit'
 const EXPECTED_PACKAGED_SKILLS = [...EXPECTED_DEFAULT_SKILLS, OPTIONAL_SKILL].sort()

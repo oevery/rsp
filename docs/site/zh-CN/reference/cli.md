@@ -62,31 +62,7 @@ rsp reopen <name> --reason <text> [--from <archive-path>]
 rsp commit --message-file <path> [--json]
 ```
 
-`rsp commit` 基于当前已经暂存的边界创建一个本地 commit。它不会主动 stage、push、tag、发布、amend，也不会创建修复提交。消息文件必须包含真实换行；字面量 `\n` 会被拒绝。Git 通过直接子进程的 stdin 路径接收消息，并使用 `--cleanup=verbatim`；提交完成后还会检查 `HEAD` 的完整消息。如果提交后的消息不匹配，命令会报告失败，但保留已经创建的 commit，后续历史修复仍需单独授权。
-
-## 隔离 Workspace
-
-```text
-rsp workspace prepare <work-ref> [--target <branch>] [--allow-dirty-source] [--json]
-rsp workspace status <work-ref> [--json]
-rsp workspace inspect <work-ref> [--json]
-rsp workspace activity register <work-ref> --id <id> --pid <pid>
-    [--label <text>] [--process-group <pgid>] [--resources <ids>] [--json]
-rsp workspace activity stop <work-ref> --id <id> [--json]
-rsp workspace dispose <work-ref> [--discard] [--json]
-rsp workspace prune <work-ref> [--apply] [--json]
-rsp land <work-ref> --target <branch> --commits <sha[,sha...]> [--cleanup] [--json]
-```
-
-Workspace 只为一个已有且可执行的 WorkRef 启用，并且必须满足项目的 `workspace.activation` 策略。Workspace 默认是 `explicit`，要求当前明确请求隔离；`auto` 是项目主动启用的高级选项，还允许根据实质 workspace 信号选择隔离；`disabled` 则禁止 RSP 选择 workspace。选择必须在准备前重新确认。Workspace 属于修改前基础设施，不会静默迁移已经在源 checkout 开始的产品修改。新建前会拒绝选中 owner 控制文件之外的源 checkout dirty 路径；`--allow-dirty-source` 只确认 Core 或人类已把它们审查为无关修改。准备命令在稳定缓存目录中创建或恢复 `rsp/<work-ref>` 分支；普通临时工作仍在当前分支完成。`inspect` 只返回有界仓库事实，不判断项目技术栈。
-
-`rsp-workspace` Skill 或人类负责理解项目语义，并使用宿主现有的文件、shell、包管理、浏览器和进程能力。该 Skill 复用调用方已有的 RSP 控制与结果契约，只追加 workspace 上下文和观察事实；CLI 不解析 AI 响应文本，也不提供通用执行计划 DSL。
-
-长运行进程由宿主启动并验证。`activity register` 登记已观察到的 PID 及其稳定进程启动身份、可选且已核验的进程组，以及不透明的协作式资源名称，使后续会话可以安全停止或清理。停止和清理前会重新验证该身份；如果 PID 或进程组已被复用则安全失败，不会发送信号。登记属于协作协调，不是沙箱，也不会授予网络、凭证、外部状态、部署或发布权限。
-
-清理会拒绝存在未提交修改或真正尚未交付的 commit。若一个干净 Workspace 的领先 commit 已在目标分支存在补丁等价版本，其 `deliveryState` 为 `landed-equivalent`，无需 `--discard` 即可普通清理；补丁等价不代表 Change 已验收。`--discard` 才显式授权丢弃 dirty 或未交付工作。回迁要求精确目标分支和有序 commit 列表。冲突会保留来源 workspace 和目标 cherry-pick 状态；只有回迁成功且列表覆盖 workspace 相对目标领先的全部 commit 时，`--cleanup` 才会继续清理。
-
-`workspace prune` 默认只报告孤儿残留证据。`--apply` 仅在 branch、worktree、缓存路径和活动进程均不存在时删除有效陈旧记录；同等缺失证据下，无法解析的精确普通记录只会被隔离保存。存在或有歧义的资源会阻止修改。
+`rsp commit` 基于当前已经暂存的边界创建一个本地 commit。存在进行中的 merge、cherry-pick、revert、rebase 或 sequencer 操作时会拒绝提交。它不会主动 stage、push、tag、发布、amend、创建修复提交或执行跨分支集成。消息文件必须包含真实换行；字面量 `\n` 会被拒绝。Git 通过直接子进程的 stdin 路径接收消息，并使用 `--cleanup=verbatim`。提交完成后，RSP 会核对完整存储消息和实际提交路径，并返回提交前后 HEAD、存储消息、已提交路径与工作树剩余路径。如果提交后的消息或路径不匹配，命令会报告失败，但保留已经创建的 commit，后续历史修复仍需单独授权。
 
 ## 检查与查询
 
@@ -101,7 +77,7 @@ rsp history <work-ref> [--json [--compact]]
 
 在真实的交互式终端中，不带子命令的 RSP 会打开与 `rsp ui` 相同的面板。CI、管道、重定向流与 `TERM=dumb` 接收静态命令输出。
 
-普通 `rsp status` 以紧凑形式保留当前聚焦、Change 与 Group 摘要、进度、阻塞项和派生的下一步，同时显示每个活动 Workspace 及 inspect 或 dispose 恢复动作。增加 `--verbose` 可查看有效 Manage 与语言策略、完整依赖森林、归档趋势和更详细的活动 Workspace 恢复事实。JSON 新增稳定排序的 `activeWorkspaces` 数组，字段为 `workRef`、`branch`、`targetBranch`、`dirty`、`commitsAhead`、`activeActivityCount`、`deliveryState` 和 `cleanupReady`；`deliveryState` 取值为 `landed`、`unlanded` 或 `landed-equivalent`，工作树 dirty 状态保持独立。这些值来自现有 Workspace 注册表的已校验机械观察，不代表 Change readiness 或 acceptance；无效记录会显式失败。默认纯文本 status 不显示机器相关的 Workspace 路径，status 也不会创建第二注册表或工作流状态。
+普通 `rsp status` 以紧凑形式保留当前聚焦、Change 与 Group 摘要、进度、阻塞项和派生的下一步。增加 `--verbose` 可查看有效 Manage 与语言策略、完整依赖森林和归档趋势。JSON 以结构化形式提供相同工作流事实，不增加执行环境状态或第二注册表。
 
 `status` 从完整工作树派生精确的依赖、就绪工作、阻塞项与稳定波次。`check` 校验 Change 结构，并警告未完成的占位符或待澄清标记。`history` 直接读取保留的归档文件，默认返回 20 条、最多 100 条；筛选参数包括 `--limit`、`--since`、`--until`、`--kind`、`--group` 与 `--search`。
 

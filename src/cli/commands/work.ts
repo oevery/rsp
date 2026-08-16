@@ -9,8 +9,8 @@ import { showReady } from '../../commands/ready.js'
 import { reopenChange } from '../../commands/reopen.js'
 import { executeCliCommand } from '../adapter.js'
 import { jsonArgs } from '../capabilities.js'
+import { presentCommit } from '../presenters/commit.js'
 import { presentArchive, presentArchiveDryRun, presentCreate, presentFocus, presentGroup, presentReopen } from '../presenters/work.js'
-import { presentCommit } from '../presenters/workspace.js'
 
 function createCreateCommand(deprecatedLite: boolean) {
   return defineCommand({
