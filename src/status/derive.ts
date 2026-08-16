@@ -18,13 +18,14 @@ export function deriveStatusView(snapshot: ProjectStatusSnapshot, options: Statu
   })
   const filtered = query.focused || query.blocked || query.stale !== null
   const ok = snapshot.diagnostics.every(diagnostic => diagnostic.severity !== 'error')
+  const workspaceActions = buildWorkspaceNextActions(snapshot.activeWorkspaces ?? [])
   const nextActions = ok
-    ? buildStatusNextActions(snapshot.focused.length, snapshot.records.map(record => record.output), snapshot.groups, filtered)
+    ? [...workspaceActions, ...buildStatusNextActions(snapshot.focused.length, snapshot.records.map(record => record.output), snapshot.groups, filtered)]
     : ['Run: rsp doctor']
 
   return {
     manage: snapshot.manage,
-    workspace: snapshot.workspace ?? { activation: 'auto' },
+    workspace: snapshot.workspace ?? { activation: 'explicit' },
     activeWorkspaces: snapshot.activeWorkspaces ?? [],
     language: snapshot.language,
     query,
@@ -44,6 +45,12 @@ export function deriveStatusView(snapshot: ProjectStatusSnapshot, options: Statu
     hasExecutableChanges: snapshot.records.length > 0,
     ok,
   }
+}
+
+function buildWorkspaceNextActions(workspaces: NonNullable<ProjectStatusSnapshot['activeWorkspaces']>): string[] {
+  return workspaces.slice(0, 3).map(workspace => workspace.cleanupReady
+    ? `Run: rsp workspace dispose ${workspace.workRef}`
+    : `Run: rsp workspace inspect ${workspace.workRef} --json`)
 }
 
 export function buildStatusNextActions(focusedCount: number, records: StatusRecordOutput[], groups: ChangeGroupStatusOutput[], filtered: boolean): string[] {

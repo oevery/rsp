@@ -50,6 +50,7 @@
   - `exactTargetBranch`
   - `authorityReference`
 - Core produces it, Manage validates and forwards it unchanged, and Workspace consumes it without redefining it. Workspace appends only separately observed path, branch, target, dirty state, commits ahead, activity, resource, and cleanup facts through the invoking result contract.
+- Workspace defaults to `explicit`; Core freshly derives the decision immediately before Workspace preparation from a current explicit isolation request. `auto` is an advanced project opt-in that also permits current parallel work, unrelated dirty or overlapping product paths, or an independent runtime. Workspace is pre-mutation infrastructure, so a late switch stops for an explicit owner-directed handoff rather than silently splitting selected product changes across checkouts.
 - It contains no observed machine path, prepared branch fact, activity, dirty state, commits-ahead count, readiness, acceptance, lifecycle, Git, or execution result. It is never persisted or added to a CLI manifest, Change, Group Brief, Spec, Decision Record, Focus Capsule, registry, status projection, or hidden host ledger.
 - If any of the four fields is missing, ambiguous, stale, or inconsistent with current evidence, Manage or Workspace stops and returns the discrepancy to Core rather than repairing or reselecting isolation.
 

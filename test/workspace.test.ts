@@ -237,6 +237,8 @@ describe.sequential('rsp workspace lifecycle', () => {
       dirty: true,
       commitsAhead: 1,
       activeActivityCount: 1,
+      deliveryState: 'unlanded',
+      cleanupReady: false,
     }])
 
     const verbose: string[] = []
@@ -253,6 +255,9 @@ describe.sequential('rsp workspace lifecycle', () => {
     }
     expect(verbose.join('\n')).toContain('Active Workspaces')
     expect(verbose.join('\n')).toContain('example-change · rsp/example-change → main · dirty · 1 commit(s) ahead · 1 active activity')
+    expect(defaultPlain.join('\n')).toContain('Active Workspaces')
+    expect(defaultPlain.join('\n')).toContain('example-change · unlanded · dirty · inspect required')
+    expect(defaultPlain.join('\n')).toContain('Next action: Run: rsp workspace inspect example-change --json')
     expect(defaultPlain.join('\n')).not.toContain(prepared.record.path)
 
     await stopWorkspaceActivity('example-change', 'serve')
@@ -260,6 +265,40 @@ describe.sequential('rsp workspace lifecycle', () => {
     const landed = await landWorkspace('example-change', { targetBranch: 'main', commits: [commit], cleanup: true })
     expect(landed.cleanedUp).toBe(true)
     expect(toStatusJson(await showStatus()).activeWorkspaces).toEqual([])
+  })
+
+  it('recognizes patch-equivalent landing and allows ordinary cleanup', async () => {
+    const prepared = await prepareWorkspace('example-change')
+    await writeFile(join(prepared.record.path, 'owned.txt'), 'workspace\n')
+    git(['add', 'owned.txt'], prepared.record.path)
+    git(['commit', '-m', 'feat: change owned file'], prepared.record.path)
+    const commit = git(['rev-parse', 'HEAD'], prepared.record.path)
+    await writeFile(join(repository, 'target-only.txt'), 'target\n')
+    git(['add', 'target-only.txt'])
+    git(['commit', '-m', 'chore: advance target independently'])
+
+    const landed = await landWorkspace('example-change', {
+      targetBranch: 'main',
+      commits: [commit],
+    })
+    expect(landed.ok).toBe(true)
+    expect(landed.cleanedUp).toBe(false)
+
+    const observation = await observeWorkspace('example-change')
+    expect(observation.aheadOfTarget).toBe(1)
+    expect(observation.deliveryState).toBe('landed-equivalent')
+    expect(observation.cleanupReady).toBe(true)
+
+    const status = toStatusJson(await showStatus())
+    expect(status.activeWorkspaces).toEqual([expect.objectContaining({
+      workRef: 'example-change',
+      deliveryState: 'landed-equivalent',
+      cleanupReady: true,
+    })])
+    expect(status.nextActions[0]).toBe('Run: rsp workspace dispose example-change')
+
+    await disposeWorkspace('example-change')
+    expect(existsSync(prepared.record.path)).toBe(false)
   })
 
   it('fails ordinary status visibly and safely for an invalid workspace record', async () => {

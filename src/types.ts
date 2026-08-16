@@ -92,6 +92,8 @@ export interface ActiveWorkspaceStatusOutput {
   dirty: boolean
   commitsAhead: number
   activeActivityCount: number
+  deliveryState: 'clean' | 'unlanded' | 'landed-equivalent'
+  cleanupReady: boolean
 }
 
 export interface ProjectLanguageConfig {

@@ -65,15 +65,15 @@ manage:
 
 ```yaml
 workspace:
-  activation: auto
+  activation: explicit
 ```
 
 `activation` 接受：
 
-- `auto`：Core 可以在存在并行 Change、无关 dirty work、独立运行时边界或显式 workspace 请求时选择隔离。
-- `explicit`：Core 只能为当前显式 workspace 请求选择隔离。
+- `explicit`：Core 只能为当前明确提到 Workspace、worktree、隔离 checkout 或同等隔离意图的请求选择隔离。
+- `auto`：项目主动启用的高级选项；Core 还可以因并行 Change、无关或重叠的产品修改、独立运行时边界选择隔离。
 - `disabled`：RSP 不选择或准备隔离 workspace。
 
-生成和回填的默认值是 `auto`，用于保持现有隔离行为。没有 `workspace` 的有效旧配置同样解析为 `auto`；无效配置则让 Workspace 安全失败为 `disabled`。
+生成和回填的默认值是 `explicit`。没有 `workspace` 的有效旧配置同样解析为 `explicit`；无效配置则让 Workspace 安全失败为 `disabled`。Core 会在准备前重新确认选择。Workspace 属于修改前基础设施：如果源 checkout 已经开始产品修改，后期切换必须停下并由 owner 明确交接，不能只复制 RSP 控制文件后静默继续。
 
 该设置只是策略上限，不授予 workspace 创建、实现、清理、丢弃、回迁、Git 或外部操作权限。Workspace 路径仍跟随宿主缓存位置，分支固定为 `rsp/<work-ref>`，目标分支仍由命令明确指定，破坏性清理保持显式。

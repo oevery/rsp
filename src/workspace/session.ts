@@ -55,6 +55,8 @@ export interface WorkspaceObservation {
   branchExists: boolean
   dirty: string[]
   aheadOfTarget: number
+  deliveryState: 'clean' | 'unlanded' | 'landed-equivalent'
+  cleanupReady: boolean
 }
 
 export interface ActiveWorkspaceObservation {
@@ -64,6 +66,8 @@ export interface ActiveWorkspaceObservation {
   dirty: boolean
   commitsAhead: number
   activeActivityCount: number
+  deliveryState: WorkspaceObservation['deliveryState']
+  cleanupReady: boolean
 }
 
 export interface ActiveWorkspaceInspection {
@@ -421,12 +425,24 @@ async function observeWorkspaceRecord(context: GitContext, record: WorkspaceReco
   const aheadRaw = exists
     ? (await git(context.repository, ['rev-list', '--count', `${record.targetBranch}..${record.branch}`], true)).stdout
     : '0'
+  const aheadOfTarget = Number(aheadRaw || 0)
+  const cherry = exists && aheadOfTarget > 0
+    ? (await git(context.repository, ['cherry', record.targetBranch, record.branch], true)).stdout
+    : ''
+  const unlandedCommits = cherry.split('\n').filter(line => line.startsWith('+ ')).length
+  const deliveryState: WorkspaceObservation['deliveryState'] = aheadOfTarget === 0
+    ? 'clean'
+    : unlandedCommits === 0
+      ? 'landed-equivalent'
+      : 'unlanded'
   return {
     record,
     registered: true,
     branchExists: exists,
     dirty,
-    aheadOfTarget: Number(aheadRaw || 0),
+    aheadOfTarget,
+    deliveryState,
+    cleanupReady: dirty.length === 0 && deliveryState !== 'unlanded',
   }
 }
 
@@ -476,13 +492,16 @@ export async function inspectActiveWorkspaces(): Promise<ActiveWorkspaceInspecti
         throw new Error('record disappeared during inspection')
       const observation = await observeWorkspaceRecord(context, record, parsed.workRef)
       const activityStates = await Promise.all(Object.values(record.activities ?? {}).map(activityIsActive))
+      const activeActivityCount = activityStates.filter(Boolean).length
       workspaces.push({
         workRef: record.workRef,
         branch: record.branch,
         targetBranch: record.targetBranch,
         dirty: observation.dirty.length > 0,
         commitsAhead: observation.aheadOfTarget,
-        activeActivityCount: activityStates.filter(Boolean).length,
+        activeActivityCount,
+        deliveryState: observation.deliveryState,
+        cleanupReady: observation.cleanupReady && activeActivityCount === 0,
       })
     }
     catch (error) {
@@ -638,7 +657,7 @@ export async function disposeWorkspace(workRef: string, options: { discard?: boo
     const { record } = observation
     if (!options.discard && observation.dirty.length > 0)
       throw new Error(`workspace has uncommitted changes: ${observation.dirty.join(', ')}`)
-    if (!options.discard && !options.landed && observation.aheadOfTarget > 0)
+    if (!options.discard && !options.landed && observation.deliveryState === 'unlanded')
       throw new Error(`workspace has ${observation.aheadOfTarget} commit(s) not present on ${record.targetBranch}`)
     for (const activity of Object.values(record.activities ?? {})) {
       await stopActivityProcess(activity.pid, activity.processGroupId, activity.processIdentity)
@@ -651,7 +670,7 @@ export async function disposeWorkspace(workRef: string, options: { discard?: boo
     args.push(record.path)
     await git(context.repository, args)
     if (observation.branchExists)
-      await git(context.repository, ['branch', options.discard || options.landed ? '-D' : '-d', record.branch])
+      await git(context.repository, ['branch', options.discard || options.landed || observation.deliveryState === 'landed-equivalent' ? '-D' : '-d', record.branch])
     await unlink(recordPath(record.commonDir, workRef))
     return record
   })

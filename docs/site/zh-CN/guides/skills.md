@@ -45,7 +45,7 @@ RSP 发布一个由十四项与宿主无关的 Skill 组成的默认套件，供
 - Verify 只执行一个已声明的只读证据边界；worker identity、独立性、验收与收尾仍由 Manage 拥有。
 - Review 保持只读；Resolve Findings 拥有已接受修正的修改权限。
 - Release Docs 要求显式确认的发布操作。
-- Workspace 隔离只由 Core 为可执行 WorkRef 选择，并受项目 `workspace.activation` 上限约束。`auto` 允许既有实质信号，`explicit` 要求当前显式请求，`disabled` 则阻止选择。Core 只产生一个 response-only `WorkspaceSelection`，字段仅为 WorkRef、实质选择理由、精确目标分支和权限引用。Manage 原样校验并转交；Workspace 另行追加观察到的路径、分支、dirty、commit、activity 与 cleanup 事实。两者都不持久化，也不进入 CLI manifest。
+- Workspace 隔离只由 Core 为可执行 WorkRef 选择，并受项目 `workspace.activation` 上限约束。Workspace 默认是 `explicit`，要求当前明确请求隔离；`auto` 是为既有实质信号主动启用的高级选项，`disabled` 则阻止选择。Core 会在准备前重新确认选择，并只产生一个 response-only `WorkspaceSelection`，字段仅为 WorkRef、实质选择理由、精确目标分支和权限引用。Workspace 属于修改前基础设施；产品修改开始后的后期切换必须停下并由 owner 明确交接。Manage 原样校验并转交该选择；Workspace 另行追加观察到的路径、分支、dirty、commit、activity、delivery 与 cleanup 事实。两者都不持久化，也不进入 CLI manifest。
 - Commit 与 Land 保持独立权限；回迁冲突会保留两个 worktree，等待显式恢复。
 - 任何 Skill 都不推断提交、推送、发布、部署、批准或人工验收权限。
 

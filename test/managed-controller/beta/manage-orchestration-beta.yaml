@@ -9,7 +9,7 @@ product_skill_names:
   - rsp
   - rsp-manage
   - rsp-implement
-product_composition_sha256: b645617c86ce744b578adbe8c98c239b60de3465c764a1dcc4577e4fc0062623
+product_composition_sha256: c8768fcebaa29e6778c516fe160b7b733e76fdfd57e90a0d770d6b777fc6e815
 prior_retained_evidence:
   - path: research/evaluations/rsp-manage/2026-08-15-managed-context-no-regression/report.md
     sha256: 1253d3553743d3eeb3f0c8a39247c8c0e57610f9755f308c5784ca779fe94381

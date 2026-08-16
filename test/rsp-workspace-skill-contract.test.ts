@@ -25,8 +25,9 @@ describe('rsp workspace Skills', () => {
     for (const fragment of [
       'Before the small-work decision',
       'Core alone evaluates `workspace.activation`',
-      '`auto` permits parallel Changes, unrelated dirty work, an independent runtime boundary, or an explicit request',
-      '`explicit` permits only the explicit request',
+      'Workspace defaults to `explicit`',
+      '`auto` is an advanced project opt-in',
+      '`explicit`, which permits selection only for a current explicit isolation request',
       '`disabled` denies RSP isolation',
       'Load `rsp-workspace` only after selection',
     ])
@@ -62,6 +63,56 @@ describe('rsp workspace Skills', () => {
     expect(fallback).toContain('As the Core fallback, read the effective `workspace.activation` before the small-work decision')
     expect(fallback).toContain('under `disabled`, never select or prepare an RSP workspace')
     expect(fallback).toContain('Evaluating policy and signals does not load the Workspace capability')
+  })
+
+  it('refreshes Workspace selection at the preparation boundary', () => {
+    const core = skill('rsp')
+    const manage = skill('rsp-manage')
+    const workspace = skill('rsp-workspace')
+    const coreSpec = projectFile('.rsp/specs/core-model.md')
+    const controlModel = projectFile('.rsp/specs/skill-control-model.md')
+    const skillSpec = projectFile('.rsp/specs/skill-system.md')
+    const fallback = projectFile('rules/rsp-rules.md')
+
+    for (const content of [core, coreSpec, controlModel, skillSpec, fallback]) {
+      const normalized = content.toLowerCase()
+      expect(normalized).toContain('immediately before workspace preparation')
+    }
+
+    expect(core).toContain('Freshly rederive Workspace selection')
+    expect(core).toContain('unrelated dirty or overlapping product paths')
+    expect(core).toContain('one WorkRef, one writer')
+    expect(core).toContain('same-WorkRef Change and focus mutations')
+    expect(core).toContain('provider or evaluation harness')
+    expect(core).toContain('stays in the current checkout')
+    expect(manage).toContain('immediately before invoking `rsp-workspace`')
+    expect(manage).toContain('return the stale selection or handoff evidence to Core before preparation')
+    expect(workspace).toContain('If the invoking selection has not been refreshed immediately before preparation')
+    expect(workspace).toContain('stop without running `rsp workspace prepare`')
+    expect(workspace).toContain('one WorkRef, one writer')
+    expect(workspace).toContain('same-WorkRef Change and focus mutations')
+    expect(workspace).toContain('provider or evaluation harness')
+    expect(workspace).toContain('current checkout is sufficient')
+    expect(workspace).toContain('The CLI remains a mechanical ownership executor')
+  })
+
+  it('keeps Workspace explicit by default and refuses silent late handoff', () => {
+    const core = skill('rsp')
+    const manage = skill('rsp-manage')
+    const workspace = skill('rsp-workspace')
+    const coreSpec = projectFile('.rsp/specs/core-model.md')
+    const cliSpec = projectFile('.rsp/specs/cli-contracts.md')
+    const fallback = projectFile('rules/rsp-rules.md')
+
+    for (const content of [core, coreSpec, cliSpec, fallback]) {
+      expect(content).toContain('Workspace defaults to `explicit`')
+      expect(content).toContain('`auto` is an advanced project opt-in')
+    }
+    expect(core).toContain('a current explicit isolation request')
+    expect(manage).toContain('product mutation has not begun in the source checkout')
+    expect(workspace).toContain('Workspace is pre-mutation infrastructure')
+    expect(workspace).toContain('require an explicit owner-directed handoff')
+    expect(workspace).toContain('Never copy only RSP control files and silently continue')
   })
 
   it('documents bounded active Workspace recovery without semantic promotion', () => {

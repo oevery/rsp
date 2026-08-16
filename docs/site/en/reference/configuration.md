@@ -65,15 +65,15 @@ See [Skills and managed work](../guides/skills.md) for selection behavior.
 
 ```yaml
 workspace:
-  activation: auto
+  activation: explicit
 ```
 
 `activation` accepts:
 
-- `auto`: Core may select workspace isolation for parallel Changes, unrelated dirty work, an independent runtime boundary, or an explicit workspace request.
-- `explicit`: Core may select isolation only for a current explicit workspace request.
+- `explicit`: Core may select isolation only for a current explicit request naming a Workspace, worktree, isolated checkout, or equivalent intent.
+- `auto`: advanced project opt-in; Core may additionally select isolation for parallel Changes, unrelated dirty or overlapping product work, or an independent runtime boundary.
 - `disabled`: RSP does not select or prepare an isolated workspace.
 
-The generated and backfilled default is `auto`, which preserves the existing isolation behavior. A valid legacy config without `workspace` also resolves to `auto`; invalid configuration fails Workspace closed to `disabled`.
+The generated and backfilled default is `explicit`. A valid legacy config without `workspace` also resolves to `explicit`; invalid configuration fails Workspace closed to `disabled`. Core refreshes selection immediately before preparation. Workspace is pre-mutation infrastructure: if product mutation already began in the source checkout, a late switch stops for an explicit owner-directed handoff instead of silently copying only RSP control files.
 
 This setting is a policy ceiling. It does not grant workspace creation, implementation, cleanup, discard, landing, Git, or external authority. Workspace paths follow the host cache location, branches remain `rsp/<work-ref>`, target branches stay command-owned, and destructive cleanup remains explicit.

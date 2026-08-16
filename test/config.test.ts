@@ -48,9 +48,9 @@ describe('resolveManagePolicy', () => {
 })
 
 describe('resolveWorkspacePolicy', () => {
-  it('preserves automatic workspace selection for valid legacy configs', () => {
-    expect(resolveWorkspacePolicy({})).toEqual({ activation: 'auto' })
-    expect(resolveWorkspacePolicy({ workspace: {} })).toEqual({ activation: 'auto' })
+  it('requires explicit workspace selection for valid legacy configs', () => {
+    expect(resolveWorkspacePolicy({})).toEqual({ activation: 'explicit' })
+    expect(resolveWorkspacePolicy({ workspace: {} })).toEqual({ activation: 'explicit' })
   })
 
   it('resolves configured values and fails closed when config is invalid', () => {
@@ -83,7 +83,7 @@ describe('generated config language guidance', () => {
     expect(template).toContain('decisions:\n  path: .rsp/specs/decisions')
     expect(template).toContain('language:\n  default: en\n  # artifacts: zh-CN\n  # commit: zh-CN')
     expect(template).toContain('manage:\n  activation: auto\n  closeout: local')
-    expect(template).toContain('workspace:\n  activation: auto')
+    expect(template).toContain('workspace:\n  activation: explicit')
   })
 })
 
@@ -105,7 +105,7 @@ language:
     expect(result.content).toContain('activation: explicit')
     expect(result.content).toContain('closeout: local')
     expect(result.content).toContain('language:\n  default: zh-CN')
-    expect(result.content).toContain('workspace:\n  activation: auto')
+    expect(result.content).toContain('workspace:\n  activation: explicit')
   })
 
   it('preserves inline comments during conservative backfill', () => {
@@ -122,7 +122,7 @@ language:
     expect(result.added).toEqual(['decisions.path', 'workspace.activation'])
     expect(result.content).toContain('kinds: [] # Keep the built-in classification set.')
     expect(result.content).toContain('decisions:\n  path: .rsp/specs/decisions')
-    expect(result.content).toContain('workspace:\n  activation: auto')
+    expect(result.content).toContain('workspace:\n  activation: explicit')
   })
 
   it('does not rewrite a complete config', () => {
@@ -163,7 +163,7 @@ manage:
     expect(result.content).toContain('  # artifacts: zh-CN')
     expect(result.content).toContain('  # commit: zh-CN')
     expect(result.content).toContain('manage:\n  activation: explicit\n  closeout: local')
-    expect(result.content).toContain('workspace:\n  activation: auto')
+    expect(result.content).toContain('workspace:\n  activation: explicit')
     expect(result.content).not.toContain('# Omit kinds')
   })
 

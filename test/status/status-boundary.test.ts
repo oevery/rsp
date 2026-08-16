@@ -241,7 +241,7 @@ summary: Frontmatter summary
       clearConfigCache()
       const configured = await inspectProjectStatus()
       expect(configured.manage).toEqual({ activation: 'auto', closeout: 'lifecycle' })
-      expect(configured.workspace).toEqual({ activation: 'auto' })
+      expect(configured.workspace).toEqual({ activation: 'explicit' })
       expect(configured.language).toEqual({ artifacts: null, commit: null })
       expect(configured.diagnostics).not.toContainEqual(expect.objectContaining({ code: 'invalid_config' }))
 

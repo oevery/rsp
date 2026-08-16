@@ -40,14 +40,14 @@ export const VALID_KINDS: ChangeKind[] = ['feature', 'fix', 'refactor', 'docs', 
 export const DEFAULT_REQUIRED_SECTIONS = getCanonicalSectionHeadings(CHANGE_DOCUMENT_SCHEMA)
 export const LEGACY_MISSING_CONFIG_MANAGE_POLICY: ManagePolicy = { activation: 'explicit', closeout: 'local' }
 export const INVALID_CONFIG_MANAGE_POLICY: ManagePolicy = { activation: 'explicit', closeout: 'manual' }
-export const LEGACY_MISSING_CONFIG_WORKSPACE_POLICY: WorkspacePolicy = { activation: 'auto' }
+export const LEGACY_MISSING_CONFIG_WORKSPACE_POLICY: WorkspacePolicy = { activation: 'explicit' }
 export const INVALID_CONFIG_WORKSPACE_POLICY: WorkspacePolicy = { activation: 'disabled' }
 export const CONFIG_DEFAULTS = {
   kinds: [] as string[],
   decisions: { path: '.rsp/specs/decisions' },
   language: { default: 'en' },
   manage: { activation: 'auto' as const, closeout: 'local' as const },
-  workspace: { activation: 'auto' as const },
+  workspace: { activation: 'explicit' as const },
 }
 
 export function generateConfigTemplate(config: RspConfig = {}): string {
@@ -88,8 +88,8 @@ manage:
   activation: ${manage.activation}
   closeout: ${manage.closeout}
 
-# Workspace isolation defaults to automatic selection from material runtime signals.
-# Use activation: explicit to require a request, or disabled to prevent RSP-managed worktrees.
+# Workspace defaults to explicit requests; auto is an advanced project opt-in.
+# Use activation: disabled to prevent RSP-managed worktrees.
 workspace:
   activation: ${workspace.activation}
 
