@@ -12,6 +12,7 @@
 | Contract | Runtime owner |
 | --- | --- |
 | `ControlOutcome`, `RouteDisposition`, `StopDisposition`, and Continuation | `rsp` |
+| `WorkspaceSelection` | `rsp` Core |
 | `ExecutionFrame`, `WorkerSession`, `Assignment`, `Receipt`, `ResourceLease`, frontier, acceptance, and closeout | `rsp-manage` |
 | Verification result and evidence fields | `rsp-verify` |
 | Discipline-specific result and stop conditions | The owning Discipline Skill |
@@ -39,8 +40,18 @@
   - `managed`: hand one selected shape-ready owner and bounded goal to Manage after qualification. This is the only route that composes worker lanes and review convergence.
   - `shape`: return unclear but owned work to Shape.
   - `stop`: perform no further action and name the applicable `StopDisposition`.
-- Direct execution requires all of: one ready owner, one local seam, one mutation pass, one decisive check, no managed lifecycle coordination, and no ready successor.
+- Direct execution requires one ready owner, one writer, one execution phase, one integrated decisive check, no recovery, no independent acceptance obligation, no managed lifecycle coordination, and no ready successor. Multiple files, Specs, product presentation, public documentation, or verification files do not by themselves make the route managed.
 - If any direct-execution condition ceases to hold, Core freshly rederives the route. Direct execution does not silently expand into managed execution.
+
+## Workspace Selection
+- A `WorkspaceSelection` is the unique response-only isolation handoff produced by Core after policy and material-signal evaluation. Its fields are exactly:
+  - `WorkRef`
+  - `materialSelectionReason`
+  - `exactTargetBranch`
+  - `authorityReference`
+- Core produces it, Manage validates and forwards it unchanged, and Workspace consumes it without redefining it. Workspace appends only separately observed path, branch, target, dirty state, commits ahead, activity, resource, and cleanup facts through the invoking result contract.
+- It contains no observed machine path, prepared branch fact, activity, dirty state, commits-ahead count, readiness, acceptance, lifecycle, Git, or execution result. It is never persisted or added to a CLI manifest, Change, Group Brief, Spec, Decision Record, Focus Capsule, registry, status projection, or hidden host ledger.
+- If any of the four fields is missing, ambiguous, stale, or inconsistent with current evidence, Manage or Workspace stops and returns the discrepancy to Core rather than repairing or reselecting isolation.
 
 ## Work Ownership and Frontier Dispositions
 - Core resolves one unambiguous shape-ready `WorkOwner` before Manage qualification. Missing or non-ready ownership uses `RouteDisposition: shape` only when independently granted planning-artifact authority permits Shape; a material product or authority decision uses `StopDisposition: ask-owner`, and an invalid WorkRef, topology, route, dirty-path, scope, or authority boundary uses `StopDisposition: reroute`.
@@ -133,6 +144,7 @@
 10. Same-goal resume and Receipts invalidate stale control claims and are revalidated inside Manage; only a true owner, WorkRef topology, route, behavior, acceptance, interface, scope, or authority boundary returns to Core.
 11. WorkerSession continuity never proves workspace isolation or independent verification; only observed execution location and identity evidence support those claims.
 12. ResourceLease release follows observed completion or acknowledged cancellation, never elapsed time or controller assumption.
+13. WorkspaceSelection remains the four-field Core handoff; Workspace observations never mutate or persist it.
 
 ## Boundaries
 - Core owns route derivation and rerouting.

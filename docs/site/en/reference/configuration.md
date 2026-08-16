@@ -49,7 +49,7 @@ manage:
   closeout: local
 ```
 
-`activation` accepts `explicit` or `auto`. After specialist and complete small-work exceptions, Core first resolves one shape-ready owner and solely owns initial Manage qualification plus the `selected | declined` route result. Missing or non-ready ownership goes to Shape and returns to Core before Manage qualification; automatic activation never sends pre-owner work into Manage. Selected Manage validates the handoff against current owner, authority, and owned-diff evidence without repeating direct-versus-managed eligibility. Activation grants no planning, product mutation, lifecycle, or external authority.
+`activation` accepts `explicit` or `auto`. Core first resolves one shape-ready owner and solely owns initial Manage qualification plus the `selected | declined` route result. Automatic selection requires an observable coordination obligation—such as independent slices, recovery, distinct execution and acceptance owners, real-host verification, bounded review convergence, managed lifecycle work, or a ready successor—not merely multiple files or documentation surfaces. Missing or non-ready ownership goes to Shape and returns to Core before qualification. Selected Manage validates the handoff without repeating eligibility. Activation grants no planning, product mutation, lifecycle, or external authority.
 
 `closeout` accepts:
 

@@ -14,6 +14,7 @@ import { collectArchiveReadiness, toArchiveReadinessOutput } from '../core/readi
 import { inspectArchiveTree, inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 import { extractChangeSummary } from '../core/work-summary.js'
 import { historyInspectionComplete, inspectArchiveHistory } from '../history/query.js'
+import { inspectActiveWorkspaces } from '../workspace/session.js'
 
 export async function inspectProjectStatus(options: { nowMs?: number } = {}): Promise<ProjectStatusSnapshot> {
   const runtime: RuntimeDiagnostic[] = []
@@ -82,6 +83,28 @@ export async function inspectProjectStatus(options: { nowMs?: number } = {}): Pr
   const workTree = await inspectWorkTree()
   const archiveTree = await inspectArchiveTree()
   const historyInspection = await inspectArchiveHistory({ archiveTree })
+  const workspaceInspection = await inspectActiveWorkspaces()
+  for (const issue of workspaceInspection.issues) {
+    diagnostics.push({
+      severity: 'error',
+      code: 'workspace_record_invalid',
+      message: `unable to inspect workspace record ${issue.record}`,
+      hint: issue.message,
+    })
+    runtime.push({
+      code: 'workspace_record_invalid',
+      operation: 'inspectWorkspaceRecord',
+      path: `.git/rsp/workspaces/${issue.record}`,
+      message: issue.message,
+    })
+  }
+  if (workspaceInspection.truncated) {
+    diagnostics.push({
+      severity: 'error',
+      code: 'workspace_records_truncated',
+      message: 'active Workspace inspection exceeded its bounded record limit',
+    })
+  }
   diagnostics.push(...workTree.diagnostics.map(diagnostic => ({
     severity: 'error' as const,
     code: diagnostic.code,
@@ -236,6 +259,7 @@ export async function inspectProjectStatus(options: { nowMs?: number } = {}): Pr
   return {
     manage,
     workspace,
+    activeWorkspaces: workspaceInspection.workspaces,
     language,
     focused: [...focusedSet].sort(),
     records,

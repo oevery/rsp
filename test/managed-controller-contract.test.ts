@@ -188,7 +188,7 @@ describe('rsp-manage research candidate', () => {
     expect(prepared.prompt).toContain('Use $rsp-manage')
   })
 
-  it('prepares an unseen automatic multi-surface holdout that selects sequential Manage', ({ onTestFinished }) => {
+  it('prepares an unseen automatic multi-surface holdout with a real acceptance phase', ({ onTestFinished }) => {
     const outputRoot = mkdtempSync(join(tmpdir(), 'rsp-manage-auto-multisurface-'))
     onTestFinished(() => rmSync(outputRoot, { force: true, recursive: true }))
 
@@ -212,6 +212,26 @@ describe('rsp-manage research candidate', () => {
     expect(prepared.prompt).toContain('project-installed skills and project workflow')
     expect(prepared.manifest.expected_output).toEqual(expect.arrayContaining(['selected', 'sequential', 'npm test']))
     expect(prepared.manifest.forbidden_output).toEqual(expect.arrayContaining(['RouteDisposition: direct', 'declined']))
+  })
+
+  it('prepares a hard automatic near-miss that stays direct despite multiple surfaces', ({ onTestFinished }) => {
+    const outputRoot = mkdtempSync(join(tmpdir(), 'rsp-manage-auto-integrated-direct-'))
+    onTestFinished(() => rmSync(outputRoot, { force: true, recursive: true }))
+
+    const prepared = prepareManagedControllerRun({
+      caseId: 'auto-integrated-direct',
+      outputRoot,
+      root,
+      variant: 'product',
+    })
+
+    expect(prepared.manifest).toMatchObject({
+      automatic_activation: true,
+      base_case: 'auto-multisurface-routing',
+      expected_mode: 'execute',
+    })
+    expect(prepared.manifest.expected_output).toEqual(expect.arrayContaining(['RouteDisposition: direct', 'integrated check', 'npm test']))
+    expect(prepared.manifest.forbidden_output).toEqual(expect.arrayContaining(['RouteDisposition: managed', 'Managed dispatch: sequential']))
   })
 
   it('prepares the exact-package pause and resume recovery holdout', ({ onTestFinished }) => {
@@ -452,14 +472,12 @@ describe('rsp-manage product Skill', () => {
     const qualify = markdownSection(managedRouting, 'QUALIFY — select or decline Manage')
     const entry = `${markdownSection(body, 'Selected-goal entry')}\n${markdownSection(body, 'Validate the selected handoff before mutation')}`
 
-    expect(findSemanticUnit(qualify, ['independent path', 'independent slices', 'interruption recovery', 'prospective execution signals'])).toBeDefined()
-    expect(findSemanticUnit(qualify, ['implementation', 'integration verification', 'managed review', 'lifecycle work'])).toBeDefined()
-    expect(findSemanticUnit(qualify, ['cross-module', 'real-host', 'bounded finding convergence', 'ready successor'])).toBeDefined()
+    expect(findSemanticUnit(qualify, ['independent path', 'independent slices', 'interruption recovery', 'authority surface'])).toBeDefined()
     expect(findSemanticUnit(qualify, ['elapsed wall-clock minutes', 'never qualification evidence'])).toBeDefined()
-    expect(findSemanticUnit(qualify, ['automatic activation', 'non-small', 'Manage'])).toBeDefined()
-    expect(findSemanticUnit(qualify, ['Specs', 'product presentation', 'public documentation', 'verification surfaces', 'sequential'])).toBeDefined()
-    expect(findSemanticUnit(qualify, ['one owner', 'one local seam', 'one mutation pass', 'one decisive check', 'no managed lifecycle coordination', 'no ready successor'])).toBeDefined()
-    expect(findSemanticUnit(qualify, ['fails any one', 'non-small', 'middle case'])).toBeDefined()
+    expect(findSemanticUnit(qualify, ['distinct execution and acceptance owners', 'real-host', 'provider', 'hardware'])).toBeDefined()
+    expect(findSemanticUnit(qualify, ['Multiple files', 'do not by themselves qualify Manage'])).toBeDefined()
+    expect(findSemanticUnit(qualify, ['one owner', 'one writer', 'one execution phase', 'one integrated check', 'no recovery', 'no independent acceptance obligation', 'no ready successor'])).toBeDefined()
+    expect(findSemanticUnit(qualify, ['Substantial sequential work remains selected', 'multi-phase', 'authority obligation'])).toBeDefined()
     expect(findSemanticUnit(entry, ['Core', 'solely own', 'initial Manage qualification'])).toBeDefined()
     expect(findSemanticUnit(entry, ['Manage', 'never repeats', 'direct-versus-managed eligibility'])).toBeDefined()
     expect(findSemanticUnit(entry, [/validate only handoff completeness/i, 'owner and WorkRef topology', 'authority envelope', 'owned paths', 'qualification evidence'])).toBeDefined()

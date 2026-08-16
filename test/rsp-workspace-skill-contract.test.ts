@@ -20,6 +20,7 @@ describe('rsp workspace Skills', () => {
     const workspace = skill('rsp-workspace')
     const spec = projectFile('.rsp/specs/skill-system.md')
     const fallback = projectFile('rules/rsp-rules.md')
+    const controlModel = projectFile('.rsp/specs/skill-control-model.md')
 
     for (const fragment of [
       'Before the small-work decision',
@@ -31,19 +32,24 @@ describe('rsp workspace Skills', () => {
     ])
       expect(core).toContain(fragment)
     expect(core.indexOf('Before the small-work decision')).toBeLessThan(core.indexOf('Return `RouteDisposition: direct`'))
+    expect(core).toContain('Core produces one four-field `WorkspaceSelection`')
+    expect(controlModel).toContain('A `WorkspaceSelection` is the unique response-only isolation handoff produced by Core')
 
     for (const fragment of [
       'Core resolves ownership before this Skill is entered and also resolves workspace-isolation selection',
       'allocate or reuse one `rsp-workspace` session per executable WorkRef',
       'Manage never independently selects isolation',
       'return that evidence to Core for fresh route derivation',
-      'workspace-isolation evidence only when Core selected isolation',
+      'missing or invalid `WorkspaceSelection` only when Core selected isolation',
       'The current checkout is valid when Core did not select workspace isolation',
+      'Validate the four-field `WorkspaceSelection` and forward it unchanged',
     ])
       expect(manage).toContain(fragment)
 
     expect(workspace).toContain('selected by Core for AI-orchestrated work')
-    expect(workspace).toContain('policy-compliant selected isolation boundary')
+    expect(workspace).toContain('policy-compliant `WorkspaceSelection`')
+    expect(workspace).toContain('Consume the invoking `WorkspaceSelection` without redefining it')
+    expect(workspace).toContain('append only observed workspace facts')
     expect(workspace).toContain('`disabled` never enters this Skill')
     expect(workspace).toContain('A human may invoke the low-level CLI explicitly')
     expect(workspace).not.toContain('selected by Core or qualified Manage')
@@ -56,6 +62,22 @@ describe('rsp workspace Skills', () => {
     expect(fallback).toContain('As the Core fallback, read the effective `workspace.activation` before the small-work decision')
     expect(fallback).toContain('under `disabled`, never select or prepare an RSP workspace')
     expect(fallback).toContain('Evaluating policy and signals does not load the Workspace capability')
+  })
+
+  it('documents bounded active Workspace recovery without semantic promotion', () => {
+    const cliSpec = projectFile('.rsp/specs/cli-contracts.md')
+    const english = projectFile('docs/site/en/reference/cli.md')
+    const chinese = projectFile('docs/site/zh-CN/reference/cli.md')
+
+    for (const content of [cliSpec, english, chinese]) {
+      expect(content).toContain('activeWorkspaces')
+      expect(content).toContain('commitsAhead')
+      expect(content).toContain('activeActivityCount')
+    }
+    expect(cliSpec).toContain('mechanical observations')
+    expect(cliSpec).toContain('not Change readiness or acceptance')
+    expect(english).toContain('No machine-specific workspace path appears in default plain status')
+    expect(chinese).toContain('默认纯文本 status 不显示机器相关的 Workspace 路径')
   })
 
   it('keeps workspace infrastructure separate from ownership and delivery authority', () => {

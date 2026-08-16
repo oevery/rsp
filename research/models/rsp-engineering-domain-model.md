@@ -1,7 +1,8 @@
 ---
 topic: rsp-engineering-domain-model
 status: complete
-implementation_status: proposed
+implementation_status: superseded
+superseded_on: 2026-08-15
 scope_status:
   core_protocol: complete
   engineering_orchestration: complete
@@ -23,11 +24,13 @@ validated_targets:
 
 ## Position
 
-This model defines the proposed RSP core protocol, its surrounding engineering capabilities, and the maintainer-research boundary. It synthesizes completed reports for OpenSpec, Spec Kit, Matt skills, and planning-with-files with the earlier RSP design discussion.
+This model records the historical proposed RSP core protocol, its surrounding engineering capabilities, and the maintainer-research boundary. It synthesizes completed reports for OpenSpec, Spec Kit, Matt skills, and planning-with-files with the earlier RSP design discussion.
 
-The model is complete research but not implemented product truth. Current `.rsp/specs/design.md`, bundled rules, and CLI behavior remain authoritative until later selected Changes implement and verify individual recommendations.
+The model remains complete historical research rather than current product truth. Current `.rsp/specs/`, bundled Skills and rules, capability coverage, code, and tests are authoritative. Implemented or rejected outcomes do not rewrite the source-derived conclusions below.
 
-## Current and Target Boundary
+## Historical Current and Target Boundary
+
+The historical Current and Proposed target snapshot below is superseded by current Specs. Its terminology and recommendations are retained as provenance for the design boundary at the time of synthesis, not as a present implementation inventory or future roadmap.
 
 ### Current authority
 

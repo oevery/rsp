@@ -14,6 +14,7 @@ describe('dense plain status', () => {
     const view: ProjectStatusView = {
       manage: { activation: 'auto', closeout: 'lifecycle' },
       workspace: { activation: 'auto' },
+      activeWorkspaces: [],
       language: { artifacts: null, commit: null },
       query: { focused: false, blocked: false, stale: null },
       focused: [longName],

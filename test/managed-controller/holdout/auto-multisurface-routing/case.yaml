@@ -7,14 +7,14 @@ installed_skills:
   - rsp-implement
 request: >-
   Complete the focused tracked Change `refresh-status-guidance` under the project's automatic
-  routing policy. The accepted outcome spans the authoritative status-presentation Spec, the
-  product status card, paired English and Chinese public guidance, a focused product test, and a
-  documentation synchronization test. One implementation writer must perform all mutations
-  sequentially because the surfaces share one terminology contract; this is not permission to
-  decline Manage as direct one-step work. Modify only the allowed paths, run npm test, and update
-  the Change with truthful Tasks and verification evidence. Do not archive, stage, commit, push,
-  publish, or create controller state. In the final response report the automatic route result as
-  `selected`, explain that dispatch was `sequential`, and include `npm test`.
+  routing policy. One implementation writer must update the authoritative status-presentation Spec,
+  product status card, and paired public guidance sequentially because they share one terminology
+  contract. After implementation, a distinct acceptance owner must independently verify both the
+  focused product behavior and documentation synchronization before the Change evidence is accepted.
+  That execution/acceptance boundary is the coordination signal; file count alone is not. Modify only
+  the allowed paths, run npm test, and update the Change with truthful Tasks and verification evidence.
+  Do not archive, stage, commit, push, publish, or create controller state. In the final response report
+  the automatic route result as `selected`, explain that dispatch was `sequential`, and include `npm test`.
 allowed_changes:
   - .rsp/changes/refresh-status-guidance.md
   - .rsp/specs/status-presentation.md

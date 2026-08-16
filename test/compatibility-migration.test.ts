@@ -27,6 +27,7 @@ import { updateProject } from '../src/commands/update.js'
 
 const repositoryRoot = fileURLToPath(new URL('..', import.meta.url))
 const v320FixtureRoot = join(repositoryRoot, 'test', 'fixtures', 'compatibility', 'v3.2.0')
+const v320TransportPlaceholder = '.rsp/archives/.fixture-transport-placeholder'
 const builtCli = join(repositoryRoot, 'dist', 'cli.mjs')
 const deprecatedLiteGuidance = 'Warning: create option "--lite" is deprecated and ignored; using the standard kind-aware Change template'
 
@@ -45,6 +46,7 @@ describe.sequential('rsp 3.x compatible-release migration', () => {
       expect(git(repositoryRoot, ['rev-parse', `v3.2.0:${path}`])).toBe(expectedBlob)
     for (const [path, expectedHash] of Object.entries(manifest.sha256))
       expect(sha256(await readFile(join(v320FixtureRoot, path)))).toBe(expectedHash)
+    expect(existsSync(join(v320FixtureRoot, v320TransportPlaceholder))).toBe(true)
     const entries = await recursivePaths(v320FixtureRoot)
     const actualDirectories: string[] = []
     const actualFiles: string[] = []
@@ -53,7 +55,7 @@ describe.sequential('rsp 3.x compatible-release migration', () => {
       const value = await lstat(path)
       if (value.isDirectory())
         actualDirectories.push(projectPath)
-      else if (value.isFile() && projectPath !== 'manifest.json')
+      else if (value.isFile() && projectPath !== 'manifest.json' && projectPath !== v320TransportPlaceholder)
         actualFiles.push(projectPath)
     }
     expect(actualDirectories.sort()).toEqual([...manifest.directories].sort())
@@ -103,6 +105,7 @@ describe.sequential('rsp 3.x compatible-release migration', () => {
   it('migrates a supported 3.x layout, restores missing safe directories, and leaves direct Specs navigation cache-free', async ({ onTestFinished }) => {
     const fixture = await createV320RspProject('rsp-compat-supported-3x-')
     onTestFinished(() => rm(fixture, { recursive: true, force: true }))
+    expect(existsSync(join(fixture, v320TransportPlaceholder))).toBe(false)
 
     await rm(join(fixture, '.rsp', 'specs', 'decisions'), { recursive: true, force: true })
     await mkdir(join(fixture, '.rsp', 'specs', 'runtime'), { recursive: true })
@@ -425,6 +428,7 @@ async function createV320RspProject(prefix: string): Promise<string> {
   git(fixture, ['config', 'user.email', 'rsp-compat@example.invalid'])
   await writeFile(join(fixture, 'README.md'), '# Compatibility fixture\n')
   await cp(join(v320FixtureRoot, '.rsp'), join(fixture, '.rsp'), { recursive: true })
+  await rm(join(fixture, v320TransportPlaceholder), { force: true })
   await cp(join(v320FixtureRoot, 'AGENTS.md'), join(fixture, 'AGENTS.md'))
   git(fixture, ['add', '.'])
   git(fixture, ['commit', '-m', 'test: initialize package-executed rsp 3.2.0 fixture'])

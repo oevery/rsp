@@ -1,0 +1,42 @@
+id: auto-integrated-direct
+base_case: auto-multisurface-routing
+automatic_activation: true
+expected_mode: execute
+installed_skills:
+  - rsp
+  - rsp-manage
+  - rsp-implement
+request: >-
+  Complete the focused tracked Change `refresh-status-guidance` under the project's automatic
+  routing policy. One owner and one writer will update the status Spec, product card, paired public
+  guidance, and their tests in one execution phase, then run the single integrated `npm test` check.
+  There is no recovery, independent acceptance owner, managed lifecycle action, real-host boundary,
+  or ready successor. Multiple files and documentation surfaces alone must not select Manage. Use the
+  ordinary direct Implement path, modify only the allowed paths, and update the Change truthfully. Do
+  not archive, stage, commit, push, publish, or create controller state. In the final response report
+  `RouteDisposition: direct`, explain the `integrated check`, and include `npm test`.
+allowed_changes:
+  - .rsp/changes/refresh-status-guidance.md
+  - .rsp/specs/status-presentation.md
+  - src/status-card.mjs
+  - docs/en/status.md
+  - docs/zh-CN/status.md
+  - test/status-card.test.mjs
+  - test/docs-sync.test.mjs
+required_changes:
+  - .rsp/changes/refresh-status-guidance.md
+  - .rsp/specs/status-presentation.md
+  - src/status-card.mjs
+  - docs/en/status.md
+  - docs/zh-CN/status.md
+verification:
+  - npm
+  - test
+expected_output:
+  - 'RouteDisposition: direct'
+  - integrated check
+  - npm test
+forbidden_output:
+  - 'RouteDisposition: managed'
+  - 'Managed dispatch: sequential'
+  - controller state created

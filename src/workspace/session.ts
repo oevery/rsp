@@ -1,7 +1,8 @@
+import type { Dirent } from 'node:fs'
 import { execFile } from 'node:child_process'
 import { createHash, randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
-import { mkdir, readFile, realpath, rename, stat, unlink, writeFile } from 'node:fs/promises'
+import { mkdir, readdir, readFile, realpath, rename, stat, unlink, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path'
 import { promisify } from 'node:util'
@@ -12,6 +13,8 @@ import { acquireResourceLeases, releaseResourceLeases } from './resources.js'
 
 const execFileAsync = promisify(execFile)
 const RECORD_SCHEMA = 1
+const MAX_ACTIVE_WORKSPACES = 50
+const MAX_WORKSPACE_RECORD_ISSUES = 20
 
 export interface WorkspaceResourceLease {
   resourceId: string
@@ -52,6 +55,21 @@ export interface WorkspaceObservation {
   branchExists: boolean
   dirty: string[]
   aheadOfTarget: number
+}
+
+export interface ActiveWorkspaceObservation {
+  workRef: string
+  branch: string
+  targetBranch: string
+  dirty: boolean
+  commitsAhead: number
+  activeActivityCount: number
+}
+
+export interface ActiveWorkspaceInspection {
+  workspaces: ActiveWorkspaceObservation[]
+  issues: Array<{ record: string, message: string }>
+  truncated: boolean
 }
 
 interface GitContext {
@@ -102,13 +120,23 @@ async function git(cwd: string, args: string[], allowFailure = false) {
   return run('git', args, { cwd, allowFailure })
 }
 
-async function discoverGitContext(cwd = process.cwd()): Promise<GitContext> {
-  const sourceWorktree = await realpath((await git(cwd, ['rev-parse', '--show-toplevel'])).stdout)
+async function inspectGitContext(cwd = process.cwd()): Promise<GitContext | null> {
+  const topLevel = await git(cwd, ['rev-parse', '--show-toplevel'], true)
+  if (topLevel.exitCode !== 0)
+    return null
+  const sourceWorktree = await realpath(topLevel.stdout)
   const rawCommonDir = (await git(sourceWorktree, ['rev-parse', '--git-common-dir'])).stdout
   const commonDir = await realpath(isAbsolute(rawCommonDir) ? rawCommonDir : resolve(sourceWorktree, rawCommonDir))
   const worktrees = await listWorktrees(sourceWorktree)
   const repository = await realpath(worktrees[0]?.path || sourceWorktree)
   return { repository, commonDir, sourceWorktree }
+}
+
+async function discoverGitContext(cwd = process.cwd()): Promise<GitContext> {
+  const context = await inspectGitContext(cwd)
+  if (!context)
+    throw new Error('workspace commands require a Git repository')
+  return context
 }
 
 function recordKey(workRef: string): string {
@@ -383,6 +411,10 @@ export async function observeWorkspace(workRef: string): Promise<WorkspaceObserv
   const record = await readRecord(context.commonDir, workRef)
   if (!record)
     throw new Error(`workspace not found for ${workRef}`)
+  return observeWorkspaceRecord(context, record, workRef)
+}
+
+async function observeWorkspaceRecord(context: GitContext, record: WorkspaceRecord, workRef: string): Promise<WorkspaceObservation> {
   await assertRecordOwnership(context, record, workRef)
   const exists = await branchExists(context.repository, record.branch)
   const dirty = (await git(record.path, ['status', '--short'])).stdout.split('\n').filter(Boolean)
@@ -395,6 +427,76 @@ export async function observeWorkspace(workRef: string): Promise<WorkspaceObserv
     branchExists: exists,
     dirty,
     aheadOfTarget: Number(aheadRaw || 0),
+  }
+}
+
+async function activityIsActive(activity: WorkspaceActivity): Promise<boolean> {
+  if (!processExists(activity.pid))
+    return false
+  if (!activity.processIdentity)
+    return false
+  return await processIdentityFor(activity.pid) === activity.processIdentity
+}
+
+export async function inspectActiveWorkspaces(): Promise<ActiveWorkspaceInspection> {
+  const context = await inspectGitContext()
+  if (!context)
+    return { workspaces: [], issues: [], truncated: false }
+
+  const directory = join(context.commonDir, 'rsp', 'workspaces')
+  let recordEntries: Dirent[]
+  try {
+    recordEntries = (await readdir(directory, { withFileTypes: true }))
+      .filter(entry => entry.name.endsWith('.json'))
+      .sort((left, right) => left.name.localeCompare(right.name))
+  }
+  catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT')
+      return { workspaces: [], issues: [], truncated: false }
+    return {
+      workspaces: [],
+      issues: [{ record: 'workspace registry', message: error instanceof Error ? error.message : String(error) }],
+      truncated: false,
+    }
+  }
+
+  const workspaces: ActiveWorkspaceObservation[] = []
+  const issues: ActiveWorkspaceInspection['issues'] = []
+  let issuesTruncated = false
+  for (const entry of recordEntries.slice(0, MAX_ACTIVE_WORKSPACES)) {
+    const name = entry.name
+    try {
+      if (!entry.isFile())
+        throw new Error('workspace registry entry is not a regular file')
+      const parsed = JSON.parse(await readFile(join(directory, name), 'utf8')) as Partial<WorkspaceRecord>
+      if (parsed.schema !== RECORD_SCHEMA || typeof parsed.workRef !== 'string' || name !== `${recordKey(parsed.workRef)}.json`)
+        throw new Error('record schema, WorkRef, or registry key is invalid')
+      const record = await readRecord(context.commonDir, parsed.workRef)
+      if (!record)
+        throw new Error('record disappeared during inspection')
+      const observation = await observeWorkspaceRecord(context, record, parsed.workRef)
+      const activityStates = await Promise.all(Object.values(record.activities ?? {}).map(activityIsActive))
+      workspaces.push({
+        workRef: record.workRef,
+        branch: record.branch,
+        targetBranch: record.targetBranch,
+        dirty: observation.dirty.length > 0,
+        commitsAhead: observation.aheadOfTarget,
+        activeActivityCount: activityStates.filter(Boolean).length,
+      })
+    }
+    catch (error) {
+      if (issues.length < MAX_WORKSPACE_RECORD_ISSUES)
+        issues.push({ record: name, message: error instanceof Error ? error.message : String(error) })
+      else
+        issuesTruncated = true
+    }
+  }
+
+  return {
+    workspaces: workspaces.sort((left, right) => left.workRef.localeCompare(right.workRef)),
+    issues,
+    truncated: recordEntries.length > MAX_ACTIVE_WORKSPACES || issuesTruncated,
   }
 }
 

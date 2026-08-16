@@ -98,7 +98,7 @@ rsp history <work-ref> [--json [--compact]]
 
 Without a subcommand, RSP opens the same dashboard as `rsp ui` in a real interactive terminal. CI, pipes, redirected streams, and `TERM=dumb` receive static command output.
 
-Plain `rsp status` keeps current focus, Change and Group summaries, progress, blockers, and the derived next action compact. Add `--verbose` to inspect effective Manage and language policy, the complete dependency forest, and archive trend. JSON output is unchanged by plain presentation mode.
+Plain `rsp status` keeps current focus, Change and Group summaries, progress, blockers, and the derived next action compact. Add `--verbose` to inspect effective Manage and language policy, the complete dependency forest, archive trend, and a bounded active Workspace recovery summary. JSON adds the stably ordered `activeWorkspaces` array with `workRef`, `branch`, `targetBranch`, `dirty`, `commitsAhead`, and `activeActivityCount`. These values are validated mechanical observations from the existing Workspace registry, not Change readiness or acceptance. Invalid records fail visibly. No machine-specific workspace path appears in default plain status, and status creates no second registry or workflow state.
 
 `status` derives exact dependencies, ready work, blockers, and stable waves from the complete work tree. `check` validates Change structure and warns about unfinished placeholders or clarification markers. `history` reads retained archive files directly and defaults to 20 results, with a maximum of 100; filters include `--limit`, `--since`, `--until`, `--kind`, `--group`, and `--search`.
 

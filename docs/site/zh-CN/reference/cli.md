@@ -98,7 +98,7 @@ rsp history <work-ref> [--json [--compact]]
 
 在真实的交互式终端中，不带子命令的 RSP 会打开与 `rsp ui` 相同的面板。CI、管道、重定向流与 `TERM=dumb` 接收静态命令输出。
 
-普通 `rsp status` 以紧凑形式保留当前聚焦、Change 与 Group 摘要、进度、阻塞项和派生的下一步。增加 `--verbose` 可查看有效 Manage 与语言策略、完整依赖森林和归档趋势。JSON 输出不受纯文本展示模式影响。
+普通 `rsp status` 以紧凑形式保留当前聚焦、Change 与 Group 摘要、进度、阻塞项和派生的下一步。增加 `--verbose` 可查看有效 Manage 与语言策略、完整依赖森林、归档趋势和有界的活动 Workspace 恢复摘要。JSON 新增稳定排序的 `activeWorkspaces` 数组，字段为 `workRef`、`branch`、`targetBranch`、`dirty`、`commitsAhead` 和 `activeActivityCount`。这些值来自现有 Workspace 注册表的已校验机械观察，不代表 Change readiness 或 acceptance；无效记录会显式失败。默认纯文本 status 不显示机器相关的 Workspace 路径，status 也不会创建第二注册表或工作流状态。
 
 `status` 从完整工作树派生精确的依赖、就绪工作、阻塞项与稳定波次。`check` 校验 Change 结构，并警告未完成的占位符或待澄清标记。`history` 直接读取保留的归档文件，默认返回 20 条、最多 100 条；筛选参数包括 `--limit`、`--since`、`--until`、`--kind`、`--group` 与 `--search`。
 

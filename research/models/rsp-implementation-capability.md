@@ -1,8 +1,9 @@
 ---
 topic: rsp-implementation-capability
 status: complete
-implementation_status: proposed
-decision_status: candidate
+implementation_status: implemented
+decision_status: accepted
+reconciled_on: 2026-08-15
 sources:
   - "matt-skills@9603c1cc8118d08bc1b3bf34cf714f62178dea3b -> research/upstreams/matt-skills/9603c1cc8118d08bc1b3bf34cf714f62178dea3b.md"
   - "superpowers@d884ae04edebef577e82ff7c4e143debd0bbec99 -> research/upstreams/superpowers/d884ae04edebef577e82ff7c4e143debd0bbec99.md"
@@ -20,7 +21,7 @@ design_inputs:
 
 ## Position and Authority
 
-This model defines the candidate contract for `rsp-implement`: a host-neutral, manually invocable Discipline Skill that implements exactly one explicitly selected open Change and returns code/tests plus truthful implementation and verification evidence to existing owners. It is intermediate maintainer research, not product behavior and not authority to create or publish a Skill.
+This model records the historical candidate contract for `rsp-implement`: a host-neutral, manually invocable Discipline Skill that implements exactly one explicitly selected open Change and returns code/tests plus truthful implementation and verification evidence to existing owners. The selected contract is implemented by `skills/rsp-implement/SKILL.md` and reconciled in `research/models/rsp-capability-coverage.md`; current Specs, published Skill, rules, code, and tests own product truth. The evidence and tensions below remain historical research and grant no authority to change or publish the Skill.
 
 Current product truth remains `.rsp/specs/design.md`, bundled rules, nearest project instructions, the selected Change, relevant Specs/Decision Records, and the actual repository. `research/models/rsp-capability-coverage.md` is the selection ledger: C06, C14, C21, C37, C38, C39, C40, and C47 establish the implementation boundary. Research never overrides a contradictory current owner.
 
@@ -43,7 +44,7 @@ Local R2/R3 adds deterministic selected-focus, readiness, verification, and auth
 
 ### Trigger
 
-Run manually when the user explicitly asks to implement or fix work and exactly one open Change is selected, either by an explicit work reference or an unambiguous focused Change. A Core Skill or future Controller may select the same stable capability later, but neither is required for manual use.
+At this model's freeze boundary, the capability was designed for manual use when the user explicitly asked to implement or fix work and exactly one open Change was selected, either by an explicit work reference or an unambiguous focused Change. Current Core and Manage routing now select the implemented capability under their own authoritative contracts; the historical manual-entry conclusion remains provenance rather than current routing truth.
 
 Do not infer a target from all open Changes. An empty or multi-entry FocusSet without an explicit selection is ambiguous. A Group Brief is context, never the executable target.
 

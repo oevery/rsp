@@ -45,13 +45,13 @@ RSP 发布一个由十四项与宿主无关的 Skill 组成的默认套件，供
 - Verify 只执行一个已声明的只读证据边界；worker identity、独立性、验收与收尾仍由 Manage 拥有。
 - Review 保持只读；Resolve Findings 拥有已接受修正的修改权限。
 - Release Docs 要求显式确认的发布操作。
-- Workspace 隔离只由 Core 为可执行 WorkRef 选择，并受项目 `workspace.activation` 上限约束。`auto` 允许既有实质信号，`explicit` 要求当前显式请求，`disabled` 则阻止选择。Core 无需加载 Workspace Skill 即可判断策略与隔离信号，因此普通临时工作仍保留在当前分支，也不会承担 Workspace 上下文成本。选择完成后，直接执行路径或 Manage 才加载 Workspace 来准备并复用 session。Workspace Skill 复用调用方已有的控制与结果契约，只追加 workspace 上下文和观察事实，使用宿主原生能力执行，并只把可恢复的 worktree/activity 机械操作留给 CLI。
+- Workspace 隔离只由 Core 为可执行 WorkRef 选择，并受项目 `workspace.activation` 上限约束。`auto` 允许既有实质信号，`explicit` 要求当前显式请求，`disabled` 则阻止选择。Core 只产生一个 response-only `WorkspaceSelection`，字段仅为 WorkRef、实质选择理由、精确目标分支和权限引用。Manage 原样校验并转交；Workspace 另行追加观察到的路径、分支、dirty、commit、activity 与 cleanup 事实。两者都不持久化，也不进入 CLI manifest。
 - Commit 与 Land 保持独立权限；回迁冲突会保留两个 worktree，等待显式恢复。
 - 任何 Skill 都不推断提交、推送、发布、部署、批准或人工验收权限。
 
 ## 控制结果
 
-RSP 使用临时的 Skill Control Model 解释当前决策，但不会创建持久化控制器状态。Core 在同级路径中选择一种：专门 Discipline、受限直接执行、受管执行、返回 Shape，或停止。specialist 路径结束于一个显式且边界明确的 Discipline 结果。direct 路径编排一次非 Manage 的完成或继续过程，可以指定恰好一个 Discipline executor，但不会把它变成 Controller。只有 managed 路径可以组合 worker lanes 和 Review 收敛。直接执行必须始终满足一个 ready owner、一个本地 seam、一次修改、一个决定性检查、不需要受管生命周期协调且没有 ready successor；边界一旦扩大，Core 就重新推导路由。Core 只能直接修改 RSP 控制面状态；产品修改由 Implement 或同一边界内的受限手动 Discipline 操作执行。
+RSP 使用临时的 Skill Control Model 解释当前决策，但不会创建持久化控制器状态。Core 在同级路径中选择一种：专门 Discipline、受限直接执行、受管执行、返回 Shape，或停止。specialist 路径结束于一个显式且边界明确的 Discipline 结果。direct 路径编排一次非 Manage 的完成或继续过程，可以指定恰好一个 Discipline executor，但不会把它变成 Controller。只有 managed 路径可以组合 worker lanes 和 Review 收敛。一个 ready owner、一个 writer、一个 execution phase、一个 integrated decisive check，且没有 recovery、独立 acceptance、受管 lifecycle 或 ready successor 时保持 direct；多个文件或文档表面本身不会改变路由。Core 只能直接修改 RSP 控制面状态；产品修改由 Implement 或同一边界内的受限手动 Discipline 操作执行。
 
 工作归属、决策归属、临时交接、执行不确定性与验收是不同概念。`WorkOwner` 表示选定的 Change 或浅层 Group，`DecisionOwner` 表示必须作出实质决策的人或权限来源，`NextOwner` 表示下一个控制或执行能力。每次停止都必须说明下一位 owner、所需输入，以及工作应经 Shape 或 Core 返回，还是等待新的证据、环境、验证或能力。必需 worker 未实际创建或没有有效 receipt 时，只能视为能力不可用，绝不能视为成功完成。
 
@@ -65,7 +65,7 @@ RSP 使用临时的 Skill Control Model 解释当前决策，但不会创建持�
 
 ## 受管自动化
 
-Manage 是符合条件的长时间运行、恢复、多切片、反复收敛、真实宿主验收或生命周期交付工作的控制器。在自动激活下，一个同时跨越权威 Specs、产品呈现、公开文档和多个验证面的 tracked completion 必须选择 Manage，即使所有修改都由一个 writer 串行完成。真正的单步工作和紧密耦合的小型工作保持直接执行。
+Manage 只处理存在可观察协调义务的工作：独立切片、恢复、不同的执行与验收 owner、真实宿主/provider/hardware 验证、有界 Review 收敛、受管 lifecycle、明确 ready successor，或真实的多阶段权限边界。文件数量、Specs、产品呈现、公开文档和验证文件本身不构成资格信号；但只要真实义务存在，即使工作量较大且必须串行，仍然选择 Manage。
 
 ```yaml
 manage:
@@ -76,7 +76,7 @@ manage:
 `activation` 控制选择方式：
 
 - `explicit`：仅在明确请求时选择 Manage。
-- `auto`：在保留 Review、发布、隔离 Design 与完整小工作例外后，Core（核心协议）先解析 ready owner，再对其余非小型完成或继续请求进行 Manage 资格判断。
+- `auto`：保留 specialist 路径后，Core（核心协议）先解析 ready owner，只在当前证据存在上述协调义务时选择 Manage；否则继续 direct Core 或 Discipline 路径。
 
 Core 先把一个明确的 shape-ready Change 或浅层 Group 解析为 `WorkOwner`，并独占首次 Manage 资格判断及 `selected | declined` 路由结果。缺少或未就绪的归属在独立规划产物权限下直接进入 Shape；Shape 把 ready WorkOwner 返回 Core 重新路由，绝不直接恢复 Manage。Manage 一旦被选中，只校验 handoff 完整性以及当前 owner、权限和归属差异是否漂移，不重复判断 direct 还是 managed。普通同范围 receipt 只需检查实际路径和局部 diff；正常 Fix 在已声明验收内实现行为时不会触发完整 owner 重读。只有发现或新请求改变已声明行为、验收或公共接口边界，或出现其他失效信号、跨会话恢复、closeout 时，才扩大重读并返回 Core。
 

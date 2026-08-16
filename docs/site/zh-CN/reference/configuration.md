@@ -49,7 +49,7 @@ manage:
   closeout: local
 ```
 
-`activation` 接受 `explicit` 或 `auto`。在保留专门路由与完整小工作例外后，Core 会先解析一个 shape-ready owner，并独占首次 Manage 资格判断及 `selected | declined` 路由结果；缺少或未就绪的归属直接进入 Shape，并在 Manage 资格判断前返回 Core。已选择的 Manage 只根据当前 owner、权限与归属差异证据校验 handoff，不重复判断 direct 还是 managed。自动激活不会把尚无 owner 的工作交给 Manage，也不授予规划、产品修改、生命周期或外部操作权限。
+`activation` 接受 `explicit` 或 `auto`。Core 会先解析一个 shape-ready owner，并独占首次 Manage 资格判断及 `selected | declined` 路由结果。自动选择必须存在可观察的协调义务，例如独立切片、恢复、不同的执行与验收 owner、真实宿主验证、有界 Review 收敛、受管 lifecycle 或 ready successor；多个文件或文档表面本身不构成资格。缺少或未就绪的归属先进入 Shape。已选择的 Manage 校验 handoff，但不重复判断 direct 还是 managed。激活不会授予规划、产品修改、生命周期或外部操作权限。
 
 `closeout` 接受：
 

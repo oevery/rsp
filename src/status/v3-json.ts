@@ -12,6 +12,7 @@ export function toStatusJson(view: ProjectStatusView): StatusJsonShape {
     ok: view.ok,
     manage: view.manage,
     workspace: view.workspace,
+    activeWorkspaces: view.activeWorkspaces,
     language: view.language,
     filters: view.query,
     focused: view.focused,
@@ -32,6 +33,7 @@ export function toStatusJsonError(error: { code: string, message: string }, opti
     ok: false,
     manage: { activation: 'explicit', closeout: 'manual' },
     workspace: { activation: 'disabled' },
+    activeWorkspaces: [],
     language: { artifacts: null, commit: null },
     filters: {
       focused: options.focused,

@@ -1,8 +1,9 @@
 ---
 topic: rsp-shaping-capability
 status: complete
-implementation_status: proposed
-decision_status: candidate
+implementation_status: implemented
+decision_status: accepted
+reconciled_on: 2026-08-15
 sources:
   - "matt-skills@9603c1cc8118d08bc1b3bf34cf714f62178dea3b -> research/upstreams/matt-skills/9603c1cc8118d08bc1b3bf34cf714f62178dea3b.md"
   - "compound-engineering@d1bff966296b687eb8509312098458e5fa2535dc -> research/upstreams/compound-engineering/d1bff966296b687eb8509312098458e5fa2535dc.md"
@@ -22,9 +23,9 @@ design_inputs:
 
 ## Purpose and Authority
 
-This model defines the smallest candidate contract for an RSP-native shaping capability. It closes capability gap G2 from [RSP Capability Coverage](rsp-capability-coverage.md) by turning unclear non-trivial intent into one authorized six-section Change or, only when necessary, one shallow Change Group with directly executable child Changes.
+This model records the historical candidate contract for an RSP-native shaping capability. It closed capability gap G2 from [RSP Capability Coverage](rsp-capability-coverage.md) by turning unclear non-trivial intent into one authorized six-section Change or, only when necessary, one shallow Change Group with directly executable child Changes.
 
-This is intermediate maintainer research, not product truth and not an implementation of `rsp-shape`. Current project instructions, [`rules/rsp-rules.md`](../../rules/rsp-rules.md), [project design](../../.rsp/specs/design.md), existing Changes, code, and tests remain authoritative. A later normal RSP Change must select recommendations from this model before published Skill behavior changes.
+This remains maintainer research rather than product truth, but its selected contract is implemented by `skills/rsp-shape/SKILL.md` and reconciled in [RSP Capability Coverage](rsp-capability-coverage.md). Current project instructions, Specs, published Skill, rules, code, and tests are authoritative. The recommendations below retain the evidence and selection reasoning that preceded implementation; they do not authorize new Skill changes.
 
 The shaping capability clarifies and structures work; it does not implement, verify completion, archive, commit, publish, or settle product choices that the user or project has left unresolved.
 

@@ -85,6 +85,15 @@ export interface WorkspacePolicy {
   activation: WorkspaceActivation
 }
 
+export interface ActiveWorkspaceStatusOutput {
+  workRef: string
+  branch: string
+  targetBranch: string
+  dirty: boolean
+  commitsAhead: number
+  activeActivityCount: number
+}
+
 export interface ProjectLanguageConfig {
   default: string
   artifacts?: string
@@ -243,6 +252,7 @@ export interface StatusJsonShape {
   ok: boolean
   manage: ManagePolicy
   workspace: WorkspacePolicy
+  activeWorkspaces: ActiveWorkspaceStatusOutput[]
   language: EffectiveLanguagePolicy
   filters: {
     focused: boolean

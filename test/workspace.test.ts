@@ -1,16 +1,19 @@
 import { execFileSync, spawn } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises'
 import { createServer } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
+import { showStatus } from '../src/commands/status.js'
 import { prepareWorkspaceCommand } from '../src/commands/workspace.js'
+import { printStatusPlain } from '../src/status/plain.js'
+import { toStatusJson } from '../src/status/v3-json.js'
 import { inspectWorkspaceFacts } from '../src/workspace/facts.js'
 import { landWorkspace } from '../src/workspace/land.js'
-import { disposeWorkspace, observeWorkspace, prepareWorkspace, registerWorkspaceActivity } from '../src/workspace/session.js'
+import { disposeWorkspace, observeWorkspace, prepareWorkspace, registerWorkspaceActivity, stopWorkspaceActivity } from '../src/workspace/session.js'
 
 let repository: string
 let previousCwd: string
@@ -188,6 +191,128 @@ describe.sequential('rsp workspace lifecycle', () => {
     expect(await readFile(join(repository, 'unrelated.txt'), 'utf8')).toBe('keep me\n')
     expect(git(['status', '--short'])).toContain('?? unrelated.txt')
     expect(existsSync(prepared.record.path)).toBe(false)
+  })
+
+  it('recovers bounded active workspace facts through ordinary status until Land cleanup', async ({ onTestFinished }) => {
+    const prepared = await prepareWorkspace('example-change')
+    await writeFile(join(prepared.record.path, 'owned.txt'), 'workspace\n')
+    git(['add', 'owned.txt'], prepared.record.path)
+    git(['commit', '-m', 'feat: change owned file'], prepared.record.path)
+    const commit = git(['rev-parse', 'HEAD'], prepared.record.path)
+    await writeFile(join(prepared.record.path, 'pending.txt'), 'dirty\n')
+
+    const port = await freePort()
+    const child = spawn(process.execPath, ['server.mjs', '--port', String(port)], {
+      cwd: prepared.record.path,
+      detached: true,
+      stdio: 'ignore',
+    })
+    child.unref()
+    onTestFinished(async () => {
+      await stopWorkspaceActivity('example-change', 'serve').catch(() => undefined)
+      if (child.pid) {
+        try {
+          process.kill(-child.pid, 'SIGTERM')
+        }
+        catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== 'ESRCH')
+            throw error
+        }
+      }
+      await disposeWorkspace('example-change', { discard: true }).catch(() => undefined)
+    })
+    await waitForPort(port)
+    await registerWorkspaceActivity('example-change', {
+      id: 'serve',
+      pid: child.pid!,
+      processGroupId: child.pid,
+      resources: [`tcp:127.0.0.1:${port}`],
+    })
+
+    const activeView = await showStatus()
+    expect(toStatusJson(activeView).activeWorkspaces).toEqual([{
+      workRef: 'example-change',
+      branch: 'rsp/example-change',
+      targetBranch: 'main',
+      dirty: true,
+      commitsAhead: 1,
+      activeActivityCount: 1,
+    }])
+
+    const verbose: string[] = []
+    const defaultPlain: string[] = []
+    const log = console.log
+    try {
+      console.log = (value = '') => verbose.push(String(value))
+      printStatusPlain(activeView, { verbose: true })
+      console.log = (value = '') => defaultPlain.push(String(value))
+      printStatusPlain(activeView)
+    }
+    finally {
+      console.log = log
+    }
+    expect(verbose.join('\n')).toContain('Active Workspaces')
+    expect(verbose.join('\n')).toContain('example-change · rsp/example-change → main · dirty · 1 commit(s) ahead · 1 active activity')
+    expect(defaultPlain.join('\n')).not.toContain(prepared.record.path)
+
+    await stopWorkspaceActivity('example-change', 'serve')
+    await rm(join(prepared.record.path, 'pending.txt'))
+    const landed = await landWorkspace('example-change', { targetBranch: 'main', commits: [commit], cleanup: true })
+    expect(landed.cleanedUp).toBe(true)
+    expect(toStatusJson(await showStatus()).activeWorkspaces).toEqual([])
+  })
+
+  it('fails ordinary status visibly and safely for an invalid workspace record', async () => {
+    const recordsDir = join(repository, '.git', 'rsp', 'workspaces')
+    await mkdir(recordsDir, { recursive: true })
+    await writeFile(join(recordsDir, 'broken.json'), '{not-json\n')
+
+    const view = await showStatus()
+    const json = toStatusJson(view)
+    expect(json.ok).toBe(false)
+    expect(json.activeWorkspaces).toEqual([])
+    expect(json.diagnostics).toContainEqual(expect.objectContaining({
+      severity: 'error',
+      code: 'workspace_record_invalid',
+      message: 'unable to inspect workspace record broken.json',
+    }))
+
+    const lines: string[] = []
+    const log = console.log
+    try {
+      console.log = (value = '') => lines.push(String(value))
+      printStatusPlain(view)
+    }
+    finally {
+      console.log = log
+    }
+    expect(lines.join('\n')).toContain('unable to inspect workspace record broken.json')
+    expect(lines.join('\n')).not.toContain(repository)
+  })
+
+  it('reports a symlinked json workspace record without following it', async () => {
+    const recordsDir = join(repository, '.git', 'rsp', 'workspaces')
+    const externalRecord = join(repository, 'external-workspace-record.json')
+    await mkdir(recordsDir, { recursive: true })
+    await writeFile(externalRecord, '{"secret":"must not be read"}\n')
+    await symlink(externalRecord, join(recordsDir, 'external.json'))
+    await symlink(externalRecord, join(recordsDir, 'ignored.lock'))
+
+    const json = toStatusJson(await showStatus())
+    expect(json.ok).toBe(false)
+    expect(json.activeWorkspaces).toEqual([])
+    expect(json.diagnostics).toContainEqual(expect.objectContaining({
+      severity: 'error',
+      code: 'workspace_record_invalid',
+      message: 'unable to inspect workspace record external.json',
+      hint: 'workspace registry entry is not a regular file',
+    }))
+    expect(json.runtime).toContainEqual(expect.objectContaining({
+      path: '.git/rsp/workspaces/external.json',
+      message: 'workspace registry entry is not a regular file',
+    }))
+    expect(JSON.stringify(json)).not.toContain('must not be read')
+    expect(JSON.stringify(json)).not.toContain('ignored.lock')
   })
 
   it('reports cleanup failure separately after a successful landing', async () => {

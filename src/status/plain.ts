@@ -22,6 +22,14 @@ export function printStatusPlain(view: ProjectStatusView, options: { verbose?: b
     console.log(`  ${pc.bold('Manage:')} activation ${view.manage.activation} · closeout ${view.manage.closeout}`)
   if (options.verbose)
     console.log(`  ${pc.bold('Workspace:')} activation ${view.workspace.activation}`)
+  if (options.verbose && view.activeWorkspaces.length > 0) {
+    console.log(`  ${pc.bold('Active Workspaces')}`)
+    for (const workspace of view.activeWorkspaces) {
+      const dirty = workspace.dirty ? 'dirty' : 'clean'
+      const activity = `${workspace.activeActivityCount} active ${workspace.activeActivityCount === 1 ? 'activity' : 'activities'}`
+      console.log(`  ${workspace.workRef} · ${workspace.branch} → ${workspace.targetBranch} · ${dirty} · ${workspace.commitsAhead} commit(s) ahead · ${activity}`)
+    }
+  }
   if (options.verbose && (view.language.artifacts !== null || view.language.commit !== null))
     console.log(`  ${pc.bold('Language:')} artifacts ${view.language.artifacts ?? 'unset'} · commit ${view.language.commit ?? 'unset'}`)
   if (options.verbose)

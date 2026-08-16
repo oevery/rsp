@@ -13,7 +13,7 @@ Operate one isolated workspace selected by Core for AI-orchestrated work. Manage
 
 ## Require a selected boundary
 
-For Skill-driven operation, require one executable open WorkRef, explicit workspace authority, the target local branch, and Core's policy-compliant selected isolation boundary. Under `workspace.activation: auto`, Core may select from parallel Changes, unrelated dirty work, an independent runtime boundary, or an explicit user request; under `explicit`, only the explicit-request signal permits selection; `disabled` never enters this Skill. An explicit request handled by Core does not select this Skill by itself. A human may invoke the low-level CLI explicitly, but that invocation supplies only command authority and never becomes evidence of semantic selection or readiness. Ordinary temporary work remains in the current worktree. Without an RSP WorkOwner, create no implicit or host-branded branch.
+For Skill-driven operation, require Core's policy-compliant `WorkspaceSelection` for one executable open WorkRef plus explicit workspace authority. Consume the invoking `WorkspaceSelection` without redefining it: its only fields are WorkRef, material selection reason, exact target branch, and authority reference. Under `workspace.activation: auto`, Core may select from parallel Changes, unrelated dirty work, an independent runtime boundary, or an explicit user request; under `explicit`, only the explicit-request signal permits selection; `disabled` never enters this Skill. An explicit request handled by Core does not select this Skill by itself. A human may invoke the low-level CLI explicitly, but that invocation supplies only command authority and never becomes evidence of semantic selection or readiness. Ordinary temporary work remains in the current worktree. Without an RSP WorkOwner, create no implicit or host-branded branch.
 
 Before mutation inspect the selected Change and Group Brief when any, current branch and HEAD, existing `rsp/<workref>` branch, registered worktrees, target dirty paths, and any existing workspace record. Stop on identity, ownership, path, target, or authority ambiguity.
 
@@ -30,7 +30,7 @@ The active AI or human owns project-semantic interpretation. Do not create a wor
 - Core retains its `ControlOutcome` and canonical `StopDisposition`.
 - Manage retains its ExecutionFrame, Assignment and Receipt contracts, frontier classification, and authority envelope.
 
-When that contract needs workspace detail, append only a `Workspace context` containing the exact observed path, branch, target branch, dirty paths, commits ahead, registered activities, shared resources, and intended workspace-local actions. Keep it transient. A WorkerSession does not imply this context or prove that a worktree was used. Do not persist it, turn it into project configuration, serialize it as a universal execution plan, or ask the CLI to interpret it.
+When that contract needs workspace detail, append only observed workspace facts in a `Workspace context`: exact observed path, branch, target branch, dirty paths, commits ahead, registered activities, shared resources, and intended workspace-local actions. Never add these observations back into `WorkspaceSelection`. Keep both transient. A WorkerSession does not imply this context or prove that a worktree was used. Do not persist it, turn it into project configuration, serialize it as a universal execution plan, or ask the CLI to interpret it.
 
 ## Execute with host-native capabilities
 

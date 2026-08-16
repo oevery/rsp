@@ -3,13 +3,13 @@ case: auto-multisurface-routing
 variants:
   - baseline
   - product
-holdout_manifest_sha256: 5fc67db7f4b7bc54b12f86d811e89d9c384d94e1f376abfb5688d6652b794e30
+holdout_manifest_sha256: 0303b585bef27638f92f1c7b0f308fd0f63ff5b0ae92354f389d2c9fdb9c4540
 base_tree_sha256: 5581fdea1ebaf6000348340e25a7b1f1d84378fced4f2ca03bfda7aa787af7cd
 product_skill_names:
   - rsp
   - rsp-manage
   - rsp-implement
-product_composition_sha256: f56072c531ad1f9b5b204fe0ae74d40279703630dbdaa2bae555fccb6fb042c1
+product_composition_sha256: b645617c86ce744b578adbe8c98c239b60de3465c764a1dcc4577e4fc0062623
 prior_retained_evidence:
   - path: research/evaluations/rsp-manage/2026-08-15-managed-context-no-regression/report.md
     sha256: 1253d3553743d3eeb3f0c8a39247c8c0e57610f9755f308c5784ca779fe94381
