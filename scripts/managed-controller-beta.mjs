@@ -196,14 +196,23 @@ export function loadManagedControllerBetaPlan(projectRoot = root) {
 }
 
 export function assertManagedControllerBetaOutputBoundary(plan, outputRoot, projectRoot = root) {
-  const retainedDirectories = [...new Set(plan.prior_retained_evidence.map((evidence) => {
+  const lockedDirectories = plan.prior_retained_evidence.map((evidence) => {
     const retainedPath = resolveLockedProjectFile(
       projectRoot,
       evidence.path,
       `beta prior retained evidence ${evidence.path}`,
     )
     return dirname(retainedPath)
-  }))]
+  })
+  const retainedRoot = join(projectRoot, 'research', 'evaluations', 'rsp-manage')
+  const discoveredDirectories = existsSync(retainedRoot)
+    ? readdirSync(retainedRoot, { withFileTypes: true })
+        .filter(entry => entry.isDirectory())
+        .map(entry => join(retainedRoot, entry.name))
+        .filter(directory => existsSync(join(directory, 'report.md')) || existsSync(join(directory, 'summary.json')))
+        .map(directory => realpathSync(directory))
+    : []
+  const retainedDirectories = [...new Set([...lockedDirectories, ...discoveredDirectories])]
   return canonicalizeOutputDirectory(outputRoot, retainedDirectories)
 }
 

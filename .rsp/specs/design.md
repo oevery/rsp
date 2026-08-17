@@ -3,7 +3,7 @@
 ## Purpose
 - RSP is Reliable Software Practice, a repository-native engineering workflow for humans and AI agents.
 - Its composable Skills guide work from unclear intent through implementation, review, verification, durable review, and archive without hidden workflow state or replacement of Host Project authority.
-- Managed execution remains host-native and transient: ExecutionFrames, WorkerSessions, Assignments, Receipts, derived topology, and narrow ResourceLeases coordinate current work but are never product runtime or durable workflow state.
+- Managed execution remains host-native and transient: one outer ControlOutcome projects the current execution mode and status, while ExecutionFrames, WorkerSessions, complete Assignments, same-session AssignmentDeltas, Receipts, nested topology, and narrow ResourceLeases coordinate current work without becoming product runtime or durable workflow state.
 - Rules, Specs, Plans is the lightweight artifact foundation beneath the workflow, not the product-name expansion.
 - The repository keeps durable knowledge, open work, product runtime, distribution, maintainer knowledge, and generated state in explicit owners.
 

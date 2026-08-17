@@ -1,0 +1,186 @@
+{
+  "id": "manage-orchestration-beta",
+  "case": "auto-multisurface-routing",
+  "plan_hash": "208a6c64803193a0a82a887bfa5ca94a4b64ac2b72d41a1cf3ef1da72ac4de55",
+  "holdout_manifest_sha256": "0303b585bef27638f92f1c7b0f308fd0f63ff5b0ae92354f389d2c9fdb9c4540",
+  "base_tree_sha256": "5581fdea1ebaf6000348340e25a7b1f1d84378fced4f2ca03bfda7aa787af7cd",
+  "product_composition": {
+    "hash": "85ab85631827c838b3811405b4c71292a1374abe04fdcb8f68784b48100b9e3b",
+    "skills": [
+      {
+        "name": "rsp",
+        "hash": "923f907687dcb8899bc83a143713343006e1830a0eb35a2ed8054493fa1b9f06"
+      },
+      {
+        "name": "rsp-manage",
+        "hash": "a59608b55f6f3927de3e46862d43f03c14bba100604ca5c8adccba621e2f34c1"
+      },
+      {
+        "name": "rsp-implement",
+        "hash": "cbf1d9e74e05ac3fc591d3be0e3e82e916963adbcba2dff31522e91570fc7516"
+      }
+    ]
+  },
+  "deterministic_contracts": {
+    "passed": true,
+    "cases": 22
+  },
+  "runs": [
+    {
+      "variant": "baseline",
+      "outcome": "passed",
+      "completion": "contract-passed",
+      "first_fix_result": "passed",
+      "worker_dispatch_count": 2,
+      "tool_calls": 15,
+      "verification_rounds": {
+        "agent_observed": 1,
+        "harness": 1,
+        "harness_passed": true
+      },
+      "elapsed_ms": 161690,
+      "human_intervention_outcome": "not-observed",
+      "omissions": [],
+      "output_contract": {
+        "expected_missing": [],
+        "forbidden_present": []
+      },
+      "recovery_contract": null,
+      "unauthorized_paths": [],
+      "evaluation_receipt": {
+        "case_id": "auto-multisurface-routing",
+        "composition_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "contract_sha256": "0303b585bef27638f92f1c7b0f308fd0f63ff5b0ae92354f389d2c9fdb9c4540",
+        "receipt_sha256": "9730f62a4e6cbf679bb0c74eeae1cff16dda5b00c562d8794c94ba917cd6b01b"
+      },
+      "observation_sha256": "d4e8feb2b729988aca042472780aa1417c331f9146698f5cbfaa50875a535b40",
+      "observability": {
+        "dimensions": {
+          "trigger": {
+            "status": "passed",
+            "evidence": {
+              "route": "selected",
+              "dispatch": "sequential"
+            }
+          },
+          "compliance": {
+            "status": "passed",
+            "evidence": {
+              "expected_missing": []
+            }
+          },
+          "boundary": {
+            "status": "passed",
+            "evidence": {
+              "forbidden_present": [],
+              "unauthorized_paths": []
+            }
+          },
+          "task_result": {
+            "status": "passed",
+            "evidence": {
+              "outcome": "passed"
+            }
+          }
+        },
+        "measurements": {
+          "corrections": 0,
+          "first_fix_result": "passed",
+          "worker_dispatch_count": 2,
+          "tool_calls": 15,
+          "elapsed_ms": 161690,
+          "tokens": {
+            "input": 408488,
+            "output": 5960,
+            "total": 414448
+          }
+        },
+        "omissions": []
+      }
+    },
+    {
+      "variant": "product",
+      "outcome": "passed",
+      "completion": "contract-passed",
+      "first_fix_result": "passed",
+      "worker_dispatch_count": 2,
+      "tool_calls": 30,
+      "verification_rounds": {
+        "agent_observed": 2,
+        "harness": 1,
+        "harness_passed": true
+      },
+      "elapsed_ms": 237225,
+      "human_intervention_outcome": "not-observed",
+      "omissions": [],
+      "output_contract": {
+        "expected_missing": [],
+        "forbidden_present": []
+      },
+      "recovery_contract": null,
+      "unauthorized_paths": [],
+      "evaluation_receipt": {
+        "case_id": "auto-multisurface-routing",
+        "composition_sha256": "85ab85631827c838b3811405b4c71292a1374abe04fdcb8f68784b48100b9e3b",
+        "contract_sha256": "0303b585bef27638f92f1c7b0f308fd0f63ff5b0ae92354f389d2c9fdb9c4540",
+        "receipt_sha256": "e1cd6cee8f0c6dd038dd5360399af877e61bfc6a525568717e7a304a71756ca1"
+      },
+      "observation_sha256": "a0b0818d94ced5b03669944187c16c9f3cc2a2560e2f45df3a371a6ec81275c7",
+      "observability": {
+        "dimensions": {
+          "trigger": {
+            "status": "failed",
+            "evidence": {
+              "command": "node --test test/status-card.test.mjs",
+              "exit_code": 1,
+              "actual": "Ready",
+              "expected": "Status: Ready"
+            }
+          },
+          "compliance": {
+            "status": "passed",
+            "evidence": {
+              "expected_missing": []
+            }
+          },
+          "boundary": {
+            "status": "passed",
+            "evidence": {
+              "forbidden_present": [],
+              "unauthorized_paths": []
+            }
+          },
+          "task_result": {
+            "status": "passed",
+            "evidence": {
+              "outcome": "passed"
+            }
+          }
+        },
+        "measurements": {
+          "corrections": 0,
+          "first_fix_result": "passed",
+          "worker_dispatch_count": 2,
+          "tool_calls": 30,
+          "elapsed_ms": 237225,
+          "tokens": {
+            "input": 724988,
+            "output": 9922,
+            "total": 734910
+          }
+        },
+        "omissions": []
+      }
+    }
+  ],
+  "comparison": {
+    "status": "complete",
+    "reason": null
+  },
+  "conclusion_limits": [
+    "no numeric promotion threshold",
+    "no activation or release change",
+    "no provider or real-host generality claim",
+    "unavailable measurements remain explicit omissions"
+  ]
+}

@@ -45,7 +45,8 @@ rsp group reopen <name> --reason <text>
 ## 聚焦、就绪与生命周期
 
 ```text
-rsp focus <name>                把未完成的 Change 标记为当前工作
+rsp focus <name> [--capsule-file <path|->]
+                                把 Change 标记为当前工作，并可选替换 capsule
 rsp unfocus <name>              从聚焦集合移除未完成的 Change
 rsp show <name|--focused> [--json [--compact]] [--verbose]
 rsp ready <name> [--json [--compact]] [--verbose]
@@ -54,7 +55,11 @@ rsp reopen <name> --reason <text> [--from <archive-path>]
                                 恢复未满足验收条件的已归档 Change
 ```
 
-`rsp ready` 和 `rsp show` 分别提供必须完成门禁、可选覆盖警告与语义审查信号。未完成的 Tasks、Required Verify 或 blocker 会产生 `archiveReady: no`；未完成的 Optional 验证只保留警告。完成门禁被阻断时，`rsp archive` 会失败且不移动 Change。`rsp archive --dry-run` 作为 `rsp ready` 已弃用的兼容别名保留，不会移动 Change。
+`rsp focus --capsule-file` 接受常规文件或标准输入（`-`）。空输入保留有效的空 marker。每次新的非空写入都必须是严格 Focus Capsule v1：一个位于开头的 `<!-- rsp-focus:v1 -->`、空行、恰好一个非空单行 `Current`、`Evidence`、`Next`，以及至多一个非空单行 `Resume check`。未知非空行或字段、重复或缺失字段、无效 UTF-8、不安全输入及超过 4096 UTF-8 bytes 的内容都会在原子替换前被拒绝，并保留原 marker。
+
+已有的有界、无版本 UTF-8 内容继续按兼容模式读取。`rsp check` 发出稳定的 `focus_capsule_legacy` warning，且不会把这些文本声明为结构化 recovery。对于 focused Change，`rsp show --json` 对空内容或 legacy 内容返回 `recovery: null`，对 legacy 内容在 `warnings` 中返回稳定条目，并把有效 v1 投影为 `{ version, current, evidence, next, resumeCheck, authoritative: false }`。该投影只读，不授予权限，也不声明证据新鲜度。
+
+`rsp ready` 和 `rsp show` 还会提供必须完成门禁、可选覆盖警告与语义审查信号。未完成的 Tasks、Required Verify 或 blocker 会产生 `archiveReady: no`；未完成的 Optional 验证只保留警告。完成门禁被阻断时，`rsp archive` 会失败且不移动 Change。`rsp archive --dry-run` 作为 `rsp ready` 已弃用的兼容别名保留，不会移动 Change。
 
 ## 本地 Git 交付
 

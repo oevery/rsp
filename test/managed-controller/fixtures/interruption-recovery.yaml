@@ -15,6 +15,10 @@ required_contract:
   - semantic execution rollover
   - rederive a fresh ExecutionFrame
   - mark stale or unverifiable claims pending
+  - 'status: waiting'
+  - AssignmentDelta
+  - same compatible WorkerSession
+  - fresh WorkerSession and complete Assignment
 prohibited_actions:
   - timer-driven cancellation
   - resource release before cancellation acknowledgement

@@ -267,8 +267,9 @@ describe('rsp-manage research candidate', () => {
 
     const longitudinal = prepareManagedControllerRun({ caseId: 'longitudinal-worker-reuse', outputRoot, root, variant: 'product' })
     expect(longitudinal.manifest).toMatchObject({ automatic_activation: true, base_case: 'auto-multisurface-routing' })
-    expect(longitudinal.manifest.expected_output).toEqual(expect.arrayContaining(['longitudinal', 'same WorkerSession']))
+    expect(longitudinal.manifest.expected_output).toEqual(expect.arrayContaining(['mode: delegated', 'longitudinal', 'same WorkerSession', 'AssignmentDelta']))
     expect(longitudinal.prompt).toContain('reuse the same primary WorkerSession')
+    expect(longitudinal.prompt).toContain('complete initial Assignment and then AssignmentDelta continuations')
 
     const fresh = prepareManagedControllerRun({ caseId: 'fresh-strategy-reset', outputRoot, root, variant: 'product' })
     expect(fresh.manifest.base_case).toBe('multi-slice')
@@ -509,7 +510,7 @@ describe('rsp-manage product Skill', () => {
     const { body } = readSkill(product)
     const lanes = markdownSection(body, 'Resolve the execution frontier')
 
-    expect(inlineCodeValuesInUnit(lanes, ['Every worker lane', '`Assignment`', 'common fields'])).toEqual([
+    expect(inlineCodeValuesInUnit(lanes, ['Every fresh WorkerSession', '`Assignment`', 'common fields'])).toEqual([
       'Assignment',
       'WorkRef',
       'lane',
@@ -523,6 +524,9 @@ describe('rsp-manage product Skill', () => {
       'stop conditions',
       'resume safety: idempotent | inspect-before-repeat | non-repeatable',
     ])
+    expect(findSemanticUnit(lanes, ['observed resumed compatible WorkerSession', '`AssignmentDelta`', 'immediately accepted Assignment or AssignmentDelta'])).toBeDefined()
+    expect(findSemanticUnit(lanes, ['Session loss', 'fresh WorkerSession', 'complete Assignment'])).toBeDefined()
+    expect(findSemanticUnit(lanes, ['Token or context cost', 'otherwise equally safe and authorized strategies'])).toBeDefined()
     expect(inlineCodeValuesInUnit(lanes, ['Every Receipt', 'contains'])).toEqual([
       'WorkerSession',
       'Receipt',
@@ -738,14 +742,15 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('the complete owning Change, or the Group Brief and its children')
     expect(body).toContain('relevant Specs and Decisions')
     expect(body).toContain('`rsp status --json`, and the current checkout')
-    expect(body).toContain('Every worker lane receives one minimal transient `Assignment`')
+    expect(body).toContain('Every fresh WorkerSession receives one complete minimal transient `Assignment`')
+    expect(body).toContain('Only an observed resumed compatible WorkerSession may receive an `AssignmentDelta`')
     expect(body).toContain('Do not impose one fixed dispatch ceiling across the whole managed run')
     expect(body).toContain('at most three correction passes by default')
     expect(body).toContain('Independent Verify is a separate required acceptance obligation')
     expect(body).toContain('each worker runs the narrow lane-local check in its `Verify Set`')
     expect(body).toContain('at most one affected or integration gate')
     expect(body).toContain('Inspect changed paths, local diff, and declared verification before accepting results')
-    expect(readFileSync(join(product, 'references', 'interruption-recovery.md'), 'utf8')).toContain('On cross-session or cross-device resume, reread the complete current authority')
+    expect(readFileSync(join(product, 'references', 'interruption-recovery.md'), 'utf8')).toContain('On cross-session or cross-device resume, session loss, or invalidated continuity, require a fresh WorkerSession and complete Assignment')
   })
 
   it('keeps dirty product and durable-truth paths with an explicit owner across transitions', () => {

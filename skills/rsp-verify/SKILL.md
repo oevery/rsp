@@ -4,7 +4,7 @@ description: Verify one selected RSP Change against its declared evidence bounda
 license: MIT
 metadata:
   author: oevery
-  version: "2026.08.07.1"
+  version: "2026.08.16.2"
 ---
 
 # RSP Verify
@@ -21,7 +21,7 @@ Read the nearest project instructions, Core or fallback, selected Change and Bri
 
 Do not edit product files, Changes, Specs, Decisions, focus markers, archives, configuration, or Git state. Do not start publication, deployment, approval, or human-acceptance actions. Running a declared local test, build, typecheck, lint, browser check, or other environment check is evidence collection only and retains the authority required by that command.
 
-Reuse the invoking Core or Manage contract. Core owns route and continuation; Manage owns the ExecutionFrame, WorkerSession and Assignment, worker identity, independent-verification status, ResourceLease coordination, acceptance, lifecycle closeout, and commit eligibility. Verify does not create or persist those objects, select isolation, derive `review-clean`, or claim `archiveReady`.
+Reuse the invoking Core or Manage contract. Core owns the single outer `ControlOutcome`, route, and continuation; Manage owns execution mode, the ExecutionFrame, WorkerSession, Assignment or eligible AssignmentDelta, worker identity, independent-verification status, ResourceLease coordination, acceptance, lifecycle closeout, and commit eligibility. Verify's canonical result is nested phase evidence, not a peer outer status. Verify does not create or persist those objects, select isolation, derive `review-clean`, or claim `archiveReady`.
 
 ## Return one bounded result
 

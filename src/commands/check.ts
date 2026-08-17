@@ -1,12 +1,12 @@
 import type { CommandDiagnostic, RspConfig, RuntimeDiagnostic } from '../types.js'
 import { readFile } from 'node:fs/promises'
-import { TextDecoder } from 'node:util'
 
 import { inspectChangeDocument } from '../core/change-document-inspection.js'
 import { inspectChangeGroups } from '../core/change-group.js'
-import { loadRspConfig, MAX_FOCUS_CAPSULE_BYTES, resolveKinds, resolveRequiredSections } from '../core/config.js'
+import { loadRspConfig, resolveKinds, resolveRequiredSections } from '../core/config.js'
 import { detectDeltaSections, parseScenarios } from '../core/content.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
+import { inspectFocusCapsuleBytes } from '../core/focus-capsule.js'
 import { toErrorMessage } from '../core/output.js'
 import { inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 
@@ -95,28 +95,25 @@ export async function runCheck(options: CheckOptions = {}): Promise<CheckResult>
       })
       continue
     }
-    if (markerContent.byteLength > MAX_FOCUS_CAPSULE_BYTES) {
+    const capsule = inspectFocusCapsuleBytes(markerContent)
+    if (capsule.kind === 'invalid') {
       addDiagnostic({
         severity: 'error',
-        code: 'focus_capsule_too_large',
+        code: capsule.code,
         path: `focus.d/${entryContent}`,
         change: entryContent,
-        message: `focus capsule exceeds ${MAX_FOCUS_CAPSULE_BYTES} UTF-8 bytes`,
+        message: capsule.message,
       })
     }
-    else {
-      try {
-        new TextDecoder('utf-8', { fatal: true }).decode(markerContent)
-      }
-      catch {
-        addDiagnostic({
-          severity: 'error',
-          code: 'focus_capsule_invalid_utf8',
-          path: `focus.d/${entryContent}`,
-          change: entryContent,
-          message: 'focus capsule must contain valid UTF-8',
-        })
-      }
+    else if (capsule.kind === 'legacy') {
+      addDiagnostic({
+        severity: 'warning',
+        code: 'focus_capsule_legacy',
+        path: `focus.d/${entryContent}`,
+        change: entryContent,
+        message: capsule.warning,
+        hint: 'Replace it with a valid v1 capsule before relying on structured recovery.',
+      })
     }
     try {
       resolveWorkRef(entryContent, { executable: true, mustExist: true })

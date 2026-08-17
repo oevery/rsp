@@ -27,7 +27,7 @@ Multiple files, Specs, product presentation, public documentation, or verificati
 
 Substantial sequential work remains selected when a real multi-phase or authority obligation exists, such as implementation followed by independently owned acceptance, bounded review convergence, real-host verification, lifecycle closeout, or a ready successor. Sequential dispatch does not erase that coordination signal. Without such a signal, decline Manage and continue the ordinary Core or Discipline route. Worker-only work remains ineligible. Readiness alone does not qualify work without a requested completion or continuation, and automatic routing remains bounded by the requested goal.
 
-Make the route observable: report `selected` with the decisive qualification signal, or `declined` with the complete direct-work exclusion and exact Core or Discipline action. If dispatch applies, report the concrete overlap/isolation evidence that makes it sequential or parallel. Selection, decline, and dispatch reasoning remain transient and create no controller state.
+Make the route observable inside the single outer `ControlOutcome`: report `selected` with the decisive qualification signal, or `declined` with the complete direct-work exclusion and exact Core or Discipline action. The outer mode is `solo` before any worker, `delegated` for one compatible primary WorkerSession, or `coordinated` for multiple workers or an independence-seeking obligation. If dispatch applies, retain the exact topology only as nested technical evidence and report the concrete overlap/isolation evidence that makes it sequential or parallel. Selection, decline, and dispatch reasoning remain transient and create no controller state.
 
 ## HANDOFF AND RETURN — bound selected execution
 

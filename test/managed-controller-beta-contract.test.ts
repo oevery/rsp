@@ -45,7 +45,8 @@ function copyBetaContractProject(target: string) {
     ['skills', 'rsp'],
     ['skills', 'rsp-manage'],
     ['skills', 'rsp-implement'],
-    ['research', 'evaluations', 'rsp-manage', '2026-08-16-manage-control-action-vocabulary'],
+    ['research', 'evaluations', 'rsp-manage', '2026-08-16-unified-execution-receipts-recovery'],
+    ['research', 'evaluations', 'rsp-manage', '2026-08-16-unified-execution-receipts-recovery-review-fixes'],
   ]) {
     const source = join(root, ...path)
     const destination = join(target, ...path)
@@ -74,12 +75,12 @@ describe('managed-controller beta evidence', () => {
     })
     expect(plan.prior_retained_evidence).toEqual([
       {
-        path: 'research/evaluations/rsp-manage/2026-08-16-manage-control-action-vocabulary/report.md',
-        sha256: '47be794a4911a8fe47ea1885d908d03b83c0dff6141bc4088b969420d396b9f3',
+        path: 'research/evaluations/rsp-manage/2026-08-16-unified-execution-receipts-recovery-review-fixes/report.md',
+        sha256: '03c6edcc937afd41ab98d227b20ae11a005418a39a47c83be257d0f3f306830e',
       },
       {
-        path: 'research/evaluations/rsp-manage/2026-08-16-manage-control-action-vocabulary/summary.json',
-        sha256: '86842838959902a20baf4f172eb08a8900f424042037eaa58c1907932a58bce8',
+        path: 'research/evaluations/rsp-manage/2026-08-16-unified-execution-receipts-recovery-review-fixes/summary.json',
+        sha256: 'e975183079a9ed290016afaf4900e0ab078a7c5ddf9efcd4886c15d3c94b0b46',
       },
     ])
     expect(plan.observations).toEqual([
@@ -117,7 +118,7 @@ describe('managed-controller beta evidence', () => {
       'research',
       'evaluations',
       'rsp-manage',
-      '2026-08-16-manage-control-action-vocabulary',
+      '2026-08-16-unified-execution-receipts-recovery-review-fixes',
       'report.md',
     )
     writeFileSync(reportPath, `${readFileSync(reportPath, 'utf8')}\nretained evidence drift\n`)
@@ -134,7 +135,7 @@ describe('managed-controller beta evidence', () => {
       'research',
       'evaluations',
       'rsp-manage',
-      '2026-08-16-manage-control-action-vocabulary',
+      '2026-08-16-unified-execution-receipts-recovery-review-fixes',
     )
     const reportPath = join(retainedDirectory, 'report.md')
     const reportCopyPath = join(retainedDirectory, 'report-copy.md')
@@ -158,7 +159,7 @@ describe('managed-controller beta evidence', () => {
       'research',
       'evaluations',
       'rsp-manage',
-      '2026-08-16-manage-control-action-vocabulary',
+      '2026-08-16-unified-execution-receipts-recovery-review-fixes',
     )
     const aliasPath = join(directory, 'retained-alias')
     const nestedOutput = join(aliasPath, 'new-generation')
@@ -181,7 +182,12 @@ describe('managed-controller beta evidence', () => {
     const plan = loadManagedControllerBetaPlan(root)
     expect(() => assertManagedControllerBetaOutputBoundary(
       plan,
-      join(root, 'research', 'evaluations', 'rsp-manage', '2026-08-16-manage-control-action-vocabulary'),
+      join(root, 'research', 'evaluations', 'rsp-manage', '2026-08-16-unified-execution-receipts-recovery-review-fixes'),
+      root,
+    )).toThrow('beta output resolves inside prior retained evidence generation')
+    expect(() => assertManagedControllerBetaOutputBoundary(
+      plan,
+      join(root, 'research', 'evaluations', 'rsp-manage', '2026-08-16-unified-execution-receipts-recovery'),
       root,
     )).toThrow('beta output resolves inside prior retained evidence generation')
     const directory = mkdtempSync(join(tmpdir(), 'rsp-manage-beta-safe-output-'))
@@ -775,5 +781,121 @@ describe('managed-controller beta evidence', () => {
     expect(report).toContain('not a token or latency improvement claim')
     expect(report).toContain('every earlier generation remains unchanged historical evidence')
     expect(report).toContain('no activation or release change')
+  })
+
+  it('retains the unified execution receipts and recovery generation', () => {
+    const generationDirectory = join(
+      root,
+      'research',
+      'evaluations',
+      'rsp-manage',
+      '2026-08-16-unified-execution-receipts-recovery',
+    )
+    const report = readFileSync(join(generationDirectory, 'report.md'), 'utf8')
+    const rawSummary = readFileSync(join(generationDirectory, 'summary.json'), 'utf8')
+    const summary = JSON.parse(rawSummary)
+
+    expect(hashContent(report)).toBe(
+      'be3e169efadf636b5fef772582d350edcd751f124f32a02184eb0c3958b143f6',
+    )
+    expect(hashContent(rawSummary)).toBe(
+      'cebbd837cb1750c49555f23565e26aedd2865678c0846757e88b5d753a90ae3b',
+    )
+    expect(summary.product_composition.hash).toBe(
+      'cca42c9896aa95cdc17b03d90547c88eba0bb9a7807986833f0471064fe10776',
+    )
+    expect(summary.deterministic_contracts).toEqual({ passed: true, cases: 22 })
+    expect(summary.comparison).toEqual({ status: 'complete', reason: null })
+    expect(summary.runs).toEqual([
+      expect.objectContaining({
+        variant: 'baseline',
+        outcome: 'passed',
+        completion: 'contract-passed',
+        first_fix_result: 'passed',
+        worker_dispatch_count: 2,
+        tool_calls: 7,
+        verification_rounds: {
+          agent_observed: 1,
+          harness: 1,
+          harness_passed: true,
+        },
+        elapsed_ms: 133579,
+        unauthorized_paths: [],
+      }),
+      expect.objectContaining({
+        variant: 'product',
+        outcome: 'passed',
+        completion: 'contract-passed',
+        first_fix_result: 'passed',
+        worker_dispatch_count: 2,
+        tool_calls: 8,
+        verification_rounds: {
+          agent_observed: 1,
+          harness: 1,
+          harness_passed: true,
+        },
+        elapsed_ms: 416439,
+        unauthorized_paths: [],
+      }),
+    ])
+    expect(rawSummary).not.toMatch(/"(?:model|provider|session|settings|usage|workspace|auth|gateway|paths|events|stderr)"\s*:/u)
+    expect(rawSummary).not.toContain('/Users/')
+    expect(rawSummary).not.toContain('/tmp/')
+    expect(report).toContain('model `combo/gpt-5.6-terra`')
+    expect(report).toContain('single outer receipt')
+    expect(report).toContain('all 22 current managed-controller contracts passed')
+    expect(report).toContain('both variants reported automatic route `selected`')
+    expect(report).toContain('no performance claim')
+    expect(report).toContain('Raw events, authentication, gateway details')
+    expect(report).toContain('no activation, release, Git, push, publication, archive, or commit authority')
+  })
+
+  it('retains the review-fix provider generation without hiding its intermediate trigger observation', () => {
+    const generationDirectory = join(
+      root,
+      'research',
+      'evaluations',
+      'rsp-manage',
+      '2026-08-16-unified-execution-receipts-recovery-review-fixes',
+    )
+    const report = readFileSync(join(generationDirectory, 'report.md'), 'utf8')
+    const rawSummary = readFileSync(join(generationDirectory, 'summary.json'), 'utf8')
+    const summary = JSON.parse(rawSummary)
+
+    expect(hashContent(report)).toBe(
+      '03c6edcc937afd41ab98d227b20ae11a005418a39a47c83be257d0f3f306830e',
+    )
+    expect(hashContent(rawSummary)).toBe(
+      'e975183079a9ed290016afaf4900e0ab078a7c5ddf9efcd4886c15d3c94b0b46',
+    )
+    expect(summary.plan_hash).toBe('208a6c64803193a0a82a887bfa5ca94a4b64ac2b72d41a1cf3ef1da72ac4de55')
+    expect(summary.product_composition.hash).toBe(
+      '85ab85631827c838b3811405b4c71292a1374abe04fdcb8f68784b48100b9e3b',
+    )
+    expect(summary.deterministic_contracts).toEqual({ passed: true, cases: 22 })
+    expect(summary.comparison).toEqual({ status: 'complete', reason: null })
+    expect(summary.runs.map((run: { outcome: string }) => run.outcome)).toEqual(['passed', 'passed'])
+    expect(summary.runs[1].observability.dimensions.trigger).toEqual({
+      status: 'failed',
+      evidence: {
+        command: 'node --test test/status-card.test.mjs',
+        exit_code: 1,
+        actual: 'Ready',
+        expected: 'Status: Ready',
+      },
+    })
+    expect(summary.runs[1].verification_rounds).toEqual({
+      agent_observed: 2,
+      harness: 1,
+      harness_passed: true,
+    })
+    expect(rawSummary).not.toMatch(/"(?:model|provider|session|settings|usage|workspace|auth|gateway|paths|events|stderr)"\s*:/u)
+    expect(rawSummary).not.toContain('/Users/')
+    expect(rawSummary).not.toContain('/tmp/')
+    expect(report).toContain('model `combo/gpt-5.6-terra`')
+    expect(report).toContain('all 22 current managed-controller contracts passed')
+    expect(report).toContain('intermediate `node --test test/status-card.test.mjs` mismatch')
+    expect(report).toContain('does not use the discrepancy as a performance or promotion signal')
+    expect(report).toContain('no activation, release, Git, push, publication, archive, or commit authority')
   })
 })

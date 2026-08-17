@@ -10,10 +10,11 @@ request: >-
   Complete the focused Change under automatic Manage routing. The Spec, product status card,
   English guidance, Chinese guidance, and their tests share one terminology seam and one writer
   boundary. Keep the implementation sequential and reuse the same primary WorkerSession through
-  compatible successive Assignments instead of repeating settled context with fresh workers.
+  a complete initial Assignment and then AssignmentDelta continuations instead of repeating settled
+  context with fresh workers.
   Run npm test and update the Change truthfully. Do not archive, stage, commit, push, publish,
   create a worktree, or persist worker/session/topology state. In the final response report
-  `selected`, `longitudinal`, `same WorkerSession`, and `npm test`.
+  `selected`, `mode: delegated`, `longitudinal`, `same WorkerSession`, `AssignmentDelta`, and `npm test`.
 allowed_changes:
   - .rsp/changes/refresh-status-guidance.md
   - .rsp/specs/status-presentation.md
@@ -33,8 +34,10 @@ verification:
   - test
 expected_output:
   - selected
+  - 'mode: delegated'
   - longitudinal
   - same WorkerSession
+  - AssignmentDelta
   - npm test
 forbidden_output:
   - 'RouteDisposition: direct'

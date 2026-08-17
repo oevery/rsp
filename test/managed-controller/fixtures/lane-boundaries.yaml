@@ -2,11 +2,13 @@ id: lane-boundaries
 sources:
   - skills/rsp-manage/SKILL.md
 evidence:
-  - Every lane receives the complete common Assignment, including response-language narration rules, and returns one exact lane result schema.
+  - Every fresh WorkerSession receives the complete common Assignment, while only the same observed compatible session may inherit through AssignmentDelta.
   - Read-only overlap requires isolated paths and verification resources while Fix remains the sole writer.
   - Independent Verify is established only by a distinct worker identity and otherwise downgrades truthfully.
 required_contract:
-  - 'Every worker lane receives one minimal transient `Assignment` with these common fields: `WorkRef`, `lane`, `objective`, exact `authority references`, `Read Set`, `Write Set`, `Verify Set`, bounded `known facts`, `allowed and prohibited actions`, `stop conditions`, and `resume safety: idempotent | inspect-before-repeat | non-repeatable`'
+  - 'Every fresh WorkerSession receives one complete minimal transient `Assignment` with these common fields: `WorkRef`, `lane`, `objective`, exact `authority references`, `Read Set`, `Write Set`, `Verify Set`, bounded `known facts`, `allowed and prohibited actions`, `stop conditions`, and `resume safety: idempotent | inspect-before-repeat | non-repeatable`'
+  - Only an observed resumed compatible WorkerSession may receive an `AssignmentDelta`
+  - immediately accepted Assignment or AssignmentDelta in that same observed WorkerSession
   - Human-facing narration follows the response language
   - retains an exact canonical result secondarily when needed
   - private Inspect remains Manager-only
@@ -27,3 +29,4 @@ prohibited_actions:
   - Verify performed by Fix
   - fabricated independent verification
   - public Inspect Skill
+  - delta inheritance across WorkerSessions

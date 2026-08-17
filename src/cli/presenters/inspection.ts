@@ -57,7 +57,7 @@ export function presentShow(result: ShowResult, options: InspectionPresentationO
     return
   }
   printRuntimeDiagnostics(result.runtime, options.verbose)
-  const { change, contextPaths, durableReview } = result
+  const { change, contextPaths, durableReview, recovery, warnings } = result
   console.log()
   console.log(`  ${pc.bold('Change:')} ${pc.cyan(change.name)}`)
   console.log(`  ${pc.dim('Path:')} ${change.path}`)
@@ -71,6 +71,15 @@ export function presentShow(result: ShowResult, options: InspectionPresentationO
   console.log(`  ${pc.dim('Progress:')} ${change.progress.done}/${change.progress.total}`)
   console.log(`  ${pc.dim('Blockers:')} ${change.blockers ? pc.yellow('yes') : pc.green('no')}`)
   console.log(`  ${pc.dim('Scenarios:')} ${change.scenarioCount}`)
+  if (recovery) {
+    console.log(`  ${pc.dim('Recovery current:')} ${recovery.current}`)
+    console.log(`  ${pc.dim('Recovery evidence:')} ${recovery.evidence}`)
+    console.log(`  ${pc.dim('Recovery next:')} ${recovery.next}`)
+    if (recovery.resumeCheck)
+      console.log(`  ${pc.dim('Recovery resume check:')} ${recovery.resumeCheck}`)
+  }
+  for (const warning of warnings)
+    console.log(`  ${pc.yellow('Warning:')} ${warning.message}`)
   console.log()
   console.log(`  ${pc.bold('Readiness:')}`)
   console.log(`    ${pc.dim('Incomplete tasks:')} ${change.readiness.incompleteTasks > 0 ? pc.yellow(String(change.readiness.incompleteTasks)) : pc.green('0')}`)

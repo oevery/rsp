@@ -1452,7 +1452,7 @@ describe('init and doctor', () => {
     const checkDir = await createRspFixture('rsp-check-focus-capsule-test', ['specs', 'changes', 'focus.d'])
     await writeFile(join(checkDir, '.rsp', 'changes', 'capsule.md'), renderChange('capsule'))
     const marker = join(checkDir, '.rsp', 'focus.d', 'capsule')
-    await writeFile(marker, '<!-- rsp-focus:v1 -->\n\nNext: continue\n')
+    await writeFile(marker, '<!-- rsp-focus:v1 -->\n\nCurrent: accepted lane\nEvidence: verified\nNext: continue\n')
 
     const accepted = JSON.parse(execSync(`node ${cliPath()} check --json`, { cwd: checkDir, encoding: 'utf-8' }))
     expect(accepted.diagnostics).not.toContainEqual(expect.objectContaining({ code: 'focus_marker_not_empty' }))
@@ -1467,14 +1467,70 @@ describe('init and doctor', () => {
     }))
   })
 
-  it('accepts bounded arbitrary Markdown without a version comment', async () => {
+  it('keeps bounded unversioned Markdown readable with one stable warning', async () => {
     const checkDir = await createRspFixture('rsp-check-unversioned-focus-capsule-test', ['specs', 'changes', 'focus.d'])
     await writeFile(join(checkDir, '.rsp', 'changes', 'capsule.md'), renderChange('capsule'))
-    await writeFile(join(checkDir, '.rsp', 'focus.d', 'capsule'), '# Current\n\nContinue the accepted lane.\n')
+    await writeFile(join(checkDir, '.rsp', 'focus.d', 'capsule'), '# Current\n\nInvestigate rsp-focus behavior and continue the accepted lane.\n')
 
     const result = JSON.parse(execSync(`node ${cliPath()} check --json`, { cwd: checkDir, encoding: 'utf-8' }))
     expect(result.ok).toBe(true)
-    expect(result.diagnostics).not.toContainEqual(expect.objectContaining({ code: expect.stringContaining('focus_capsule') }))
+    expect(result.diagnostics).toContainEqual(expect.objectContaining({
+      severity: 'warning',
+      code: 'focus_capsule_legacy',
+      change: 'capsule',
+      message: 'legacy focus capsule has no structured recovery projection',
+    }))
+  })
+
+  it('rejects malformed v1 focus capsules during structural inspection', async () => {
+    const checkDir = await createRspFixture('rsp-check-invalid-v1-focus-capsule-test', ['specs', 'changes', 'focus.d'])
+    await writeFile(join(checkDir, '.rsp', 'changes', 'capsule.md'), renderChange('capsule'))
+    await writeFile(join(checkDir, '.rsp', 'focus.d', 'capsule'), '<!-- rsp-focus:v1 -->\n\nCurrent: incomplete\nNext: continue\n')
+
+    const rejected = spawnSync('node', [cliPath(), 'check', '--json'], { cwd: checkDir, encoding: 'utf-8' })
+    expect(rejected.status).toBe(1)
+    expect(JSON.parse(rejected.stdout).diagnostics).toContainEqual(expect.objectContaining({
+      code: 'focus_capsule_invalid_v1',
+      change: 'capsule',
+    }))
+  })
+
+  it('rejects unknown non-empty lines and fields in v1 focus capsules', async () => {
+    const checkDir = await createRspFixture('rsp-check-unknown-v1-focus-capsule-test', ['specs', 'changes', 'focus.d'])
+    await writeFile(join(checkDir, '.rsp', 'changes', 'capsule.md'), renderChange('capsule'))
+    const marker = join(checkDir, '.rsp', 'focus.d', 'capsule')
+
+    for (const content of [
+      '<!-- rsp-focus:v1 -->\n\nCurrent: lane\nEvidence: verified\nNext: continue\nUnexpected prose\n',
+      '<!-- rsp-focus:v1 -->\n\nCurrent: lane\nEvidence: verified\nNext: continue\nOwner: manager\n',
+    ]) {
+      await writeFile(marker, content)
+      const rejected = spawnSync('node', [cliPath(), 'check', '--json'], { cwd: checkDir, encoding: 'utf-8' })
+      expect(rejected.status).toBe(1)
+      expect(JSON.parse(rejected.stdout).diagnostics).toContainEqual(expect.objectContaining({
+        code: 'focus_capsule_invalid_v1',
+        change: 'capsule',
+      }))
+    }
+  })
+
+  it('rejects unsupported or damaged focus capsule version declarations', async () => {
+    const checkDir = await createRspFixture('rsp-check-invalid-focus-version-test', ['specs', 'changes', 'focus.d'])
+    await writeFile(join(checkDir, '.rsp', 'changes', 'capsule.md'), renderChange('capsule'))
+    const marker = join(checkDir, '.rsp', 'focus.d', 'capsule')
+
+    for (const content of [
+      '<!-- rsp-focus:v2 -->\n\nCurrent: lane\nEvidence: verified\nNext: continue\n',
+      '<!-- rsp-focus:v1\n\nCurrent: lane\nEvidence: verified\nNext: continue\n',
+    ]) {
+      await writeFile(marker, content)
+      const rejected = spawnSync('node', [cliPath(), 'check', '--json'], { cwd: checkDir, encoding: 'utf-8' })
+      expect(rejected.status).toBe(1)
+      expect(JSON.parse(rejected.stdout).diagnostics).toContainEqual(expect.objectContaining({
+        code: 'focus_capsule_invalid_v1',
+        change: 'capsule',
+      }))
+    }
   })
 
   it('rejects malformed UTF-8 already present in a focus capsule', async () => {
@@ -1774,6 +1830,51 @@ describe('show command', () => {
     expect(result.durableReview.factCandidateTargets).toEqual(['.rsp/specs/design.md'])
     expect(result.contextPaths).toContain(result.durableReview.decisionRecordsPath)
     expect(result).not.toHaveProperty('nextActions')
+  })
+
+  it('projects a valid focused v1 capsule as bounded non-authoritative recovery JSON', async () => {
+    const showDir = await createRspFixture('rsp-show-focus-recovery-test', ['specs', 'changes', 'focus.d'])
+    await writeFile(join(showDir, '.rsp', 'changes', 'focused-show.md'), renderChange('focused-show'))
+    await writeFile(join(showDir, '.rsp', 'focus.d', 'focused-show'), '<!-- rsp-focus:v1 -->\n\nCurrent: verify login\nEvidence: targeted test passed\nNext: inspect diff\nResume check: inspect before repeat\n')
+
+    const result = JSON.parse(execSync(`node ${cliPath()} show --focused --json`, { cwd: showDir, encoding: 'utf-8' }))
+
+    expect(result.recovery).toEqual({
+      version: 'v1',
+      current: 'verify login',
+      evidence: 'targeted test passed',
+      next: 'inspect diff',
+      resumeCheck: 'inspect before repeat',
+      authoritative: false,
+    })
+    expect(result.warnings).toEqual([])
+  })
+
+  it('reports legacy focused content without claiming structured recovery', async () => {
+    const showDir = await createRspFixture('rsp-show-legacy-focus-recovery-test', ['specs', 'changes', 'focus.d'])
+    await writeFile(join(showDir, '.rsp', 'changes', 'focused-show.md'), renderChange('focused-show'))
+    await writeFile(join(showDir, '.rsp', 'focus.d', 'focused-show'), '# Current\n\nInvestigate rsp-focus behavior and continue the accepted lane.\n')
+
+    const result = JSON.parse(execSync(`node ${cliPath()} show --focused --json`, { cwd: showDir, encoding: 'utf-8' }))
+
+    expect(result.recovery).toBeNull()
+    expect(result.warnings).toContainEqual(expect.objectContaining({
+      code: 'focus_capsule_legacy',
+      message: 'legacy focus capsule has no structured recovery projection',
+    }))
+  })
+
+  it('fails show for malformed versioned focus content without projecting recovery', async () => {
+    const showDir = await createRspFixture('rsp-show-invalid-focus-recovery-test', ['specs', 'changes', 'focus.d'])
+    await writeFile(join(showDir, '.rsp', 'changes', 'focused-show.md'), renderChange('focused-show'))
+    await writeFile(join(showDir, '.rsp', 'focus.d', 'focused-show'), '<!-- rsp-focus:v2 -->\n\nCurrent: lane\nEvidence: stale\nNext: stop\n')
+
+    const rejected = spawnSync('node', [cliPath(), 'show', '--focused', '--json'], { cwd: showDir, encoding: 'utf-8' })
+    expect(rejected.status).toBe(1)
+    const result = JSON.parse(rejected.stdout)
+    expect(result.ok).toBe(false)
+    expect(result.error.code).toBe('focus_capsule_invalid_v1')
+    expect(result).not.toHaveProperty('recovery')
   })
 
   it('keeps shown readiness advisory before Core durable review', async () => {

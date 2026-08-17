@@ -51,9 +51,10 @@ describe('skill runtime context composition', () => {
   })
 
   it('keeps canonical control vocabulary in one durable Spec', () => {
-    expect(controlModel).toContain('A `ControlOutcome` is response-only derived coordination data')
-    expect(controlModel).toContain('phase-specific `disposition`')
-    expect(controlModel).toContain('resumeRule')
+    expect(controlModel).toContain('A `ControlOutcome` is the single outer response receipt')
+    expect(controlModel).toContain('`mode: solo | delegated | coordinated`')
+    expect(controlModel).toContain('`status: running | waiting | completed`')
+    expect(controlModel).toContain('Route, topology, lane result, `AcceptanceDisposition`, and `CloseoutEligibility` remain nested')
     expect(controlModel).toContain('Core owns `RouteDisposition`')
     expect(controlModel).toContain('`StopDisposition` values are exactly:')
     expect(controlModel).toContain('`AcceptanceDisposition` values are exactly')
@@ -72,6 +73,7 @@ describe('skill runtime context composition', () => {
     expect(skillSystem).not.toContain('AcceptanceDisposition')
     expect(skillSystem).not.toContain('CloseoutEligibility')
     expect(skillSystem).not.toContain('FrontierDisposition')
+    expect(skillSystem).toContain('same observed compatible WorkerSession with an AssignmentDelta')
     expect(findSemanticUnit(skillSystem, ['rsp-manage', 'only suite capability', 'worker lanes', 'review convergence'])).toBeDefined()
     expect(findSemanticUnit(skillSystem, ['Core conditionally loads', 'Manage conditionally loads', 'Review conditionally loads'])).toBeDefined()
   })

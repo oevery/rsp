@@ -3,11 +3,11 @@ import { randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { mkdir, open, rename, unlink } from 'node:fs/promises'
 import { basename, dirname, join } from 'node:path'
-import { TextDecoder } from 'node:util'
 
 import { resolveExecutableChange } from '../core/change-group.js'
 import { FOCUS_DIR, MAX_FOCUS_CAPSULE_BYTES, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
 import { cleanupEmptyParentDirs } from '../core/filesystem.js'
+import { inspectFocusCapsuleBytes } from '../core/focus-capsule.js'
 import { withRspLock } from '../core/lock.js'
 import { ensureManagedFile, inspectManagedFile, requireManagedFile } from '../core/managed-path.js'
 import { resolveFocusMarkerPath, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
@@ -51,19 +51,12 @@ async function readCapsule(source: string): Promise<string> {
   const bytes = source === '-'
     ? await readBoundedStdin()
     : await readRegularCapsuleFile(source)
-  if (bytes.byteLength > MAX_FOCUS_CAPSULE_BYTES)
-    throw new Error(`focus capsule exceeds ${MAX_FOCUS_CAPSULE_BYTES} UTF-8 bytes`)
-
-  let content: string
-  try {
-    content = new TextDecoder('utf-8', { fatal: true }).decode(bytes)
-  }
-  catch {
-    throw new Error('focus capsule must contain valid UTF-8')
-  }
-  if (Buffer.byteLength(content, 'utf-8') > MAX_FOCUS_CAPSULE_BYTES)
-    throw new Error(`focus capsule exceeds ${MAX_FOCUS_CAPSULE_BYTES} UTF-8 bytes`)
-  return content
+  const inspection = inspectFocusCapsuleBytes(bytes)
+  if (inspection.kind === 'invalid')
+    throw new Error(inspection.message)
+  if (inspection.kind === 'legacy')
+    throw new Error('non-empty focus capsule writes require a valid <!-- rsp-focus:v1 --> capsule')
+  return inspection.content
 }
 
 async function replaceFocusCapsule(path: string, content: string): Promise<void> {

@@ -12,7 +12,11 @@ evidence:
   - Selected Manage returns only at a true boundary.
 required_contract:
   - 'Core owns `RouteDisposition`, whose values are exactly'
-  - '`ControlOutcome` is response-only derived coordination data'
+  - '`ControlOutcome` is the single outer response receipt'
+  - '`mode: solo | delegated | coordinated`'
+  - '`status: running | waiting | completed`'
+  - '`running -> waiting | completed` and `waiting -> running | completed`'
+  - Route, topology, lane result, `AcceptanceDisposition`, and `CloseoutEligibility` remain nested
   - '`WorkOwner` means the selected shape-ready Change or shallow Group'
   - 'Missing or non-ready ownership uses `RouteDisposition: shape`'
   - canonical `FrontierDisposition` is exactly `out-of-goal`, `owner-decision`, `fog`, `evidence-needed`, or `executable`
@@ -23,6 +27,8 @@ required_contract:
   - no Manage handoff or managed Assignment
 prohibited_actions:
   - persist ControlOutcome
+  - topology as outer mode
+  - acceptance as peer status
   - resume Manage directly from Shape
   - treat out-of-goal as a product question
   - retain direct routing after boundary expansion

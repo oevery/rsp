@@ -469,16 +469,55 @@ manage:
     execFileSync('node', [cliPath(), 'create', 'capsule-change', 'Exercise focus capsules'], { cwd: root })
     const marker = join(root, '.rsp', 'focus.d', 'capsule-change')
     const capsulePath = join(root, 'capsule.md')
-    await writeFile(capsulePath, '<!-- rsp-focus:v1 -->\n\nNext: file input\n')
+    await writeFile(capsulePath, '<!-- rsp-focus:v1 -->\n\nCurrent: file lane\nEvidence: file evidence\nNext: file input\n')
 
     execFileSync('node', [cliPath(), 'focus', 'capsule-change', '--capsule-file', capsulePath], { cwd: root })
     expect(await readFile(marker, 'utf-8')).toContain('Next: file input')
 
     execFileSync('node', [cliPath(), 'focus', 'capsule-change', '--capsule-file', '-'], {
       cwd: root,
-      input: '<!-- rsp-focus:v1 -->\n\nNext: standard input\n',
+      input: '<!-- rsp-focus:v1 -->\n\nCurrent: stdin lane\nEvidence: stdin evidence\nNext: standard input\nResume check: inspect before repeat\n',
     })
     expect(await readFile(marker, 'utf-8')).toContain('Next: standard input')
+  })
+
+  it('rejects malformed or unversioned non-empty capsule writes without replacing existing content', async () => {
+    const root = join(tmpdir(), 'rsp-focus-capsule-schema-test', randomUUID())
+    await mkdir(root, { recursive: true })
+    execFileSync('node', [cliPath(), 'init'], { cwd: root })
+    execFileSync('node', [cliPath(), 'create', 'capsule-change', 'Validate focus capsule schema'], { cwd: root })
+    const marker = join(root, '.rsp', 'focus.d', 'capsule-change')
+    const original = '<!-- rsp-focus:v1 -->\n\nCurrent: accepted lane\nEvidence: verified\nNext: continue\n'
+    await writeFile(marker, original)
+
+    for (const input of [
+      'Current: unversioned\nEvidence: stale\nNext: stop\n',
+      '<!-- rsp-focus:v1 -->\n\nCurrent: missing evidence\nNext: stop\n',
+      '<!-- rsp-focus:v1 -->\n\nCurrent: duplicate\nCurrent: again\nEvidence: verified\nNext: stop\n',
+      '<!-- rsp-focus:v1 -->\n\nCurrent: lane\nEvidence: verified\nNext: stop\nResume check:\n',
+      '<!-- rsp-focus:v1 -->\n\nCurrent: lane\nEvidence: verified\nNext: stop\nUnexpected prose\n',
+      '<!-- rsp-focus:v1 -->\n\nCurrent: lane\nEvidence: verified\nNext: stop\nOwner: manager\n',
+      '<!-- rsp-focus:v2 -->\n\nCurrent: lane\nEvidence: verified\nNext: stop\n',
+      '<!-- rsp-focus:v1\n\nCurrent: lane\nEvidence: verified\nNext: stop\n',
+    ]) {
+      const result = spawnSync('node', [cliPath(), 'focus', 'capsule-change', '--capsule-file', '-'], { cwd: root, input, encoding: 'utf-8' })
+      expect(result.status).not.toBe(0)
+      expect(await readFile(marker, 'utf-8')).toBe(original)
+    }
+  })
+
+  it('continues to allow an explicit empty focus marker replacement', async () => {
+    const root = join(tmpdir(), 'rsp-focus-capsule-empty-test', randomUUID())
+    await mkdir(root, { recursive: true })
+    execFileSync('node', [cliPath(), 'init'], { cwd: root })
+    execFileSync('node', [cliPath(), 'create', 'capsule-change', 'Clear focus capsule'], { cwd: root })
+    const marker = join(root, '.rsp', 'focus.d', 'capsule-change')
+    await writeFile(marker, '<!-- rsp-focus:v1 -->\n\nCurrent: lane\nEvidence: verified\nNext: continue\n')
+
+    const result = spawnSync('node', [cliPath(), 'focus', 'capsule-change', '--capsule-file', '-'], { cwd: root, input: '', encoding: 'utf-8' })
+
+    expect(result.status).toBe(0)
+    expect(await readFile(marker, 'utf-8')).toBe('')
   })
 
   it('rejects oversized or unsafe capsule input without replacing existing content', async () => {
@@ -515,7 +554,7 @@ manage:
     const capsulePath = join(root, 'replacement.md')
     const original = 'Next: preserve prior capsule\n'
     await writeFile(marker, original)
-    await writeFile(capsulePath, 'Next: replacement\n')
+    await writeFile(capsulePath, '<!-- rsp-focus:v1 -->\n\nCurrent: replacement\nEvidence: verified\nNext: continue\n')
     await chmod(focusDir, 0o555)
 
     try {
@@ -560,7 +599,10 @@ manage:
     execFileSync('node', [cliPath(), 'init'], { cwd: root })
     execFileSync('node', [cliPath(), 'create', 'capsule-change', 'Validate multibyte boundary'], { cwd: root })
     const marker = join(root, '.rsp', 'focus.d', 'capsule-change')
-    const exact = `${'界'.repeat(1365)}a`
+    const prefix = '<!-- rsp-focus:v1 -->\n\nCurrent: '
+    const suffix = '\nEvidence: verified\nNext: continue\n'
+    const remainingBytes = 4096 - Buffer.byteLength(prefix + suffix, 'utf-8')
+    const exact = `${prefix}${'界'.repeat(Math.floor(remainingBytes / 3))}${'a'.repeat(remainingBytes % 3)}${suffix}`
     expect(Buffer.byteLength(exact, 'utf-8')).toBe(4096)
 
     const accepted = spawnSync('node', [cliPath(), 'focus', 'capsule-change', '--capsule-file', '-'], { cwd: root, input: exact, encoding: 'utf-8' })

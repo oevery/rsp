@@ -45,7 +45,8 @@ For one compatible-release cycle, `rsp create --lite`, `--lite=true`, and `--lit
 ## Focus, readiness, and lifecycle
 
 ```text
-rsp focus <name>                Mark an open Change as current
+rsp focus <name> [--capsule-file <path|->]
+                                Mark an open Change as current and optionally replace its capsule
 rsp unfocus <name>              Remove an open Change from the focus set
 rsp show <name|--focused> [--json [--compact]] [--verbose]
 rsp ready <name> [--json [--compact]] [--verbose]
@@ -54,7 +55,11 @@ rsp reopen <name> --reason <text> [--from <archive-path>]
                                 Restore incomplete archived acceptance
 ```
 
-`rsp ready` and `rsp show` expose the required completion gate, optional coverage warnings, and semantic-review signals. Incomplete Tasks, Required Verify items, or blockers produce `archiveReady: no`; incomplete Optional verification remains a warning. `rsp archive` fails without moving the Change when the completion gate is blocked. `rsp archive --dry-run` remains a deprecated compatibility alias for `rsp ready` and does not move a Change.
+`rsp focus --capsule-file` accepts a regular file or standard input (`-`). Empty input keeps a valid empty marker. Every new non-empty write must be strict Focus Capsule v1: one leading `<!-- rsp-focus:v1 -->`, blank lines, exactly one non-empty single-line `Current`, `Evidence`, and `Next`, and at most one non-empty single-line `Resume check`. Unknown non-empty lines or fields, duplicates, missing fields, invalid UTF-8, unsafe inputs, and content above 4096 UTF-8 bytes are rejected before atomic replacement, preserving the previous marker.
+
+Existing bounded unversioned UTF-8 content remains readable for compatibility. `rsp check` emits `focus_capsule_legacy` as a warning and does not treat that prose as structured recovery. For a focused Change, `rsp show --json` returns `recovery: null` for empty or legacy content, includes a stable entry in `warnings` for legacy content, and projects valid v1 as `{ version, current, evidence, next, resumeCheck, authoritative: false }`. The projection is read-only, grants no authority, and does not claim evidence freshness.
+
+`rsp ready` and `rsp show` also expose the required completion gate, optional coverage warnings, and semantic-review signals. Incomplete Tasks, Required Verify items, or blockers produce `archiveReady: no`; incomplete Optional verification remains a warning. `rsp archive` fails without moving the Change when the completion gate is blocked. `rsp archive --dry-run` remains a deprecated compatibility alias for `rsp ready` and does not move a Change.
 
 ## Local Git delivery
 

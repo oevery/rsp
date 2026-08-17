@@ -47,7 +47,7 @@ RSP 发布一个由十二项与宿主无关的 Skill 组成的默认套件，供
 
 ## 控制结果
 
-RSP 使用临时的 Skill Control Model 解释当前决策，但不会创建持久化控制器状态。Core 在同级路径中选择一种：专门 Discipline、受限直接执行、受管执行、返回 Shape，或停止。specialist 路径结束于一个显式且边界明确的 Discipline 结果。direct 路径编排一次非 Manage 的完成或继续过程，可以指定恰好一个 Discipline executor，但不会把它变成 Controller。只有 managed 路径可以组合 worker lanes 和 Review 收敛。一个 ready owner、一个 writer、一个 execution phase、一个 integrated decisive check，且没有 recovery、独立 acceptance、受管 lifecycle 或 ready successor 时保持 direct；多个文件或文档表面本身不会改变路由。Core 只能直接修改 RSP 控制面状态；产品修改由 Implement 或同一边界内的受限手动 Discipline 操作执行。
+RSP 使用唯一的临时外层 `ControlOutcome` 解释当前进展，而不会创建持久化控制器状态。它报告 WorkRef、`mode: solo | delegated | coordinated`、`status: running | waiting | completed`、阶段结果或停止原因、决定性证据、存在时的 changed artifacts、下一 owner/action，以及可选 recovery。状态只允许 `running -> waiting | completed` 与 `waiting -> running | completed`；route、topology、lane result、acceptance 和 closeout 只作为嵌套细节或门槛，不形成并列状态流。Core 仍在 specialist、direct、managed、Shape 或 stop 中选择一条 route。一个 ready owner、一个 writer、一个 execution phase、一个 integrated decisive check，且没有 recovery、独立 acceptance、受管 lifecycle 或 ready successor 时保持 direct；多个文件或文档表面本身不会改变路由。
 
 工作归属、决策归属、临时交接、执行不确定性与验收是不同概念。`WorkOwner` 表示选定的 Change 或浅层 Group，`DecisionOwner` 表示必须作出实质决策的人或权限来源，`NextOwner` 表示下一个控制或执行能力。每次停止都必须说明下一位 owner、所需输入，以及工作应经 Shape 或 Core 返回，还是等待新的证据、环境、验证或能力。必需 worker 未实际创建或没有有效 receipt 时，只能视为能力不可用，绝不能视为成功完成。
 
@@ -76,9 +76,9 @@ manage:
 
 Core 先把一个明确的 shape-ready Change 或浅层 Group 解析为 `WorkOwner`，并独占首次 Manage 资格判断及 `selected | declined` 路由结果。缺少或未就绪的归属在独立规划产物权限下直接进入 Shape；Shape 把 ready WorkOwner 返回 Core 重新路由，绝不直接恢复 Manage。Manage 一旦被选中，只校验 handoff 完整性以及当前 owner、权限和归属差异是否漂移，不重复判断 direct 还是 managed。普通同范围 receipt 只需检查实际路径和局部 diff；正常 Fix 在已声明验收内实现行为时不会触发完整 owner 重读。只有发现或新请求改变已声明行为、验收或公共接口边界，或出现其他失效信号、跨会话恢复、closeout 时，才扩大重读并返回 Core。
 
-受管执行会按失败关闭顺序把新出现的不确定性分类为超出目标、归属者决策、尚不可精确描述的 fog、需要事实证据，或可执行。Manage 会派生临时 `ExecutionFrame` 与最小安全拓扑：`control-action`、纵向复用 worker、顺序 worker、并行 wave、只读 fan-out、有界纠正或独立 Verify。每个 `Assignment` 只携带 WorkRef、目标、精确 authority 引用、Read/Write/Verify 集合、有界已知事实、允许与禁止动作、停止条件和重放安全等级。Worker 通过消息返回包含 result、changed paths、精确 verification、omissions、boundary status、证据有效性与资源释放结果的 `Receipt`，不通过 Focus Capsule 协调。Token 数量、运行时间、轮询次数与进度消息数永远不参与派发、路由、权限、完成或验收判断。
+受管执行中，`solo` 不使用 worker，`delegated` 使用一个兼容的 primary WorkerSession，`coordinated` 使用多个 worker 或一个寻求独立性的 worker 义务。Manage 派生临时 `ExecutionFrame`，并把现有七种 topology——`control-action`、longitudinal、sequential、parallel-wave、read-only-fan-out、bounded-correction 与 independent-verify——保留为内部策略。fresh WorkerSession 接收完整 `Assignment`；只有实际观察到的同一兼容 WorkerSession 才能接收 `AssignmentDelta`，省略字段仅继承它紧邻的已接受 Assignment 或 AssignmentDelta 边界。session 丢失或边界失效时必须使用 fresh worker 与完整 Assignment。Worker 返回的 `Receipt` 包含 result、changed paths、精确 verification、omissions、boundary status、证据有效性与资源释放结果。Token 或上下文成本绝不改变权限、安全、验收、完成或必需验证，只能在同样安全且获授权的策略之间打破平局。
 
-Diagnose 与私有 Inspect lane 保持只读；Fix 是其修改边界内的唯一写入者。只有 owner、角色、seam、策略与 writer 边界仍兼容时，才纵向复用 primary worker；独立调查、策略重置、无关切片与独立 Verify 使用 fresh worker。Manage 通过 `rsp-verify` 的结果契约路由验证，且只有能够确认 Verify 使用了不同于 Fix 的 worker identity 时，才可声称独立验证；否则必须报告 independence unavailable。不再设置整个 managed run 的派发总配额：每次派发都必须服务于必要且有界的 Assignment；同范围 Assignment 失败后默认最多允许三次 correction pass，且在没有新证据或无法收敛时提前停止。独立 Verify 始终是单独的验收义务。frame、session、assignment、receipt、resource lease、计数与过程时间线始终保持临时。
+Diagnose 与私有 Inspect lane 保持只读；Fix 是其修改边界内的唯一写入者。Manage 优先复用兼容的 longitudinal primary worker，以避免重复传递已经稳定的上下文。独立调查、策略重置、无关切片、session 丢失、连续性失效与独立 Verify 使用 fresh worker 和完整 Assignment。Manage 通过 `rsp-verify` 的结果契约路由验证；只有能够确认 Verify 使用了不同于 Fix 的 worker identity 时，才可声称独立验证，否则必须报告 independence unavailable。不再设置整个 managed run 的派发总配额：每次派发都必须服务于必要且有界的 Assignment；同范围 Assignment 失败后默认最多允许三次 correction pass，且在没有新证据或无法收敛时提前停止。独立 Verify 始终是单独的验收义务。frame、session、assignment、delta、receipt、resource lease、计数与过程时间线始终保持临时。
 
 `closeout` 设置 Manage 已被实际选择并通过资格判断后的收尾上限：
 
@@ -92,6 +92,6 @@ Manage 负责推导 commit 资格、时机和 Commit envelope；`rsp-commit` 独
 
 受管工作的中断与恢复不会创建持久化控制器或暂停状态。机器 heartbeat 与用户可见进度分离，健康运行的长 worker 或验证不会因为计时器或消息阈值而被取消。显式取消会一直保留独占资源，直到 worker 与其拥有的后台进程确认停止。Assignment 把重放安全声明为 idempotent、inspect-before-repeat 或 non-repeatable；长上下文只有在写回已接受状态并检查 diff 与证据后，才能进行语义 rollover。
 
-Manager 可在选中的 marker 中保存稀疏的已接受状态 Focus Capsule 作为恢复指针，但它不具备权限。可安全提交的 capsule 只包含版本注释以及 `Current`、`Evidence`、`Next` 和例外情况下的 `Resume check`；不得包含 worker identity、进程 handle、本机路径、lease、原始 receipt、日志、重试、拓扑或权限。未归档 Change 的普通中间提交可以包含 marker 与 capsule，但跨设备可用仍需要单独授权的 Git 传输，并重新派生权限、baseline、dirty state、阻塞项、资源与证据有效性。unfocus 或 archive 会删除 marker。验证先运行 lane-local 检查，在 convergence 时运行一次 affected 或 integration gate，并在 closeout 时重新运行 Change 要求的新鲜证据。
+Manager 可在选中的 marker 中保存稀疏的已接受状态 Focus Capsule 作为恢复指针，但它不具备权限。有效且可安全提交的 v1 capsule 只允许一个位于开头的版本声明、空行、恰好一个非空单行 `Current`、`Evidence`、`Next`，以及至多一个非空单行 `Resume check`；任何未知非空行或字段都无效。它不得包含 worker identity、进程 handle、本机路径、lease、原始 receipt、日志、重试、拓扑或权限。未归档 Change 的普通中间提交可以包含 marker 与 capsule，但跨设备可用仍需要单独授权的 Git 传输，并重新派生权限、baseline、dirty state、阻塞项、资源与证据有效性。unfocus 或 archive 会删除 marker。
 
 精确键见[配置](../reference/configuration.md)，普通操作见[日常工作流](./daily-workflow.md)。

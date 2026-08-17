@@ -1,4 +1,5 @@
-import type { ArchiveReadinessOutput, IssueRelationship, RuntimeDiagnostic } from '../types.js'
+import type { FocusCapsuleRecovery } from '../core/focus-capsule.js'
+import type { ArchiveReadinessOutput, CommandDiagnostic, IssueRelationship, RuntimeDiagnostic } from '../types.js'
 import { readFile } from 'node:fs/promises'
 
 import { resolveExecutableChange } from '../core/change-group.js'
@@ -8,6 +9,7 @@ import { resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } fro
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
 import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionBody, parseRspDocument } from '../core/document-model.js'
 import { guardRspInitialized, normalizeLogicalPath } from '../core/filesystem.js'
+import { inspectFocusCapsuleBytes } from '../core/focus-capsule.js'
 import { IssueRelationshipError, parseIssueRelationships } from '../core/issue-relationship.js'
 import { toErrorMessage } from '../core/output.js'
 import { buildDurableReviewGuidance, collectArchiveReadiness, getDurableReviewCandidateTargets, toArchiveReadinessOutput } from '../core/readiness.js'
@@ -36,6 +38,8 @@ export interface ShowSuccessResult {
     decisionRecordsPath: string
     note: string
   }
+  recovery: FocusCapsuleRecovery | null
+  warnings: CommandDiagnostic[]
   runtime: RuntimeDiagnostic[]
 }
 
@@ -73,6 +77,7 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
     return showError({ code: diagnostic.code, message: diagnostic.message }, runtime)
   }
   const focused = new Set(focusTree.markers.map(marker => marker.name))
+  const focusMarkers = new Map(focusTree.markers.map(marker => [marker.name, marker.path]))
 
   let name: string
 
@@ -134,6 +139,38 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
   }
 
   const isFocused = focused.has(name)
+  let recovery: FocusCapsuleRecovery | null = null
+  const warnings: CommandDiagnostic[] = []
+  if (isFocused) {
+    const markerPath = focusMarkers.get(name)!
+    let markerContent: Uint8Array
+    try {
+      markerContent = await readFile(markerPath)
+    }
+    catch (error) {
+      reportRuntime({
+        code: 'focus_marker_read_failed',
+        operation: 'readFile',
+        path: markerPath,
+        message: toErrorMessage(error),
+      })
+      return showError({ code: 'focus_marker_read_failed', message: 'unable to read focus marker file' }, runtime)
+    }
+    const capsule = inspectFocusCapsuleBytes(markerContent)
+    if (capsule.kind === 'invalid')
+      return showError({ code: capsule.code, message: capsule.message }, runtime)
+    if (capsule.kind === 'legacy') {
+      warnings.push({
+        severity: 'warning',
+        code: 'focus_capsule_legacy',
+        change: name,
+        path: normalizeLogicalPath(markerPath),
+        message: capsule.warning,
+      })
+    }
+    if (capsule.kind === 'valid-v1')
+      recovery = capsule.recovery
+  }
 
   const dependencyInspection = await inspectChangeDependencies()
   const blockers = dependencyInspection.activeBlockers.get(name) ?? hasMeaningfulBlockers(content)
@@ -183,6 +220,8 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
     },
     contextPaths,
     durableReview,
+    recovery,
+    warnings,
     runtime,
   }
 
