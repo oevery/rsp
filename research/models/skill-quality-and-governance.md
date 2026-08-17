@@ -3,12 +3,13 @@ topic: skill-quality-and-governance
 status: complete
 implementation_status: partial
 decision_status: accepted
-reconciled_on: 2026-08-15
+reconciled_on: 2026-08-17
 sources:
   - "addy-agent-skills@df1edb2e05487d0aa6d93c747141e0aed1187f25 -> research/upstreams/addy-agent-skills/df1edb2e05487d0aa6d93c747141e0aed1187f25.md"
   - "anthropic-skill-creator@f6656c1256d5a8adfa37db9110046ef20bac644c -> research/upstreams/anthropic-skill-creator/f6656c1256d5a8adfa37db9110046ef20bac644c.md"
   - "deepseek-harness@47f943859bef60e4160492346772ded9b24f765a -> research/upstreams/deepseek-harness/47f943859bef60e4160492346772ded9b24f765a.md"
   - "everything-claude-code@c9de8f5b2b3a225bca9befa2b7700aa5e3a4d1b8 -> research/upstreams/everything-claude-code/c9de8f5b2b3a225bca9befa2b7700aa5e3a4d1b8.md"
+  - "matt-skills@8b78b531ab965735c5dc74f6f7a219e1e37326df -> research/upstreams/matt-skills/8b78b531ab965735c5dc74f6f7a219e1e37326df.md"
   - "skillopt@a17de4ec767eb3171b8ba10111cb74940406d2f1 -> research/upstreams/skillopt/a17de4ec767eb3171b8ba10111cb74940406d2f1.md"
   - "skillspector@5680c2c3008e63c9979bbbe08221ee4c2dcd17ee -> research/upstreams/skillspector/5680c2c3008e63c9979bbbe08221ee4c2dcd17ee.md"
   - "skill-use-bench@b1f74886957e13b8013fa554649b210955b69980 -> research/upstreams/skill-use-bench/b1f74886957e13b8013fa554649b210955b69980.md"
@@ -30,6 +31,7 @@ This model turns the reviewed sources into a queryable maintainer contract for f
 | Test procedure compliance | addy R2; anthropic R1/R3; Skill-Use R2 | required trajectory events plus artifact/task success | candidate evaluation |
 | Test authority boundaries | Skill-Use R1/R2; addy M2 | forbidden actions scored separately under pressure | candidate evaluation |
 | Optimize instructions safely | anthropic R2; SkillOpt R1/R2 | candidate-versus-current holdout and no-regression receipt | maintainer candidate workspace |
+| Author and evolve RSP Skills | Matt R1; anthropic R1/R2; SkillOpt R1/R2 | bounded contract, progressive resources, semantic concision, attributable candidate | repository maintainer Skill |
 | Scan supply-chain risk | SkillSpector R1/R2/R3 | local deterministic findings, suppression provenance, disclosed optional egress | promotion security gate |
 | Prove host behavior | DeepSeek R1/R3; Skill-Use M4 | exact host/projection receipt for release candidates | host adapter/release evidence |
 
@@ -41,6 +43,8 @@ This model turns the reviewed sources into a queryable maintainer contract for f
 4. **Deterministic checks precede model judging.** Structure, paths, permissions, collisions, static security, and exact prohibitions should not spend model calls when scripts can decide them.
 5. **Catalog breadth stays out of runtime context.** Large sources are library inventories; only selected stable RSP Skills and project adapters enter ordinary discovery.
 6. **Host evidence is a projection result.** A portable Skill can still fail because a host exposes different metadata, tools, permissions, or progressive disclosure.
+7. **Instruction hierarchy should expose the next decision first.** Co-locate rules with the action they constrain, move low-frequency branches behind explicit links, lead with discriminating words, and give completion criteria that can be checked.
+8. **Pruning is semantic, not numeric.** Remove no-op prose, repeated subjects, and duplicated explanations only when trigger, inputs, authority, action, output, stop, verification, and conditional-loading behavior remain explicit. Lists, tables, numbering, and closed single-meaning flows may compress context; private notation and shortened public contracts may not.
 
 ## Disagreements and Resolutions
 
@@ -59,6 +63,7 @@ This model turns the reviewed sources into a queryable maintainer contract for f
 - **QG3 — Closed by Q3 maintainer infrastructure.** Current and candidate observations can now be compared on identity-bound unseen holdouts with a deterministic no-regression receipt. This establishes the gate; it does not prove that any particular Skill candidate is better. See [skill-candidate-no-regression](../../.rsp/archives/2026-08-15_skill-candidate-no-regression.md).
 - **QG4 — Deferred to a selected release-candidate security decision.** Structure and packaging checks still do not substitute for script, permission, egress, injection, dependency, or MCP analysis.
 - **QG5 — Deferred pending repeated lookup friction.** The exact-path coverage ledger is complete; a family-level lookup layer is justified only when maintainers repeatedly fail to find an existing capability.
+- **QG6 — Closed by local maintainer implementation.** `author-rsp-skills` now owns bounded creation, revision, audit, semantic concision, upstream adaptation, and evaluation composition without entering the published package inventory or receiving promotion authority.
 
 ## Rejected Ideas
 
@@ -77,6 +82,7 @@ This model turns the reviewed sources into a queryable maintainer contract for f
 | **Q3 — Add holdout and no-regression gates for instruction edits.** | `implemented` | RSP-owned model-only contract implemented by [skill-candidate-no-regression](../../.rsp/archives/2026-08-15_skill-candidate-no-regression.md); a future concrete Skill edit still requires fresh current/candidate holdout evidence. |
 | **Q4 — Add a deterministic Skill security preflight.** | `defer` | Resume for an explicit release-candidate promotion/security decision after choosing external-tool evaluation or a bounded local preflight. Evidence: SkillSpector R1/R2/R3/R4. |
 | **Q5 — Add a capability-family lookup layer.** | `defer` | Resume only after repeated maintainer lookup friction demonstrates that exact-path coverage is insufficient. Evidence: ECC R1/R2, DeepSeek R1. |
+| **Q6 — Add one repository Skill authoring owner.** | `implemented` | Independently expressed by `.agents/skills/author-rsp-skills` with progressive authoring, concision, and evaluation references plus a deterministic diagnostic scanner. Review, Git, and publication remain separate authorities. |
 
 ## Promotion Boundary
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Author RSP Skills"
+  short_description: "Author and evolve repository RSP Skills safely"
+  default_prompt: "Use $author-rsp-skills to author or improve an RSP Skill with bounded evidence."
