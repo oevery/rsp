@@ -48,6 +48,7 @@ const EXPECTED_RELEASE_REFERENCES = [
 ]
 const EXPECTED_MANAGE_REFERENCES = [
   'closeout.md',
+  'host-worker-lifecycle.md',
   'interruption-recovery.md',
   'review-convergence.md',
 ]

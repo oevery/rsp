@@ -126,6 +126,61 @@ sources:
       - plugins/**/*.json
       - plugins/**/*.yaml
 
+  openai-agents-python:
+    repository: https://github.com/openai/openai-agents-python.git
+    ref: main
+    tier: reference
+    strategy: model
+    paths:
+      - README.md
+      - LICENSE
+      - docs/handoffs.md
+      - docs/tools.md
+      - docs/results.md
+      - src/agents/run_state.py
+      - src/agents/extensions/experimental/hosted_multi_agent/model.py
+
+  langgraph:
+    repository: https://github.com/langchain-ai/langgraph.git
+    ref: main
+    tier: reference
+    strategy: model
+    paths:
+      - README.md
+      - LICENSE
+      - libs/langgraph/langgraph/_internal/_replay.py
+      - libs/langgraph/langgraph/types.py
+      - libs/langgraph/tests/test_interruption.py
+      - libs/langgraph/tests/test_subgraph_persistence.py
+      - libs/langgraph/tests/test_pregel.py
+
+  anthropic-managed-agents:
+    repository: https://github.com/anthropics/skills.git
+    ref: main
+    tier: reference
+    strategy: model
+    paths:
+      - README.md
+      - THIRD_PARTY_NOTICES.md
+      - skills/claude-api/shared/managed-agents-*.md
+      - skills/claude-api/*/managed-agents/**
+
+  temporal-workflow-observability:
+    repository: https://github.com/temporalio/sdk-typescript.git
+    ref: main
+    tier: reference
+    strategy: model
+    paths:
+      - README.md
+      - LICENSE*
+      - packages/workflow/src/workflow.ts
+      - packages/workflow/src/cancellation-scope.ts
+      - packages/workflow/src/interfaces.ts
+      - packages/test/src/workflows/signals-are-always-processed.ts
+      - packages/test/src/workflows/signal-update-ordering.ts
+      - packages/test/src/workflows/unblock-or-cancel.ts
+      - packages/test/src/workflows/handle-external-workflow-cancellation-while-activity-running.ts
+
   planning-with-files:
     repository: https://github.com/OthmanAdi/planning-with-files.git
     ref: master

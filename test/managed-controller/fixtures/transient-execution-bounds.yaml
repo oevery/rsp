@@ -9,7 +9,7 @@ evidence:
   - Correction is Assignment-scoped and independent Verify remains a separate obligation.
   - Controller execution state remains response-only and is never durable project state.
 required_contract:
-  - Before accepting an ordinary same-scope Receipt, inspect the actual changed paths against the Assignment, inspect the local diff
+  - Before accepting an ordinary same-scope WorkerReceipt, inspect the actual changed paths against the Assignment, inspect the local diff
   - Do not return to Core merely to repeat route selection or qualification
   - Do not impose one fixed dispatch ceiling across the whole managed run
   - Every dispatch requires one necessary bounded Assignment
@@ -18,7 +18,7 @@ required_contract:
   - Independent Verify is a separate required acceptance obligation
   - does not consume the Fix correction allowance
   - Allow at most three Resolve Findings passes per Change, separate from the worker retry limit
-  - Keep frontier classification, topology, assignments, receipts, dispatch and correction counts, concurrency reasoning, invalidation mapping, and resume chronology response-only
+  - Keep frontier classification, DispatchDisposition, topology, assignments, WorkerReceipts, AcceptedLaneEvidence, dispatch and correction counts, concurrency reasoning, invalidation mapping, and resume chronology response-only
   - Create no frontier file, ticket map, ledger, registry, dependency graph, ambient hook, or numeric routing score
   - Never persist the goal envelope, WorkSet, waves, invalidation graph, or discovery classification
 prohibited_actions:

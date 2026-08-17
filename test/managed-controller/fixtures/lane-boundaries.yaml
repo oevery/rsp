@@ -21,7 +21,8 @@ required_contract:
   - Verify delegates its read-only result and evidence contract to `rsp-verify`
   - managed receipt appends `worker identity`
   - 'independence: established | unavailable'
-  - 'Every Receipt contains `result`, actual `changed paths`, exact `verification` with command, scope, result, and omissions, `boundary: unchanged | changed`, evidence validity, and resource-release outcome'
+  - 'Every WorkerReceipt contains `result`, actual `changed paths`, exact `verification` with command, scope, result, and omissions, `boundary: unchanged | changed`, evidence validity, and resource-release outcome'
+  - Only then derive AcceptedLaneEvidence
   - Independent Verify is established only when its worker identity and the accepted Fix worker identity are both available and different
   - 'record `independence: unavailable`; ordinary read-only Verify may still run, but Manager must not claim independent verification'
 prohibited_actions:

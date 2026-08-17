@@ -122,6 +122,7 @@ export interface ManagedControllerObservation {
 }
 
 export interface ManagedControllerEvaluationMetadata {
+  agent_reported: ManagedControllerAgentReportedEvaluation | null
   case_id: string
   contract_sha256: string
   duration_ms: number
@@ -129,6 +130,7 @@ export interface ManagedControllerEvaluationMetadata {
     forbidden_actions: { force_push: number, publication: number, push: number }
     tool_calls: number
     usage: unknown
+    worker_lifecycle: ManagedControllerWorkerLifecycleObservation
   }
   output: ManagedControllerOutputScore
   paths: { events: string, final: string, metadata: string, workspace: string }
@@ -153,6 +155,7 @@ export interface ManagedControllerEvaluationMetadata {
       tokens: { input: number | null, output: number | null, total: number | null }
     }
     omissions: string[]
+    host_observed: { worker_lifecycle: ManagedControllerWorkerLifecycleObservation }
   }
   receipt_observations: {
     correction_count: number | null
@@ -165,6 +168,37 @@ export interface ManagedControllerEvaluationMetadata {
   variant: 'baseline' | 'candidate' | 'product'
   verification: { code: number | null, passed: boolean, stderr: string, stdout: string }
   worktree: { changed_paths: string[], missing_required_paths: string[], unauthorized_paths: string[] }
+}
+
+export interface ManagedControllerEvaluationReceiptIdentity {
+  case_id: string
+  composition_sha256: string
+  contract_sha256: string
+  receipt_sha256: string
+}
+
+export interface ManagedControllerReceiptObservations {
+  correction_count: number | null
+  first_fix_result: 'passed' | 'failed' | null
+  trigger: { status: 'passed' | 'failed', evidence?: unknown } | null
+  worker_dispatch_count: number | null
+}
+
+export interface ManagedControllerAgentReportedEvaluation {
+  evaluation_receipt: ManagedControllerEvaluationReceiptIdentity
+  observations: ManagedControllerReceiptObservations
+}
+
+export interface ManagedControllerWorkerLifecycleObservation {
+  admission_count: number | null
+  delivery_count: number | null
+  dispatch_count: number | null
+  interrupt_count: number | null
+  release_count: number | null
+  settlement_count: number | null
+  wait_count: number | null
+  order: Array<{ event_index: number, phase: 'dispatch' | 'admission' | 'delivery' | 'wait' | 'interrupt' | 'settlement' | 'release', tool: string }>
+  omissions: string[]
 }
 
 export function loadManagedControllerCases(root: string): ManagedControllerCase[]
@@ -206,6 +240,23 @@ export function summarizeManagedControllerEvents(raw: string): {
   forbidden_actions: { force_push: number, publication: number, push: number }
   tool_calls: number
   usage: unknown
+  worker_lifecycle: ManagedControllerWorkerLifecycleObservation
+}
+export function projectManagedControllerEvaluationEvidence(options: {
+  durationMs: number
+  events: ReturnType<typeof summarizeManagedControllerEvents>
+  receipt: {
+    case_id: string
+    composition_sha256: string
+    contract_sha256: string
+    observations: ManagedControllerReceiptObservations
+  } | null
+  result: 'passed' | 'failed'
+  output: ManagedControllerOutputScore
+  unauthorizedPaths: string[]
+}): {
+  agent_reported: ManagedControllerAgentReportedEvaluation | null
+  observability: ManagedControllerEvaluationMetadata['observability']
 }
 export function readManagedControllerFlag(flags: string[], name: string): string | undefined
 export function scoreManagedControllerOutput(manifest: ManagedControllerOutputManifest, final: string): ManagedControllerOutputScore

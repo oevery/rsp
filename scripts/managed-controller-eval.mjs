@@ -244,9 +244,19 @@ function isPublication(argv) {
 
 export function summarizeManagedControllerEvents(raw) {
   const forbiddenActions = { force_push: 0, publication: 0, push: 0 }
+  const lifecycleCounts = {
+    admission_count: null,
+    delivery_count: null,
+    dispatch_count: null,
+    interrupt_count: null,
+    release_count: null,
+    settlement_count: null,
+    wait_count: null,
+  }
+  const lifecycleOrder = []
   let toolCalls = 0
   let usage = null
-  for (const line of raw.split('\n').filter(Boolean)) {
+  for (const [eventIndex, line] of raw.split('\n').filter(Boolean).entries()) {
     try {
       const event = JSON.parse(line)
       if (event.type === 'item.completed' && ['command_execution', 'mcp_tool_call', 'tool_call'].includes(event.item?.type)) {
@@ -264,13 +274,175 @@ export function summarizeManagedControllerEvents(raw) {
               forbiddenActions.publication += 1
           }
         }
+        if (event.item?.type === 'mcp_tool_call' || event.item?.type === 'tool_call') {
+          const toolName = managedWorkerToolName(event.item)
+          const phase = managedWorkerToolPhase(toolName, event.item)
+          if (phase && managedWorkerPhaseObserved(phase, event.item)) {
+            observeLifecyclePhase(lifecycleCounts, lifecycleOrder, phase, toolName, eventIndex)
+            if (phase === 'delivery' && managedWorkerAdmissionObserved(event.item))
+              observeLifecyclePhase(lifecycleCounts, lifecycleOrder, 'admission', toolName, eventIndex)
+            if (phase === 'wait' && managedWorkerSettlementObserved(event.item))
+              observeLifecyclePhase(lifecycleCounts, lifecycleOrder, 'settlement', toolName, eventIndex)
+          }
+        }
       }
       if (event.type === 'turn.completed' && event.usage)
         usage = event.usage
     }
     catch {}
   }
-  return { forbidden_actions: forbiddenActions, tool_calls: toolCalls, usage }
+  const workerLifecycle = {
+    ...lifecycleCounts,
+    order: lifecycleOrder,
+    omissions: Object.entries(lifecycleCounts)
+      .filter(([, count]) => count === null)
+      .map(([field]) => `${field.replaceAll('_', ' ')} is unavailable`),
+  }
+  return { forbidden_actions: forbiddenActions, tool_calls: toolCalls, usage, worker_lifecycle: workerLifecycle }
+}
+
+function managedWorkerToolName(item) {
+  const candidate = item.name ?? item.tool_name ?? (typeof item.tool === 'string' ? item.tool : item.tool?.name) ?? item.function?.name
+  if (typeof candidate !== 'string' || candidate.length === 0)
+    return null
+  const qualified = candidate.split(/[/:.]/u).filter(Boolean).at(-1) ?? candidate
+  return qualified.split('__').filter(Boolean).at(-1)?.toLowerCase() ?? null
+}
+
+function managedWorkerToolPhase(toolName, item) {
+  if (['create_agent', 'spawn_agent'].includes(toolName))
+    return 'dispatch'
+  if (['send_input', 'send_message_to_agent'].includes(toolName)) {
+    if (managedWorkerInterruptRequested(item))
+      return 'interrupt'
+    return 'delivery'
+  }
+  if (['wait', 'wait_agent', 'wait_agents'].includes(toolName))
+    return 'wait'
+  if (toolName === 'interrupt_agent')
+    return 'interrupt'
+  if (toolName === 'close_agent')
+    return 'release'
+  return null
+}
+
+function managedWorkerToolEvidence(item) {
+  const evidence = item.structuredContent ?? item.structured_content ?? item.result ?? item.output ?? item.content
+  try {
+    return JSON.stringify(evidence ?? null)
+  }
+  catch {
+    return String(evidence ?? '')
+  }
+}
+
+function managedWorkerToolSucceeded(item) {
+  return !item.error && !['failed', 'errored', 'cancelled', 'canceled'].includes(String(item.status ?? '').toLowerCase())
+}
+
+function managedWorkerToolArguments(item) {
+  const candidate = item.arguments ?? item.args ?? item.input ?? item.parameters
+  if (typeof candidate !== 'string')
+    return candidate
+  try {
+    return JSON.parse(candidate)
+  }
+  catch {
+    return candidate
+  }
+}
+
+function managedWorkerInterruptRequested(item) {
+  const value = managedWorkerToolArguments(item)
+  return Boolean(value && typeof value === 'object' && value.interrupt === true)
+}
+
+function managedWorkerPhaseObserved(phase, item) {
+  if (!managedWorkerToolSucceeded(item))
+    return false
+  const evidence = managedWorkerToolEvidence(item)
+  if (phase === 'dispatch')
+    return /(?:agent|worker|session)[_-]?id/iu.test(evidence) || /\b(?:created|running)\b/iu.test(evidence)
+  if (phase === 'release')
+    return evidence !== 'null' && evidence !== 'undefined'
+  return true
+}
+
+function managedWorkerAdmissionObserved(item) {
+  if (!managedWorkerToolSucceeded(item))
+    return false
+  const evidence = item.structuredContent ?? item.structured_content ?? item.result ?? item.output ?? item.content
+  return hasManagedWorkerAdmission(evidence)
+}
+
+function hasManagedWorkerAdmission(value) {
+  if (Array.isArray(value))
+    return value.some(hasManagedWorkerAdmission)
+  if (value && typeof value === 'object') {
+    return Object.entries(value).some(([key, nested]) => {
+      const normalized = key.toLowerCase()
+      if (['accepted', 'admitted'].includes(normalized) && nested === true)
+        return true
+      if (normalized === 'status' && typeof nested === 'string' && ['accepted', 'admitted', 'running'].includes(nested.toLowerCase()))
+        return true
+      return hasManagedWorkerAdmission(nested)
+    })
+  }
+  if (typeof value !== 'string')
+    return false
+  try {
+    return hasManagedWorkerAdmission(JSON.parse(value))
+  }
+  catch {
+    return /\b(?:accepted|admitted|running)\b/iu.test(value)
+  }
+}
+
+function managedWorkerSettlementObserved(item) {
+  const evidence = managedWorkerToolEvidence(item)
+  return /(?:"status"\s*:\s*"|\bstatus\s*[=:]\s*)(?:completed|failed|cancelled|canceled|errored|done|settled)\b/iu.test(evidence)
+    || /"(?:completed|errored)"\s*:/iu.test(evidence)
+}
+
+function observeLifecyclePhase(counts, order, phase, tool, eventIndex) {
+  const field = `${phase}_count`
+  counts[field] = (counts[field] ?? 0) + 1
+  order.push({ event_index: eventIndex, phase, tool })
+}
+
+export function projectManagedControllerEvaluationEvidence({
+  durationMs,
+  events,
+  receipt,
+  result,
+  output,
+  unauthorizedPaths,
+}) {
+  const projected = projectSkillEvaluationObservability({
+    elapsedMs: durationMs,
+    outcome: result,
+    outputContract: output,
+    receiptObservations: null,
+    toolCalls: events.tool_calls,
+    unauthorizedPaths,
+    usage: events.usage,
+  })
+  const observability = {
+    ...projected,
+    host_observed: { worker_lifecycle: events.worker_lifecycle },
+  }
+  const agentReported = receipt
+    ? {
+        evaluation_receipt: {
+          case_id: receipt.case_id,
+          composition_sha256: receipt.composition_sha256,
+          contract_sha256: receipt.contract_sha256,
+          receipt_sha256: hashSkillEvaluationValue(receipt),
+        },
+        observations: receipt.observations,
+      }
+    : null
+  return { agent_reported: agentReported, observability }
 }
 
 function gitLines(workspace, args) {
@@ -857,16 +1029,17 @@ export async function runManagedControllerEvaluation({ authFile, caseId, codexBi
     timed_out: executed.timedOut,
     verification_passed: verification.passed,
   })
-  const observability = projectSkillEvaluationObservability({
-    elapsedMs: durationMs,
-    outcome: score.result,
-    outputContract: score.output,
-    receiptObservations: receipt?.observations,
-    toolCalls: events.tool_calls,
+  const evaluationEvidence = projectManagedControllerEvaluationEvidence({
+    durationMs,
+    events,
+    receipt,
+    result: score.result,
+    output: score.output,
     unauthorizedPaths: score.unauthorized_paths,
-    usage: events.usage,
   })
+  const { agent_reported: agentReported, observability } = evaluationEvidence
   const metadata = {
+    agent_reported: agentReported,
     case_id: caseId,
     contract_sha256: prepared.contractSha256,
     duration_ms: durationMs,
@@ -877,15 +1050,11 @@ export async function runManagedControllerEvaluation({ authFile, caseId, codexBi
     output: score.output,
     observation_sha256: hashSkillEvaluationValue(observability),
     observability,
-    evaluation_receipt: receipt
-      ? {
-          case_id: receipt.case_id,
-          composition_sha256: receipt.composition_sha256,
-          contract_sha256: receipt.contract_sha256,
-          receipt_sha256: hashSkillEvaluationValue(receipt),
-        }
-      : null,
-    receipt_observations: receipt?.observations ?? null,
+    // Retain the legacy beta projection as an explicit absence. Older retained
+    // metadata with populated fields remains readable, while new producer
+    // claims live only under agent_reported and cannot be mistaken for host evidence.
+    evaluation_receipt: null,
+    receipt_observations: null,
     ...(score.recovery ? { recovery: score.recovery } : {}),
     paths: { events: eventsPath, final: finalPath, metadata: metadataPath, workspace: prepared.workspace },
     result: score.result,

@@ -86,7 +86,8 @@ describe('managed-controller beta evidence', () => {
     expect(plan.observations).toEqual([
       'completion outcome',
       'first-fix result where observable',
-      'worker or tool dispatch count where observable',
+      'host-observed worker lifecycle counts and ordering where observable',
+      'agent-reported routing and dispatch claims kept separate',
       'verification rounds',
       'elapsed time where observable',
       'human-intervention outcome',
@@ -199,7 +200,7 @@ describe('managed-controller beta evidence', () => {
 
     const deterministic = evaluateManagedController(root)
     const summary = createManagedControllerBetaSummary(plan, deterministic, [])
-    expect(summary.deterministic_contracts).toEqual({ passed: true, cases: 29 })
+    expect(summary.deterministic_contracts).toEqual({ passed: true, cases: 33 })
     expect(summary.product_composition).toEqual(plan.product_composition)
     expect(Object.keys(summary.product_composition)).toEqual(['hash', 'skills'])
     expect(summary.product_composition.skills.map(skill => Object.keys(skill))).toEqual([
@@ -415,18 +416,25 @@ describe('managed-controller beta evidence', () => {
       final,
     )
 
-    expect(metadata.evaluation_receipt).toMatchObject({
+    expect(metadata.agent_reported?.evaluation_receipt).toMatchObject({
       case_id: plan.case,
       composition_sha256: plan.product_composition.hash,
       contract_sha256: plan.holdout_manifest_sha256,
       receipt_sha256: expect.stringMatching(/^[a-f0-9]{64}$/),
     })
     expect(metadata.observation_sha256).toMatch(/^[a-f0-9]{64}$/)
-    expect(summary.evaluation_receipt).toEqual(metadata.evaluation_receipt)
+    expect(metadata.evaluation_receipt).toBeNull()
+    expect(metadata.receipt_observations).toBeNull()
+    expect(summary.evaluation_receipt).toBeNull()
     expect(summary.observation_sha256).toBe(metadata.observation_sha256)
-    expect(summary.first_fix_result).toBe('passed')
-    expect(summary.worker_dispatch_count).toBe(2)
-    expect(summary.observability.dimensions.trigger.status).toBe('passed')
+    expect(metadata.agent_reported?.observations).toMatchObject({
+      first_fix_result: 'passed',
+      worker_dispatch_count: 2,
+    })
+    expect(summary.first_fix_result).toBeNull()
+    expect(summary.worker_dispatch_count).toBeNull()
+    expect(summary.observability.dimensions.trigger.status).toBe('not-observed')
+    expect(summary.observability.host_observed?.worker_lifecycle.dispatch_count).toBeNull()
     expect(existsSync(join(produced.paths.workspace, '.rsp-evaluation-receipt.json'))).toBe(false)
     expect(produced.worktree.changed_paths).not.toContain('.rsp-evaluation-receipt.json')
   })
@@ -604,7 +612,7 @@ describe('managed-controller beta evidence', () => {
     expect(summary.product_composition.hash).toBe(
       'ee2e26aee295ea182add2102d928f016e58685cd3e53d3447d92f13268688b76',
     )
-    expect(evaluateManagedController(root)).toHaveLength(29)
+    expect(evaluateManagedController(root)).toHaveLength(33)
     expect(summary.deterministic_contracts).toEqual({
       passed: true,
       cases: 19,
@@ -676,7 +684,7 @@ describe('managed-controller beta evidence', () => {
     expect(summary.product_composition.hash).toBe(
       'ff9d3e73086d7067fa2c65f8e569a369266ea15d6a70d3971665ca84d8c2be41',
     )
-    expect(evaluateManagedController(root)).toHaveLength(29)
+    expect(evaluateManagedController(root)).toHaveLength(33)
     expect(summary.deterministic_contracts).toEqual({
       passed: true,
       cases: 19,
@@ -743,7 +751,7 @@ describe('managed-controller beta evidence', () => {
       passed: true,
       cases: 21,
     })
-    expect(evaluateManagedController(root)).toHaveLength(29)
+    expect(evaluateManagedController(root)).toHaveLength(33)
     expect(summary.runs).toEqual([
       expect.objectContaining({
         variant: 'baseline',

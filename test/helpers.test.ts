@@ -363,7 +363,7 @@ describe('documentation command examples', () => {
 
     const custom = metadata.metadata as Record<string, unknown>
     expect(custom.author).toBe('oevery')
-    expect(custom.version).toBe('2026.08.16.2')
+    expect(custom.version).toBe('2026.08.17.1')
     expect(Object.values(custom).every(value => typeof value === 'string')).toBe(true)
     expect(custom.version).toMatch(/^\d{4}\.\d{2}\.\d{2}(?:\.\d+)?$/)
   })
@@ -431,7 +431,7 @@ describe('documentation command examples', () => {
     expect(skill).toMatch(/Do not use it for unrelated coding or create a Change for a simple session task/)
     expect(skill).toContain('metadata:')
     expect(skill).toContain('author: oevery')
-    expect(skill).toContain('version: "2026.08.16.2"')
+    expect(skill).toContain('version: "2026.08.17.1"')
     expect(contract).toContain('Executable WorkRefs are `<change>` or one direct `<group>/<change>` child.')
     expect(contract).toContain('`<group>/brief`, stored as `<group>/00-brief.md`, is not executable or focusable.')
     expect(contract).toContain('`plan.nodes`, `ready`, `edges`, `blocked`, and `waves`')

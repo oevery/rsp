@@ -1,18 +1,18 @@
 id: settlement-without-receipt
 sources:
   - skills/rsp-manage/SKILL.md
+  - skills/rsp-manage/references/host-worker-lifecycle.md
   - skills/rsp-manage/references/interruption-recovery.md
   - .rsp/specs/skill-control-model.md
 evidence:
-  - Runtime settlement and worker-authored Receipt acceptance are separate evidence.
+  - Runtime settlement, worker-authored WorkerReceipt, and Manager acceptance are separate evidence.
   - Partial or empty terminal output cannot establish success.
 required_contract:
-  - Controller-observed settlement and worker-authored Receipt acceptance are separate evidence
-  - cannot manufacture a lane result, Receipt, successful verification, or acceptance
-  - Partial output and empty terminal output are recovery evidence only
-  - 'required worker without a schema-valid Receipt remains `AcceptanceDisposition: incomplete`'
-  - Runtime settlement without a schema-valid required Receipt keeps acceptance incomplete
+  - settlement, host release, worker-authored WorkerReceipt, and Manager-derived AcceptedLaneEvidence are separate facts
+  - Settlement closes liveness, not acceptance
+  - partial or empty terminal output is recovery evidence only
+  - Runtime settlement without a schema-valid required WorkerReceipt and Manager-derived AcceptedLaneEvidence keeps acceptance incomplete
 prohibited_actions:
-  - settlement implies Receipt
+  - settlement implies WorkerReceipt
   - partial output accepted as success
   - empty terminal output accepted as completion

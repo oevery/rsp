@@ -9,8 +9,8 @@ evidence:
 required_contract:
   - Inside one WorkRef, one slice may batch several small same-shape edits only when their role, seam, writer boundary, authority envelope, replay safety, verification and review surfaces, and ResourceLeases are compatible
   - otherwise keep them as separate ordered or independent slices
-  - Never batch distinct WorkRefs into one Assignment or Receipt
-  - Manager may reuse one primary WorkerSession longitudinally, but each child retains its own Assignment and Receipt
+  - Never batch distinct WorkRefs into one Assignment or WorkerReceipt
+  - Manager may reuse one primary WorkerSession longitudinally, but each child retains its own Assignment, WorkerInvocation, and WorkerReceipt
   - '`Assignment` contains one bounded objective for exactly one WorkRef'
 prohibited_actions:
   - one worker per file by default

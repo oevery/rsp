@@ -34,6 +34,7 @@ describe('skill runtime context composition', () => {
 
   it('keeps conditional Manage procedures reachable without loading their detail by default', () => {
     expect(markdownLinks(manage)).toEqual(expect.arrayContaining([
+      'references/host-worker-lifecycle.md',
       'references/interruption-recovery.md',
       'references/review-convergence.md',
       'references/closeout.md',
@@ -43,6 +44,8 @@ describe('skill runtime context composition', () => {
     expect(findSemanticUnit(manage, ['When closeout begins', 'derive `CloseoutEligibility`', 'incomplete-or-drifted fail-safe'])).toBeDefined()
 
     expect(manage).not.toContain('Machine heartbeat is host-level liveness evidence')
+    expect(manage).not.toContain('Observe creation, delivery, admission, activity or wait')
+    expect(read('skills/rsp-manage/references/host-worker-lifecycle.md')).toContain('Observe creation, delivery, admission, activity or wait')
     expect(manageInterruption).toContain('Machine heartbeat is host-level liveness evidence')
     expect(manage).not.toContain('same Finding remains after two completed corrections')
     expect(manageReviewConvergence).toContain('same Finding remains after two completed corrections')
@@ -73,7 +76,9 @@ describe('skill runtime context composition', () => {
     expect(skillSystem).not.toContain('AcceptanceDisposition')
     expect(skillSystem).not.toContain('CloseoutEligibility')
     expect(skillSystem).not.toContain('FrontierDisposition')
-    expect(skillSystem).toContain('same observed compatible WorkerSession with an AssignmentDelta')
+    expect(skillSystem).toContain('A reusable WorkerSession may receive successive non-overlapping WorkerInvocations')
+    expect(skillSystem).toContain('worker-authored WorkerReceipt')
+    expect(skillSystem).toContain('AcceptedLaneEvidence')
     expect(findSemanticUnit(skillSystem, ['rsp-manage', 'only suite capability', 'worker lanes', 'review convergence'])).toBeDefined()
     expect(findSemanticUnit(skillSystem, ['Core conditionally loads', 'Manage conditionally loads', 'Review conditionally loads'])).toBeDefined()
   })

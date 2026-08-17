@@ -1,5 +1,6 @@
 id: focus-capsule-portability
 sources:
+  - skills/rsp/SKILL.md
   - skills/rsp-manage/SKILL.md
   - skills/rsp-manage/references/interruption-recovery.md
   - .rsp/specs/core-model.md
@@ -15,7 +16,7 @@ required_contract:
   - separately authorized Git transfer
   - worker identities
   - absolute or machine-specific execution paths
-  - raw receipts
+  - raw WorkerReceipts
   - Archive or explicit unfocus removes the marker
   - current-evidence rederivation
   - evidence freshness

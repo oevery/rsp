@@ -8,12 +8,14 @@ evidence:
 required_contract:
   - ExecutionFrame
   - WorkerSession
+  - WorkerInvocation
   - Assignment
   - AssignmentDelta
-  - Receipt
+  - WorkerReceipt
+  - AcceptedLaneEvidence
   - ResourceLease
   - 'mode: solo | delegated | coordinated'
-  - Use `solo` with no worker
+  - Use `solo` with no worker, including bounded local Discipline execution
   - '`delegated` with one compatible primary WorkerSession'
   - '`coordinated` with multiple workers or an independence-seeking worker obligation'
   - control-action

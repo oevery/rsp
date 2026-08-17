@@ -1,0 +1,18 @@
+id: worker-receipt-accepted-evidence
+sources:
+  - skills/rsp-manage/SKILL.md
+  - skills/rsp-manage/references/host-worker-lifecycle.md
+  - .rsp/specs/skill-control-model.md
+evidence:
+  - A worker returns a schema-valid result whose claims still require Manager inspection.
+required_contract:
+  - The worker returns one structured `WorkerReceipt`
+  - It is an attributable claim, not accepted evidence
+  - Only then derive transient `AcceptedLaneEvidence`
+  - Schema validity and attribution do not establish acceptance
+  - actual changed paths against the Assignment
+  - inspect the local diff
+prohibited_actions:
+  - WorkerReceipt implies acceptance
+  - provenance grants authority
+  - settlement manufactures accepted evidence

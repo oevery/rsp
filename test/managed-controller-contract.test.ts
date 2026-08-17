@@ -6,7 +6,7 @@ import { basename, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
-import { evaluateManagedController, hashManagedControllerArtifact, hashManagedControllerComposition, loadManagedControllerCases, observeManagedControllerGit, prepareManagedControllerRun, readManagedControllerFlag, rescoreManagedControllerArtifact, runManagedControllerEvaluation, scoreManagedControllerObservation, scoreManagedControllerOutput, scoreManagedRecoveryOutput, summarizeManagedControllerEvents } from '../scripts/managed-controller-eval.mjs'
+import { evaluateManagedController, hashManagedControllerArtifact, hashManagedControllerComposition, loadManagedControllerCases, observeManagedControllerGit, prepareManagedControllerRun, projectManagedControllerEvaluationEvidence, readManagedControllerFlag, rescoreManagedControllerArtifact, runManagedControllerEvaluation, scoreManagedControllerObservation, scoreManagedControllerOutput, scoreManagedRecoveryOutput, summarizeManagedControllerEvents } from '../scripts/managed-controller-eval.mjs'
 import { canonicalEnum, findSemanticUnit, inlineCodeValues, inlineCodeValuesInUnit, markdownListItem, markdownSection, orderedMarkers } from './helpers/markdown-contract'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
@@ -102,9 +102,11 @@ describe('rsp-manage research candidate', () => {
       'fresh-return',
       'frontier-precedence-stop',
       'host-capability-downgrade',
+      'host-settlement-release',
       'owner-preflight-routing',
       'interruption-recovery',
       'lane-boundaries',
+      'managed-critical-path-solo',
       'nested-delegation-requires-authority',
       'ordinary-restraint',
       'owned-background-work-settlement',
@@ -117,6 +119,8 @@ describe('rsp-manage research candidate', () => {
       'shape-requalification',
       'control-route-transitions',
       'transient-execution-bounds',
+      'worker-receipt-accepted-evidence',
+      'worker-session-invocation',
     ].sort())
     expect(cases.find(item => item.id === 'owner-preflight-routing')?.sources).toEqual([
       'skills/rsp/SKILL.md',
@@ -534,16 +538,17 @@ describe('rsp-manage product Skill', () => {
     expect(findSemanticUnit(lanes, ['observed resumed compatible WorkerSession', '`AssignmentDelta`', 'immediately accepted Assignment or AssignmentDelta'])).toBeDefined()
     expect(findSemanticUnit(lanes, ['Session loss', 'fresh WorkerSession', 'complete Assignment'])).toBeDefined()
     expect(findSemanticUnit(lanes, ['Token or context cost', 'otherwise equally safe and authorized strategies'])).toBeDefined()
-    expect(inlineCodeValuesInUnit(lanes, ['Every Receipt', 'contains'])).toEqual([
+    expect(inlineCodeValuesInUnit(lanes, ['Every WorkerReceipt', 'contains'])).toEqual([
       'WorkerSession',
-      'Receipt',
+      'WorkerInvocation',
+      'WorkerReceipt',
       'result',
       'changed paths',
       'verification',
       'boundary: unchanged | changed',
     ])
     expect(findSemanticUnit(lanes, ['exact owner sections or paths', 'instead of copying their prose'])).toBeDefined()
-    expect(findSemanticUnit(lanes, ['WorkerSession', 'Receipt', 'rather than a conversational execution diary'])).toBeDefined()
+    expect(findSemanticUnit(lanes, ['WorkerSession', 'WorkerInvocation', 'WorkerReceipt', 'rather than a conversational execution diary'])).toBeDefined()
     expect(findSemanticUnit(lanes, ['Diagnose', '`rsp-diagnose`', 'read-only', 'no-cause result'])).toBeDefined()
     expect(findSemanticUnit(lanes, ['Inspect', 'private Manager-only', 'read-only lane'])).toBeDefined()
     expect(findSemanticUnit(lanes, ['Fix', '`rsp-implement`', 'sole product writer'])).toBeDefined()
@@ -572,16 +577,15 @@ describe('rsp-manage product Skill', () => {
     const controlModel = readFileSync(join(root, '.rsp', 'specs', 'skill-control-model.md'), 'utf8')
 
     expect(findSemanticUnit(body, ['host-confirmed Assignment admission', 'cancellation-ownership boundary'])).toBeDefined()
-    expect(findSemanticUnit(body, ['Worker creation or resume alone', 'does not prove admission'])).toBeDefined()
-    expect(findSemanticUnit(body, ['After admission', 'caller abandonment', 'does not retract', 'explicit host-supported interrupt or cancellation'])).toBeDefined()
-    expect(findSemanticUnit(body, ['Controller-observed settlement', 'worker-authored Receipt acceptance', 'separate evidence'])).toBeDefined()
-    expect(findSemanticUnit(body, ['Partial output', 'empty terminal output', 'recovery evidence only'])).toBeDefined()
-    expect(findSemanticUnit(body, ['Outstanding worker-owned background processes', 'lane incomplete', 'ResourceLeases claimed'])).toBeDefined()
+    expect(findSemanticUnit(body, ['WorkerSession creation or resume alone', 'does not prove admission'])).toBeDefined()
+    expect(findSemanticUnit(body, ['WorkerInvocation', 'cancellation-ownership boundary'])).toBeDefined()
+    expect(findSemanticUnit(body, ['Controller-observed settlement', 'worker-authored WorkerReceipt', 'Manager-derived AcceptedLaneEvidence', 'separate facts'])).toBeDefined()
+    expect(findSemanticUnit(body, ['settled invocation without accepted evidence', 'closes liveness only'])).toBeDefined()
     expect(findSemanticUnit(body, ['WorkerSession identity', 'message source', 'never grant authority', 'Assignment envelope'])).toBeDefined()
     expect(findSemanticUnit(interruption, ['cancelling the caller\'s own wait', 'does not retract accepted work'])).toBeDefined()
     expect(findSemanticUnit(interruption, ['terminal message or partial output', 'does not release resources', 'owned work remains live'])).toBeDefined()
     expect(findSemanticUnit(controlModel, ['Assignment admission transfers cancellation ownership', 'pre-admission failure creates no dispatch', 'post-admission work requires explicit cancellation'])).toBeDefined()
-    expect(findSemanticUnit(controlModel, ['Runtime settlement and provenance', 'never substitute', 'schema-valid Receipt'])).toBeDefined()
+    expect(findSemanticUnit(controlModel, ['Runtime settlement and provenance', 'never substitute', 'schema-valid WorkerReceipt', 'Manager-derived AcceptedLaneEvidence'])).toBeDefined()
   })
 
   it('scores localized Chinese receipt narration without a fixed result translation table', () => {
@@ -640,7 +644,7 @@ describe('rsp-manage product Skill', () => {
     expect(findSemanticUnit(lanes, ['execution receipt', 'verification receipt', 'never derives', '`review-clean`'])).toBeDefined()
     expect(findSemanticUnit(lanes, ['durable writeback decision', 'cannot substitute', 'fixed-scope change review'])).toBeDefined()
     expect(findSemanticUnit(body, ['required worker obligation', '`StopDisposition: capability-unavailable`', '`incomplete`', 'stop'])).toBeDefined()
-    expect(findSemanticUnit(body, ['Absence of a confirmed dispatch or receipt', 'never success', 'controller claiming'])).toBeDefined()
+    expect(findSemanticUnit(body, ['Absence of a confirmed WorkerInvocation or WorkerReceipt', 'never success', 'controller claiming'])).toBeDefined()
 
     expect(findSemanticUnit(boundaries, ['closeout begins', 'lifecycle and delivery closeout', 'derive `CloseoutEligibility`'])).toBeDefined()
     expect(canonicalEnum(closeout, 'CloseoutEligibility')).toEqual(['not-eligible', 'lifecycle-ready', 'local-commit-ready'])
@@ -676,7 +680,7 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('Reread the complete owner, status, authority, blockers, and decisive evidence only when')
     expect(body).toContain('execution resumes across sessions, or closeout begins')
     expect(body).toContain('Do not return to Core merely to repeat route selection or qualification')
-    expect(body).toContain('frontier classification, topology, assignments, receipts, dispatch and correction counts, concurrency reasoning, invalidation mapping, and resume chronology response-only')
+    expect(body).toContain('frontier classification, DispatchDisposition, topology, assignments, WorkerReceipts, AcceptedLaneEvidence, dispatch and correction counts, concurrency reasoning, invalidation mapping, and resume chronology response-only')
     expect(body).toContain('compress only accepted outcomes into Change Tasks')
     expect(body).toContain('real unresolved dependencies or risks into Blockers')
     expect(body).toContain('Durable facts or rationale remain owned by the durable writeback decision')
@@ -704,12 +708,15 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('do not stop merely because a normal Fix changes implementation behavior to satisfy the declared acceptance')
   })
 
-  it('requires one implementation worker without forcing parallelism and reports the route', () => {
+  it('derives dispatch independently from managed selection and reports the route', () => {
     const { body } = readSkill(product)
 
-    expect(body).toContain('When the host supports workers and authorized implementation remains, dispatch at least one implementation worker')
-    expect(body).toContain('sequential or longitudinal execution does not permit the controller to absorb the whole implementation')
-    expect(body).toContain('The controller retains Receipt acceptance, convergence verification, review convergence, lifecycle decisions, and commit eligibility and orchestration')
+    expect(body).toContain('Derive `DispatchDisposition` independently after selection')
+    expect(body).toContain('`none` when the current bounded action has no useful or required worker seam')
+    expect(body).toContain('With `none`, invoke the bounded local Discipline while retaining orchestration and acceptance')
+    expect(body).toContain('With unavailable `required`, stop `capability-unavailable` and keep acceptance incomplete')
+    expect(body).toContain('Manage qualification never manufactures a worker obligation')
+    expect(body).toContain('The controller retains WorkerReceipt validation, AcceptedLaneEvidence derivation, convergence verification, review convergence, lifecycle decisions, and commit eligibility and orchestration')
     expect(body).toContain('It does not absorb Commit\'s exact Git procedure')
     expect(body).toContain('provider sessions, and hardware/classroom sessions as exclusive `ResourceLease` candidates')
     expect(body).toContain('Dispatch in parallel only for independent mutation paths and evidenced distinct resources')
@@ -719,6 +726,8 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('closeout always reruns the Change-required evidence fresh')
     expect(managedRouting).toContain('Make the route observable')
     expect(managedRouting).toContain('report `selected` with the decisive qualification signal')
+    expect(managedRouting).toContain('Selection transfers current-phase control from Core to Manage; it does not imply worker delegation')
+    expect(managedRouting).toContain('Manage independently derives `DispatchDisposition: none | preferred | required` after selection')
     expect(managedRouting).toContain('`declined` with the complete direct-work exclusion')
     expect(managedRouting).toContain('reasoning remain transient and create no controller state')
   })
@@ -1130,6 +1139,119 @@ describe('rsp-manage product Skill', () => {
     expect(summarizeManagedControllerEvents(events)).toMatchObject({
       forbidden_actions: { force_push: 1, publication: 9, push: 2 },
       tool_calls: 15,
+    })
+  })
+
+  it('keeps agent-reported dispatch separate from host-observed worker lifecycle', () => {
+    const raw = [
+      { type: 'item.completed', item: { type: 'tool_call', name: 'multi_agent_v1__spawn_agent', result: { agent_id: 'worker-1', status: 'created' } } },
+      { type: 'item.completed', item: { type: 'tool_call', name: 'multi_agent_v1__send_input', result: { accepted: true } } },
+    ].map(event => JSON.stringify(event)).join('\n')
+    const evidence = projectManagedControllerEvaluationEvidence({
+      durationMs: 10,
+      events: summarizeManagedControllerEvents(raw),
+      receipt: {
+        case_id: 'observer-authored',
+        composition_sha256: 'a'.repeat(64),
+        contract_sha256: 'b'.repeat(64),
+        observations: {
+          trigger: null,
+          first_fix_result: null,
+          correction_count: null,
+          worker_dispatch_count: 3,
+        },
+      },
+      result: 'passed',
+      output: { expected_missing: [], forbidden_present: [] },
+      unauthorizedPaths: [],
+    })
+
+    expect(evidence.agent_reported?.observations.worker_dispatch_count).toBe(3)
+    expect(evidence.observability.measurements.worker_dispatch_count).toBeNull()
+    expect(evidence.observability.host_observed.worker_lifecycle).toMatchObject({
+      dispatch_count: 1,
+      admission_count: 1,
+      delivery_count: 1,
+    })
+  })
+
+  it('leaves unavailable host lifecycle facts null', () => {
+    const events = summarizeManagedControllerEvents(JSON.stringify({
+      type: 'item.completed',
+      item: { type: 'command_execution', command: 'npm test' },
+    }))
+
+    expect(events.worker_lifecycle).toMatchObject({
+      admission_count: null,
+      delivery_count: null,
+      dispatch_count: null,
+      interrupt_count: null,
+      release_count: null,
+      settlement_count: null,
+      wait_count: null,
+      order: [],
+    })
+    expect(events.worker_lifecycle.omissions).toContain('dispatch count is unavailable')
+  })
+
+  it('does not promote failed or explicitly rejected host calls into lifecycle facts', () => {
+    const raw = [
+      { type: 'item.completed', item: { type: 'tool_call', tool: 'mcp__multi_agent_v1__spawn_agent', status: 'failed', result: { agent_id: 'worker-1' } } },
+      { type: 'item.completed', item: { type: 'tool_call', name: 'multi_agent_v1__send_input', result: { accepted: false } } },
+      { type: 'item.completed', item: { type: 'tool_call', name: 'multi_agent_v1__close_agent', error: 'close failed', result: { previous_status: 'running' } } },
+    ].map(event => JSON.stringify(event)).join('\n')
+
+    expect(summarizeManagedControllerEvents(raw).worker_lifecycle).toMatchObject({
+      admission_count: null,
+      delivery_count: 1,
+      dispatch_count: null,
+      release_count: null,
+    })
+  })
+
+  it('maps the current host interrupt flag to interruption rather than delivery', () => {
+    const raw = JSON.stringify({
+      type: 'item.completed',
+      item: {
+        type: 'tool_call',
+        name: 'mcp__multi_agent_v1__send_input',
+        arguments: JSON.stringify({ target: 'worker-1', interrupt: true }),
+        result: { submission_id: 'submission-1' },
+      },
+    })
+
+    expect(summarizeManagedControllerEvents(raw).worker_lifecycle).toMatchObject({
+      delivery_count: null,
+      interrupt_count: 1,
+      order: [{ event_index: 0, phase: 'interrupt', tool: 'send_input' }],
+    })
+  })
+
+  it('observes worker settlement and release as distinct ordered facts', () => {
+    const raw = [
+      { type: 'item.completed', item: { type: 'tool_call', name: 'multi_agent_v1__wait_agent', result: { status: { worker1: { completed: 'done' } } } } },
+      { type: 'item.completed', item: { type: 'tool_call', name: 'multi_agent_v1__close_agent', result: { previous_status: { completed: 'done' } } } },
+    ].map(event => JSON.stringify(event)).join('\n')
+
+    expect(summarizeManagedControllerEvents(raw).worker_lifecycle).toEqual({
+      admission_count: null,
+      delivery_count: null,
+      dispatch_count: null,
+      interrupt_count: null,
+      release_count: 1,
+      settlement_count: 1,
+      wait_count: 1,
+      order: [
+        { event_index: 0, phase: 'wait', tool: 'wait_agent' },
+        { event_index: 0, phase: 'settlement', tool: 'wait_agent' },
+        { event_index: 1, phase: 'release', tool: 'close_agent' },
+      ],
+      omissions: [
+        'admission count is unavailable',
+        'delivery count is unavailable',
+        'dispatch count is unavailable',
+        'interrupt count is unavailable',
+      ],
     })
   })
 

@@ -27,6 +27,15 @@ export interface ManagedControllerBetaPlan {
 }
 
 export interface ManagedControllerBetaRunMetadata {
+  agent_reported?: {
+    evaluation_receipt: {
+      case_id: string
+      composition_sha256: string
+      contract_sha256: string
+      receipt_sha256: string
+    }
+    observations: ManagedControllerBetaReceiptObservations
+  } | null
   case_id?: string
   contract_sha256?: string
   variant: ManagedControllerBetaVariant
@@ -35,6 +44,7 @@ export interface ManagedControllerBetaRunMetadata {
   events?: {
     tool_calls?: number | null
     usage?: unknown
+    worker_lifecycle?: ManagedControllerBetaWorkerLifecycleObservation
   }
   output?: {
     expected_missing: string[]
@@ -69,6 +79,18 @@ export interface ManagedControllerBetaRunMetadata {
     model?: string
     provider?: string | null
   }
+}
+
+export interface ManagedControllerBetaWorkerLifecycleObservation {
+  admission_count: number | null
+  delivery_count: number | null
+  dispatch_count: number | null
+  interrupt_count: number | null
+  release_count: number | null
+  settlement_count: number | null
+  wait_count: number | null
+  order: Array<{ event_index: number, phase: 'dispatch' | 'admission' | 'delivery' | 'wait' | 'interrupt' | 'settlement' | 'release', tool: string }>
+  omissions: string[]
 }
 
 export interface ManagedControllerBetaRunSummary {
@@ -115,6 +137,7 @@ export interface ManagedControllerBetaObservability {
     tokens: { input: number | null, output: number | null, total: number | null }
   }
   omissions: string[]
+  host_observed?: { worker_lifecycle: ManagedControllerBetaWorkerLifecycleObservation }
 }
 
 export interface ManagedControllerBetaComparison {

@@ -1,0 +1,18 @@
+id: worker-session-invocation
+sources:
+  - skills/rsp-manage/SKILL.md
+  - skills/rsp-manage/references/host-worker-lifecycle.md
+  - skills/rsp-manage/references/interruption-recovery.md
+  - .rsp/specs/skill-control-model.md
+evidence:
+  - Compatible context may be reused while each admitted execution call retains separate lifecycle ownership.
+required_contract:
+  - A `WorkerSession` is a reusable compatible role and context
+  - A `WorkerInvocation` is exactly one host-admitted Assignment or AssignmentDelta
+  - the resumed call is still a new WorkerInvocation
+  - at most one active context-mutating WorkerInvocation
+  - each child retains its own Assignment, WorkerInvocation, and WorkerReceipt
+prohibited_actions:
+  - WorkerSession is one execution call
+  - overlapping stateful invocation by assumption
+  - shared cancellation boundary across invocations
