@@ -27,7 +27,7 @@
 - `rsp-shape` owns clarification and ready-owner planning artifacts; `rsp-design` owns one bounded report-only design question.
 - `rsp-implement`, `rsp-diagnose`, `rsp-tdd`, `rsp-verify`, `rsp-review`, `rsp-resolve-findings`, `rsp-commit`, and `rsp-release-docs` remain standalone bounded capabilities within their declared result and authority contracts.
 - `rsp-manage` is the only suite capability that composes worker lanes, selected-goal execution, review convergence, lifecycle closeout, and local Commit orchestration after Core selection.
-- `rsp-commit` owns exact local commit creation and its receipt only. Host or user Git tooling owns any later cross-branch handoff, cherry-pick, cleanup, remote delivery, or publication.
+- `rsp-commit` owns exact local commit creation and its receipt for one Core- or Manage-derived `direct`, Change, Group, or release boundary. A direct owner is transient and supplies no synthetic WorkRef or lifecycle state. Host or user Git tooling owns any later cross-branch handoff, cherry-pick, cleanup, remote delivery, or publication.
 - Each capability has one detailed procedure owner. Non-owner capabilities may invoke or append bounded fields, but do not redefine another capability's complete contract.
 
 ## Progressive disclosure

@@ -14,20 +14,36 @@ describe('rsp-commit Skill contract', () => {
     expect(skill).not.toContain('/Users/')
   })
 
-  it('requires an RSP owner, explicit authority, decisive evidence, and one exact boundary', () => {
+  it('requires one typed owner, explicit authority, decisive evidence, and one exact boundary', () => {
     for (const fragment of [
       'Core or qualified Manage',
+      'transient Commit envelope',
+      '`direct`',
+      '`change`',
+      '`group`',
+      '`release`',
       'allowed paths',
-      'decisive verification',
-      'lifecycle state',
+      'fresh decisive verification',
+      'lifecycle evidence only when the owner variant requires it',
       'commit authority',
-      'one Change',
-      'one integration-coupled Group wave',
-      'one confirmed release commit boundary',
+      'confirmed direct Tiny/Small boundary',
+      'transient Git delivery boundary',
       'Stop without staging',
       'staged, unstaged, and untracked paths',
       'cached diff',
       'recent non-merge commit messages',
+    ])
+      expect(skill).toContain(fragment)
+  })
+
+  it('accepts direct boundaries without synthetic RSP lifecycle or metadata', () => {
+    for (const fragment of [
+      'Never require it to create a Change, invent a WorkRef, or supply lifecycle evidence',
+      'A missing WorkRef or lifecycle state is not a defect for a valid direct owner',
+      'A direct or release owner with no included WorkRefs emits no RSP trailer',
+      'Never invent a WorkRef',
+      'owner kind and identity',
+      'manual fallback is only for capability unavailability',
     ])
       expect(skill).toContain(fragment)
   })
