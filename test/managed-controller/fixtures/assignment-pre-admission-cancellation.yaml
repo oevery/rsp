@@ -1,0 +1,19 @@
+id: assignment-pre-admission-cancellation
+sources:
+  - skills/rsp-manage/SKILL.md
+  - skills/rsp-manage/references/interruption-recovery.md
+  - .rsp/specs/skill-control-model.md
+evidence:
+  - Worker creation, resume, and Assignment admission are distinct boundaries.
+  - Cancellation or delivery failure before admission creates no accepted work.
+required_contract:
+  - Treat host-confirmed Assignment admission as the cancellation-ownership boundary
+  - Worker creation or resume alone does not prove admission
+  - before the host confirms admission creates no accepted dispatch
+  - no inherited Assignment boundary
+  - A failed creation or resume creates no synthetic dispatch
+  - neither does pre-admission delivery failure
+prohibited_actions:
+  - creation implies admission
+  - pre-admission cancellation releases an accepted lease
+  - synthetic inherited Assignment boundary

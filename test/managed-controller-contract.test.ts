@@ -89,6 +89,8 @@ describe('rsp-manage research candidate', () => {
     const cases = loadManagedControllerCases(root)
     expect(cases.map(item => item.id)).toEqual([
       'authority-stop',
+      'assignment-post-admission-cancellation',
+      'assignment-pre-admission-cancellation',
       'blocker-continuation',
       'dispatch-envelope',
       'drift-safe-resume',
@@ -103,10 +105,15 @@ describe('rsp-manage research candidate', () => {
       'owner-preflight-routing',
       'interruption-recovery',
       'lane-boundaries',
+      'nested-delegation-requires-authority',
       'ordinary-restraint',
+      'owned-background-work-settlement',
       'owner-release',
       'progress-continues',
+      'provenance-does-not-grant-authority',
       'required-worker-closeout',
+      'same-shape-assignment-batching',
+      'settlement-without-receipt',
       'shape-requalification',
       'control-route-transitions',
       'transient-execution-bounds',
@@ -557,6 +564,24 @@ describe('rsp-manage product Skill', () => {
     expect(existsSync(join(root, 'skills', 'rsp-inspect'))).toBe(false)
     expect(existsSync(join(root, 'skills', 'rsp-verify'))).toBe(true)
     expect(readFileSync(join(root, 'skills', 'rsp-verify', 'SKILL.md'), 'utf8')).toContain('Run one bounded, read-only verification pass')
+  })
+
+  it('separates Assignment admission, cancellation ownership, settlement, Receipt, and provenance', () => {
+    const { body } = readSkill(product)
+    const interruption = readFileSync(join(product, 'references', 'interruption-recovery.md'), 'utf8')
+    const controlModel = readFileSync(join(root, '.rsp', 'specs', 'skill-control-model.md'), 'utf8')
+
+    expect(findSemanticUnit(body, ['host-confirmed Assignment admission', 'cancellation-ownership boundary'])).toBeDefined()
+    expect(findSemanticUnit(body, ['Worker creation or resume alone', 'does not prove admission'])).toBeDefined()
+    expect(findSemanticUnit(body, ['After admission', 'caller abandonment', 'does not retract', 'explicit host-supported interrupt or cancellation'])).toBeDefined()
+    expect(findSemanticUnit(body, ['Controller-observed settlement', 'worker-authored Receipt acceptance', 'separate evidence'])).toBeDefined()
+    expect(findSemanticUnit(body, ['Partial output', 'empty terminal output', 'recovery evidence only'])).toBeDefined()
+    expect(findSemanticUnit(body, ['Outstanding worker-owned background processes', 'lane incomplete', 'ResourceLeases claimed'])).toBeDefined()
+    expect(findSemanticUnit(body, ['WorkerSession identity', 'message source', 'never grant authority', 'Assignment envelope'])).toBeDefined()
+    expect(findSemanticUnit(interruption, ['cancelling the caller\'s own wait', 'does not retract accepted work'])).toBeDefined()
+    expect(findSemanticUnit(interruption, ['terminal message or partial output', 'does not release resources', 'owned work remains live'])).toBeDefined()
+    expect(findSemanticUnit(controlModel, ['Assignment admission transfers cancellation ownership', 'pre-admission failure creates no dispatch', 'post-admission work requires explicit cancellation'])).toBeDefined()
+    expect(findSemanticUnit(controlModel, ['Runtime settlement and provenance', 'never substitute', 'schema-valid Receipt'])).toBeDefined()
   })
 
   it('scores localized Chinese receipt narration without a fixed result translation table', () => {

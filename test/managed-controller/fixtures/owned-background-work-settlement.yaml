@@ -1,0 +1,16 @@
+id: owned-background-work-settlement
+sources:
+  - skills/rsp-manage/SKILL.md
+  - skills/rsp-manage/references/interruption-recovery.md
+  - .rsp/specs/skill-control-model.md
+evidence:
+  - A worker terminal message does not prove that its owned background work has stopped.
+required_contract:
+  - Outstanding worker-owned background processes keep the lane incomplete
+  - conflicting ResourceLeases claimed until they acknowledge stop or settle
+  - terminal message or partial output does not release resources while owned work remains live
+  - owned background processes acknowledge stop
+prohibited_actions:
+  - release resources on terminal message alone
+  - ignore owned background processes
+  - start conflicting Assignment before settlement

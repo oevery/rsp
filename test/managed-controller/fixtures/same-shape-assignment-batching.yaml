@@ -1,0 +1,21 @@
+id: same-shape-assignment-batching
+sources:
+  - skills/rsp-manage/SKILL.md
+  - .rsp/specs/skill-control-model.md
+evidence:
+  - Repeated small edits inside one WorkRef should not mechanically require one worker per file when they share every control boundary.
+  - Compatible Group children may reuse one primary WorkerSession without merging WorkRef identity or acceptance.
+  - Batching must fail closed when writer, verification, review, replay, authority, or resource boundaries differ.
+required_contract:
+  - Inside one WorkRef, one slice may batch several small same-shape edits only when their role, seam, writer boundary, authority envelope, replay safety, verification and review surfaces, and ResourceLeases are compatible
+  - otherwise keep them as separate ordered or independent slices
+  - Never batch distinct WorkRefs into one Assignment or Receipt
+  - Manager may reuse one primary WorkerSession longitudinally, but each child retains its own Assignment and Receipt
+  - '`Assignment` contains one bounded objective for exactly one WorkRef'
+prohibited_actions:
+  - one worker per file by default
+  - batch distinct WorkRefs
+  - merge Group child Receipts
+  - batch incompatible writer boundaries
+  - batch incompatible review surfaces
+  - token cost overrides authority

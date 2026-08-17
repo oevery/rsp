@@ -9,3 +9,4 @@ Cross-source models are added only when two or more completed source distillatio
 - `rsp-implementation-capability.md` — historical input now implemented by `rsp-implement`; current behavior is owned by Specs, the published Skill, code, and tests.
 - `skill-quality-and-governance.md` — the accepted Skill-quality baseline, implemented Q1/Q3 maintainer foundation, and evidence-triggered Q2/Q4/Q5 conditions.
 - `upstream-acceptance-decision.md` — the completed revision-acceptance wave and its separate product-candidate dispositions.
+- `subagent-orchestration.md` — DeepSeek Harness and Superpowers synthesis for leaf-worker authority, compatible batching, WorkerSession reuse, and transient orchestration boundaries.

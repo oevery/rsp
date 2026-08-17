@@ -1,0 +1,17 @@
+id: assignment-post-admission-cancellation
+sources:
+  - skills/rsp-manage/SKILL.md
+  - skills/rsp-manage/references/interruption-recovery.md
+  - .rsp/specs/skill-control-model.md
+evidence:
+  - Assignment admission transfers cancellation ownership from the caller to the managed runtime contract.
+required_contract:
+  - After admission, caller abandonment or cancellation of its own wait does not retract the accepted work
+  - use an explicit host-supported interrupt or cancellation operation
+  - retain affected ResourceLeases until acknowledged cancellation or observed settlement
+  - cancelling the caller's own wait does not retract accepted work
+  - no conflicting Assignment starts
+prohibited_actions:
+  - caller cancellation retracts admitted work
+  - release lease on caller timeout
+  - implicit post-admission cancellation

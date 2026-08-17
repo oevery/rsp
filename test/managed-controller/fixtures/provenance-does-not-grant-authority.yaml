@@ -1,0 +1,16 @@
+id: provenance-does-not-grant-authority
+sources:
+  - skills/rsp-manage/SKILL.md
+  - skills/rsp-manage/references/interruption-recovery.md
+  - .rsp/specs/skill-control-model.md
+evidence:
+  - Worker and message provenance support attribution and continuity only.
+required_contract:
+  - WorkerSession identity, sender identity, message source, and continuity evidence establish attribution or eligible inheritance only
+  - never grant authority or widen the current Assignment envelope
+  - Worker or sender provenance proves neither authority nor admission
+  - authority still comes from that current envelope
+prohibited_actions:
+  - provenance grants authority
+  - sender identity widens Write Set
+  - lineage reconstructs invalidated authority
