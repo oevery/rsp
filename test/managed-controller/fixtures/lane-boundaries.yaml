@@ -1,12 +1,15 @@
 id: lane-boundaries
 sources:
   - skills/rsp-manage/SKILL.md
+  - skills/rsp-manage/references/managed-exchange.md
 evidence:
   - Every fresh WorkerSession receives the complete common Assignment, while only the same observed compatible session may inherit through AssignmentDelta.
   - Read-only overlap requires isolated paths and verification resources while Fix remains the sole writer.
   - Independent Verify is established only by a distinct worker identity and otherwise downgrades truthfully.
 required_contract:
-  - 'Every fresh WorkerSession receives one complete minimal transient `Assignment` with these common fields: `WorkRef`, `lane`, `objective`, exact `authority references`, `Read Set`, `Write Set`, `Verify Set`, bounded `known facts`, `allowed and prohibited actions`, `stop conditions`, and `resume safety: idempotent | inspect-before-repeat | non-repeatable`'
+  - Every fresh WorkerSession receives one complete `Assignment`
+  - 'Authority: <exact owner sections or paths>'
+  - 'Replay safety: <idempotent | inspect-before-repeat | non-repeatable>'
   - Only an observed resumed compatible WorkerSession may receive an `AssignmentDelta`
   - immediately accepted Assignment or AssignmentDelta in that same observed WorkerSession
   - Human-facing narration follows the response language
@@ -21,8 +24,12 @@ required_contract:
   - Verify delegates its read-only result and evidence contract to `rsp-verify`
   - managed receipt appends `worker identity`
   - 'independence: established | unavailable'
-  - 'Every WorkerReceipt contains `result`, actual `changed paths`, exact `verification` with command, scope, result, and omissions, `boundary: unchanged | changed`, evidence validity, and resource-release outcome'
-  - Only then derive AcceptedLaneEvidence
+  - Every WorkerInvocation expects exactly one worker-authored `WorkerReceipt`
+  - 'Evidence status: <valid | invalid | unavailable>'
+  - 'Release claim: <released | retained | unavailable>'
+  - Use localized labeled natural language as the default Assignment and WorkerReceipt presentation
+  - Do not emit both natural-language and JSON renderings by default
+  - Before deriving `AcceptedLaneEvidence`
   - Independent Verify is established only when its worker identity and the accepted Fix worker identity are both available and different
   - 'record `independence: unavailable`; ordinary read-only Verify may still run, but Manager must not claim independent verification'
 prohibited_actions:

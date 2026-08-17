@@ -2,6 +2,8 @@ id: execution-topology
 sources:
   - skills/rsp-manage/SKILL.md
   - skills/rsp/references/managed-routing.md
+  - skills/rsp/references/control-outcome.md
+  - skills/rsp-manage/references/managed-exchange.md
 evidence:
   - Worker reuse is a continuity optimization, while fresh workers establish independence or a reasoning reset.
   - Execution location is observed from the host and remains separate from worker dispatch.
@@ -15,7 +17,7 @@ required_contract:
   - AcceptedLaneEvidence
   - ResourceLease
   - 'mode: solo | delegated | coordinated'
-  - Use `solo` with no worker, including bounded local Discipline execution
+  - Report `solo` with no worker, including bounded local Discipline execution
   - '`delegated` with one compatible primary WorkerSession'
   - '`coordinated` with multiple workers or an independence-seeking worker obligation'
   - control-action

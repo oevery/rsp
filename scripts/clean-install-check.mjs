@@ -32,6 +32,7 @@ const EXPECTED_DESIGN_REFERENCES = [
 ]
 const EXPECTED_CORE_REFERENCES = [
   'conflict-handling.md',
+  'control-outcome.md',
   'durable-review.md',
   'groups-dependencies.md',
   'managed-routing.md',
@@ -50,6 +51,7 @@ const EXPECTED_MANAGE_REFERENCES = [
   'closeout.md',
   'host-worker-lifecycle.md',
   'interruption-recovery.md',
+  'managed-exchange.md',
   'review-convergence.md',
 ]
 const EXPECTED_REVIEW_REFERENCES = [

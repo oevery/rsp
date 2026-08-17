@@ -12,7 +12,7 @@ After admission, cancelling the caller's wait does not retract accepted work. Us
 
 ## Separate claims from acceptance
 
-The worker returns one structured `WorkerReceipt`. It is an attributable claim, not accepted evidence. Validate its Assignment or AssignmentDelta identity, actual changed paths and diff, exact verification and omissions, boundary validity, observed host lifecycle, and resource release. Only then derive transient `AcceptedLaneEvidence`. Worker identity, schema validity, provenance, settlement, or release alone never grants authority or proves acceptance.
+The Manage-owned managed exchange contract defines the structured `WorkerReceipt` and its validation into transient `AcceptedLaneEvidence`. This lifecycle reference adds no receipt fields. A worker-authored release claim remains distinct from the host's release observation; neither substitutes for the other. Worker identity, schema validity, provenance, settlement, or release alone never grants authority or proves acceptance.
 
 A required worker obligation remains incomplete when creation or admission is unobserved, no schema-valid WorkerReceipt arrives, Manager validation fails, required independence is unavailable, cancellation or background ownership remains unresolved, or release cannot satisfy a declared exclusive-resource boundary. Use the most specific stop and never substitute controller self-certification.
 

@@ -2,6 +2,7 @@ id: interruption-recovery
 sources:
   - skills/rsp-manage/SKILL.md
   - skills/rsp-manage/references/interruption-recovery.md
+  - skills/rsp-manage/references/managed-exchange.md
 evidence:
   - Long-running workers and verification must survive status intervals without semantic interruption.
   - Replay and cancellation must preserve external effects and resource ownership truthfully.

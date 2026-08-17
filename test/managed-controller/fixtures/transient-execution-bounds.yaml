@@ -1,6 +1,7 @@
 id: transient-execution-bounds
 sources:
   - skills/rsp-manage/SKILL.md
+  - skills/rsp-manage/references/managed-exchange.md
   - skills/rsp-manage/references/review-convergence.md
   - skills/rsp/references/managed-routing.md
 evidence:
@@ -9,7 +10,7 @@ evidence:
   - Correction is Assignment-scoped and independent Verify remains a separate obligation.
   - Controller execution state remains response-only and is never durable project state.
 required_contract:
-  - Before accepting an ordinary same-scope WorkerReceipt, inspect the actual changed paths against the Assignment, inspect the local diff
+  - Manager matches the echoed Assignment identity to the current WorkerInvocation
   - Do not return to Core merely to repeat route selection or qualification
   - Do not impose one fixed dispatch ceiling across the whole managed run
   - Every dispatch requires one necessary bounded Assignment

@@ -9,7 +9,7 @@ product_skill_names:
   - rsp
   - rsp-manage
   - rsp-implement
-product_composition_sha256: c04a5a11a7c1db30f0dd7bc0c3364466b61adebe63ebd4d15d31e5434fb3afee
+product_composition_sha256: daf4b9058527962b03b41ef6945f803298fc75a99af2043e2420104468f0ae4c
 prior_retained_evidence:
   - path: research/evaluations/rsp-manage/2026-08-16-unified-execution-receipts-recovery-review-fixes/report.md
     sha256: 03c6edcc937afd41ab98d227b20ae11a005418a39a47c83be257d0f3f306830e

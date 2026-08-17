@@ -8,8 +8,10 @@ import { findSemanticUnit, markdownLinks } from './helpers/markdown-contract'
 const root = fileURLToPath(new URL('..', import.meta.url))
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
 const core = read('skills/rsp/SKILL.md')
+const controlOutcome = read('skills/rsp/references/control-outcome.md')
 const responseLanguage = read('skills/rsp/references/response-language.md')
 const manage = read('skills/rsp-manage/SKILL.md')
+const managedExchange = read('skills/rsp-manage/references/managed-exchange.md')
 const manageInterruption = read('skills/rsp-manage/references/interruption-recovery.md')
 const manageReviewConvergence = read('skills/rsp-manage/references/review-convergence.md')
 const manageCloseout = read('skills/rsp-manage/references/closeout.md')
@@ -23,6 +25,7 @@ describe('skill runtime context composition', () => {
   it('keeps inactive procedures behind direct Core references', () => {
     expect(markdownLinks(core)).toEqual(expect.arrayContaining([
       'references/response-language.md',
+      'references/control-outcome.md',
       'references/managed-routing.md',
       'references/reopen-recovery.md',
       'references/durable-review.md',
@@ -36,6 +39,7 @@ describe('skill runtime context composition', () => {
     expect(markdownLinks(manage)).toEqual(expect.arrayContaining([
       'references/host-worker-lifecycle.md',
       'references/interruption-recovery.md',
+      'references/managed-exchange.md',
       'references/review-convergence.md',
       'references/closeout.md',
     ]))
@@ -46,6 +50,17 @@ describe('skill runtime context composition', () => {
     expect(manage).not.toContain('Machine heartbeat is host-level liveness evidence')
     expect(manage).not.toContain('Observe creation, delivery, admission, activity or wait')
     expect(read('skills/rsp-manage/references/host-worker-lifecycle.md')).toContain('Observe creation, delivery, admission, activity or wait')
+    expect(controlOutcome).toContain('default session rendering is localized labeled natural language')
+    expect(controlOutcome).toContain('Use JSON only for an explicitly identified machine consumer')
+    expect(controlOutcome).toContain('do not emit a duplicate JSON copy by default')
+    expect(controlOutcome).toContain('Raw Assignments, WorkerReceipts, host events, leases, retry chronology, and unaccepted evidence never appear as outer receipt fields')
+    expect(managedExchange).toContain('Every WorkerInvocation expects exactly one worker-authored `WorkerReceipt`')
+    expect(managedExchange).toContain('Use localized labeled natural language as the default Assignment and WorkerReceipt presentation')
+    expect(managedExchange).toContain('Use JSON only when an explicitly identified host, API, CLI, or other machine consumer requires this managed-exchange encoding')
+    expect(managedExchange).toContain('A maintainer `EvaluationReceipt` is a separate evaluation-harness protocol')
+    expect(managedExchange).toContain('Do not emit both natural-language and JSON renderings by default')
+    expect(managedExchange).toContain('Host observations and producer claims remain separate inputs')
+    expect(managedExchange).toContain('Manager validation')
     expect(manageInterruption).toContain('Machine heartbeat is host-level liveness evidence')
     expect(manage).not.toContain('same Finding remains after two completed corrections')
     expect(manageReviewConvergence).toContain('same Finding remains after two completed corrections')
@@ -55,6 +70,7 @@ describe('skill runtime context composition', () => {
 
   it('keeps canonical control vocabulary in one durable Spec', () => {
     expect(controlModel).toContain('A `ControlOutcome` is the single outer response receipt')
+    expect(controlModel).toContain('Core owns its packaged runtime projection in `skills/rsp/references/control-outcome.md`')
     expect(controlModel).toContain('`mode: solo | delegated | coordinated`')
     expect(controlModel).toContain('`status: running | waiting | completed`')
     expect(controlModel).toContain('Route, topology, lane result, `AcceptanceDisposition`, and `CloseoutEligibility` remain nested')
@@ -62,6 +78,7 @@ describe('skill runtime context composition', () => {
     expect(controlModel).toContain('`StopDisposition` values are exactly:')
     expect(controlModel).toContain('`AcceptanceDisposition` values are exactly')
     expect(controlModel).toContain('`CloseoutEligibility` values are exactly')
+    expect(controlModel).toContain('Manage owns both packaged runtime forms and their transition contract in `skills/rsp-manage/references/managed-exchange.md`')
     expect(skillSystem).toContain('The Skill Control Model is the sole durable owner of transient control vocabulary')
     expect(skillSystem).not.toContain('`RouteDisposition` is exactly')
     expect(skillSystem).not.toContain('`StopDisposition` values are exactly')

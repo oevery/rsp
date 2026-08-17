@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
 import { evaluateManagedController, hashManagedControllerArtifact, hashManagedControllerComposition, loadManagedControllerCases, observeManagedControllerGit, prepareManagedControllerRun, projectManagedControllerEvaluationEvidence, readManagedControllerFlag, rescoreManagedControllerArtifact, runManagedControllerEvaluation, scoreManagedControllerObservation, scoreManagedControllerOutput, scoreManagedRecoveryOutput, summarizeManagedControllerEvents } from '../scripts/managed-controller-eval.mjs'
-import { canonicalEnum, findSemanticUnit, inlineCodeValues, inlineCodeValuesInUnit, markdownListItem, markdownSection, orderedMarkers } from './helpers/markdown-contract'
+import { canonicalEnum, findSemanticUnit, inlineCodeValues, markdownListItem, markdownSection, orderedMarkers } from './helpers/markdown-contract'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const candidate = join(root, 'research', 'candidates', 'skills', 'rsp-manage')
@@ -17,6 +17,7 @@ const durableReview = readFileSync(join(root, 'skills', 'rsp', 'references', 'du
 const coreSkill = readFileSync(join(root, 'skills', 'rsp', 'SKILL.md'), 'utf8')
 const reviewConvergence = readFileSync(join(product, 'references', 'review-convergence.md'), 'utf8')
 const closeout = readFileSync(join(product, 'references', 'closeout.md'), 'utf8')
+const managedExchange = readFileSync(join(product, 'references', 'managed-exchange.md'), 'utf8')
 
 function readSkill(directory = candidate): { body: string, frontmatter: Record<string, any> } {
   const content = readFileSync(join(directory, 'SKILL.md'), 'utf8')
@@ -521,40 +522,30 @@ describe('rsp-manage product Skill', () => {
     const { body } = readSkill(product)
     const lanes = markdownSection(body, 'Resolve the execution frontier')
 
-    expect(inlineCodeValuesInUnit(lanes, ['Every fresh WorkerSession', '`Assignment`', 'common fields'])).toEqual([
-      'Assignment',
-      'WorkRef',
-      'lane',
-      'objective',
-      'authority references',
-      'Read Set',
-      'Write Set',
-      'Verify Set',
-      'known facts',
-      'allowed and prohibited actions',
-      'stop conditions',
-      'resume safety: idempotent | inspect-before-repeat | non-repeatable',
-    ])
-    expect(findSemanticUnit(lanes, ['observed resumed compatible WorkerSession', '`AssignmentDelta`', 'immediately accepted Assignment or AssignmentDelta'])).toBeDefined()
+    expect(body).toContain('[managed exchange](references/managed-exchange.md)')
+    expect(managedExchange).toContain('Every fresh WorkerSession receives one complete `Assignment`')
+    for (const field of ['Assignment', 'Work', 'Lane', 'Objective', 'Authority', 'Read', 'Write', 'Verify', 'Known facts', 'Allowed actions', 'Prohibited actions', 'Stop conditions', 'Replay safety'])
+      expect(managedExchange).toContain(`${field}:`)
+    expect(findSemanticUnit(managedExchange, ['Manager issues', 'distinct transient Assignment identity', 'worker echoes', 'WorkerReceipt'])).toBeDefined()
+    expect(findSemanticUnit(managedExchange, ['AssignmentDelta', 'new Assignment identity', 'repeats `workRef`'])).toBeDefined()
+    expect(findSemanticUnit(managedExchange, ['observed resumed compatible WorkerSession', '`AssignmentDelta`', 'immediately accepted Assignment or AssignmentDelta'])).toBeDefined()
     expect(findSemanticUnit(lanes, ['Session loss', 'fresh WorkerSession', 'complete Assignment'])).toBeDefined()
     expect(findSemanticUnit(lanes, ['Token or context cost', 'otherwise equally safe and authorized strategies'])).toBeDefined()
-    expect(inlineCodeValuesInUnit(lanes, ['Every WorkerReceipt', 'contains'])).toEqual([
-      'WorkerSession',
-      'WorkerInvocation',
-      'WorkerReceipt',
-      'result',
-      'changed paths',
-      'verification',
-      'boundary: unchanged | changed',
-    ])
-    expect(findSemanticUnit(lanes, ['exact owner sections or paths', 'instead of copying their prose'])).toBeDefined()
-    expect(findSemanticUnit(lanes, ['WorkerSession', 'WorkerInvocation', 'WorkerReceipt', 'rather than a conversational execution diary'])).toBeDefined()
+    for (const field of ['Assignment', 'Result', 'Changed paths', 'Verification', 'Boundary', 'Evidence status', 'Release claim'])
+      expect(managedExchange).toContain(`${field}:`)
+    expect(managedExchange).toContain('Authority: <exact owner sections or paths>')
+    expect(findSemanticUnit(managedExchange, ['WorkerInvocation', 'WorkerReceipt', 'conversational execution diary'])).toBeDefined()
     expect(findSemanticUnit(lanes, ['Diagnose', '`rsp-diagnose`', 'read-only', 'no-cause result'])).toBeDefined()
     expect(findSemanticUnit(lanes, ['Inspect', 'private Manager-only', 'read-only lane'])).toBeDefined()
     expect(findSemanticUnit(lanes, ['Fix', '`rsp-implement`', 'sole product writer'])).toBeDefined()
     expect(findSemanticUnit(lanes, ['Verify', 'delegates', 'rsp-verify', 'read-only', 'Change-declared risk', 'failed correction'])).toBeDefined()
     expect(findSemanticUnit(lanes, ['Fixed-scope review', '`rsp-review`'])).toBeDefined()
-    expect(findSemanticUnit(lanes, ['Human-facing narration', 'response language', 'exact canonical result', 'secondarily'])).toBeDefined()
+    expect(findSemanticUnit(managedExchange, ['Human-facing narration', 'response language', 'exact canonical result', 'secondarily'])).toBeDefined()
+    expect(findSemanticUnit(managedExchange, ['localized labeled natural language', 'default', 'human-visible session'])).toBeDefined()
+    expect(findSemanticUnit(managedExchange, ['JSON', 'explicitly identified', 'machine consumer', 'secondary transport'])).toBeDefined()
+    expect(managedExchange).toContain('Do not emit both natural-language and JSON renderings by default')
+    expect(findSemanticUnit(managedExchange, ['`EvaluationReceipt`', 'separate evaluation-harness protocol', 'never', '`WorkerReceipt` encoding'])).toBeDefined()
+    expect(findSemanticUnit(managedExchange, ['release claim', 'worker-authored', 'never substitutes', 'host\'s release observation'])).toBeDefined()
     expect(inlineCodeValues(markdownListItem(lanes, 'Diagnose'))).toEqual([
       'rsp-diagnose',
       'confirmed-same-scope',
@@ -579,7 +570,7 @@ describe('rsp-manage product Skill', () => {
     expect(findSemanticUnit(body, ['host-confirmed Assignment admission', 'cancellation-ownership boundary'])).toBeDefined()
     expect(findSemanticUnit(body, ['WorkerSession creation or resume alone', 'does not prove admission'])).toBeDefined()
     expect(findSemanticUnit(body, ['WorkerInvocation', 'cancellation-ownership boundary'])).toBeDefined()
-    expect(findSemanticUnit(body, ['Controller-observed settlement', 'worker-authored WorkerReceipt', 'Manager-derived AcceptedLaneEvidence', 'separate facts'])).toBeDefined()
+    expect(findSemanticUnit(body, ['Controller-observed settlement', 'host release', 'WorkerReceipt\'s worker-authored release claim', 'Manager-derived AcceptedLaneEvidence', 'separate facts'])).toBeDefined()
     expect(findSemanticUnit(body, ['settled invocation without accepted evidence', 'closes liveness only'])).toBeDefined()
     expect(findSemanticUnit(body, ['WorkerSession identity', 'message source', 'never grant authority', 'Assignment envelope'])).toBeDefined()
     expect(findSemanticUnit(interruption, ['cancelling the caller\'s own wait', 'does not retract accepted work'])).toBeDefined()
@@ -675,8 +666,7 @@ describe('rsp-manage product Skill', () => {
   it('revalidates selected-goal evidence and keeps all controller execution state transient', () => {
     const { body } = readSkill(product)
 
-    expect(body).toContain('inspect the actual changed paths against the Assignment')
-    expect(body).toContain('inspect the local diff')
+    expect(managedExchange).toContain('actual paths and local diff')
     expect(body).toContain('Reread the complete owner, status, authority, blockers, and decisive evidence only when')
     expect(body).toContain('execution resumes across sessions, or closeout begins')
     expect(body).toContain('Do not return to Core merely to repeat route selection or qualification')
@@ -776,7 +766,7 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('the complete owning Change, or the Group Brief and its children')
     expect(body).toContain('relevant Specs and Decisions')
     expect(body).toContain('`rsp status --json`, and the current checkout')
-    expect(body).toContain('Every fresh WorkerSession receives one complete minimal transient `Assignment`')
+    expect(managedExchange).toContain('Every fresh WorkerSession receives one complete `Assignment`')
     expect(body).toContain('Only an observed resumed compatible WorkerSession may receive an `AssignmentDelta`')
     expect(body).toContain('Do not impose one fixed dispatch ceiling across the whole managed run')
     expect(body).toContain('at most three correction passes by default')

@@ -1,6 +1,7 @@
 id: same-shape-assignment-batching
 sources:
   - skills/rsp-manage/SKILL.md
+  - skills/rsp-manage/references/managed-exchange.md
   - .rsp/specs/skill-control-model.md
 evidence:
   - Repeated small edits inside one WorkRef should not mechanically require one worker per file when they share every control boundary.
@@ -11,7 +12,7 @@ required_contract:
   - otherwise keep them as separate ordered or independent slices
   - Never batch distinct WorkRefs into one Assignment or WorkerReceipt
   - Manager may reuse one primary WorkerSession longitudinally, but each child retains its own Assignment, WorkerInvocation, and WorkerReceipt
-  - '`Assignment` contains one bounded objective for exactly one WorkRef'
+  - Every fresh WorkerSession receives one complete `Assignment`
 prohibited_actions:
   - one worker per file by default
   - batch distinct WorkRefs

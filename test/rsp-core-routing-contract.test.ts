@@ -7,10 +7,12 @@ import { markdownHeadings, markdownLinks } from './helpers/markdown-contract'
 const root = fileURLToPath(new URL('..', import.meta.url))
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
 const skill = read('skills/rsp/SKILL.md')
+const controlOutcome = read('skills/rsp/references/control-outcome.md')
 const fallback = read('rules/rsp-rules.md')
 const controlModel = read('.rsp/specs/skill-control-model.md')
 const managed = read('skills/rsp/references/managed-routing.md')
 const manage = read('skills/rsp-manage/SKILL.md')
+const managedExchange = read('skills/rsp-manage/references/managed-exchange.md')
 const closeout = read('skills/rsp-manage/references/closeout.md')
 
 describe('rsp core routing contract', () => {
@@ -25,6 +27,7 @@ describe('rsp core routing contract', () => {
     ])
     expect(markdownLinks(skill)).toEqual(expect.arrayContaining([
       'references/response-language.md',
+      'references/control-outcome.md',
       'references/managed-routing.md',
       'references/setup-repair.md',
       'references/groups-dependencies.md',
@@ -37,7 +40,7 @@ describe('rsp core routing contract', () => {
     expect(skill.split(/\s+/).length).toBeLessThan(2100)
   })
 
-  it('keeps transient vocabulary exclusively in the control model', () => {
+  it('keeps transient vocabulary in the control model and runtime forms with their owners', () => {
     expect(controlModel).toContain('A `ControlOutcome` is the single outer response receipt')
     expect(controlModel).toContain('`mode: solo | delegated | coordinated`')
     expect(controlModel).toContain('`status: running | waiting | completed`')
@@ -50,10 +53,15 @@ describe('rsp core routing contract', () => {
     expect(controlModel).toContain('observed execution location')
     expect(controlModel).toContain('`control-action`, `longitudinal`')
     expect(controlModel).toContain('`AssignmentDelta` continues only an observed resumed compatible WorkerSession')
-    expect(controlModel).toContain('immediately accepted complete Assignment or AssignmentDelta in that same observed WorkerSession')
+    expect(managedExchange).toContain('immediately accepted Assignment or AssignmentDelta in that same observed WorkerSession')
     expect(controlModel).toContain('Token or context cost may break a tie only between otherwise equally safe and authorized strategies')
     expect(controlModel).not.toContain('WorkspaceSelection')
     expect(skill).toContain('Use the canonical transient control vocabulary')
+    expect(skill).toContain('[control outcome](references/control-outcome.md)')
+    expect(controlOutcome).toContain('Work: <current WorkRef>')
+    expect(controlOutcome).toContain('Next owner: <NextOwner>')
+    expect(controlOutcome).toContain('Exactly one of Result or Stop applies')
+    expect(controlOutcome).toContain('localized labeled natural language')
     expect(skill).not.toContain('`RouteDisposition` is exactly')
     expect(skill).not.toContain('`StopDisposition` is exactly')
   })
@@ -107,7 +115,7 @@ describe('rsp core routing contract', () => {
     expect(managed).toContain('After selection, stop using this reference for execution detail')
     expect(manage).toContain('solely owns')
     expect(manage).toContain('`control-action` for a bounded Manager-owned control action')
-    expect(manage).toContain('Project one outer `ControlOutcome`')
+    expect(manage).toContain('Return one bounded managed phase result for Core to compose through its `ControlOutcome` contract')
     expect(manage).toContain('Only an observed resumed compatible WorkerSession may receive an `AssignmentDelta`')
     expect(manage).toContain('session loss, boundary invalidation, or uncertain prior identity')
     expect(manage).not.toContain('`direct` for a bounded Manager-owned control action')
