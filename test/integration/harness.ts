@@ -180,7 +180,6 @@ export async function createClosedGroupProject(prefix: string): Promise<string> 
 }
 
 beforeAll(async () => {
-  execSync('pnpm build', { cwd: repoRoot, stdio: 'pipe' })
   testDir = join(tmpdir(), 'rsp-int-test', randomUUID())
   await mkdir(testDir, { recursive: true })
   origCwd = process.cwd()
