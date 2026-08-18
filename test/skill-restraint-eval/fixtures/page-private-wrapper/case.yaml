@@ -1,0 +1,23 @@
+id: page-private-wrapper
+source:
+  class: real-world-derived
+  project: boats-cloud
+  sanitization: independent-reimplementation
+request: Add the settled page-private open action without introducing a single-caller wrapper or a wrapper-only unit test.
+command: [node, test.mjs]
+acceptance:
+  changed_paths: [src/page.mjs]
+  required_paths: [src/page.mjs]
+  forbidden_paths: [src/use-dialog-state.mjs, test/use-dialog-state.test.mjs]
+  content:
+    - path: src/page.mjs
+      contains: [export function openDialog]
+      absent: [createDialogState]
+  adjudication:
+    decision: minimal-change
+    independent_consequences: not-applicable
+    restraint: passed
+    trigger: passed
+variants:
+  overbuilt: {remove: []}
+  restrained: {remove: []}

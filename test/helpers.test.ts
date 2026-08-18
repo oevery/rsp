@@ -413,7 +413,6 @@ describe('documentation command examples', () => {
       'durable-review.md',
       'groups-dependencies.md',
       'managed-routing.md',
-      'release-operations.md',
       'reopen-recovery.md',
       'setup-repair.md',
     ].map(name => readFileSync(join(root, 'skills', 'rsp', 'references', name), 'utf-8')).join('\n')

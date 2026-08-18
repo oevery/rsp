@@ -77,7 +77,7 @@ describe('managed-controller beta evidence', () => {
     expect(plan.prior_retained_evidence).toEqual([
       {
         path: 'research/evaluations/rsp-manage/2026-08-17-implementation-test-restraint/report.md',
-        sha256: '8c79791b11f40ba106b6502a41f8caaa71f69fc4c3da7f67d7121a75a6b5b6f3',
+        sha256: '981587bd4ce9e26107682e30ddf64e863454e7fa1863343ed1c62f8f3c232b75',
       },
       {
         path: 'research/evaluations/rsp-manage/2026-08-17-implementation-test-restraint/summary.json',
@@ -921,7 +921,7 @@ describe('managed-controller beta evidence', () => {
     const summary = JSON.parse(rawSummary)
 
     expect(hashContent(report)).toBe(
-      '8c79791b11f40ba106b6502a41f8caaa71f69fc4c3da7f67d7121a75a6b5b6f3',
+      '981587bd4ce9e26107682e30ddf64e863454e7fa1863343ed1c62f8f3c232b75',
     )
     expect(hashContent(rawSummary)).toBe(
       'e9c992ae8ebdc630560756cfcddc79e390335dc401d0b39671ab9aa1412f170f',

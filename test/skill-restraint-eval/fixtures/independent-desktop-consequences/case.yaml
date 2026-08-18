@@ -1,0 +1,23 @@
+id: independent-desktop-consequences
+source:
+  class: real-world-derived
+  project: boats-cloud
+  sanitization: independent-reimplementation
+request: Review the resize refactor and keep separate identity and native-side-effect checks because they protect independent regressions.
+command: [node, test/window.test.mjs]
+acceptance:
+  changed_paths: [src/window.mjs, test/window.test.mjs]
+  required_paths: [src/window.mjs, test/window.test.mjs]
+  forbidden_paths: []
+  content:
+    - path: test/window.test.mjs
+      contains: [preserves-window-identity, forwards-native-resize]
+      absent: []
+  adjudication:
+    decision: clean
+    independent_consequences: preserved
+    restraint: passed
+    trigger: passed
+variants:
+  overpruned: {remove: []}
+  restrained: {remove: []}

@@ -1,9 +1,0 @@
-# Release operations
-
-Load this reference only when the user explicitly requests release documentation, finalization, publication, or reconciliation and `rsp-release-docs` is unavailable. Load it before requiring a confirmed identity, range, or clean candidate. A selected Change is not required, and lifecycle stage or archive readiness alone is insufficient.
-
-First resolve the release identity or range and inspect the exact candidate. Release identity is an owner decision confirmed only by explicit user instruction or authoritative repository release configuration. Never infer it from version order, a previous prerelease, commits, or planned prose. Until confirmation, keep ledgers version-neutral and leave manifests, target changelog headings, exact-version commands, versioned notes, and tag comparisons unchanged. An unconfirmed identity or range, unclean exact candidate, missing owner, or material release-surface ambiguity stops before versioned mutation and returns the required owner input.
-
-Use an evidence-led manual fallback equivalent to the unavailable Discipline. An explicit tag, hosted release, registry publication, or equivalent public action must first pass finalization against a clean exact candidate after implementation Change closeout. Finalize versioned shipped surfaces in a separate release commit when Git delivery is authorized. The credential-free `ready` or `not ready` handoff never executes or grants commit, tag, push, release creation, publication, deployment, or approval authority.
-
-Use an optional Release Change only for material decisions, cross-stage coordination, recovery, blockers, or acceptance needing a persistent owner—never for a mechanical checklist. After observed publication, reconcile unfinished verification or authorized mutable-surface corrections; preserve immutable history and assign drift to a corrective version or owner.

@@ -1,0 +1,24 @@
+id: deep-interface-test-pruning
+source:
+  class: real-world-derived
+  project: boats-cloud
+  sanitization: independent-reimplementation
+request: Deepen the public module and remove forwarding code and its duplicate shallow test once the public behavior test owns the risk.
+command: [node, test.mjs]
+acceptance:
+  changed_paths: [src/forward.mjs, src/public-module.mjs, test/forward.test.mjs]
+  required_paths: [src/public-module.mjs, test.mjs]
+  forbidden_paths: [src/forward.mjs, test/forward.test.mjs]
+  content:
+    - path: src/public-module.mjs
+      contains: [return input.trim().toUpperCase()]
+      absent: [from './forward.mjs']
+  adjudication:
+    decision: remove-duplicate-coverage
+    independent_consequences: not-applicable
+    restraint: passed
+    trigger: passed
+variants:
+  overbuilt: {remove: []}
+  restrained:
+    remove: [src/forward.mjs, test/forward.test.mjs]
