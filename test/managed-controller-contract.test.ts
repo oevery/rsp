@@ -15,6 +15,8 @@ const product = join(root, 'skills', 'rsp-manage')
 const managedRouting = readFileSync(join(root, 'skills', 'rsp', 'references', 'managed-routing.md'), 'utf8')
 const durableReview = readFileSync(join(root, 'skills', 'rsp', 'references', 'durable-review.md'), 'utf8')
 const coreSkill = readFileSync(join(root, 'skills', 'rsp', 'SKILL.md'), 'utf8')
+const commitSkill = readFileSync(join(root, 'skills', 'rsp-commit', 'SKILL.md'), 'utf8')
+const releaseDocsSkill = readFileSync(join(root, 'skills', 'rsp-release-docs', 'SKILL.md'), 'utf8')
 const reviewConvergence = readFileSync(join(product, 'references', 'review-convergence.md'), 'utf8')
 const closeout = readFileSync(join(product, 'references', 'closeout.md'), 'utf8')
 const managedExchange = readFileSync(join(product, 'references', 'managed-exchange.md'), 'utf8')
@@ -130,6 +132,20 @@ describe('rsp-manage research candidate', () => {
       'skills/rsp/references/managed-routing.md',
     ])
     expect(evaluateManagedController(root)).toEqual(cases.map(item => ({ id: item.id, missing: [], passed: true })))
+  })
+
+  it('keeps release identity out of ordinary execution frames and in release owners', () => {
+    const { body } = readSkill(product)
+    const executionFrame = findSemanticUnit(body, [
+      'ExecutionFrame',
+      'current goal',
+      'acceptance surfaces',
+    ])
+
+    expect(executionFrame).toBeDefined()
+    expect(executionFrame).toContain('never require or invent a release identity for a non-release managed goal')
+    expect(releaseDocsSkill).toContain('A release identity is confirmed only by explicit user instruction or authoritative repository release configuration')
+    expect(commitSkill).toContain('one confirmed release identity and release-boundary evidence')
   })
 
   it('fails closed when a contract fixture source escapes the repository root', ({ onTestFinished }) => {
