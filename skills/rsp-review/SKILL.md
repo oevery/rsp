@@ -4,7 +4,7 @@ description: Review an RSP-tracked code, document, or mixed change against a fix
 license: MIT
 metadata:
   author: oevery
-  version: "2026.08.15.1"
+  version: "2026.08.17.1"
 ---
 
 # RSP Review

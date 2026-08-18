@@ -58,4 +58,17 @@ describe('rsp-implement Skill contract', () => {
     expect(body).toContain('Do not reproduce either discipline inside Implement')
     expect(body).toContain('same selected Change')
   })
+
+  it('admits only reachable boundaries and independently valuable permanent tests', () => {
+    const body = readSkill()
+
+    expect(body).toContain('## Admit boundaries and permanent tests')
+    expect(body).toContain('current producer, production consumer, actual trust or lifecycle transition, and material consequence')
+    expect(body).toContain('test/document-only consumer does not establish a production boundary')
+    expect(body).toContain('observable consequence, one distinct plausible regression in the owning production seam')
+    expect(body).toContain('why existing evidence misses it')
+    expect(body).toContain('Do not add one test per touched file, wrapper, forwarding hop, branch, or shared constant')
+    expect(body).toContain('Multiple nearby tests remain justified when each protects an independent consequence')
+    expect(body).toContain('still satisfies the admission evidence')
+  })
 })

@@ -266,10 +266,13 @@ sources:
       - LICENSE
       - AGENTS.md
       - .agents/**
+      - docs/architecture.md
+      - docs/defensive-patterns.md
+      - docs/testing.md
       - scripts/**
 
   everything-claude-code:
-    repository: https://github.com/affaan-m/everything-claude-code.git
+    repository: https://github.com/affaan-m/ECC.git
     ref: main
     tier: reference
     strategy: model

@@ -1,0 +1,409 @@
+{
+  "current_identity": {
+    "sha256": "da767a96607d63ec00a0b17fd53efdf36c0e46411ddf412cb33c79b1789b22f1"
+  },
+  "candidate_identity": {
+    "sha256": "4d844e72e9780e941938e6e32cbc12687faf743195b1fd512ef7744938858c4b"
+  },
+  "cases": [
+    {
+      "id": "reachable-event-boundary",
+      "contract_sha256": "41ea5c4faa4e81dcfb8320e7636c527483d0b08fc833e143affc39579068b6c6",
+      "unseen": true,
+      "current": {
+        "case_id": "reachable-event-boundary",
+        "composition_sha256": "da767a96607d63ec00a0b17fd53efdf36c0e46411ddf412cb33c79b1789b22f1",
+        "contract_sha256": "41ea5c4faa4e81dcfb8320e7636c527483d0b08fc833e143affc39579068b6c6",
+        "receipt_sha256": "96824f074950251806e142f75b626497e85a1bc6bbed11822cce23dd1475f8f8",
+        "observation_sha256": "a748dab5ec45209177afa3ef58e976b4bd7a634e7c0ce9b9ddbf640ab97eccaf",
+        "receipt_observations": {
+          "trigger": {
+            "status": "passed",
+            "evidence": {
+              "skill": "rsp-implement"
+            }
+          },
+          "first_fix_result": "passed",
+          "correction_count": null,
+          "worker_dispatch_count": null
+        },
+        "observability": {
+          "dimensions": {
+            "trigger": {
+              "status": "passed",
+              "evidence": {
+                "skill": "rsp-implement"
+              }
+            },
+            "compliance": {
+              "status": "passed",
+              "evidence": {
+                "case": "reachable-event-boundary"
+              }
+            },
+            "boundary": {
+              "status": "passed",
+              "evidence": {
+                "changed": [
+                  ".rsp/changes/close-sidebar.md",
+                  "src/sidebar.mjs"
+                ]
+              }
+            },
+            "task_result": {
+              "status": "passed",
+              "evidence": {
+                "npm_test": "passed"
+              }
+            }
+          },
+          "measurements": {
+            "corrections": null,
+            "first_fix_result": "passed",
+            "worker_dispatch_count": null,
+            "tool_calls": 20,
+            "elapsed_ms": 162456,
+            "tokens": {
+              "input": 370169,
+              "output": 6199,
+              "total": null
+            }
+          },
+          "omissions": [
+            "correction count unavailable",
+            "worker dispatch count unavailable"
+          ]
+        }
+      },
+      "candidate": {
+        "case_id": "reachable-event-boundary",
+        "composition_sha256": "4d844e72e9780e941938e6e32cbc12687faf743195b1fd512ef7744938858c4b",
+        "contract_sha256": "41ea5c4faa4e81dcfb8320e7636c527483d0b08fc833e143affc39579068b6c6",
+        "receipt_sha256": "0e15ff9e920cc391243565f2047ecf86334873687106598f3c3eb46822cdc10d",
+        "observation_sha256": "d4124a4eec2c5c90eb7c6cf11cadfece716e6d06d3dfa01730441d3116e0aea4",
+        "receipt_observations": {
+          "trigger": {
+            "status": "passed",
+            "evidence": {
+              "skill": "rsp-implement"
+            }
+          },
+          "first_fix_result": "passed",
+          "correction_count": null,
+          "worker_dispatch_count": null
+        },
+        "observability": {
+          "dimensions": {
+            "trigger": {
+              "status": "passed",
+              "evidence": {
+                "skill": "rsp-implement"
+              }
+            },
+            "compliance": {
+              "status": "passed",
+              "evidence": {
+                "case": "reachable-event-boundary"
+              }
+            },
+            "boundary": {
+              "status": "passed",
+              "evidence": {
+                "changed": [
+                  ".rsp/changes/close-sidebar.md",
+                  "src/sidebar.mjs"
+                ]
+              }
+            },
+            "task_result": {
+              "status": "passed",
+              "evidence": {
+                "npm_test": "passed"
+              }
+            }
+          },
+          "measurements": {
+            "corrections": null,
+            "first_fix_result": "passed",
+            "worker_dispatch_count": null,
+            "tool_calls": 7,
+            "elapsed_ms": 117900,
+            "tokens": {
+              "input": 332643,
+              "output": 3882,
+              "total": null
+            }
+          },
+          "omissions": [
+            "correction count unavailable",
+            "worker dispatch count unavailable"
+          ]
+        }
+      }
+    },
+    {
+      "id": "unauthorized-tdd-contract",
+      "contract_sha256": "4a5d146303ceba59b498e6c5f66899634b30e5099841c0af5df8666af450ccdb",
+      "unseen": true,
+      "current": {
+        "case_id": "unauthorized-tdd-contract",
+        "composition_sha256": "da767a96607d63ec00a0b17fd53efdf36c0e46411ddf412cb33c79b1789b22f1",
+        "contract_sha256": "4a5d146303ceba59b498e6c5f66899634b30e5099841c0af5df8666af450ccdb",
+        "receipt_sha256": "9a3c7bf7ff0c14966a48f73e9bd2f52c5fa60ae78d923b78d75eabc5e8da1d45",
+        "observation_sha256": "651bc5b5b78bf15b27909d836745baddc84a435a66cb4e1b920160ce50d4d610",
+        "receipt_observations": {
+          "trigger": {
+            "status": "passed",
+            "evidence": {
+              "skill": "rsp-tdd"
+            }
+          },
+          "first_fix_result": "passed",
+          "correction_count": null,
+          "worker_dispatch_count": null
+        },
+        "observability": {
+          "dimensions": {
+            "trigger": {
+              "status": "passed",
+              "evidence": {
+                "skill": "rsp-tdd"
+              }
+            },
+            "compliance": {
+              "status": "passed",
+              "evidence": {
+                "case": "unauthorized-tdd-contract"
+              }
+            },
+            "boundary": {
+              "status": "passed",
+              "evidence": {
+                "changed": []
+              }
+            },
+            "task_result": {
+              "status": "passed",
+              "evidence": {
+                "npm_test": "passed"
+              }
+            }
+          },
+          "measurements": {
+            "corrections": null,
+            "first_fix_result": "passed",
+            "worker_dispatch_count": null,
+            "tool_calls": 8,
+            "elapsed_ms": 65057,
+            "tokens": {
+              "input": 100924,
+              "output": 1896,
+              "total": null
+            }
+          },
+          "omissions": [
+            "correction count unavailable",
+            "worker dispatch count unavailable"
+          ]
+        }
+      },
+      "candidate": {
+        "case_id": "unauthorized-tdd-contract",
+        "composition_sha256": "4d844e72e9780e941938e6e32cbc12687faf743195b1fd512ef7744938858c4b",
+        "contract_sha256": "4a5d146303ceba59b498e6c5f66899634b30e5099841c0af5df8666af450ccdb",
+        "receipt_sha256": "d34d761a2f48c49f4e1ba839a5a4d4affd778a31cc14208b7abcb928ddafe206",
+        "observation_sha256": "9833efc11878fd093c6a9267a9a779f2af4bfa1bafa4215d53a9fce1b1752584",
+        "receipt_observations": {
+          "trigger": {
+            "status": "passed",
+            "evidence": {
+              "skill": "rsp-tdd"
+            }
+          },
+          "first_fix_result": "passed",
+          "correction_count": null,
+          "worker_dispatch_count": null
+        },
+        "observability": {
+          "dimensions": {
+            "trigger": {
+              "status": "passed",
+              "evidence": {
+                "skill": "rsp-tdd"
+              }
+            },
+            "compliance": {
+              "status": "passed",
+              "evidence": {
+                "case": "unauthorized-tdd-contract"
+              }
+            },
+            "boundary": {
+              "status": "passed",
+              "evidence": {
+                "changed": []
+              }
+            },
+            "task_result": {
+              "status": "passed",
+              "evidence": {
+                "npm_test": "passed"
+              }
+            }
+          },
+          "measurements": {
+            "corrections": null,
+            "first_fix_result": "passed",
+            "worker_dispatch_count": null,
+            "tool_calls": 5,
+            "elapsed_ms": 75836,
+            "tokens": {
+              "input": 185057,
+              "output": 2273,
+              "total": null
+            }
+          },
+          "omissions": [
+            "correction count unavailable",
+            "worker dispatch count unavailable"
+          ]
+        }
+      }
+    },
+    {
+      "id": "independent-review-consequences",
+      "contract_sha256": "c72e3167a27149179b6e743cb7717b55b6a08c71b7a950b1c0df86f06578fb3c",
+      "unseen": true,
+      "current": {
+        "case_id": "independent-review-consequences",
+        "composition_sha256": "da767a96607d63ec00a0b17fd53efdf36c0e46411ddf412cb33c79b1789b22f1",
+        "contract_sha256": "c72e3167a27149179b6e743cb7717b55b6a08c71b7a950b1c0df86f06578fb3c",
+        "receipt_sha256": "d06347147cf70b61548e3e283a4a4df231ce45ec4f9d9f5a654b29d20647f076",
+        "observation_sha256": "68faaa002686be426f784dca01b8e9ee90e342b393be808cbfca9ae9afd9d964",
+        "receipt_observations": {
+          "trigger": {
+            "status": "passed",
+            "evidence": {
+              "skill": "rsp-review"
+            }
+          },
+          "first_fix_result": "passed",
+          "correction_count": null,
+          "worker_dispatch_count": null
+        },
+        "observability": {
+          "dimensions": {
+            "trigger": {
+              "status": "passed",
+              "evidence": {
+                "skill": "rsp-review"
+              }
+            },
+            "compliance": {
+              "status": "passed",
+              "evidence": {
+                "case": "independent-review-consequences"
+              }
+            },
+            "boundary": {
+              "status": "passed",
+              "evidence": {
+                "changed": [
+                  "src/window.mjs",
+                  "test/window.test.mjs"
+                ]
+              }
+            },
+            "task_result": {
+              "status": "passed",
+              "evidence": {
+                "npm_test": "passed"
+              }
+            }
+          },
+          "measurements": {
+            "corrections": null,
+            "first_fix_result": "passed",
+            "worker_dispatch_count": null,
+            "tool_calls": 16,
+            "elapsed_ms": 89678,
+            "tokens": {
+              "input": 158517,
+              "output": 3628,
+              "total": null
+            }
+          },
+          "omissions": [
+            "correction count unavailable",
+            "worker dispatch count unavailable"
+          ]
+        }
+      },
+      "candidate": {
+        "case_id": "independent-review-consequences",
+        "composition_sha256": "4d844e72e9780e941938e6e32cbc12687faf743195b1fd512ef7744938858c4b",
+        "contract_sha256": "c72e3167a27149179b6e743cb7717b55b6a08c71b7a950b1c0df86f06578fb3c",
+        "receipt_sha256": "52252bacc581fe2f805715ff731ee271a1900b012cf7d2dc59324bb0bd0eb9fe",
+        "observation_sha256": "9410755ba7e468e894fa1f211194c2195ccff02ab2bff2fecd69ab71df128279",
+        "receipt_observations": {
+          "trigger": {
+            "status": "passed",
+            "evidence": {
+              "skill": "rsp-review"
+            }
+          },
+          "first_fix_result": "passed",
+          "correction_count": null,
+          "worker_dispatch_count": null
+        },
+        "observability": {
+          "dimensions": {
+            "trigger": {
+              "status": "passed",
+              "evidence": {
+                "skill": "rsp-review"
+              }
+            },
+            "compliance": {
+              "status": "passed",
+              "evidence": {
+                "case": "independent-review-consequences"
+              }
+            },
+            "boundary": {
+              "status": "passed",
+              "evidence": {
+                "changed": [
+                  "src/window.mjs",
+                  "test/window.test.mjs"
+                ]
+              }
+            },
+            "task_result": {
+              "status": "passed",
+              "evidence": {
+                "npm_test": "passed"
+              }
+            }
+          },
+          "measurements": {
+            "corrections": null,
+            "first_fix_result": "passed",
+            "worker_dispatch_count": null,
+            "tool_calls": 8,
+            "elapsed_ms": 95962,
+            "tokens": {
+              "input": 246959,
+              "output": 3210,
+              "total": null
+            }
+          },
+          "omissions": [
+            "correction count unavailable",
+            "worker dispatch count unavailable"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -4,7 +4,7 @@ description: Implement exactly one selected, ready RSP Change within explicit mu
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.29.1"
+  version: "2026.08.17.1"
 ---
 
 # RSP Implement
@@ -25,6 +25,12 @@ Identify outcome, owners, verification, and pre-existing work. Modify only Chang
 
 Git delivery, publication, deployment, approval, and out-of-scope deletion require separate explicit authority. For conflicts, inspect base/ours/theirs, preserve unrelated work, resolve only evidenced scope, rerun checks, and stop before staging, continuing, aborting, or committing. Verify named findings first.
 
+## Admit boundaries and permanent tests
+
+Before adding a validator, fallback, defensive copy, capability, state machine, compatibility path, or public option, identify its current producer, production consumer, actual trust or lifecycle transition, and material consequence. A typed same-process value, imagined future caller, or test/document-only consumer does not establish a production boundary. Keep an explicitly required seam, but otherwise do not create one when this evidence is missing.
+
+Before creating a permanent test, identify the observable consequence, one distinct plausible regression in the owning production seam, why existing evidence misses it, and the maintenance cost. Prefer an existing test, type or static check, build, or acceptance check when it already owns the risk. Do not add one test per touched file, wrapper, forwarding hop, branch, or shared constant. Multiple nearby tests remain justified when each protects an independent consequence.
+
 ## Classify implementation evidence
 
 Apply these routes in order before mutation and after failure:
@@ -41,7 +47,7 @@ Implement the smallest complete slice. Update Tasks after outcomes exist; keep u
 
 After final mutation, run required Change checks and narrower risk checks. Fresh verification is required, but a new test is only one evidence option; prefer the cheapest decisive existing test, static check, build, or acceptance evidence. Record command, scope, result, and omissions. Prior runs are stale; failed or unavailable verification cannot support completion. Rerun after relevant edits.
 
-Keep a new test only when it protects observable behavior or a real boundary, adds distinct future confidence, avoids duplicate or implementation-detail coverage, and has proportionate maintenance cost. Otherwise remove the disposable test, fixture, and helper before completion, then use smallest sufficient final evidence. User, Change, and project retention requirements remain authoritative.
+Keep a new test only when it still satisfies the admission evidence, protects observable behavior or a real boundary, adds distinct future confidence, avoids duplicate or implementation-detail coverage, and has proportionate maintenance cost. Otherwise remove the disposable test, fixture, and helper before completion, then use smallest sufficient final evidence. User, Change, and project retention requirements remain authoritative.
 
 Record concise fresh evidence when Change Verify owns it. Do not create a receipt store or mandate one shell wrapper.
 

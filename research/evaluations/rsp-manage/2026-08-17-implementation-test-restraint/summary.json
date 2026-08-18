@@ -1,0 +1,226 @@
+{
+  "id": "manage-orchestration-beta",
+  "case": "auto-multisurface-routing",
+  "plan_hash": "0ce8552fc9d39e0a0c4fd61adcc6dd2d0dd1dd843f10250f3b236c13715c5b13",
+  "holdout_manifest_sha256": "0303b585bef27638f92f1c7b0f308fd0f63ff5b0ae92354f389d2c9fdb9c4540",
+  "base_tree_sha256": "5581fdea1ebaf6000348340e25a7b1f1d84378fced4f2ca03bfda7aa787af7cd",
+  "product_composition": {
+    "hash": "a1d4735ee12700fc8912e81959e515ccf942d42ac99a8f706c6c8e3064f39fb5",
+    "skills": [
+      {
+        "name": "rsp",
+        "hash": "a1f091389bc78a6448aa061bee30219d97772f52b1ddc49c6d8d55d7cc24aa5b"
+      },
+      {
+        "name": "rsp-manage",
+        "hash": "311ce72c2621f7edb29a02830901c93dd3ea43215f735d35a5802588f841dbaa"
+      },
+      {
+        "name": "rsp-implement",
+        "hash": "f54db795f5e6cd218a91676592af6ad755d3572bf9d2ea4c3dfc68d6c3ac50b7"
+      }
+    ]
+  },
+  "deterministic_contracts": {
+    "passed": true,
+    "cases": 33
+  },
+  "runs": [
+    {
+      "variant": "baseline",
+      "outcome": "passed",
+      "completion": "contract-passed",
+      "first_fix_result": null,
+      "worker_dispatch_count": null,
+      "tool_calls": 10,
+      "verification_rounds": {
+        "agent_observed": 1,
+        "harness": 1,
+        "harness_passed": true
+      },
+      "elapsed_ms": 167389,
+      "human_intervention_outcome": "not-observed",
+      "omissions": [
+        "first-fix result is not emitted as a structured receipt observation",
+        "worker dispatch count is not emitted as a structured receipt observation"
+      ],
+      "output_contract": {
+        "expected_missing": [],
+        "forbidden_present": []
+      },
+      "recovery_contract": null,
+      "unauthorized_paths": [],
+      "evaluation_receipt": null,
+      "observation_sha256": "385ec36b9bbb572eb099e94bfd0416324ac396e81e5b5fbf6b1aab40b99a00bc",
+      "observability": {
+        "dimensions": {
+          "trigger": {
+            "status": "not-observed",
+            "evidence": null
+          },
+          "compliance": {
+            "status": "passed",
+            "evidence": {
+              "expected_missing": []
+            }
+          },
+          "boundary": {
+            "status": "passed",
+            "evidence": {
+              "forbidden_present": [],
+              "unauthorized_paths": []
+            }
+          },
+          "task_result": {
+            "status": "passed",
+            "evidence": {
+              "outcome": "passed"
+            }
+          }
+        },
+        "measurements": {
+          "corrections": null,
+          "first_fix_result": null,
+          "worker_dispatch_count": null,
+          "tool_calls": 10,
+          "elapsed_ms": 167389,
+          "tokens": {
+            "input": 380298,
+            "output": 5410,
+            "total": 385708
+          }
+        },
+        "omissions": [
+          "trigger observation is unavailable",
+          "correction count is unavailable",
+          "first-fix result is unavailable",
+          "worker dispatch count is unavailable"
+        ],
+        "host_observed": {
+          "worker_lifecycle": {
+            "admission_count": null,
+            "delivery_count": null,
+            "dispatch_count": null,
+            "interrupt_count": null,
+            "release_count": null,
+            "settlement_count": null,
+            "wait_count": null,
+            "order": [],
+            "omissions": [
+              "admission count is unavailable",
+              "delivery count is unavailable",
+              "dispatch count is unavailable",
+              "interrupt count is unavailable",
+              "release count is unavailable",
+              "settlement count is unavailable",
+              "wait count is unavailable"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "variant": "product",
+      "outcome": "passed",
+      "completion": "contract-passed",
+      "first_fix_result": null,
+      "worker_dispatch_count": null,
+      "tool_calls": 10,
+      "verification_rounds": {
+        "agent_observed": 0,
+        "harness": 1,
+        "harness_passed": true
+      },
+      "elapsed_ms": 426308,
+      "human_intervention_outcome": "not-observed",
+      "omissions": [
+        "first-fix result is not emitted as a structured receipt observation",
+        "worker dispatch count is not emitted as a structured receipt observation"
+      ],
+      "output_contract": {
+        "expected_missing": [],
+        "forbidden_present": []
+      },
+      "recovery_contract": null,
+      "unauthorized_paths": [],
+      "evaluation_receipt": null,
+      "observation_sha256": "561445aaea3f6d6936829e83a7c9c65e25964b724b7288879b582ee67d282e1b",
+      "observability": {
+        "dimensions": {
+          "trigger": {
+            "status": "not-observed",
+            "evidence": null
+          },
+          "compliance": {
+            "status": "passed",
+            "evidence": {
+              "expected_missing": []
+            }
+          },
+          "boundary": {
+            "status": "passed",
+            "evidence": {
+              "forbidden_present": [],
+              "unauthorized_paths": []
+            }
+          },
+          "task_result": {
+            "status": "passed",
+            "evidence": {
+              "outcome": "passed"
+            }
+          }
+        },
+        "measurements": {
+          "corrections": null,
+          "first_fix_result": null,
+          "worker_dispatch_count": null,
+          "tool_calls": 10,
+          "elapsed_ms": 426308,
+          "tokens": {
+            "input": 1554020,
+            "output": 9485,
+            "total": 1563505
+          }
+        },
+        "omissions": [
+          "trigger observation is unavailable",
+          "correction count is unavailable",
+          "first-fix result is unavailable",
+          "worker dispatch count is unavailable"
+        ],
+        "host_observed": {
+          "worker_lifecycle": {
+            "admission_count": null,
+            "delivery_count": null,
+            "dispatch_count": null,
+            "interrupt_count": null,
+            "release_count": null,
+            "settlement_count": null,
+            "wait_count": null,
+            "order": [],
+            "omissions": [
+              "admission count is unavailable",
+              "delivery count is unavailable",
+              "dispatch count is unavailable",
+              "interrupt count is unavailable",
+              "release count is unavailable",
+              "settlement count is unavailable",
+              "wait count is unavailable"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "comparison": {
+    "status": "complete",
+    "reason": null
+  },
+  "conclusion_limits": [
+    "no numeric promotion threshold",
+    "no activation or release change",
+    "no provider or real-host generality claim",
+    "unavailable measurements remain explicit omissions"
+  ]
+}

@@ -9,12 +9,12 @@ product_skill_names:
   - rsp
   - rsp-manage
   - rsp-implement
-product_composition_sha256: a15ac635ce7c0c42c9623caf850a4cde785bd6ad8d20cc9bac6db610907e9fda
+product_composition_sha256: a1d4735ee12700fc8912e81959e515ccf942d42ac99a8f706c6c8e3064f39fb5
 prior_retained_evidence:
-  - path: research/evaluations/rsp-manage/2026-08-16-unified-execution-receipts-recovery-review-fixes/report.md
-    sha256: 03c6edcc937afd41ab98d227b20ae11a005418a39a47c83be257d0f3f306830e
-  - path: research/evaluations/rsp-manage/2026-08-16-unified-execution-receipts-recovery-review-fixes/summary.json
-    sha256: e975183079a9ed290016afaf4900e0ab078a7c5ddf9efcd4886c15d3c94b0b46
+  - path: research/evaluations/rsp-manage/2026-08-17-implementation-test-restraint/report.md
+    sha256: 8c79791b11f40ba106b6502a41f8caaa71f69fc4c3da7f67d7121a75a6b5b6f3
+  - path: research/evaluations/rsp-manage/2026-08-17-implementation-test-restraint/summary.json
+    sha256: e9c992ae8ebdc630560756cfcddc79e390335dc401d0b39671ab9aa1412f170f
 observations:
   - completion outcome
   - first-fix result where observable

@@ -33,6 +33,18 @@ describe('rsp-tdd Skill contract', () => {
     expect(body).toContain('rerun the focused check')
   })
 
+  it('does not let a test invent or widen the product contract', () => {
+    const body = readSkill()
+
+    expect(body).toContain('## Admit the behavior and test seam')
+    expect(body).toContain('selected Change, Spec, or project authority owns the observable behavior')
+    expect(body).toContain('A test cannot create product authority')
+    expect(body).toContain('imagined edge state, test-only consumer, wrapper hop, or source-string convention is not sufficient')
+    expect(body).toContain('stop for the owning decision instead of encoding the assumption as RED')
+    expect(body).toContain('Do not widen the product contract merely to satisfy the test')
+    expect(body).toContain('unauthorized API, fallback, compatibility behavior, test-only hook, or unreachable-state branch')
+  })
+
   it('retains only valuable tests and cleans disposable probes before final verification', () => {
     const body = readSkill()
 

@@ -4,7 +4,7 @@ description: Drive one clear testable behavior owned by a selected RSP Change th
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.24.1"
+  version: "2026.08.17.1"
 ---
 
 # RSP TDD
@@ -17,6 +17,12 @@ Require one selected, ready Change, clear observable behavior, test and producti
 
 Stop when behavior or acceptance is unclear, mutation authority is missing, an existing symptom has an unexplained cause, the execution environment is unavailable, or a baseline failure cannot be separated. Return the same Change, evidence, and one needed next action.
 
+## Admit the behavior and test seam
+
+Before RED, confirm that the selected Change, Spec, or project authority owns the observable behavior and that a real production path can reach the proposed seam. Name the consequence, one distinct plausible regression, why existing evidence misses it, and the expected maintenance cost. A test cannot create product authority; an imagined edge state, test-only consumer, wrapper hop, or source-string convention is not sufficient by itself.
+
+If the proposed test would require a new public contract, fallback, compatibility path, or handling for a state the production producer cannot emit, stop for the owning decision instead of encoding the assumption as RED. Explicit user, Change, or project test requirements remain authoritative.
+
 ## RED
 
 Add the smallest focused test at the real owning seam. Run it before production mutation and observe the expected missing or incorrect behavior.
@@ -26,6 +32,8 @@ RED is not a syntax, fixture, environment, or unrelated baseline failure. A pass
 ## GREEN
 
 Make the minimum production change for GREEN, preserve scope, and rerun the same command. An unexplained failure returns to diagnosis without speculative widening.
+
+Do not widen the product contract merely to satisfy the test. If GREEN requires an unauthorized API, fallback, compatibility behavior, test-only hook, or unreachable-state branch, treat the test premise as invalid or return the missing owner decision; do not mutate production first and rationalize the contract afterward.
 
 ## REFACTOR
 
