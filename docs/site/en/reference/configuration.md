@@ -60,20 +60,3 @@ manage:
 When `manage` is omitted, compatibility defaults resolve to `activation: explicit` and `closeout: local`. Nearest project restrictions and host enforcement can only narrow these ceilings. RSP intentionally has no `full` preset; push, tag, publication, deployment, approval, and human acceptance stay explicit.
 
 See [Skills and managed work](../guides/skills.md) for selection behavior.
-
-## Workspace policy
-
-```yaml
-workspace:
-  activation: explicit
-```
-
-`activation` accepts:
-
-- `explicit`: Core may select isolation only for a current explicit request naming a Workspace, worktree, isolated checkout, or equivalent intent.
-- `auto`: advanced project opt-in; Core may additionally select isolation for parallel Changes, unrelated dirty or overlapping product work, or an independent runtime boundary.
-- `disabled`: RSP does not select or prepare an isolated workspace.
-
-The generated and backfilled default is `explicit`. A valid legacy config without `workspace` also resolves to `explicit`; invalid configuration fails Workspace closed to `disabled`. Core refreshes selection immediately before preparation. Workspace is pre-mutation infrastructure: if product mutation already began in the source checkout, a late switch stops for an explicit owner-directed handoff instead of silently copying only RSP control files.
-
-This setting is a policy ceiling. It does not grant workspace creation, implementation, cleanup, discard, landing, Git, or external authority. Workspace paths follow the host cache location, branches remain `rsp/<work-ref>`, target branches stay command-owned, and destructive cleanup remains explicit.

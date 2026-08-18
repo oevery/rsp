@@ -1,6 +1,6 @@
 # Defer the local Runtime, Broker, and Web Observatory
 
-RSP defers the local Runtime, user-level Broker, SQLite observation store, managed-runtime adapter, and Web Observatory. They are not current product capabilities, package surfaces, Skill contracts, or maintained source boundaries. RSP remains repository-native: current Markdown artifacts and checkout evidence own workflow state, while Specs queries, Workspace, Land, verification gates, and Focus Capsule recovery remain independent supported capabilities.
+RSP defers the local Runtime, user-level Broker, SQLite observation store, managed-runtime adapter, and Web Observatory. They are not current product capabilities, package surfaces, Skill contracts, or maintained source boundaries. RSP remains repository-native: current Markdown artifacts and checkout evidence own workflow state. Direct Specs queries, generated-index migration, verification and readiness gates, Focus Capsule recovery, and exact local commit transport remain supported; execution-environment selection and cross-branch integration remain host, user, or Git concerns.
 
 This decision supersedes the following removed decisions and their active product consequences:
 
@@ -29,5 +29,5 @@ Hiding the capability behind an experimental flag would retain most of those obl
 
 - The supported CLI and package expose no Broker lifecycle command, daemon, SQLite runtime store, managed-runtime adapter, Broker/SQLite diagnostics, Web Observatory command, browser asset, or runtime synchronization contract.
 - Core and Manage coordinate host-native execution with transient ExecutionFrames, WorkerSessions, Assignments, Receipts, derived topology, and narrow ResourceLeases only. No run database, worker registry, event stream, Receipt store, verification ledger, or persisted topology is required. Cross-session and cross-device recovery reread current authority, focus, baseline, dirty state, resources, blockers, and evidence freshness; the optional commit-safe Markdown Focus Capsule remains only a sparse non-authoritative recovery pointer.
-- Direct `rsp specs` queries, generated-index migration, Workspace isolation and activity ownership, exact Land, commit transport, Required and Optional verification, and readiness gates remain supported and do not depend on the deferred experiment.
+- Direct `rsp specs` queries, generated-index migration, commit transport, Required and Optional verification, readiness gates, and Focus Capsule recovery remain supported and do not depend on the deferred experiment.
 - Reintroducing any part requires a new selected Change, a stable host-native event source that does not require an RSP-owned synchronization layer, an explicit maintenance owner, measurable value over repository-native recovery, and fresh security, compatibility, migration, packaging, review, and acceptance evidence.
