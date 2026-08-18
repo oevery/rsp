@@ -31,9 +31,8 @@ describe('rsp-release-docs Skill contract', () => {
   })
 
   it('selects exactly one lifecycle branch and preserves identity ownership', () => {
-    for (const branch of ['**Audit:**', '**Draft:**', '**Finalize for publication:**', '**Reconcile published release:**']) {
+    for (const branch of ['**Audit:**', '**Draft:**', '**Finalize for publication:**', '**Reconcile published release:**'])
       expect(skill).toContain(branch)
-    }
     expect(skill).toContain('Exactly one branch is active')
     expect(skill).toMatch(/release identity is confirmed only by explicit user instruction or authoritative repository release configuration/i)
     expect(skill).toContain('Never infer it from semantic-version ordering')

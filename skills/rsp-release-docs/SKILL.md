@@ -4,7 +4,7 @@ description: Draft, audit, finalize, or reconcile evidence-based changelogs, rel
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.26.1"
+  version: "2026.08.18.2"
 ---
 
 # RSP Release Docs
@@ -25,10 +25,10 @@ Before continuing, name the range, confirmed version or draft state, audience, s
 
 ## Select one branch
 
-- **Audit:** inspect fixed release prose and return findings without editing.
-- **Draft:** collect and project evidence. While identity can change, keep the ledger transient or use an existing release-fragment owner. Once identity is confirmed, update only authorized surfaces. Formal releases include release notes; update a changelog only when the repository owns one or the user asks; include migration guidance whenever users must act.
-- **Finalize for publication:** require confirmed identity and range, completed implementation Change closeout, and an exact clean candidate. An explicit tag, hosted release, registry publication, or equivalent public request must pass this branch even after prose review. Bind `ready` to the exact release commit.
-- **Reconcile published release:** observe the published identity and external surfaces, repair only authorized mutable surfaces, and assign immutable discrepancies to a corrective version or owner. Never rewrite a published package or move a tag to manufacture consistency.
+- **Audit:** fixed release prose → inspect and return findings; no edits.
+- **Draft:** when evidence projection is authorized. Mutable identity → transient ledger or existing release-fragment owner; confirmed identity → authorized surfaces only. Formal release → notes; owned or requested changelog → changelog; required user action → migration guidance.
+- **Finalize for publication:** requires confirmed identity and range, completed implementation Change closeout, and an exact clean candidate. A tag, hosted release, registry publication, or equivalent public request selects this branch even after prose review. Bind `ready` to the exact release commit.
+- **Reconcile published release:** requires an observed published identity and external surfaces. Repair authorized mutable surfaces; route an immutable discrepancy to a corrective version or owner. Never rewrite a published package or move a tag to manufacture consistency.
 
 Exactly one branch is active. Give every requested surface one disposition: draft, finalize, reconcile, audit only, not applicable, or blocked by a named decision.
 

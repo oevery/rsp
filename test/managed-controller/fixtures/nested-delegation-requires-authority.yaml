@@ -1,17 +1,18 @@
 id: nested-delegation-requires-authority
 sources:
   - skills/rsp-manage/SKILL.md
+  - skills/rsp-manage/references/managed-exchange.md
   - .rsp/specs/skill-control-model.md
 evidence:
   - A worker-created helper or reviewer must not bypass the Assignment or duplicate Manager-owned acceptance obligations.
   - Explicitly authorized descendants remain owned by one parent WorkerSession and collapse into one WorkerReceipt.
 required_contract:
-  - A WorkerSession is a leaf execution boundary by default
-  - may not dispatch another worker, helper, reviewer, or verifier unless its current Assignment explicitly grants nested-delegation authority
-  - parent WorkerSession owns all descendant work and background processes
-  - returns exactly one schema-valid WorkerReceipt to Manager
-  - cannot satisfy Manager-owned independent Verify or fixed-scope Review merely because it was created by another worker
-  - does not require or persist a descendant registry
+  - A WorkerSession is a leaf by default
+  - Nested delegation requires explicit Assignment authority
+  - The parent owns descendant work, background processes, and ResourceLeases
+  - returns one schema-valid WorkerReceipt
+  - cannot satisfy Manager-owned independent Verify or fixed-scope Review
+  - Persist no descendant registry
 prohibited_actions:
   - implicit nested delegation
   - worker-created reviewer grants review-clean

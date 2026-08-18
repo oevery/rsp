@@ -11,8 +11,8 @@ evidence:
 required_contract:
   - Selection transfers current-phase control from Core to Manage; it does not imply worker delegation
   - '`DispatchDisposition: none | preferred | required`'
-  - Manage qualification never manufactures a worker obligation
-  - '`none` invokes the bounded local Discipline without synthetic delegation'
+  - Manage qualification, distinct execution/acceptance phases, and separate owners never manufacture a worker obligation
+  - '`none` invokes the local Discipline without synthetic delegation'
   - selected Manage execution through a bounded local Discipline
 prohibited_actions:
   - mandatory implementation worker for every managed run

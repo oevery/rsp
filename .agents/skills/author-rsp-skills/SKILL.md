@@ -13,16 +13,14 @@ Require one explicit target package or authored corpus. A report-only Pre-Change
 
 Choose one primary mode:
 
-| Mode | Use when | Load |
-| --- | --- | --- |
-| `create` | a demonstrated capability has no owner | [authoring](references/authoring.md) |
-| `revise` | an existing contract or workflow needs a bounded behavior change | [authoring](references/authoring.md) |
-| `audit` | the target corpus needs structural, reachability, duplication, or clarity findings | [authoring](references/authoring.md) |
-| `concise` | equivalent behavior should use less or clearer context | [concision](references/concision.md) |
-| `adapt` | an accepted upstream mechanism is selected for local use | [authoring](references/authoring.md) |
-| `evaluate` | current and candidate behavior need comparison | [evaluation](references/evaluation.md) |
+- `create`: a demonstrated capability has no owner.
+- `revise`: an existing contract or workflow needs a bounded behavior change.
+- `audit`: the target corpus needs structural, reachability, duplication, or clarity findings.
+- `concise`: equivalent behavior should use less or clearer context.
+- `adapt`: an accepted upstream mechanism is selected for local use.
+- `evaluate`: current and candidate behavior need comparison.
 
-Load only the selected reference. Load [evaluation](references/evaluation.md) additionally before completing `create`, `revise`, `concise`, or `adapt` when observable behavior changes.
+Load only the selected reference: [authoring](references/authoring.md) for `create | revise | audit | adapt`, [concision](references/concision.md) for `concise`, or [evaluation](references/evaluation.md) for `evaluate`. Load evaluation additionally before completing `create`, `revise`, `concise`, or `adapt` when observable behavior changes.
 
 ## Preserve the contract
 

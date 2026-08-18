@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
 import { evaluateManagedController, hashManagedControllerArtifact, hashManagedControllerComposition, loadManagedControllerCases, observeManagedControllerGit, prepareManagedControllerRun, projectManagedControllerEvaluationEvidence, readManagedControllerFlag, rescoreManagedControllerArtifact, runManagedControllerEvaluation, scoreManagedControllerObservation, scoreManagedControllerOutput, scoreManagedRecoveryOutput, summarizeManagedControllerEvents } from '../scripts/managed-controller-eval.mjs'
-import { canonicalEnum, findSemanticUnit, inlineCodeValues, markdownListItem, markdownSection, orderedMarkers } from './helpers/markdown-contract'
+import { canonicalEnum, findSemanticUnit, markdownSection, orderedMarkers } from './helpers/markdown-contract'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const candidate = join(root, 'research', 'candidates', 'skills', 'rsp-manage')
@@ -20,6 +20,7 @@ const releaseDocsSkill = readFileSync(join(root, 'skills', 'rsp-release-docs', '
 const reviewConvergence = readFileSync(join(product, 'references', 'review-convergence.md'), 'utf8')
 const closeout = readFileSync(join(product, 'references', 'closeout.md'), 'utf8')
 const managedExchange = readFileSync(join(product, 'references', 'managed-exchange.md'), 'utf8')
+const hostWorkerLifecycle = readFileSync(join(product, 'references', 'host-worker-lifecycle.md'), 'utf8')
 
 function readSkill(directory = candidate): { body: string, frontmatter: Record<string, any> } {
   const content = readFileSync(join(directory, 'SKILL.md'), 'utf8')
@@ -525,13 +526,14 @@ describe('rsp-manage product Skill', () => {
     expect(findSemanticUnit(frontier, ['`owner-decision`', 'highest-impact question', '`DecisionOwner`'])).toBeDefined()
     expect(findSemanticUnit(frontier, ['`fog`', 'not yet a precise question', 'no synthetic Task', 'worker dispatch'])).toBeDefined()
     expect(findSemanticUnit(frontier, ['`evidence-needed`', 'precise factual question'])).toBeDefined()
-    expect(findSemanticUnit(frontier, ['applicable stop', 'instead of selecting Fix'])).toBeDefined()
-    expect(findSemanticUnit(frontier, ['`ready-to-execute`', 'canonical `executable`'])).toBeDefined()
-    expect(findSemanticUnit(frontier, ['`StopDisposition: return-to-shape`', 'Core', 'Only Core', 'Shape'])).toBeDefined()
+    expect(findSemanticUnit(frontier, ['earlier boundary', 'instead of selecting Fix'])).toBeDefined()
+    expect(findSemanticUnit(frontier, ['`ready-to-execute`', '`executable`'])).toBeDefined()
+    expect(frontier).toContain('`fog`: This is not yet a precise question.')
+    expect(frontier).toContain('Stop `return-to-shape`. Resume after Shape returns a ready owner')
     expect(body).not.toContain('return `StopDisposition: return-to-shape` to Core/Shape')
-    expect(findSemanticUnit(frontier, ['halt the current managed control phase', 'Do not continue', 'dispatch another worker', 'mutate product state'])).toBeDefined()
+    expect(findSemanticUnit(frontier, ['`fog`', 'Halt this phase', 'worker dispatch', 'product mutation'])).toBeDefined()
     expect(body).not.toContain('unless an independently ready owned slice can continue')
-    expect(findSemanticUnit(frontier, ['Resume only after', 'Shape', 'ready owner', 'Core', 'rederives the route'])).toBeDefined()
+    expect(findSemanticUnit(frontier, ['Resume after', 'Shape', 'ready owner', 'Core', 'rederives the route'])).toBeDefined()
   })
 
   it('defines one minimal token-independent Assignment and Receipt schema', () => {
@@ -552,9 +554,9 @@ describe('rsp-manage product Skill', () => {
     expect(managedExchange).toContain('Authority: <exact owner sections or paths>')
     expect(findSemanticUnit(managedExchange, ['WorkerInvocation', 'WorkerReceipt', 'conversational execution diary'])).toBeDefined()
     expect(findSemanticUnit(lanes, ['Diagnose', '`rsp-diagnose`', 'read-only', 'no-cause result'])).toBeDefined()
-    expect(findSemanticUnit(lanes, ['Inspect', 'private Manager-only', 'read-only lane'])).toBeDefined()
+    expect(findSemanticUnit(lanes, ['Inspect', 'Manager-only', 'read-only'])).toBeDefined()
     expect(findSemanticUnit(lanes, ['Fix', '`rsp-implement`', 'sole product writer'])).toBeDefined()
-    expect(findSemanticUnit(lanes, ['Verify', 'delegates', 'rsp-verify', 'read-only', 'Change-declared risk', 'failed correction'])).toBeDefined()
+    expect(findSemanticUnit(lanes, ['Verify', '`rsp-verify`', 'read-only', 'declared risk', 'failed correction'])).toBeDefined()
     expect(findSemanticUnit(lanes, ['Fixed-scope review', '`rsp-review`'])).toBeDefined()
     expect(findSemanticUnit(managedExchange, ['Human-facing narration', 'response language', 'exact canonical result', 'secondarily'])).toBeDefined()
     expect(findSemanticUnit(managedExchange, ['localized labeled natural language', 'default', 'human-visible session'])).toBeDefined()
@@ -562,15 +564,11 @@ describe('rsp-manage product Skill', () => {
     expect(managedExchange).toContain('Do not emit both natural-language and JSON renderings by default')
     expect(findSemanticUnit(managedExchange, ['`EvaluationReceipt`', 'separate evaluation-harness protocol', 'never', '`WorkerReceipt` encoding'])).toBeDefined()
     expect(findSemanticUnit(managedExchange, ['release claim', 'worker-authored', 'never substitutes', 'host\'s release observation'])).toBeDefined()
-    expect(inlineCodeValues(markdownListItem(lanes, 'Diagnose'))).toEqual([
-      'rsp-diagnose',
-      'confirmed-same-scope',
-      'unresolved-same-scope',
-      'boundary-changed',
-    ])
-    expect(inlineCodeValues(markdownListItem(lanes, 'Inspect'))).toEqual(['confirmed-same-scope', 'unresolved-same-scope', 'boundary-changed'])
-    expect(inlineCodeValues(markdownListItem(lanes, 'Fix'))).toEqual(['rsp-implement', 'changed-same-scope', 'no-change', 'boundary-changed', 'worker identity'])
-    expect(inlineCodeValues(markdownListItem(lanes, 'Verify'))).toEqual(['rsp-verify', 'worker identity', 'independence: established | unavailable', 'rsp-review'])
+    expect(lanes).toContain('**Diagnose:** `rsp-diagnose`; read-only until a cause or explicit no-cause result. Return `confirmed-same-scope`, `unresolved-same-scope`, or `boundary-changed`')
+    expect(lanes).toContain('**Inspect:** Manager-only and read-only; parallel only with isolated paths and verification resources. Return `confirmed-same-scope`, `unresolved-same-scope`, or `boundary-changed`')
+    expect(lanes).toContain('**Fix:** `rsp-implement`; sole product writer with explicit in-scope mutation authority. Return `changed-same-scope`, `no-change`, or `boundary-changed`')
+    expect(lanes).toContain('**Verify:** `rsp-verify`; read-only for declared risk or failed correction. Return the Verify-owned result with observed worker identity and independence status')
+    expect(lanes).toContain('Verify receipts append observed worker identity and `independence: established | unavailable`')
     expect(body).not.toMatch(/token\s+(?:budget|limit)|(?:budget|limit)[^\n.]*token/i)
     expect(body).not.toMatch(/token[^\n.]*rout|rout[^\n.]*token/i)
     expect(existsSync(join(root, 'skills', 'rsp-inspect'))).toBe(false)
@@ -583,12 +581,12 @@ describe('rsp-manage product Skill', () => {
     const interruption = readFileSync(join(product, 'references', 'interruption-recovery.md'), 'utf8')
     const controlModel = readFileSync(join(root, '.rsp', 'specs', 'skill-control-model.md'), 'utf8')
 
-    expect(findSemanticUnit(body, ['host-confirmed Assignment admission', 'cancellation-ownership boundary'])).toBeDefined()
-    expect(findSemanticUnit(body, ['WorkerSession creation or resume alone', 'does not prove admission'])).toBeDefined()
+    expect(findSemanticUnit(body, ['Host-confirmed Assignment admission', 'cancellation-ownership boundary'])).toBeDefined()
+    expect(findSemanticUnit(body, ['creation or resume alone', 'does not prove admission'])).toBeDefined()
     expect(findSemanticUnit(body, ['WorkerInvocation', 'cancellation-ownership boundary'])).toBeDefined()
-    expect(findSemanticUnit(body, ['Controller-observed settlement', 'host release', 'WorkerReceipt\'s worker-authored release claim', 'Manager-derived AcceptedLaneEvidence', 'separate facts'])).toBeDefined()
-    expect(findSemanticUnit(body, ['settled invocation without accepted evidence', 'closes liveness only'])).toBeDefined()
-    expect(findSemanticUnit(body, ['WorkerSession identity', 'message source', 'never grant authority', 'Assignment envelope'])).toBeDefined()
+    expect(findSemanticUnit(managedExchange, ['Host observations', 'producer claims', 'separate inputs'])).toBeDefined()
+    expect(findSemanticUnit(hostWorkerLifecycle, ['Settlement closes liveness', 'not acceptance'])).toBeDefined()
+    expect(findSemanticUnit(body, ['Identity and continuity grant no authority'])).toBeDefined()
     expect(findSemanticUnit(interruption, ['cancelling the caller\'s own wait', 'does not retract accepted work'])).toBeDefined()
     expect(findSemanticUnit(interruption, ['terminal message or partial output', 'does not release resources', 'owned work remains live'])).toBeDefined()
     expect(findSemanticUnit(controlModel, ['Assignment admission transfers cancellation ownership', 'pre-admission failure creates no dispatch', 'post-admission work requires explicit cancellation'])).toBeDefined()
@@ -616,9 +614,9 @@ describe('rsp-manage product Skill', () => {
   it('bounds Assignments and correction while preserving independent Verify', () => {
     const { body } = readSkill(product)
 
-    expect(body).toContain('may run alongside another read-only lane only when paths and verification resources are demonstrably isolated')
-    expect(body).toContain('otherwise keep it sequential')
-    expect(body).toContain('Separate Group child mutations stay sequential unless the host independently provides and proves distinct writer and verification resources')
+    expect(body).toContain('**Inspect:** Manager-only and read-only; parallel only with isolated paths and verification resources')
+    expect(body).toContain('Keep blockers, later waves, shared seams, conflicting leases, and dependent verification sequential')
+    expect(body).toContain('Parallel work requires independent mutation paths and evidenced distinct resources')
     expect(body).toContain('Do not impose one fixed dispatch ceiling across the whole managed run')
     expect(body).toContain('Every dispatch requires one necessary bounded Assignment')
     expect(body).toContain('at most three correction passes by default')
@@ -643,13 +641,14 @@ describe('rsp-manage product Skill', () => {
     const lanes = markdownSection(body, 'Resolve the execution frontier')
     const boundaries = markdownSection(body, 'Preserve boundaries')
 
-    expect(canonicalEnum(lanes, 'AcceptanceDisposition')).toEqual(['incomplete', 'evidence-complete', 'review-clean'])
-    expect(findSemanticUnit(lanes, ['required worker', 'not created', 'valid required receipt', '`unavailable`', '`boundary-changed`', '`incomplete`'])).toBeDefined()
+    expect(lanes).toContain('accepted required receipts + fresh declared verification → evidence-complete')
+    expect(lanes).toContain('evidence-complete + clean fixed-scope review              → review-clean')
+    expect(findSemanticUnit(lanes, ['required worker', 'not created', 'valid receipt', '`unavailable`', '`boundary-changed`', '`incomplete`'])).toBeDefined()
     expect(findSemanticUnit(lanes, ['Implementation verification', 'fixed-scope change review', 'durable writeback decision', 'separate gates'])).toBeDefined()
-    expect(findSemanticUnit(lanes, ['Accepted required receipts', 'fresh declared verification', '`evidence-complete`', 'implementation verification'])).toBeDefined()
-    expect(findSemanticUnit(lanes, ['clean fixed-scope change review', '`review-clean`'])).toBeDefined()
-    expect(findSemanticUnit(lanes, ['execution receipt', 'verification receipt', 'never derives', '`review-clean`'])).toBeDefined()
-    expect(findSemanticUnit(lanes, ['durable writeback decision', 'cannot substitute', 'fixed-scope change review'])).toBeDefined()
+    expect(findSemanticUnit(lanes, ['first transition', 'implementation verification'])).toBeDefined()
+    expect(lanes).toContain('evidence-complete + clean fixed-scope review              → review-clean')
+    expect(findSemanticUnit(lanes, ['Execution and verification receipts', 'never derive', '`review-clean`'])).toBeDefined()
+    expect(findSemanticUnit(lanes, ['durable writeback decision', 'never substitutes', 'review'])).toBeDefined()
     expect(findSemanticUnit(body, ['required worker obligation', '`StopDisposition: capability-unavailable`', '`incomplete`', 'stop'])).toBeDefined()
     expect(findSemanticUnit(body, ['Absence of a confirmed WorkerInvocation or WorkerReceipt', 'never success', 'controller claiming'])).toBeDefined()
 
@@ -657,7 +656,7 @@ describe('rsp-manage product Skill', () => {
     expect(canonicalEnum(closeout, 'CloseoutEligibility')).toEqual(['not-eligible', 'lifecycle-ready', 'local-commit-ready'])
     expect(findSemanticUnit(closeout, ['`completionGate: pass`', '`archiveReady: yes`', '`AcceptanceDisposition: review-clean`', 'fresh owner', 'authority', 'exact diff', 'decisive Required verification evidence', 'ready value'])).toBeDefined()
     expect(findSemanticUnit(closeout, ['Any other acceptance state', '`CloseoutEligibility: not-eligible`'])).toBeDefined()
-    expect(body.match(/A required worker that was not created, did not return a valid required receipt, returned `unavailable` or `boundary-changed`/g)).toHaveLength(1)
+    expect(body.match(/required worker that was not created, returned no valid receipt, reported `unavailable` or `boundary-changed`/g)).toHaveLength(1)
     expect(findSemanticUnit(closeout, ['neither archive nor commit runs'])).toBeDefined()
   })
 
@@ -665,16 +664,15 @@ describe('rsp-manage product Skill', () => {
     const { body } = readSkill(product)
     const lanes = markdownSection(body, 'Resolve the execution frontier')
     const entry = `${markdownSection(body, 'Selected-goal entry')}\n${markdownSection(body, 'Validate the selected handoff before mutation')}`
-    const withoutReviewClean = lanes.replace(', or `review-clean`', '')
+    const withoutReviewClean = lanes.replace('evidence-complete + clean fixed-scope review              → review-clean', '')
     const reassignedQualification = entry.replace(
       'Core and its managed-routing reference solely own initial Manage qualification',
       'Manage owns initial Manage qualification',
     )
     const reassignedFixOwner = lanes
-      .replace('and is the sole product writer at its mutation boundary', 'at its mutation boundary')
-      .replace('Verify delegates its read-only result and evidence contract to `rsp-verify`', 'Verify is the sole product writer and delegates its read-only result and evidence contract to `rsp-verify`')
+      .replace('sole product writer with explicit in-scope mutation authority', 'explicit in-scope mutation authority')
 
-    expect(canonicalEnum(withoutReviewClean, 'AcceptanceDisposition')).not.toEqual(['incomplete', 'evidence-complete', 'review-clean'])
+    expect(withoutReviewClean).not.toContain('evidence-complete + clean fixed-scope review              → review-clean')
     expect(findSemanticUnit(reassignedQualification, ['Core', 'solely own', 'initial Manage qualification'])).toBeUndefined()
     expect(findSemanticUnit(reassignedFixOwner, ['Fix', '`rsp-implement`', 'sole product writer'])).toBeUndefined()
   })
@@ -683,25 +681,24 @@ describe('rsp-manage product Skill', () => {
     const { body } = readSkill(product)
 
     expect(managedExchange).toContain('actual paths and local diff')
-    expect(body).toContain('Reread the complete owner, status, authority, blockers, and decisive evidence only when')
-    expect(body).toContain('execution resumes across sessions, or closeout begins')
-    expect(body).toContain('Do not return to Core merely to repeat route selection or qualification')
-    expect(body).toContain('frontier classification, DispatchDisposition, topology, assignments, WorkerReceipts, AcceptedLaneEvidence, dispatch and correction counts, concurrency reasoning, invalidation mapping, and resume chronology response-only')
-    expect(body).toContain('compress only accepted outcomes into Change Tasks')
-    expect(body).toContain('real unresolved dependencies or risks into Blockers')
+    expect(managedExchange).toContain('Reread the complete owner, status, authority, blockers, and decisive evidence only after')
+    expect(managedExchange).toContain('cross-session resume, or closeout')
+    expect(managedExchange).toContain('unchanged same-scope work never returns to Core merely to repeat qualification')
+    expect(body).toContain('Keep transient control, execution, receipt, resource, topology, and chronology data response-only')
+    expect(body).toContain('write only accepted outcomes to Tasks')
+    expect(body).toContain('real unresolved dependencies or risks to Blockers')
     expect(body).toContain('Durable facts or rationale remain owned by the durable writeback decision')
-    expect(body).toContain('Create no frontier file, ticket map, ledger, registry, dependency graph, ambient hook, or numeric routing score')
+    expect(body).toContain('Create no frontier file, ticket map, ledger, registry, graph, hook, numeric routing score, run directory, or receipt/worker/verification registry')
   })
 
   it('keeps a normal Fix within declared acceptance on the bounded receipt path', () => {
     const { body } = readSkill(product)
-    expect(body).toContain('A normal Fix that implements the already-declared behavior and acceptance remains same-scope')
+    expect(managedExchange).toContain('A normal Fix that implements declared behavior remains same-scope')
     expect(body).toContain('Implementing declared acceptance does not return to Core')
   })
 
   it('widens rereads when discovery changes the declared behavior or acceptance', () => {
-    const { body } = readSkill(product)
-    expect(body).toContain('discovers or receives a request to change the declared behavior, acceptance, or public-interface boundary')
+    expect(managedExchange).toContain('changed behavior/acceptance/interface')
   })
 
   it('returns to Core for a new request that changes a public-interface boundary', () => {
@@ -718,18 +715,18 @@ describe('rsp-manage product Skill', () => {
     const { body } = readSkill(product)
 
     expect(body).toContain('Derive `DispatchDisposition` independently after selection')
-    expect(body).toContain('`none` when the current bounded action has no useful or required worker seam')
-    expect(body).toContain('With `none`, invoke the bounded local Discipline while retaining orchestration and acceptance')
-    expect(body).toContain('With unavailable `required`, stop `capability-unavailable` and keep acceptance incomplete')
-    expect(body).toContain('Manage qualification never manufactures a worker obligation')
-    expect(body).toContain('The controller retains WorkerReceipt validation, AcceptedLaneEvidence derivation, convergence verification, review convergence, lifecycle decisions, and commit eligibility and orchestration')
-    expect(body).toContain('It does not absorb Commit\'s exact Git procedure')
-    expect(body).toContain('provider sessions, and hardware/classroom sessions as exclusive `ResourceLease` candidates')
-    expect(body).toContain('Dispatch in parallel only for independent mutation paths and evidenced distinct resources')
-    expect(body).toContain('delegation and separate workers never imply concurrency or isolation')
-    expect(body).toContain('each worker runs the narrow lane-local check in its `Verify Set`')
-    expect(body).toContain('Manager runs at most one affected or integration gate for shared risk')
-    expect(body).toContain('closeout always reruns the Change-required evidence fresh')
+    expect(body).toContain('| `none` | The bounded action has no useful or required worker seam.')
+    expect(body).toContain('Invoke the local Discipline; Manage retains orchestration and acceptance')
+    expect(body).toContain('Stop `capability-unavailable`; acceptance remains `incomplete`')
+    expect(body).toContain('Manage qualification, distinct execution/acceptance phases, and separate owners never manufacture a worker obligation')
+    expect(body).toContain('Manage retains receipt validation, accepted-evidence derivation, convergence, lifecycle, and commit orchestration')
+    expect(body).toContain('Commit retains the exact Git procedure')
+    expect(body).toContain('provider sessions, or hardware/classroom sessions as exclusive ResourceLease candidates')
+    expect(body).toContain('Parallel work requires independent mutation paths and evidenced distinct resources')
+    expect(body).toContain('delegation never implies concurrency or isolation')
+    expect(body).toContain('Run lane-local checks first')
+    expect(body).toContain('at most one affected or integration gate for shared risk')
+    expect(body).toContain('Closeout reruns required evidence fresh')
     expect(managedRouting).toContain('Make the route observable')
     expect(managedRouting).toContain('report `selected` with the decisive qualification signal')
     expect(managedRouting).toContain('Selection transfers current-phase control from Core to Manage; it does not imply worker delegation')
@@ -742,7 +739,7 @@ describe('rsp-manage product Skill', () => {
     const { body } = readSkill(product)
     const boundaries = markdownSection(body, 'Preserve boundaries')
 
-    expect(findSemanticUnit(boundaries, ['interruption and recovery', 'creating, replacing, transferring, or consuming', 'Focus Capsule'])).toBeDefined()
+    expect(findSemanticUnit(boundaries, ['Before using capsule content', 'interruption and recovery'])).toBeDefined()
     expect(findSemanticUnit(boundaries, ['focus marker path', 'sole selection truth', 'prose grants no authority'])).toBeDefined()
     expect(findSemanticUnit(readFileSync(join(product, 'references', 'interruption-recovery.md'), 'utf8'), ['short optional Markdown Focus Capsule', 'owned only by Manager'])).toBeDefined()
     expect(findSemanticUnit(readFileSync(join(product, 'references', 'interruption-recovery.md'), 'utf8'), ['Workers communicate through messages', 'rather than the capsule'])).toBeDefined()
@@ -783,11 +780,11 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('relevant Specs and Decisions')
     expect(body).toContain('`rsp status --json`, and the current checkout')
     expect(managedExchange).toContain('Every fresh WorkerSession receives one complete `Assignment`')
-    expect(body).toContain('Only an observed resumed compatible WorkerSession may receive an `AssignmentDelta`')
+    expect(managedExchange).toContain('Only an observed resumed compatible WorkerSession may receive an `AssignmentDelta`')
     expect(body).toContain('Do not impose one fixed dispatch ceiling across the whole managed run')
     expect(body).toContain('at most three correction passes by default')
     expect(body).toContain('Independent Verify is a separate required acceptance obligation')
-    expect(body).toContain('each worker runs the narrow lane-local check in its `Verify Set`')
+    expect(body).toContain('Run lane-local checks first')
     expect(body).toContain('at most one affected or integration gate')
     expect(body).toContain('Inspect changed paths, local diff, and declared verification before accepting results')
     expect(readFileSync(join(product, 'references', 'interruption-recovery.md'), 'utf8')).toContain('On cross-session or cross-device resume, session loss, or invalidated continuity, require a fresh WorkerSession and complete Assignment')
@@ -822,12 +819,12 @@ describe('rsp-manage product Skill', () => {
 
     expect(body).toContain('every selected WorkRef, including clear in-scope successors')
     expect(managedRouting).toContain('A Group qualifies when it has at least two ready children')
-    expect(body).toContain('dispatch child WorkRefs only in the current derived `plan.waves` wave')
+    expect(body).toContain('Dispatch only children in the current `plan.waves` wave')
     expect(body).toContain('Rerun `rsp status --json`')
     expect(body).toContain('restrict it to declared children')
-    expect(body).toContain('repository writer boundaries, the RSP control plane, test runners, generated artifacts, browsers, Brokers, provider sessions, and hardware/classroom sessions')
+    expect(body).toContain('writers, the RSP control plane, test runners, generated artifacts, browsers, Brokers, provider sessions, or hardware/classroom sessions')
     expect(body).toContain('Keep blockers, later waves, shared seams, conflicting leases, and dependent verification sequential')
-    expect(body).toContain('Workers receive no implied focus')
+    expect(body).toContain('Grant no implied focus')
   })
 
   it('continues a bounded goal across derived owners and stops at real boundaries', () => {
@@ -841,7 +838,7 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('only Core may route authorized Shape')
     expect(body).toContain('never classify discovery or change topology')
     expect(body).toContain('Stop when discovery or a new request changes declared behavior')
-    expect(body).toContain('Never persist the goal envelope, WorkSet, waves, invalidation graph, or discovery classification')
+    expect(managedRouting).toContain('Never persist the goal envelope, ExecutionFrame, DispatchDisposition')
   })
 
   it('prepares a product Group holdout with real waves and bounded mutations', ({ onTestFinished }) => {
@@ -1498,7 +1495,7 @@ describe('rsp-manage product Skill', () => {
   it('keeps Group scheduling transient and checkpoints lifecycle-scoped', () => {
     const { body } = readSkill(product)
 
-    expect(body).toContain('out of Changes, Group Briefs, Specs, Decision Records')
+    expect(body).toContain('out of Changes, Briefs, Specs, Decisions, and Focus Capsules')
     expect(body).toContain('Changes retain converged requirements')
     expect(body).toContain('Briefs retain shared completion without copied child state')
     expect(closeout).toContain('give `rsp-commit` the WorkOwner, paths, evidence, lifecycle state, and authority')
@@ -1508,7 +1505,7 @@ describe('rsp-manage product Skill', () => {
   it('keeps process chronology transient and returns only outcome evidence', () => {
     const { body } = readSkill(product)
 
-    expect(body).toContain('Keep dispatch chronology out of Changes, Group Briefs, Specs, Decision Records')
+    expect(body).toContain('Keep chronology and transient control objects out of Changes, Briefs, Specs, Decisions, and Focus Capsules')
     expect(body).toContain('return the incomplete continuation in this order: `WorkRef, Authority, Current state, Changed artifacts, Fresh verification, Blockers, and Next action`')
     expect(body).toContain('Do not expose retry chronology')
     expect(closeout).toContain('Archive grants no Git or publication authority')

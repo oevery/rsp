@@ -9,7 +9,7 @@ product_skill_names:
   - rsp
   - rsp-manage
   - rsp-implement
-product_composition_sha256: 272186fb7913598117a7e1ed18f4fda2762ff8df5d568da44fa1b0d04283935f
+product_composition_sha256: 47ba02bd327bd9bc7614ce79fda7111f3002246cf68fc383a7168715f217e1a9
 prior_retained_evidence:
   - path: research/evaluations/rsp-manage/2026-08-17-implementation-test-restraint/report.md
     sha256: 981587bd4ce9e26107682e30ddf64e863454e7fa1863343ed1c62f8f3c232b75

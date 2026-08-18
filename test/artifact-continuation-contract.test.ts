@@ -150,7 +150,7 @@ describe('rsp artifact routing and continuation contract', () => {
     const fallback = readFileSync(join(root, 'rules', 'rsp-rules.md'), 'utf8')
     expect(core).toContain('[response language](references/response-language.md)')
     expect(language).toContain('Response prose is user/session-owned')
-    expect(language).toContain('project `.rsp/config.yaml` never selects response language')
+    expect(language).toContain('Project `.rsp/config.yaml` never selects response language')
     expect(language).toContain('configured effective artifact language')
     expect(language).toContain('configured effective commit language')
     expect(language).toContain('configuration changes never rewrite them')
@@ -178,7 +178,7 @@ describe('rsp artifact routing and continuation contract', () => {
 
     expect(core).toContain('[response language](references/response-language.md)')
     expect(language).toContain('Use natural-language narration for progress, phases, control results, receipts, stop reasons, and handoffs')
-    expect(language).toContain('preserve it unchanged only as a secondary parenthesized or code-formatted value')
+    expect(language).toContain('Preserve an exact machine value unchanged only as a secondary parenthesized or code-formatted value')
     expect(language).toContain('Durable artifact prose is repository-owned')
     expect(fallback).toContain('Use the response language for user-visible narration')
     expect(fallback).toContain('preserving exact WorkRefs, paths, commands, headings, and machine values')

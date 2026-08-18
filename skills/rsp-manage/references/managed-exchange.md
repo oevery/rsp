@@ -34,6 +34,10 @@ Only an observed resumed compatible WorkerSession may receive an `AssignmentDelt
 
 The canonical resume safety values remain `resume safety: idempotent | inspect-before-repeat | non-repeatable`; the exchange form shortens only the contextual field label to `replay`.
 
+## Bound nested delegation
+
+A WorkerSession is a leaf by default. Nested delegation requires explicit Assignment authority that bounds the descendant role, authority, resources, stops, and evidence. The parent owns descendant work, background processes, and ResourceLeases, then returns one schema-valid WorkerReceipt. Descendants gain no ambient authority and cannot satisfy Manager-owned independent Verify or fixed-scope Review. Persist no descendant registry.
+
 ## Return one worker claim
 
 Every WorkerInvocation expects exactly one worker-authored `WorkerReceipt` rather than a conversational execution diary. Localize the labels in the session:
@@ -70,6 +74,8 @@ Host observations and producer claims remain separate inputs:
 | `AcceptedLaneEvidence` | Manager | validated lane evidence | review-clean or closeout by itself |
 
 Before deriving `AcceptedLaneEvidence`, Manager matches the echoed Assignment identity to the current WorkerInvocation, then validates actual paths and local diff, exact verification and omissions, boundary validity, evidence status, the worker's release claim, and the host's lifecycle and release observations. The accepted projection retains only the validated assignment, lane result, paths, verification, applicable identity or independence, and decisive observations. It is response-only and never becomes a receipt ledger.
+
+Reuse unchanged same-run evidence only inside its declared scope. A normal Fix that implements declared behavior remains same-scope. Reread the complete owner, status, authority, blockers, and decisive evidence only after an Assignment crossing, `boundary: changed`, changed behavior/acceptance/interface, a shared seam, external owner or capsule drift, unbounded impact, cross-session resume, or closeout. Uncertainty widens the reread and verification boundary; unchanged same-scope work never returns to Core merely to repeat qualification.
 
 The managed transition is exactly:
 

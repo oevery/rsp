@@ -8,10 +8,9 @@ evidence:
   - Compatible Group children may reuse one primary WorkerSession without merging WorkRef identity or acceptance.
   - Batching must fail closed when writer, verification, review, replay, authority, or resource boundaries differ.
 required_contract:
-  - Inside one WorkRef, one slice may batch several small same-shape edits only when their role, seam, writer boundary, authority envelope, replay safety, verification and review surfaces, and ResourceLeases are compatible
-  - otherwise keep them as separate ordered or independent slices
+  - Batch small same-shape edits only when role, seam, writer, authority, replay, verification, review, and ResourceLease boundaries match
   - Never batch distinct WorkRefs into one Assignment or WorkerReceipt
-  - Manager may reuse one primary WorkerSession longitudinally, but each child retains its own Assignment, WorkerInvocation, and WorkerReceipt
+  - Compatible Group children may reuse a primary WorkerSession, but each child retains its own Assignment, WorkerInvocation, and WorkerReceipt
   - Every fresh WorkerSession receives one complete `Assignment`
 prohibited_actions:
   - one worker per file by default

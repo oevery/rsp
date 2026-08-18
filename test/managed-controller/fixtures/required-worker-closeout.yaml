@@ -8,12 +8,11 @@ evidence:
   - Closeout derives not-eligible from every non-review-clean acceptance state without restating worker failures.
 required_contract:
   - '`AcceptanceDisposition` independently from execution'
-  - exactly `incomplete`, `evidence-complete`, or `review-clean`
-  - A required worker that was not created, did not return a valid required receipt, returned `unavailable` or `boundary-changed`
-  - keeps acceptance `incomplete`
-  - Accepted required receipts plus fresh declared verification may derive only `evidence-complete`
-  - Only a clean fixed-scope change review may then derive managed `review-clean`
-  - An execution receipt never derives `review-clean` directly
+  - 'accepted required receipts + fresh declared verification → evidence-complete'
+  - 'evidence-complete + clean fixed-scope review              → review-clean'
+  - Otherwise acceptance is `incomplete`
+  - a required worker that was not created, returned no valid receipt, reported `unavailable` or `boundary-changed`
+  - Execution and verification receipts never derive `review-clean`
   - When dispatch cannot satisfy a required worker obligation, apply the AcceptanceDisposition rule above
   - 'return `StopDisposition: capability-unavailable`, keep acceptance `incomplete`, and stop'
   - Absence of a confirmed WorkerInvocation or WorkerReceipt is never success

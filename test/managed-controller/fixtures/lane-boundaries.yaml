@@ -14,15 +14,11 @@ required_contract:
   - immediately accepted Assignment or AssignmentDelta in that same observed WorkerSession
   - Human-facing narration follows the response language
   - retains an exact canonical result secondarily when needed
-  - private Inspect remains Manager-only
-  - Diagnose reuses `rsp-diagnose` and remains read-only
-  - Inspect is a private Manager-only read-only lane
-  - may run alongside another read-only lane only when paths and verification resources are demonstrably isolated
-  - otherwise keep it sequential
-  - Fix reuses `rsp-implement`, receives explicit in-scope mutation authority, and is the sole product writer at its mutation boundary
-  - runs only for the Change-declared risk or after a failed correction
-  - Verify delegates its read-only result and evidence contract to `rsp-verify`
-  - managed receipt appends `worker identity`
+  - '**Diagnose:** `rsp-diagnose`; read-only until a cause or explicit no-cause result'
+  - '**Inspect:** Manager-only and read-only; parallel only with isolated paths and verification resources'
+  - '**Fix:** `rsp-implement`; sole product writer with explicit in-scope mutation authority'
+  - '**Verify:** `rsp-verify`; read-only for declared risk or failed correction'
+  - 'Verify receipts append observed worker identity and `independence: established | unavailable`'
   - 'independence: established | unavailable'
   - Every WorkerInvocation expects exactly one worker-authored `WorkerReceipt`
   - 'Evidence status: <valid | invalid | unavailable>'

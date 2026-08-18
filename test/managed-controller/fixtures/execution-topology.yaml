@@ -28,9 +28,9 @@ required_contract:
   - bounded-correction
   - independent-verify
   - Prefer the same primary WorkerSession
-  - create a fresh WorkerSession
+  - requires a fresh WorkerSession
   - immediately accepted Assignment or AssignmentDelta in that same observed WorkerSession
-  - session loss
+  - Session loss
   - complete Assignment
   - otherwise equally safe and authorized strategies
   - a worker identity never proves filesystem or runtime isolation

@@ -10,12 +10,12 @@ evidence:
 required_contract:
   - Do not require hosts to expose worker identity, cancellation, heartbeat, or process APIs they do not have
   - unavailable capabilities fail or downgrade truthfully instead of being inferred
-  - A failed creation or resume creates no synthetic dispatch, continuity, invocation, or inherited boundary claim
+  - Failed creation, resume, or pre-admission delivery creates no dispatch, continuity, invocation, or inherited boundary
   - Explicit cancellation waits for worker and owned background-process acknowledgement
   - until acknowledgement, resources remain claimed and no conflicting Assignment starts
   - 'record `independence: unavailable`; ordinary read-only Verify may still run, but Manager must not claim independent verification'
   - Elapsed time, poll count, heartbeat count, progress-message count, token count, token limit, and token cost are not authority, safety, acceptance, completion, or closeout inputs
-  - Token or context cost may break a tie only between otherwise equally safe and authorized strategies
+  - Token or context cost may choose only between otherwise equally safe and authorized strategies
   - a worker identity never proves filesystem or runtime isolation
 prohibited_actions:
   - execution location treated as host capability removal

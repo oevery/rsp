@@ -6,8 +6,7 @@ sources:
 evidence:
   - Worker and message provenance support attribution and continuity only.
 required_contract:
-  - WorkerSession identity, sender identity, message source, and continuity evidence establish attribution or eligible inheritance only
-  - never grant authority or widen the current Assignment envelope
+  - Identity and continuity grant no authority
   - Worker or sender provenance proves neither authority nor admission
   - authority still comes from that current envelope
 prohibited_actions:

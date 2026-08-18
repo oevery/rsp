@@ -11,7 +11,7 @@ evidence:
   - Controller execution state remains response-only and is never durable project state.
 required_contract:
   - Manager matches the echoed Assignment identity to the current WorkerInvocation
-  - Do not return to Core merely to repeat route selection or qualification
+  - unchanged same-scope work never returns to Core merely to repeat qualification
   - Do not impose one fixed dispatch ceiling across the whole managed run
   - Every dispatch requires one necessary bounded Assignment
   - at most three correction passes by default
@@ -19,9 +19,9 @@ required_contract:
   - Independent Verify is a separate required acceptance obligation
   - does not consume the Fix correction allowance
   - Allow at most three Resolve Findings passes per Change, separate from the worker retry limit
-  - Keep frontier classification, DispatchDisposition, topology, assignments, WorkerReceipts, AcceptedLaneEvidence, dispatch and correction counts, concurrency reasoning, invalidation mapping, and resume chronology response-only
-  - Create no frontier file, ticket map, ledger, registry, dependency graph, ambient hook, or numeric routing score
-  - Never persist the goal envelope, WorkSet, waves, invalidation graph, or discovery classification
+  - Keep transient control, execution, receipt, resource, topology, and chronology data response-only
+  - Create no frontier file, ticket map, ledger, registry, graph, hook, numeric routing score, run directory, or receipt/worker/verification registry
+  - Never persist the goal envelope, ExecutionFrame, DispatchDisposition
 prohibited_actions:
   - fixed whole-run dispatch quota
   - unbounded correction

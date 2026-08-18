@@ -6,11 +6,11 @@ evidence:
   - Owner decisions, fog, and out-of-goal evidence stop before evidence or Fix dispatch.
 required_contract:
   - '`out-of-goal` → `owner-decision` → `fog` → `evidence-needed` → `ready-to-execute`'
-  - '`out-of-goal` stops for topology or authority resolution'
-  - '`owner-decision` stops with the single highest-impact question for its `DecisionOwner`'
-  - '`fog` is not yet a precise question'
-  - Create no synthetic Task, Change, Blocker, or worker dispatch
-  - If evidence would cross one of those boundaries, take the applicable stop instead of selecting Fix
+  - '`out-of-goal`: return topology or authority resolution to Core; stop `reroute`.'
+  - '`owner-decision`: ask the `DecisionOwner` one highest-impact question'
+  - This is not yet a precise question
+  - Create no synthetic Task, Change, Blocker, worker dispatch, or product mutation
+  - If it crosses an earlier boundary, use that boundary's stop instead of selecting Fix
 prohibited_actions:
   - evidence lane before owner-decision
   - synthetic work for fog

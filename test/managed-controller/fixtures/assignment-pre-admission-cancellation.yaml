@@ -8,11 +8,9 @@ evidence:
   - Worker creation, resume, and Assignment admission are distinct boundaries.
   - Cancellation or delivery failure before admission creates no accepted work.
 required_contract:
-  - Treat host-confirmed Assignment admission as the WorkerInvocation and cancellation-ownership boundary
-  - WorkerSession creation or resume alone does not prove admission
-  - Cancellation or delivery failure before admission creates no accepted dispatch or inherited Assignment boundary
-  - A failed creation or resume creates no synthetic dispatch
-  - neither does pre-admission delivery failure
+  - Host-confirmed Assignment admission creates the WorkerInvocation and cancellation-ownership boundary
+  - creation or resume alone does not prove admission
+  - Failed creation, resume, or pre-admission delivery creates no dispatch, continuity, invocation, or inherited boundary
 prohibited_actions:
   - creation implies admission
   - pre-admission cancellation releases an accepted lease

@@ -20,7 +20,7 @@ required_contract:
   - Route, topology, lane result, `AcceptanceDisposition`, and `CloseoutEligibility` remain nested
   - '`WorkOwner` means the selected shape-ready Change or shallow Group'
   - 'Missing or non-ready ownership uses `RouteDisposition: shape`'
-  - canonical `FrontierDisposition` is exactly `out-of-goal`, `owner-decision`, `fog`, `evidence-needed`, or `executable`
+  - Canonical `FrontierDisposition` is exactly `out-of-goal`, `owner-decision`, `fog`, `evidence-needed`, or `executable`
   - '`StopDisposition` values are exactly:'
   - returning a ready WorkOwner to Core for fresh route derivation
   - it never resumes Manage directly
