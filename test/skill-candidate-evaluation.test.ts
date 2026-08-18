@@ -456,4 +456,91 @@ describe('skill candidate no-regression evaluation', () => {
       result: { result: 'candidate-eligible' },
     })
   })
+
+  it('compares current agent-reported managed-run metadata without a legacy projection', () => {
+    const managedMetadata = (identity: string, toolCalls: number) => {
+      const bound = boundObservation('managed-agent-reported', identity, contractIdentity, {}, {
+        corrections: 0,
+        first_fix_result: 'passed',
+        worker_dispatch_count: 1,
+        tool_calls: toolCalls,
+      })
+      const sourceObservability = observation({ trigger: 'not-observed' }, { tool_calls: toolCalls })
+      return {
+        agent_reported: {
+          evaluation_receipt: {
+            case_id: bound.case_id,
+            composition_sha256: bound.composition_sha256,
+            contract_sha256: bound.contract_sha256,
+            receipt_sha256: bound.receipt_sha256,
+          },
+          observations: bound.receipt_observations,
+        },
+        case_id: bound.case_id,
+        contract_sha256: bound.contract_sha256,
+        duration_ms: 100,
+        events: { tool_calls: toolCalls, usage: { input_tokens: 20, output_tokens: 5 } },
+        evaluation_receipt: null,
+        observation_sha256: hashSkillEvaluationValue(sourceObservability),
+        observability: sourceObservability,
+        output: { expected_missing: [], forbidden_present: [] },
+        receipt_observations: null,
+        result: 'passed',
+        worktree: { unauthorized_paths: [] },
+      }
+    }
+
+    const manifest = createSkillCandidateManifestFromManagedRuns(
+      managedMetadata(currentIdentity, 5),
+      managedMetadata(candidateIdentity, 4),
+    )
+
+    expect(evaluateSkillCandidate(manifest)).toMatchObject({
+      result: 'candidate-eligible',
+      regressions: [],
+      candidate_failures: [],
+      missing_evidence: [],
+    })
+    expect(manifest.cases[0].current.observability.dimensions.trigger.status).toBe('passed')
+    expect(manifest.cases[0].current.observability.measurements).toMatchObject({
+      corrections: 0,
+      first_fix_result: 'passed',
+      worker_dispatch_count: 1,
+    })
+  })
+
+  it('fails closed when legacy and agent-reported managed-run evidence conflict', () => {
+    const legacy = boundObservation('managed-conflict', candidateIdentity, contractIdentity)
+    const reported = boundObservation('managed-conflict', currentIdentity, contractIdentity)
+    const metadata = {
+      agent_reported: {
+        evaluation_receipt: {
+          case_id: reported.case_id,
+          composition_sha256: reported.composition_sha256,
+          contract_sha256: reported.contract_sha256,
+          receipt_sha256: reported.receipt_sha256,
+        },
+        observations: reported.receipt_observations,
+      },
+      case_id: reported.case_id,
+      contract_sha256: reported.contract_sha256,
+      duration_ms: 100,
+      events: { tool_calls: 1, usage: {} },
+      evaluation_receipt: {
+        case_id: legacy.case_id,
+        composition_sha256: legacy.composition_sha256,
+        contract_sha256: legacy.contract_sha256,
+        receipt_sha256: legacy.receipt_sha256,
+      },
+      observation_sha256: hashSkillEvaluationValue(legacy.observability),
+      observability: legacy.observability,
+      output: { expected_missing: [], forbidden_present: [] },
+      receipt_observations: legacy.receipt_observations,
+      result: 'passed',
+      worktree: { unauthorized_paths: [] },
+    }
+
+    expect(() => createSkillCandidateManifestFromManagedRuns(metadata, metadata))
+      .toThrow('metadata contains conflicting legacy and agent-reported evaluation evidence')
+  })
 })

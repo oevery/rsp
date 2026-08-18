@@ -6,6 +6,7 @@ import { basename, dirname, resolve } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { parse as parseYaml } from 'yaml'
+import { projectSkillEvaluationObservability } from './skill-evaluation-observability.mjs'
 
 const dimensions = ['trigger', 'compliance', 'boundary', 'task_result']
 const numericMeasurements = [
@@ -388,7 +389,7 @@ function loadManagedRunMetadata(path, label) {
   return metadata
 }
 
-function boundObservationFromManagedRun(metadata, label) {
+function legacyBoundObservationFromManagedRun(metadata, label) {
   const receiptSummary = metadata.evaluation_receipt
   if (!isObject(receiptSummary) || !isObject(metadata.receipt_observations))
     throw new Error(`${label} metadata lacks structured evaluation receipt evidence`)
@@ -418,6 +419,73 @@ function boundObservationFromManagedRun(metadata, label) {
     receipt_observations: receipt.observations,
     observability: metadata.observability,
   }
+}
+
+function agentReportedBoundObservationFromManagedRun(metadata, label) {
+  const reported = metadata.agent_reported
+  const receiptSummary = reported?.evaluation_receipt
+  if (!isObject(reported) || !isObject(receiptSummary) || !isObject(reported.observations))
+    throw new Error(`${label} metadata lacks agent-reported evaluation receipt evidence`)
+  const receipt = validateSkillEvaluationReceipt({
+    case_id: receiptSummary.case_id,
+    composition_sha256: receiptSummary.composition_sha256,
+    contract_sha256: receiptSummary.contract_sha256,
+    observations: reported.observations,
+  }, {
+    caseId: metadata.case_id,
+    contractSha256: metadata.contract_sha256,
+  })
+  const receiptSha256 = hashSkillEvaluationValue(receipt)
+  if (receiptSummary.receipt_sha256 !== receiptSha256)
+    throw new Error(`${label} agent-reported receipt hash does not match its structured content`)
+  if (!isObject(metadata.observability))
+    throw new Error(`${label} metadata lacks managed-run observability`)
+  if (metadata.observation_sha256 !== hashSkillEvaluationValue(metadata.observability))
+    throw new Error(`${label} source observability hash does not match its structured content`)
+  const projected = projectSkillEvaluationObservability({
+    elapsedMs: metadata.duration_ms,
+    outcome: metadata.result,
+    outputContract: metadata.output,
+    receiptObservations: receipt.observations,
+    toolCalls: metadata.events?.tool_calls,
+    unauthorizedPaths: metadata.worktree?.unauthorized_paths,
+    usage: metadata.events?.usage,
+  })
+  const observability = metadata.observability.host_observed === undefined
+    ? projected
+    : { ...projected, host_observed: metadata.observability.host_observed }
+  validateSkillEvaluationReceiptObservability(
+    receipt.observations,
+    observability,
+    `${label} agent-reported observability`,
+  )
+  return {
+    case_id: receipt.case_id,
+    composition_sha256: receipt.composition_sha256,
+    contract_sha256: receipt.contract_sha256,
+    receipt_sha256: receiptSha256,
+    observation_sha256: hashSkillEvaluationValue(observability),
+    receipt_observations: receipt.observations,
+    observability,
+  }
+}
+
+function boundObservationFromManagedRun(metadata, label) {
+  const hasLegacy = (metadata.evaluation_receipt !== null && metadata.evaluation_receipt !== undefined)
+    || (metadata.receipt_observations !== null && metadata.receipt_observations !== undefined)
+  const hasAgentReported = metadata.agent_reported !== null && metadata.agent_reported !== undefined
+  if (!hasLegacy && !hasAgentReported)
+    throw new Error(`${label} metadata lacks structured evaluation receipt evidence`)
+  const legacy = hasLegacy ? legacyBoundObservationFromManagedRun(metadata, label) : null
+  const agentReported = hasAgentReported
+    ? agentReportedBoundObservationFromManagedRun(metadata, label)
+    : null
+  if (legacy && agentReported
+    && (legacy.receipt_sha256 !== agentReported.receipt_sha256
+      || legacy.observation_sha256 !== agentReported.observation_sha256)) {
+    throw new Error(`${label} metadata contains conflicting legacy and agent-reported evaluation evidence`)
+  }
+  return agentReported ?? legacy
 }
 
 export function createSkillCandidateManifestFromManagedRuns(currentMetadata, candidateMetadata) {
