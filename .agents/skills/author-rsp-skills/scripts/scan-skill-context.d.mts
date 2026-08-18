@@ -7,6 +7,7 @@ export interface SkillContextDiagnostics {
 
 export interface SkillContextPackage {
   diagnostics: SkillContextDiagnostics
+  distribution_markdown: string[]
   entrypoint: string
   kind: 'maintainer' | 'published'
   markdown_files: string[]

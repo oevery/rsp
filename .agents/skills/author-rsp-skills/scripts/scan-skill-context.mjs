@@ -1,10 +1,16 @@
 #!/usr/bin/env node
 
 import { lstatSync, readFileSync, readdirSync, realpathSync, statSync } from 'node:fs'
-import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 const linkPattern = /\[[^\]]*\]\(([^)]+)\)/g
+const distributionMarkdownNames = new Set([
+  'copying.md',
+  'license.md',
+  'notice.md',
+  'third-party-notices.md',
+])
 
 function within(parent, child) {
   const path = relative(parent, child)
@@ -26,6 +32,10 @@ function markdownFiles(root) {
   }
   visit(root)
   return files
+}
+
+function isDistributionMarkdown(path, packageRoot) {
+  return dirname(path) === packageRoot && distributionMarkdownNames.has(basename(path).toLowerCase())
 }
 
 function localMarkdownLinks(path, packageRoot) {
@@ -124,21 +134,25 @@ export function scanSkillContext(options = {}) {
   const root = realpathSync(resolve(options.root ?? process.cwd()))
   const packages = discoverPackages(root).map(item => {
     const markdown = markdownFiles(item.packageRoot)
-    const reached = reachableMarkdown(item.entrypoint, item.packageRoot, markdown)
+    const distribution = markdown.filter(path => isDistributionMarkdown(path, item.packageRoot))
+    const context = markdown.filter(path => !distribution.includes(path))
+    const reached = reachableMarkdown(item.entrypoint, item.packageRoot, context)
     return {
       name: item.name,
       kind: item.kind,
       entrypoint: relative(root, item.entrypoint),
       markdown_files: markdown.map(path => relative(root, path)),
+      distribution_markdown: distribution.map(path => relative(root, path)),
       reachable_markdown: [...reached].sort().map(path => relative(root, path)),
-      unreachable_markdown: markdown.filter(path => !reached.has(path)).map(path => relative(root, path)),
+      unreachable_markdown: context.filter(path => !reached.has(path)).map(path => relative(root, path)),
       diagnostics: diagnostics(markdown),
     }
   })
 
   const occurrences = new Map()
   for (const item of packages) {
-    for (const path of item.markdown_files) {
+    const distribution = new Set(item.distribution_markdown)
+    for (const path of item.markdown_files.filter(path => !distribution.has(path))) {
       for (const value of normalizedBlocks(join(root, path))) {
         const paths = occurrences.get(value) ?? []
         paths.push(path)
@@ -165,6 +179,8 @@ export function formatSkillContext(result) {
   for (const item of result.packages) {
     const d = item.diagnostics
     lines.push(`- ${item.kind} ${item.name}: ${d.markdown_files} md, ${d.words} words, ${d.bytes} bytes, ${d.lines} lines`)
+    if (item.distribution_markdown.length > 0)
+      lines.push(`  distribution: ${item.distribution_markdown.join(', ')}`)
     if (item.unreachable_markdown.length > 0)
       lines.push(`  unreachable: ${item.unreachable_markdown.join(', ')}`)
   }

@@ -1,15 +1,15 @@
 ---
 name: author-rsp-skills
-description: Author, revise, audit, semantically condense, adapt, or evaluate repository RSP Skills. Use for a selected RSP Change that changes a Skill contract, package, progressive resources, context shape, upstream-derived mechanism, or current-versus-candidate evidence; do not use for ordinary product implementation or publication alone.
+description: Author, revise, audit, semantically condense, adapt, or evaluate repository RSP Skills. Use for a report-only Pre-Change Audit or a selected RSP Change that changes a Skill contract, package, progressive resources, context shape, upstream-derived mechanism, or current-versus-candidate evidence; do not use for ordinary product implementation or publication alone.
 ---
 
 # Author RSP Skills
 
-Prepare one bounded Skill candidate and return evidence. The selected RSP Change owns the work; this Skill does not grant review, Git, archive, installation, or publication authority.
+Audit one explicit authored corpus or prepare one bounded Skill candidate and return evidence. A report-only Pre-Change Audit may run without inventing a WorkRef; every candidate or repair remains owned by a selected RSP Change. This Skill does not grant artifact mutation, candidate acceptance, review, Git, archive, installation, or publication authority.
 
 ## Select mode and target
 
-Require one explicit target package or authored corpus plus artifact mutation authority. Read the nearest instructions, selected Change, target `SKILL.md`, directly linked resources, relevant tests, and accepted research named by the Change. Preserve unrelated work and stop when the owner, behavioral gap, or authority is unresolved.
+Require one explicit target package or authored corpus. A report-only Pre-Change Audit requires read-only authority, returns findings with `WorkRef: N/A`, and stops before candidate creation, repair, mutation, or acceptance. Every other mode, plus an audit repair, requires one selected RSP Change and explicit artifact mutation authority. Read the nearest instructions, the selected Change when required, target `SKILL.md`, directly linked resources, relevant tests, and accepted research named by the Change. Preserve unrelated work and stop when the owner, behavioral gap, or authority is unresolved.
 
 Choose one primary mode:
 
@@ -32,15 +32,15 @@ Use host limits as constraints, never as the definition of quality. Words, lines
 
 ## Work
 
-1. Establish current evidence and the smallest candidate delta.
+1. Establish current evidence and, when mutation is authorized, the smallest candidate delta.
 2. Create new packages with the host's canonical Skill initializer; edit authored sources, not generated projections.
 3. Keep the entrypoint focused on routing, authority, action, stop, and return. Put low-frequency procedures in directly linked references and deterministic work in scripts.
 4. Run `node .agents/skills/author-rsp-skills/scripts/scan-skill-context.mjs` for corpus diagnostics when package layout, reachability, repetition, or context shape matters.
 5. Reuse repository evaluation, security, packaging, and behavior checks. Do not duplicate their implementations inside the Skill.
-6. Update only the selected Change's Tasks, Verify evidence, Durable Decisions, and Blockers after outcomes exist.
+6. For tracked work, update only the selected Change's Tasks, Verify evidence, Durable Decisions, and Blockers after outcomes exist. A report-only Pre-Change Audit writes no artifact and returns its findings to Core or the user for the planning decision.
 
 ## Stop and return
 
-Stop before accepting a candidate, independent review, Git delivery, archive, push, tag, release, publication, or installation unless the user separately authorizes the owning workflow. Also stop when provenance, license, containment, current behavior, or required holdout evidence is unresolved.
+Stop a report-only Pre-Change Audit before any artifact mutation or candidate acceptance. For tracked work, stop before accepting a candidate, independent review, Git delivery, archive, push, tag, release, publication, or installation unless the user separately authorizes the owning workflow. Also stop when provenance, license, containment, current behavior, or required holdout evidence is unresolved.
 
-Return: `WorkRef`, `Mode`, `Target`, `Contract delta`, `Changed artifacts`, `Fresh verification`, `Diagnostics`, `Blockers`, and `Next owner`. Use natural language; include machine-readable output only when another tool consumes it.
+Return: `WorkRef` (`N/A` for report-only Pre-Change Audit), `Mode`, `Target`, `Contract delta`, `Changed artifacts`, `Fresh verification`, `Diagnostics`, `Blockers`, and `Next owner`. Use natural language; include machine-readable output only when another tool consumes it.

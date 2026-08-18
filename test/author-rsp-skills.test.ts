@@ -40,7 +40,11 @@ describe('author-rsp-skills maintainer contract', () => {
       expect(skill).toContain(path)
     for (const obligation of ['trigger', 'inputs', 'authority', 'action', 'output', 'stop', 'verification', 'conditional-loading'])
       expect(skill).toContain(obligation)
-    expect(skill).toContain('does not grant review, Git, archive, installation, or publication authority')
+    expect(skill).toContain('report-only Pre-Change Audit')
+    expect(skill).toContain('WorkRef: N/A')
+    expect(skill).toContain('stops before candidate creation, repair, mutation, or acceptance')
+    expect(skill).toContain('requires one selected RSP Change and explicit artifact mutation authority')
+    expect(skill).toContain('does not grant artifact mutation, candidate acceptance, review, Git, archive, installation, or publication authority')
     expect(concise).toContain('diagnostics')
     expect(concise).toContain('Do not introduce a private DSL')
     expect(evaluation).toContain('Trigger, Compliance, Boundary, and task result')
@@ -61,6 +65,7 @@ describe('skill context scanner', () => {
     write(base, 'skills/published/references/guide.md', '# Guide\n\n[Deep](deep.md)\n')
     write(base, 'skills/published/references/deep.md', `# Deep\n\n${repeated}\n`)
     write(base, 'skills/published/references/orphan.md', '# Orphan\n')
+    write(base, 'skills/published/NOTICE.md', `# Notice\n\n${repeated}\n`)
     write(base, '.agents/skills/local/SKILL.md', '# Local\n')
     mkdirSync(join(base, '.agents/skills'), { recursive: true })
     symlinkSync('../../skills/published', join(base, '.agents/skills/published'))
@@ -80,12 +85,15 @@ describe('skill context scanner', () => {
       'skills/published/references/deep.md',
       'skills/published/references/guide.md',
     ])
+    expect(first.packages[1].markdown_files).toContain('skills/published/NOTICE.md')
+    expect(first.packages[1].distribution_markdown).toEqual(['skills/published/NOTICE.md'])
     expect(first.packages[1].unreachable_markdown).toEqual(['skills/published/references/orphan.md'])
     expect(first.repeated_prose).toEqual([{
       text: repeated,
       paths: ['skills/published/SKILL.md', 'skills/published/references/deep.md'],
     }])
     expect(formatSkillContext(first)).toContain('diagnostics, not correctness thresholds')
+    expect(formatSkillContext(first)).toContain('distribution: skills/published/NOTICE.md')
   })
 
   it('does not follow Markdown references outside the package', () => {
