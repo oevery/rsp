@@ -2,6 +2,7 @@ import { readdirSync } from 'node:fs'
 import { relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import vitestConfig from '../../vitest.config.js'
 
 const root = resolve(fileURLToPath(new URL('../..', import.meta.url)))
 
@@ -21,7 +22,7 @@ describe('verification topology', () => {
   it('separates source-owner tests from workflow-owner contracts', () => {
     const entries = readdirSync(resolve(root, 'test'), { withFileTypes: true })
 
-    expect(entries.filter(entry => entry.isFile() && entry.name.endsWith('.test.ts'))).toEqual([])
+    expect(entries.filter(entry => entry.isFile() && /\.test\.(?:ts|tsx)$/u.test(entry.name))).toEqual([])
     expect(entries
       .filter(entry => entry.isDirectory())
       .map(entry => entry.name)
@@ -41,6 +42,14 @@ describe('verification topology', () => {
       'tooling',
       'tui',
     ])
+  })
+
+  it('limits Vitest collection to executable tests under the test boundary', () => {
+    expect(vitestConfig.test?.include).toEqual(['test/**/*.test.{ts,tsx}'])
+    expect(vitestConfig.test?.exclude).toEqual(expect.arrayContaining([
+      'test/**/fixtures/**',
+      'test/**/holdout/**',
+    ]))
   })
 
   it('keeps only small single-owner fixtures under executable tests', () => {

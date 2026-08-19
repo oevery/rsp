@@ -226,7 +226,7 @@ describe('release acceptance runner', () => {
     }
   })
 
-  it('fingerprints tracked and untracked source changes without retaining their content', () => {
+  it('fingerprints a tracked diff larger than the default child-process buffer plus untracked changes', () => {
     const repository = mkdtempSync(join(tmpdir(), 'rsp-release-source-fingerprint-'))
     const git = (...args: string[]) => execFileSync('git', ['-C', repository, ...args], { encoding: 'utf8' })
     try {
@@ -238,7 +238,8 @@ describe('release acceptance runner', () => {
       git('commit', '--quiet', '-m', 'baseline')
 
       const clean = computeReleaseSourceIdentity(repository)
-      writeFileSync(join(repository, 'tracked.txt'), 'changed\n')
+      const largeTrackedContent = 'x'.repeat(2 * 1024 * 1024)
+      writeFileSync(join(repository, 'tracked.txt'), largeTrackedContent)
       const tracked = computeReleaseSourceIdentity(repository)
       writeFileSync(join(repository, 'untracked.txt'), 'untracked\n')
       const untracked = computeReleaseSourceIdentity(repository)
@@ -246,6 +247,7 @@ describe('release acceptance runner', () => {
       expect(clean.dirty).toBe(false)
       expect(clean.fingerprintSha256).toMatch(/^[a-f0-9]{64}$/u)
       expect(tracked.dirty).toBe(true)
+      expect(tracked.fingerprintSha256).toMatch(/^[a-f0-9]{64}$/u)
       expect(tracked.fingerprintSha256).not.toBe(clean.fingerprintSha256)
       expect(untracked.fingerprintSha256).not.toBe(tracked.fingerprintSha256)
     }
