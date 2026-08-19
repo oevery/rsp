@@ -1,0 +1,27 @@
+{
+  "id": "sanitized-dirty-git-adoption",
+  "kind": "fresh-adoption",
+  "fixture": "acceptance/fixtures/sanitized-dirty-git-worktree",
+  "derivedFrom": "sanitized-product-worktree",
+  "sanitizationVersion": "v1",
+  "fixtureSha256": "b007ced3709629afe6dc8b945336c3422df7ce0e8df882a071018cb1022e1c39",
+  "coverage": [
+    "dirty-git-worktree",
+    "doctor",
+    "existing-files",
+    "fresh-adoption",
+    "real-project",
+    "specs"
+  ],
+  "preserve": [
+    "README.md",
+    "apps/api/config.ts",
+    "docs/release.md",
+    "package.json"
+  ],
+  "gitWorktree": {
+    "staged": "docs/release.md",
+    "unstaged": "apps/api/config.ts",
+    "untracked": "notes/local.todo"
+  }
+}

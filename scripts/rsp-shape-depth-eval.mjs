@@ -20,7 +20,7 @@ function assertSafeFile(root, path, label) {
 }
 
 export function loadShapeDepthCases(root) {
-  const fixturesRoot = join(root, 'test', 'rsp-shape-depth', 'fixtures')
+  const fixturesRoot = join(root, 'evaluation', 'rsp-shape-depth', 'fixtures')
   return readdirSync(fixturesRoot)
     .filter(name => name.endsWith('.yaml'))
     .sort()

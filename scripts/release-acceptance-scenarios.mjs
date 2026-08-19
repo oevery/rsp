@@ -101,8 +101,8 @@ function fixturePath(fixtureRoot, value, label, { directory = false, missing = f
 }
 
 export function discoverReleaseProjectScenarios(repositoryRoot) {
-  const fixturesRoot = join(repositoryRoot, 'test', 'fixtures')
-  const registryRoot = join(repositoryRoot, 'test', 'release-projects')
+  const fixturesRoot = join(repositoryRoot, 'acceptance', 'fixtures')
+  const registryRoot = join(repositoryRoot, 'acceptance', 'projects')
   const scenarios = findManifests(registryRoot).map((manifestPath) => {
     let manifest
     try {
@@ -138,10 +138,10 @@ export function discoverReleaseProjectScenarios(repositoryRoot) {
       fail(`${manifest.id}.fixture must be a non-empty repository-relative path`)
     const fixtureRoot = resolve(repositoryRoot, manifest.fixture)
     if (!fixtureRoot.startsWith(fixturesRoot + sep))
-      fail(`${manifest.id}.fixture must select one directory under test/fixtures`)
+      fail(`${manifest.id}.fixture must select one directory under acceptance/fixtures`)
     const fixtureStats = lstatSync(fixtureRoot)
     if (fixtureStats.isSymbolicLink() || !fixtureStats.isDirectory())
-      fail(`${manifest.id}.fixture must select one real directory under test/fixtures`)
+      fail(`${manifest.id}.fixture must select one real directory under acceptance/fixtures`)
     assertRealFixtureTree(fixtureRoot, manifest.id)
     if (typeof manifest.derivedFrom !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(manifest.derivedFrom))
       fail(`${manifest.id}.derivedFrom must be one anonymous kebab-case category`)

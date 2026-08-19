@@ -549,11 +549,11 @@ function managedSkillRoot(root, variant) {
 }
 
 function contractFixtures(root) {
-  return join(root, 'test', 'managed-controller', 'fixtures')
+  return join(root, 'evaluation', 'managed-controller', 'fixtures')
 }
 
 function holdoutFixtures(root) {
-  return join(root, 'test', 'managed-controller', 'holdout')
+  return join(root, 'evaluation', 'managed-controller', 'holdout')
 }
 
 function contractSources(root, item) {

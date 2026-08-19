@@ -20,7 +20,7 @@ function assertSafeFile(root, path, label) {
 }
 
 export function loadDisciplineCompositionCases(root) {
-  const fixturesRoot = join(root, 'test', 'discipline-composition', 'fixtures')
+  const fixturesRoot = join(root, 'evaluation', 'discipline-composition', 'fixtures')
   return readdirSync(fixturesRoot)
     .filter(name => name.endsWith('.yaml'))
     .sort()

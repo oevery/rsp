@@ -17,7 +17,7 @@ export const RELEASE_ACCEPTANCE_STEPS = [
   { id: 'build', label: 'CLI build', command: 'pnpm', args: ['run', 'build'], coverage: ['build'] },
   { id: 'typecheck', label: 'TypeScript typecheck', command: 'pnpm', args: ['run', 'typecheck'], coverage: ['typecheck'] },
   { id: 'lint', label: 'Lint', command: 'pnpm', args: ['run', 'lint'], coverage: ['lint'] },
-  { id: 'tests', label: 'Complete serial test suite', command: 'pnpm', args: ['exec', 'vitest', 'run', '--no-file-parallelism'], coverage: ['serial-tests'] },
+  { id: 'tests', label: 'Complete serial code test suite', command: 'pnpm', args: ['exec', 'vitest', 'run', '--no-file-parallelism'], coverage: ['serial-tests'] },
   { id: 'package', label: 'Packed installed-package workflows', command: 'node', args: ['scripts/clean-install-check.mjs', '--json'], coverage: ['installed-package', 'real-projects'], streamStdout: false },
 ]
 
@@ -79,7 +79,7 @@ function gitOutput(root, args) {
 }
 
 function gitBuffer(root, args) {
-  const result = spawnSync('git', ['-C', root, ...args])
+  const result = spawnSync('git', ['-C', root, ...args], { maxBuffer: 64 * 1024 * 1024 })
   return result.status === 0 ? result.stdout : null
 }
 

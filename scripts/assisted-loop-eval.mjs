@@ -20,7 +20,7 @@ function assertSafeFile(root, path, label) {
 }
 
 export function loadAssistedLoopCases(root) {
-  const fixturesRoot = join(root, 'test', 'assisted-loop', 'fixtures')
+  const fixturesRoot = join(root, 'evaluation', 'assisted-loop', 'fixtures')
   const files = readdirSync(fixturesRoot)
     .filter(name => name.endsWith('.yaml'))
     .sort()

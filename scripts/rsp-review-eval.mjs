@@ -20,7 +20,7 @@ function assertContained(parent, child, label) {
 }
 
 function fixtureRoot(root) {
-  return join(root, 'test', 'skill-behavior', 'fixtures')
+  return join(root, 'evaluation', 'skill-behavior', 'fixtures')
 }
 
 function assertRelativeFixturePath(path, label) {

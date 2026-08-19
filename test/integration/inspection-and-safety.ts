@@ -5,9 +5,16 @@ import { existsSync, utimesSync } from 'node:fs'
 import { chmod, mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
 import { RSP_DIR } from '../../src/core/config.js'
 import { changesPath, cliPath, createRspFixture, renderChange, renderGeneratedIndexMetadata, renderGroupBrief } from './harness.js'
+
+beforeAll(async () => {
+  await mkdir(changesPath('auth'), { recursive: true })
+  await writeFile(changesPath('auth', '00-brief.md'), renderGroupBrief('auth', ['auth/login']))
+  const { createChange } = await import('../../src/commands/create.js')
+  await createChange('auth/login', 'Login change')
+})
 
 describe('check command', () => {
   it('passes on valid changes', async () => {

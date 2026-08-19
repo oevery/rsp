@@ -141,7 +141,7 @@ function validatePriorRetainedEvidence(projectRoot, entries) {
 }
 
 export function loadManagedControllerBetaPlan(projectRoot = root) {
-  const path = join(projectRoot, 'test', 'managed-controller', 'beta', 'manage-orchestration-beta.yaml')
+  const path = join(projectRoot, 'evaluation', 'managed-controller', 'beta', 'manage-orchestration-beta.yaml')
   const plan = parseYaml(readFileSync(path, 'utf8'))
   if (!plan || plan.id !== 'manage-orchestration-beta' || typeof plan.case !== 'string')
     throw new Error('invalid managed-controller beta plan')
@@ -151,7 +151,7 @@ export function loadManagedControllerBetaPlan(projectRoot = root) {
     if (!Array.isArray(plan[field]) || plan[field].length === 0 || plan[field].some(item => typeof item !== 'string'))
       throw new Error(`beta ${field} must be a non-empty string array`)
   }
-  const caseDirectory = join(projectRoot, 'test', 'managed-controller', 'holdout', plan.case)
+  const caseDirectory = join(projectRoot, 'evaluation', 'managed-controller', 'holdout', plan.case)
   const manifestPath = join(caseDirectory, 'case.yaml')
   const baseDirectory = join(caseDirectory, 'base')
   if (!existsSync(manifestPath) || !existsSync(baseDirectory))

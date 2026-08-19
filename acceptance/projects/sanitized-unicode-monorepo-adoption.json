@@ -1,0 +1,27 @@
+{
+  "id": "sanitized-unicode-monorepo-adoption",
+  "kind": "fresh-adoption",
+  "fixture": "acceptance/fixtures/sanitized-unicode-monorepo",
+  "derivedFrom": "sanitized-multilingual-monorepo",
+  "sanitizationVersion": "v1",
+  "fixtureSha256": "8ffe1b3412af874b9aa544d8093602ad166fd8260e19393cea0266a63e0c78c1",
+  "coverage": [
+    "doctor",
+    "existing-files",
+    "fresh-adoption",
+    "monorepo-nesting",
+    "real-project",
+    "specs",
+    "unicode-content"
+  ],
+  "preserve": [
+    "README.md",
+    "docs/发布说明.md",
+    "package.json",
+    "packages/课堂应用/package.json",
+    "packages/课堂应用/src/入口.ts",
+    "pnpm-workspace.yaml"
+  ],
+  "nestedProjectDirectory": "packages/课堂应用",
+  "specName": "release-flow"
+}

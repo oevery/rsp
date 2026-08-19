@@ -134,7 +134,7 @@ function changedPaths(workspace) {
 
 function loadRealCase(root, caseId) {
   assert(REAL_CASES.has(caseId), `unsupported real case: ${caseId}`)
-  const directory = join(root, 'test', 'daily-workflow-depth', 'holdout', caseId)
+  const directory = join(root, 'evaluation', 'daily-workflow-depth', 'holdout', caseId)
   const manifest = parseYaml(readFileSync(join(directory, 'case.yaml'), 'utf8'))
   assert(manifest?.id === caseId, `invalid manifest for ${caseId}`)
   return { directory, manifest }

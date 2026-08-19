@@ -52,8 +52,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "pnpm run build && vitest run",
+    "test:watch": "vitest --config vitest.watch.config.ts"
   },
   "dependencies": {
     "citty": "^0.2.2",

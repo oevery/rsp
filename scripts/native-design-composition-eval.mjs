@@ -165,7 +165,7 @@ function archivePreviousAttempt(persistRoot) {
 
 function readContractPaths(root) {
   const evaluationRoot = join(root, ...EVALUATION_PATH)
-  const holdoutRoot = join(root, 'test', 'native-design-composition', 'holdout', CASE_ID)
+  const holdoutRoot = join(root, 'evaluation', 'native-design-composition', 'holdout', CASE_ID)
   return {
     evaluationRoot,
     holdoutRoot,

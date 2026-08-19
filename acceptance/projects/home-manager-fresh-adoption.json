@@ -1,0 +1,22 @@
+{
+  "id": "home-manager-fresh-adoption",
+  "kind": "fresh-adoption",
+  "fixture": "acceptance/fixtures/home-manager-ish",
+  "derivedFrom": "sanitized-personal-configuration",
+  "sanitizationVersion": "v1",
+  "fixtureSha256": "991d8439e6d480942aa98d659f4dadbf278b161134159119e3e0d3933891e406",
+  "coverage": [
+    "doctor",
+    "existing-files",
+    "fresh-adoption",
+    "real-project",
+    "specs"
+  ],
+  "preserve": [
+    "README.md",
+    "flake.nix",
+    "home.nix",
+    "modules/editor.nix",
+    "package.json"
+  ]
+}
