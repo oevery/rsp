@@ -77,6 +77,7 @@ describe('verification topology', () => {
       'rsp-tdd-forward',
       'skill-behavior',
       'skill-restraint-eval',
+      'skill-routing',
       'skill-shape',
       'structural-audit',
     ])

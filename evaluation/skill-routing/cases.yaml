@@ -1,0 +1,126 @@
+version: 1
+collision_threshold: 0.55
+owners:
+  - rsp-review
+  - rsp-resolve-findings
+  - rsp-implement
+  - rsp-tdd
+positive:
+  - id: review-code-change
+    prompt: Review this RSP-tracked code change and report findings without modifying files.
+    expected_owner: rsp-review
+  - id: review-document-change
+    prompt: Perform a read-only review of the tracked documentation change before archive.
+    expected_owner: rsp-review
+  - id: review-mixed-change
+    prompt: Review this mixed code and document change against its fixed comparison scope.
+    expected_owner: rsp-review
+  - id: resolve-fixed-report
+    prompt: Resolve the actionable findings in this fixed rsp-review report and rerun verification.
+    expected_owner: rsp-resolve-findings
+  - id: resolve-disposition
+    prompt: Take the existing review findings through disposition and bounded fixes.
+    expected_owner: rsp-resolve-findings
+  - id: resolve-rereview
+    prompt: Address this rsp-review report, make the authorized fixes, and prepare it for re-review.
+    expected_owner: rsp-resolve-findings
+  - id: implement-ready-change
+    prompt: Implement the selected ready RSP Change and run its required verification.
+    expected_owner: rsp-implement
+  - id: implement-known-fix
+    prompt: Apply the known bounded fix for this tracked work without inferring Git authority.
+    expected_owner: rsp-implement
+  - id: implement-tests-and-code
+    prompt: Complete the authorized code and tests for the focused ready Change.
+    expected_owner: rsp-implement
+  - id: tdd-test-first
+    prompt: Drive this selected behavior test-first through RED, minimal GREEN, and safe REFACTOR.
+    expected_owner: rsp-tdd
+  - id: tdd-observed-red
+    prompt: Start from an observed failing test and use the TDD cycle for this one clear behavior.
+    expected_owner: rsp-tdd
+  - id: tdd-concrete-risk
+    prompt: The Change explicitly requires test-first evidence for this concrete regression risk.
+    expected_owner: rsp-tdd
+hard_negative:
+  - id: review-do-not-fix
+    prompt: Review the tracked change and return read-only findings; do not fix anything.
+    excluded_owner: rsp-resolve-findings
+    expected_owner: rsp-review
+  - id: review-before-fixes
+    prompt: Inspect this code change for findings before anyone starts implementing fixes.
+    excluded_owner: rsp-resolve-findings
+    expected_owner: rsp-review
+  - id: review-no-report-yet
+    prompt: There is no existing report yet; review the mixed change against project authority.
+    excluded_owner: rsp-resolve-findings
+    expected_owner: rsp-review
+  - id: resolve-not-new-review
+    prompt: Use the existing rsp-review report to disposition findings and apply bounded fixes.
+    excluded_owner: rsp-review
+    expected_owner: rsp-resolve-findings
+  - id: resolve-after-review
+    prompt: The review is complete; resolve its requested changes and obtain fresh verification.
+    excluded_owner: rsp-review
+    expected_owner: rsp-resolve-findings
+  - id: resolve-recovery
+    prompt: Recover the authorized finding-resolution work from the fixed reviewer report.
+    excluded_owner: rsp-review
+    expected_owner: rsp-resolve-findings
+  - id: implement-no-test-first
+    prompt: Implement exactly one selected ready RSP Change within explicit mutation authority.
+    excluded_owner: rsp-tdd
+    expected_owner: rsp-implement
+  - id: implement-known-cause
+    prompt: Implement the selected ready Change now that its behavior, cause, and owner are known.
+    excluded_owner: rsp-tdd
+    expected_owner: rsp-implement
+  - id: implement-existing-evidence
+    prompt: Implement the focused ready Change using its existing decisive evidence and required checks.
+    excluded_owner: rsp-tdd
+    expected_owner: rsp-implement
+  - id: tdd-explicit-route
+    prompt: The selected Change explicitly requires a test-first RED GREEN REFACTOR cycle.
+    excluded_owner: rsp-implement
+    expected_owner: rsp-tdd
+  - id: tdd-regression-first
+    prompt: Drive this one clear regression behavior through observed RED, minimal GREEN, and safe REFACTOR.
+    excluded_owner: rsp-implement
+    expected_owner: rsp-tdd
+  - id: tdd-one-behavior
+    prompt: Drive one clear testable behavior through observed RED and minimal GREEN.
+    excluded_owner: rsp-implement
+    expected_owner: rsp-tdd
+pairwise:
+  - id: review-over-resolve-read-only
+    prompt: Read-only review of a tracked code change before fixes.
+    expected_owner: rsp-review
+    competing_owner: rsp-resolve-findings
+  - id: review-over-resolve-no-report
+    prompt: Perform a read-only review of this mixed change before fixes.
+    expected_owner: rsp-review
+    competing_owner: rsp-resolve-findings
+  - id: resolve-over-review-fixed-report
+    prompt: Resolve bounded fixes from this fixed rsp-review report.
+    expected_owner: rsp-resolve-findings
+    competing_owner: rsp-review
+  - id: resolve-over-review-rereview
+    prompt: Address requested changes and prepare the existing findings for re-review.
+    expected_owner: rsp-resolve-findings
+    competing_owner: rsp-review
+  - id: implement-over-tdd-ordinary
+    prompt: Implement the selected ready Change using ordinary evidence and verification.
+    expected_owner: rsp-implement
+    competing_owner: rsp-tdd
+  - id: implement-over-tdd-known-cause
+    prompt: Implement the selected ready Change after its behavior and cause were established.
+    expected_owner: rsp-implement
+    competing_owner: rsp-tdd
+  - id: tdd-over-implement-explicit
+    prompt: 'Test-first is explicitly required: observe RED, make minimal GREEN, then REFACTOR.'
+    expected_owner: rsp-tdd
+    competing_owner: rsp-implement
+  - id: tdd-over-implement-risk
+    prompt: Use an observed failing test first because this concrete regression risk needs TDD.
+    expected_owner: rsp-tdd
+    competing_owner: rsp-implement

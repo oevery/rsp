@@ -1,10 +1,10 @@
 ---
 name: rsp-review
-description: Review an RSP-tracked code, document, or mixed change against a fixed comparison scope and project authorities. Use for read-only findings before fixes, durable review, archive, or delivery; keep Code and Document states separate and never implement, commit, publish, or approve.
+description: Review an RSP-tracked code, document, or mixed change against a fixed comparison scope and project authorities without modifying files. Use for read-only findings before fixes, durable review, archive, or delivery; keep Code and Document states separate and never implement, commit, publish, or approve.
 license: MIT
 metadata:
   author: oevery
-  version: "2026.08.17.1"
+  version: "2026.08.19.1"
 ---
 
 # RSP Review
