@@ -46,14 +46,10 @@ describe('release candidate check', () => {
 
     expect(publishEntry).toMatch(/(?:^|&&\s*)pnpm run release:candidate-check(?:\s*&&|$)/u)
     expect(candidateEntry).toMatch(/(?:^|&&\s*)node scripts\/release-candidate-check\.mjs(?:\s*&&|$)/u)
-    expect(candidateEntry).toMatch(/(?:^|&&\s*)pnpm run skills:security-check(?:\s*&&|$)/u)
-    expect(scripts['skills:security-check']).toBe('node scripts/skill-security-preflight.mjs --suppressions skill-security-suppressions.json')
-    expect(candidateEntry).toMatch(/(?:^|&&\s*)pnpm run release:check(?:\s*&&|$)/u)
+    expect(candidateEntry).toMatch(/(?:^|&&\s*)pnpm run release:acceptance(?:\s*&&|$)/u)
     const identityIndex = candidateEntry.indexOf('release-candidate-check.mjs')
-    const securityIndex = candidateEntry.indexOf('pnpm run skills:security-check')
-    const releaseIndex = candidateEntry.indexOf('pnpm run release:check')
-    expect(identityIndex).toBeLessThan(securityIndex)
-    expect(securityIndex).toBeLessThan(releaseIndex)
+    const acceptanceIndex = candidateEntry.indexOf('pnpm run release:acceptance')
+    expect(identityIndex).toBeLessThan(acceptanceIndex)
   })
 
   it('accepts a clean checkout when the version tag is absent', () => {

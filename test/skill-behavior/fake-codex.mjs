@@ -9,7 +9,7 @@ if (process.argv.includes('--version')) {
 }
 
 const prompt = readFileSync(0, 'utf8')
-const receiptIdentityMatch = prompt.match(/Copy this identity exactly: (\{[^\n]+\})\./u)
+const receiptShapeMatch = prompt.match(/Use this exact top-level JSON shape: (\{[^\n]+\})\./u)
 
 const outputFlag = process.argv.indexOf('--output-last-message')
 const outputPath = outputFlag >= 0 ? process.argv[outputFlag + 1] : undefined
@@ -34,20 +34,17 @@ if (process.env.FAKE_CODEX_DELAY_MS)
 if (process.env.FAKE_CODEX_MUTATE === '1')
   writeFileSync('unauthorized.txt', 'mutation\n')
 
-if (receiptIdentityMatch || process.env.FAKE_CODEX_RECEIPT_MODE) {
-  if (!receiptIdentityMatch)
-    throw new Error('missing evaluation receipt identity')
-  const receiptIdentity = JSON.parse(receiptIdentityMatch[1])
+if (receiptShapeMatch || process.env.FAKE_CODEX_RECEIPT_MODE) {
+  if (!receiptShapeMatch)
+    throw new Error('missing evaluation receipt shape')
+  const receipt = JSON.parse(receiptShapeMatch[1])
   const receiptMode = process.env.FAKE_CODEX_RECEIPT_MODE ?? 'valid'
   const receiptPath = '.rsp-evaluation-receipt.json'
-  const receipt = {
-    ...receiptIdentity,
-    observations: {
-      trigger: { status: 'passed', evidence: { selected_skill: 'rsp-manage' } },
-      first_fix_result: 'passed',
-      correction_count: 1,
-      worker_dispatch_count: 2,
-    },
+  receipt.observations = {
+    trigger: { status: 'passed', evidence: { selected_skill: 'rsp-manage' } },
+    first_fix_result: 'passed',
+    correction_count: 1,
+    worker_dispatch_count: 2,
   }
   if (receiptMode === 'valid') {
     writeFileSync(receiptPath, `${JSON.stringify(receipt)}\n`)

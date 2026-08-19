@@ -77,7 +77,9 @@ function hashTree(directory) {
   return hash.digest('hex')
 }
 
-function skillSourceRoot(root, variant, skill) {
+function skillSourceRoot(root, variant, skill, skillSourceDirectory) {
+  if (skillSourceDirectory)
+    return join(skillSourceDirectory, skill)
   return skill === 'rsp-manage' ? managedSkillRoot(root, variant) : join(root, 'skills', skill)
 }
 
@@ -816,7 +818,7 @@ export function scoreManagedControllerObservation(manifest, observation) {
   }
 }
 
-export function prepareManagedControllerRun({ caseId, outputRoot, root, variant }) {
+export function prepareManagedControllerRun({ caseId, outputRoot, root, skillSourceDirectory, variant }) {
   if (!VARIANTS.has(variant))
     throw new Error(`invalid variant: ${variant}`)
   const { baseDirectory, directory, manifest } = readHoldout(root, caseId)
@@ -839,7 +841,7 @@ export function prepareManagedControllerRun({ caseId, outputRoot, root, variant 
     mkdirSync(join(workspace, '.agents', 'skills'), { recursive: true })
     const installedSkills = manifest.installed_skills ?? ['rsp-manage']
     for (const skill of installedSkills) {
-      const source = skillSourceRoot(root, variant, skill)
+      const source = skillSourceRoot(root, variant, skill, skillSourceDirectory)
       cpSync(source, join(workspace, '.agents', 'skills', skill), { recursive: true })
     }
   }
@@ -865,7 +867,10 @@ export function prepareManagedControllerRun({ caseId, outputRoot, root, variant 
     git(workspace, ['push', '--quiet', '--set-upstream', 'origin', 'HEAD'])
   }
   const installedSkills = variant === 'candidate' || variant === 'product' ? manifest.installed_skills ?? ['rsp-manage'] : []
-  const sourceComposition = hashManagedControllerComposition(installedSkills.map(name => ({ name, path: skillSourceRoot(root, variant, name) })))
+  const sourceComposition = hashManagedControllerComposition(installedSkills.map(name => ({
+    name,
+    path: skillSourceRoot(root, variant, name, skillSourceDirectory),
+  })))
   const installedComposition = hashManagedControllerComposition(installedSkills.map(name => ({ name, path: join(workspace, '.agents', 'skills', name) })))
   const contractSha256 = hashContent(readFileSync(join(directory, 'case.yaml')))
   const remoteRefsBefore = remoteRefs(workspace, manifest.local_bare_remote ? 'origin' : null)
@@ -873,6 +878,15 @@ export function prepareManagedControllerRun({ caseId, outputRoot, root, variant 
     case_id: caseId,
     composition_sha256: installedComposition.hash,
     contract_sha256: contractSha256,
+  }
+  const receiptShape = {
+    ...receiptIdentity,
+    observations: {
+      trigger: null,
+      first_fix_result: null,
+      correction_count: null,
+      worker_dispatch_count: null,
+    },
   }
   const prompt = [
     variant === 'candidate' || variant === 'product'
@@ -887,8 +901,8 @@ export function prepareManagedControllerRun({ caseId, outputRoot, root, variant 
           `Add one Recovery evidence line containing these exact machine tokens after the seven fields: ${manifest.continuation_contract.recovery_evidence.join(', ')}.`,
         ]
       : []),
-    `Before the final response, write ${EVALUATION_RECEIPT_PATH} as one JSON object. Copy this identity exactly: ${JSON.stringify(receiptIdentity)}.`,
-    'The only other top-level key is observations, with exactly trigger, first_fix_result, correction_count, and worker_dispatch_count. Use null when a field was not directly observed. Trigger is null or {"status":"passed|failed","evidence":<JSON>}; first_fix_result is null, passed, or failed; counts are null or non-negative integers. Do not stage or commit this transient file.',
+    `Before the final response, write ${EVALUATION_RECEIPT_PATH} as one JSON object. Use this exact top-level JSON shape: ${JSON.stringify(receiptShape)}.`,
+    'Keep case_id, composition_sha256, and contract_sha256 unchanged. Replace only the four observation values with directly observed values. Do not add an identity wrapper or any other key. Trigger is null or {"status":"passed|failed","evidence":<JSON>}; first_fix_result is null, passed, or failed; counts are null or non-negative integers. Do not stage or commit this transient file.',
     'Return a concise final status with completed work, fresh verification, remaining boundary, and next action.',
   ].join('\n\n')
   return { baseSha, contractSha256, installedComposition, manifest, prompt, remotePath, remoteRefsBefore, sourceComposition, workspace }
@@ -921,14 +935,16 @@ function consumeManagedControllerEvaluationReceipt(prepared, required) {
   }
 }
 
-export async function runManagedControllerEvaluation({ authFile, caseId, codexBin = 'codex', effort, env = process.env, isolatedUserContext = false, model, modelCatalogJson, openaiBaseUrl, outputRoot, provider, root, timeoutMs, variant }) {
-  const prepared = prepareManagedControllerRun({ caseId, outputRoot, root, variant })
+export async function runManagedControllerEvaluation({ authFile, caseId, codexBin = 'codex', effort, env = process.env, isolatedUserContext = false, model, modelCatalogJson, openaiBaseUrl, outputRoot, provider, root, skillSourceDirectory, timeoutMs, variant }) {
+  const prepared = prepareManagedControllerRun({ caseId, outputRoot, root, skillSourceDirectory, variant })
   const runDirectory = join(outputRoot, 'runs', basename(prepared.workspace))
   mkdirSync(runDirectory, { recursive: true })
   const finalPath = join(runDirectory, 'final.md')
   const eventsPath = join(runDirectory, 'events.jsonl')
   const metadataPath = join(runDirectory, 'metadata.json')
-  const sourceRoot = managedSkillRoot(root, variant)
+  const sourceRoot = skillSourceDirectory
+    ? join(skillSourceDirectory, 'rsp-manage')
+    : managedSkillRoot(root, variant)
   const sourceHash = hashTree(sourceRoot)
   const started = new Date()
   if (isolatedUserContext && (!authFile || !openaiBaseUrl || !modelCatalogJson))
@@ -1013,7 +1029,10 @@ export async function runManagedControllerEvaluation({ authFile, caseId, codexBi
   const final = existsSync(finalPath) ? readFileSync(finalPath, 'utf8') : ''
   const events = summarizeManagedControllerEvents(executed.stdout)
   const installedSkills = variant === 'candidate' || variant === 'product' ? prepared.manifest.installed_skills ?? ['rsp-manage'] : []
-  const sourceCompositionAfter = hashManagedControllerComposition(installedSkills.map(name => ({ name, path: skillSourceRoot(root, variant, name) })))
+  const sourceCompositionAfter = hashManagedControllerComposition(installedSkills.map(name => ({
+    name,
+    path: skillSourceRoot(root, variant, name, skillSourceDirectory),
+  })))
   const installedCompositionAfter = hashManagedControllerComposition(installedSkills.map(name => ({ name, path: join(prepared.workspace, '.agents', 'skills', name) })))
   const compositionStable = prepared.sourceComposition.hash === prepared.installedComposition.hash
     && prepared.sourceComposition.hash === sourceCompositionAfter.hash

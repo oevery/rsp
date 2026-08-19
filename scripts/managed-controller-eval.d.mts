@@ -207,6 +207,7 @@ export function prepareManagedControllerRun(options: {
   caseId: string
   outputRoot: string
   root: string
+  skillSourceDirectory?: string
   variant: 'baseline' | 'candidate' | 'product'
 }): PreparedManagedControllerRun
 export function runManagedControllerEvaluation(options: {
@@ -222,6 +223,7 @@ export function runManagedControllerEvaluation(options: {
   outputRoot: string
   provider?: string
   root: string
+  skillSourceDirectory?: string
   timeoutMs: number
   variant: 'baseline' | 'candidate' | 'product'
 }): Promise<ManagedControllerEvaluationMetadata>

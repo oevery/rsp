@@ -48,6 +48,17 @@ describe('clean install package check', () => {
         optionalSkillInstallIdempotent: true,
         statusJson: true,
         specsJson: true,
+        lifecycle: {
+          incompleteReadyBlocked: true,
+          focusCapsuleProjected: true,
+          completedReady: true,
+          archivedHistory: true,
+        },
+        exactCommit: {
+          committedPaths: ['accepted.txt'],
+          unrelatedDirtyPreserved: true,
+        },
+        unsupportedWorkspaceConfigRejected: true,
         compatibilityBoundary: {
           nodeEngine: '>=22',
         },
@@ -55,6 +66,76 @@ describe('clean install package check', () => {
         invalidLocale: { exitCode: 1, stderr: 'Error: --lang must be auto, en, or zh-CN' },
       })
       expect(report.tarballSha256).toMatch(/^[a-f0-9]{64}$/)
+      expect(report.projectCoverage).toEqual({
+        observed: expect.arrayContaining([
+          'complex-existing-rsp',
+          'dirty-git-worktree',
+          'fresh-adoption',
+          'monorepo-nesting',
+          'published-upgrade',
+          'real-project',
+          'unicode-content',
+        ]),
+        required: [
+          'complex-existing-rsp',
+          'dirty-git-worktree',
+          'fresh-adoption',
+          'monorepo-nesting',
+          'published-upgrade',
+          'unicode-content',
+        ],
+      })
+      expect(report.projectScenarios).toEqual(expect.arrayContaining([
+        expect.objectContaining({
+          id: 'home-manager-fresh-adoption',
+          kind: 'fresh-adoption',
+          checks: {
+            init: true,
+            addSpec: true,
+            doctor: true,
+            status: true,
+            specs: true,
+            preservedFiles: true,
+          },
+        }),
+        expect.objectContaining({
+          id: 'rsp-v3-2-published-upgrade',
+          kind: 'published-upgrade',
+          sourceVersion: '3.2.0',
+          checks: {
+            update: true,
+            doctor: true,
+            check: true,
+            specs: true,
+            generatedIndexRemoved: true,
+          },
+        }),
+        expect.objectContaining({
+          id: 'sanitized-dirty-git-adoption',
+          derivedFrom: 'sanitized-product-worktree',
+          sanitizationVersion: 'v1',
+          checks: expect.objectContaining({ dirtyGitWorktree: true, preservedFiles: true }),
+        }),
+        expect.objectContaining({
+          id: 'sanitized-existing-rsp',
+          kind: 'existing-rsp',
+          checks: {
+            update: true,
+            doctor: true,
+            check: true,
+            status: true,
+            specs: true,
+            history: true,
+            preservedFiles: true,
+          },
+        }),
+        expect.objectContaining({
+          id: 'sanitized-unicode-monorepo-adoption',
+          checks: expect.objectContaining({ monorepoNesting: true, unicodeContent: true }),
+        }),
+      ]))
+      for (const coverage of report.projectCoverage.required)
+        expect(report.projectCoverage.observed).toContain(coverage)
       expect(report.inventory.skills).toEqual(expectedSkills)
       expect(report.inventory.defaultProjectSkills).toEqual(expectedSkills.filter(name => name !== 'rsp-structural-audit'))
       expect(report.inventory.projectSkills).toEqual(expectedSkills)

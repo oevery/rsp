@@ -1,0 +1,8 @@
+kinds: []
+decisions:
+  path: .rsp/specs/decisions
+manage:
+  activation: auto
+  closeout: local
+language:
+  default: en

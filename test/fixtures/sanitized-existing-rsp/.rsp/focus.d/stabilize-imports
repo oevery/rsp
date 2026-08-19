@@ -1,0 +1,6 @@
+<!-- rsp-focus:v1 -->
+
+Current: preserve import behavior during package cleanup
+Evidence: focused checks are pending
+Next: verify the sanitized package boundary
+Resume check: rerun rsp check --focused --json

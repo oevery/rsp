@@ -37,10 +37,9 @@
   },
   "scripts": {
     "prepare": "pnpm run build",
-    "release:check": "pnpm run release:metadata-check && pnpm run docs:check && pnpm run docs:build && pnpm run build && pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run release:package-check",
-    "release:candidate-check": "node scripts/release-candidate-check.mjs && pnpm run skills:security-check && pnpm run release:check",
-    "release:metadata-check": "node scripts/release-metadata-check.mjs",
-    "release:package-check": "node scripts/clean-install-check.mjs",
+    "release:acceptance": "node scripts/release-acceptance.mjs",
+    "release:provider-compare": "node scripts/release-provider-comparison.mjs",
+    "release:candidate-check": "node scripts/release-candidate-check.mjs && pnpm run release:acceptance",
     "skills:security-check": "node scripts/skill-security-preflight.mjs --suppressions skill-security-suppressions.json",
     "prepublishOnly": "pnpm run release:candidate-check",
     "build": "tsup",

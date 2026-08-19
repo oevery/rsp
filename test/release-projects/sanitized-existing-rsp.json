@@ -1,0 +1,26 @@
+{
+  "id": "sanitized-existing-rsp",
+  "kind": "existing-rsp",
+  "fixture": "test/fixtures/sanitized-existing-rsp",
+  "derivedFrom": "sanitized-long-running-rsp-project",
+  "sanitizationVersion": "v1",
+  "fixtureSha256": "a35531c5699c8b594a094bb01b99519c762dcef489f0a8a1645f5d0716c72518",
+  "coverage": [
+    "check",
+    "complex-existing-rsp",
+    "doctor",
+    "existing-rsp",
+    "history",
+    "real-project",
+    "specs",
+    "status"
+  ],
+  "preserve": [
+    "README.md",
+    ".rsp/archives/2026-06-15_archived-bootstrap.md",
+    ".rsp/changes/stabilize-imports.md",
+    ".rsp/specs/decisions/0001-offline-first.md",
+    ".rsp/specs/design.md",
+    ".rsp/specs/部署边界.md"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "rsp-v3-2-published-upgrade",
+  "kind": "published-upgrade",
+  "fixture": "test/fixtures/compatibility/v3.2.0",
+  "derivedFrom": "published-package-snapshot",
+  "sanitizationVersion": "v1",
+  "fixtureSha256": "f4124d24222855b35de801dd38b685be49e4cf1d58b0b558ec30841a8917346e",
+  "sourceVersion": "3.2.0",
+  "coverage": [
+    "check",
+    "doctor",
+    "published-upgrade",
+    "real-project",
+    "specs"
+  ]
+}

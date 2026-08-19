@@ -1,0 +1,4 @@
+interface:
+  display_name: Release Acceptance
+  short_description: Run the serial RSP pre-release acceptance campaign and interpret its report.
+  default_prompt: Plan and run the repository release acceptance campaign, then summarize the generated report and remaining release boundaries.

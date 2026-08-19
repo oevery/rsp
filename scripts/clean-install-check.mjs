@@ -2,12 +2,13 @@
 
 import { execFileSync, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, dirname, join, relative, resolve, sep } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { parse as parseYaml } from 'yaml'
+import { discoverReleaseProjectScenarios, fixtureTreeSha256 } from './release-acceptance-scenarios.mjs'
 
 const EXPECTED_DEFAULT_SKILLS = [
   'rsp',
@@ -119,6 +120,81 @@ function parseJsonIfPossible(content) {
   }
 }
 
+function requireJsonResult(result, label) {
+  if (result.status !== 0)
+    fail(`${label}: ${result.stderr.trim() || result.stdout.trim() || `exit ${result.status}`}`)
+  const parsed = parseJsonIfPossible(result.stdout)
+  if (!parsed)
+    fail(`${label}: command did not return JSON`)
+  return parsed
+}
+
+function fileSha256(path) {
+  return createHash('sha256').update(readFileSync(path)).digest('hex')
+}
+
+function gitStatusForPaths(repository, paths) {
+  return Object.fromEntries(paths.map(path => [
+    path,
+    run('git', ['status', '--short', '--untracked-files=all', '--', path], { cwd: repository }),
+  ]))
+}
+
+function completedAcceptanceChange(name) {
+  return [
+    '---',
+    'kind: ops',
+    '---',
+    '',
+    `# Change: ${name}`,
+    '',
+    '## Proposal',
+    '- Outcome: Complete the installed-package lifecycle',
+    '- Why:',
+    '  - prove the shipped CLI',
+    '- Scope:',
+    '  - one temporary project',
+    '- Non-goals:',
+    '  - publication',
+    '',
+    '## Spec',
+    '### ADDED',
+    '- Requirement: Installed lifecycle',
+    '  - The shipped CLI completes one tracked workflow.',
+    '',
+    '### Acceptance',
+    '#### Scenario: Complete work',
+    '- GIVEN an installed package',
+    '- WHEN the workflow is completed',
+    '- THEN readiness and archive succeed',
+    '',
+    '## Design',
+    '- Approach:',
+    '  - use the installed binary',
+    '- Affected areas:',
+    '  - temporary project',
+    '- Constraints:',
+    '  - preserve exact state',
+    '',
+    '## Tasks',
+    '- [x] Complete the installed workflow.',
+    '',
+    '## Verify',
+    '### Required',
+    '- Automated:',
+    '  - [x] rsp check --focused --json — proves: the installed project is structurally valid',
+    '### Optional',
+    '- Manual or environment:',
+    '  - [x] not applicable — temporary package acceptance',
+    '- Coverage:',
+    '  - package lifecycle only',
+    '',
+    '## Blockers',
+    '- none',
+    '',
+  ].join('\n')
+}
+
 function walkNoSymlinks(root) {
   const files = []
   for (const entry of readdirSync(root, { withFileTypes: true })) {
@@ -224,6 +300,7 @@ function expectedPackageInventory(root) {
 
 function main() {
   const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+  const projectCatalog = discoverReleaseProjectScenarios(root)
   const npmCli = argument('--npm-cli')
   const runNpm = (args, options = {}) => npmCli
     ? run(process.execPath, [resolve(npmCli), ...args], options)
@@ -237,9 +314,13 @@ function main() {
     const packRoot = join(workspace, 'pack')
     const projectRoot = join(workspace, 'project')
     const execRoot = join(workspace, 'exec-project')
+    const projectsRoot = join(workspace, 'project-scenarios')
+    const invalidConfigRoot = join(workspace, 'invalid-config-project')
     mkdirSync(packRoot)
     mkdirSync(projectRoot)
     mkdirSync(execRoot)
+    mkdirSync(projectsRoot)
+    mkdirSync(invalidConfigRoot)
     writeFileSync(join(projectRoot, 'package.json'), '{"name":"rsp-clean-install-smoke","private":true}\n')
     writeFileSync(join(execRoot, 'package.json'), '{"name":"rsp-npm-exec-smoke","private":true}\n')
 
@@ -324,6 +405,292 @@ function main() {
     }
     if (existsSync(join(projectRoot, '.rsp', 'specs', '00-index.md')))
       fail('Installed rsp init unexpectedly created a generated Specs index')
+
+    const lifecycleName = 'installed-package-flow'
+    const create = runResult(
+      process.execPath,
+      [installedBin, 'create', lifecycleName, 'Complete an installed-package lifecycle'],
+      { cwd: projectRoot },
+    )
+    if (create.status !== 0)
+      fail(`Installed rsp create failed: ${create.stderr.trim()}`)
+    const blockedReady = requireJsonResult(
+      runResult(process.execPath, [installedBin, 'ready', lifecycleName, '--json'], { cwd: projectRoot }),
+      'Installed rsp incomplete readiness failed',
+    )
+    if (blockedReady.readiness?.completionGate !== 'blocked'
+      || blockedReady.readiness?.archiveReady !== 'no') {
+      fail('Installed rsp ready did not block an incomplete Change')
+    }
+
+    const capsulePath = join(workspace, 'focus-capsule.md')
+    writeFileSync(capsulePath, [
+      '<!-- rsp-focus:v1 -->',
+      '',
+      'Current: installed package lifecycle',
+      'Evidence: fresh package initialized',
+      'Next: complete and archive the Change',
+      'Resume check: rerun ready from current artifacts',
+      '',
+    ].join('\n'))
+    const focus = runResult(
+      process.execPath,
+      [installedBin, 'focus', lifecycleName, '--capsule-file', capsulePath],
+      { cwd: projectRoot },
+    )
+    if (focus.status !== 0)
+      fail(`Installed rsp Focus Capsule write failed: ${focus.stderr.trim()}`)
+    const shown = requireJsonResult(
+      runResult(process.execPath, [installedBin, 'show', lifecycleName, '--json'], { cwd: projectRoot }),
+      'Installed rsp Focus Capsule projection failed',
+    )
+    if (shown.recovery?.version !== 'v1'
+      || shown.recovery?.current !== 'installed package lifecycle'
+      || shown.recovery?.authoritative !== false) {
+      fail('Installed rsp did not project the Focus Capsule recovery contract')
+    }
+
+    writeFileSync(
+      join(projectRoot, '.rsp', 'changes', `${lifecycleName}.md`),
+      completedAcceptanceChange(lifecycleName),
+    )
+    const focusedCheck = requireJsonResult(
+      runResult(process.execPath, [installedBin, 'check', '--focused', '--json'], { cwd: projectRoot }),
+      'Installed rsp focused check failed',
+    )
+    if (focusedCheck.summary?.errors !== 0 || focusedCheck.summary?.warnings !== 0)
+      fail('Installed rsp focused check reported diagnostics for the completed Change')
+    const ready = requireJsonResult(
+      runResult(process.execPath, [installedBin, 'ready', lifecycleName, '--json'], { cwd: projectRoot }),
+      'Installed rsp completed readiness failed',
+    )
+    if (ready.readiness?.completionGate !== 'pass'
+      || ready.readiness?.archiveReady !== 'yes') {
+      fail('Installed rsp ready did not accept the completed Change')
+    }
+    const archived = runResult(process.execPath, [installedBin, 'archive', lifecycleName], { cwd: projectRoot })
+    if (archived.status !== 0)
+      fail(`Installed rsp archive failed: ${archived.stderr.trim()}`)
+    const history = requireJsonResult(
+      runResult(process.execPath, [installedBin, 'history', lifecycleName, '--json'], { cwd: projectRoot }),
+      'Installed rsp archived history lookup failed',
+    )
+    if (history.record?.workRef !== lifecycleName
+      || existsSync(join(projectRoot, '.rsp', 'focus.d', lifecycleName))) {
+      fail('Installed rsp archive did not retain history and remove focus')
+    }
+
+    run('git', ['config', 'user.name', 'RSP Package Acceptance'], { cwd: projectRoot })
+    run('git', ['config', 'user.email', 'rsp-package@example.invalid'], { cwd: projectRoot })
+    run('git', ['add', '.'], { cwd: projectRoot })
+    run('git', ['commit', '-m', 'test: initialize installed package acceptance'], { cwd: projectRoot })
+    writeFileSync(join(projectRoot, 'accepted.txt'), 'accepted boundary\n')
+    writeFileSync(join(projectRoot, 'unrelated.txt'), 'unrelated dirty work\n')
+    run('git', ['add', 'accepted.txt'], { cwd: projectRoot })
+    const commitMessage = join(workspace, 'commit-message.txt')
+    writeFileSync(commitMessage, 'test: commit installed package boundary\n')
+    const committed = requireJsonResult(
+      runResult(process.execPath, [installedBin, 'commit', '--message-file', commitMessage, '--json'], { cwd: projectRoot }),
+      'Installed rsp exact Commit failed',
+    )
+    if (JSON.stringify(committed.committedPaths) !== JSON.stringify(['accepted.txt'])
+      || !committed.remainingWorktreePaths?.includes('unrelated.txt')
+      || committed.storedMessage !== 'test: commit installed package boundary\n') {
+      fail('Installed rsp Commit did not preserve the exact staged and dirty-worktree boundary')
+    }
+
+    const projectScenarios = []
+    for (const scenario of projectCatalog.scenarios) {
+      const scenarioRoot = join(projectsRoot, scenario.id)
+      if (fixtureTreeSha256(scenario.fixtureRoot) !== scenario.fixtureSha256)
+        fail(`Installed rsp project scenario ${scenario.id} source fixture changed before execution`)
+      if (scenario.kind === 'fresh-adoption') {
+        cpSync(scenario.fixtureRoot, scenarioRoot, { recursive: true })
+        const agentsBefore = existsSync(join(scenarioRoot, 'AGENTS.md'))
+          ? readFileSync(join(scenarioRoot, 'AGENTS.md'), 'utf8').trimEnd()
+          : null
+        let dirtyGitBefore = null
+        let dirtyGitHead = null
+        if (scenario.gitWorktree) {
+          run('git', ['init', '--quiet'], { cwd: scenarioRoot })
+          run('git', ['config', 'user.name', 'Sanitized Fixture'], { cwd: scenarioRoot })
+          run('git', ['config', 'user.email', 'fixture@example.invalid'], { cwd: scenarioRoot })
+          run('git', ['add', '.'], { cwd: scenarioRoot })
+          run('git', ['commit', '--quiet', '-m', 'fixture: sanitized baseline'], { cwd: scenarioRoot })
+          writeFileSync(
+            join(scenarioRoot, scenario.gitWorktree.staged),
+            `${readFileSync(join(scenarioRoot, scenario.gitWorktree.staged), 'utf8')}staged local edit\n`,
+          )
+          writeFileSync(
+            join(scenarioRoot, scenario.gitWorktree.unstaged),
+            `${readFileSync(join(scenarioRoot, scenario.gitWorktree.unstaged), 'utf8')}unstaged local edit\n`,
+          )
+          mkdirSync(dirname(join(scenarioRoot, scenario.gitWorktree.untracked)), { recursive: true })
+          writeFileSync(join(scenarioRoot, scenario.gitWorktree.untracked), 'untracked local work\n')
+          run('git', ['add', scenario.gitWorktree.staged], { cwd: scenarioRoot })
+          dirtyGitHead = run('git', ['rev-parse', 'HEAD'], { cwd: scenarioRoot })
+          dirtyGitBefore = gitStatusForPaths(scenarioRoot, Object.values(scenario.gitWorktree))
+        }
+        const preservedBefore = Object.fromEntries(
+          scenario.preserve.map(path => [path, fileSha256(join(scenarioRoot, path))]),
+        )
+        const scenarioInit = runResult(process.execPath, [installedBin, 'init'], { cwd: scenarioRoot })
+        if (scenarioInit.status !== 0)
+          fail(`Installed rsp project scenario ${scenario.id} init failed: ${scenarioInit.stderr.trim()}`)
+        const addSpec = runResult(process.execPath, [installedBin, 'add', 'spec', scenario.specName], { cwd: scenarioRoot })
+        if (addSpec.status !== 0)
+          fail(`Installed rsp project scenario ${scenario.id} add spec failed: ${addSpec.stderr.trim()}`)
+        const scenarioDoctor = requireJsonResult(
+          runResult(process.execPath, [installedBin, 'doctor', '--json'], { cwd: scenarioRoot }),
+          `Installed rsp project scenario ${scenario.id} doctor failed`,
+        )
+        const scenarioStatus = requireJsonResult(
+          runResult(process.execPath, [installedBin, 'status', '--json'], { cwd: scenarioRoot }),
+          `Installed rsp project scenario ${scenario.id} status failed`,
+        )
+        const scenarioSpecs = requireJsonResult(
+          runResult(process.execPath, [installedBin, 'specs', '--json'], { cwd: scenarioRoot }),
+          `Installed rsp project scenario ${scenario.id} Specs failed`,
+        )
+        const changedPreserved = scenario.preserve.filter(path => fileSha256(join(scenarioRoot, path)) !== preservedBefore[path])
+        const expectedSpecPath = `.rsp/specs/${scenario.specName}.md`
+        const dirtyGitPreserved = !scenario.gitWorktree || (
+          JSON.stringify(gitStatusForPaths(scenarioRoot, Object.values(scenario.gitWorktree))) === JSON.stringify(dirtyGitBefore)
+          && run('git', ['rev-parse', 'HEAD'], { cwd: scenarioRoot }) === dirtyGitHead
+        )
+        if (!scenarioDoctor.ok
+          || scenarioStatus.command !== 'status'
+          || scenarioSpecs.mode !== 'tree'
+          || !scenarioSpecs.documents?.some(document => document.path === expectedSpecPath)
+          || !readFileSync(join(scenarioRoot, 'AGENTS.md'), 'utf8').includes('<!-- rsp:begin -->')
+          || (agentsBefore !== null && !readFileSync(join(scenarioRoot, 'AGENTS.md'), 'utf8').includes(agentsBefore))
+          || changedPreserved.length > 0
+          || !dirtyGitPreserved) {
+          fail(`Installed rsp project scenario ${scenario.id} did not preserve the adoption contract`)
+        }
+        const checks = { init: true, addSpec: true, doctor: true, status: true, specs: true, preservedFiles: true }
+        if (scenario.gitWorktree)
+          checks.dirtyGitWorktree = true
+        if (scenario.coverage.includes('unicode-content'))
+          checks.unicodeContent = scenario.preserve.some(path => [...path].some(character => character.codePointAt(0) > 0x7F))
+        if (scenario.nestedProjectDirectory)
+          checks.monorepoNesting = existsSync(join(scenarioRoot, scenario.nestedProjectDirectory))
+        projectScenarios.push({
+          id: scenario.id,
+          kind: scenario.kind,
+          fixturePath: scenario.fixturePath,
+          fixtureSha256: scenario.fixtureSha256,
+          derivedFrom: scenario.derivedFrom,
+          sanitizationVersion: scenario.sanitizationVersion,
+          coverage: scenario.coverage,
+          checks,
+        })
+      }
+      else if (scenario.kind === 'published-upgrade') {
+        cpSync(join(scenario.fixtureRoot, '.rsp'), join(scenarioRoot, '.rsp'), { recursive: true })
+        if (existsSync(join(scenario.fixtureRoot, 'AGENTS.md')))
+          cpSync(join(scenario.fixtureRoot, 'AGENTS.md'), join(scenarioRoot, 'AGENTS.md'))
+        rmSync(join(scenarioRoot, '.rsp', 'archives', '.fixture-transport-placeholder'), { force: true })
+        const update = runResult(process.execPath, [installedBin, 'update'], { cwd: scenarioRoot })
+        if (update.status !== 0)
+          fail(`Installed rsp project scenario ${scenario.id} update failed: ${update.stderr.trim()}`)
+        const scenarioDoctor = requireJsonResult(
+          runResult(process.execPath, [installedBin, 'doctor', '--json'], { cwd: scenarioRoot }),
+          `Installed rsp project scenario ${scenario.id} doctor failed`,
+        )
+        const scenarioCheck = requireJsonResult(
+          runResult(process.execPath, [installedBin, 'check', '--json'], { cwd: scenarioRoot }),
+          `Installed rsp project scenario ${scenario.id} check failed`,
+        )
+        const scenarioSpecs = requireJsonResult(
+          runResult(process.execPath, [installedBin, 'specs', '--json'], { cwd: scenarioRoot }),
+          `Installed rsp project scenario ${scenario.id} Specs failed`,
+        )
+        if (!scenarioDoctor.ok
+          || scenarioCheck.summary?.errors !== 0
+          || scenarioSpecs.mode !== 'tree'
+          || existsSync(join(scenarioRoot, '.rsp', 'specs', '00-index.md'))) {
+          fail(`Installed rsp project scenario ${scenario.id} did not complete the supported migration`)
+        }
+        projectScenarios.push({
+          id: scenario.id,
+          kind: scenario.kind,
+          fixturePath: scenario.fixturePath,
+          fixtureSha256: scenario.fixtureSha256,
+          derivedFrom: scenario.derivedFrom,
+          sanitizationVersion: scenario.sanitizationVersion,
+          sourceVersion: scenario.sourceVersion,
+          coverage: scenario.coverage,
+          checks: { update: true, doctor: true, check: true, specs: true, generatedIndexRemoved: true },
+        })
+      }
+      else if (scenario.kind === 'existing-rsp') {
+        cpSync(scenario.fixtureRoot, scenarioRoot, { recursive: true })
+        const preservedBefore = Object.fromEntries(
+          scenario.preserve.map(path => [path, fileSha256(join(scenarioRoot, path))]),
+        )
+        const update = runResult(process.execPath, [installedBin, 'update'], { cwd: scenarioRoot })
+        if (update.status !== 0)
+          fail(`Installed rsp project scenario ${scenario.id} update failed: ${update.stderr.trim()}`)
+        const scenarioDoctor = requireJsonResult(
+          runResult(process.execPath, [installedBin, 'doctor', '--json'], { cwd: scenarioRoot }),
+          `Installed rsp project scenario ${scenario.id} doctor failed`,
+        )
+        const scenarioCheck = requireJsonResult(
+          runResult(process.execPath, [installedBin, 'check', '--json'], { cwd: scenarioRoot }),
+          `Installed rsp project scenario ${scenario.id} check failed`,
+        )
+        const scenarioStatus = requireJsonResult(
+          runResult(process.execPath, [installedBin, 'status', '--json'], { cwd: scenarioRoot }),
+          `Installed rsp project scenario ${scenario.id} status failed`,
+        )
+        const scenarioSpecs = requireJsonResult(
+          runResult(process.execPath, [installedBin, 'specs', '--json'], { cwd: scenarioRoot }),
+          `Installed rsp project scenario ${scenario.id} Specs failed`,
+        )
+        const scenarioHistory = requireJsonResult(
+          runResult(process.execPath, [installedBin, 'history', 'archived-bootstrap', '--json'], { cwd: scenarioRoot }),
+          `Installed rsp project scenario ${scenario.id} history failed`,
+        )
+        const changedPreserved = scenario.preserve.filter(path => fileSha256(join(scenarioRoot, path)) !== preservedBefore[path])
+        if (!scenarioDoctor.ok
+          || scenarioCheck.summary?.errors !== 0
+          || scenarioCheck.summary?.warnings !== 0
+          || !scenarioStatus.focused?.includes('stabilize-imports')
+          || !scenarioSpecs.documents?.some(document => document.path === '.rsp/specs/部署边界.md')
+          || scenarioHistory.record?.workRef !== 'archived-bootstrap'
+          || changedPreserved.length > 0) {
+          fail(`Installed rsp project scenario ${scenario.id} did not preserve the existing RSP contract`)
+        }
+        projectScenarios.push({
+          id: scenario.id,
+          kind: scenario.kind,
+          fixturePath: scenario.fixturePath,
+          fixtureSha256: scenario.fixtureSha256,
+          derivedFrom: scenario.derivedFrom,
+          sanitizationVersion: scenario.sanitizationVersion,
+          coverage: scenario.coverage,
+          checks: { update: true, doctor: true, check: true, status: true, specs: true, history: true, preservedFiles: true },
+        })
+      }
+      if (fixtureTreeSha256(scenario.fixtureRoot) !== scenario.fixtureSha256)
+        fail(`Installed rsp project scenario ${scenario.id} mutated its registered source fixture`)
+    }
+
+    const invalidInit = runResult(process.execPath, [installedBin, 'init'], { cwd: invalidConfigRoot })
+    if (invalidInit.status !== 0)
+      fail(`Installed rsp invalid-config fixture init failed: ${invalidInit.stderr.trim()}`)
+    const invalidConfigPath = join(invalidConfigRoot, '.rsp', 'config.yaml')
+    writeFileSync(
+      invalidConfigPath,
+      `${readFileSync(invalidConfigPath, 'utf8')}\nworkspace:\n  activation: explicit\n`,
+    )
+    const invalidConfig = runResult(process.execPath, [installedBin, 'status', '--json'], { cwd: invalidConfigRoot })
+    if (invalidConfig.status === 0
+      || !`${invalidConfig.stdout}\n${invalidConfig.stderr}`.includes('workspace')) {
+      fail('Installed rsp did not reject the unsupported Workspace configuration')
+    }
+
     const nonTtyUi = runResult(process.execPath, [installedBin, 'ui'], { cwd: projectRoot, env: { ...process.env, CI: 'false', TERM: 'xterm-256color' } })
     const invalidLocale = runResult(process.execPath, [installedBin, 'ui', '--lang', 'fr'], { cwd: projectRoot, env: { ...process.env, CI: 'false', TERM: 'xterm-256color' } })
     const expectedNonTtyError = '  Error: rsp ui requires an interactive terminal; use rsp status or rsp status --json instead\n'
@@ -396,6 +763,11 @@ function main() {
         projectSkills,
       },
       package: `${packResult.name}@${packResult.version}`,
+      projectCoverage: {
+        observed: projectCatalog.coverage,
+        required: projectCatalog.requiredCoverage,
+      },
+      projectScenarios,
       runtime: { node: process.version, npm: runNpm(['--version']) },
       entrySmoke: {
         help: true,
@@ -408,6 +780,17 @@ function main() {
         optionalSkillInstallIdempotent: true,
         statusJson: true,
         specsJson: true,
+        lifecycle: {
+          incompleteReadyBlocked: true,
+          focusCapsuleProjected: true,
+          completedReady: true,
+          archivedHistory: true,
+        },
+        exactCommit: {
+          committedPaths: committed.committedPaths,
+          unrelatedDirtyPreserved: true,
+        },
+        unsupportedWorkspaceConfigRejected: true,
         deferredCommandsAbsent: ['broker', 'web'],
         compatibilityBoundary: {
           nodeEngine: installedManifest.engines.node,

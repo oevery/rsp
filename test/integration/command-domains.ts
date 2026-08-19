@@ -5,22 +5,7 @@ import { cp, mkdir, readdir, readFile, rm, symlink, writeFile } from 'node:fs/pr
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { archivePath, changesPath, cliPath, completeOpenChange, completeReopenChange, copyFixture, createClosedGroupProject, createRspFixture, renderChange, renderGroupBrief } from './harness.js'
-
-describe('pseudo-real fixture workflow', () => {
-  it('initializes, adds files, and passes doctor in a repo with existing AGENTS.md', async () => {
-    const fixtureDir = await copyFixture('home-manager-ish')
-
-    execSync(`node ${cliPath()} init`, { cwd: fixtureDir })
-    execSync(`node ${cliPath()} add spec shell-layout`, { cwd: fixtureDir })
-
-    const agents = await readFile(join(fixtureDir, 'AGENTS.md'), 'utf-8')
-    expect(agents).toContain('<!-- rsp:begin -->')
-
-    const doctorOutput = execSync(`node ${cliPath()} doctor`, { cwd: fixtureDir, encoding: 'utf-8' })
-    expect(doctorOutput).toContain('RSP setup looks healthy')
-  })
-})
+import { archivePath, changesPath, cliPath, completeOpenChange, completeReopenChange, createClosedGroupProject, createRspFixture, renderChange, renderGroupBrief } from './harness.js'
 
 describe('archive name collisions', () => {
   it('fails closed on a normalization-equivalent archive filename', async () => {
