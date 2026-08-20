@@ -882,9 +882,22 @@ function readRetainedScoringManifest(root, matrixPath, caseId) {
 export function scoreManagedControllerOutput(manifest, final) {
   const normalized = final.toLowerCase()
   return {
-    expected_missing: manifest.expected_output.filter(fragment => !normalized.includes(fragment.toLowerCase())),
-    forbidden_present: manifest.forbidden_output.filter(fragment => normalized.includes(fragment.toLowerCase())),
+    expected_missing: manifest.expected_output.filter(fragment => !includesManagedControllerOutputFragment(normalized, fragment)),
+    forbidden_present: manifest.forbidden_output.filter(fragment => includesManagedControllerOutputFragment(normalized, fragment)),
   }
+}
+
+function includesManagedControllerOutputFragment(normalized, fragment) {
+  const normalizedFragment = fragment.toLowerCase()
+  if (normalized.includes(normalizedFragment))
+    return true
+
+  const canonicalField = normalizedFragment.match(/^([^`\r\n]+?:\s*)([a-z0-9][a-z0-9_-]*)$/u)
+  if (!canonicalField)
+    return false
+
+  const [, prefix, value] = canonicalField
+  return new RegExp(`${escapeRegExp(prefix)}\`${escapeRegExp(value)}\``, 'u').test(normalized)
 }
 
 function escapeRegExp(value) {

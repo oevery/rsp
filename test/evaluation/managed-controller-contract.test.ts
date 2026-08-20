@@ -410,6 +410,22 @@ describe('rsp-manage research candidate', () => {
     })
   })
 
+  it('scores canonical field values rendered as Markdown inline code', () => {
+    const manifest = {
+      expected_output: ['RouteDisposition: direct'],
+      forbidden_output: ['RouteDisposition: managed'],
+    }
+
+    expect(scoreManagedControllerOutput(manifest, 'RouteDisposition: `direct`')).toEqual({
+      expected_missing: [],
+      forbidden_present: [],
+    })
+    expect(scoreManagedControllerOutput(manifest, 'RouteDisposition: `managed`')).toEqual({
+      expected_missing: ['RouteDisposition: direct'],
+      forbidden_present: ['RouteDisposition: managed'],
+    })
+  })
+
   it('accepts a bounded archive-date token without broadening unrelated paths', () => {
     const manifest = {
       id: 'archive-date-token',
