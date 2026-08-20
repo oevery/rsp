@@ -5,7 +5,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { isAbsolute, join, resolve } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
-import { buildReleaseProviderComparisonPlan } from './release-provider-comparison.mjs'
+import { buildReleaseProviderComparisonMatrixPlans } from './release-provider-comparison.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
 const VERSION_PATTERN = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/u
@@ -67,6 +67,8 @@ function hasCompleteRuns(report, plan) {
       : plan.candidate.composition.hash
     if (!sameIdentity(run.compositionSha256, composition)
       || !sameIdentity(run.contractSha256, plan.identities.contractSha256)
+      || run.case !== plan.case
+      || run.scenario?.status !== 'passed'
       || REQUIRED_DIMENSIONS.some(name => run.dimensions?.[name]?.status !== 'passed')) {
       return false
     }
@@ -77,6 +79,7 @@ function hasCompleteRuns(report, plan) {
 function reportMatchesPlan(report, plan) {
   return report?.verdict === 'passed'
     && report.execution === 'serial-paired'
+    && report.case === plan.case
     && report.scheduling?.concurrency === 1
     && report.scheduling?.order === 'alternating-ab-ba'
     && report.repetitions === plan.repetitions
@@ -119,6 +122,40 @@ export function assessReleaseProviderEvidence(plan, reports) {
   }
 }
 
+export function assessReleaseProviderEvidenceMatrix(plans, reports) {
+  if (!Array.isArray(plans) || plans.length === 0)
+    throw new Error('provider comparison matrix must contain at least one scenario plan')
+  const assessments = plans.map(plan => ({ case: plan.case, result: assessReleaseProviderEvidence(plan, reports) }))
+  if (assessments.every(entry => entry.result.state === 'not-required')) {
+    return {
+      state: 'not-required',
+      baselineRef: plans[0].baseline.ref,
+      compositionSha256: plans[0].candidate.composition.hash,
+    }
+  }
+  const missingCases = assessments
+    .filter(entry => entry.result.state !== 'reused')
+    .map(entry => entry.case)
+  if (missingCases.length > 0) {
+    return {
+      state: 'missing',
+      baselineRef: plans[0].baseline.ref,
+      compositionSha256: plans[0].candidate.composition.hash,
+      missingCases,
+    }
+  }
+  return {
+    state: 'reused',
+    baselineRef: plans[0].baseline.ref,
+    compositionSha256: plans[0].candidate.composition.hash,
+    reports: assessments.map(entry => ({
+      case: entry.case,
+      reportPath: entry.result.reportPath,
+      repetitions: entry.result.repetitions,
+    })),
+  }
+}
+
 export function loadReleaseProviderReports(root) {
   const reportsRoot = join(root, '.cache', 'release-provider-comparison')
   if (!existsSync(reportsRoot))
@@ -144,18 +181,18 @@ export function checkReleaseProviderEvidence(root) {
   const baselineRef = previousReleaseTag(root, targetTag)
   if (!baselineRef)
     return { state: 'not-required', baselineRef: null, compositionSha256: null }
-  const plan = buildReleaseProviderComparisonPlan(root, { baselineRef, repetitions: 3 })
-  return assessReleaseProviderEvidence(plan, loadReleaseProviderReports(root))
+  const plans = buildReleaseProviderComparisonMatrixPlans(root, { baselineRef })
+  return assessReleaseProviderEvidenceMatrix(plans, loadReleaseProviderReports(root))
 }
 
 function main() {
   try {
     const result = checkReleaseProviderEvidence(parseRoot(process.argv.slice(2)))
     if (result.state === 'missing') {
-      throw new Error(`matching provider comparison evidence is missing or stale for ${result.baselineRef}; run release:provider-compare explicitly before retrying (candidate check never invokes a provider)`)
+      throw new Error(`matching provider comparison matrix evidence is missing or stale for ${result.baselineRef} (missing: ${result.missingCases.join(', ')}); run release:provider-compare -- --matrix explicitly before retrying (candidate check never invokes a provider)`)
     }
     if (result.state === 'reused') {
-      console.log(`Release provider evidence check passed: reused ${result.repetitions}/3 paired comparison evidence from ${result.reportPath}.`)
+      console.log(`Release provider evidence check passed: reused all ${result.reports.length} provider comparison scenarios.`)
       return
     }
     const baseline = result.baselineRef ? ` against ${result.baselineRef}` : ''

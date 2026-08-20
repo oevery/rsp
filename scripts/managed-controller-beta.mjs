@@ -28,6 +28,10 @@ import {
 import { projectSkillEvaluationObservability } from './skill-evaluation-observability.mjs'
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)))
+const CASE_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u
+const PROVIDER_ROUTES = new Set(['direct', 'selected'])
+const PROVIDER_MODES = new Set(['direct', 'solo', 'delegated', 'coordinated'])
+const PROVIDER_DISPATCHES = new Set(['none', 'sequential', 'independent-verify', 'parallel-wave'])
 
 function hashContent(content) {
   return createHash('sha256').update(content).digest('hex')
@@ -140,7 +144,52 @@ function validatePriorRetainedEvidence(projectRoot, entries) {
   return evidence
 }
 
-export function loadManagedControllerBetaPlan(projectRoot = root) {
+function loadProviderComparisonCase(projectRoot, caseId, productSkillNames) {
+  if (typeof caseId !== 'string' || !CASE_ID.test(caseId))
+    throw new Error(`invalid beta provider comparison case: ${caseId}`)
+  const holdoutRoot = join(projectRoot, 'evaluation', 'managed-controller', 'holdout')
+  const caseDirectory = join(holdoutRoot, caseId)
+  const manifestPath = join(caseDirectory, 'case.yaml')
+  if (!existsSync(manifestPath))
+    throw new Error(`beta provider comparison case is missing: ${caseId}`)
+  const manifest = parseYaml(readFileSync(manifestPath, 'utf8'))
+  if (!manifest || manifest.id !== caseId)
+    throw new Error(`invalid beta provider comparison manifest: ${caseId}`)
+  const baseCase = manifest.base_case ?? caseId
+  if (typeof baseCase !== 'string' || !CASE_ID.test(baseCase))
+    throw new Error(`beta provider comparison base case is invalid: ${caseId}`)
+  const baseDirectory = join(holdoutRoot, baseCase, 'base')
+  if (!existsSync(baseDirectory) || lstatSync(baseDirectory).isSymbolicLink() || !lstatSync(baseDirectory).isDirectory())
+    throw new Error(`beta provider comparison fixture is incomplete: ${caseId}`)
+  const installedSkills = manifest.installed_skills ?? ['rsp-manage']
+  if (JSON.stringify(installedSkills) !== JSON.stringify(productSkillNames)) {
+    if (caseId === 'auto-multisurface-routing')
+      throw new Error('beta product_skill_names must exactly match holdout installed_skills')
+    throw new Error(`beta provider comparison case ${caseId} must exactly match product_skill_names`)
+  }
+  const expectations = manifest.provider_expectations
+  const workerCount = expectations?.worker_dispatch_count
+  if (!expectations
+    || !PROVIDER_ROUTES.has(expectations.route)
+    || !PROVIDER_MODES.has(expectations.mode)
+    || !PROVIDER_DISPATCHES.has(expectations.dispatch)
+    || !workerCount
+    || !Number.isInteger(workerCount.min)
+    || !Number.isInteger(workerCount.max)
+    || workerCount.min < 0
+    || workerCount.max < workerCount.min) {
+    throw new Error(`beta provider comparison expectations are invalid: ${caseId}`)
+  }
+  return {
+    base_tree_sha256: hashTree(baseDirectory),
+    case: caseId,
+    holdout_manifest_sha256: hashContent(readFileSync(manifestPath)),
+    manifest_path: manifestPath,
+    provider_expectations: expectations,
+  }
+}
+
+export function loadManagedControllerBetaPlan(projectRoot = root, { caseId } = {}) {
   const path = join(projectRoot, 'evaluation', 'managed-controller', 'beta', 'manage-orchestration-beta.yaml')
   const plan = parseYaml(readFileSync(path, 'utf8'))
   if (!plan || plan.id !== 'manage-orchestration-beta' || typeof plan.case !== 'string')
@@ -151,21 +200,32 @@ export function loadManagedControllerBetaPlan(projectRoot = root) {
     if (!Array.isArray(plan[field]) || plan[field].length === 0 || plan[field].some(item => typeof item !== 'string'))
       throw new Error(`beta ${field} must be a non-empty string array`)
   }
-  const caseDirectory = join(projectRoot, 'evaluation', 'managed-controller', 'holdout', plan.case)
-  const manifestPath = join(caseDirectory, 'case.yaml')
-  const baseDirectory = join(caseDirectory, 'base')
-  if (!existsSync(manifestPath) || !existsSync(baseDirectory))
-    throw new Error(`beta holdout ${plan.case} is incomplete`)
-  const manifest = parseYaml(readFileSync(manifestPath, 'utf8'))
-  const installedSkills = manifest?.installed_skills ?? ['rsp-manage']
   if (!Array.isArray(plan.product_skill_names)
     || plan.product_skill_names.length === 0
     || plan.product_skill_names.some(name => typeof name !== 'string')
     || new Set(plan.product_skill_names).size !== plan.product_skill_names.length) {
     throw new Error('beta product_skill_names must be a non-empty unique string array')
   }
-  if (JSON.stringify(plan.product_skill_names) !== JSON.stringify(installedSkills))
-    throw new Error('beta product_skill_names must exactly match holdout installed_skills')
+  if (!Array.isArray(plan.provider_comparison_cases)
+    || plan.provider_comparison_cases.length === 0
+    || plan.provider_comparison_cases.some(entry => !entry
+      || typeof entry.case !== 'string'
+      || !Number.isInteger(entry.repetitions)
+      || entry.repetitions < 1
+      || entry.repetitions > 10)) {
+    throw new Error('beta provider_comparison_cases must contain valid case and repetition entries')
+  }
+  const configuredCases = new Set(plan.provider_comparison_cases.map(entry => entry.case))
+  if (configuredCases.size !== plan.provider_comparison_cases.length || !configuredCases.has(plan.case))
+    throw new Error('beta provider_comparison_cases must be unique and include the beta case')
+  const providerComparisonCases = plan.provider_comparison_cases.map(entry => ({
+    ...loadProviderComparisonCase(projectRoot, entry.case, plan.product_skill_names),
+    repetitions: entry.repetitions,
+  }))
+  const selectedCaseId = caseId ?? plan.case
+  const selectedCase = providerComparisonCases.find(entry => entry.case === selectedCaseId)
+  if (!selectedCase)
+    throw new Error(`beta provider comparison case is not configured: ${selectedCaseId}`)
   const productComposition = hashManagedControllerComposition(
     plan.product_skill_names.map(name => ({
       name,
@@ -174,24 +234,23 @@ export function loadManagedControllerBetaPlan(projectRoot = root) {
   )
   if (productComposition.hash !== plan.product_composition_sha256)
     throw new Error(`beta product composition drifted: ${productComposition.hash}`)
-  const manifestHash = hashContent(readFileSync(manifestPath))
-  const baseTreeHash = hashTree(baseDirectory)
-  if (manifestHash !== plan.holdout_manifest_sha256)
-    throw new Error(`beta holdout manifest drifted: ${manifestHash}`)
-  if (baseTreeHash !== plan.base_tree_sha256)
-    throw new Error(`beta holdout base drifted: ${baseTreeHash}`)
+  const defaultCase = providerComparisonCases.find(entry => entry.case === plan.case)
+  if (defaultCase.holdout_manifest_sha256 !== plan.holdout_manifest_sha256)
+    throw new Error(`beta holdout manifest drifted: ${defaultCase.holdout_manifest_sha256}`)
+  if (defaultCase.base_tree_sha256 !== plan.base_tree_sha256)
+    throw new Error(`beta holdout base drifted: ${defaultCase.base_tree_sha256}`)
   const priorRetainedEvidence = validatePriorRetainedEvidence(
     projectRoot,
     plan.prior_retained_evidence,
   )
   return {
     ...plan,
-    base_tree_sha256: baseTreeHash,
-    holdout_manifest_sha256: manifestHash,
+    ...selectedCase,
     path,
     prior_retained_evidence: priorRetainedEvidence,
     product_composition: productComposition,
     product_composition_sha256: productComposition.hash,
+    provider_comparison_cases: providerComparisonCases,
   }
 }
 
@@ -336,6 +395,34 @@ function producerEvidence(plan, metadata) {
   }
 }
 
+function providerExpectation(plan, agentReported) {
+  const expected = plan.provider_expectations
+  if (!expected)
+    return null
+  const observations = agentReported?.observations
+  const trigger = observations?.trigger
+  const evidence = trigger?.evidence
+  const workerDispatchCount = observations?.worker_dispatch_count
+  const observed = {
+    dispatch: evidence?.dispatch ?? null,
+    mode: evidence?.mode ?? null,
+    route: evidence?.route ?? null,
+    worker_dispatch_count: Number.isInteger(workerDispatchCount) ? workerDispatchCount : null,
+  }
+  const passed = trigger?.status === 'passed'
+    && observed.route === expected.route
+    && observed.mode === expected.mode
+    && observed.dispatch === expected.dispatch
+    && observed.worker_dispatch_count !== null
+    && observed.worker_dispatch_count >= expected.worker_dispatch_count.min
+    && observed.worker_dispatch_count <= expected.worker_dispatch_count.max
+  return {
+    expected,
+    observed,
+    status: passed ? 'passed' : 'failed',
+  }
+}
+
 export function summarizeManagedControllerBetaRun(plan, metadata, final) {
   const verificationCommand = ['npm', 'test']
   const agentVerificationRounds = countAgentVerificationRounds(metadata.paths?.events, verificationCommand)
@@ -407,6 +494,7 @@ export function summarizeManagedControllerBetaRun(plan, metadata, final) {
       ? hashSkillEvaluationValue(observability)
       : metadata.observation_sha256 ?? null,
     observability,
+    provider_expectation: providerExpectation(plan, capabilityUnavailable ? null : producer?.agentReported ?? null),
   }
 }
 

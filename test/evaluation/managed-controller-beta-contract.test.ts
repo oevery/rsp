@@ -25,7 +25,7 @@ import {
   summarizeManagedControllerBetaComparison,
   summarizeManagedControllerBetaRun,
 } from '../../scripts/managed-controller-beta.mjs'
-import { evaluateManagedController, runManagedControllerEvaluation } from '../../scripts/managed-controller-eval.mjs'
+import { evaluateManagedController, prepareManagedControllerRun, runManagedControllerEvaluation } from '../../scripts/managed-controller-eval.mjs'
 import { hashSkillEvaluationValue } from '../../scripts/skill-candidate-evaluation.mjs'
 
 const root = fileURLToPath(new URL('../..', import.meta.url))
@@ -41,7 +41,7 @@ function observabilityOf(summary: unknown) {
 function copyBetaContractProject(target: string) {
   for (const path of [
     ['evaluation', 'managed-controller', 'beta'],
-    ['evaluation', 'managed-controller', 'holdout', 'auto-multisurface-routing'],
+    ['evaluation', 'managed-controller', 'holdout'],
     ['skills', 'rsp'],
     ['skills', 'rsp-manage'],
     ['skills', 'rsp-implement'],
@@ -57,6 +57,33 @@ function copyBetaContractProject(target: string) {
 }
 
 describe('managed-controller beta evidence', () => {
+  it('prepares every provider comparison scenario with an explicit topology receipt contract', ({ onTestFinished }) => {
+    const outputRoot = mkdtempSync(join(tmpdir(), 'rsp-manage-provider-scenarios-'))
+    onTestFinished(() => rmSync(outputRoot, { force: true, recursive: true }))
+    const plan = loadManagedControllerBetaPlan(root)
+
+    expect(plan.provider_comparison_cases).toHaveLength(6)
+    for (const entry of plan.provider_comparison_cases) {
+      const prepared = prepareManagedControllerRun({
+        caseId: entry.case,
+        outputRoot,
+        root,
+        variant: 'product',
+      })
+      const expected = prepared.manifest.provider_expectations
+      if (!expected)
+        throw new Error('provider comparison scenario is missing provider_expectations')
+      expect(prepared.prompt).toContain('For this provider scenario, set trigger evidence to an object containing exactly these routing fields when observed:')
+      expect(prepared.prompt).toContain(JSON.stringify({
+        dispatch: expected.dispatch,
+        mode: expected.mode,
+        route: expected.route,
+      }))
+      expect(prepared.prompt).toContain(
+        `Set worker_dispatch_count to the directly observed number; the accepted range is ${expected.worker_dispatch_count.min}..${expected.worker_dispatch_count.max}.`,
+      )
+    }
+  })
   it('locks one baseline/product holdout before execution', () => {
     const plan = loadManagedControllerBetaPlan(root)
 
@@ -268,6 +295,7 @@ describe('managed-controller beta evidence', () => {
       'evaluation_receipt',
       'observation_sha256',
       'observability',
+      'provider_expectation',
     ])
     expect(summary.omissions).toContain(
       'first-fix result is not emitted as a structured receipt observation',

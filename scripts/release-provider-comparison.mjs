@@ -2,16 +2,18 @@
 
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, relative, resolve, sep } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
+import { isDeepStrictEqual } from 'node:util'
 import {
   loadManagedControllerBetaPlan,
   summarizeManagedControllerBetaRun,
 } from './managed-controller-beta.mjs'
 import {
+  hashManagedControllerArtifact,
   hashManagedControllerComposition,
   readManagedControllerFlag,
   runManagedControllerEvaluation,
@@ -24,6 +26,38 @@ const code = '`'
 
 function fail(message) {
   throw new Error(`Release provider comparison invalid: ${message}`)
+}
+
+function hashContent(content) {
+  return createHash('sha256').update(content).digest('hex')
+}
+
+function sameJson(left, right) {
+  return isDeepStrictEqual(left, right)
+}
+
+function isSha256(value) {
+  return typeof value === 'string' && /^[a-f0-9]{64}$/u.test(value)
+}
+
+function readRegularFile(path, label) {
+  if (!existsSync(path))
+    fail(`${label} is missing`)
+  const stats = lstatSync(path)
+  if (stats.isSymbolicLink() || !stats.isFile())
+    fail(`${label} must be a regular non-symlink file`)
+  return readFileSync(path, 'utf8')
+}
+
+function readJsonFile(path, label) {
+  try {
+    return JSON.parse(readRegularFile(path, label))
+  }
+  catch (error) {
+    if (error instanceof SyntaxError)
+      fail(`${label} is not valid JSON`)
+    throw error
+  }
 }
 
 function gitOutput(repositoryRoot, args, options = {}) {
@@ -125,11 +159,14 @@ function harnessSha256(repositoryRoot, betaPlan) {
 
 export function buildReleaseProviderComparisonPlan(
   repositoryRoot,
-  { baselineRef, repetitions = 3 } = {},
+  { baselineRef, caseId, repetitions } = {},
 ) {
-  const repetitionCount = positiveInteger(repetitions, 'repetitions', { min: 3, max: 10 })
   const baselineCommit = resolveGitCommit(repositoryRoot, baselineRef)
-  const betaPlan = loadManagedControllerBetaPlan(repositoryRoot)
+  const betaPlan = loadManagedControllerBetaPlan(repositoryRoot, { caseId })
+  const configuredCase = betaPlan.provider_comparison_cases.find(entry => entry.case === betaPlan.case)
+  const repetitionCount = repetitions === undefined
+    ? configuredCase.repetitions
+    : positiveInteger(repetitions, 'repetitions', { min: 3, max: 10 })
   const skills = [...betaPlan.product_skill_names]
   const baselineComposition = withBaselineSnapshot(
     repositoryRoot,
@@ -144,7 +181,7 @@ export function buildReleaseProviderComparisonPlan(
     repetitions: repetitionCount,
     case: betaPlan.case,
     metrics: ['input-tokens', 'cached-input-tokens', 'uncached-input-tokens', 'output-tokens', 'total-tokens', 'tool-calls', 'tool-output-bytes', 'model-invocations', 'elapsed-ms'],
-    correctness: ['compliance', 'boundary', 'task-result'],
+    correctness: ['compliance', 'boundary', 'task-result', 'routing-topology'],
     baseline: {
       ref: baselineRef,
       commit: baselineCommit,
@@ -172,12 +209,21 @@ export function buildReleaseProviderComparisonPlan(
       efficiencyThreshold: null,
       unavailableIsPass: false,
     },
+    providerExpectations: betaPlan.provider_expectations,
     omissions: [
       'token deltas are provider-backed observations rather than deterministic release acceptance',
       'the comparison isolates Skill composition while sharing the current CLI and evaluation harness',
       'no provider-general, model-general, cost, publication, or release approval claim is made',
     ],
   }
+}
+
+export function buildReleaseProviderComparisonMatrixPlans(repositoryRoot, { baselineRef } = {}) {
+  const betaPlan = loadManagedControllerBetaPlan(repositoryRoot)
+  return betaPlan.provider_comparison_cases.map(entry => buildReleaseProviderComparisonPlan(repositoryRoot, {
+    baselineRef,
+    caseId: entry.case,
+  }))
 }
 
 function runClassification(run) {
@@ -360,6 +406,8 @@ export function createReleaseProviderComparisonSummary(plan, runs, refreshedPlan
       identityIssues.push(`candidate composition drift in repetition ${run.repetition}`)
   }
   for (const run of runs) {
+    if (run.case !== plan.case)
+      identityIssues.push(`scenario identity drift in repetition ${run.repetition}`)
     if (run.contractSha256 !== plan.identities.contractSha256)
       identityIssues.push(`${run.arm} contract drift in repetition ${run.repetition}`)
   }
@@ -377,7 +425,8 @@ export function createReleaseProviderComparisonSummary(plan, runs, refreshedPlan
   const correctnessFailed = runs.some(run => !['infra-contaminated', 'incomplete'].includes(runClassification(run))
     && (run.outcome === 'failed'
       || (run.outcome === 'passed'
-        && ['compliance', 'boundary', 'task_result'].some(name => run.dimensions[name]?.status !== 'passed'))))
+        && (['compliance', 'boundary', 'task_result'].some(name => run.dimensions[name]?.status !== 'passed')
+          || (plan.providerExpectations && run.scenario?.status !== 'passed')))))
   const unavailable = eligiblePairs.length !== plan.repetitions
   const measurementIncomplete = eligibleRuns.some(run => [
     run.measurements.tokens.input,
@@ -455,6 +504,14 @@ export function renderReleaseProviderComparisonMarkdown(summary) {
     `- Correctness: ${summary.correctness.passed ? 'passed' : 'not passed'}`,
     `- Eligible pairs: ${summary.infrastructure.eligiblePairs}/${summary.repetitions}`,
     `- Infrastructure-contaminated pairs: ${summary.infrastructure.contaminatedPairs}`,
+    ...(summary.replay
+      ? [
+          `- Evidence mode: ${code}${summary.replay.mode}${code}`,
+          `- Source report SHA-256: ${code}${summary.replay.sourceReportSha256}${code}`,
+          `- Source harness SHA-256: ${code}${summary.replay.sourceHarnessSha256}${code}`,
+          `- Source candidate commit: ${code}${summary.replay.sourceCandidateCommit ?? 'unavailable'}${code}`,
+        ]
+      : []),
     '',
     '## Correctness Gate',
     '',
@@ -522,7 +579,7 @@ export function renderReleaseProviderComparisonMarkdown(summary) {
 function createRunDirectory(outputRoot, plan) {
   mkdirSync(outputRoot, { recursive: true })
   const timestamp = new Date().toISOString().replace(/[-:.]/gu, '')
-  const directory = join(outputRoot, `${timestamp}-${plan.baseline.commit.slice(0, 10)}-${process.pid}`)
+  const directory = join(outputRoot, `${timestamp}-${plan.case}-${plan.baseline.commit.slice(0, 10)}-${process.pid}`)
   mkdirSync(directory)
   return directory
 }
@@ -539,6 +596,7 @@ function sanitizedRun(arm, schedule, summary, metadata) {
     timedOut,
   })
   return {
+    case: metadata.case_id,
     repetition: schedule.pairAttempt,
     ...schedule,
     arm,
@@ -574,6 +632,7 @@ function sanitizedRun(arm, schedule, summary, metadata) {
       retryCount: finiteMeasurement(observedInfrastructure?.retry_count),
       status: contaminated ? 'contaminated' : 'no-contamination-observed',
     },
+    scenario: summary.provider_expectation,
     omissions: summary.omissions,
   }
 }
@@ -583,6 +642,7 @@ function sanitizedFailedRun(arm, schedule, plan, error) {
   const receiptInvalid = message.includes('evaluation receipt')
   const infrastructureFailure = /\b(?:429|502|503|504|ECONNRESET|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|ETIMEDOUT|rate[ -]?limit|too many requests|bad gateway|service unavailable|gateway timeout|connection reset|connection refused|network unreachable|socket hang up|timed out)\b/iu.test(message)
   return {
+    case: plan.case,
     repetition: schedule.pairAttempt,
     ...schedule,
     arm,
@@ -619,14 +679,196 @@ function sanitizedFailedRun(arm, schedule, plan, error) {
       retryCount: null,
       status: infrastructureFailure ? 'contaminated' : 'no-contamination-observed',
     },
+    scenario: plan.providerExpectations
+      ? { expected: plan.providerExpectations, observed: null, status: 'failed' }
+      : null,
     failure: receiptInvalid ? 'invalid-evaluation-receipt' : infrastructureFailure ? 'provider-transport-unavailable' : 'provider-execution-unavailable',
     omissions: ['provider execution did not produce validated structured evaluation metadata'],
   }
 }
 
+function validateReplaySourceReport(source, plan) {
+  if (!source || typeof source !== 'object'
+    || source.verdict !== 'passed'
+    || source.execution !== 'serial-paired'
+    || source.case !== plan.case
+    || source.repetitions !== plan.repetitions
+    || source.correctness?.passed !== true
+    || source.infrastructure?.attemptedPairs !== plan.repetitions
+    || source.infrastructure?.eligiblePairs !== plan.repetitions
+    || source.infrastructure?.contaminatedPairs !== 0
+    || source.infrastructure?.incompletePairs !== 0
+    || source.infrastructure?.replacementPairs !== 0
+    || !Array.isArray(source.identities?.issues)
+    || source.identities.issues.length !== 0) {
+    fail('replay source must be one complete passed comparison without contamination or replacement attempts')
+  }
+  const identities = [
+    ['baseline ref', source.identities.baseline?.ref, plan.baseline.ref],
+    ['baseline commit', source.identities.baseline?.commit, plan.baseline.commit],
+    ['baseline composition', source.identities.baseline?.composition?.hash, plan.baseline.composition.hash],
+    ['candidate composition', source.identities.candidate?.composition?.hash, plan.candidate.composition.hash],
+    ['contract', source.identities.contractSha256, plan.identities.contractSha256],
+    ['fixture', source.identities.fixtureSha256, plan.identities.fixtureSha256],
+  ]
+  for (const [label, observed, expected] of identities) {
+    if (observed !== expected)
+      fail(`replay source ${label} does not match the current plan`)
+  }
+  if (!isSha256(source.identities.harnessSha256))
+    fail('replay source harness identity is missing')
+  if (!Array.isArray(source.runs) || source.runs.length !== plan.repetitions * 2)
+    fail('replay source must contain exactly two eligible runs per target pair')
+  const expectedRuns = new Set()
+  for (let targetPair = 1; targetPair <= plan.repetitions; targetPair += 1) {
+    expectedRuns.add(`baseline:${targetPair}`)
+    expectedRuns.add(`candidate:${targetPair}`)
+  }
+  for (const run of source.runs) {
+    const key = `${run.arm}:${run.targetPair}`
+    if (!expectedRuns.delete(key)
+      || run.pairAttempt !== run.targetPair
+      || run.repetition !== run.pairAttempt
+      || run.pairId !== `pair-attempt-${String(run.pairAttempt).padStart(2, '0')}`
+      || run.position !== (run.targetPair % 2 === 1
+        ? run.arm === 'baseline' ? 1 : 2
+        : run.arm === 'candidate' ? 1 : 2)
+      || runClassification(run) !== 'eligible'
+      || run.outcome !== 'passed'
+      || (plan.providerExpectations && run.scenario?.status !== 'passed')
+      || run.contractSha256 !== plan.identities.contractSha256
+      || run.compositionSha256 !== (run.arm === 'baseline' ? plan.baseline.composition.hash : plan.candidate.composition.hash)
+      || ['compliance', 'boundary', 'task_result'].some(name => run.dimensions?.[name]?.status !== 'passed')
+      || !isSha256(run.observationSha256)) {
+      fail('replay source contains an incomplete, duplicate, or mismatched run')
+    }
+  }
+  if (expectedRuns.size > 0)
+    fail('replay source is missing one or more paired runs')
+}
+
+function replayRunMetadata(sourceDirectory, sourceRun, plan, betaPlan) {
+  const pairAttempt = sourceRun.pairAttempt ?? sourceRun.repetition
+  const runsRoot = join(sourceDirectory, 'raw', `pair-attempt-${String(pairAttempt).padStart(2, '0')}`, 'runs')
+  if (!existsSync(runsRoot) || lstatSync(runsRoot).isSymbolicLink() || !lstatSync(runsRoot).isDirectory())
+    fail(`replay raw runs are missing for pair attempt ${pairAttempt}`)
+  const expectedVariant = sourceRun.arm === 'baseline' ? 'candidate' : 'product'
+  const candidates = readdirSync(runsRoot, { withFileTypes: true })
+    .filter(entry => entry.isDirectory())
+    .map(entry => join(runsRoot, entry.name, 'metadata.json'))
+    .filter(existsSync)
+    .map((metadataPath) => {
+      const metadata = readJsonFile(metadataPath, `replay metadata for pair attempt ${pairAttempt}`)
+      return { metadata, metadataPath }
+    })
+    .filter(entry => entry.metadata.variant === expectedVariant)
+  if (candidates.length !== 1)
+    fail(`replay pair attempt ${pairAttempt} must contain exactly one ${sourceRun.arm} metadata record`)
+  const { metadata, metadataPath } = candidates[0]
+  if (metadata.case_id !== plan.case
+    || metadata.result !== 'passed'
+    || metadata.timed_out === true
+    || metadata.contract_sha256 !== plan.identities.contractSha256
+    || metadata.composition?.installed_before?.hash !== sourceRun.compositionSha256
+    || metadata.composition?.installed_after?.hash !== sourceRun.compositionSha256
+    || metadata.composition?.stable !== true
+    || metadata.events?.infrastructure?.status !== 'no-contamination-observed'
+    || metadata.verification?.passed !== true
+    || metadata.observation_sha256 !== sourceRun.observationSha256) {
+    fail(`replay metadata does not match the sanitized ${sourceRun.arm} run for pair attempt ${pairAttempt}`)
+  }
+  const runDirectory = dirname(metadataPath)
+  const eventsPath = join(runDirectory, 'events.jsonl')
+  const finalPath = join(runDirectory, 'final.md')
+  readRegularFile(eventsPath, `replay events for pair attempt ${pairAttempt}`)
+  const final = readRegularFile(finalPath, `replay final response for pair attempt ${pairAttempt}`)
+  if (hashManagedControllerArtifact(final) !== metadata.final_hash)
+    fail(`replay final response hash does not match for pair attempt ${pairAttempt}`)
+  const replayMetadata = {
+    ...metadata,
+    paths: { ...metadata.paths, events: eventsPath, final: finalPath, metadata: metadataPath },
+  }
+  const summarized = summarizeManagedControllerBetaRun(betaPlan, replayMetadata, final)
+  const replayed = sanitizedRun(sourceRun.arm, {
+    order: sourceRun.order,
+    pairAttempt,
+    pairId: sourceRun.pairId,
+    position: sourceRun.position,
+    targetPair: sourceRun.targetPair,
+  }, summarized, replayMetadata)
+  const replayChecks = [
+    ['classification', replayed.classification, 'eligible'],
+    ['outcome', replayed.outcome, 'passed'],
+    ['observation identity', replayed.observationSha256, sourceRun.observationSha256],
+    ...(sourceRun.agent_reported == null
+      ? []
+      : [['agent-reported evidence', replayed.agent_reported, sourceRun.agent_reported]]),
+    ['dimensions', replayed.dimensions, sourceRun.dimensions],
+    ['resources', replayed.resources, sourceRun.resources],
+    ['infrastructure', replayed.infrastructure, sourceRun.infrastructure],
+    ['input tokens', replayed.measurements.tokens.input, sourceRun.measurements?.tokens?.input],
+    ['cached input tokens', replayed.measurements.tokens.cached_input, sourceRun.measurements?.tokens?.cached_input],
+    ['uncached input tokens', replayed.measurements.tokens.uncached_input, sourceRun.measurements?.tokens?.uncached_input],
+    ['output tokens', replayed.measurements.tokens.output, sourceRun.measurements?.tokens?.output],
+    ['reasoning output tokens', replayed.measurements.tokens.reasoning_output, sourceRun.measurements?.tokens?.reasoning_output],
+    ['total tokens', replayed.measurements.tokens.total, sourceRun.measurements?.tokens?.total],
+    ['tool calls', replayed.measurements.tool_calls, sourceRun.measurements?.tool_calls],
+    ['tool output bytes', replayed.measurements.tool_output_bytes, sourceRun.measurements?.tool_output_bytes],
+    ['model invocations', replayed.measurements.model_invocations, sourceRun.measurements?.model_invocations],
+    ['elapsed time', replayed.measurements.elapsed_ms, sourceRun.measurements?.elapsed_ms],
+  ]
+  const mismatch = replayChecks.find(([, observed, expected]) => !sameJson(observed, expected))
+  if (mismatch)
+    fail(`replay ${mismatch[0]} does not match the validated sanitized ${sourceRun.arm} run for pair attempt ${pairAttempt}`)
+  return replayed
+}
+
+export function replayReleaseProviderComparison({
+  baselineRef,
+  caseId,
+  outputRoot = join(root, '.cache', 'release-provider-comparison'),
+  repetitions,
+  sourceReportPath,
+} = {}) {
+  if (typeof sourceReportPath !== 'string' || sourceReportPath.length === 0)
+    fail('replay source report path is required')
+  const plan = buildReleaseProviderComparisonPlan(root, { baselineRef, caseId, repetitions })
+  const resolvedSourceReport = resolve(sourceReportPath)
+  const sourceContent = readRegularFile(resolvedSourceReport, 'replay source report')
+  let source
+  try {
+    source = JSON.parse(sourceContent)
+  }
+  catch {
+    fail('replay source report is not valid JSON')
+  }
+  validateReplaySourceReport(source, plan)
+  const betaPlan = loadManagedControllerBetaPlan(root, { caseId: plan.case })
+  const sourceDirectory = dirname(resolvedSourceReport)
+  const runs = source.runs.map(run => replayRunMetadata(sourceDirectory, run, plan, betaPlan))
+  const refreshedPlan = buildReleaseProviderComparisonPlan(root, { baselineRef, caseId: plan.case, repetitions })
+  const summary = {
+    ...createReleaseProviderComparisonSummary(plan, runs, refreshedPlan),
+    replay: {
+      mode: 'deterministic-replay',
+      sourceCandidateCommit: source.identities.candidate?.commit ?? null,
+      sourceHarnessSha256: source.identities.harnessSha256,
+      sourceReportSha256: hashContent(sourceContent),
+    },
+  }
+  summary.omissions.push('provider execution was not repeated; the report was deterministically replayed from validated local raw evidence')
+  const runDirectory = createRunDirectory(resolve(outputRoot), plan)
+  const jsonPath = join(runDirectory, 'report.json')
+  const markdownPath = join(runDirectory, 'report.md')
+  writeFileSync(jsonPath, `${JSON.stringify(summary, null, 2)}\n`)
+  writeFileSync(markdownPath, renderReleaseProviderComparisonMarkdown(summary))
+  return { jsonPath, markdownPath, summary }
+}
+
 export async function runReleaseProviderComparison({
   authFile,
   baselineRef,
+  caseId,
   effort,
   isolatedUserContext = false,
   model,
@@ -634,12 +876,12 @@ export async function runReleaseProviderComparison({
   openaiBaseUrl,
   outputRoot = join(root, '.cache', 'release-provider-comparison'),
   provider,
-  repetitions = 3,
+  repetitions,
   timeoutMs = 600000,
   evaluationRunner = runManagedControllerEvaluation,
 } = {}) {
-  const plan = buildReleaseProviderComparisonPlan(root, { baselineRef, repetitions })
-  const betaPlan = loadManagedControllerBetaPlan(root)
+  const plan = buildReleaseProviderComparisonPlan(root, { baselineRef, caseId, repetitions })
+  const betaPlan = loadManagedControllerBetaPlan(root, { caseId: plan.case })
   const runDirectory = createRunDirectory(resolve(outputRoot), plan)
   const baselineSnapshotRoot = join(runDirectory, '.baseline-source')
   const baselineSkills = extractGitSkills(root, plan.baseline.commit, betaPlan.product_skill_names, baselineSnapshotRoot)
@@ -686,7 +928,7 @@ export async function runReleaseProviderComparison({
   finally {
     rmSync(baselineSnapshotRoot, { force: true, recursive: true })
   }
-  const refreshedPlan = buildReleaseProviderComparisonPlan(root, { baselineRef, repetitions })
+  const refreshedPlan = buildReleaseProviderComparisonPlan(root, { baselineRef, caseId: plan.case, repetitions })
   const summary = createReleaseProviderComparisonSummary(plan, runs, refreshedPlan)
   const jsonPath = join(runDirectory, 'report.json')
   const markdownPath = join(runDirectory, 'report.md')
@@ -695,22 +937,106 @@ export async function runReleaseProviderComparison({
   return { jsonPath, markdownPath, summary }
 }
 
+export async function runReleaseProviderComparisonMatrix({
+  baselineRef,
+  scenarioRunner = runReleaseProviderComparison,
+  ...options
+} = {}) {
+  const plans = buildReleaseProviderComparisonMatrixPlans(root, { baselineRef })
+  const results = []
+  let failedCase = null
+  let failure = null
+  for (const plan of plans) {
+    const result = await scenarioRunner({
+      ...options,
+      baselineRef,
+      caseId: plan.case,
+      repetitions: undefined,
+    })
+    results.push(result)
+    const identitiesMatch = result.summary?.case === plan.case
+      && result.summary?.repetitions === plan.repetitions
+      && result.summary?.identities?.baseline?.ref === plan.baseline.ref
+      && result.summary?.identities?.baseline?.commit === plan.baseline.commit
+      && result.summary?.identities?.baseline?.composition?.hash === plan.baseline.composition.hash
+      && result.summary?.identities?.candidate?.composition?.hash === plan.candidate.composition.hash
+      && result.summary?.identities?.contractSha256 === plan.identities.contractSha256
+      && result.summary?.identities?.fixtureSha256 === plan.identities.fixtureSha256
+      && result.summary?.identities?.harnessSha256 === plan.identities.harnessSha256
+    if (result.summary.verdict !== 'passed' || !identitiesMatch) {
+      failedCase = plan.case
+      failure = result.summary.verdict !== 'passed'
+        ? 'scenario-failed'
+        : 'scenario-identity-drift'
+      break
+    }
+  }
+  return {
+    failedCase,
+    failure,
+    results,
+    scenariosCompleted: results.length,
+    scenariosPlanned: plans.length,
+    verdict: failure === null && results.length === plans.length
+      ? 'passed'
+      : 'failed',
+  }
+}
+
 async function main() {
   const flags = process.argv.slice(2)
   const baselineRef = readManagedControllerFlag(flags, '--baseline-ref')
-  const repetitions = readManagedControllerFlag(flags, '--repetitions') ?? 3
+  const caseId = readManagedControllerFlag(flags, '--case')
+  const repetitions = readManagedControllerFlag(flags, '--repetitions')
+  const matrix = flags.includes('--matrix')
+  const replayReport = readManagedControllerFlag(flags, '--replay-report')
   if (!baselineRef)
     fail('--baseline-ref is required')
-  const plan = buildReleaseProviderComparisonPlan(root, { baselineRef, repetitions })
+  if (matrix && (caseId || repetitions || replayReport))
+    fail('--matrix cannot be combined with --case, --repetitions, or --replay-report')
   if (flags.includes('--plan')) {
+    if (matrix) {
+      const plans = buildReleaseProviderComparisonMatrixPlans(root, { baselineRef })
+      process.stdout.write(`${JSON.stringify({
+        execution: 'serial-scenario-matrix',
+        scenarios: plans,
+        totalPairs: plans.reduce((total, plan) => total + plan.repetitions, 0),
+      }, null, 2)}\n`)
+      return
+    }
+    const plan = buildReleaseProviderComparisonPlan(root, { baselineRef, caseId, repetitions })
     process.stdout.write(flags.includes('--json') ? `${JSON.stringify(plan, null, 2)}\n` : `${renderReleaseProviderComparisonMarkdown(createReleaseProviderComparisonSummary(plan, []))}\n`)
+    return
+  }
+  if (replayReport) {
+    if (flags.includes('--plan'))
+      fail('--replay-report cannot be combined with --plan')
+    for (const flag of ['--auth-file', '--effort', '--isolated-user-context', '--model', '--model-catalog-json', '--openai-base-url', '--provider', '--timeout-ms']) {
+      if (flags.includes(flag))
+        fail(`--replay-report cannot be combined with provider execution option ${flag}`)
+    }
+    const result = replayReleaseProviderComparison({
+      baselineRef,
+      caseId,
+      outputRoot: readManagedControllerFlag(flags, '--output-root'),
+      repetitions,
+      sourceReportPath: replayReport,
+    })
+    process.stdout.write(`${JSON.stringify({
+      verdict: result.summary.verdict,
+      replay: result.summary.replay,
+      report: result.markdownPath,
+      json: result.jsonPath,
+    }, null, 2)}\n`)
+    if (result.summary.verdict !== 'passed')
+      process.exitCode = 1
     return
   }
   const model = readManagedControllerFlag(flags, '--model')
   const effort = readManagedControllerFlag(flags, '--effort')
   if (!model || !effort)
     fail('--model and --effort are required for provider execution')
-  const result = await runReleaseProviderComparison({
+  const providerOptions = {
     authFile: readManagedControllerFlag(flags, '--auth-file'),
     baselineRef,
     effort,
@@ -720,8 +1046,31 @@ async function main() {
     openaiBaseUrl: readManagedControllerFlag(flags, '--openai-base-url'),
     outputRoot: readManagedControllerFlag(flags, '--output-root'),
     provider: readManagedControllerFlag(flags, '--provider'),
-    repetitions,
     timeoutMs: positiveInteger(readManagedControllerFlag(flags, '--timeout-ms') ?? 600000, 'timeout-ms'),
+  }
+  if (matrix) {
+    const campaign = await runReleaseProviderComparisonMatrix(providerOptions)
+    process.stdout.write(`${JSON.stringify({
+      verdict: campaign.verdict,
+      failedCase: campaign.failedCase,
+      failure: campaign.failure,
+      scenariosCompleted: campaign.scenariosCompleted,
+      scenariosPlanned: campaign.scenariosPlanned,
+      reports: campaign.results.map(result => ({
+        case: result.summary.case,
+        json: result.jsonPath,
+        report: result.markdownPath,
+        verdict: result.summary.verdict,
+      })),
+    }, null, 2)}\n`)
+    if (campaign.verdict !== 'passed')
+      process.exitCode = 1
+    return
+  }
+  const result = await runReleaseProviderComparison({
+    ...providerOptions,
+    caseId,
+    repetitions,
   })
   process.stdout.write(`${JSON.stringify({
     verdict: result.summary.verdict,

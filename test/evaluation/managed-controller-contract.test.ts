@@ -239,7 +239,7 @@ describe('rsp-manage research candidate', () => {
       'docs/zh-CN/status.md',
     ])
     expect(prepared.prompt).toContain('project-installed skills and project workflow')
-    expect(prepared.manifest.expected_output).toEqual(expect.arrayContaining(['selected', 'sequential', 'npm test']))
+    expect(prepared.manifest.expected_output).toEqual(expect.arrayContaining(['selected', 'coordinated', 'independent-verify', 'npm test']))
     expect(prepared.manifest.forbidden_output).toEqual(expect.arrayContaining(['RouteDisposition: direct', 'declined']))
   })
 

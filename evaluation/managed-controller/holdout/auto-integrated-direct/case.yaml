@@ -14,7 +14,15 @@ request: >-
   or ready successor. Multiple files and documentation surfaces alone must not select Manage. Use the
   ordinary direct Implement path, modify only the allowed paths, and update the Change truthfully. Do
   not archive, stage, commit, push, publish, or create controller state. In the final response report
-  `RouteDisposition: direct`, explain the `integrated check`, and include `npm test`.
+  `RouteDisposition: direct`, explain the `integrated check`, and include `npm test`. Report structured
+  trigger evidence with route `direct`, mode `direct`, dispatch `none`, and zero worker dispatches.
+provider_expectations:
+  route: direct
+  mode: direct
+  dispatch: none
+  worker_dispatch_count:
+    min: 0
+    max: 0
 allowed_changes:
   - .rsp/changes/refresh-status-guidance.md
   - .rsp/specs/status-presentation.md

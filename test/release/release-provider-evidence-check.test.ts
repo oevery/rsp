@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { assessReleaseProviderEvidence } from '../../scripts/release-provider-evidence-check.mjs'
+import {
+  assessReleaseProviderEvidence,
+  assessReleaseProviderEvidenceMatrix,
+} from '../../scripts/release-provider-evidence-check.mjs'
 
-function plan(candidateComposition = 'candidate-composition') {
+function plan(candidateComposition = 'candidate-composition', caseId = 'scenario-a', repetitions = 3) {
   return {
-    repetitions: 3,
+    case: caseId,
+    providerExpectations: {},
+    repetitions,
     baseline: {
       ref: 'v3.2.0',
       commit: 'baseline-commit',
@@ -23,12 +28,12 @@ function plan(candidateComposition = 'candidate-composition') {
   }
 }
 
-function passedReport() {
-  const repetitions = 3
+function passedReport(caseId = 'scenario-a', repetitions = 3) {
   const runs = []
   for (let repetition = 1; repetition <= repetitions; repetition += 1) {
     for (const arm of ['baseline', 'candidate']) {
       runs.push({
+        case: caseId,
         arm,
         classification: 'eligible',
         repetition,
@@ -41,16 +46,18 @@ function passedReport() {
           boundary: { status: 'passed' },
           task_result: { status: 'passed' },
         },
+        scenario: { status: 'passed' },
       })
     }
   }
   return {
-    path: '.cache/release-provider-comparison/run/report.json',
+    path: `.cache/release-provider-comparison/${caseId}/report.json`,
     report: {
       verdict: 'passed',
       execution: 'serial-paired',
       scheduling: { concurrency: 1, order: 'alternating-ab-ba' },
       repetitions,
+      case: caseId,
       identities: {
         baseline: {
           ref: 'v3.2.0',
@@ -92,9 +99,45 @@ describe('release provider evidence check', () => {
     expect(result).toEqual({
       state: 'reused',
       baselineRef: 'v3.2.0',
-      reportPath: '.cache/release-provider-comparison/run/report.json',
+      reportPath: '.cache/release-provider-comparison/scenario-a/report.json',
       repetitions: 3,
       compositionSha256: 'candidate-composition',
+    })
+  })
+
+  it('reuses provider evidence only when every matrix scenario has a matching passed report', () => {
+    const plans = [
+      plan('candidate-composition', 'scenario-a', 3),
+      plan('candidate-composition', 'scenario-b', 1),
+    ]
+    const result = assessReleaseProviderEvidenceMatrix(plans, [
+      passedReport('scenario-a', 3),
+      passedReport('scenario-b', 1),
+    ])
+
+    expect(result).toEqual({
+      state: 'reused',
+      baselineRef: 'v3.2.0',
+      compositionSha256: 'candidate-composition',
+      reports: [
+        { case: 'scenario-a', reportPath: '.cache/release-provider-comparison/scenario-a/report.json', repetitions: 3 },
+        { case: 'scenario-b', reportPath: '.cache/release-provider-comparison/scenario-b/report.json', repetitions: 1 },
+      ],
+    })
+  })
+
+  it('reports each missing matrix scenario instead of accepting partial coverage', () => {
+    const plans = [
+      plan('candidate-composition', 'scenario-a', 3),
+      plan('candidate-composition', 'scenario-b', 1),
+      plan('candidate-composition', 'scenario-c', 1),
+    ]
+
+    expect(assessReleaseProviderEvidenceMatrix(plans, [passedReport('scenario-a', 3)])).toEqual({
+      state: 'missing',
+      baselineRef: 'v3.2.0',
+      compositionSha256: 'candidate-composition',
+      missingCases: ['scenario-b', 'scenario-c'],
     })
   })
 

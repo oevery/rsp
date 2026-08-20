@@ -1087,6 +1087,13 @@ export function prepareManagedControllerRun({ caseId, outputRoot, root, skillSou
       : []),
     `Before the final response, write ${EVALUATION_RECEIPT_PATH} as one JSON object. Use this exact top-level JSON shape: ${JSON.stringify(receiptShape)}.`,
     'Keep case_id, composition_sha256, and contract_sha256 unchanged. Replace only the four observation values with directly observed values. Do not add an identity wrapper or any other key. Trigger is null or {"status":"passed|failed","evidence":<JSON>}; first_fix_result is null, passed, or failed; counts are null or non-negative integers. Do not stage or commit this transient file.',
+    ...(manifest.provider_expectations
+      ? [`For this provider scenario, set trigger evidence to an object containing exactly these routing fields when observed: ${JSON.stringify({
+          dispatch: manifest.provider_expectations.dispatch,
+          mode: manifest.provider_expectations.mode,
+          route: manifest.provider_expectations.route,
+        })}. Set worker_dispatch_count to the directly observed number; the accepted range is ${manifest.provider_expectations.worker_dispatch_count.min}..${manifest.provider_expectations.worker_dispatch_count.max}.`]
+      : []),
     'Return a concise final status with completed work, fresh verification, remaining boundary, and next action.',
   ].join('\n\n')
   return { baseSha, contractSha256, installedComposition, manifest, prompt, remotePath, remoteRefsBefore, sourceComposition, workspace }

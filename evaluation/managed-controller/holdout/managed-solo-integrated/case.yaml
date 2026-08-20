@@ -1,0 +1,50 @@
+id: managed-solo-integrated
+base_case: auto-multisurface-routing
+automatic_activation: true
+expected_mode: execute
+installed_skills:
+  - rsp
+  - rsp-manage
+  - rsp-implement
+request: >-
+  Complete the focused tracked Change `refresh-status-guidance` under automatic routing. The goal
+  qualifies for Manage because lifecycle coordination remains after implementation, although archive
+  authority is intentionally withheld. The immediate implementation and one integrated `npm test`
+  verification are fully coupled and create no independent worker obligation. Keep execution in the
+  manager's bounded local Discipline: select Manage, use mode `solo`, dispatch `none`, and dispatch zero
+  workers. Modify only the allowed paths and update the Change truthfully. Do not archive, stage, commit,
+  push, publish, or create controller state. Report `selected`, `solo`, `dispatch: none`, and `npm test`.
+provider_expectations:
+  route: selected
+  mode: solo
+  dispatch: none
+  worker_dispatch_count:
+    min: 0
+    max: 0
+allowed_changes:
+  - .rsp/changes/refresh-status-guidance.md
+  - .rsp/specs/status-presentation.md
+  - src/status-card.mjs
+  - docs/en/status.md
+  - docs/zh-CN/status.md
+  - test/status-card.test.mjs
+  - test/docs-sync.test.mjs
+required_changes:
+  - .rsp/changes/refresh-status-guidance.md
+  - .rsp/specs/status-presentation.md
+  - src/status-card.mjs
+  - docs/en/status.md
+  - docs/zh-CN/status.md
+verification:
+  - npm
+  - test
+expected_output:
+  - selected
+  - solo
+  - 'dispatch: none'
+  - npm test
+forbidden_output:
+  - 'RouteDisposition: direct'
+  - delegated
+  - coordinated
+  - controller state created

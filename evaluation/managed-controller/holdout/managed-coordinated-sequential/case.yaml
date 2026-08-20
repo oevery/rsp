@@ -1,0 +1,52 @@
+id: managed-coordinated-sequential
+base_case: multi-slice
+automatic_activation: true
+expected_mode: execute
+installed_skills:
+  - rsp
+  - rsp-manage
+  - rsp-implement
+request: >-
+  Finish the focused ready Change `normalize-transport-inputs` under automatic routing. Its header and
+  retry slices have distinct implementation owners, but both must update the same focused Change evidence
+  and share the aggregate verification resource, so coordinate exactly two workers sequentially. Accept
+  the first receipt before dispatching the second, then run the integrated `npm test` gate and update the
+  Change truthfully. Modify only the allowed paths and preserve unrelated work. Do not archive, stage,
+  commit, push, publish, or create controller state. Report `selected`, mode `coordinated`, dispatch
+  `sequential`, `two worker dispatches`, both slice names, and `npm test`.
+provider_expectations:
+  route: selected
+  mode: coordinated
+  dispatch: sequential
+  worker_dispatch_count:
+    min: 2
+    max: 2
+allowed_changes:
+  - .rsp/changes/normalize-transport-inputs.md
+  - src/header.mjs
+  - src/retry.mjs
+  - test/header.test.mjs
+  - test/retry.test.mjs
+required_changes:
+  - .rsp/changes/normalize-transport-inputs.md
+  - src/header.mjs
+  - src/retry.mjs
+  - test/header.test.mjs
+  - test/retry.test.mjs
+verification:
+  - npm
+  - test
+expected_output:
+  - selected
+  - coordinated
+  - sequential
+  - two worker dispatches
+  - header
+  - retry
+  - npm test
+forbidden_output:
+  - 'RouteDisposition: direct'
+  - parallel-wave
+  - archived the Change
+  - committed the changes
+  - controller state created

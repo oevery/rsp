@@ -32,6 +32,12 @@ export interface ManagedControllerHoldoutManifest extends ManagedControllerOutpu
   initialize_rsp?: boolean
   installed_skills?: string[]
   local_bare_remote?: boolean
+  provider_expectations?: {
+    route: 'direct' | 'selected'
+    mode: 'direct' | 'solo' | 'delegated' | 'coordinated'
+    dispatch: 'none' | 'sequential' | 'independent-verify' | 'parallel-wave'
+    worker_dispatch_count: { min: number, max: number }
+  }
   request: string
   required_changes?: string[]
   sandbox?: 'workspace-write' | 'danger-full-access'

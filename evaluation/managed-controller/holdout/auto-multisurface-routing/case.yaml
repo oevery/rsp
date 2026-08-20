@@ -21,7 +21,16 @@ request: >-
   That execution/acceptance boundary is the coordination signal; file count alone is not. Modify only
   the allowed paths, run npm test, and update the Change with truthful Tasks and verification evidence.
   Do not archive, stage, commit, push, publish, or create controller state. In the final response report
-  the automatic route result as `selected`, explain that dispatch was `sequential`, and include `npm test`.
+  the automatic route result as `selected`, explain that execution mode was `coordinated` and dispatch
+  was `independent-verify`, and include `npm test`. Report exactly two worker dispatches: one implementation
+  worker and one independent verifier.
+provider_expectations:
+  route: selected
+  mode: coordinated
+  dispatch: independent-verify
+  worker_dispatch_count:
+    min: 2
+    max: 2
 allowed_changes:
   - .rsp/changes/refresh-status-guidance.md
   - .rsp/specs/status-presentation.md
@@ -41,7 +50,8 @@ verification:
   - test
 expected_output:
   - selected
-  - sequential
+  - coordinated
+  - independent-verify
   - npm test
 forbidden_output:
   - 'RouteDisposition: direct'

@@ -1,0 +1,52 @@
+id: managed-coordinated-parallel
+base_case: multi-slice
+automatic_activation: true
+expected_mode: execute
+installed_skills:
+  - rsp
+  - rsp-manage
+  - rsp-implement
+request: >-
+  Finish the focused ready Change `normalize-transport-inputs` under automatic routing. Header and retry
+  own disjoint source and focused-test paths, have independent implementation owners, and can run in one
+  parallel wave. Coordinate exactly two workers in parallel; workers must not edit the shared Change file.
+  After both receipts settle, integrate their evidence into the Change and run the single aggregate
+  `npm test` gate. Modify only the allowed paths and preserve unrelated work. Do not archive, stage, commit,
+  push, publish, or create controller state. Report `selected`, mode `coordinated`, dispatch `parallel-wave`,
+  `two worker dispatches`, both slice names, and `npm test`.
+provider_expectations:
+  route: selected
+  mode: coordinated
+  dispatch: parallel-wave
+  worker_dispatch_count:
+    min: 2
+    max: 2
+allowed_changes:
+  - .rsp/changes/normalize-transport-inputs.md
+  - src/header.mjs
+  - src/retry.mjs
+  - test/header.test.mjs
+  - test/retry.test.mjs
+required_changes:
+  - .rsp/changes/normalize-transport-inputs.md
+  - src/header.mjs
+  - src/retry.mjs
+  - test/header.test.mjs
+  - test/retry.test.mjs
+verification:
+  - npm
+  - test
+expected_output:
+  - selected
+  - coordinated
+  - parallel-wave
+  - two worker dispatches
+  - header
+  - retry
+  - npm test
+forbidden_output:
+  - 'RouteDisposition: direct'
+  - dispatch sequential
+  - archived the Change
+  - committed the changes
+  - controller state created

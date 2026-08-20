@@ -22,8 +22,23 @@ export interface ManagedControllerBetaPlan {
   product_skill_names: string[]
   product_composition_sha256: string
   product_composition: ManagedControllerBetaComposition
+  provider_comparison_cases: Array<{
+    case: string
+    repetitions: number
+    holdout_manifest_sha256: string
+    base_tree_sha256: string
+    provider_expectations: ManagedControllerBetaProviderExpectations
+  }>
+  provider_expectations: ManagedControllerBetaProviderExpectations
   prior_retained_evidence: ManagedControllerBetaRetainedEvidence[]
   path: string
+}
+
+export interface ManagedControllerBetaProviderExpectations {
+  route: 'direct' | 'selected'
+  mode: 'direct' | 'solo' | 'delegated' | 'coordinated'
+  dispatch: 'none' | 'sequential' | 'independent-verify' | 'parallel-wave'
+  worker_dispatch_count: { min: number, max: number }
 }
 
 export interface ManagedControllerBetaRunMetadata {
@@ -115,6 +130,16 @@ export interface ManagedControllerBetaRunSummary {
   evaluation_receipt: ManagedControllerBetaRunMetadata['evaluation_receipt']
   observation_sha256: string | null
   observability: ManagedControllerBetaObservability
+  provider_expectation: {
+    expected: ManagedControllerBetaProviderExpectations
+    observed: {
+      route: string | null
+      mode: string | null
+      dispatch: string | null
+      worker_dispatch_count: number | null
+    }
+    status: 'passed' | 'failed'
+  }
 }
 
 export interface ManagedControllerBetaReceiptObservations {
@@ -162,7 +187,10 @@ export interface ManagedControllerBetaSummary {
   conclusion_limits: string[]
 }
 
-export function loadManagedControllerBetaPlan(projectRoot?: string): ManagedControllerBetaPlan
+export function loadManagedControllerBetaPlan(
+  projectRoot?: string,
+  options?: { caseId?: string },
+): ManagedControllerBetaPlan
 export function assertManagedControllerBetaOutputBoundary(
   plan: ManagedControllerBetaPlan,
   outputRoot: string,
