@@ -883,21 +883,45 @@ export function scoreManagedControllerOutput(manifest, final) {
   const normalized = final.toLowerCase()
   return {
     expected_missing: manifest.expected_output.filter(fragment => !includesManagedControllerOutputFragment(normalized, fragment)),
-    forbidden_present: manifest.forbidden_output.filter(fragment => includesManagedControllerOutputFragment(normalized, fragment)),
+    forbidden_present: manifest.forbidden_output.filter(fragment => includesForbiddenManagedControllerOutputFragment(normalized, fragment)),
   }
 }
 
 function includesManagedControllerOutputFragment(normalized, fragment) {
+  return managedControllerOutputFragmentPositions(normalized, fragment).length > 0
+}
+
+function includesForbiddenManagedControllerOutputFragment(normalized, fragment) {
+  return managedControllerOutputFragmentPositions(normalized, fragment)
+    .some(position => !managedControllerFragmentIsNegated(normalized, position))
+}
+
+function managedControllerOutputFragmentPositions(normalized, fragment) {
   const normalizedFragment = fragment.toLowerCase()
-  if (normalized.includes(normalizedFragment))
-    return true
+  const positions = []
+  let position = normalized.indexOf(normalizedFragment)
+  while (position >= 0) {
+    positions.push(position)
+    position = normalized.indexOf(normalizedFragment, position + normalizedFragment.length)
+  }
 
   const canonicalField = normalizedFragment.match(/^([^`\r\n]+?:\s*)([a-z0-9][a-z0-9_-]*)$/u)
-  if (!canonicalField)
-    return false
+  if (canonicalField) {
+    const [, prefix, value] = canonicalField
+    const pattern = new RegExp(`${escapeRegExp(prefix)}\`${escapeRegExp(value)}\``, 'gu')
+    for (const match of normalized.matchAll(pattern))
+      positions.push(match.index)
+  }
 
-  const [, prefix, value] = canonicalField
-  return new RegExp(`${escapeRegExp(prefix)}\`${escapeRegExp(value)}\``, 'u').test(normalized)
+  return [...new Set(positions)]
+}
+
+function managedControllerFragmentIsNegated(normalized, position) {
+  const lineStart = normalized.lastIndexOf('\n', position - 1) + 1
+  const prefix = normalized.slice(lineStart, position).trimStart()
+  return /^(?:[-*]\s*)?no\b/u.test(prefix)
+    && !/[.;:!?]/u.test(prefix)
+    && !/\b(?:but|except|however)\b/u.test(prefix)
 }
 
 function escapeRegExp(value) {

@@ -426,6 +426,26 @@ describe('rsp-manage research candidate', () => {
     })
   })
 
+  it('does not treat a bounded No-list as evidence that a forbidden action occurred', () => {
+    const manifest = {
+      expected_output: [],
+      forbidden_output: ['controller state created'],
+    }
+
+    expect(scoreManagedControllerOutput(
+      manifest,
+      '- No archive, stage, commit, push, publish, or controller state created.',
+    ).forbidden_present).toEqual([])
+    expect(scoreManagedControllerOutput(
+      manifest,
+      'Controller state created.',
+    ).forbidden_present).toEqual(['controller state created'])
+    expect(scoreManagedControllerOutput(
+      manifest,
+      'No archive was created; controller state created.',
+    ).forbidden_present).toEqual(['controller state created'])
+  })
+
   it('accepts a bounded archive-date token without broadening unrelated paths', () => {
     const manifest = {
       id: 'archive-date-token',
