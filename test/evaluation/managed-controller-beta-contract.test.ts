@@ -73,12 +73,16 @@ describe('managed-controller beta evidence', () => {
       const expected = prepared.manifest.provider_expectations
       if (!expected)
         throw new Error('provider comparison scenario is missing provider_expectations')
-      expect(prepared.prompt).toContain('For this provider scenario, set trigger evidence to an object containing exactly these routing fields when observed:')
+      expect(prepared.prompt).toContain('For this provider scenario, when the expected routing is observed, set trigger exactly to')
       expect(prepared.prompt).toContain(JSON.stringify({
-        dispatch: expected.dispatch,
-        mode: expected.mode,
-        route: expected.route,
+        status: 'passed',
+        evidence: {
+          dispatch: expected.dispatch,
+          mode: expected.mode,
+          route: expected.route,
+        },
       }))
+      expect(prepared.prompt).toContain('Do not place dispatch, mode, or route directly under trigger.')
       expect(prepared.prompt).toContain(
         `Set worker_dispatch_count to the directly observed number; the accepted range is ${expected.worker_dispatch_count.min}..${expected.worker_dispatch_count.max}.`,
       )

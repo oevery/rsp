@@ -6,7 +6,7 @@ import { basename, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
-import { evaluateManagedController, hashManagedControllerArtifact, hashManagedControllerComposition, loadManagedControllerCases, observeManagedControllerGit, prepareManagedControllerRun, projectManagedControllerEvaluationEvidence, readManagedControllerFlag, rescoreManagedControllerArtifact, runManagedControllerEvaluation, scoreManagedControllerObservation, scoreManagedControllerOutput, scoreManagedRecoveryOutput, summarizeManagedControllerEvents } from '../../scripts/managed-controller-eval.mjs'
+import { evaluateManagedController, hashManagedControllerArtifact, hashManagedControllerComposition, loadManagedControllerCases, normalizeManagedControllerEvaluationReceipt, observeManagedControllerGit, prepareManagedControllerRun, projectManagedControllerEvaluationEvidence, readManagedControllerFlag, rescoreManagedControllerArtifact, runManagedControllerEvaluation, scoreManagedControllerObservation, scoreManagedControllerOutput, scoreManagedRecoveryOutput, summarizeManagedControllerEvents } from '../../scripts/managed-controller-eval.mjs'
 import { canonicalEnum, findSemanticUnit, markdownSection, orderedMarkers } from '../support/markdown-contract'
 
 const root = fileURLToPath(new URL('../..', import.meta.url))
@@ -1289,6 +1289,52 @@ describe('rsp-manage product Skill', () => {
       admission_count: 1,
       delivery_count: 1,
     })
+  })
+
+  it('normalizes only an exact flat provider trigger into the canonical observation shape', () => {
+    const receipt = {
+      case_id: 'managed-delegated-integrated',
+      composition_sha256: 'a'.repeat(64),
+      contract_sha256: 'b'.repeat(64),
+      observations: {
+        trigger: { route: 'selected', dispatch: 'sequential', mode: 'delegated' },
+        first_fix_result: 'passed',
+        correction_count: 0,
+        worker_dispatch_count: 1,
+      },
+    }
+    const expectations = {
+      dispatch: 'sequential',
+      mode: 'delegated',
+      route: 'selected',
+      worker_dispatch_count: { min: 1, max: 1 },
+    } as const
+
+    expect(normalizeManagedControllerEvaluationReceipt(receipt, expectations)).toMatchObject({
+      observations: {
+        trigger: {
+          status: 'passed',
+          evidence: { dispatch: 'sequential', mode: 'delegated', route: 'selected' },
+        },
+      },
+    })
+    const mismatched = {
+      ...receipt,
+      observations: {
+        ...receipt.observations,
+        trigger: { dispatch: 'parallel-wave', mode: 'delegated', route: 'selected' },
+      },
+    }
+    const extraField = {
+      ...receipt,
+      observations: {
+        ...receipt.observations,
+        trigger: { dispatch: 'sequential', mode: 'delegated', route: 'selected', worker: 'unexpected' },
+      },
+    }
+
+    expect(normalizeManagedControllerEvaluationReceipt(mismatched, expectations)).toBe(mismatched)
+    expect(normalizeManagedControllerEvaluationReceipt(extraField, expectations)).toBe(extraField)
   })
 
   it('leaves unavailable host lifecycle facts null', () => {

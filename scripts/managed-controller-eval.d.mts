@@ -259,6 +259,10 @@ export function runManagedControllerEvaluation(options: {
 export function hashManagedControllerArtifact(content: string): string
 export function hashManagedControllerComposition(entries: Array<{ name: string, path: string }>): ManagedControllerComposition
 export function observeManagedControllerGit(workspace: string, baseSha: string, remoteRefsBefore?: Array<{ ref: string, sha: string }> | null): ManagedControllerGitObservation
+export function normalizeManagedControllerEvaluationReceipt(
+  receipt: unknown,
+  providerExpectations: ManagedControllerHoldoutManifest['provider_expectations'],
+): unknown
 export function scoreManagedControllerObservation(manifest: ManagedControllerHoldoutManifest, observation: ManagedControllerObservation): {
   commit_message?: { errors: string[], passed: boolean }
   missing_required_paths: string[]

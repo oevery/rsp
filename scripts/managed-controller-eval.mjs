@@ -1101,15 +1101,45 @@ export function prepareManagedControllerRun({ caseId, outputRoot, root, skillSou
     `Before the final response, write ${EVALUATION_RECEIPT_PATH} as one JSON object. Use this exact top-level JSON shape: ${JSON.stringify(receiptShape)}.`,
     'Keep case_id, composition_sha256, and contract_sha256 unchanged. Replace only the four observation values with directly observed values. Do not add an identity wrapper or any other key. Trigger is null or {"status":"passed|failed","evidence":<JSON>}; first_fix_result is null, passed, or failed; counts are null or non-negative integers. Do not stage or commit this transient file.',
     ...(manifest.provider_expectations
-      ? [`For this provider scenario, set trigger evidence to an object containing exactly these routing fields when observed: ${JSON.stringify({
-          dispatch: manifest.provider_expectations.dispatch,
-          mode: manifest.provider_expectations.mode,
-          route: manifest.provider_expectations.route,
-        })}. Set worker_dispatch_count to the directly observed number; the accepted range is ${manifest.provider_expectations.worker_dispatch_count.min}..${manifest.provider_expectations.worker_dispatch_count.max}.`]
+      ? [`For this provider scenario, when the expected routing is observed, set trigger exactly to ${JSON.stringify({
+          status: 'passed',
+          evidence: {
+            dispatch: manifest.provider_expectations.dispatch,
+            mode: manifest.provider_expectations.mode,
+            route: manifest.provider_expectations.route,
+          },
+        })}. Do not place dispatch, mode, or route directly under trigger. Set worker_dispatch_count to the directly observed number; the accepted range is ${manifest.provider_expectations.worker_dispatch_count.min}..${manifest.provider_expectations.worker_dispatch_count.max}.`]
       : []),
     'Return a concise final status with completed work, fresh verification, remaining boundary, and next action.',
   ].join('\n\n')
   return { baseSha, contractSha256, installedComposition, manifest, prompt, remotePath, remoteRefsBefore, sourceComposition, workspace }
+}
+
+export function normalizeManagedControllerEvaluationReceipt(receipt, providerExpectations) {
+  const trigger = receipt?.observations?.trigger
+  if (!providerExpectations || !trigger || typeof trigger !== 'object' || Array.isArray(trigger))
+    return receipt
+
+  const keys = Object.keys(trigger).sort()
+  const expectedEvidence = {
+    dispatch: providerExpectations.dispatch,
+    mode: providerExpectations.mode,
+    route: providerExpectations.route,
+  }
+  if (JSON.stringify(keys) !== JSON.stringify(['dispatch', 'mode', 'route'])
+    || trigger.dispatch !== expectedEvidence.dispatch
+    || trigger.mode !== expectedEvidence.mode
+    || trigger.route !== expectedEvidence.route) {
+    return receipt
+  }
+
+  return {
+    ...receipt,
+    observations: {
+      ...receipt.observations,
+      trigger: { status: 'passed', evidence: expectedEvidence },
+    },
+  }
 }
 
 function consumeManagedControllerEvaluationReceipt(prepared, required) {
@@ -1128,7 +1158,10 @@ function consumeManagedControllerEvaluationReceipt(prepared, required) {
     catch {
       throw new Error('managed-controller evaluation receipt must contain valid JSON')
     }
-    return validateSkillEvaluationReceipt(parsed, {
+    return validateSkillEvaluationReceipt(normalizeManagedControllerEvaluationReceipt(
+      parsed,
+      prepared.manifest.provider_expectations,
+    ), {
       caseId: prepared.manifest.id,
       compositionSha256: prepared.installedComposition.hash,
       contractSha256: prepared.contractSha256,
