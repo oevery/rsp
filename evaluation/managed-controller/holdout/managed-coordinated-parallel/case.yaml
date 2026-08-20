@@ -31,8 +31,6 @@ required_changes:
   - .rsp/changes/normalize-transport-inputs.md
   - src/header.mjs
   - src/retry.mjs
-  - test/header.test.mjs
-  - test/retry.test.mjs
 verification:
   - npm
   - test

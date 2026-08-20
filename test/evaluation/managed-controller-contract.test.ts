@@ -263,6 +263,24 @@ describe('rsp-manage research candidate', () => {
     expect(prepared.manifest.forbidden_output).toEqual(expect.arrayContaining(['RouteDisposition: managed', 'Managed dispatch: sequential']))
   })
 
+  it('does not require coordinated workers to rewrite already-decisive focused tests', ({ onTestFinished }) => {
+    const outputRoot = mkdtempSync(join(tmpdir(), 'rsp-manage-coordinated-required-changes-'))
+    onTestFinished(() => rmSync(outputRoot, { force: true, recursive: true }))
+
+    for (const caseId of ['managed-coordinated-sequential', 'managed-coordinated-parallel']) {
+      const prepared = prepareManagedControllerRun({ caseId, outputRoot, root, variant: 'product' })
+      expect(prepared.manifest.allowed_changes).toEqual(expect.arrayContaining([
+        'test/header.test.mjs',
+        'test/retry.test.mjs',
+      ]))
+      expect(prepared.manifest.required_changes).toEqual([
+        '.rsp/changes/normalize-transport-inputs.md',
+        'src/header.mjs',
+        'src/retry.mjs',
+      ])
+    }
+  })
+
   it('prepares the exact-package pause and resume recovery holdout', ({ onTestFinished }) => {
     const outputRoot = mkdtempSync(join(tmpdir(), 'rsp-manage-pause-resume-'))
     onTestFinished(() => rmSync(outputRoot, { force: true, recursive: true }))
