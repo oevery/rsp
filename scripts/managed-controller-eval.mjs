@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { Buffer } from 'node:buffer'
 import { execFileSync, spawn } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
@@ -279,6 +280,64 @@ function observedSkillReferenceReads(command, workspace, installedSkills) {
   return observed
 }
 
+function eventDiagnosticText(event) {
+  const values = [
+    event?.message,
+    event?.error?.code,
+    event?.error?.message,
+    event?.item?.message,
+    event?.item?.error?.code,
+    event?.item?.error?.message,
+  ].filter(value => typeof value === 'string')
+  return values.join(' ')
+}
+
+function explicitTransportEvent(event) {
+  const structuredStatus = [
+    event?.status_code,
+    event?.http_status,
+    event?.error?.status_code,
+    event?.item?.status_code,
+    event?.item?.http_status,
+  ].some(Number.isInteger)
+  const structuredCode = [event?.error?.code, event?.item?.error?.code]
+    .some(value => typeof value === 'string' && /^(?:ECONNRESET|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|ETIMEDOUT|rate_limit_exceeded)$/iu.test(value))
+  return structuredStatus || structuredCode || ['error', 'request.failed', 'response.failed', 'turn.failed'].includes(event?.type)
+}
+
+function transportCategories(event) {
+  const text = eventDiagnosticText(event)
+  const statuses = [
+    event?.status_code,
+    event?.http_status,
+    event?.error?.status_code,
+    event?.item?.status_code,
+    event?.item?.http_status,
+  ].filter(Number.isInteger)
+  const categories = []
+  if (statuses.includes(429) || /\b(?:429|rate[ -]?limit|too many requests)\b/iu.test(text))
+    categories.push('rate-limit')
+  if (statuses.some(status => [408, 504].includes(status)) || /\b(?:408|504|ETIMEDOUT|timeout|timed out|gateway timeout)\b/iu.test(text))
+    categories.push('timeout')
+  if (statuses.some(status => [502, 503, 504].includes(status)) || /\b(?:502|503|504|bad gateway|service unavailable|upstream unavailable|upstream error)\b/iu.test(text))
+    categories.push('gateway')
+  if (/\b(?:ECONNRESET|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|connection reset|connection refused|stream disconnected|network unreachable|socket hang up)\b/iu.test(text))
+    categories.push('connection')
+  return categories
+}
+
+function outputByteLength(item) {
+  const value = item?.aggregated_output ?? item?.output ?? item?.result ?? item?.content
+  if (value === undefined || value === null)
+    return 0
+  try {
+    return Buffer.byteLength(typeof value === 'string' ? value : JSON.stringify(value))
+  }
+  catch {
+    return 0
+  }
+}
+
 export function summarizeManagedControllerEvents(raw, { installedSkills = [], workspace } = {}) {
   const forbiddenActions = { force_push: 0, publication: 0, push: 0 }
   const lifecycleCounts = {
@@ -294,13 +353,27 @@ export function summarizeManagedControllerEvents(raw, { installedSkills = [], wo
   const observedResources = new Set()
   const installedSkillNames = new Set(installedSkills)
   let resourceObservationAvailable = false
+  let modelInvocations = null
+  let retryCount = 0
+  let toolOutputBytes = 0
   let toolCalls = 0
   let usage = null
+  const infrastructureCategories = new Set()
   for (const [eventIndex, line] of raw.split('\n').filter(Boolean).entries()) {
     try {
       const event = JSON.parse(line)
+      if (['api.request.started', 'model.request.started', 'model.started'].includes(event.type))
+        modelInvocations = (modelInvocations ?? 0) + 1
+      if (explicitTransportEvent(event)) {
+        const diagnosticText = eventDiagnosticText(event)
+        if (/\b(?:retrying|retry attempt|will retry)\b/iu.test(diagnosticText))
+          retryCount += 1
+        for (const category of transportCategories(event))
+          infrastructureCategories.add(category)
+      }
       if (event.type === 'item.completed' && ['command_execution', 'mcp_tool_call', 'tool_call'].includes(event.item?.type)) {
         toolCalls += 1
+        toolOutputBytes += outputByteLength(event.item)
         if (event.item?.type === 'command_execution' && typeof event.item.command === 'string') {
           resourceObservationAvailable = true
           if ((event.item.status === undefined || event.item.status === 'completed')
@@ -346,8 +419,15 @@ export function summarizeManagedControllerEvents(raw, { installedSkills = [], wo
   }
   return {
     forbidden_actions: forbiddenActions,
+    infrastructure: {
+      categories: [...infrastructureCategories].sort(),
+      retry_count: retryCount,
+      status: infrastructureCategories.size > 0 ? 'contaminated' : 'no-contamination-observed',
+    },
+    model_invocations: modelInvocations,
     observed_resources: resourceObservationAvailable ? [...observedResources].sort() : null,
     tool_calls: toolCalls,
+    tool_output_bytes: toolOutputBytes,
     usage,
     worker_lifecycle: workerLifecycle,
   }
@@ -474,11 +554,13 @@ export function projectManagedControllerEvaluationEvidence({
   const projected = projectSkillEvaluationObservability({
     elapsedMs: durationMs,
     expectedResources,
+    modelInvocations: events.model_invocations,
     outcome: result,
     observedResources: events.observed_resources,
     outputContract: output,
     receiptObservations: null,
     toolCalls: events.tool_calls,
+    toolOutputBytes: events.tool_output_bytes,
     unauthorizedPaths,
     usage: events.usage,
   })

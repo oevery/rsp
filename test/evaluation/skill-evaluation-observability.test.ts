@@ -30,13 +30,25 @@ describe('skill evaluation observability', () => {
         worker_dispatch_count: null,
         tool_calls: 4,
         elapsed_ms: 1200,
-        tokens: { input: 100, output: 25, total: 125 },
+        model_invocations: null,
+        tool_output_bytes: null,
+        tokens: {
+          cache_write_input: null,
+          cached_input: null,
+          input: 100,
+          output: 25,
+          reasoning_output: null,
+          total: 125,
+          uncached_input: null,
+        },
       },
       omissions: [
         'trigger observation is unavailable',
         'correction count is unavailable',
         'first-fix result is unavailable',
         'worker dispatch count is unavailable',
+        'model-invocation count is unavailable',
+        'tool-output byte count is unavailable',
       ],
     })
   })
@@ -56,9 +68,49 @@ describe('skill evaluation observability', () => {
       worker_dispatch_count: null,
       tool_calls: null,
       elapsed_ms: null,
-      tokens: { input: null, output: null, total: null },
+      model_invocations: null,
+      tool_output_bytes: null,
+      tokens: {
+        cache_write_input: null,
+        cached_input: null,
+        input: null,
+        output: null,
+        reasoning_output: null,
+        total: null,
+        uncached_input: null,
+      },
     })
     expect(result.omissions).toContain('total-token count is unavailable')
+  })
+
+  it('separates cached and uncached input while retaining unavailable host telemetry', () => {
+    const result = projectSkillEvaluationObservability({
+      modelInvocations: 3,
+      toolOutputBytes: 4096,
+      usage: {
+        cache_write_input_tokens: 50,
+        cached_input_tokens: 700,
+        input_tokens: 1000,
+        output_tokens: 40,
+        reasoning_output_tokens: 12,
+      },
+    })
+
+    expect(result.measurements).toMatchObject({
+      model_invocations: 3,
+      tool_output_bytes: 4096,
+      tokens: {
+        cache_write_input: 50,
+        cached_input: 700,
+        input: 1000,
+        output: 40,
+        reasoning_output: 12,
+        total: 1040,
+        uncached_input: 300,
+      },
+    })
+    expect(result.omissions).not.toContain('model-invocation count is unavailable')
+    expect(result.omissions).not.toContain('tool-output byte count is unavailable')
   })
 
   it('attributes compliance, boundary, and task failures independently', () => {

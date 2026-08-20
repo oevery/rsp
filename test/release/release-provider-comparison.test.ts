@@ -9,7 +9,9 @@ import {
 } from '../../scripts/managed-controller-eval.mjs'
 import {
   buildReleaseProviderComparisonPlan,
+  classifyProviderAttempt,
   createReleaseProviderComparisonSummary,
+  executeSerialProviderPairs,
   renderReleaseProviderComparisonMarkdown,
   runReleaseProviderComparison,
 } from '../../scripts/release-provider-comparison.mjs'
@@ -59,6 +61,12 @@ describe('release provider comparison', () => {
     const plan = buildReleaseProviderComparisonPlan(root, { baselineRef: 'v3.2.0', repetitions: 3 })
 
     expect(plan.execution).toBe('serial-paired')
+    expect(plan.scheduling).toEqual({
+      concurrency: 1,
+      order: 'alternating-ab-ba',
+      maxPairAttempts: 5,
+      maxContaminatedPairReplacements: 2,
+    })
     expect(plan.repetitions).toBe(3)
     expect(plan.baseline).toMatchObject({
       ref: 'v3.2.0',
@@ -76,6 +84,53 @@ describe('release provider comparison', () => {
       harnessSha256: expect.stringMatching(/^[a-f0-9]{64}$/),
     })
     expect(JSON.stringify(plan)).not.toContain(root)
+  })
+
+  it('does not relabel a runner timeout as infrastructure contamination without transport evidence', () => {
+    expect(classifyProviderAttempt({
+      infrastructureStatus: 'no-contamination-observed',
+      outcome: 'failed',
+      timedOut: true,
+    })).toBe('model-failed')
+    expect(classifyProviderAttempt({
+      infrastructureStatus: 'contaminated',
+      outcome: 'failed',
+      timedOut: true,
+    })).toBe('infra-contaminated')
+  })
+
+  it('executes balanced pairs strictly serially and replaces only contaminated pairs', async () => {
+    const calls: string[] = []
+    let active = 0
+    let maxActive = 0
+    const runs = await executeSerialProviderPairs({
+      maxContaminatedPairReplacements: 2,
+      repetitions: 3,
+      runArm: async ({ arm, pairAttempt, position, targetPair }) => {
+        active += 1
+        maxActive = Math.max(maxActive, active)
+        calls.push(`${targetPair}:${pairAttempt}:${position}:${arm}`)
+        await Promise.resolve()
+        active -= 1
+        return {
+          arm,
+          classification: pairAttempt === 1 && arm === 'baseline' ? 'infra-contaminated' : 'eligible',
+          outcome: 'passed',
+        }
+      },
+    })
+
+    expect(maxActive).toBe(1)
+    expect(calls).toEqual([
+      '1:1:1:baseline',
+      '1:2:1:baseline',
+      '1:2:2:candidate',
+      '2:3:1:candidate',
+      '2:3:2:baseline',
+      '3:4:1:baseline',
+      '3:4:2:candidate',
+    ])
+    expect(runs).toHaveLength(7)
   })
 
   it('installs an explicit historical Skill source instead of silently using the current product', ({ onTestFinished }) => {
@@ -142,7 +197,7 @@ describe('release provider comparison', () => {
     expect(existsSync(result.jsonPath)).toBe(true)
     expect(existsSync(result.markdownPath)).toBe(true)
     expect(readFileSync(result.jsonPath, 'utf8')).not.toContain('private diagnostic')
-    expect(readFileSync(result.markdownPath, 'utf8')).toContain('| 1 | baseline | failed | invalid-evaluation-receipt |')
+    expect(readFileSync(result.markdownPath, 'utf8')).toContain('| 1 | 1 | 1 | baseline | model-failed | failed | invalid-evaluation-receipt |')
   })
 
   it('reports repeated median token deltas and arm noise without making an efficiency gate', () => {
@@ -169,6 +224,63 @@ describe('release provider comparison', () => {
     })
     expect(markdown).toContain('| total_tokens | 100 | 110 | 10% | 20% | 18.18% |')
     expect(JSON.stringify(summary)).not.toMatch(/"(?:model|provider|session|settings|workspace)"s*:/u)
+  })
+
+  it('excludes transport-contaminated pairs but keeps expensive clean pairs in efficiency statistics', () => {
+    const plan = buildReleaseProviderComparisonPlan(root, { baselineRef: 'v3.2.0', repetitions: 3 })
+    const contaminatedBaseline = {
+      ...syntheticRun(plan, 'baseline', 1, 1000),
+      pairAttempt: 1,
+      pairId: 'pair-attempt-01',
+      targetPair: 1,
+      classification: 'infra-contaminated',
+      infrastructure: { categories: ['rate-limit'], retryCount: 1, status: 'contaminated' },
+    }
+    const runs = [contaminatedBaseline]
+    for (let repetition = 2; repetition <= 4; repetition += 1) {
+      const targetPair = repetition - 1
+      for (const arm of ['baseline', 'candidate'] as const) {
+        runs.push({
+          ...syntheticRun(plan, arm, repetition, targetPair === 1 ? 900 : 100),
+          pairAttempt: repetition,
+          pairId: `pair-attempt-0${repetition}`,
+          targetPair,
+          classification: 'eligible',
+          infrastructure: { categories: [], retryCount: 0, status: 'no-contamination-observed' },
+        })
+      }
+    }
+
+    const summary = createReleaseProviderComparisonSummary(plan, runs)
+
+    expect(summary.verdict).toBe('passed')
+    expect(summary.infrastructure).toMatchObject({
+      attemptedPairs: 4,
+      contaminatedPairs: 1,
+      eligiblePairs: 3,
+      replacementPairs: 1,
+    })
+    expect(summary.efficiency.baseline.total_tokens).toMatchObject({ median: 100, max: 900 })
+    expect(summary.runs).toContainEqual(expect.objectContaining({
+      classification: 'infra-contaminated',
+      measurements: expect.objectContaining({ tokens: expect.objectContaining({ total: 1000 }) }),
+    }))
+  })
+
+  it('does not report an exhausted contaminated attempt as a completed replacement', () => {
+    const plan = buildReleaseProviderComparisonPlan(root, { baselineRef: 'v3.2.0', repetitions: 3 })
+    const run = {
+      ...syntheticRun(plan, 'baseline', 1, null, { outcome: 'unavailable' }),
+      classification: 'infra-contaminated',
+      pairAttempt: 1,
+      pairId: 'pair-attempt-01',
+      targetPair: 1,
+    }
+
+    expect(createReleaseProviderComparisonSummary(plan, [run]).infrastructure).toMatchObject({
+      contaminatedPairs: 1,
+      replacementPairs: 0,
+    })
   })
 
   it('fails correctness regressions even when candidate tokens are lower', () => {

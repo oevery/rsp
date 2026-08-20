@@ -48,15 +48,18 @@ function sameIdentity(left, right) {
 }
 
 function hasCompleteRuns(report, plan) {
-  if (!Array.isArray(report.runs) || report.runs.length !== plan.repetitions * 2)
+  if (!Array.isArray(report.runs))
+    return false
+  const eligibleRuns = report.runs.filter(run => run.classification === 'eligible')
+  if (eligibleRuns.length !== plan.repetitions * 2)
     return false
   const expected = new Set()
-  for (let repetition = 1; repetition <= plan.repetitions; repetition += 1) {
-    expected.add(`baseline:${repetition}`)
-    expected.add(`candidate:${repetition}`)
+  for (let targetPair = 1; targetPair <= plan.repetitions; targetPair += 1) {
+    expected.add(`baseline:${targetPair}`)
+    expected.add(`candidate:${targetPair}`)
   }
-  for (const run of report.runs) {
-    const key = `${run.arm}:${run.repetition}`
+  for (const run of eligibleRuns) {
+    const key = `${run.arm}:${run.targetPair}`
     if (!expected.delete(key) || run.outcome !== 'passed')
       return false
     const composition = run.arm === 'baseline'
@@ -74,8 +77,11 @@ function hasCompleteRuns(report, plan) {
 function reportMatchesPlan(report, plan) {
   return report?.verdict === 'passed'
     && report.execution === 'serial-paired'
+    && report.scheduling?.concurrency === 1
+    && report.scheduling?.order === 'alternating-ab-ba'
     && report.repetitions === plan.repetitions
     && report.correctness?.passed === true
+    && report.infrastructure?.eligiblePairs === plan.repetitions
     && Array.isArray(report.identities?.issues)
     && report.identities.issues.length === 0
     && report.identities.baseline?.ref === plan.baseline.ref

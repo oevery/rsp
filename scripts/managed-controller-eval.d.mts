@@ -129,8 +129,11 @@ export interface ManagedControllerEvaluationMetadata {
   duration_ms: number
   events: {
     forbidden_actions: { force_push: number, publication: number, push: number }
+    infrastructure: { categories: string[], retry_count: number, status: 'contaminated' | 'no-contamination-observed' }
+    model_invocations: number | null
     observed_resources: string[] | null
     tool_calls: number
+    tool_output_bytes: number
     usage: unknown
     worker_lifecycle: ManagedControllerWorkerLifecycleObservation
   }
@@ -153,8 +156,18 @@ export interface ManagedControllerEvaluationMetadata {
       first_fix_result: 'passed' | 'failed' | null
       worker_dispatch_count: number | null
       tool_calls: number | null
+      model_invocations: number | null
+      tool_output_bytes: number | null
       elapsed_ms: number | null
-      tokens: { input: number | null, output: number | null, total: number | null }
+      tokens: {
+        cache_write_input: number | null
+        cached_input: number | null
+        input: number | null
+        output: number | null
+        reasoning_output: number | null
+        total: number | null
+        uncached_input: number | null
+      }
     }
     omissions: string[]
     resources: ManagedControllerResourceObservation
@@ -253,8 +266,11 @@ export function summarizeManagedControllerEvents(raw: string, options?: {
   workspace?: string
 }): {
   forbidden_actions: { force_push: number, publication: number, push: number }
+  infrastructure: { categories: string[], retry_count: number, status: 'contaminated' | 'no-contamination-observed' }
+  model_invocations: number | null
   observed_resources: string[] | null
   tool_calls: number
+  tool_output_bytes: number
   usage: unknown
   worker_lifecycle: ManagedControllerWorkerLifecycleObservation
 }

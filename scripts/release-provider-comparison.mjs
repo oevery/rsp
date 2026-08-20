@@ -143,7 +143,7 @@ export function buildReleaseProviderComparisonPlan(
     execution: 'serial-paired',
     repetitions: repetitionCount,
     case: betaPlan.case,
-    metrics: ['input-tokens', 'output-tokens', 'total-tokens', 'tool-calls', 'elapsed-ms'],
+    metrics: ['input-tokens', 'cached-input-tokens', 'uncached-input-tokens', 'output-tokens', 'total-tokens', 'tool-calls', 'tool-output-bytes', 'model-invocations', 'elapsed-ms'],
     correctness: ['compliance', 'boundary', 'task-result'],
     baseline: {
       ref: baselineRef,
@@ -161,6 +161,12 @@ export function buildReleaseProviderComparisonPlan(
       fixtureSha256: betaPlan.base_tree_sha256,
       harnessSha256: harnessSha256(repositoryRoot, betaPlan),
     },
+    scheduling: {
+      concurrency: 1,
+      order: 'alternating-ab-ba',
+      maxPairAttempts: repetitionCount + 2,
+      maxContaminatedPairReplacements: 2,
+    },
     policy: {
       correctnessBeforeEfficiency: true,
       efficiencyThreshold: null,
@@ -172,6 +178,65 @@ export function buildReleaseProviderComparisonPlan(
       'no provider-general, model-general, cost, publication, or release approval claim is made',
     ],
   }
+}
+
+function runClassification(run) {
+  if (['eligible', 'infra-contaminated', 'model-failed', 'harness-failed', 'incomplete'].includes(run.classification))
+    return run.classification
+  if (run.outcome === 'passed')
+    return 'eligible'
+  if (run.outcome === 'failed')
+    return 'model-failed'
+  return 'incomplete'
+}
+
+export function classifyProviderAttempt({ infrastructureStatus, outcome, timedOut = false }) {
+  if (infrastructureStatus === 'contaminated')
+    return 'infra-contaminated'
+  if (timedOut || outcome === 'failed')
+    return 'model-failed'
+  if (outcome === 'passed')
+    return 'eligible'
+  return 'incomplete'
+}
+
+export async function executeSerialProviderPairs({
+  maxContaminatedPairReplacements = 2,
+  repetitions,
+  runArm,
+}) {
+  const runs = []
+  const maximumAttempts = repetitions + maxContaminatedPairReplacements
+  let pairAttempt = 0
+  let targetPair = 1
+  while (targetPair <= repetitions && pairAttempt < maximumAttempts) {
+    pairAttempt += 1
+    const order = targetPair % 2 === 1
+      ? ['baseline', 'candidate']
+      : ['candidate', 'baseline']
+    let contaminated = false
+    for (const [index, arm] of order.entries()) {
+      const run = await runArm({
+        arm,
+        order: order.join('-then-'),
+        pairAttempt,
+        pairId: `pair-attempt-${String(pairAttempt).padStart(2, '0')}`,
+        position: index + 1,
+        targetPair,
+      })
+      runs.push(run)
+      const classification = runClassification(run)
+      if (classification === 'infra-contaminated') {
+        contaminated = true
+        break
+      }
+      if (classification !== 'eligible')
+        return runs
+    }
+    if (!contaminated)
+      targetPair += 1
+  }
+  return runs
 }
 
 function finiteMeasurement(value) {
@@ -193,9 +258,13 @@ function median(values) {
 function summarizeMeasurements(runs) {
   const fields = {
     input_tokens: run => run.measurements.tokens.input,
+    cached_input_tokens: run => run.measurements.tokens.cached_input,
+    uncached_input_tokens: run => run.measurements.tokens.uncached_input,
     output_tokens: run => run.measurements.tokens.output,
     total_tokens: run => run.measurements.tokens.total,
     tool_calls: run => run.measurements.tool_calls,
+    tool_output_bytes: run => run.measurements.tool_output_bytes,
+    model_invocations: run => run.measurements.model_invocations,
     elapsed_ms: run => run.measurements.elapsed_ms,
   }
   return Object.fromEntries(Object.entries(fields).map(([name, select]) => {
@@ -219,8 +288,30 @@ function percentageDelta(baseline, candidate) {
 }
 
 export function createReleaseProviderComparisonSummary(plan, runs, refreshedPlan = plan) {
-  const baselineRuns = runs.filter(run => run.arm === 'baseline')
-  const candidateRuns = runs.filter(run => run.arm === 'candidate')
+  const pairMap = new Map()
+  for (const run of runs) {
+    const pairId = run.pairId ?? `pair-attempt-${String(run.repetition).padStart(2, '0')}`
+    const pair = pairMap.get(pairId) ?? []
+    pair.push(run)
+    pairMap.set(pairId, pair)
+  }
+  const pairs = [...pairMap.values()]
+  const eligiblePairs = pairs.filter(pair => pair.length === 2
+    && new Set(pair.map(run => run.arm)).size === 2
+    && pair.every(run => runClassification(run) === 'eligible'))
+  const contaminatedPairs = pairs.filter(pair => pair.some(run => runClassification(run) === 'infra-contaminated'))
+  const failedPairs = pairs.filter(pair => pair.some(run => ['model-failed', 'harness-failed'].includes(runClassification(run))))
+  const incompletePairs = pairs.filter(pair => !eligiblePairs.includes(pair)
+    && !contaminatedPairs.includes(pair)
+    && !failedPairs.includes(pair))
+  const replacementPairs = contaminatedPairs.filter((pair) => {
+    const pairIndex = pairs.indexOf(pair)
+    const targetPair = pair[0]?.targetPair ?? pair[0]?.repetition
+    return pairs.slice(pairIndex + 1).some(next => (next[0]?.targetPair ?? next[0]?.repetition) === targetPair)
+  })
+  const eligibleRuns = eligiblePairs.flat()
+  const baselineRuns = eligibleRuns.filter(run => run.arm === 'baseline')
+  const candidateRuns = eligibleRuns.filter(run => run.arm === 'candidate')
   const identityIssues = []
   for (const run of baselineRuns) {
     if (run.compositionSha256 !== plan.baseline.composition.hash)
@@ -245,13 +336,12 @@ export function createReleaseProviderComparisonSummary(plan, runs, refreshedPlan
   })) {
     identityIssues.push('comparison identities drifted during execution')
   }
-  const correctnessFailed = runs.some(run => run.outcome === 'failed'
-    || (run.outcome === 'passed'
-      && ['compliance', 'boundary', 'task_result'].some(name => run.dimensions[name]?.status !== 'passed')))
-  const unavailable = runs.some(run => ['unavailable', 'not-run'].includes(run.outcome))
-    || baselineRuns.length !== plan.repetitions
-    || candidateRuns.length !== plan.repetitions
-  const measurementIncomplete = runs.some(run => [
+  const correctnessFailed = runs.some(run => !['infra-contaminated', 'incomplete'].includes(runClassification(run))
+    && (run.outcome === 'failed'
+      || (run.outcome === 'passed'
+        && ['compliance', 'boundary', 'task_result'].some(name => run.dimensions[name]?.status !== 'passed'))))
+  const unavailable = eligiblePairs.length !== plan.repetitions
+  const measurementIncomplete = eligibleRuns.some(run => [
     run.measurements.tokens.input,
     run.measurements.tokens.output,
     run.measurements.tokens.total,
@@ -274,6 +364,7 @@ export function createReleaseProviderComparisonSummary(plan, runs, refreshedPlan
   return {
     verdict,
     execution: plan.execution,
+    scheduling: plan.scheduling,
     repetitions: plan.repetitions,
     case: plan.case,
     identities: {
@@ -285,6 +376,14 @@ export function createReleaseProviderComparisonSummary(plan, runs, refreshedPlan
     correctness: {
       passed: !correctnessFailed && !unavailable && identityIssues.length === 0,
       requiredDimensions: plan.correctness,
+    },
+    infrastructure: {
+      attemptedPairs: pairs.length,
+      contaminatedPairs: contaminatedPairs.length,
+      eligiblePairs: eligiblePairs.length,
+      incompletePairs: incompletePairs.length,
+      replacementPairs: replacementPairs.length,
+      status: contaminatedPairs.length > 0 ? 'contamination-observed' : 'no-contamination-observed',
     },
     efficiency: {
       status: verdict === 'passed' ? 'observed' : 'not-conclusive',
@@ -314,8 +413,14 @@ export function renderReleaseProviderComparisonMarkdown(summary) {
     `- Baseline: ${code}${summary.identities.baseline.ref}${code} (${code}${summary.identities.baseline.commit}${code})`,
     `- Candidate source: ${code}${summary.identities.candidate.fingerprintSha256}${code}`,
     `- Correctness: ${summary.correctness.passed ? 'passed' : 'not passed'}`,
+    `- Eligible pairs: ${summary.infrastructure.eligiblePairs}/${summary.repetitions}`,
+    `- Infrastructure-contaminated pairs: ${summary.infrastructure.contaminatedPairs}`,
     '',
-    '## Median measurements',
+    '## Correctness Gate',
+    '',
+    `- Status: ${summary.correctness.passed ? 'passed' : 'not passed'}`,
+    '',
+    '## Efficiency',
     '',
     '| Metric | Baseline | Candidate | Delta | Baseline range | Candidate range |',
     '| --- | ---: | ---: | ---: | ---: | ---: |',
@@ -326,9 +431,22 @@ export function renderReleaseProviderComparisonMarkdown(summary) {
     const delta = summary.efficiency.deltaPct[metric]
     lines.push(`| ${metric} | ${baseline.median ?? 'unavailable'} | ${candidate.median ?? 'unavailable'} | ${delta === null ? 'unavailable' : `${delta}%`} | ${baseline.relativeRangePct === null ? 'unavailable' : `${baseline.relativeRangePct}%`} | ${candidate.relativeRangePct === null ? 'unavailable' : `${candidate.relativeRangePct}%`} |`)
   }
-  lines.push('', '## Paired runs', '', '| Repetition | Arm | Outcome | Failure | Total tokens | Tool calls | Elapsed |', '| ---: | --- | --- | --- | ---: | ---: | ---: |')
+  lines.push(
+    '',
+    '## Infrastructure Quality',
+    '',
+    `- Attempted pairs: ${summary.infrastructure.attemptedPairs}`,
+    `- Eligible pairs: ${summary.infrastructure.eligiblePairs}`,
+    `- Contaminated pairs: ${summary.infrastructure.contaminatedPairs}`,
+    `- Replacement pairs: ${summary.infrastructure.replacementPairs}`,
+    '',
+    '## Paired runs',
+    '',
+    '| Pair attempt | Target pair | Position | Arm | Classification | Outcome | Failure | Total tokens | Tool calls | Elapsed |',
+    '| ---: | ---: | ---: | --- | --- | --- | --- | ---: | ---: | ---: |',
+  )
   for (const run of summary.runs) {
-    lines.push(`| ${run.repetition} | ${run.arm} | ${run.outcome} | ${run.failure ?? 'none'} | ${run.measurements.tokens.total ?? 'unavailable'} | ${run.measurements.tool_calls ?? 'unavailable'} | ${run.measurements.elapsed_ms ?? 'unavailable'} ms |`)
+    lines.push(`| ${run.pairAttempt ?? run.repetition} | ${run.targetPair ?? run.repetition} | ${run.position ?? 'unavailable'} | ${run.arm} | ${runClassification(run)} | ${run.outcome} | ${run.failure ?? 'none'} | ${run.measurements.tokens.total ?? 'unavailable'} | ${run.measurements.tool_calls ?? 'unavailable'} | ${run.measurements.elapsed_ms ?? 'unavailable'} ms |`)
   }
   lines.push('', '## Omissions', '')
   for (const omission of summary.omissions)
@@ -345,11 +463,21 @@ function createRunDirectory(outputRoot, plan) {
   return directory
 }
 
-function sanitizedRun(arm, repetition, summary, metadata) {
+function sanitizedRun(arm, schedule, summary, metadata) {
   const observation = summary.observability
+  const observedInfrastructure = metadata.events?.infrastructure
+  const timedOut = metadata.timed_out === true
+  const contaminated = observedInfrastructure?.status === 'contaminated'
+  const classification = classifyProviderAttempt({
+    infrastructureStatus: observedInfrastructure?.status,
+    outcome: summary.outcome,
+    timedOut,
+  })
   return {
-    repetition,
+    repetition: schedule.pairAttempt,
+    ...schedule,
     arm,
+    classification,
     outcome: summary.outcome,
     completion: summary.completion,
     compositionSha256: metadata.composition?.installed_before?.hash ?? null,
@@ -362,23 +490,37 @@ function sanitizedRun(arm, repetition, summary, metadata) {
       first_fix_result: observation.measurements.first_fix_result,
       worker_dispatch_count: finiteMeasurement(observation.measurements.worker_dispatch_count),
       tool_calls: finiteMeasurement(observation.measurements.tool_calls),
+      tool_output_bytes: finiteMeasurement(observation.measurements.tool_output_bytes),
+      model_invocations: finiteMeasurement(observation.measurements.model_invocations),
       elapsed_ms: finiteMeasurement(observation.measurements.elapsed_ms),
       tokens: {
+        cache_write_input: finiteMeasurement(observation.measurements.tokens.cache_write_input),
+        cached_input: finiteMeasurement(observation.measurements.tokens.cached_input),
         input: finiteMeasurement(observation.measurements.tokens.input),
         output: finiteMeasurement(observation.measurements.tokens.output),
+        reasoning_output: finiteMeasurement(observation.measurements.tokens.reasoning_output),
         total: finiteMeasurement(observation.measurements.tokens.total),
+        uncached_input: finiteMeasurement(observation.measurements.tokens.uncached_input),
       },
+    },
+    infrastructure: {
+      categories: observedInfrastructure?.categories ?? [],
+      retryCount: finiteMeasurement(observedInfrastructure?.retry_count),
+      status: contaminated ? 'contaminated' : 'no-contamination-observed',
     },
     omissions: summary.omissions,
   }
 }
 
-function sanitizedFailedRun(arm, repetition, plan, error) {
+function sanitizedFailedRun(arm, schedule, plan, error) {
   const message = error instanceof Error ? error.message : String(error)
   const receiptInvalid = message.includes('evaluation receipt')
+  const infrastructureFailure = /\b(?:429|502|503|504|ECONNRESET|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|ETIMEDOUT|rate[ -]?limit|too many requests|bad gateway|service unavailable|gateway timeout|connection reset|connection refused|network unreachable|socket hang up|timed out)\b/iu.test(message)
   return {
-    repetition,
+    repetition: schedule.pairAttempt,
+    ...schedule,
     arm,
+    classification: infrastructureFailure ? 'infra-contaminated' : receiptInvalid ? 'model-failed' : 'incomplete',
     outcome: receiptInvalid ? 'failed' : 'unavailable',
     completion: 'evaluation-unavailable',
     compositionSha256: arm === 'baseline' ? plan.baseline.composition.hash : plan.candidate.composition.hash,
@@ -401,10 +543,17 @@ function sanitizedFailedRun(arm, repetition, plan, error) {
       first_fix_result: null,
       worker_dispatch_count: null,
       tool_calls: null,
+      tool_output_bytes: null,
+      model_invocations: null,
       elapsed_ms: null,
-      tokens: { input: null, output: null, total: null },
+      tokens: { cache_write_input: null, cached_input: null, input: null, output: null, reasoning_output: null, total: null, uncached_input: null },
     },
-    failure: receiptInvalid ? 'invalid-evaluation-receipt' : 'provider-execution-unavailable',
+    infrastructure: {
+      categories: infrastructureFailure ? ['provider-transport'] : [],
+      retryCount: null,
+      status: infrastructureFailure ? 'contaminated' : 'no-contamination-observed',
+    },
+    failure: receiptInvalid ? 'invalid-evaluation-receipt' : infrastructureFailure ? 'provider-transport-unavailable' : 'provider-execution-unavailable',
     omissions: ['provider execution did not produce validated structured evaluation metadata'],
   }
 }
@@ -428,13 +577,17 @@ export async function runReleaseProviderComparison({
   const runDirectory = createRunDirectory(resolve(outputRoot), plan)
   const baselineSnapshotRoot = join(runDirectory, '.baseline-source')
   const baselineSkills = extractGitSkills(root, plan.baseline.commit, betaPlan.product_skill_names, baselineSnapshotRoot)
-  const runs = []
+  let runs = []
   try {
-    for (let repetition = 1; repetition <= plan.repetitions; repetition += 1) {
-      for (const arm of [
-        { name: 'baseline', source: baselineSkills, variant: 'candidate' },
-        { name: 'candidate', source: join(root, 'skills'), variant: 'product' },
-      ]) {
+    const arms = {
+      baseline: { source: baselineSkills, variant: 'candidate' },
+      candidate: { source: join(root, 'skills'), variant: 'product' },
+    }
+    runs = await executeSerialProviderPairs({
+      maxContaminatedPairReplacements: plan.scheduling.maxContaminatedPairReplacements,
+      repetitions: plan.repetitions,
+      runArm: async (schedule) => {
+        const arm = arms[schedule.arm]
         let metadata
         try {
           metadata = await evaluationRunner({
@@ -445,7 +598,7 @@ export async function runReleaseProviderComparison({
             model,
             modelCatalogJson,
             openaiBaseUrl,
-            outputRoot: join(runDirectory, 'raw', `repetition-${String(repetition).padStart(2, '0')}`),
+            outputRoot: join(runDirectory, 'raw', `pair-attempt-${String(schedule.pairAttempt).padStart(2, '0')}`),
             provider,
             root,
             skillSourceDirectory: arm.source,
@@ -454,20 +607,15 @@ export async function runReleaseProviderComparison({
           })
         }
         catch (error) {
-          runs.push(sanitizedFailedRun(arm.name, repetition, plan, error))
-          break
+          return sanitizedFailedRun(schedule.arm, schedule, plan, error)
         }
         const final = metadata.paths?.final && existsSync(metadata.paths.final)
           ? readFileSync(metadata.paths.final, 'utf8')
           : ''
         const summarized = summarizeManagedControllerBetaRun(betaPlan, metadata, final)
-        runs.push(sanitizedRun(arm.name, repetition, summarized, metadata))
-        if (summarized.outcome !== 'passed')
-          break
-      }
-      if (runs.at(-1)?.outcome !== 'passed')
-        break
-    }
+        return sanitizedRun(schedule.arm, schedule, summarized, metadata)
+      },
+    })
   }
   finally {
     rmSync(baselineSnapshotRoot, { force: true, recursive: true })

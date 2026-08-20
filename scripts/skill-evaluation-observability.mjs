@@ -58,20 +58,36 @@ export function projectSkillResourceObservability({ expectedResources, observedR
 
 function tokenMeasurements(usage) {
   const input = finiteNumber(usage?.input_tokens)
+  const cachedInput = finiteNumber(usage?.cached_input_tokens)
+  const cacheWriteInput = finiteNumber(usage?.cache_write_input_tokens)
   const output = finiteNumber(usage?.output_tokens)
+  const reasoningOutput = finiteNumber(usage?.reasoning_output_tokens)
   const total = finiteNumber(usage?.total_tokens)
     ?? (input !== null && output !== null ? input + output : null)
-  return { input, output, total }
+  const uncachedInput = input !== null && cachedInput !== null && cachedInput <= input
+    ? input - cachedInput
+    : null
+  return {
+    cache_write_input: cacheWriteInput,
+    cached_input: cachedInput,
+    input,
+    output,
+    reasoning_output: reasoningOutput,
+    total,
+    uncached_input: uncachedInput,
+  }
 }
 
 export function projectSkillEvaluationObservability({
   elapsedMs,
   expectedResources,
+  modelInvocations,
   outcome,
   observedResources,
   outputContract,
   receiptObservations,
   toolCalls,
+  toolOutputBytes,
   unauthorizedPaths,
   usage,
 } = {}) {
@@ -110,6 +126,8 @@ export function projectSkillEvaluationObservability({
     first_fix_result: observedFirstFixResult,
     worker_dispatch_count: workerDispatchCount,
     tool_calls: finiteNumber(toolCalls),
+    model_invocations: nonNegativeInteger(modelInvocations),
+    tool_output_bytes: nonNegativeInteger(toolOutputBytes),
     elapsed_ms: finiteNumber(elapsedMs),
     tokens,
   }
@@ -122,6 +140,8 @@ export function projectSkillEvaluationObservability({
     ...(observedFirstFixResult === null ? ['first-fix result is unavailable'] : []),
     ...(workerDispatchCount === null ? ['worker dispatch count is unavailable'] : []),
     ...(measurements.tool_calls === null ? ['tool-call count is unavailable'] : []),
+    ...(measurements.model_invocations === null ? ['model-invocation count is unavailable'] : []),
+    ...(measurements.tool_output_bytes === null ? ['tool-output byte count is unavailable'] : []),
     ...(measurements.elapsed_ms === null ? ['elapsed time is unavailable'] : []),
     ...(tokens.input === null ? ['input-token count is unavailable'] : []),
     ...(tokens.output === null ? ['output-token count is unavailable'] : []),

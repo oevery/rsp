@@ -7,9 +7,26 @@ export interface ReleaseProviderComparisonPlan {
   baseline: Record<string, any>
   candidate: Record<string, any>
   identities: Record<string, string>
+  scheduling: {
+    concurrency: 1
+    order: 'alternating-ab-ba'
+    maxPairAttempts: number
+    maxContaminatedPairReplacements: number
+  }
   policy: Record<string, any>
   omissions: string[]
 }
+
+export function executeSerialProviderPairs(options: {
+  maxContaminatedPairReplacements?: number
+  repetitions: number
+  runArm: (schedule: Record<string, any>) => Promise<Record<string, any>>
+}): Promise<Array<Record<string, any>>>
+export function classifyProviderAttempt(options: {
+  infrastructureStatus?: string
+  outcome?: string
+  timedOut?: boolean
+}): 'eligible' | 'infra-contaminated' | 'model-failed' | 'incomplete'
 
 export function buildReleaseProviderComparisonPlan(
   repositoryRoot: string,

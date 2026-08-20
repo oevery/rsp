@@ -30,7 +30,9 @@ function passedReport() {
     for (const arm of ['baseline', 'candidate']) {
       runs.push({
         arm,
+        classification: 'eligible',
         repetition,
+        targetPair: repetition,
         outcome: 'passed',
         compositionSha256: arm === 'baseline' ? 'baseline-composition' : 'candidate-composition',
         contractSha256: 'contract',
@@ -47,6 +49,7 @@ function passedReport() {
     report: {
       verdict: 'passed',
       execution: 'serial-paired',
+      scheduling: { concurrency: 1, order: 'alternating-ab-ba' },
       repetitions,
       identities: {
         baseline: {
@@ -66,6 +69,7 @@ function passedReport() {
         issues: [],
       },
       correctness: { passed: true },
+      infrastructure: { eligiblePairs: repetitions },
       runs,
     },
   }
@@ -99,6 +103,8 @@ describe('release provider evidence check', () => {
     ['contract', (entry: ReturnType<typeof passedReport>) => { entry.report.identities.contractSha256 = 'stale' }],
     ['fixture', (entry: ReturnType<typeof passedReport>) => { entry.report.identities.fixtureSha256 = 'stale' }],
     ['harness', (entry: ReturnType<typeof passedReport>) => { entry.report.identities.harnessSha256 = 'stale' }],
+    ['serial scheduling', (entry: ReturnType<typeof passedReport>) => { entry.report.scheduling.concurrency = 2 }],
+    ['eligible pair count', (entry: ReturnType<typeof passedReport>) => { entry.report.infrastructure.eligiblePairs = 2 }],
     ['paired correctness', (entry: ReturnType<typeof passedReport>) => { entry.report.runs.pop() }],
   ])('rejects stale or incomplete %s evidence', (_label, mutate) => {
     const entry = passedReport()

@@ -1145,6 +1145,41 @@ describe('rsp-manage product Skill', () => {
     })
   })
 
+  it('projects only predeclared transport evidence as infrastructure contamination', () => {
+    const raw = [
+      { type: 'turn.started' },
+      { type: 'item.completed', item: { type: 'error', message: 'tool command timed out after a local 503 fixture' } },
+      { type: 'item.completed', item: { type: 'command_execution', command: 'true', aggregated_output: 'done' } },
+      { type: 'model.request.started' },
+      { type: 'turn.failed', error: { status_code: 429, message: 'rate limit exceeded; retrying request' } },
+      { type: 'turn.completed', usage: { input_tokens: 100, cached_input_tokens: 80, output_tokens: 10 } },
+    ].map(event => JSON.stringify(event)).join('\n')
+
+    expect(summarizeManagedControllerEvents(raw)).toMatchObject({
+      infrastructure: {
+        categories: ['rate-limit'],
+        retry_count: 1,
+        status: 'contaminated',
+      },
+      model_invocations: 1,
+      tool_calls: 1,
+      tool_output_bytes: 4,
+    })
+  })
+
+  it('does not infer model invocations or transport contamination from outer turns and tool errors', () => {
+    const raw = [
+      { type: 'turn.started' },
+      { type: 'item.completed', item: { type: 'error', message: 'local command timed out with 503 text' } },
+      { type: 'turn.completed' },
+    ].map(event => JSON.stringify(event)).join('\n')
+
+    expect(summarizeManagedControllerEvents(raw)).toMatchObject({
+      infrastructure: { categories: [], retry_count: 0, status: 'no-contamination-observed' },
+      model_invocations: null,
+    })
+  })
+
   it('keeps agent-reported dispatch separate from host-observed worker lifecycle', () => {
     const raw = [
       { type: 'item.completed', item: { type: 'tool_call', name: 'multi_agent_v1__spawn_agent', result: { agent_id: 'worker-1', status: 'created' } } },
