@@ -3,6 +3,7 @@ topic: upstream-acceptance-decision
 status: complete
 decision_status: accepted
 accepted_on: 2026-08-15
+reconciled_on: 2026-08-19
 sources:
   - "addy-agent-skills@df1edb2e05487d0aa6d93c747141e0aed1187f25 -> research/upstreams/addy-agent-skills/df1edb2e05487d0aa6d93c747141e0aed1187f25.md"
   - "agent-skills-spec@69ef37e9424c0a7ea9dd2293b559e43ec8176379 -> research/upstreams/agent-skills-spec/69ef37e9424c0a7ea9dd2293b559e43ec8176379.md"
@@ -62,15 +63,24 @@ All 17 revisions were accepted on August 15, 2026. Together with the three alrea
 
 ## Product Candidate Disposition
 
-Acceptance did not automatically create product work. Two maintainer-infrastructure recommendations were subsequently selected and implemented independently:
+Acceptance did not automatically create product work. At closeout, two maintainer-infrastructure recommendations had been selected and implemented independently, while three retained explicit resume conditions:
 
 1. **Q1 evaluation observability — implemented:** independent Trigger, Compliance, Boundary, task-result, and nullable measurement projection is retained by the archived `skill-evaluation-observability` Change.
 2. **Q3 holdout and no-regression — implemented:** identity-bound current/candidate comparison is retained by the archived `skill-candidate-no-regression` Change; no concrete Skill candidate has been promoted by that infrastructure.
-3. **Q2 deterministic routing — deferred:** resume only from an observed catalog-routing or description-collision failure.
-4. **Q4 supply-chain security — deferred:** reconsider as a separate release-candidate security decision.
+3. **Q2 deterministic routing — deferred at acceptance:** resume only from an observed catalog-routing or description-collision failure.
+4. **Q4 supply-chain security — deferred at acceptance:** reconsider as a separate release-candidate security decision.
 5. **Q5 capability lookup — deferred:** reconsider only after repeated maintainer lookup friction.
 
 Do not combine all five into one promotion-framework project. Each candidate requires its own observed gap, owner, smallest behavior delta, and acceptance evidence.
+
+## Current Implementation Reconciliation
+
+The acceptance-time dispositions above remain historical decisions. Two later Changes independently satisfied their resume conditions without reopening or rewriting the upstream acceptance wave:
+
+- **Q2 deterministic routing — implemented on 2026-08-19:** an observed `rsp-review` versus `rsp-resolve-findings` ranking failure selected the bounded deterministic routing gate retained by [skill-routing-evaluation](../../.rsp/archives/2026-08-19_skill-routing-evaluation.md).
+- **Q4 supply-chain security — implemented on 2026-08-15:** the explicit release-candidate security decision selected the bounded offline gate retained by [add-skill-security-preflight](../../.rsp/archives/2026-08-15_add-skill-security-preflight.md).
+
+Q5 remains deferred pending repeated capability-lookup friction. These later implementations change current product-candidate status, not the source acceptance decisions or their original dates.
 
 ## Deferred Product Actions
 
@@ -82,4 +92,4 @@ Do not combine all five into one promotion-framework project. Each candidate req
 
 ## Closeout State
 
-The acceptance wave is complete: all 20 registered sources report accepted revisions, complete research, and no pending action. Q1 and Q3 provide the selected deterministic maintainer foundation. No further upstream-derived product candidate is implied; the next RSP optimization must begin from a newly observed product or workflow problem, while Q2, Q4, and Q5 retain their explicit resume conditions.
+The acceptance wave is complete: all 20 registered sources report accepted revisions, complete research, and no pending action. Q1 through Q4 now provide independently owned maintainer infrastructure after Q2 and Q4 later satisfied their acceptance-time resume conditions. No further upstream-derived product candidate is implied; Q5 still requires newly observed lookup friction before selection.

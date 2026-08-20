@@ -11,10 +11,16 @@ describe('deterministic cross-Skill routing evaluation', () => {
     const result = evaluateSkillRouting({ catalog, manifest })
 
     expect(manifest.owners).toEqual([
+      'rsp',
+      'rsp-manage',
+      'rsp-shape',
+      'rsp-design',
       'rsp-review',
       'rsp-resolve-findings',
       'rsp-implement',
       'rsp-tdd',
+      'rsp-release-docs',
+      'rsp-commit',
     ])
     expect(manifest.owners.every(owner => manifest.positive.filter(item => item.expected_owner === owner).length >= MINIMUM_CASES_PER_OWNER)).toBe(true)
     expect(manifest.owners.every(owner => manifest.hard_negative.filter(item => item.excluded_owner === owner).length >= MINIMUM_CASES_PER_OWNER)).toBe(true)

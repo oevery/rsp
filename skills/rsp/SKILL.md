@@ -25,7 +25,7 @@ Use the canonical transient control vocabulary from the maintainer Skill Control
 
 Apply these routes in order:
 
-Before later-turn mutation under a direct report, design, tiny, or small route, rederive from the newly authorized objective and prospective work. Independent slices, recovery, distinct execution and acceptance owners, repeated production-path correction, real-host/provider/hardware validation, bounded review convergence, managed lifecycle delivery, or a clear ready successor requires the smallest sufficient WorkRef plus fresh owner preflight and Manage qualification before mutation. Multiple files or documentation surfaces alone do not. Unchanged direct follow-ups remain direct. Elapsed time and message count alone never escalate work.
+Before later-turn mutation under a direct report, design, tiny, or small route, rederive from the newly authorized objective and prospective work. Independent slices, recovery, distinct execution and acceptance owners, repeated production-path correction, real-host, provider, or hardware validation, bounded review convergence, managed lifecycle delivery, or a clear ready successor requires the smallest sufficient WorkRef plus fresh owner preflight and Manage qualification before mutation. Multiple files or documentation surfaces alone do not. Unchanged direct follow-ups remain direct. Elapsed time and message count alone never escalate work.
 
 1. Route explicit fixed-scope review to `rsp-review`, release finalization or reconciliation to `rsp-release-docs`, and one bounded design question to installed `rsp-design`; never manually emulate it. Without a selected Change, use report-only Pre-Change Design without inventing a WorkRef or artifact. Only when unavailable, its manual fallback stays bounded to the same question.
 2. Return `RouteDisposition: direct` only for one ready owner, one writer, one execution phase, one integrated decisive check, no recovery, no independent acceptance obligation, no managed lifecycle coordination, and no ready successor. Multiple changed files or documentation surfaces do not by themselves alter that route. Perform no Manage handoff or managed Assignment. After the direct result and fresh verification exist, explicit local commit authority may route exactly once to `rsp-commit` with a `direct` owner summary, exact allowed paths, decisive evidence, and current authority; do not invent a Change, WorkRef, lifecycle state, or RSP trailer. An available Commit refusal returns its real missing condition to Core and never becomes a manual fallback. Rederive before further mutation if any condition changes.
@@ -35,7 +35,7 @@ Before later-turn mutation under a direct report, design, tiny, or small route, 
 
 Return the canonical outer `ControlOutcome` in localized prose through the Core-owned contract. Preserve exact machine values as secondary technical values and keep route, dispatch disposition, or topology only as nested technical evidence.
 
-For managed evaluation, report `selected` or `declined` and the decisive signal; report sequential/parallel choice only when dispatch applies. Name at most one optional capability when it is the next action and available. A missing optional Discipline Skill does not invalidate RSP: use its bounded manual fallback against the same owner. This fallback never substitutes for a required managed worker or required independent Verify. Do not preload or recursively invoke capabilities.
+For managed evaluation, report `selected` or `declined` and the decisive signal; report a sequential or parallel choice only when dispatch applies. Name at most one optional capability when it is the next action and available. A missing optional Discipline Skill does not invalidate RSP: use its bounded manual fallback against the same owner. This fallback never substitutes for a required managed worker or required independent Verify. Do not preload or recursively invoke capabilities.
 
 ### Implementation evidence
 
@@ -61,7 +61,7 @@ When archived acceptance is incomplete, read [reopen recovery](references/reopen
 Load detailed procedures only when active:
 
 - [setup and repair](references/setup-repair.md) for initialization, audit, migration, or repair.
-- [groups and dependencies](references/groups-dependencies.md) for grouped/dependent work.
+- [groups and dependencies](references/groups-dependencies.md) for grouped or dependent work.
 - [conflict handling](references/conflict-handling.md) for an intersecting Git operation.
 - [durable writeback decision](references/durable-review.md) after required Tasks and implementation verification pass.
 

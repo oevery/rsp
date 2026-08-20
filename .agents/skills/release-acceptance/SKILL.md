@@ -22,7 +22,7 @@ Reusable Skill fixtures, holdouts, beta plans, and fake-provider inputs remain u
 
 ## 2. Provider comparison
 
-Use only when compared Skill behavior changed or an explicit release evaluation requires old/new correctness and efficiency evidence, and provider cost is authorized. It does not replace deterministic acceptance. Ordinary sanitized-project acceptance validates only the current candidate against stable contracts and does not require a historical arm.
+Use only when compared Skill behavior changed or an explicit release evaluation requires old and new correctness and efficiency evidence, and provider cost is authorized. It does not replace deterministic acceptance. Ordinary sanitized-project acceptance validates only the current candidate against stable contracts and does not require a historical arm.
 The comparison may consume cases and fake-provider support under `evaluation/`, but its selected baseline, candidate, contract, fixture, and harness identities must still be explicit and immutable for the run.
 
 1. Preview with `mise exec -- pnpm run release:provider-compare -- --plan --json --baseline-ref v<previous-version> --repetitions 3`. Require distinct fixed baseline/candidate composition identities plus fixed contract, fixture, harness, and candidate-source hashes; execution must be `serial-paired`.

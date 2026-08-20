@@ -28,6 +28,8 @@ Name the candidate's trigger, inputs, authority, action, output, stop, verificat
 
 Use host limits as constraints, never as the definition of quality. Words, lines, bytes, tokens, tool calls, and elapsed time are diagnostics. Do not pass a candidate because it is shorter or fail it because it is longer.
 
+Use symbols by semantic role rather than as general prose compression: write `and` or `or` in ordinary sentences; reserve `|` for closed canonical alternatives, `/` for established paired terms or compact labels, `→` for short process summaries, and `:` for label-value boundaries. Use lists when items remain independently actionable. Preserve paths, links, code, tables, and established technical pairs; never apply mechanical symbol replacement across a corpus.
+
 ## Work
 
 1. Establish current evidence and, when mutation is authorized, the smallest candidate delta.

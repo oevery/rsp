@@ -1,6 +1,6 @@
 ---
 name: rsp-design
-description: Resolve one material domain-model, module/seam, or evidence-seeking design question before a Change or for an explicit or focused RSP Change without implementing production behavior or writing durable project truth.
+description: Resolve one material domain-model, module or seam, or evidence-seeking design question before a Change or for an explicit or focused RSP Change without implementing production behavior or writing durable project truth.
 license: MIT
 metadata:
   author: oevery

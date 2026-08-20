@@ -36,7 +36,7 @@ Exactly one branch is active. Give every requested surface one disposition: draf
 
 A confirmed mechanical release does not require an RSP Change. Keep the ledger, command progress, authentication state, and publication handoff transient; manifests, changelog, release commit, tag, hosted release, and registry record own durable release history.
 
-Use an optional Release Change only when material version/range, migration, rollback, security, compatibility, cross-repository/team, multi-stage handoff, recovery, blocker, or acceptance decisions need a persistent owner. Do not create one for a checklist, verification transcript, or prose already owned by release surfaces.
+Use an optional Release Change only when material version or range, migration, rollback, security, compatibility, cross-repository or cross-team, multi-stage handoff, recovery, blocker, or acceptance decisions need a persistent owner. Do not create one for a checklist, verification transcript, or prose already owned by release surfaces.
 
 ## Build evidence before prose
 
@@ -52,7 +52,7 @@ Every relevant commit and work item must map to a net outcome or explicit exclus
 
 - **Changelog:** concise cumulative notable outcomes using the existing categories, or Keep a Changelog categories as fallback. Put breaking changes and required action first.
 - **Release notes:** audience-specific narrative led by the most important outcomes, required action, evidenced compatibility and limitations, plus the full range link. Do not merely duplicate the changelog.
-- **Migration notes:** identify affected users, ordered actions, changed defaults or removed surfaces, compatibility window, validation, and known rollback/support. Use a separate guide when this would overwhelm the notes.
+- **Migration notes:** identify affected users, ordered actions, changed defaults or removed surfaces, compatibility window, validation, and known rollback and support paths. Use a separate guide when this would overwhelm the notes.
 
 Every claim must map to the ledger. Keep terminology aligned while respecting each surface's audience and lifetime.
 

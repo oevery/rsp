@@ -1,11 +1,53 @@
 version: 1
 collision_threshold: 0.55
 owners:
+  - rsp
+  - rsp-manage
+  - rsp-shape
+  - rsp-design
   - rsp-review
   - rsp-resolve-findings
   - rsp-implement
   - rsp-tdd
+  - rsp-release-docs
+  - rsp-commit
 positive:
+  - id: core-operate-existing-project
+    prompt: Operate this existing .rsp project, audit its current state, and decide whether the focused Change needs durable updates before archive.
+    expected_owner: rsp
+  - id: core-initialize-or-repair
+    prompt: Initialize this repository's RSP project or repair its existing .rsp state before any other work.
+    expected_owner: rsp
+  - id: core-durable-update-decision
+    prompt: Decide whether this verified tracked work needs a durable Spec or Decision update before archive.
+    expected_owner: rsp
+  - id: manage-ready-group
+    prompt: Coordinate this ready shallow Change Group across its independent implementation and verification slices without expanding authority.
+    expected_owner: rsp-manage
+  - id: manage-interrupted-goal
+    prompt: Resume the interrupted long-running tracked goal, revalidate its evidence, and continue the same authorized work.
+    expected_owner: rsp-manage
+  - id: manage-review-convergence
+    prompt: Coordinate this multi-slice RSP goal across ready Changes, independent verification, and bounded review convergence.
+    expected_owner: rsp-manage
+  - id: shape-unclear-request
+    prompt: Turn this unclear non-trivial request into the smallest executable Change or justified shallow Group without implementing it.
+    expected_owner: rsp-shape
+  - id: shape-acceptance-ambiguity
+    prompt: Shape this unclear non-trivial acceptance boundary into one executable RSP Change without implementing it.
+    expected_owner: rsp-shape
+  - id: shape-independent-slices
+    prompt: Shape these unclear independent outcomes into a justified shallow Change Group without implementing them.
+    expected_owner: rsp-shape
+  - id: design-module-seam
+    prompt: Resolve one material module seam and dependency-direction question before implementation.
+    expected_owner: rsp-design
+  - id: design-reversible-evidence
+    prompt: Seek the cheapest reversible evidence needed to answer this one focused design question without changing production behavior.
+    expected_owner: rsp-design
+  - id: design-domain-ownership
+    prompt: Determine the domain-model ownership boundary for this focused Change and return the design conclusion only.
+    expected_owner: rsp-design
   - id: review-code-change
     prompt: Review this RSP-tracked code change and report findings without modifying files.
     expected_owner: rsp-review
@@ -42,7 +84,73 @@ positive:
   - id: tdd-concrete-risk
     prompt: The Change explicitly requires test-first evidence for this concrete regression risk.
     expected_owner: rsp-tdd
+  - id: release-docs-changelog
+    prompt: Draft an evidence-based changelog for this explicit release operation from the accepted Changes.
+    expected_owner: rsp-release-docs
+  - id: release-docs-migration
+    prompt: Reconcile the release notes and migration guidance with the verified package behavior and known omissions.
+    expected_owner: rsp-release-docs
+  - id: release-docs-audit
+    prompt: Audit the release documentation against the exact release evidence before publication.
+    expected_owner: rsp-release-docs
+  - id: commit-exact-scope
+    prompt: Create one authorized exact-scope local commit with a repository-consistent structured message.
+    expected_owner: rsp-commit
+  - id: commit-reviewed-group
+    prompt: Commit the reviewed and verified paths for this completed Change Group locally without pushing.
+    expected_owner: rsp-commit
+  - id: commit-message-contract
+    prompt: Construct and create the permitted local commit using the required message structure and trailers.
+    expected_owner: rsp-commit
 hard_negative:
+  - id: core-not-managed-group
+    prompt: Coordinate the ready shallow Group across multiple independent slices and acceptance owners.
+    excluded_owner: rsp
+    expected_owner: rsp-manage
+  - id: core-not-unclear-shaping
+    prompt: Turn this ambiguous non-trivial request into one ready Change or justified shallow Group without implementation.
+    excluded_owner: rsp
+    expected_owner: rsp-shape
+  - id: core-not-focused-design
+    prompt: Resolve one material domain-model seam question before the selected Change is implemented.
+    excluded_owner: rsp
+    expected_owner: rsp-design
+  - id: manage-not-single-implementation
+    prompt: Implement exactly one selected ready Change with its existing evidence and required checks.
+    excluded_owner: rsp-manage
+    expected_owner: rsp-implement
+  - id: manage-not-shaping
+    prompt: Shape this unclear request into executable tracked work and stop before implementation.
+    excluded_owner: rsp-manage
+    expected_owner: rsp-shape
+  - id: manage-not-core-operation
+    prompt: Operate the existing .rsp project and decide whether its focused Change needs durable updates before archive.
+    excluded_owner: rsp-manage
+    expected_owner: rsp
+  - id: shape-not-ready-implementation
+    prompt: The selected Change is already ready; implement its authorized code and run fresh verification.
+    excluded_owner: rsp-shape
+    expected_owner: rsp-implement
+  - id: shape-not-focused-design
+    prompt: Answer this one bounded module seam question without implementing production behavior.
+    excluded_owner: rsp-shape
+    expected_owner: rsp-design
+  - id: shape-not-core-status
+    prompt: Operate the existing .rsp project, audit its state, and decide whether the Change needs durable updates before archive.
+    excluded_owner: rsp-shape
+    expected_owner: rsp
+  - id: design-not-broad-shaping
+    prompt: Turn this unclear multi-outcome request into a ready Change Group with executable slices.
+    excluded_owner: rsp-design
+    expected_owner: rsp-shape
+  - id: design-not-settled-implementation
+    prompt: The seam decision is settled; implement exactly one selected ready RSP Change within explicit mutation authority.
+    excluded_owner: rsp-design
+    expected_owner: rsp-implement
+  - id: design-not-fixed-review
+    prompt: Review this tracked mixed change against its fixed comparison scope without modifying files.
+    excluded_owner: rsp-design
+    expected_owner: rsp-review
   - id: review-do-not-fix
     prompt: Review the tracked change and return read-only findings; do not fix anything.
     excluded_owner: rsp-resolve-findings
@@ -91,7 +199,63 @@ hard_negative:
     prompt: Drive one clear testable behavior through observed RED and minimal GREEN.
     excluded_owner: rsp-implement
     expected_owner: rsp-tdd
+  - id: release-docs-not-local-commit
+    prompt: Create the authorized exact-scope local commit for these reviewed release paths without pushing.
+    excluded_owner: rsp-release-docs
+    expected_owner: rsp-commit
+  - id: release-docs-not-implementation
+    prompt: Implement the selected ready Change and run its required code and test verification.
+    excluded_owner: rsp-release-docs
+    expected_owner: rsp-implement
+  - id: release-docs-not-core-closeout
+    prompt: Decide the durable writeback and archive readiness for this verified non-release Change.
+    excluded_owner: rsp-release-docs
+    expected_owner: rsp
+  - id: commit-not-release-writing
+    prompt: Draft and reconcile the changelog, release notes, and migration guidance for the explicit release.
+    excluded_owner: rsp-commit
+    expected_owner: rsp-release-docs
+  - id: commit-not-implementation
+    prompt: Implement exactly one selected ready RSP Change within explicit mutation authority; do not create a local commit.
+    excluded_owner: rsp-commit
+    expected_owner: rsp-implement
+  - id: commit-not-review
+    prompt: Perform a report-only fixed-scope review before any local commit is authorized.
+    excluded_owner: rsp-commit
+    expected_owner: rsp-review
 pairwise:
+  - id: core-over-manage-current-action
+    prompt: Operate this existing .rsp project and decide whether its focused Change needs durable updates before archive.
+    expected_owner: rsp
+    competing_owner: rsp-manage
+  - id: manage-over-core-ready-group
+    prompt: Coordinate this ready shallow Group across independent execution and acceptance slices.
+    expected_owner: rsp-manage
+    competing_owner: rsp
+  - id: core-over-shape-existing-owner
+    prompt: Operate the existing .rsp project and decide whether the already shaped Change needs durable updates before archive.
+    expected_owner: rsp
+    competing_owner: rsp-shape
+  - id: shape-over-core-ambiguous-work
+    prompt: Turn this ambiguous non-trivial request into one executable Change or justified shallow Group.
+    expected_owner: rsp-shape
+    competing_owner: rsp
+  - id: shape-over-manage-unready-group
+    prompt: This non-trivial work is still unclear and not ready; shape it into one justified shallow Change Group without implementing or coordinating it.
+    expected_owner: rsp-shape
+    competing_owner: rsp-manage
+  - id: manage-over-shape-ready-group
+    prompt: The shallow Change Group is already ready; coordinate its independent slices and acceptance without reshaping it.
+    expected_owner: rsp-manage
+    competing_owner: rsp-shape
+  - id: design-over-implement-unsettled-seam
+    prompt: Resolve the material module seam question before any production implementation begins.
+    expected_owner: rsp-design
+    competing_owner: rsp-implement
+  - id: implement-over-design-settled
+    prompt: The design question is settled; implement the selected ready Change and verify it.
+    expected_owner: rsp-implement
+    competing_owner: rsp-design
   - id: review-over-resolve-read-only
     prompt: Read-only review of a tracked code change before fixes.
     expected_owner: rsp-review
@@ -124,3 +288,11 @@ pairwise:
     prompt: Use an observed failing test first because this concrete regression risk needs TDD.
     expected_owner: rsp-tdd
     competing_owner: rsp-implement
+  - id: release-docs-over-commit-draft
+    prompt: Draft the evidence-based release notes and migration guidance before any delivery commit.
+    expected_owner: rsp-release-docs
+    competing_owner: rsp-commit
+  - id: commit-over-release-docs-deliver
+    prompt: The release documentation is final; create the separately authorized exact-scope local commit.
+    expected_owner: rsp-commit
+    competing_owner: rsp-release-docs

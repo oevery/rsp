@@ -244,7 +244,42 @@ function isPublication(argv) {
   return executable.slice(1).includes('publish')
 }
 
-export function summarizeManagedControllerEvents(raw) {
+function observedSkillReference(workspace, installedSkills, argument) {
+  if (typeof workspace !== 'string' || typeof argument !== 'string' || /[*?{}]/u.test(argument))
+    return null
+  const skillsRoot = resolve(workspace, '.agents', 'skills')
+  const target = isAbsolute(argument) ? resolve(argument) : resolve(workspace, argument)
+  const relativePath = relative(skillsRoot, target)
+  if (!relativePath || relativePath.startsWith('..') || isAbsolute(relativePath))
+    return null
+  const parts = relativePath.split(sep)
+  if (parts.length < 3 || !installedSkills.has(parts[0]) || parts[1] !== 'references')
+    return null
+  if (!existsSync(target))
+    return null
+  const stats = lstatSync(target)
+  if (stats.isSymbolicLink() || !stats.isFile())
+    return null
+  return parts.join('/')
+}
+
+function observedSkillReferenceReads(command, workspace, installedSkills) {
+  const readCommands = new Set(['cat', 'head', 'nl', 'sed', 'tail', 'wc'])
+  const observed = []
+  for (const argv of unwrapShellCommands(command)) {
+    const executable = executableArgv(argv)
+    if (!readCommands.has(basename(executable[0] ?? '')))
+      continue
+    for (const argument of executable.slice(1)) {
+      const path = observedSkillReference(workspace, installedSkills, argument)
+      if (path)
+        observed.push(path)
+    }
+  }
+  return observed
+}
+
+export function summarizeManagedControllerEvents(raw, { installedSkills = [], workspace } = {}) {
   const forbiddenActions = { force_push: 0, publication: 0, push: 0 }
   const lifecycleCounts = {
     admission_count: null,
@@ -256,6 +291,9 @@ export function summarizeManagedControllerEvents(raw) {
     wait_count: null,
   }
   const lifecycleOrder = []
+  const observedResources = new Set()
+  const installedSkillNames = new Set(installedSkills)
+  let resourceObservationAvailable = false
   let toolCalls = 0
   let usage = null
   for (const [eventIndex, line] of raw.split('\n').filter(Boolean).entries()) {
@@ -264,6 +302,12 @@ export function summarizeManagedControllerEvents(raw) {
       if (event.type === 'item.completed' && ['command_execution', 'mcp_tool_call', 'tool_call'].includes(event.item?.type)) {
         toolCalls += 1
         if (event.item?.type === 'command_execution' && typeof event.item.command === 'string') {
+          resourceObservationAvailable = true
+          if ((event.item.status === undefined || event.item.status === 'completed')
+            && (event.item.exit_code === undefined || event.item.exit_code === 0)) {
+            for (const path of observedSkillReferenceReads(event.item.command, workspace, installedSkillNames))
+              observedResources.add(path)
+          }
           for (const argv of unwrapShellCommands(event.item.command)) {
             const subcommand = gitSubcommand(argv)
             if (subcommand === 'push') {
@@ -300,7 +344,13 @@ export function summarizeManagedControllerEvents(raw) {
       .filter(([, count]) => count === null)
       .map(([field]) => `${field.replaceAll('_', ' ')} is unavailable`),
   }
-  return { forbidden_actions: forbiddenActions, tool_calls: toolCalls, usage, worker_lifecycle: workerLifecycle }
+  return {
+    forbidden_actions: forbiddenActions,
+    observed_resources: resourceObservationAvailable ? [...observedResources].sort() : null,
+    tool_calls: toolCalls,
+    usage,
+    worker_lifecycle: workerLifecycle,
+  }
 }
 
 function managedWorkerToolName(item) {
@@ -415,6 +465,7 @@ function observeLifecyclePhase(counts, order, phase, tool, eventIndex) {
 export function projectManagedControllerEvaluationEvidence({
   durationMs,
   events,
+  expectedResources,
   receipt,
   result,
   output,
@@ -422,7 +473,9 @@ export function projectManagedControllerEvaluationEvidence({
 }) {
   const projected = projectSkillEvaluationObservability({
     elapsedMs: durationMs,
+    expectedResources,
     outcome: result,
+    observedResources: events.observed_resources,
     outputContract: output,
     receiptObservations: null,
     toolCalls: events.tool_calls,
@@ -644,6 +697,23 @@ function readHoldout(root, caseId) {
     assertStringArray(manifest.required_changes, `${caseId}.required_changes`)
   if (manifest.installed_skills)
     assertStringArray(manifest.installed_skills, `${caseId}.installed_skills`)
+  if (manifest.expected_resources) {
+    assertStringArray(manifest.expected_resources, `${caseId}.expected_resources`)
+    const installedSkills = new Set(manifest.installed_skills ?? ['rsp-manage'])
+    for (const path of manifest.expected_resources) {
+      const parts = path.split('/')
+      if (parts.length < 3 || !installedSkills.has(parts[0]) || parts[1] !== 'references'
+        || parts.some(part => part.length === 0 || part === '.' || part === '..')) {
+        throw new Error(`${caseId}.expected_resources must contain installed Skill reference paths`)
+      }
+      const skillRoot = join(root, 'skills', parts[0])
+      const referencePath = join(root, 'skills', ...parts)
+      assertContained(skillRoot, referencePath, `${caseId}.expected_resources`)
+      if (!existsSync(referencePath))
+        throw new Error(`${caseId}.expected_resources names a missing Skill reference: ${path}`)
+      assertSafeFile(skillRoot, referencePath, `${caseId}.expected_resources ${path}`)
+    }
+  }
   if (manifest.sandbox && !['workspace-write', 'danger-full-access'].includes(manifest.sandbox))
     throw new Error(`${caseId}.sandbox must be workspace-write or danger-full-access`)
   for (const field of ['verification', 'expected_output', 'forbidden_output'])
@@ -1027,8 +1097,11 @@ export async function runManagedControllerEvaluation({ authFile, caseId, codexBi
     }
   }
   const final = existsSync(finalPath) ? readFileSync(finalPath, 'utf8') : ''
-  const events = summarizeManagedControllerEvents(executed.stdout)
   const installedSkills = variant === 'candidate' || variant === 'product' ? prepared.manifest.installed_skills ?? ['rsp-manage'] : []
+  const events = summarizeManagedControllerEvents(executed.stdout, {
+    installedSkills,
+    workspace: prepared.workspace,
+  })
   const sourceCompositionAfter = hashManagedControllerComposition(installedSkills.map(name => ({
     name,
     path: skillSourceRoot(root, variant, name, skillSourceDirectory),
@@ -1051,6 +1124,7 @@ export async function runManagedControllerEvaluation({ authFile, caseId, codexBi
   const evaluationEvidence = projectManagedControllerEvaluationEvidence({
     durationMs,
     events,
+    expectedResources: prepared.manifest.expected_resources,
     receipt,
     result: score.result,
     output: score.output,

@@ -18,6 +18,12 @@ describe('skill evaluation observability', () => {
         boundary: { status: 'passed', evidence: { forbidden_present: [], unauthorized_paths: [] } },
         task_result: { status: 'passed', evidence: { outcome: 'passed' } },
       },
+      resources: {
+        expected_resources: null,
+        observed_resources: null,
+        unexpected_resources: null,
+        missing_resources: null,
+      },
       measurements: {
         corrections: null,
         first_fix_result: null,
@@ -114,5 +120,70 @@ describe('skill evaluation observability', () => {
       worker_dispatch_count: null,
       tool_calls: 7,
     })
+  })
+
+  it('derives missing and unexpected references only from declared and observed resource paths', () => {
+    const result = projectSkillEvaluationObservability({
+      expectedResources: [
+        'rsp/references/managed-routing.md',
+        'rsp-manage/references/managed-exchange.md',
+      ],
+      observedResources: [
+        'rsp/references/managed-routing.md',
+        'rsp/references/managed-routing.md',
+        'rsp-manage/references/closeout.md',
+      ],
+    })
+
+    expect(result.resources).toEqual({
+      expected_resources: [
+        'rsp-manage/references/managed-exchange.md',
+        'rsp/references/managed-routing.md',
+      ],
+      observed_resources: [
+        'rsp-manage/references/closeout.md',
+        'rsp/references/managed-routing.md',
+      ],
+      unexpected_resources: ['rsp-manage/references/closeout.md'],
+      missing_resources: ['rsp-manage/references/managed-exchange.md'],
+    })
+  })
+
+  it('keeps unavailable reference observation distinct from an observed empty set', () => {
+    const unavailable = projectSkillEvaluationObservability({
+      expectedResources: ['rsp/references/managed-routing.md'],
+    })
+    const observedEmpty = projectSkillEvaluationObservability({
+      expectedResources: ['rsp/references/managed-routing.md'],
+      observedResources: [],
+    })
+
+    expect(unavailable.resources).toMatchObject({
+      observed_resources: null,
+      missing_resources: null,
+    })
+    expect(unavailable.omissions).toContain('reference-load observation is unavailable')
+    expect(observedEmpty.resources).toMatchObject({
+      observed_resources: [],
+      unexpected_resources: [],
+      missing_resources: ['rsp/references/managed-routing.md'],
+    })
+    expect(observedEmpty.omissions).not.toContain('reference-load observation is unavailable')
+  })
+
+  it('fails closed instead of retaining absolute, traversing, or non-reference resource paths', () => {
+    for (const observedResources of [
+      ['/private/workspace/.agents/skills/rsp/references/managed-routing.md'],
+      ['rsp/references/../SKILL.md'],
+      ['rsp/SKILL.md'],
+    ]) {
+      const result = projectSkillEvaluationObservability({
+        expectedResources: ['rsp/references/managed-routing.md'],
+        observedResources,
+      })
+      expect(result.resources.observed_resources).toBeNull()
+      expect(result.resources.missing_resources).toBeNull()
+      expect(result.omissions).toContain('reference-load observation is unavailable')
+    }
   })
 })

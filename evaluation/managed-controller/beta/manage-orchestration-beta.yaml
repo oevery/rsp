@@ -3,13 +3,13 @@ case: auto-multisurface-routing
 variants:
   - baseline
   - product
-holdout_manifest_sha256: 0303b585bef27638f92f1c7b0f308fd0f63ff5b0ae92354f389d2c9fdb9c4540
+holdout_manifest_sha256: c6b2cf569166eabe971cec6094f51107e204ac06bffd863ce897dc4fa1ed1662
 base_tree_sha256: 5581fdea1ebaf6000348340e25a7b1f1d84378fced4f2ca03bfda7aa787af7cd
 product_skill_names:
   - rsp
   - rsp-manage
   - rsp-implement
-product_composition_sha256: 47ba02bd327bd9bc7614ce79fda7111f3002246cf68fc383a7168715f217e1a9
+product_composition_sha256: 93943f2db64c7c45082298d5a348faeb182e9c0fdaf8310eec5daeedd98be504
 prior_retained_evidence:
   - path: research/evaluations/rsp-manage/2026-08-17-implementation-test-restraint/report.md
     sha256: 981587bd4ce9e26107682e30ddf64e863454e7fa1863343ed1c62f8f3c232b75
@@ -19,6 +19,7 @@ observations:
   - completion outcome
   - first-fix result where observable
   - host-observed worker lifecycle counts and ordering where observable
+  - expected and host-observed conditional Skill references where observable
   - agent-reported routing and dispatch claims kept separate
   - verification rounds
   - elapsed time where observable

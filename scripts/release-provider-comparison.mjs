@@ -356,6 +356,7 @@ function sanitizedRun(arm, repetition, summary, metadata) {
     contractSha256: metadata.contract_sha256 ?? null,
     observationSha256: summary.observation_sha256,
     dimensions: observation.dimensions,
+    resources: observation.resources,
     measurements: {
       corrections: finiteMeasurement(observation.measurements.corrections),
       first_fix_result: observation.measurements.first_fix_result,
@@ -388,6 +389,12 @@ function sanitizedFailedRun(arm, repetition, plan, error) {
       compliance: { status: 'not-observed' },
       boundary: { status: 'not-observed' },
       task_result: { status: 'not-observed' },
+    },
+    resources: {
+      expected_resources: null,
+      observed_resources: null,
+      unexpected_resources: null,
+      missing_resources: null,
     },
     measurements: {
       corrections: null,

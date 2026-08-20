@@ -36,13 +36,13 @@ Choose subject and body prose language from explicit current commit-language ins
 
 Use the repository's established Conventional Commit form when present. Derive type and scope from the owned outcome and repository history, not from the conversation. Keep the subject concise and imperative or otherwise repository-consistent.
 
-A tiny, mechanical, or direct Tiny/Small boundary may be subject-only when that subject fully explains it. For a non-trivial Change, integration wave, Group closeout, or release commit, add two to four concise bullets covering:
+A tiny, mechanical, or direct `Tiny` or `Small` boundary may be subject-only when that subject fully explains it. For a non-trivial Change, integration wave, Group closeout, or release commit, add two to four concise bullets covering:
 
 - the observable outcome;
 - material behavior or compatibility boundaries; and
 - an important omission or risk when one affects review.
 
-Do not copy file lists, command transcripts, routine verification output, execution chronology, or the full Change/archive. Project trailers from the selected owner variant: add one `RSP-WorkRef:` per real included WorkRef and `RSP-Group:` only when the Group is the owner. A direct or release owner with no included WorkRefs emits no RSP trailer. Add authoritative external references already owned by the work and `BREAKING CHANGE:` only for an actual breaking change. Never invent a WorkRef, Group, issue, co-author, sign-off, breaking change, or AI attribution.
+Do not copy file lists, command transcripts, routine verification output, execution chronology, or the full Change or archive. Project trailers from the selected owner variant: add one `RSP-WorkRef:` per real included WorkRef and `RSP-Group:` only when the Group is the owner. A direct or release owner with no included WorkRefs emits no RSP trailer. Add authoritative external references already owned by the work and `BREAKING CHANGE:` only for an actual breaking change. Never invent a WorkRef, Group, issue, co-author, sign-off, breaking change, or AI attribution.
 
 Project every owned issue relationship as a non-closing `Issue: <canonical-url>` reference when proportionate. Only a terminal commit whose selected Change acceptance is complete may additionally use a provider-supported closing keyword for an explicit `relation: closes`. Checkpoints, `relation: relates`, ambiguous Change or Group ownership, and unresolved provider or repository identity emit no closing keyword. When safe shorthand cannot be resolved, keep only the canonical URL; never infer an issue from changed files or mutate the external tracker.
 
@@ -58,4 +58,4 @@ Create one local commit with the prepared subject, optional body, and trailers. 
 
 ## Return the receipt
 
-Return before and after `HEAD`, the commit SHA, owner kind and identity, included WorkRefs when present, the complete stored message with parsed subject/body/trailers, committed paths, remaining worktree paths, and explicit omissions. Report a stop before staging, commit failure, receipt-observation failure, or post-commit path/message mismatch truthfully; never silently amend or create a second commit to repair the first. An available Commit Skill that rejects an invalid envelope returns that stop; manual fallback is only for capability unavailability.
+Return before and after `HEAD`, the commit SHA, owner kind and identity, included WorkRefs when present, the complete stored message with parsed subject/body/trailers, committed paths, remaining worktree paths, and explicit omissions. Report a stop before staging, commit failure, receipt-observation failure, or post-commit path or message mismatch truthfully; never silently amend or create a second commit to repair the first. An available Commit Skill that rejects an invalid envelope returns that stop; manual fallback is only for capability unavailability.

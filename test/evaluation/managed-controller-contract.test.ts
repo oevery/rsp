@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -820,7 +820,7 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('every selected WorkRef, including clear in-scope successors')
     expect(managedRouting).toContain('A Group qualifies when it has at least two ready children')
     expect(body).toContain('Dispatch only children in the current `plan.waves` wave')
-    expect(body).toContain('Rerun `rsp status --json`')
+    expect(body).toContain('rerun `rsp status --json`')
     expect(body).toContain('restrict it to declared children')
     expect(body).toContain('writers, the RSP control plane, test runners, generated artifacts, browsers, Brokers, provider sessions, or hardware/classroom sessions')
     expect(body).toContain('Keep blockers, later waves, shared seams, conflicting leases, and dependent verification sequential')
@@ -1195,6 +1195,99 @@ describe('rsp-manage product Skill', () => {
       order: [],
     })
     expect(events.worker_lifecycle.omissions).toContain('dispatch count is unavailable')
+  })
+
+  it('observes only successful contained reference reads from supported host command events', ({ onTestFinished }) => {
+    const workspace = mkdtempSync(join(tmpdir(), 'rsp-reference-observation-'))
+    onTestFinished(() => rmSync(workspace, { force: true, recursive: true }))
+    const managedRoutingPath = join(workspace, '.agents', 'skills', 'rsp', 'references', 'managed-routing.md')
+    const closeoutPath = join(workspace, '.agents', 'skills', 'rsp-manage', 'references', 'closeout.md')
+    mkdirSync(join(managedRoutingPath, '..'), { recursive: true })
+    mkdirSync(join(closeoutPath, '..'), { recursive: true })
+    writeFileSync(managedRoutingPath, '# managed routing\n')
+    writeFileSync(closeoutPath, '# closeout\n')
+    const raw = [
+      { type: 'item.completed', item: { type: 'command_execution', command: `sed -n '1,20p' ${managedRoutingPath}`, exit_code: 0, status: 'completed' } },
+      { type: 'item.completed', item: { type: 'command_execution', command: `cat ${closeoutPath}`, exit_code: 1, status: 'failed' } },
+      { type: 'item.completed', item: { type: 'command_execution', command: `printf '%s' ${closeoutPath}`, exit_code: 0, status: 'completed' } },
+    ].map(event => JSON.stringify(event)).join('\n')
+
+    const events = summarizeManagedControllerEvents(raw, {
+      installedSkills: ['rsp', 'rsp-manage'],
+      workspace,
+    })
+    expect(events.observed_resources).toEqual(['rsp/references/managed-routing.md'])
+
+    const evidence = projectManagedControllerEvaluationEvidence({
+      durationMs: 10,
+      events,
+      expectedResources: [
+        'rsp/references/managed-routing.md',
+        'rsp-manage/references/managed-exchange.md',
+      ],
+      receipt: null,
+      result: 'passed',
+      output: { expected_missing: [], forbidden_present: [] },
+      unauthorizedPaths: [],
+    })
+    expect(evidence.observability.resources).toEqual({
+      expected_resources: [
+        'rsp-manage/references/managed-exchange.md',
+        'rsp/references/managed-routing.md',
+      ],
+      observed_resources: ['rsp/references/managed-routing.md'],
+      unexpected_resources: [],
+      missing_resources: ['rsp-manage/references/managed-exchange.md'],
+    })
+  })
+
+  it('marks reference observation unavailable when the host exposes no command events', () => {
+    const events = summarizeManagedControllerEvents(JSON.stringify({
+      type: 'turn.completed',
+      usage: { input_tokens: 1, output_tokens: 1 },
+    }), { installedSkills: ['rsp'], workspace: '/tmp/unobserved-workspace' })
+    const evidence = projectManagedControllerEvaluationEvidence({
+      durationMs: 10,
+      events,
+      expectedResources: ['rsp/references/managed-routing.md'],
+      receipt: null,
+      result: 'passed',
+      output: { expected_missing: [], forbidden_present: [] },
+      unauthorizedPaths: [],
+    })
+
+    expect(events.observed_resources).toBeNull()
+    expect(evidence.observability.resources.observed_resources).toBeNull()
+    expect(evidence.observability.omissions).toContain('reference-load observation is unavailable')
+  })
+
+  it('rejects expected references that do not exist in the declared installed Skill composition', ({ onTestFinished }) => {
+    const projectRoot = mkdtempSync(join(tmpdir(), 'rsp-reference-manifest-'))
+    const outputRoot = join(projectRoot, 'runs')
+    onTestFinished(() => rmSync(projectRoot, { force: true, recursive: true }))
+    cpSync(
+      join(root, 'evaluation', 'managed-controller', 'holdout', 'auto-multisurface-routing'),
+      join(projectRoot, 'evaluation', 'managed-controller', 'holdout', 'auto-multisurface-routing'),
+      { recursive: true },
+    )
+    for (const skill of ['rsp', 'rsp-manage', 'rsp-implement']) {
+      cpSync(join(root, 'skills', skill), join(projectRoot, 'skills', skill), { recursive: true })
+    }
+    const manifestPath = join(projectRoot, 'evaluation', 'managed-controller', 'holdout', 'auto-multisurface-routing', 'case.yaml')
+    writeFileSync(
+      manifestPath,
+      readFileSync(manifestPath, 'utf8').replace(
+        'rsp/references/control-outcome.md',
+        'rsp/references/missing.md',
+      ),
+    )
+
+    expect(() => prepareManagedControllerRun({
+      caseId: 'auto-multisurface-routing',
+      outputRoot,
+      root: projectRoot,
+      variant: 'product',
+    })).toThrow('expected_resources names a missing Skill reference: rsp/references/missing.md')
   })
 
   it('does not promote failed or explicitly rejected host calls into lifecycle facts', () => {

@@ -5,6 +5,13 @@ installed_skills:
   - rsp
   - rsp-manage
   - rsp-implement
+expected_resources:
+  - rsp-manage/references/host-worker-lifecycle.md
+  - rsp-manage/references/managed-exchange.md
+  - rsp/references/control-outcome.md
+  - rsp/references/durable-review.md
+  - rsp/references/managed-routing.md
+  - rsp/references/response-language.md
 request: >-
   Complete the focused tracked Change `refresh-status-guidance` under the project's automatic
   routing policy. One implementation writer must update the authoritative status-presentation Spec,

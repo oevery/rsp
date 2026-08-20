@@ -26,6 +26,7 @@ export interface ManagedControllerHoldoutManifest extends ManagedControllerOutpu
   base_case?: string
   branch?: string
   expected_mode?: 'decline' | 'execute'
+  expected_resources?: string[]
   id: string
   initial_commit_message?: string
   initialize_rsp?: boolean
@@ -128,6 +129,7 @@ export interface ManagedControllerEvaluationMetadata {
   duration_ms: number
   events: {
     forbidden_actions: { force_push: number, publication: number, push: number }
+    observed_resources: string[] | null
     tool_calls: number
     usage: unknown
     worker_lifecycle: ManagedControllerWorkerLifecycleObservation
@@ -155,6 +157,7 @@ export interface ManagedControllerEvaluationMetadata {
       tokens: { input: number | null, output: number | null, total: number | null }
     }
     omissions: string[]
+    resources: ManagedControllerResourceObservation
     host_observed: { worker_lifecycle: ManagedControllerWorkerLifecycleObservation }
   }
   receipt_observations: {
@@ -201,6 +204,13 @@ export interface ManagedControllerWorkerLifecycleObservation {
   omissions: string[]
 }
 
+export interface ManagedControllerResourceObservation {
+  expected_resources: string[] | null
+  observed_resources: string[] | null
+  unexpected_resources: string[] | null
+  missing_resources: string[] | null
+}
+
 export function loadManagedControllerCases(root: string): ManagedControllerCase[]
 export function evaluateManagedController(root: string): Array<{ id: string, missing: string[], passed: boolean }>
 export function prepareManagedControllerRun(options: {
@@ -238,8 +248,12 @@ export function scoreManagedControllerObservation(manifest: ManagedControllerHol
   result: 'passed' | 'failed'
   unauthorized_paths: string[]
 }
-export function summarizeManagedControllerEvents(raw: string): {
+export function summarizeManagedControllerEvents(raw: string, options?: {
+  installedSkills?: string[]
+  workspace?: string
+}): {
   forbidden_actions: { force_push: number, publication: number, push: number }
+  observed_resources: string[] | null
   tool_calls: number
   usage: unknown
   worker_lifecycle: ManagedControllerWorkerLifecycleObservation
@@ -247,6 +261,7 @@ export function summarizeManagedControllerEvents(raw: string): {
 export function projectManagedControllerEvaluationEvidence(options: {
   durationMs: number
   events: ReturnType<typeof summarizeManagedControllerEvents>
+  expectedResources?: string[]
   receipt: {
     case_id: string
     composition_sha256: string

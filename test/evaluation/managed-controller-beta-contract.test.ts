@@ -88,6 +88,7 @@ describe('managed-controller beta evidence', () => {
       'completion outcome',
       'first-fix result where observable',
       'host-observed worker lifecycle counts and ordering where observable',
+      'expected and host-observed conditional Skill references where observable',
       'agent-reported routing and dispatch claims kept separate',
       'verification rounds',
       'elapsed time where observable',

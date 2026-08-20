@@ -8,7 +8,7 @@ Cross-source models are added only when two or more completed source distillatio
 - `rsp-shaping-capability.md` — historical input now implemented by `rsp-shape`; current behavior is owned by Specs, the published Skill, code, and tests.
 - `rsp-implementation-capability.md` — historical input now implemented by `rsp-implement`; current behavior is owned by Specs, the published Skill, code, and tests.
 - `agent-implementation-restraint-and-test-value.md` — candidate research for reachable boundary evidence, permanent-test ownership, contrastive restraint fixtures, and rejection of universal coverage/test matrices.
-- `skill-quality-and-governance.md` — the accepted Skill-quality baseline, implemented Q1/Q3 maintainer foundation, and evidence-triggered Q2/Q4/Q5 conditions.
-- `upstream-acceptance-decision.md` — the completed revision-acceptance wave and its separate product-candidate dispositions.
+- `skill-quality-and-governance.md` — the accepted Skill-quality baseline, implemented Q1/Q2/Q3/Q4 maintainer foundation, and evidence-triggered Q5 condition.
+- `upstream-acceptance-decision.md` — the completed revision-acceptance wave, its historical product-candidate dispositions, and current independent-implementation reconciliation.
 - `subagent-orchestration.md` — DeepSeek Harness and Superpowers synthesis for leaf-worker authority, compatible batching, WorkerSession reuse, and transient orchestration boundaries.
 - `managed-control-and-host-protocol.md` — six-source refinement separating control transfer, dispatch need, WorkerSession and WorkerInvocation lifecycles, host observations, and accepted lane evidence.

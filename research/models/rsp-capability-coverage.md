@@ -3,7 +3,7 @@ topic: rsp-capability-coverage
 status: complete
 implementation_status: partial
 decision_status: accepted
-reconciled_on: 2026-08-15
+reconciled_on: 2026-08-19
 sources:
   - "agent-skills-spec@69ef37e9424c0a7ea9dd2293b559e43ec8176379 -> research/upstreams/agent-skills-spec/69ef37e9424c0a7ea9dd2293b559e43ec8176379.md"
   - "andrej-karpathy-skills@2c606141936f1eeef17fa3043a72095b4765b9c2 -> research/upstreams/andrej-karpathy-skills/2c606141936f1eeef17fa3043a72095b4765b9c2.md"
@@ -158,7 +158,7 @@ The original minimum ledger supported four owners and the 3.0 readiness review s
 2. `rsp-shape` owns G2 from C05, C10, C20, C36, and C46.
 3. `rsp-implement` owns G3 from C06, C21, C37, C47, the compact C04b fallback, bounded C12 continuation, and the restraint contract in C14.
 4. `rsp-review` owns G4 as the stable report-only capability informed by C02, C15, C19, and C38.
-5. G5 remains maintainer Skill-promotion infrastructure. Q1 observability and Q3 no-regression gates are implemented; Q2, Q4, and Q5 remain conditionally deferred in `skill-quality-and-governance.md`.
+5. G5 remains maintainer Skill-promotion infrastructure. Q1 observability, Q2 deterministic routing, Q3 no-regression, and Q4 deterministic security gates are implemented; Q5 remains conditionally deferred in `skill-quality-and-governance.md`.
 6. `rsp-manage` owns G6 through bounded long-running, recovery, and multi-slice coordination while RSP artifacts retain durable truth and Git/publication authority remains separate.
 7. `rsp-resolve-findings` owns G7 from C31 and C39, replacing the retired `rsp-address-review` identity.
 8. `rsp-diagnose` owns G8 using the evidence-gate constraints retained from C04 and C40.

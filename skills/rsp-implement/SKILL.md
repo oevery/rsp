@@ -1,6 +1,6 @@
 ---
 name: rsp-implement
-description: Implement exactly one selected, ready RSP Change within explicit mutation authority. Use when the user asks to implement or fix tracked work and requires code/tests plus truthful Tasks, Blockers, and fresh verification evidence; never infer Git, publication, review, TDD, or diagnosis authority.
+description: Implement exactly one selected, ready RSP Change within explicit mutation authority. Use when the user asks to implement or fix tracked work and requires code and tests plus truthful Tasks, Blockers, and fresh verification evidence; never infer Git, publication, review, TDD, or diagnosis authority.
 license: MIT
 metadata:
   author: oevery
@@ -17,7 +17,7 @@ Follow Core's response-versus-artifact language boundary for all user-visible co
 
 Require an explicit WorkRef or one unambiguous focus marker. A Group Brief is context, not executable work. Stop when selection, readiness, product authority, acceptance, or required decisions are unresolved.
 
-Read nearest instructions, Core or fallback, Change and Brief, relevant Specs and decisions, current checkout, then the smallest owning code/test chain. Use normal repository discovery; do not guess owners. Operate only in the execution location actually supplied by the host; Implement never selects or migrates execution environments.
+Read nearest instructions, Core or fallback, Change and Brief, relevant Specs and decisions, current checkout, then the smallest owning code and test chain. Use normal repository discovery; do not guess owners. Operate only in the execution location actually supplied by the host; Implement never selects or migrates execution environments.
 
 ## Preserve authority
 

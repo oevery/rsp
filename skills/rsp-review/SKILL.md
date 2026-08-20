@@ -32,7 +32,7 @@ The user request fixes the requested outcome and allowed operations subject to n
 
 Determine applicability only from artifacts inside the fixed comparison scope. A Change, Spec, instruction, implementation file, or test read only as authority or evidence is not thereby a reviewed artifact. Run each applicable pipeline; return `skipped` for a pipeline with no reviewed artifacts even when authority of that kind was inspected, and never return `clean` for authority-only documents. When such authority is missing, ambiguous, or conflicting, record it in Review Scope, Coverage, and Verdict; do not emit a Finding owned by a skipped pipeline. An executable document may need both; merge evidence for the same underlying issue into one cross-artifact finding.
 
-Inspect in a bounded order: fixed status/diff, selected authority, then only the smallest direct behavior chain and tests needed to resolve a concrete question. Stop when every applicable pipeline can be judged. Do not search unrelated files or broaden authority merely to fill Coverage or Findings.
+Inspect in a bounded order: fixed status and diff, selected authority, then only the smallest direct behavior chain and tests needed to resolve a concrete question. Stop when every applicable pipeline can be judged. Do not search unrelated files or broaden authority merely to fill Coverage or Findings.
 
 Read [Code review](references/code-review.md) only when the fixed reviewed artifacts make the Code pipeline applicable.
 
@@ -70,6 +70,6 @@ Use this shape:
 <blocked | findings | clean, with the smallest next action>
 ```
 
-Omit Finding entries when none exist. `clean` means an applicable pipeline was reviewed with no actionable issue; `skipped` means no applicable artifacts; `blocked` means required scope or authority was unavailable. Deduplicate one underlying issue across pipelines, then order by severity and path. Use P0 for critical security/data/breakage, P1 for normal-path contract failure, P2 for a meaningful edge or maintenance risk, and P3 only for narrow actionable improvement.
+Omit Finding entries when none exist. `clean` means an applicable pipeline was reviewed with no actionable issue; `skipped` means no applicable artifacts; `blocked` means required scope or authority was unavailable. Deduplicate one underlying issue across pipelines, then order by severity and path. Use P0 for critical security, data, or breakage risk, P1 for normal-path contract failure, P2 for a meaningful edge or maintenance risk, and P3 only for narrow actionable improvement.
 
 Return a report only. Do not edit files, apply fixes, change focus, create RSP artifacts, switch branches, stage, commit, push, open a PR, publish, delete, trigger external review, or approve. Later actions require separate explicit authority.

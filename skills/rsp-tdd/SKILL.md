@@ -13,7 +13,7 @@ Implement one clear behavior test-first and return evidence to its selected Chan
 
 ## Establish the cycle
 
-Require one selected, ready Change, clear observable behavior, test and production mutation authority, and an executable focused check. Read project authority, current worktree state, and the smallest owning production/test seam.
+Require one selected, ready Change, clear observable behavior, test and production mutation authority, and an executable focused check. Read project authority, current worktree state, and the smallest owning production and test seam.
 
 Stop when behavior or acceptance is unclear, mutation authority is missing, an existing symptom has an unexplained cause, the execution environment is unavailable, or a baseline failure cannot be separated. Return the same Change, evidence, and one needed next action.
 

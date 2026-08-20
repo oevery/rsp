@@ -14,6 +14,48 @@ function firstFixResult(value) {
   return value === 'passed' || value === 'failed' ? value : null
 }
 
+function resourceList(value) {
+  if (!Array.isArray(value) || value.some((item) => {
+    if (typeof item !== 'string' || item.length === 0 || item.startsWith('/'))
+      return true
+    const parts = item.split('/')
+    return parts.length < 3 || parts[1] !== 'references'
+      || parts.some(part => part.length === 0 || part === '.' || part === '..')
+  })) {
+    return null
+  }
+  return [...new Set(value)].sort()
+}
+
+export function projectSkillResourceObservability({ expectedResources, observedResources } = {}) {
+  const expected = resourceList(expectedResources)
+  if (expected === null) {
+    return {
+      expected_resources: null,
+      observed_resources: null,
+      unexpected_resources: null,
+      missing_resources: null,
+    }
+  }
+  const observed = resourceList(observedResources)
+  if (observed === null) {
+    return {
+      expected_resources: expected,
+      observed_resources: null,
+      unexpected_resources: null,
+      missing_resources: null,
+    }
+  }
+  const expectedSet = new Set(expected)
+  const observedSet = new Set(observed)
+  return {
+    expected_resources: expected,
+    observed_resources: observed,
+    unexpected_resources: observed.filter(path => !expectedSet.has(path)),
+    missing_resources: expected.filter(path => !observedSet.has(path)),
+  }
+}
+
 function tokenMeasurements(usage) {
   const input = finiteNumber(usage?.input_tokens)
   const output = finiteNumber(usage?.output_tokens)
@@ -24,7 +66,9 @@ function tokenMeasurements(usage) {
 
 export function projectSkillEvaluationObservability({
   elapsedMs,
+  expectedResources,
   outcome,
+  observedResources,
   outputContract,
   receiptObservations,
   toolCalls,
@@ -60,6 +104,7 @@ export function projectSkillEvaluationObservability({
   const correctionCount = nonNegativeInteger(receiptObservations?.correction_count)
   const workerDispatchCount = nonNegativeInteger(receiptObservations?.worker_dispatch_count)
   const observedFirstFixResult = firstFixResult(receiptObservations?.first_fix_result)
+  const resources = projectSkillResourceObservability({ expectedResources, observedResources })
   const measurements = {
     corrections: correctionCount,
     first_fix_result: observedFirstFixResult,
@@ -81,6 +126,9 @@ export function projectSkillEvaluationObservability({
     ...(tokens.input === null ? ['input-token count is unavailable'] : []),
     ...(tokens.output === null ? ['output-token count is unavailable'] : []),
     ...(tokens.total === null ? ['total-token count is unavailable'] : []),
+    ...(resources.expected_resources !== null && resources.observed_resources === null
+      ? ['reference-load observation is unavailable']
+      : []),
   ]
   return {
     dimensions: {
@@ -89,6 +137,7 @@ export function projectSkillEvaluationObservability({
       boundary,
       task_result: taskResult,
     },
+    resources,
     measurements,
     omissions,
   }
