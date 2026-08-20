@@ -278,6 +278,8 @@ describe('rsp-manage research candidate', () => {
         'src/header.mjs',
         'src/retry.mjs',
       ])
+      expect(prepared.manifest.expected_output).not.toContain('two worker dispatches')
+      expect(prepared.manifest.provider_expectations?.worker_dispatch_count).toEqual({ min: 2, max: 2 })
     }
   })
 

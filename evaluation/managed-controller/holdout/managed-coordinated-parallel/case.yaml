@@ -38,7 +38,6 @@ expected_output:
   - selected
   - coordinated
   - parallel-wave
-  - two worker dispatches
   - header
   - retry
   - npm test

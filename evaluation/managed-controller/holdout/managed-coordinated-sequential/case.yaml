@@ -38,7 +38,6 @@ expected_output:
   - selected
   - coordinated
   - sequential
-  - two worker dispatches
   - header
   - retry
   - npm test
