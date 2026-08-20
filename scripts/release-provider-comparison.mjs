@@ -287,6 +287,44 @@ function percentageDelta(baseline, candidate) {
     : rounded(((candidate / baseline) - 1) * 100)
 }
 
+function summarizePairedDeltas(eligiblePairs) {
+  const fields = {
+    input_tokens: run => run.measurements.tokens.input,
+    cached_input_tokens: run => run.measurements.tokens.cached_input,
+    uncached_input_tokens: run => run.measurements.tokens.uncached_input,
+    output_tokens: run => run.measurements.tokens.output,
+    total_tokens: run => run.measurements.tokens.total,
+    tool_calls: run => run.measurements.tool_calls,
+    tool_output_bytes: run => run.measurements.tool_output_bytes,
+    model_invocations: run => run.measurements.model_invocations,
+    elapsed_ms: run => run.measurements.elapsed_ms,
+  }
+  return Object.fromEntries(Object.entries(fields).map(([name, select]) => {
+    const pairs = eligiblePairs.map((pair) => {
+      const baseline = pair.find(run => run.arm === 'baseline')
+      const candidate = pair.find(run => run.arm === 'candidate')
+      return {
+        pairAttempt: baseline?.pairAttempt ?? candidate?.pairAttempt ?? baseline?.repetition ?? candidate?.repetition,
+        targetPair: baseline?.targetPair ?? candidate?.targetPair ?? baseline?.repetition ?? candidate?.repetition,
+        deltaPct: percentageDelta(
+          finiteMeasurement(baseline ? select(baseline) : null),
+          finiteMeasurement(candidate ? select(candidate) : null),
+        ),
+      }
+    })
+    const values = pairs.map(pair => pair.deltaPct)
+    if (values.length === 0 || values.includes(null))
+      return [name, { pairs, median: null, min: null, max: null, range: null }]
+    return [name, {
+      pairs,
+      median: rounded(median(values)),
+      min: Math.min(...values),
+      max: Math.max(...values),
+      range: rounded(Math.max(...values) - Math.min(...values)),
+    }]
+  }))
+}
+
 export function createReleaseProviderComparisonSummary(plan, runs, refreshedPlan = plan) {
   const pairMap = new Map()
   for (const run of runs) {
@@ -354,6 +392,7 @@ export function createReleaseProviderComparisonSummary(plan, runs, refreshedPlan
     name,
     percentageDelta(baseline[name].median, candidate[name].median),
   ]))
+  const pairedDeltaPct = summarizePairedDeltas(eligiblePairs)
   let verdict = 'passed'
   if (identityIssues.length > 0 || correctnessFailed)
     verdict = 'failed'
@@ -391,6 +430,7 @@ export function createReleaseProviderComparisonSummary(plan, runs, refreshedPlan
       baseline,
       candidate,
       deltaPct: deltas,
+      pairedDeltaPct,
       interpretation: 'diagnostic-only; correctness and boundary evidence take precedence',
     },
     runs,
@@ -433,6 +473,19 @@ export function renderReleaseProviderComparisonMarkdown(summary) {
   }
   lines.push(
     '',
+    '## Paired deltas',
+    '',
+    '| Metric | Pair deltas | Median | Min | Max | Range |',
+    '| --- | --- | ---: | ---: | ---: | ---: |',
+  )
+  for (const [metric, paired] of Object.entries(summary.efficiency.pairedDeltaPct)) {
+    const values = paired.pairs
+      .map(pair => `${pair.targetPair}:${pair.deltaPct === null ? 'unavailable' : `${pair.deltaPct}%`}`)
+      .join(', ') || 'unavailable'
+    lines.push(`| ${metric} | ${values} | ${paired.median === null ? 'unavailable' : `${paired.median}%`} | ${paired.min === null ? 'unavailable' : `${paired.min}%`} | ${paired.max === null ? 'unavailable' : `${paired.max}%`} | ${paired.range === null ? 'unavailable' : `${paired.range}%`} |`)
+  }
+  lines.push(
+    '',
     '## Infrastructure Quality',
     '',
     `- Attempted pairs: ${summary.infrastructure.attemptedPairs}`,
@@ -447,6 +500,17 @@ export function renderReleaseProviderComparisonMarkdown(summary) {
   )
   for (const run of summary.runs) {
     lines.push(`| ${run.pairAttempt ?? run.repetition} | ${run.targetPair ?? run.repetition} | ${run.position ?? 'unavailable'} | ${run.arm} | ${runClassification(run)} | ${run.outcome} | ${run.failure ?? 'none'} | ${run.measurements.tokens.total ?? 'unavailable'} | ${run.measurements.tool_calls ?? 'unavailable'} | ${run.measurements.elapsed_ms ?? 'unavailable'} ms |`)
+  }
+  lines.push(
+    '',
+    '## Agent-reported observations',
+    '',
+    '| Pair attempt | Arm | Trigger | First fix | Corrections | Worker dispatches |',
+    '| ---: | --- | --- | --- | ---: | ---: |',
+  )
+  for (const run of summary.runs) {
+    const observations = run.agent_reported?.observations
+    lines.push(`| ${run.pairAttempt ?? run.repetition} | ${run.arm} | ${observations?.trigger?.status ?? 'unavailable'} | ${observations?.first_fix_result ?? 'unavailable'} | ${observations?.correction_count ?? 'unavailable'} | ${observations?.worker_dispatch_count ?? 'unavailable'} |`)
   }
   lines.push('', '## Omissions', '')
   for (const omission of summary.omissions)
@@ -465,6 +529,7 @@ function createRunDirectory(outputRoot, plan) {
 
 function sanitizedRun(arm, schedule, summary, metadata) {
   const observation = summary.observability
+  const agentReported = summary.agent_reported
   const observedInfrastructure = metadata.events?.infrastructure
   const timedOut = metadata.timed_out === true
   const contaminated = observedInfrastructure?.status === 'contaminated'
@@ -483,12 +548,13 @@ function sanitizedRun(arm, schedule, summary, metadata) {
     compositionSha256: metadata.composition?.installed_before?.hash ?? null,
     contractSha256: metadata.contract_sha256 ?? null,
     observationSha256: summary.observation_sha256,
+    agent_reported: agentReported,
     dimensions: observation.dimensions,
     resources: observation.resources,
     measurements: {
-      corrections: finiteMeasurement(observation.measurements.corrections),
-      first_fix_result: observation.measurements.first_fix_result,
-      worker_dispatch_count: finiteMeasurement(observation.measurements.worker_dispatch_count),
+      corrections: finiteMeasurement(agentReported?.observations.correction_count ?? observation.measurements.corrections),
+      first_fix_result: agentReported?.observations.first_fix_result ?? observation.measurements.first_fix_result,
+      worker_dispatch_count: finiteMeasurement(agentReported?.observations.worker_dispatch_count ?? observation.measurements.worker_dispatch_count),
       tool_calls: finiteMeasurement(observation.measurements.tool_calls),
       tool_output_bytes: finiteMeasurement(observation.measurements.tool_output_bytes),
       model_invocations: finiteMeasurement(observation.measurements.model_invocations),

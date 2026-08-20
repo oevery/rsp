@@ -111,6 +111,7 @@ export interface ManagedControllerBetaRunSummary {
   output_contract: ManagedControllerBetaRunMetadata['output']
   recovery_contract: unknown
   unauthorized_paths: string[]
+  agent_reported: ManagedControllerBetaRunMetadata['agent_reported']
   evaluation_receipt: ManagedControllerBetaRunMetadata['evaluation_receipt']
   observation_sha256: string | null
   observability: ManagedControllerBetaObservability

@@ -264,6 +264,7 @@ describe('managed-controller beta evidence', () => {
       'output_contract',
       'recovery_contract',
       'unauthorized_paths',
+      'agent_reported',
       'evaluation_receipt',
       'observation_sha256',
       'observability',
@@ -427,18 +428,75 @@ describe('managed-controller beta evidence', () => {
     expect(metadata.observation_sha256).toMatch(/^[a-f0-9]{64}$/)
     expect(metadata.evaluation_receipt).toBeNull()
     expect(metadata.receipt_observations).toBeNull()
-    expect(summary.evaluation_receipt).toBeNull()
+    expect(summary.evaluation_receipt).toEqual(metadata.agent_reported?.evaluation_receipt)
     expect(summary.observation_sha256).toBe(metadata.observation_sha256)
     expect(metadata.agent_reported?.observations).toMatchObject({
       first_fix_result: 'passed',
       worker_dispatch_count: 2,
     })
-    expect(summary.first_fix_result).toBeNull()
-    expect(summary.worker_dispatch_count).toBeNull()
+    expect(summary.first_fix_result).toBe('passed')
+    expect(summary.worker_dispatch_count).toBe(2)
+    expect(summary.agent_reported).toEqual(metadata.agent_reported)
     expect(summary.observability.dimensions.trigger.status).toBe('not-observed')
     expect(summary.observability.host_observed?.worker_lifecycle.dispatch_count).toBeNull()
     expect(existsSync(join(produced.paths.workspace, '.rsp-evaluation-receipt.json'))).toBe(false)
     expect(produced.worktree.changed_paths).not.toContain('.rsp-evaluation-receipt.json')
+  })
+
+  it('rejects a mismatched agent-reported receipt hash', () => {
+    const plan = loadManagedControllerBetaPlan(root)
+    const observability = {
+      dimensions: {
+        trigger: { status: 'not-observed' as const, evidence: null },
+        compliance: { status: 'passed' as const, evidence: { expected_missing: [] } },
+        boundary: { status: 'passed' as const, evidence: { forbidden_present: [], unauthorized_paths: [] } },
+        task_result: { status: 'passed' as const, evidence: { outcome: 'passed' } },
+      },
+      resources: { expected_resources: null, observed_resources: null, unexpected_resources: null, missing_resources: null },
+      measurements: {
+        corrections: null,
+        first_fix_result: null,
+        worker_dispatch_count: null,
+        tool_calls: 1,
+        model_invocations: null,
+        tool_output_bytes: null,
+        elapsed_ms: 10,
+        tokens: { cache_write_input: null, cached_input: null, input: 1, output: 1, reasoning_output: null, total: 2, uncached_input: null },
+      },
+      omissions: ['trigger observation is unavailable', 'correction count is unavailable', 'first-fix result is unavailable', 'worker dispatch count is unavailable', 'model-invocation count is unavailable', 'tool-output byte count is unavailable'],
+    }
+    const observations = {
+      trigger: { status: 'passed' as const },
+      correction_count: 0,
+      first_fix_result: 'passed' as const,
+      worker_dispatch_count: 1,
+    }
+
+    expect(() => summarizeManagedControllerBetaRun(plan, {
+      agent_reported: {
+        evaluation_receipt: {
+          case_id: plan.case,
+          composition_sha256: plan.product_composition.hash,
+          contract_sha256: plan.holdout_manifest_sha256,
+          receipt_sha256: '0'.repeat(64),
+        },
+        observations,
+      },
+      case_id: plan.case,
+      contract_sha256: plan.holdout_manifest_sha256,
+      variant: 'product',
+      result: 'passed',
+      duration_ms: 10,
+      events: { tool_calls: 1 },
+      output: { expected_missing: [], forbidden_present: [] },
+      composition: { installed_before: plan.product_composition },
+      evaluation_receipt: null,
+      receipt_observations: null,
+      observation_sha256: hashSkillEvaluationValue(observability),
+      observability,
+      verification: { passed: true },
+      worktree: { unauthorized_paths: [] },
+    }, 'done')).toThrow('agent-reported receipt hash does not match its content')
   })
 
   it('records unavailable model execution without requiring a final response', ({ onTestFinished }) => {

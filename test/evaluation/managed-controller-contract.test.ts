@@ -1180,6 +1180,68 @@ describe('rsp-manage product Skill', () => {
     })
   })
 
+  it('classifies a structured failed worker dispatch as runtime contamination', () => {
+    const raw = JSON.stringify({
+      type: 'item.completed',
+      item: {
+        type: 'collab_tool_call',
+        tool: 'spawn_agent',
+        receiver_thread_ids: [],
+        status: 'failed',
+      },
+    })
+
+    expect(summarizeManagedControllerEvents(raw)).toMatchObject({
+      infrastructure: {
+        categories: ['worker-runtime-unavailable'],
+        status: 'contaminated',
+      },
+      tool_calls: 0,
+      worker_lifecycle: { dispatch_count: null },
+    })
+  })
+
+  it('does not classify invalid worker arguments or cancellation as runtime contamination', () => {
+    const raw = [
+      {
+        type: 'item.completed',
+        item: {
+          type: 'collab_tool_call',
+          tool: 'send_input',
+          status: 'failed',
+          error: { code: 'INVALID_ARGUMENT', message: 'unknown worker id' },
+        },
+      },
+      {
+        type: 'item.completed',
+        item: { type: 'collab_tool_call', tool: 'wait', status: 'cancelled' },
+      },
+    ].map(event => JSON.stringify(event)).join('\n')
+
+    expect(summarizeManagedControllerEvents(raw).infrastructure).toEqual({
+      categories: [],
+      retry_count: 0,
+      status: 'no-contamination-observed',
+    })
+  })
+
+  it('classifies an explicit worker-runtime unavailable category as contamination', () => {
+    const raw = JSON.stringify({
+      type: 'item.completed',
+      item: {
+        type: 'collab_tool_call',
+        tool: 'wait',
+        status: 'failed',
+        error: { category: 'worker_runtime_unavailable' },
+      },
+    })
+
+    expect(summarizeManagedControllerEvents(raw).infrastructure).toMatchObject({
+      categories: ['worker-runtime-unavailable'],
+      status: 'contaminated',
+    })
+  })
+
   it('keeps agent-reported dispatch separate from host-observed worker lifecycle', () => {
     const raw = [
       { type: 'item.completed', item: { type: 'tool_call', name: 'multi_agent_v1__spawn_agent', result: { agent_id: 'worker-1', status: 'created' } } },

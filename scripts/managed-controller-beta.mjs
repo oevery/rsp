@@ -256,8 +256,9 @@ function hasUnavailableCapabilityError(eventsPath) {
   return false
 }
 
-function producerObservability(plan, metadata) {
+function producerEvidence(plan, metadata) {
   const hasProducerEvidence = metadata.observability !== undefined
+    || metadata.agent_reported !== undefined
     || metadata.evaluation_receipt !== undefined
     || metadata.observation_sha256 !== undefined
     || metadata.receipt_observations !== undefined
@@ -274,8 +275,40 @@ function producerObservability(plan, metadata) {
     throw new Error('managed-controller producer contract does not match the beta plan')
   if (hashSkillEvaluationValue(metadata.observability) !== metadata.observation_sha256)
     throw new Error('managed-controller producer observation hash does not match its content')
-  if (metadata.evaluation_receipt === null && metadata.receipt_observations === null)
-    return validateSkillEvaluationReceiptObservability(null, metadata.observability, 'managed-controller producer')
+  const reported = metadata.agent_reported
+  if (reported !== undefined && reported !== null) {
+    if (!reported.evaluation_receipt || !reported.observations)
+      throw new Error('managed-controller producer agent-reported evidence is incomplete')
+    const receipt = validateSkillEvaluationReceipt({
+      case_id: reported.evaluation_receipt.case_id,
+      composition_sha256: reported.evaluation_receipt.composition_sha256,
+      contract_sha256: reported.evaluation_receipt.contract_sha256,
+      observations: reported.observations,
+    }, {
+      caseId: plan.case,
+      compositionSha256: expectedComposition,
+      contractSha256: plan.holdout_manifest_sha256,
+    })
+    if (hashSkillEvaluationValue(receipt) !== reported.evaluation_receipt.receipt_sha256)
+      throw new Error('managed-controller producer agent-reported receipt hash does not match its content')
+    return {
+      agentReported: {
+        evaluation_receipt: reported.evaluation_receipt,
+        observations: receipt.observations,
+      },
+      observability: validateSkillEvaluationReceiptObservability(
+        null,
+        metadata.observability,
+        'managed-controller producer',
+      ),
+    }
+  }
+  if (metadata.evaluation_receipt === null && metadata.receipt_observations === null) {
+    return {
+      agentReported: null,
+      observability: validateSkillEvaluationReceiptObservability(null, metadata.observability, 'managed-controller producer'),
+    }
+  }
   if (!metadata.evaluation_receipt || !metadata.receipt_observations)
     throw new Error('managed-controller producer observability is missing its evaluation receipt')
   const receipt = validateSkillEvaluationReceipt({
@@ -290,11 +323,17 @@ function producerObservability(plan, metadata) {
   })
   if (hashSkillEvaluationValue(receipt) !== metadata.evaluation_receipt.receipt_sha256)
     throw new Error('managed-controller producer receipt hash does not match its content')
-  return validateSkillEvaluationReceiptObservability(
-    receipt.observations,
-    metadata.observability,
-    'managed-controller producer',
-  )
+  return {
+    agentReported: {
+      evaluation_receipt: metadata.evaluation_receipt,
+      observations: receipt.observations,
+    },
+    observability: validateSkillEvaluationReceiptObservability(
+      receipt.observations,
+      metadata.observability,
+      'managed-controller producer',
+    ),
+  }
 }
 
 export function summarizeManagedControllerBetaRun(plan, metadata, final) {
@@ -304,8 +343,10 @@ export function summarizeManagedControllerBetaRun(plan, metadata, final) {
   const receiverBoundary = /\breceiver\b/iu.test(final)
     && !/receiver-device acceptance passed/iu.test(final)
   const outcome = capabilityUnavailable ? 'unavailable' : metadata.result
-  const receiptObservations = metadata.receipt_observations
-  const producerObservation = producerObservability(plan, metadata)
+  const producer = producerEvidence(plan, metadata)
+  const receiptObservations = capabilityUnavailable
+    ? null
+    : producer?.agentReported?.observations ?? metadata.receipt_observations
   const observability = capabilityUnavailable
     ? projectSkillEvaluationObservability({
         elapsedMs: metadata.duration_ms,
@@ -316,7 +357,7 @@ export function summarizeManagedControllerBetaRun(plan, metadata, final) {
         unauthorizedPaths: metadata.worktree?.unauthorized_paths,
         usage: metadata.events?.usage,
       })
-    : producerObservation ?? projectSkillEvaluationObservability({
+    : producer?.observability ?? projectSkillEvaluationObservability({
       elapsedMs: metadata.duration_ms,
       outcome,
       outputContract: metadata.output,
@@ -331,8 +372,10 @@ export function summarizeManagedControllerBetaRun(plan, metadata, final) {
     completion: capabilityUnavailable
       ? 'not-observed'
       : metadata.result === 'passed' ? 'contract-passed' : 'contract-failed',
-    first_fix_result: observability.measurements.first_fix_result,
-    worker_dispatch_count: observability.measurements.worker_dispatch_count,
+    first_fix_result: receiptObservations?.first_fix_result
+      ?? observability.measurements.first_fix_result,
+    worker_dispatch_count: receiptObservations?.worker_dispatch_count
+      ?? observability.measurements.worker_dispatch_count,
     tool_calls: metadata.events?.tool_calls ?? null,
     verification_rounds: {
       agent_observed: agentVerificationRounds,
@@ -356,7 +399,10 @@ export function summarizeManagedControllerBetaRun(plan, metadata, final) {
     output_contract: metadata.output,
     recovery_contract: metadata.recovery ?? null,
     unauthorized_paths: metadata.worktree?.unauthorized_paths ?? [],
-    evaluation_receipt: metadata.evaluation_receipt ?? null,
+    agent_reported: capabilityUnavailable ? null : producer?.agentReported ?? null,
+    evaluation_receipt: capabilityUnavailable
+      ? null
+      : producer?.agentReported?.evaluation_receipt ?? metadata.evaluation_receipt ?? null,
     observation_sha256: capabilityUnavailable
       ? hashSkillEvaluationValue(observability)
       : metadata.observation_sha256 ?? null,
@@ -454,6 +500,7 @@ export async function runManagedControllerBeta({
           output_contract: null,
           recovery_contract: null,
           unauthorized_paths: [],
+          agent_reported: null,
           evaluation_receipt: null,
           observation_sha256: null,
           observability: projectSkillEvaluationObservability({ outcome: 'not-run' }),

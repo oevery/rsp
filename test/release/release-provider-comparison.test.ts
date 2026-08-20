@@ -203,7 +203,23 @@ describe('release provider comparison', () => {
   it('reports repeated median token deltas and arm noise without making an efficiency gate', () => {
     const plan = buildReleaseProviderComparisonPlan(root, { baselineRef: 'v3.2.0', repetitions: 3 })
     const runs = [
-      syntheticRun(plan, 'baseline', 1, 100),
+      {
+        ...syntheticRun(plan, 'baseline', 1, 100),
+        agent_reported: {
+          evaluation_receipt: {
+            case_id: plan.case,
+            composition_sha256: plan.baseline.composition.hash,
+            contract_sha256: plan.identities.contractSha256,
+            receipt_sha256: 'a'.repeat(64),
+          },
+          observations: {
+            trigger: { status: 'passed' },
+            first_fix_result: 'passed',
+            correction_count: 0,
+            worker_dispatch_count: 1,
+          },
+        },
+      },
       syntheticRun(plan, 'candidate', 1, 120),
       syntheticRun(plan, 'baseline', 2, 110),
       syntheticRun(plan, 'candidate', 2, 100),
@@ -221,8 +237,24 @@ describe('release provider comparison', () => {
       baseline: { total_tokens: { median: 100, min: 90, max: 110, relativeRangePct: 20 } },
       candidate: { total_tokens: { median: 110, min: 100, max: 120, relativeRangePct: 18.18 } },
       deltaPct: { total_tokens: 10 },
+      pairedDeltaPct: {
+        total_tokens: {
+          median: 20,
+          min: -9.09,
+          max: 22.22,
+          range: 31.31,
+          pairs: [
+            { targetPair: 1, deltaPct: 20 },
+            { targetPair: 2, deltaPct: -9.09 },
+            { targetPair: 3, deltaPct: 22.22 },
+          ],
+        },
+      },
     })
     expect(markdown).toContain('| total_tokens | 100 | 110 | 10% | 20% | 18.18% |')
+    expect(markdown).toContain('| total_tokens | 1:20%, 2:-9.09%, 3:22.22% | 20% | -9.09% | 22.22% | 31.31% |')
+    expect(markdown).toContain('## Agent-reported observations')
+    expect(markdown).toContain('| 1 | baseline | passed | passed | 0 | 1 |')
     expect(JSON.stringify(summary)).not.toMatch(/"(?:model|provider|session|settings|workspace)"s*:/u)
   })
 
@@ -312,6 +344,10 @@ describe('release provider comparison', () => {
     expect(summary.verdict).toBe('incomplete')
     expect(summary.efficiency.status).toBe('not-conclusive')
     expect(summary.omissions).toContain('one or more required measurements are unavailable')
+    expect(summary.efficiency.pairedDeltaPct.total_tokens.median).toBeNull()
+    expect(summary.efficiency.pairedDeltaPct.total_tokens.pairs).toContainEqual(
+      expect.objectContaining({ targetPair: 2, deltaPct: null }),
+    )
   })
 
   it('keeps unavailable provider execution distinct from a correctness failure', () => {

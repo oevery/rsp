@@ -393,16 +393,18 @@ export function summarizeManagedControllerEvents(raw, { installedSkills = [], wo
               forbiddenActions.publication += 1
           }
         }
-        if (event.item?.type === 'mcp_tool_call' || event.item?.type === 'tool_call') {
-          const toolName = managedWorkerToolName(event.item)
-          const phase = managedWorkerToolPhase(toolName, event.item)
-          if (phase && managedWorkerPhaseObserved(phase, event.item)) {
-            observeLifecyclePhase(lifecycleCounts, lifecycleOrder, phase, toolName, eventIndex)
-            if (phase === 'delivery' && managedWorkerAdmissionObserved(event.item))
-              observeLifecyclePhase(lifecycleCounts, lifecycleOrder, 'admission', toolName, eventIndex)
-            if (phase === 'wait' && managedWorkerSettlementObserved(event.item))
-              observeLifecyclePhase(lifecycleCounts, lifecycleOrder, 'settlement', toolName, eventIndex)
-          }
+      }
+      if (event.type === 'item.completed' && ['collab_tool_call', 'mcp_tool_call', 'tool_call'].includes(event.item?.type)) {
+        const toolName = managedWorkerToolName(event.item)
+        const phase = managedWorkerToolPhase(toolName, event.item)
+        if (phase && managedWorkerRuntimeUnavailable(phase, event.item))
+          infrastructureCategories.add('worker-runtime-unavailable')
+        if (phase && managedWorkerPhaseObserved(phase, event.item)) {
+          observeLifecyclePhase(lifecycleCounts, lifecycleOrder, phase, toolName, eventIndex)
+          if (phase === 'delivery' && managedWorkerAdmissionObserved(event.item))
+            observeLifecyclePhase(lifecycleCounts, lifecycleOrder, 'admission', toolName, eventIndex)
+          if (phase === 'wait' && managedWorkerSettlementObserved(event.item))
+            observeLifecyclePhase(lifecycleCounts, lifecycleOrder, 'settlement', toolName, eventIndex)
         }
       }
       if (event.type === 'turn.completed' && event.usage)
@@ -470,6 +472,36 @@ function managedWorkerToolEvidence(item) {
 
 function managedWorkerToolSucceeded(item) {
   return !item.error && !['failed', 'errored', 'cancelled', 'canceled'].includes(String(item.status ?? '').toLowerCase())
+}
+
+function managedWorkerRuntimeUnavailable(phase, item) {
+  if (!['delivery', 'dispatch', 'wait'].includes(phase) || managedWorkerToolSucceeded(item))
+    return false
+  if (phase === 'dispatch'
+    && item.type === 'collab_tool_call'
+    && ['failed', 'errored'].includes(String(item.status ?? '').toLowerCase())
+    && Array.isArray(item.receiver_thread_ids)
+    && item.receiver_thread_ids.length === 0) {
+    return true
+  }
+  return hasManagedWorkerRuntimeUnavailableCategory(
+    item.error ?? item.structuredContent ?? item.structured_content ?? item.result ?? item.output ?? item.content,
+  )
+}
+
+function hasManagedWorkerRuntimeUnavailableCategory(value) {
+  if (Array.isArray(value))
+    return value.some(hasManagedWorkerRuntimeUnavailableCategory)
+  if (!value || typeof value !== 'object')
+    return false
+  return Object.entries(value).some(([key, nested]) => {
+    if (['category', 'code', 'reason', 'status', 'type'].includes(key.toLowerCase())
+      && typeof nested === 'string'
+      && /^(?:runtime[_ -]?unavailable|unavailable|worker[_ -]?(?:runtime[_ -]?)?unavailable)$/iu.test(nested)) {
+      return true
+    }
+    return hasManagedWorkerRuntimeUnavailableCategory(nested)
+  })
 }
 
 function managedWorkerToolArguments(item) {
