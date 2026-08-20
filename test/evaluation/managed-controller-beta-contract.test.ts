@@ -475,6 +475,35 @@ describe('managed-controller beta evidence', () => {
     expect(produced.worktree.changed_paths).not.toContain('.rsp-evaluation-receipt.json')
   })
 
+  it('keeps worker-capable provider runs persistent while zero-worker runs stay ephemeral', async ({ onTestFinished }) => {
+    const outputRoot = mkdtempSync(join(tmpdir(), 'rsp-manage-provider-session-mode-'))
+    onTestFinished(() => rmSync(outputRoot, { force: true, recursive: true }))
+    const codexBin = join(root, 'evaluation', 'skill-behavior', 'fake-codex.mjs')
+    const common = {
+      codexBin,
+      effort: 'medium',
+      model: 'test-model',
+      outputRoot,
+      root,
+      timeoutMs: 5000,
+      variant: 'product' as const,
+    }
+
+    const direct = await runManagedControllerEvaluation({
+      ...common,
+      caseId: 'auto-integrated-direct',
+      env: { ...process.env, FAKE_CODEX_EPHEMERAL_MODE: 'required' },
+    })
+    const delegated = await runManagedControllerEvaluation({
+      ...common,
+      caseId: 'managed-delegated-integrated',
+      env: { ...process.env, FAKE_CODEX_EPHEMERAL_MODE: 'forbidden' },
+    })
+
+    expect(direct.exit_code).toBe(0)
+    expect(delegated.exit_code).toBe(0)
+  })
+
   it('rejects a mismatched agent-reported receipt hash', () => {
     const plan = loadManagedControllerBetaPlan(root)
     const observability = {

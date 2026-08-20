@@ -18,10 +18,16 @@ if (!outputPath)
 
 const configExpectation = process.env.FAKE_CODEX_CONFIG_MODE
 const ignoresUserConfig = process.argv.includes('--ignore-user-config')
+const ephemeralExpectation = process.env.FAKE_CODEX_EPHEMERAL_MODE
+const isEphemeral = process.argv.includes('--ephemeral')
 if (configExpectation === 'user' && ignoresUserConfig)
   throw new Error('unexpected --ignore-user-config')
 if (configExpectation === 'isolated' && !ignoresUserConfig)
   throw new Error('missing --ignore-user-config')
+if (ephemeralExpectation === 'required' && !isEphemeral)
+  throw new Error('missing --ephemeral')
+if (ephemeralExpectation === 'forbidden' && isEphemeral)
+  throw new Error('unexpected --ephemeral')
 if (configExpectation?.startsWith('provider:')) {
   const provider = configExpectation.slice('provider:'.length)
   if (!process.argv.includes(`model_provider="${provider}"`))

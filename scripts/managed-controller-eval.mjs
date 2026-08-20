@@ -1195,9 +1195,10 @@ export async function runManagedControllerEvaluation({ authFile, caseId, codexBi
         `model_catalog_json=${JSON.stringify(resolve(modelCatalogJson))}`,
       ]
     : []
+  const mayDispatchWorkers = (prepared.manifest.provider_expectations?.worker_dispatch_count.max ?? 0) > 0
   const args = [
     'exec',
-    '--ephemeral',
+    ...(!mayDispatchWorkers ? ['--ephemeral'] : []),
     ...(isolatedUserContext ? ['--ignore-rules'] : []),
     '--sandbox',
     prepared.manifest.sandbox ?? 'workspace-write',
