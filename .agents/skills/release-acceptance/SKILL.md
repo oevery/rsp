@@ -29,11 +29,13 @@ The comparison may consume cases and fake-provider support under `evaluation/`, 
 2. Run the same command without `--plan`, adding the authorized model, effort, provider, and isolation options. Run at least three pairs and do not overlap another acceptance or provider run.
 3. Require correctness, compliance, boundary, and task-result passes before interpreting token, tool-call, or elapsed-time medians, ranges, and deltas. Missing usage, unavailable runs, incomplete pairs, or identity drift never pass. Token reduction alone has no release threshold.
 
+Retain a passed sanitized report for exact-candidate reuse. Final version, changelog, release-note, and migration-only changes do not require another provider execution while baseline and candidate Skill-composition hashes plus contract, fixture, and harness hashes remain exact. Recompute those identities through the plan path only; candidate commit and whole-source fingerprint remain provenance rather than a release-surface invalidation key. Any relevant hash drift, incomplete report, or failed correctness requires a new explicitly authorized comparison.
+
 Retain only the sanitized aggregate report. Provider settings, prompts, sessions, events, and workspaces remain local diagnostics.
 
 ## 3. Exact candidate
 
-Use only after version identity and release surfaces are final and the intended release commit has a clean worktree. Run `mise exec -- pnpm run release:candidate-check`. It checks exact candidate identity first, then runs deterministic acceptance.
+Use only after version identity and release surfaces are final and the intended release commit has a clean worktree. Run `mise exec -- pnpm run release:candidate-check`. It checks exact candidate identity first, deterministically verifies that provider comparison is either unnecessary or covered by a matching retained report, then runs deterministic acceptance. Candidate validation never invokes a provider; missing or stale provider evidence stops with an explicit `release:provider-compare` handoff.
 
 Re-run deterministic acceptance after any source, package inventory, generated output, release metadata, or required-scenario change. Run required PTY, Windows, or provider evidence serially and record unavailable environments as incomplete, never passed.
 

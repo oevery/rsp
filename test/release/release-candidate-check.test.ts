@@ -46,10 +46,14 @@ describe('release candidate check', () => {
 
     expect(publishEntry).toMatch(/(?:^|&&\s*)pnpm run release:candidate-check(?:\s*&&|$)/u)
     expect(candidateEntry).toMatch(/(?:^|&&\s*)node scripts\/release-candidate-check\.mjs(?:\s*&&|$)/u)
+    expect(candidateEntry).toMatch(/(?:^|&&\s*)node scripts\/release-provider-evidence-check\.mjs(?:\s*&&|$)/u)
     expect(candidateEntry).toMatch(/(?:^|&&\s*)pnpm run release:acceptance(?:\s*&&|$)/u)
     const identityIndex = candidateEntry.indexOf('release-candidate-check.mjs')
+    const providerEvidenceIndex = candidateEntry.indexOf('release-provider-evidence-check.mjs')
     const acceptanceIndex = candidateEntry.indexOf('pnpm run release:acceptance')
-    expect(identityIndex).toBeLessThan(acceptanceIndex)
+    expect(identityIndex).toBeLessThan(providerEvidenceIndex)
+    expect(providerEvidenceIndex).toBeLessThan(acceptanceIndex)
+    expect(candidateEntry).not.toContain('release:provider-compare')
   })
 
   it('accepts a clean checkout when the version tag is absent', () => {

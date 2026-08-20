@@ -39,7 +39,7 @@
     "prepare": "pnpm run build",
     "release:acceptance": "node scripts/release-acceptance.mjs",
     "release:provider-compare": "node scripts/release-provider-comparison.mjs",
-    "release:candidate-check": "node scripts/release-candidate-check.mjs && pnpm run release:acceptance",
+    "release:candidate-check": "node scripts/release-candidate-check.mjs && node scripts/release-provider-evidence-check.mjs && pnpm run release:acceptance",
     "skills:security-check": "node scripts/skill-security-preflight.mjs --suppressions skill-security-suppressions.json",
     "prepublishOnly": "pnpm run release:candidate-check",
     "build": "tsup",

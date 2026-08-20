@@ -75,7 +75,7 @@ describe('release acceptance runner', () => {
 
     expect(scripts['release:acceptance']).toBe('node scripts/release-acceptance.mjs')
     expect(scripts['release:provider-compare']).toBe('node scripts/release-provider-comparison.mjs')
-    expect(scripts['release:candidate-check']).toBe('node scripts/release-candidate-check.mjs && pnpm run release:acceptance')
+    expect(scripts['release:candidate-check']).toBe('node scripts/release-candidate-check.mjs && node scripts/release-provider-evidence-check.mjs && pnpm run release:acceptance')
     expect(scripts.prepublishOnly).toBe('pnpm run release:candidate-check')
     expect(Object.keys(scripts).filter(name => name.startsWith('release:')).sort()).toEqual([
       'release:acceptance',
