@@ -71,14 +71,12 @@ describe('verification topology', () => {
       'native-design-composition',
       'rsp-design-behavior',
       'rsp-diagnose',
-      'rsp-implement-behavior',
       'rsp-shape-depth',
       'rsp-tdd-behavior',
       'rsp-tdd-forward',
       'skill-behavior',
       'skill-restraint-eval',
       'skill-routing',
-      'skill-shape',
       'structural-audit',
     ])
   })
