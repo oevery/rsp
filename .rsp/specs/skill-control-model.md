@@ -77,6 +77,7 @@
 
 ## Execution Evidence
 - Specialist Disciplines and managed lanes retain their own exact result schemas. The control model does not replace Diagnose, Inspect, Fix, Verify, Review, or Resolve Findings results with a generic execution enum.
+- Discipline receipt dimensions are orthogonal: Diagnose and Inspect use `result: confirmed | unresolved`; Fix uses `result: changed | no-change`; Verify uses `result: pass | fail | unavailable` plus `evidence_delta: new | none`; every lane independently uses `boundary: unchanged | changed`. `boundary: changed` is never a Discipline result, and value names do not repeat their field meaning.
 - Only a missing optional Discipline Skill may use that Discipline's bounded manual fallback against the same owner. A manual fallback never substitutes for a required managed worker or required independent Verify.
 - Managed execution uses the following transient objects and persists none of them as RSP state:
   - `ExecutionFrame` contains the current goal, WorkOwner or WorkSet, effective authority, comparison baseline, observed execution location, current resource claims, and acceptance surfaces. Manage rederives it from current owners and evidence.

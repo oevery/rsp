@@ -19,9 +19,10 @@ const ASSIGNMENT_IDENTITY = /^\w[\w.:/-]*$/
 const EVALUATION_RECEIPT_PATH = '.rsp-evaluation-receipt.json'
 const WORKER_RECEIPT_PREFIX = 'RSP_WORKER_RECEIPT_JSON='
 const VARIANTS = new Set(['baseline', 'candidate', 'product'])
+const DISCIPLINE_LANES = new Set(['Diagnose', 'Inspect', 'Fix', 'Verify'])
 
 export const MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT = Object.freeze({
-  version: 1,
+  version: 2,
   consumer: 'managed-controller-evaluator',
   transport: { encoding: 'single-line-json', prefix: WORKER_RECEIPT_PREFIX },
   identity: { field: 'assignment', mode: 'exact-echo' },
@@ -41,10 +42,24 @@ export const MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT = Object.freeze({
     },
     worker: 'non-empty string when present',
     independence: 'non-empty string when present',
+    evidence_delta: 'required for Verify and forbidden for every other lane',
+  },
+  lane_results: {
+    Diagnose: ['confirmed', 'unresolved'],
+    Inspect: ['confirmed', 'unresolved'],
+    Fix: ['changed', 'no-change'],
+    Verify: ['pass', 'fail', 'unavailable'],
+  },
+  lane_fields: {
+    Diagnose: { required: [] },
+    Inspect: { required: [] },
+    Fix: { required: [] },
+    Verify: { required: ['evidence_delta'] },
   },
   enums: {
-    boundary: ['changed', 'unchanged'],
-    evidence_status: ['invalid', 'unavailable', 'valid'],
+    boundary: ['unchanged', 'changed'],
+    evidence_delta: ['new', 'none'],
+    evidence_status: ['valid', 'invalid', 'unavailable'],
     release_claim: ['released', 'retained', 'unavailable'],
   },
 })
@@ -928,7 +943,12 @@ function readHoldout(root, caseId) {
       if (assignmentIdentities.has(assignmentIdentity))
         throw new Error(`${caseId}.worker_assignments contains duplicate assignment identity ${assignmentIdentity}`)
       assignmentIdentities.add(assignmentIdentity)
+      if (!DISCIPLINE_LANES.has(assignment.lane))
+        throw new Error(`${caseId}.worker_assignments[${index}].lane must be Diagnose, Inspect, Fix, or Verify`)
       assertStringArray(assignment.allowed_results, `${caseId}.worker_assignments[${index}].allowed_results`)
+      const canonicalResults = MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT.lane_results[assignment.lane]
+      if (JSON.stringify(assignment.allowed_results) !== JSON.stringify(canonicalResults))
+        throw new Error(`${caseId}.worker_assignments[${index}].allowed_results must match the ${assignment.lane} result domain`)
       assertStringArray(assignment.allowed_changes, `${caseId}.worker_assignments[${index}].allowed_changes`)
       assertStringArray(assignment.allowed_commands, `${caseId}.worker_assignments[${index}].allowed_commands`)
     }
@@ -1163,6 +1183,7 @@ function validWorkerReceiptShape(receipt) {
   const allowedFields = new Set([
     ...MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT.required_fields,
     ...MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT.optional_fields,
+    'evidence_delta',
   ])
   if (MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT.required_fields.some(field => !Object.hasOwn(receipt, field))
     || Object.keys(receipt).some(field => !allowedFields.has(field))) {
@@ -1254,6 +1275,11 @@ export function scoreManagedWorkerAssignments(manifest, events) {
     const assignmentViolations = []
     if (!assignment.allowed_results.includes(receipt.result))
       assignmentViolations.push({ assignment: assignment.id, kind: 'invalid-result', value: receipt.result })
+    const requiresEvidenceDelta = MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT.lane_fields[assignment.lane].required.includes('evidence_delta')
+    if (requiresEvidenceDelta && !MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT.enums.evidence_delta.includes(receipt.evidence_delta))
+      assignmentViolations.push({ assignment: assignment.id, kind: 'invalid-evidence-delta', value: receipt.evidence_delta ?? null })
+    if (!requiresEvidenceDelta && Object.hasOwn(receipt, 'evidence_delta'))
+      assignmentViolations.push({ assignment: assignment.id, kind: 'unexpected-evidence-delta', value: receipt.evidence_delta })
     for (const path of receipt.changed_paths) {
       if ((manifest.manager_only_changes ?? []).some(pattern => matchesAuthorizedPath(pattern, path)))
         assignmentViolations.push({ assignment: assignment.id, kind: 'manager-only-path', value: path })
@@ -1435,6 +1461,7 @@ export function prepareManagedControllerRun({ caseId, outputRoot, root, skillSou
             assignments: manifest.worker_assignments.map(assignment => ({
               policy_id: assignment.id,
               assignment_identity: workerAssignmentIdentity(assignment),
+              lane: assignment.lane,
               allowed_results: assignment.allowed_results,
             })),
           })}. Each settled worker must return exactly one matching transport. Do not infer or repair a missing or invalid worker receipt.`,

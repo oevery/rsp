@@ -4,7 +4,7 @@ description: Verify one selected RSP Change against its declared evidence bounda
 license: MIT
 metadata:
   author: oevery
-  version: "2026.08.16.2"
+  version: "2026.08.21.1"
 ---
 
 # RSP Verify
@@ -28,12 +28,10 @@ Reuse the invoking Core or Manage contract. Core owns the single outer `ControlO
 Return exactly one canonical result:
 
 - `pass`: every named required check passed within the declared boundary.
-- `failed-with-new-evidence`: a check failed and produced evidence that changes the next diagnosis or correction.
-- `failed-without-new-evidence`: a check failed without materially new evidence.
+- `fail`: at least one named required check failed.
 - `unavailable`: a required tool, dependency, service, credential, or environment could not be used.
-- `boundary-changed`: the observed owner, paths, baseline, behavior, interface, scope, or authority no longer matches the declared boundary.
 
-Every result includes the WorkRef, lane objective, effective authority, named checks, comparison baseline, observed diff boundary, decisive evidence, omissions, and stop boundary. Preserve exact result values as machine-facing values; human-facing narration follows the invoking response-language contract.
+Every result includes `evidence_delta: new | none` to state independently whether the pass, failure, or unavailability produced evidence that changes the next diagnosis or correction. It also includes `boundary: unchanged | changed` to state independently whether the observed owner, paths, baseline, behavior, interface, scope, or authority still matches the declared boundary. Include the WorkRef, lane objective, effective authority, named checks, comparison baseline, observed diff boundary, decisive evidence, omissions, and stop boundary. Preserve exact result and field values as machine-facing values; human-facing narration follows the invoking response-language contract.
 
 `pass` proves only the declared verification boundary. It does not prove semantic review, durable writeback, archive readiness, commit eligibility, publication, deployment, approval, or human acceptance, and it does not grant lifecycle, Git, publication, or acceptance authority. Independent worker identity is reported only when the host and invoking Manage contract establish it; Verify must not infer independence from a successful check, a fresh context, or a different execution directory. Long-running verification remains active while its Assignment boundary and stop conditions hold; elapsed time, heartbeat, polling, and progress messages do not change the result.
 

@@ -11,7 +11,7 @@ required_contract:
   - 'accepted required receipts + fresh declared verification → evidence-complete'
   - 'evidence-complete + clean fixed-scope review              → review-clean'
   - Otherwise acceptance is `incomplete`
-  - a required worker that was not created, returned no valid receipt, reported `unavailable` or `boundary-changed`
+  - 'a required worker that was not created, returned no valid receipt, reported `evidence_status: unavailable` or `boundary: changed`'
   - Execution and verification receipts never derive `review-clean`
   - When dispatch cannot satisfy a required worker obligation, apply the AcceptanceDisposition rule above
   - 'return `StopDisposition: capability-unavailable`, keep acceptance `incomplete`, and stop'

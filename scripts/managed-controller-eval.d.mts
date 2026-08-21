@@ -47,6 +47,7 @@ export interface ManagedControllerHoldoutManifest extends ManagedControllerOutpu
   worker_assignments?: Array<{
     id: string
     assignment_identity?: string
+    lane: 'Diagnose' | 'Inspect' | 'Fix' | 'Verify'
     allowed_results: string[]
     allowed_changes: string[]
     allowed_commands: string[]
@@ -69,7 +70,9 @@ export const MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT: {
   required_fields: string[]
   optional_fields: string[]
   field_types: Record<string, unknown>
-  enums: Record<'boundary' | 'evidence_status' | 'release_claim', string[]>
+  lane_results: Record<'Diagnose' | 'Inspect' | 'Fix' | 'Verify', string[]>
+  lane_fields: Record<'Diagnose' | 'Inspect' | 'Fix' | 'Verify', { required: string[] }>
+  enums: Record<'boundary' | 'evidence_delta' | 'evidence_status' | 'release_claim', string[]>
 }
 
 export interface PreparedManagedControllerRun {

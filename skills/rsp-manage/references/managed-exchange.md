@@ -54,6 +54,7 @@ Verification:
   Scope: <covered boundary>
   Outcome: <observed result>
   Omissions: <known omissions>
+Evidence delta: <new | none; Verify only>
 Boundary: <unchanged | changed>
 Evidence status: <valid | invalid | unavailable>
 Release claim: <released | retained | unavailable>
@@ -61,7 +62,7 @@ Worker: <observed worker identity>
 Independence: <established | unavailable>
 ```
 
-Assignment identity, result, changed paths, verification, boundary, evidence status, and release claim are required. The release claim is worker-authored and never substitutes for the host's release observation. Worker identity and independence appear only when observed and applicable. Lane-specific result enums remain owned by Diagnose, Inspect, Fix, or Verify; this envelope never replaces them with one generic result enum. Human-facing narration follows the response language and retains an exact canonical result secondarily when needed. Never parse free-form prose to manufacture a receipt.
+Assignment identity, result, changed paths, verification, boundary, evidence status, and release claim are required. Verify additionally requires `evidence_delta: new | none`; every other lane omits that field. The release claim is worker-authored and never substitutes for the host's release observation. Worker identity and independence appear only when observed and applicable. Lane-specific result enums remain owned by Diagnose, Inspect, Fix, or Verify; this envelope never replaces them with one generic result enum. Human-facing narration follows the response language and retains an exact canonical result secondarily when needed. Never parse free-form prose to manufacture a receipt.
 Manager may reject a WorkerReceipt, but must never author, repair, reconstruct, or substitute one. Manager-authored labels, summaries, or structured output remain controller claims and cannot establish worker provenance.
 
 ## Separate observations, claims, and acceptance

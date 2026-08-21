@@ -175,8 +175,10 @@ describe('rsp Skill contract', () => {
 
     expect(verify).toContain('Run one bounded, read-only verification pass')
     expect(verify).toContain('Do not edit product files')
-    for (const result of ['pass', 'failed-with-new-evidence', 'failed-without-new-evidence', 'unavailable', 'boundary-changed'])
+    for (const result of ['pass', 'fail', 'unavailable'])
       expect(verify).toContain(`\`${result}\``)
+    expect(verify).toContain('`evidence_delta: new | none`')
+    expect(verify).toContain('`boundary: unchanged | changed`')
     expect(verify).toContain('does not prove semantic review')
     expect(verify).toContain('does not grant lifecycle, Git, publication, or acceptance authority')
     expect(manage).toContain('**Verify:** `rsp-verify`; read-only for declared risk or failed correction')

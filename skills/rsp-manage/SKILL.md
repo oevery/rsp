@@ -4,7 +4,7 @@ description: Coordinate one eligible long-running, recovery, or multi-slice RSP 
 license: MIT
 metadata:
   author: oevery
-  version: "2026.08.21.3"
+  version: "2026.08.21.4"
 ---
 
 # RSP Manage
@@ -64,9 +64,9 @@ Before composing or resuming work, validating a `WorkerReceipt`, or deriving `Ac
 
 Prefer the same primary WorkerSession while frame, role, seam, writer, strategy, and evidence remain compatible. Session loss, incompatible boundaries, independence, or a reasoning reset requires a fresh WorkerSession and complete Assignment. Use an `AssignmentDelta` only under the exchange contract's observed same-session inheritance rule. Identity and continuity grant no authority. Token or context cost may choose only between otherwise equally safe and authorized strategies; it never changes authority, acceptance, completion, or a required worker boundary.
 
-- **Diagnose:** `rsp-diagnose`; read-only until a cause or explicit no-cause result. Return `confirmed-same-scope`, `unresolved-same-scope`, or `boundary-changed`, plus decisive evidence and the next safe discriminating check when available.
-- **Inspect:** Manager-only and read-only; parallel only with isolated paths and verification resources. Return `confirmed-same-scope`, `unresolved-same-scope`, or `boundary-changed`, plus one independent evidence packet.
-- **Fix:** `rsp-implement`; sole product writer with explicit in-scope mutation authority. Return `changed-same-scope`, `no-change`, or `boundary-changed`, plus observed worker identity, changed paths, and fresh verification.
+- **Diagnose:** `rsp-diagnose`; read-only until a cause or explicit no-cause result. Return `result: confirmed | unresolved` and `boundary: unchanged | changed`, plus decisive evidence and the next safe discriminating check when available.
+- **Inspect:** Manager-only and read-only; parallel only with isolated paths and verification resources. Return `result: confirmed | unresolved` and `boundary: unchanged | changed`, plus one independent evidence packet.
+- **Fix:** `rsp-implement`; sole product writer with explicit in-scope mutation authority. Return `result: changed | no-change` and `boundary: unchanged | changed`, plus observed worker identity, changed paths, and fresh verification.
 - **Verify:** `rsp-verify`; read-only for declared risk or failed correction. Return the Verify-owned result with observed worker identity and independence status.
 
 Fixed-scope review remains owned by `rsp-review`.
@@ -83,7 +83,7 @@ accepted required receipts + fresh declared verification → evidence-complete
 evidence-complete + clean fixed-scope review              → review-clean
 ```
 
-Otherwise acceptance is `incomplete`. This includes a required worker that was not created, returned no valid receipt, reported `unavailable` or `boundary-changed`, or could not satisfy required independence. Execution and verification receipts never derive `review-clean`; the durable writeback decision never substitutes for review. Controller mutation cannot replace an unavailable required implementation worker, and ordinary Verify cannot satisfy required independent Verify.
+Otherwise acceptance is `incomplete`. This includes a required worker that was not created, returned no valid receipt, reported `evidence_status: unavailable` or `boundary: changed`, or could not satisfy required independence. Execution and verification receipts never derive `review-clean`; the durable writeback decision never substitutes for review. Controller mutation cannot replace an unavailable required implementation worker, and ordinary Verify cannot satisfy required independent Verify.
 Implementation verification, fixed-scope change review, and the durable writeback decision remain separate gates. The first transition above is implementation verification; only the second derives `review-clean`.
 
 Keep transient control, execution, receipt, resource, topology, and chronology data response-only. After validation, persist only accepted outcomes to Tasks, decisive evidence to Verify, and real unresolved dependencies or risks to Blockers. Durable facts or rationale remain owned by the durable writeback decision; do not create another managed-state owner.

@@ -4,7 +4,7 @@ description: Diagnose one selected RSP Change when a reproducible or materially 
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.22.1"
+  version: "2026.08.21.1"
 ---
 
 # RSP Diagnose
@@ -40,6 +40,8 @@ Return:
 - decisive evidence and impact boundary;
 - investigation mutations, if explicitly authorized;
 - exactly one next action.
+
+The result expresses only whether the cause was confirmed. In a managed WorkerReceipt, report whether the declared owner, scope, or authority boundary changed independently as `boundary: unchanged | changed`; never combine either dimension into one result value. Keep the detailed impact boundary above as evidence rather than replacing it with this enum.
 
 For `confirmed`, name one correction entrypoint owned by the same Change; do not apply it. For `unresolved`, name the next discriminating check or blocker. Update that Change's Tasks, Verify, or Blockers only with authority and observed facts. Preserve unrelated work and never infer Git, delivery, publication, or approval authority.
 
