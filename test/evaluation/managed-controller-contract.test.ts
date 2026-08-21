@@ -316,6 +316,9 @@ describe('rsp-manage research candidate', () => {
     expect(parallel.prompt).toContain('one atomic return contract')
     expect(MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT).toMatchObject({
       version: 2,
+      field_semantics: {
+        boundary: expect.stringContaining('in-scope work remains unchanged even when result is changed and changed_paths is non-empty'),
+      },
       lane_results: {
         Diagnose: ['confirmed', 'unresolved'],
         Inspect: ['confirmed', 'unresolved'],
@@ -324,6 +327,7 @@ describe('rsp-manage research candidate', () => {
       },
       lane_fields: { Verify: { required: ['evidence_delta'] } },
     })
+    expect(parallel.prompt).toContain('in-scope work remains unchanged even when result is changed and changed_paths is non-empty')
     expect(parallel.prompt).toContain(JSON.stringify(MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT.enums))
     expect(parallel.prompt).toContain('\"assignment_identity\":\"normalize/header/1\"')
     expect(parallel.prompt).toContain('\"lane\":\"Fix\"')
@@ -1379,8 +1383,8 @@ describe('rsp-manage product Skill', () => {
     }, {
       worker_lifecycle: { dispatch_count: 2 },
       worker_receipts: [
-        { worker_id: 'worker-header', status: 'parsed', receipt: { assignment: 'header', result: 'changed', changed_paths: ['src/header.mjs'], verification: [{ command: 'node --test test/header.test.mjs', scope: 'header', outcome: 'passed', omissions: [] }], boundary: 'unchanged', evidence_status: 'valid', release_claim: 'unavailable' } },
-        { worker_id: 'worker-retry', status: 'parsed', receipt: { assignment: 'retry', result: 'changed', changed_paths: ['src/retry.mjs', '.rsp/changes/normalize-transport-inputs.md'], verification: [{ command: 'node --test test/retry.test.mjs', scope: 'retry', outcome: 'passed', omissions: [] }, { command: 'npm test', scope: 'aggregate', outcome: 'passed', omissions: [] }], boundary: 'unchanged', evidence_status: 'valid', release_claim: 'unavailable' } },
+        { worker_id: 'worker-header', status: 'parsed', error: null, receipt: { assignment: 'header', result: 'changed', changed_paths: ['src/header.mjs'], verification: [{ command: 'node --test test/header.test.mjs', scope: 'header', outcome: 'passed', omissions: [] }], boundary: 'unchanged', evidence_status: 'valid', release_claim: 'unavailable' } },
+        { worker_id: 'worker-retry', status: 'parsed', error: null, receipt: { assignment: 'retry', result: 'changed', changed_paths: ['src/retry.mjs', '.rsp/changes/normalize-transport-inputs.md'], verification: [{ command: 'node --test test/retry.test.mjs', scope: 'retry', outcome: 'passed', omissions: [] }, { command: 'npm test', scope: 'aggregate', outcome: 'passed', omissions: [] }], boundary: 'unchanged', evidence_status: 'valid', release_claim: 'unavailable' } },
       ],
     })
 
@@ -1406,8 +1410,8 @@ describe('rsp-manage product Skill', () => {
       manager_only_commands: ['npm test'],
     }
     const workerReceipts = [
-      { worker_id: 'worker-header', status: 'parsed', error: null, receipt: { assignment: 'header', result: 'changed', changed_paths: ['src/header.mjs'], verification: [{ command: 'node --test test/header.test.mjs', scope: 'header', outcome: 'passed', omissions: [] }], boundary: 'unchanged', evidence_status: 'valid', release_claim: 'unavailable' } },
-      { worker_id: 'worker-retry', status: 'parsed', error: null, receipt: { assignment: 'retry', result: 'changed', changed_paths: ['src/retry.mjs'], verification: [{ command: 'node --test test/retry.test.mjs', scope: 'retry', outcome: 'passed', omissions: [] }], boundary: 'unchanged', evidence_status: 'valid', release_claim: 'unavailable' } },
+      { worker_id: 'worker-header', status: 'parsed' as const, error: null, receipt: { assignment: 'header', result: 'changed', changed_paths: ['src/header.mjs'], verification: [{ command: 'node --test test/header.test.mjs', scope: 'header', outcome: 'passed', omissions: [] }], boundary: 'unchanged', evidence_status: 'valid', release_claim: 'unavailable' } },
+      { worker_id: 'worker-retry', status: 'parsed' as const, error: null, receipt: { assignment: 'retry', result: 'changed', changed_paths: ['src/retry.mjs'], verification: [{ command: 'node --test test/retry.test.mjs', scope: 'retry', outcome: 'passed', omissions: [] }], boundary: 'unchanged', evidence_status: 'valid', release_claim: 'unavailable' } },
     ]
 
     expect(scoreManagedWorkerAssignments(manifest, {
@@ -1528,6 +1532,7 @@ describe('rsp-manage product Skill', () => {
       unauthorizedPaths: [],
       workerCompliance: {
         status: 'failed',
+        evidence_source: 'host-lifecycle-and-worker-claim',
         receipt_rejection_count: 1,
         host_dispatch_count: 2,
         expected_dispatch_count: 2,

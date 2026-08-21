@@ -28,6 +28,9 @@ export const MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT = Object.freeze({
   identity: { field: 'assignment', mode: 'exact-echo' },
   required_fields: ['assignment', 'result', 'changed_paths', 'verification', 'boundary', 'evidence_status', 'release_claim'],
   optional_fields: ['worker', 'independence'],
+  field_semantics: {
+    boundary: 'Report whether the declared owner, scope, paths, behavior, interface, or authority changed; in-scope work remains unchanged even when result is changed and changed_paths is non-empty.',
+  },
   field_types: {
     assignment: 'non-empty string equal to assignment_identity',
     result: 'one of assignment.allowed_results',

@@ -30,7 +30,7 @@ function syntheticRun(
   repetition: number,
   totalTokens: number | null,
   options: { dimensionStatus?: 'failed' | 'passed', outcome?: 'failed' | 'passed' | 'unavailable' } = {},
-) {
+): Record<string, any> {
   const dimensionStatus = options.dimensionStatus ?? 'passed'
   return {
     case: plan.case,
@@ -257,7 +257,7 @@ function writeReplaySource(directory: string, plan: ReturnType<typeof buildRelea
       })
     }
   }
-  const report = {
+  const report: Record<string, any> = {
     verdict: 'passed',
     execution: 'serial-paired',
     scheduling: plan.scheduling,
@@ -925,7 +925,7 @@ describe('release provider comparison', () => {
       report.runs[0].agent_reported!.observations.worker_dispatch_count = 99
     }],
     ['candidate worker failure hidden by passed dimensions', ({ metadataPaths, report }: ReturnType<typeof writeReplaySource>) => {
-      const sourceRun = report.runs.find(run => run.arm === 'candidate' && run.targetPair === 1)! as any
+      const sourceRun = report.runs.find((run: any) => run.arm === 'candidate' && run.targetPair === 1)! as any
       const metadataPath = metadataPaths.find(path => path.includes('pair-attempt-01')
         && JSON.parse(readFileSync(path, 'utf8')).variant === 'product')!
       const metadata = JSON.parse(readFileSync(metadataPath, 'utf8'))

@@ -69,6 +69,7 @@ export const MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT: {
   identity: { field: string, mode: string }
   required_fields: string[]
   optional_fields: string[]
+  field_semantics: { boundary: string }
   field_types: Record<string, unknown>
   lane_results: Record<'Diagnose' | 'Inspect' | 'Fix' | 'Verify', string[]>
   lane_fields: Record<'Diagnose' | 'Inspect' | 'Fix' | 'Verify', { required: string[] }>
@@ -174,6 +175,7 @@ export interface ManagedControllerEvaluationMetadata {
   case_id: string
   contract_sha256: string
   duration_ms: number
+  exit_code: number | null
   events: {
     forbidden_actions: { force_push: number, publication: number, push: number }
     infrastructure: { categories: string[], retry_count: number, status: 'contaminated' | 'no-contamination-observed' }
@@ -237,6 +239,18 @@ export interface ManagedControllerEvaluationMetadata {
   worker_compliance: ManagedControllerWorkerCompliance
   worker_compliance_enforcement: 'diagnostic' | 'required'
 }
+
+export type ManagedControllerScoringManifest = Pick<
+  ManagedControllerHoldoutManifest,
+  | 'allowed_changes'
+  | 'commit_message'
+  | 'continuation_contract'
+  | 'expected_mode'
+  | 'expected_output'
+  | 'forbidden_output'
+  | 'local_bare_remote'
+  | 'required_changes'
+>
 
 export interface ManagedControllerEvaluationReceiptIdentity {
   case_id: string
@@ -310,7 +324,7 @@ export function normalizeManagedControllerEvaluationReceipt(
   receipt: unknown,
   providerExpectations: ManagedControllerHoldoutManifest['provider_expectations'],
 ): unknown
-export function scoreManagedControllerObservation(manifest: ManagedControllerHoldoutManifest, observation: ManagedControllerObservation, options?: {
+export function scoreManagedControllerObservation(manifest: ManagedControllerScoringManifest, observation: ManagedControllerObservation, options?: {
   workerComplianceEnforcement?: 'diagnostic' | 'required'
 }): {
   commit_message?: { errors: string[], passed: boolean }
