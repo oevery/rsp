@@ -580,7 +580,77 @@ describe('release provider comparison', () => {
     expect(markdown).toContain('| total_tokens | 1:20%, 2:-9.09%, 3:22.22% | 20% | -9.09% | 22.22% | 31.31% |')
     expect(markdown).toContain('## Agent-reported observations')
     expect(markdown).toContain('| 1 | baseline | passed | passed | 0 | 1 |')
-    expect(JSON.stringify(summary)).not.toMatch(/"(?:model|provider|session|settings|workspace)"s*:/u)
+    expect(JSON.stringify(summary)).not.toMatch(/"(?:model|provider|session|settings|workspace)"\s*:/u)
+  })
+
+  it('keeps baseline worker noncompliance diagnostic and makes efficiency not comparable', () => {
+    const plan = buildReleaseProviderComparisonPlan(root, { baselineRef: 'v3.2.0', repetitions: 3 })
+    const runs = []
+    for (let repetition = 1; repetition <= 3; repetition += 1) {
+      const baseline = syntheticRun(plan, 'baseline', repetition, 100)
+      if (repetition === 1) {
+        baseline.worker_compliance = {
+          status: 'failed',
+          host_dispatch_count: 0,
+          expected_dispatch_count: 2,
+          receipt_rejection_count: 2,
+          recovered_product_result: true,
+          violations: [{ assignment: null, kind: 'host-dispatch-count', value: 0, expected: 2 }],
+        }
+        baseline.worker_compliance_enforcement = 'diagnostic'
+        baseline.dimensions.compliance.status = 'failed'
+        baseline.dimensions.boundary.status = 'failed'
+      }
+      runs.push(baseline, syntheticRun(plan, 'candidate', repetition, 90))
+    }
+
+    const summary = createReleaseProviderComparisonSummary(plan, runs)
+    const markdown = renderReleaseProviderComparisonMarkdown(summary)
+
+    expect(summary.verdict).toBe('passed')
+    expect(summary.correctness).toMatchObject({
+      passed: true,
+      candidatePassed: true,
+      baselineDiagnosticFailures: 1,
+    })
+    expect(summary.infrastructure.eligiblePairs).toBe(3)
+    expect(summary.infrastructure.efficiencyComparablePairs).toBe(0)
+    expect(summary.efficiency.status).toBe('not-comparable')
+    expect(summary.efficiency.deltaPct.total_tokens).toBeNull()
+    expect(markdown).toContain('- Candidate gate: passed')
+    expect(markdown).toContain('- Baseline diagnostic failures: 1')
+    expect(markdown).toContain('- Status: not-comparable')
+    expect(markdown).toContain('| 1 | baseline | diagnostic | failed | 0 | 2 | 2 | true | 1 |')
+  })
+
+  it('fails the candidate gate when candidate worker compliance fails', () => {
+    const plan = buildReleaseProviderComparisonPlan(root, { baselineRef: 'v3.2.0', repetitions: 3 })
+    const runs = []
+    for (let repetition = 1; repetition <= 3; repetition += 1) {
+      runs.push(syntheticRun(plan, 'baseline', repetition, 100))
+      const candidate = syntheticRun(plan, 'candidate', repetition, 90)
+      if (repetition === 1) {
+        candidate.outcome = 'failed'
+        candidate.classification = 'model-failed'
+        candidate.worker_compliance_enforcement = 'required'
+        candidate.worker_compliance = {
+          status: 'failed',
+          host_dispatch_count: 2,
+          expected_dispatch_count: 2,
+          receipt_rejection_count: 1,
+          recovered_product_result: true,
+          violations: [{ assignment: 'retry', kind: 'manager-only-command', value: 'npm test' }],
+        }
+        candidate.dimensions.compliance.status = 'failed'
+        candidate.dimensions.boundary.status = 'failed'
+      }
+      runs.push(candidate)
+    }
+
+    const summary = createReleaseProviderComparisonSummary(plan, runs)
+
+    expect(summary.verdict).toBe('failed')
+    expect(summary.correctness).toMatchObject({ passed: false, candidatePassed: false })
   })
 
   it('excludes transport-contaminated pairs but keeps expensive clean pairs in efficiency statistics', () => {
@@ -766,6 +836,62 @@ describe('release provider comparison', () => {
     expect(serialized).not.toMatch(/"(?:model|provider|session|settings|workspace)"\s*:/u)
   })
 
+  it('replays baseline worker diagnostics without weakening the candidate gate', ({ onTestFinished }) => {
+    const temporaryRoot = mkdtempSync(join(tmpdir(), 'rsp-release-provider-replay-baseline-diagnostic-'))
+    onTestFinished(() => rmSync(temporaryRoot, { force: true, recursive: true }))
+    const plan = buildReleaseProviderComparisonPlan(root, { baselineRef: 'v3.2.0', repetitions: 3 })
+    const source = writeReplaySource(join(temporaryRoot, 'source'), plan) as any
+    const sourceRun = source.report.runs.find((run: any) => run.arm === 'baseline' && run.targetPair === 1)
+    const metadataPath = source.metadataPaths.find((path: string) => path.includes('pair-attempt-01')
+      && JSON.parse(readFileSync(path, 'utf8')).variant === 'candidate')
+    const metadata = JSON.parse(readFileSync(metadataPath, 'utf8'))
+    const workerCompliance = {
+      status: 'failed',
+      evidence_source: 'host-lifecycle-and-worker-claim',
+      expected_dispatch_count: 2,
+      host_dispatch_count: 0,
+      receipt_rejection_count: 2,
+      recovered_product_result: true,
+      violations: [{ assignment: null, kind: 'host-dispatch-count', value: 0, expected: 2 }],
+    }
+    metadata.observability.dimensions.compliance = { status: 'failed', evidence: { worker_assignments: workerCompliance } }
+    metadata.observability.dimensions.boundary = { status: 'failed', evidence: { worker_assignment_violations: workerCompliance.violations } }
+    metadata.observability.worker_compliance = workerCompliance
+    metadata.worker_compliance = workerCompliance
+    metadata.worker_compliance_enforcement = 'diagnostic'
+    metadata.product_result = 'passed'
+    metadata.observation_sha256 = hashSkillEvaluationValue(metadata.observability)
+    writeFileSync(metadataPath, `${JSON.stringify(metadata, null, 2)}\n`)
+
+    sourceRun.observationSha256 = metadata.observation_sha256
+    sourceRun.dimensions = metadata.observability.dimensions
+    sourceRun.worker_compliance = workerCompliance
+    sourceRun.worker_compliance_enforcement = 'diagnostic'
+    source.report.correctness = { passed: true, candidatePassed: true, baselineDiagnosticFailures: 1 }
+    source.report.infrastructure.efficiencyComparablePairs = 0
+    source.report.efficiency = { status: 'not-comparable' }
+    writeFileSync(source.reportPath, `${JSON.stringify(source.report, null, 2)}\n`)
+
+    const result = replayReleaseProviderComparison({
+      baselineRef: 'v3.2.0',
+      outputRoot: join(temporaryRoot, 'output'),
+      repetitions: 3,
+      sourceReportPath: source.reportPath,
+    })
+
+    expect(result.summary).toMatchObject({
+      verdict: 'passed',
+      correctness: { candidatePassed: true, baselineDiagnosticFailures: 1 },
+      efficiency: { status: 'not-comparable' },
+    })
+    expect(result.summary.runs).toContainEqual(expect.objectContaining({
+      arm: 'baseline',
+      worker_compliance_enforcement: 'diagnostic',
+      worker_compliance: expect.objectContaining({ status: 'failed' }),
+    }))
+    expect(assessReleaseProviderEvidence(plan, [{ path: result.jsonPath, report: result.summary }]).state).toBe('reused')
+  })
+
   it('replays a configured one-pair scenario without weakening explicit repetition overrides', ({ onTestFinished }) => {
     const temporaryRoot = mkdtempSync(join(tmpdir(), 'rsp-release-provider-replay-one-pair-'))
     onTestFinished(() => rmSync(temporaryRoot, { force: true, recursive: true }))
@@ -797,6 +923,31 @@ describe('release provider comparison', () => {
     }],
     ['tampered retained agent evidence', ({ report }: ReturnType<typeof writeReplaySource>) => {
       report.runs[0].agent_reported!.observations.worker_dispatch_count = 99
+    }],
+    ['candidate worker failure hidden by passed dimensions', ({ metadataPaths, report }: ReturnType<typeof writeReplaySource>) => {
+      const sourceRun = report.runs.find(run => run.arm === 'candidate' && run.targetPair === 1)! as any
+      const metadataPath = metadataPaths.find(path => path.includes('pair-attempt-01')
+        && JSON.parse(readFileSync(path, 'utf8')).variant === 'product')!
+      const metadata = JSON.parse(readFileSync(metadataPath, 'utf8'))
+      const workerCompliance = {
+        status: 'failed',
+        evidence_source: 'host-lifecycle-and-worker-claim',
+        expected_dispatch_count: 2,
+        host_dispatch_count: 2,
+        receipt_rejection_count: 1,
+        recovered_product_result: true,
+        violations: [{ assignment: 'retry', kind: 'manager-only-command', value: 'npm test' }],
+      }
+      metadata.observability.worker_compliance = workerCompliance
+      metadata.worker_compliance = workerCompliance
+      metadata.worker_compliance_enforcement = 'diagnostic'
+      metadata.observation_sha256 = hashSkillEvaluationValue(metadata.observability)
+      writeFileSync(metadataPath, `${JSON.stringify(metadata, null, 2)}\n`)
+      sourceRun.observationSha256 = metadata.observation_sha256
+      sourceRun.worker_compliance = workerCompliance
+      sourceRun.worker_compliance_enforcement = 'diagnostic'
+      report.infrastructure.efficiencyComparablePairs = 0
+      ;(report as any).efficiency = { status: 'not-comparable' }
     }],
     ['missing final response', ({ metadataPaths }: ReturnType<typeof writeReplaySource>) => {
       unlinkSync(join(metadataPaths[0], '..', 'final.md'))

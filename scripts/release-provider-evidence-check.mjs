@@ -5,12 +5,15 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { isAbsolute, join, resolve } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
-import { buildReleaseProviderComparisonMatrixPlans } from './release-provider-comparison.mjs'
+import {
+  buildReleaseProviderComparisonMatrixPlans,
+  releaseProviderEfficiencyPolicyPassed,
+  releaseProviderRunCorrectnessPassed,
+} from './release-provider-comparison.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
 const VERSION_PATTERN = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/u
 const TAG_PATTERN = /^v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u
-const REQUIRED_DIMENSIONS = ['compliance', 'boundary', 'task_result']
 
 function parseRoot(argv) {
   let root = process.cwd()
@@ -68,8 +71,7 @@ function hasCompleteRuns(report, plan) {
     if (!sameIdentity(run.compositionSha256, composition)
       || !sameIdentity(run.contractSha256, plan.identities.contractSha256)
       || run.case !== plan.case
-      || run.scenario?.status !== 'passed'
-      || REQUIRED_DIMENSIONS.some(name => run.dimensions?.[name]?.status !== 'passed')) {
+      || !releaseProviderRunCorrectnessPassed(plan, run)) {
       return false
     }
   }
@@ -94,6 +96,7 @@ function reportMatchesPlan(report, plan) {
     && sameIdentity(report.identities.contractSha256, plan.identities.contractSha256)
     && sameIdentity(report.identities.fixtureSha256, plan.identities.fixtureSha256)
     && sameIdentity(report.identities.harnessSha256, plan.identities.harnessSha256)
+    && releaseProviderEfficiencyPolicyPassed(report)
     && hasCompleteRuns(report, plan)
 }
 

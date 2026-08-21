@@ -16,6 +16,7 @@ import { projectSkillEvaluationObservability } from './skill-evaluation-observab
 
 const CASE_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const EVALUATION_RECEIPT_PATH = '.rsp-evaluation-receipt.json'
+const WORKER_RECEIPT_PREFIX = 'RSP_WORKER_RECEIPT_JSON='
 const VARIANTS = new Set(['baseline', 'candidate', 'product'])
 
 function assertStringArray(value, label) {
@@ -327,7 +328,7 @@ function transportCategories(event) {
 }
 
 function outputByteLength(item) {
-  const value = item?.aggregated_output ?? item?.output ?? item?.result ?? item?.content
+  const value = item?.aggregated_output ?? item?.output ?? item?.result ?? item?.content ?? item?.agents_states
   if (value === undefined || value === null)
     return 0
   try {
@@ -359,6 +360,7 @@ export function summarizeManagedControllerEvents(raw, { installedSkills = [], wo
   let toolCalls = 0
   let usage = null
   const infrastructureCategories = new Set()
+  const workerReceipts = new Map()
   for (const [eventIndex, line] of raw.split('\n').filter(Boolean).entries()) {
     try {
       const event = JSON.parse(line)
@@ -371,7 +373,7 @@ export function summarizeManagedControllerEvents(raw, { installedSkills = [], wo
         for (const category of transportCategories(event))
           infrastructureCategories.add(category)
       }
-      if (event.type === 'item.completed' && ['command_execution', 'mcp_tool_call', 'tool_call'].includes(event.item?.type)) {
+      if (event.type === 'item.completed' && ['collab_tool_call', 'command_execution', 'mcp_tool_call', 'tool_call'].includes(event.item?.type)) {
         toolCalls += 1
         toolOutputBytes += outputByteLength(event.item)
         if (event.item?.type === 'command_execution' && typeof event.item.command === 'string') {
@@ -397,14 +399,22 @@ export function summarizeManagedControllerEvents(raw, { installedSkills = [], wo
       if (event.type === 'item.completed' && ['collab_tool_call', 'mcp_tool_call', 'tool_call'].includes(event.item?.type)) {
         const toolName = managedWorkerToolName(event.item)
         const phase = managedWorkerToolPhase(toolName, event.item)
+        const settledMessages = phase === 'wait' ? managedWorkerSettledMessages(event.item) : []
         if (phase && managedWorkerRuntimeUnavailable(phase, event.item))
           infrastructureCategories.add('worker-runtime-unavailable')
         if (phase && managedWorkerPhaseObserved(phase, event.item)) {
-          observeLifecyclePhase(lifecycleCounts, lifecycleOrder, phase, toolName, eventIndex)
+          const phaseCount = phase === 'dispatch' && Array.isArray(event.item.receiver_thread_ids)
+            ? event.item.receiver_thread_ids.length
+            : 1
+          observeLifecyclePhase(lifecycleCounts, lifecycleOrder, phase, toolName, eventIndex, phaseCount)
           if (phase === 'delivery' && managedWorkerAdmissionObserved(event.item))
             observeLifecyclePhase(lifecycleCounts, lifecycleOrder, 'admission', toolName, eventIndex)
           if (phase === 'wait' && managedWorkerSettlementObserved(event.item))
-            observeLifecyclePhase(lifecycleCounts, lifecycleOrder, 'settlement', toolName, eventIndex)
+            observeLifecyclePhase(lifecycleCounts, lifecycleOrder, 'settlement', toolName, eventIndex, Math.max(settledMessages.length, 1))
+        }
+        if (phase === 'wait') {
+          for (const settled of settledMessages)
+            workerReceipts.set(settled.worker_id, parseManagedWorkerReceipt(settled))
         }
       }
       if (event.type === 'turn.completed' && event.usage)
@@ -432,6 +442,39 @@ export function summarizeManagedControllerEvents(raw, { installedSkills = [], wo
     tool_output_bytes: toolOutputBytes,
     usage,
     worker_lifecycle: workerLifecycle,
+    worker_receipts: [...workerReceipts.values()].sort((left, right) => left.worker_id.localeCompare(right.worker_id)),
+  }
+}
+
+function managedWorkerSettledMessages(item) {
+  const states = item.agents_states
+    ?? item.result?.agents_states
+    ?? item.output?.agents_states
+    ?? item.structuredContent?.agents_states
+    ?? item.structured_content?.agents_states
+  if (!states || typeof states !== 'object' || Array.isArray(states))
+    return []
+  return Object.entries(states)
+    .filter(([, state]) => state && typeof state === 'object'
+      && ['completed', 'failed', 'errored', 'cancelled', 'canceled'].includes(String(state.status ?? '').toLowerCase()))
+    .map(([workerId, state]) => ({
+      message: typeof state.message === 'string' ? state.message : '',
+      worker_id: workerId,
+    }))
+}
+
+function parseManagedWorkerReceipt({ message, worker_id: workerId }) {
+  const line = message.split(/\r?\n/u).find(candidate => candidate.startsWith(WORKER_RECEIPT_PREFIX))
+  if (!line)
+    return { worker_id: workerId, status: 'missing', receipt: null, error: 'structured WorkerReceipt is missing' }
+  try {
+    const receipt = JSON.parse(line.slice(WORKER_RECEIPT_PREFIX.length))
+    if (!receipt || typeof receipt !== 'object' || Array.isArray(receipt))
+      throw new Error('WorkerReceipt must be one JSON object')
+    return { worker_id: workerId, status: 'parsed', receipt, error: null }
+  }
+  catch (error) {
+    return { worker_id: workerId, status: 'invalid', receipt: null, error: error instanceof Error ? error.message : String(error) }
   }
 }
 
@@ -461,7 +504,7 @@ function managedWorkerToolPhase(toolName, item) {
 }
 
 function managedWorkerToolEvidence(item) {
-  const evidence = item.structuredContent ?? item.structured_content ?? item.result ?? item.output ?? item.content
+  const evidence = item.structuredContent ?? item.structured_content ?? item.result ?? item.output ?? item.content ?? item.agents_states
   try {
     return JSON.stringify(evidence ?? null)
   }
@@ -524,6 +567,8 @@ function managedWorkerInterruptRequested(item) {
 function managedWorkerPhaseObserved(phase, item) {
   if (!managedWorkerToolSucceeded(item))
     return false
+  if (phase === 'dispatch' && Array.isArray(item.receiver_thread_ids) && item.receiver_thread_ids.length > 0)
+    return true
   const evidence = managedWorkerToolEvidence(item)
   if (phase === 'dispatch')
     return /(?:agent|worker|session)[_-]?id/iu.test(evidence) || /\b(?:created|running)\b/iu.test(evidence)
@@ -568,9 +613,9 @@ function managedWorkerSettlementObserved(item) {
     || /"(?:completed|errored)"\s*:/iu.test(evidence)
 }
 
-function observeLifecyclePhase(counts, order, phase, tool, eventIndex) {
+function observeLifecyclePhase(counts, order, phase, tool, eventIndex, count = 1) {
   const field = `${phase}_count`
-  counts[field] = (counts[field] ?? 0) + 1
+  counts[field] = (counts[field] ?? 0) + count
   order.push({ event_index: eventIndex, phase, tool })
 }
 
@@ -582,6 +627,7 @@ export function projectManagedControllerEvaluationEvidence({
   result,
   output,
   unauthorizedPaths,
+  workerCompliance,
 }) {
   const projected = projectSkillEvaluationObservability({
     elapsedMs: durationMs,
@@ -596,9 +642,31 @@ export function projectManagedControllerEvaluationEvidence({
     unauthorizedPaths,
     usage: events.usage,
   })
+  const workerFailed = workerCompliance?.status === 'failed'
   const observability = {
     ...projected,
+    dimensions: {
+      ...projected.dimensions,
+      compliance: workerFailed
+        ? { status: 'failed', evidence: {
+            ...projected.dimensions.compliance.evidence,
+            worker_assignments: workerCompliance,
+          } }
+        : projected.dimensions.compliance,
+      boundary: workerFailed
+        ? { status: 'failed', evidence: {
+            ...(projected.dimensions.boundary.evidence ?? {}),
+            worker_assignment_violations: workerCompliance.violations,
+          } }
+        : projected.dimensions.boundary,
+    },
     host_observed: { worker_lifecycle: events.worker_lifecycle },
+    worker_compliance: workerCompliance
+      ? {
+          ...workerCompliance,
+          recovered_product_result: workerFailed && result === 'passed',
+        }
+      : null,
   }
   const agentReported = receipt
     ? {
@@ -809,6 +877,29 @@ function readHoldout(root, caseId) {
   assertArray(manifest.allowed_changes, `${caseId}.allowed_changes`)
   if (manifest.required_changes)
     assertStringArray(manifest.required_changes, `${caseId}.required_changes`)
+  if (manifest.worker_assignments) {
+    if (!Array.isArray(manifest.worker_assignments) || manifest.worker_assignments.length === 0)
+      throw new Error(`${caseId}.worker_assignments must be a non-empty array`)
+    const assignmentIds = new Set()
+    for (const [index, assignment] of manifest.worker_assignments.entries()) {
+      if (!assignment || typeof assignment !== 'object' || !CASE_ID.test(assignment.id ?? ''))
+        throw new Error(`${caseId}.worker_assignments[${index}].id must be a valid id`)
+      if (assignmentIds.has(assignment.id))
+        throw new Error(`${caseId}.worker_assignments contains duplicate id ${assignment.id}`)
+      assignmentIds.add(assignment.id)
+      assertStringArray(assignment.allowed_changes, `${caseId}.worker_assignments[${index}].allowed_changes`)
+      assertStringArray(assignment.allowed_commands, `${caseId}.worker_assignments[${index}].allowed_commands`)
+    }
+    if (manifest.provider_expectations
+      && (manifest.provider_expectations.worker_dispatch_count.min !== manifest.worker_assignments.length
+        || manifest.provider_expectations.worker_dispatch_count.max !== manifest.worker_assignments.length)) {
+      throw new Error(`${caseId}.worker_assignments must match the exact provider worker dispatch count`)
+    }
+  }
+  if (manifest.manager_only_changes)
+    assertStringArray(manifest.manager_only_changes, `${caseId}.manager_only_changes`)
+  if (manifest.manager_only_commands)
+    assertStringArray(manifest.manager_only_commands, `${caseId}.manager_only_commands`)
   if (manifest.installed_skills)
     assertStringArray(manifest.installed_skills, `${caseId}.installed_skills`)
   if (manifest.expected_resources) {
@@ -1003,7 +1094,138 @@ function matchesAuthorizedPath(pattern, path) {
   return new RegExp(`^${escaped}$`).test(path)
 }
 
-export function scoreManagedControllerObservation(manifest, observation) {
+function workerReceiptVerificationCommands(receipt) {
+  if (!Array.isArray(receipt?.verification))
+    return null
+  const commands = []
+  for (const item of receipt.verification) {
+    if (!item || typeof item !== 'object' || typeof item.command !== 'string' || item.command.length === 0)
+      return null
+    commands.push(item.command)
+  }
+  return commands
+}
+
+function validWorkerReceiptShape(receipt) {
+  return receipt
+    && typeof receipt === 'object'
+    && typeof receipt.assignment === 'string'
+    && receipt.assignment.length > 0
+    && typeof receipt.result === 'string'
+    && receipt.result.length > 0
+    && Array.isArray(receipt.changed_paths)
+    && receipt.changed_paths.every(path => typeof path === 'string' && path.length > 0)
+    && workerReceiptVerificationCommands(receipt) !== null
+    && ['changed', 'unchanged'].includes(receipt.boundary)
+    && ['invalid', 'unavailable', 'valid'].includes(receipt.evidence_status)
+    && ['released', 'retained', 'unavailable'].includes(receipt.release_claim)
+}
+
+export function scoreManagedWorkerAssignments(manifest, events) {
+  const assignments = manifest.worker_assignments
+  if (!Array.isArray(assignments) || assignments.length === 0) {
+    return {
+      status: 'not-required',
+      evidence_source: 'host-lifecycle-and-worker-claim',
+      expected_dispatch_count: 0,
+      host_dispatch_count: events.worker_lifecycle?.dispatch_count ?? null,
+      receipt_rejection_count: 0,
+      violations: [],
+    }
+  }
+
+  const violations = []
+  const invalidAssignments = new Set()
+  const acceptedAssignments = new Set()
+  let unassignedMissingClaims = 0
+  let unexpectedRejectedReceipts = 0
+  const expectedDispatchCount = assignments.length
+  const knownAssignments = new Set(assignments.map(assignment => assignment.id))
+  const hostDispatchCount = events.worker_lifecycle?.dispatch_count ?? null
+  if (hostDispatchCount !== expectedDispatchCount) {
+    violations.push({
+      assignment: null,
+      kind: 'host-dispatch-count',
+      value: hostDispatchCount,
+      expected: expectedDispatchCount,
+    })
+  }
+
+  const claims = Array.isArray(events.worker_receipts) ? events.worker_receipts : []
+  const parsedByAssignment = new Map()
+  for (const claim of claims) {
+    if (claim.status !== 'parsed' || !validWorkerReceiptShape(claim.receipt)) {
+      const assignment = typeof claim.receipt?.assignment === 'string' ? claim.receipt.assignment : null
+      violations.push({ assignment, kind: claim.status === 'missing' ? 'missing-receipt' : 'invalid-receipt', value: claim.error ?? null })
+      if (assignment && knownAssignments.has(assignment))
+        invalidAssignments.add(assignment)
+      else if (assignment)
+        unexpectedRejectedReceipts += 1
+      else
+        unassignedMissingClaims += 1
+      continue
+    }
+    const assignment = claim.receipt.assignment
+    if (parsedByAssignment.has(assignment)) {
+      violations.push({ assignment, kind: 'duplicate-receipt', value: claim.worker_id })
+      invalidAssignments.add(assignment)
+      continue
+    }
+    parsedByAssignment.set(assignment, claim.receipt)
+  }
+
+  for (const assignment of assignments) {
+    const receipt = parsedByAssignment.get(assignment.id)
+    if (!receipt) {
+      if (unassignedMissingClaims > 0)
+        unassignedMissingClaims -= 1
+      else if (!violations.some(violation => violation.assignment === assignment.id && ['invalid-receipt', 'missing-receipt'].includes(violation.kind)))
+        violations.push({ assignment: assignment.id, kind: 'missing-receipt', value: null })
+      invalidAssignments.add(assignment.id)
+      continue
+    }
+    const assignmentViolations = []
+    for (const path of receipt.changed_paths) {
+      if ((manifest.manager_only_changes ?? []).some(pattern => matchesAuthorizedPath(pattern, path)))
+        assignmentViolations.push({ assignment: assignment.id, kind: 'manager-only-path', value: path })
+      else if (!assignment.allowed_changes.some(pattern => matchesAuthorizedPath(pattern, path)))
+        assignmentViolations.push({ assignment: assignment.id, kind: 'unauthorized-worker-path', value: path })
+    }
+    for (const command of workerReceiptVerificationCommands(receipt)) {
+      if ((manifest.manager_only_commands ?? []).includes(command))
+        assignmentViolations.push({ assignment: assignment.id, kind: 'manager-only-command', value: command })
+      else if (!assignment.allowed_commands.includes(command))
+        assignmentViolations.push({ assignment: assignment.id, kind: 'unauthorized-worker-command', value: command })
+    }
+    if (receipt.boundary !== 'unchanged')
+      assignmentViolations.push({ assignment: assignment.id, kind: 'changed-boundary', value: receipt.boundary })
+    if (receipt.evidence_status !== 'valid')
+      assignmentViolations.push({ assignment: assignment.id, kind: 'invalid-evidence', value: receipt.evidence_status })
+    if (assignmentViolations.length > 0)
+      invalidAssignments.add(assignment.id)
+    else if (!invalidAssignments.has(assignment.id))
+      acceptedAssignments.add(assignment.id)
+    violations.push(...assignmentViolations)
+  }
+
+  for (const assignment of parsedByAssignment.keys()) {
+    if (!knownAssignments.has(assignment)) {
+      violations.push({ assignment, kind: 'unexpected-receipt', value: assignment })
+      unexpectedRejectedReceipts += 1
+    }
+  }
+
+  return {
+    status: violations.length === 0 ? 'passed' : 'failed',
+    evidence_source: 'host-lifecycle-and-worker-claim',
+    expected_dispatch_count: expectedDispatchCount,
+    host_dispatch_count: hostDispatchCount,
+    receipt_rejection_count: assignments.filter(assignment => !acceptedAssignments.has(assignment.id)).length + unexpectedRejectedReceipts,
+    violations,
+  }
+}
+
+export function scoreManagedControllerObservation(manifest, observation, { workerComplianceEnforcement = 'required' } = {}) {
   const unauthorizedPaths = observation.changed_paths.filter(path => !manifest.allowed_changes.some(pattern => matchesAuthorizedPath(pattern, path)))
   const missingRequiredPaths = (manifest.required_changes ?? []).filter(pattern => !observation.changed_paths.some(path => matchesAuthorizedPath(pattern, path)))
   const output = scoreManagedControllerOutput(manifest, observation.final)
@@ -1013,7 +1235,7 @@ export function scoreManagedControllerObservation(manifest, observation) {
     ? observation.changed_paths.length === 0
     : observation.verification_passed
   const forbidden = observation.forbidden_actions
-  const result = observation.exit_code === 0
+  const productPassed = observation.exit_code === 0
     && !observation.timed_out
     && unauthorizedPaths.length === 0
     && missingRequiredPaths.length === 0
@@ -1027,13 +1249,16 @@ export function scoreManagedControllerObservation(manifest, observation) {
     && (!manifest.local_bare_remote || observation.remote_refs_unchanged)
     && observation.source_stable
     && (commitMessage?.passed ?? true)
-    ? 'passed'
-    : 'failed'
+  const productResult = productPassed ? 'passed' : 'failed'
+  const workerCompliancePassed = workerComplianceEnforcement === 'diagnostic'
+    || observation.worker_compliance?.status !== 'failed'
+  const result = productPassed && workerCompliancePassed ? 'passed' : 'failed'
   return {
     ...(commitMessage ? { commit_message: commitMessage } : {}),
     missing_required_paths: missingRequiredPaths,
     output,
     ...(recovery ? { recovery } : {}),
+    ...(observation.worker_compliance ? { product_result: productResult } : {}),
     result,
     unauthorized_paths: unauthorizedPaths,
   }
@@ -1134,6 +1359,16 @@ export function prepareManagedControllerRun({ caseId, outputRoot, root, skillSou
           },
         })}. Do not place dispatch, mode, or route directly under trigger. Set worker_dispatch_count to the directly observed number; the accepted range is ${manifest.provider_expectations.worker_dispatch_count.min}..${manifest.provider_expectations.worker_dispatch_count.max}.`]
       : []),
+    ...(manifest.worker_assignments
+      ? [
+          `This evaluation has a machine consumer for managed WorkerReceipts. For each settled worker, require exactly one single-line JSON transport prefixed with ${WORKER_RECEIPT_PREFIX}. The JSON object must encode the existing managed-exchange fields as: assignment, result, changed_paths, verification (objects with command, scope, outcome, omissions), boundary, evidence_status, release_claim, and optional worker and independence. Do not infer or repair a missing worker receipt.`,
+          `Worker Assignment policy: ${JSON.stringify({
+            assignments: manifest.worker_assignments,
+            manager_only_changes: manifest.manager_only_changes ?? [],
+            manager_only_commands: manifest.manager_only_commands ?? [],
+          })}.`,
+        ]
+      : []),
     'Return a concise final status with completed work, fresh verification, remaining boundary, and next action.',
   ].join('\n\n')
   return { baseSha, contractSha256, installedComposition, manifest, prompt, remotePath, remoteRefsBefore, sourceComposition, workspace }
@@ -1196,7 +1431,10 @@ function consumeManagedControllerEvaluationReceipt(prepared, required) {
   }
 }
 
-export async function runManagedControllerEvaluation({ authFile, caseId, codexBin = 'codex', effort, env = process.env, isolatedUserContext = false, model, modelCatalogJson, openaiBaseUrl, outputRoot, provider, root, skillSourceDirectory, timeoutMs, variant }) {
+export async function runManagedControllerEvaluation({ authFile, caseId, codexBin = 'codex', comparisonArm, effort, env = process.env, isolatedUserContext = false, model, modelCatalogJson, openaiBaseUrl, outputRoot, provider, root, skillSourceDirectory, timeoutMs, variant }) {
+  if (comparisonArm !== undefined && !['baseline', 'candidate'].includes(comparisonArm))
+    throw new Error(`invalid comparison arm: ${comparisonArm}`)
+  const workerComplianceEnforcement = comparisonArm === 'baseline' ? 'diagnostic' : 'required'
   const prepared = prepareManagedControllerRun({ caseId, outputRoot, root, skillSourceDirectory, variant })
   const runDirectory = join(outputRoot, 'runs', basename(prepared.workspace))
   mkdirSync(runDirectory, { recursive: true })
@@ -1294,6 +1532,7 @@ export async function runManagedControllerEvaluation({ authFile, caseId, codexBi
     installedSkills,
     workspace: prepared.workspace,
   })
+  const workerCompliance = scoreManagedWorkerAssignments(prepared.manifest, events)
   const sourceCompositionAfter = hashManagedControllerComposition(installedSkills.map(name => ({
     name,
     path: skillSourceRoot(root, variant, name, skillSourceDirectory),
@@ -1312,15 +1551,19 @@ export async function runManagedControllerEvaluation({ authFile, caseId, codexBi
     source_stable: sourceHash === hashTree(sourceRoot) && compositionStable,
     timed_out: executed.timedOut,
     verification_passed: verification.passed,
+    worker_compliance: workerCompliance,
+  }, {
+    workerComplianceEnforcement,
   })
   const evaluationEvidence = projectManagedControllerEvaluationEvidence({
     durationMs,
     events,
     expectedResources: prepared.manifest.expected_resources,
     receipt,
-    result: score.result,
+    result: score.product_result,
     output: score.output,
     unauthorizedPaths: score.unauthorized_paths,
+    workerCompliance,
   })
   const { agent_reported: agentReported, observability } = evaluationEvidence
   const metadata = {
@@ -1333,6 +1576,7 @@ export async function runManagedControllerEvaluation({ authFile, caseId, codexBi
     exit_code: executed.code,
     final_hash: hashManagedControllerArtifact(final),
     output: score.output,
+    product_result: score.product_result,
     observation_sha256: hashSkillEvaluationValue(observability),
     observability,
     // Retain the legacy beta projection as an explicit absence. Older retained
@@ -1353,6 +1597,8 @@ export async function runManagedControllerEvaluation({ authFile, caseId, codexBi
     verification,
     git: gitObservation,
     worktree: { changed_paths: paths, missing_required_paths: score.missing_required_paths, unauthorized_paths: score.unauthorized_paths },
+    worker_compliance: workerCompliance,
+    worker_compliance_enforcement: workerComplianceEnforcement,
   }
   writeFileSync(metadataPath, `${JSON.stringify(metadata, null, 2)}\n`)
   return metadata

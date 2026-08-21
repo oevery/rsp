@@ -236,6 +236,41 @@ function runClassification(run) {
   return 'incomplete'
 }
 
+function workerComplianceEnforcement(run) {
+  return run.worker_compliance_enforcement ?? (run.arm === 'baseline' ? 'diagnostic' : 'required')
+}
+
+export function releaseProviderRunCorrectnessPassed(plan, run) {
+  if (run.outcome !== 'passed')
+    return false
+  const workerComplianceFailed = run.worker_compliance?.status === 'failed'
+  const workerDiagnosticFailure = run.arm === 'baseline'
+    && workerComplianceEnforcement(run) === 'diagnostic'
+    && workerComplianceFailed
+  if (workerComplianceFailed && !workerDiagnosticFailure)
+    return false
+  const requiredDimensions = workerDiagnosticFailure
+    ? ['task_result']
+    : ['compliance', 'boundary', 'task_result']
+  return requiredDimensions.every(name => run.dimensions?.[name]?.status === 'passed')
+    && (!plan.providerExpectations || run.scenario?.status === 'passed')
+}
+
+export function releaseProviderEfficiencyPolicyPassed(report) {
+  const workerComplianceFailed = Array.isArray(report?.runs)
+    && report.runs.some(run => run.worker_compliance?.status === 'failed')
+  return !workerComplianceFailed
+    || (report.efficiency?.status === 'not-comparable'
+      && report.infrastructure?.efficiencyComparablePairs === 0)
+}
+
+function hardCorrectnessFailed(plan, run) {
+  if (['infra-contaminated', 'incomplete'].includes(runClassification(run)))
+    return false
+  return run.outcome === 'failed'
+    || (run.outcome === 'passed' && !releaseProviderRunCorrectnessPassed(plan, run))
+}
+
 export function classifyProviderAttempt({ infrastructureStatus, outcome, timedOut = false }) {
   if (infrastructureStatus === 'contaminated')
     return 'infra-contaminated'
@@ -394,14 +429,19 @@ export function createReleaseProviderComparisonSummary(plan, runs, refreshedPlan
     return pairs.slice(pairIndex + 1).some(next => (next[0]?.targetPair ?? next[0]?.repetition) === targetPair)
   })
   const eligibleRuns = eligiblePairs.flat()
-  const baselineRuns = eligibleRuns.filter(run => run.arm === 'baseline')
-  const candidateRuns = eligibleRuns.filter(run => run.arm === 'candidate')
+  const efficiencyBlockedByWorkerCompliance = eligibleRuns.some(run => run.worker_compliance?.status === 'failed')
+  const efficiencyPairs = efficiencyBlockedByWorkerCompliance ? [] : eligiblePairs
+  const efficiencyRuns = efficiencyPairs.flat()
+  const baselineRuns = efficiencyRuns.filter(run => run.arm === 'baseline')
+  const candidateRuns = efficiencyRuns.filter(run => run.arm === 'candidate')
+  const identityBaselineRuns = eligibleRuns.filter(run => run.arm === 'baseline')
+  const identityCandidateRuns = eligibleRuns.filter(run => run.arm === 'candidate')
   const identityIssues = []
-  for (const run of baselineRuns) {
+  for (const run of identityBaselineRuns) {
     if (run.compositionSha256 !== plan.baseline.composition.hash)
       identityIssues.push(`baseline composition drift in repetition ${run.repetition}`)
   }
-  for (const run of candidateRuns) {
+  for (const run of identityCandidateRuns) {
     if (run.compositionSha256 !== plan.candidate.composition.hash)
       identityIssues.push(`candidate composition drift in repetition ${run.repetition}`)
   }
@@ -422,13 +462,14 @@ export function createReleaseProviderComparisonSummary(plan, runs, refreshedPlan
   })) {
     identityIssues.push('comparison identities drifted during execution')
   }
-  const correctnessFailed = runs.some(run => !['infra-contaminated', 'incomplete'].includes(runClassification(run))
-    && (run.outcome === 'failed'
-      || (run.outcome === 'passed'
-        && (['compliance', 'boundary', 'task_result'].some(name => run.dimensions[name]?.status !== 'passed')
-          || (plan.providerExpectations && run.scenario?.status !== 'passed')))))
+  const candidateCorrectnessFailed = runs.some(run => run.arm === 'candidate' && hardCorrectnessFailed(plan, run))
+  const baselineCorrectnessFailed = runs.some(run => run.arm === 'baseline' && hardCorrectnessFailed(plan, run))
+  const correctnessFailed = candidateCorrectnessFailed || baselineCorrectnessFailed
+  const baselineDiagnosticFailures = runs.filter(run => run.arm === 'baseline'
+    && workerComplianceEnforcement(run) === 'diagnostic'
+    && run.worker_compliance?.status === 'failed').length
   const unavailable = eligiblePairs.length !== plan.repetitions
-  const measurementIncomplete = eligibleRuns.some(run => [
+  const measurementIncomplete = !efficiencyBlockedByWorkerCompliance && efficiencyRuns.some(run => [
     run.measurements.tokens.input,
     run.measurements.tokens.output,
     run.measurements.tokens.total,
@@ -441,7 +482,7 @@ export function createReleaseProviderComparisonSummary(plan, runs, refreshedPlan
     name,
     percentageDelta(baseline[name].median, candidate[name].median),
   ]))
-  const pairedDeltaPct = summarizePairedDeltas(eligiblePairs)
+  const pairedDeltaPct = summarizePairedDeltas(efficiencyPairs)
   let verdict = 'passed'
   if (identityIssues.length > 0 || correctnessFailed)
     verdict = 'failed'
@@ -463,18 +504,23 @@ export function createReleaseProviderComparisonSummary(plan, runs, refreshedPlan
     },
     correctness: {
       passed: !correctnessFailed && !unavailable && identityIssues.length === 0,
+      candidatePassed: !candidateCorrectnessFailed && !unavailable && identityIssues.length === 0,
+      baselineDiagnosticFailures,
       requiredDimensions: plan.correctness,
     },
     infrastructure: {
       attemptedPairs: pairs.length,
       contaminatedPairs: contaminatedPairs.length,
       eligiblePairs: eligiblePairs.length,
+      efficiencyComparablePairs: efficiencyPairs.length,
       incompletePairs: incompletePairs.length,
       replacementPairs: replacementPairs.length,
       status: contaminatedPairs.length > 0 ? 'contamination-observed' : 'no-contamination-observed',
     },
     efficiency: {
-      status: verdict === 'passed' ? 'observed' : 'not-conclusive',
+      status: efficiencyBlockedByWorkerCompliance
+        ? 'not-comparable'
+        : verdict === 'passed' ? 'observed' : 'not-conclusive',
       threshold: null,
       baseline,
       candidate,
@@ -487,6 +533,7 @@ export function createReleaseProviderComparisonSummary(plan, runs, refreshedPlan
       ...plan.omissions,
       ...(measurementIncomplete ? ['one or more required measurements are unavailable'] : []),
       ...(unavailable ? ['one or more paired provider runs were unavailable or not run'] : []),
+      ...(efficiencyBlockedByWorkerCompliance ? ['worker assignment noncompliance makes baseline and candidate efficiency not comparable'] : []),
     ],
   }
 }
@@ -502,6 +549,8 @@ export function renderReleaseProviderComparisonMarkdown(summary) {
     `- Baseline: ${code}${summary.identities.baseline.ref}${code} (${code}${summary.identities.baseline.commit}${code})`,
     `- Candidate source: ${code}${summary.identities.candidate.fingerprintSha256}${code}`,
     `- Correctness: ${summary.correctness.passed ? 'passed' : 'not passed'}`,
+    `- Candidate gate: ${summary.correctness.candidatePassed ? 'passed' : 'not passed'}`,
+    `- Baseline diagnostic failures: ${summary.correctness.baselineDiagnosticFailures}`,
     `- Eligible pairs: ${summary.infrastructure.eligiblePairs}/${summary.repetitions}`,
     `- Infrastructure-contaminated pairs: ${summary.infrastructure.contaminatedPairs}`,
     ...(summary.replay
@@ -518,6 +567,9 @@ export function renderReleaseProviderComparisonMarkdown(summary) {
     `- Status: ${summary.correctness.passed ? 'passed' : 'not passed'}`,
     '',
     '## Efficiency',
+    '',
+    `- Status: ${summary.efficiency.status}`,
+    `- Comparable pairs: ${summary.infrastructure.efficiencyComparablePairs}/${summary.repetitions}`,
     '',
     '| Metric | Baseline | Candidate | Delta | Baseline range | Candidate range |',
     '| --- | ---: | ---: | ---: | ---: | ---: |',
@@ -569,6 +621,17 @@ export function renderReleaseProviderComparisonMarkdown(summary) {
     const observations = run.agent_reported?.observations
     lines.push(`| ${run.pairAttempt ?? run.repetition} | ${run.arm} | ${observations?.trigger?.status ?? 'unavailable'} | ${observations?.first_fix_result ?? 'unavailable'} | ${observations?.correction_count ?? 'unavailable'} | ${observations?.worker_dispatch_count ?? 'unavailable'} |`)
   }
+  lines.push(
+    '',
+    '## Worker assignment compliance',
+    '',
+    '| Pair attempt | Arm | Enforcement | Status | Host dispatches | Expected dispatches | Rejected receipts | Recovered product result | Violations |',
+    '| ---: | --- | --- | --- | ---: | ---: | ---: | --- | ---: |',
+  )
+  for (const run of summary.runs) {
+    const worker = run.worker_compliance
+    lines.push(`| ${run.pairAttempt ?? run.repetition} | ${run.arm} | ${workerComplianceEnforcement(run)} | ${worker?.status ?? 'unavailable'} | ${worker?.host_dispatch_count ?? 'unavailable'} | ${worker?.expected_dispatch_count ?? 'unavailable'} | ${worker?.receipt_rejection_count ?? 'unavailable'} | ${worker?.recovered_product_result ?? false} | ${worker?.violations?.length ?? 'unavailable'} |`)
+  }
   lines.push('', '## Omissions', '')
   for (const omission of summary.omissions)
     lines.push(`- ${omission}`)
@@ -609,6 +672,8 @@ function sanitizedRun(arm, schedule, summary, metadata) {
     agent_reported: agentReported,
     dimensions: observation.dimensions,
     resources: observation.resources,
+    worker_compliance: observation.worker_compliance ?? null,
+    worker_compliance_enforcement: metadata.worker_compliance_enforcement ?? workerComplianceEnforcement({ arm }),
     measurements: {
       corrections: finiteMeasurement(agentReported?.observations.correction_count ?? observation.measurements.corrections),
       first_fix_result: agentReported?.observations.first_fix_result ?? observation.measurements.first_fix_result,
@@ -682,6 +747,8 @@ function sanitizedFailedRun(arm, schedule, plan, error) {
     scenario: plan.providerExpectations
       ? { expected: plan.providerExpectations, observed: null, status: 'failed' }
       : null,
+    worker_compliance: null,
+    worker_compliance_enforcement: workerComplianceEnforcement({ arm }),
     failure: receiptInvalid ? 'invalid-evaluation-receipt' : infrastructureFailure ? 'provider-transport-unavailable' : 'provider-execution-unavailable',
     omissions: ['provider execution did not produce validated structured evaluation metadata'],
   }
@@ -734,17 +801,17 @@ function validateReplaySourceReport(source, plan) {
         ? run.arm === 'baseline' ? 1 : 2
         : run.arm === 'candidate' ? 1 : 2)
       || runClassification(run) !== 'eligible'
-      || run.outcome !== 'passed'
-      || (plan.providerExpectations && run.scenario?.status !== 'passed')
+      || !releaseProviderRunCorrectnessPassed(plan, run)
       || run.contractSha256 !== plan.identities.contractSha256
       || run.compositionSha256 !== (run.arm === 'baseline' ? plan.baseline.composition.hash : plan.candidate.composition.hash)
-      || ['compliance', 'boundary', 'task_result'].some(name => run.dimensions?.[name]?.status !== 'passed')
       || !isSha256(run.observationSha256)) {
       fail('replay source contains an incomplete, duplicate, or mismatched run')
     }
   }
   if (expectedRuns.size > 0)
     fail('replay source is missing one or more paired runs')
+  if (!releaseProviderEfficiencyPolicyPassed(source))
+    fail('replay source compares efficiency despite worker assignment noncompliance')
 }
 
 function replayRunMetadata(sourceDirectory, sourceRun, plan, betaPlan) {
@@ -804,6 +871,8 @@ function replayRunMetadata(sourceDirectory, sourceRun, plan, betaPlan) {
       ? []
       : [['agent-reported evidence', replayed.agent_reported, sourceRun.agent_reported]]),
     ['dimensions', replayed.dimensions, sourceRun.dimensions],
+    ['worker compliance', replayed.worker_compliance, sourceRun.worker_compliance ?? null],
+    ['worker compliance enforcement', replayed.worker_compliance_enforcement, sourceRun.worker_compliance_enforcement ?? workerComplianceEnforcement(sourceRun)],
     ['resources', replayed.resources, sourceRun.resources],
     ['infrastructure', replayed.infrastructure, sourceRun.infrastructure],
     ['input tokens', replayed.measurements.tokens.input, sourceRun.measurements?.tokens?.input],
@@ -901,6 +970,7 @@ export async function runReleaseProviderComparison({
           metadata = await evaluationRunner({
             authFile,
             caseId: plan.case,
+            comparisonArm: schedule.arm,
             effort,
             isolatedUserContext,
             model,

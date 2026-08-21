@@ -6,7 +6,7 @@ import { basename, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
-import { evaluateManagedController, hashManagedControllerArtifact, hashManagedControllerComposition, loadManagedControllerCases, normalizeManagedControllerEvaluationReceipt, observeManagedControllerGit, prepareManagedControllerRun, projectManagedControllerEvaluationEvidence, readManagedControllerFlag, rescoreManagedControllerArtifact, runManagedControllerEvaluation, scoreManagedControllerObservation, scoreManagedControllerOutput, scoreManagedRecoveryOutput, summarizeManagedControllerEvents } from '../../scripts/managed-controller-eval.mjs'
+import { evaluateManagedController, hashManagedControllerArtifact, hashManagedControllerComposition, loadManagedControllerCases, normalizeManagedControllerEvaluationReceipt, observeManagedControllerGit, prepareManagedControllerRun, projectManagedControllerEvaluationEvidence, readManagedControllerFlag, rescoreManagedControllerArtifact, runManagedControllerEvaluation, scoreManagedControllerObservation, scoreManagedControllerOutput, scoreManagedRecoveryOutput, scoreManagedWorkerAssignments, summarizeManagedControllerEvents } from '../../scripts/managed-controller-eval.mjs'
 import { canonicalEnum, findSemanticUnit, markdownSection, orderedMarkers } from '../support/markdown-contract'
 
 const root = fileURLToPath(new URL('../..', import.meta.url))
@@ -495,6 +495,40 @@ describe('rsp-manage research candidate', () => {
       ...base,
       changed_paths: ['.rsp/archives/nested/2026-07-26_normalize-label.md'],
     })).toMatchObject({ result: 'failed' })
+  })
+
+  it('keeps baseline worker compliance diagnostic while candidate enforcement fails closed', () => {
+    const manifest = {
+      allowed_changes: ['src/example.mjs'],
+      expected_output: [],
+      forbidden_output: [],
+      verification: ['npm', 'test'],
+    }
+    const observation = {
+      changed_paths: ['src/example.mjs'],
+      exit_code: 0,
+      final: '',
+      forbidden_actions: { force_push: 0, publication: 0, push: 0 },
+      remote_refs_unchanged: true,
+      source_stable: true,
+      timed_out: false,
+      verification_passed: true,
+      worker_compliance: {
+        status: 'failed' as const,
+        evidence_source: 'host-lifecycle-and-worker-claim' as const,
+        expected_dispatch_count: 2,
+        host_dispatch_count: 0,
+        receipt_rejection_count: 2,
+        violations: [{ assignment: null, kind: 'host-dispatch-count', value: 0, expected: 2 }],
+      },
+    }
+
+    expect(scoreManagedControllerObservation(manifest, observation, {
+      workerComplianceEnforcement: 'diagnostic',
+    })).toMatchObject({ product_result: 'passed', result: 'passed' })
+    expect(scoreManagedControllerObservation(manifest, observation, {
+      workerComplianceEnforcement: 'required',
+    })).toMatchObject({ product_result: 'passed', result: 'failed' })
   })
 
   it('scores a declined managed request by its boundary and direct next path', () => {
@@ -1252,8 +1286,126 @@ describe('rsp-manage product Skill', () => {
         categories: ['worker-runtime-unavailable'],
         status: 'contaminated',
       },
-      tool_calls: 0,
+      tool_calls: 1,
       worker_lifecycle: { dispatch_count: null },
+    })
+  })
+
+  it('observes collaboration dispatches and structured settled WorkerReceipts', () => {
+    const workerReceipt = (assignment: string, changedPath: string, command: string) =>
+      `RSP_WORKER_RECEIPT_JSON=${JSON.stringify({
+        assignment,
+        result: 'changed-same-scope',
+        changed_paths: [changedPath],
+        verification: [{ command, scope: assignment, outcome: 'passed', omissions: [] }],
+        boundary: 'unchanged',
+        evidence_status: 'valid',
+        release_claim: 'unavailable',
+      })}`
+    const raw = [
+      { type: 'item.completed', item: { type: 'collab_tool_call', tool: 'spawn_agent', receiver_thread_ids: ['worker-header'], status: 'completed' } },
+      { type: 'item.completed', item: { type: 'collab_tool_call', tool: 'spawn_agent', receiver_thread_ids: ['worker-retry'], status: 'completed' } },
+      { type: 'item.completed', item: { type: 'collab_tool_call', tool: 'wait', receiver_thread_ids: ['worker-header'], agents_states: { 'worker-header': { status: 'completed', message: workerReceipt('header', 'src/header.mjs', 'node --test test/header.test.mjs') } }, status: 'completed' } },
+      { type: 'item.completed', item: { type: 'collab_tool_call', tool: 'wait', receiver_thread_ids: ['worker-retry'], agents_states: { 'worker-retry': { status: 'completed', message: workerReceipt('retry', 'src/retry.mjs', 'node --test test/retry.test.mjs') } }, status: 'completed' } },
+    ].map(event => JSON.stringify(event)).join('\n')
+
+    expect(summarizeManagedControllerEvents(raw)).toMatchObject({
+      tool_calls: 4,
+      worker_lifecycle: { dispatch_count: 2, settlement_count: 2, wait_count: 2 },
+      worker_receipts: [
+        { worker_id: 'worker-header', status: 'parsed', receipt: { assignment: 'header' } },
+        { worker_id: 'worker-retry', status: 'parsed', receipt: { assignment: 'retry' } },
+      ],
+    })
+  })
+
+  it('fails worker compliance when a receipt reports Manager-owned work', () => {
+    const compliance = scoreManagedWorkerAssignments({
+      worker_assignments: [
+        { id: 'header', allowed_changes: ['src/header.mjs'], allowed_commands: ['node --test test/header.test.mjs'] },
+        { id: 'retry', allowed_changes: ['src/retry.mjs'], allowed_commands: ['node --test test/retry.test.mjs'] },
+      ],
+      manager_only_changes: ['.rsp/changes/normalize-transport-inputs.md'],
+      manager_only_commands: ['npm test'],
+    }, {
+      worker_lifecycle: { dispatch_count: 2 },
+      worker_receipts: [
+        { worker_id: 'worker-header', status: 'parsed', receipt: { assignment: 'header', result: 'changed-same-scope', changed_paths: ['src/header.mjs'], verification: [{ command: 'node --test test/header.test.mjs', scope: 'header', outcome: 'passed', omissions: [] }], boundary: 'unchanged', evidence_status: 'valid', release_claim: 'unavailable' } },
+        { worker_id: 'worker-retry', status: 'parsed', receipt: { assignment: 'retry', result: 'changed-same-scope', changed_paths: ['src/retry.mjs', '.rsp/changes/normalize-transport-inputs.md'], verification: [{ command: 'node --test test/retry.test.mjs', scope: 'retry', outcome: 'passed', omissions: [] }, { command: 'npm test', scope: 'aggregate', outcome: 'passed', omissions: [] }], boundary: 'unchanged', evidence_status: 'valid', release_claim: 'unavailable' } },
+      ],
+    })
+
+    expect(compliance).toMatchObject({
+      status: 'failed',
+      receipt_rejection_count: 1,
+      host_dispatch_count: 2,
+      expected_dispatch_count: 2,
+    })
+    expect(compliance.violations).toEqual(expect.arrayContaining([
+      expect.objectContaining({ assignment: 'retry', kind: 'manager-only-path' }),
+      expect.objectContaining({ assignment: 'retry', kind: 'manager-only-command' }),
+    ]))
+  })
+
+  it('passes matching worker claims and fails a missing host dispatch', () => {
+    const manifest = {
+      worker_assignments: [
+        { id: 'header', allowed_changes: ['src/header.mjs'], allowed_commands: ['node --test test/header.test.mjs'] },
+        { id: 'retry', allowed_changes: ['src/retry.mjs'], allowed_commands: ['node --test test/retry.test.mjs'] },
+      ],
+      manager_only_changes: ['.rsp/changes/normalize-transport-inputs.md'],
+      manager_only_commands: ['npm test'],
+    }
+    const workerReceipts = [
+      { worker_id: 'worker-header', status: 'parsed', error: null, receipt: { assignment: 'header', result: 'changed-same-scope', changed_paths: ['src/header.mjs'], verification: [{ command: 'node --test test/header.test.mjs', scope: 'header', outcome: 'passed', omissions: [] }], boundary: 'unchanged', evidence_status: 'valid', release_claim: 'unavailable' } },
+      { worker_id: 'worker-retry', status: 'parsed', error: null, receipt: { assignment: 'retry', result: 'changed-same-scope', changed_paths: ['src/retry.mjs'], verification: [{ command: 'node --test test/retry.test.mjs', scope: 'retry', outcome: 'passed', omissions: [] }], boundary: 'unchanged', evidence_status: 'valid', release_claim: 'unavailable' } },
+    ]
+
+    expect(scoreManagedWorkerAssignments(manifest, {
+      worker_lifecycle: { dispatch_count: 2 },
+      worker_receipts: workerReceipts,
+    })).toMatchObject({
+      status: 'passed',
+      receipt_rejection_count: 0,
+      violations: [],
+    })
+
+    expect(scoreManagedWorkerAssignments(manifest, {
+      worker_lifecycle: { dispatch_count: 1 },
+      worker_receipts: workerReceipts,
+    })).toMatchObject({
+      status: 'failed',
+      receipt_rejection_count: 0,
+      violations: [expect.objectContaining({ kind: 'host-dispatch-count', expected: 2, value: 1 })],
+    })
+  })
+
+  it('keeps recovered product correctness separate from failed worker compliance', () => {
+    const evidence = projectManagedControllerEvaluationEvidence({
+      durationMs: 10,
+      events: summarizeManagedControllerEvents(''),
+      receipt: null,
+      result: 'passed',
+      output: { expected_missing: [], forbidden_present: [] },
+      unauthorizedPaths: [],
+      workerCompliance: {
+        status: 'failed',
+        receipt_rejection_count: 1,
+        host_dispatch_count: 2,
+        expected_dispatch_count: 2,
+        violations: [{ assignment: 'retry', kind: 'manager-only-command', value: 'npm test' }],
+      },
+    })
+
+    expect(evidence.observability.dimensions).toMatchObject({
+      compliance: { status: 'failed' },
+      boundary: { status: 'failed' },
+      task_result: { status: 'passed' },
+    })
+    expect(evidence.observability.worker_compliance).toMatchObject({
+      status: 'failed',
+      recovered_product_result: true,
+      receipt_rejection_count: 1,
     })
   })
 

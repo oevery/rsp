@@ -32,6 +32,8 @@ export interface ManagedControllerHoldoutManifest extends ManagedControllerOutpu
   initialize_rsp?: boolean
   installed_skills?: string[]
   local_bare_remote?: boolean
+  manager_only_changes?: string[]
+  manager_only_commands?: string[]
   provider_expectations?: {
     route: 'direct' | 'selected'
     mode: 'direct' | 'solo' | 'delegated' | 'coordinated'
@@ -42,6 +44,11 @@ export interface ManagedControllerHoldoutManifest extends ManagedControllerOutpu
   required_changes?: string[]
   sandbox?: 'workspace-write' | 'danger-full-access'
   verification: string[]
+  worker_assignments?: Array<{
+    id: string
+    allowed_changes: string[]
+    allowed_commands: string[]
+  }>
   commit_message?: {
     body_bullets_max: number
     body_bullets_min: number
@@ -126,6 +133,24 @@ export interface ManagedControllerObservation {
   source_stable: boolean
   timed_out: boolean
   verification_passed: boolean
+  worker_compliance?: ManagedControllerWorkerCompliance
+}
+
+export interface ManagedControllerWorkerReceiptObservation {
+  worker_id: string
+  status: 'invalid' | 'missing' | 'parsed'
+  receipt: Record<string, unknown> | null
+  error: string | null
+}
+
+export interface ManagedControllerWorkerCompliance {
+  status: 'failed' | 'not-required' | 'passed'
+  evidence_source: 'host-lifecycle-and-worker-claim'
+  expected_dispatch_count: number
+  host_dispatch_count: number | null
+  receipt_rejection_count: number
+  recovered_product_result?: boolean
+  violations: Array<{ assignment: string | null, kind: string, value: unknown, expected?: unknown }>
 }
 
 export interface ManagedControllerEvaluationMetadata {
@@ -142,6 +167,7 @@ export interface ManagedControllerEvaluationMetadata {
     tool_output_bytes: number
     usage: unknown
     worker_lifecycle: ManagedControllerWorkerLifecycleObservation
+    worker_receipts: ManagedControllerWorkerReceiptObservation[]
   }
   output: ManagedControllerOutputScore
   paths: { events: string, final: string, metadata: string, workspace: string }
@@ -178,6 +204,7 @@ export interface ManagedControllerEvaluationMetadata {
     omissions: string[]
     resources: ManagedControllerResourceObservation
     host_observed: { worker_lifecycle: ManagedControllerWorkerLifecycleObservation }
+    worker_compliance: ManagedControllerWorkerCompliance | null
   }
   receipt_observations: {
     correction_count: number | null
@@ -187,9 +214,12 @@ export interface ManagedControllerEvaluationMetadata {
   } | null
   recovery?: ManagedControllerRecoveryScore
   result: 'passed' | 'failed'
+  product_result?: 'passed' | 'failed'
   variant: 'baseline' | 'candidate' | 'product'
   verification: { code: number | null, passed: boolean, stderr: string, stdout: string }
   worktree: { changed_paths: string[], missing_required_paths: string[], unauthorized_paths: string[] }
+  worker_compliance: ManagedControllerWorkerCompliance
+  worker_compliance_enforcement: 'diagnostic' | 'required'
 }
 
 export interface ManagedControllerEvaluationReceiptIdentity {
@@ -243,6 +273,7 @@ export function runManagedControllerEvaluation(options: {
   authFile?: string
   caseId: string
   codexBin?: string
+  comparisonArm?: 'baseline' | 'candidate'
   effort: string
   env?: NodeJS.ProcessEnv
   isolatedUserContext?: boolean
@@ -263,14 +294,21 @@ export function normalizeManagedControllerEvaluationReceipt(
   receipt: unknown,
   providerExpectations: ManagedControllerHoldoutManifest['provider_expectations'],
 ): unknown
-export function scoreManagedControllerObservation(manifest: ManagedControllerHoldoutManifest, observation: ManagedControllerObservation): {
+export function scoreManagedControllerObservation(manifest: ManagedControllerHoldoutManifest, observation: ManagedControllerObservation, options?: {
+  workerComplianceEnforcement?: 'diagnostic' | 'required'
+}): {
   commit_message?: { errors: string[], passed: boolean }
   missing_required_paths: string[]
   output: ManagedControllerOutputScore
+  product_result?: 'passed' | 'failed'
   recovery?: ManagedControllerRecoveryScore
   result: 'passed' | 'failed'
   unauthorized_paths: string[]
 }
+export function scoreManagedWorkerAssignments(
+  manifest: Pick<ManagedControllerHoldoutManifest, 'manager_only_changes' | 'manager_only_commands' | 'worker_assignments'>,
+  events: { worker_lifecycle?: Partial<ManagedControllerWorkerLifecycleObservation>, worker_receipts?: ManagedControllerWorkerReceiptObservation[] },
+): ManagedControllerWorkerCompliance
 export function summarizeManagedControllerEvents(raw: string, options?: {
   installedSkills?: string[]
   workspace?: string
@@ -283,6 +321,7 @@ export function summarizeManagedControllerEvents(raw: string, options?: {
   tool_output_bytes: number
   usage: unknown
   worker_lifecycle: ManagedControllerWorkerLifecycleObservation
+  worker_receipts: ManagedControllerWorkerReceiptObservation[]
 }
 export function projectManagedControllerEvaluationEvidence(options: {
   durationMs: number
@@ -297,6 +336,7 @@ export function projectManagedControllerEvaluationEvidence(options: {
   result: 'passed' | 'failed'
   output: ManagedControllerOutputScore
   unauthorizedPaths: string[]
+  workerCompliance?: ManagedControllerWorkerCompliance
 }): {
   agent_reported: ManagedControllerAgentReportedEvaluation | null
   observability: ManagedControllerEvaluationMetadata['observability']
