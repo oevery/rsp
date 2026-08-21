@@ -15,9 +15,43 @@ import {
 import { projectSkillEvaluationObservability } from './skill-evaluation-observability.mjs'
 
 const CASE_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+const ASSIGNMENT_IDENTITY = /^\w[\w.:/-]*$/
 const EVALUATION_RECEIPT_PATH = '.rsp-evaluation-receipt.json'
 const WORKER_RECEIPT_PREFIX = 'RSP_WORKER_RECEIPT_JSON='
 const VARIANTS = new Set(['baseline', 'candidate', 'product'])
+
+export const MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT = Object.freeze({
+  version: 1,
+  consumer: 'managed-controller-evaluator',
+  transport: { encoding: 'single-line-json', prefix: WORKER_RECEIPT_PREFIX },
+  identity: { field: 'assignment', mode: 'exact-echo' },
+  required_fields: ['assignment', 'result', 'changed_paths', 'verification', 'boundary', 'evidence_status', 'release_claim'],
+  optional_fields: ['worker', 'independence'],
+  field_types: {
+    assignment: 'non-empty string equal to assignment_identity',
+    result: 'one of assignment.allowed_results',
+    changed_paths: 'array of non-empty strings',
+    verification: {
+      type: 'array',
+      item_required_fields: ['command', 'scope', 'outcome', 'omissions'],
+      command: 'non-empty string',
+      scope: 'non-empty string',
+      outcome: 'non-empty string',
+      omissions: 'string or array of strings',
+    },
+    worker: 'non-empty string when present',
+    independence: 'non-empty string when present',
+  },
+  enums: {
+    boundary: ['changed', 'unchanged'],
+    evidence_status: ['invalid', 'unavailable', 'valid'],
+    release_claim: ['released', 'retained', 'unavailable'],
+  },
+})
+
+function workerAssignmentIdentity(assignment) {
+  return assignment.assignment_identity ?? assignment.id
+}
 
 function assertStringArray(value, label) {
   if (!Array.isArray(value) || value.length === 0 || value.some(item => typeof item !== 'string' || item.length === 0))
@@ -881,12 +915,20 @@ function readHoldout(root, caseId) {
     if (!Array.isArray(manifest.worker_assignments) || manifest.worker_assignments.length === 0)
       throw new Error(`${caseId}.worker_assignments must be a non-empty array`)
     const assignmentIds = new Set()
+    const assignmentIdentities = new Set()
     for (const [index, assignment] of manifest.worker_assignments.entries()) {
       if (!assignment || typeof assignment !== 'object' || !CASE_ID.test(assignment.id ?? ''))
         throw new Error(`${caseId}.worker_assignments[${index}].id must be a valid id`)
       if (assignmentIds.has(assignment.id))
         throw new Error(`${caseId}.worker_assignments contains duplicate id ${assignment.id}`)
       assignmentIds.add(assignment.id)
+      const assignmentIdentity = workerAssignmentIdentity(assignment)
+      if (typeof assignmentIdentity !== 'string' || !ASSIGNMENT_IDENTITY.test(assignmentIdentity))
+        throw new Error(`${caseId}.worker_assignments[${index}].assignment_identity must be a valid identity`)
+      if (assignmentIdentities.has(assignmentIdentity))
+        throw new Error(`${caseId}.worker_assignments contains duplicate assignment identity ${assignmentIdentity}`)
+      assignmentIdentities.add(assignmentIdentity)
+      assertStringArray(assignment.allowed_results, `${caseId}.worker_assignments[${index}].allowed_results`)
       assertStringArray(assignment.allowed_changes, `${caseId}.worker_assignments[${index}].allowed_changes`)
       assertStringArray(assignment.allowed_commands, `${caseId}.worker_assignments[${index}].allowed_commands`)
     }
@@ -1099,16 +1141,34 @@ function workerReceiptVerificationCommands(receipt) {
     return null
   const commands = []
   for (const item of receipt.verification) {
-    if (!item || typeof item !== 'object' || typeof item.command !== 'string' || item.command.length === 0)
+    if (!item || typeof item !== 'object' || Array.isArray(item))
       return null
+    if (JSON.stringify(Object.keys(item).sort()) !== JSON.stringify(MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT.field_types.verification.item_required_fields.slice().sort()))
+      return null
+    if (typeof item.command !== 'string' || item.command.length === 0
+      || typeof item.scope !== 'string' || item.scope.length === 0
+      || typeof item.outcome !== 'string' || item.outcome.length === 0
+      || !(typeof item.omissions === 'string'
+        || (Array.isArray(item.omissions) && item.omissions.every(omission => typeof omission === 'string')))) {
+      return null
+    }
     commands.push(item.command)
   }
   return commands
 }
 
 function validWorkerReceiptShape(receipt) {
+  if (!receipt || typeof receipt !== 'object' || Array.isArray(receipt))
+    return false
+  const allowedFields = new Set([
+    ...MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT.required_fields,
+    ...MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT.optional_fields,
+  ])
+  if (MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT.required_fields.some(field => !Object.hasOwn(receipt, field))
+    || Object.keys(receipt).some(field => !allowedFields.has(field))) {
+    return false
+  }
   return receipt
-    && typeof receipt === 'object'
     && typeof receipt.assignment === 'string'
     && receipt.assignment.length > 0
     && typeof receipt.result === 'string'
@@ -1116,9 +1176,11 @@ function validWorkerReceiptShape(receipt) {
     && Array.isArray(receipt.changed_paths)
     && receipt.changed_paths.every(path => typeof path === 'string' && path.length > 0)
     && workerReceiptVerificationCommands(receipt) !== null
-    && ['changed', 'unchanged'].includes(receipt.boundary)
-    && ['invalid', 'unavailable', 'valid'].includes(receipt.evidence_status)
-    && ['released', 'retained', 'unavailable'].includes(receipt.release_claim)
+    && MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT.enums.boundary.includes(receipt.boundary)
+    && MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT.enums.evidence_status.includes(receipt.evidence_status)
+    && MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT.enums.release_claim.includes(receipt.release_claim)
+    && (!Object.hasOwn(receipt, 'worker') || (typeof receipt.worker === 'string' && receipt.worker.length > 0))
+    && (!Object.hasOwn(receipt, 'independence') || (typeof receipt.independence === 'string' && receipt.independence.length > 0))
 }
 
 export function scoreManagedWorkerAssignments(manifest, events) {
@@ -1140,7 +1202,8 @@ export function scoreManagedWorkerAssignments(manifest, events) {
   let unassignedMissingClaims = 0
   let unexpectedRejectedReceipts = 0
   const expectedDispatchCount = assignments.length
-  const knownAssignments = new Set(assignments.map(assignment => assignment.id))
+  const assignmentByIdentity = new Map(assignments.map(assignment => [workerAssignmentIdentity(assignment), assignment]))
+  const knownAssignmentIdentities = new Set(assignmentByIdentity.keys())
   const hostDispatchCount = events.worker_lifecycle?.dispatch_count ?? null
   if (hostDispatchCount !== expectedDispatchCount) {
     violations.push({
@@ -1156,26 +1219,30 @@ export function scoreManagedWorkerAssignments(manifest, events) {
   for (const claim of claims) {
     if (claim.status !== 'parsed' || !validWorkerReceiptShape(claim.receipt)) {
       const assignment = typeof claim.receipt?.assignment === 'string' ? claim.receipt.assignment : null
-      violations.push({ assignment, kind: claim.status === 'missing' ? 'missing-receipt' : 'invalid-receipt', value: claim.error ?? null })
-      if (assignment && knownAssignments.has(assignment))
-        invalidAssignments.add(assignment)
+      const policyAssignment = assignment ? assignmentByIdentity.get(assignment) : null
+      violations.push({ assignment: policyAssignment?.id ?? assignment, kind: claim.status === 'missing' ? 'missing-receipt' : 'invalid-receipt', value: claim.error ?? null })
+      if (policyAssignment)
+        invalidAssignments.add(policyAssignment.id)
       else if (assignment)
         unexpectedRejectedReceipts += 1
       else
         unassignedMissingClaims += 1
       continue
     }
-    const assignment = claim.receipt.assignment
-    if (parsedByAssignment.has(assignment)) {
-      violations.push({ assignment, kind: 'duplicate-receipt', value: claim.worker_id })
-      invalidAssignments.add(assignment)
+    const assignmentIdentity = claim.receipt.assignment
+    const assignment = assignmentByIdentity.get(assignmentIdentity)
+    if (parsedByAssignment.has(assignmentIdentity)) {
+      violations.push({ assignment: assignment?.id ?? assignmentIdentity, kind: 'duplicate-receipt', value: claim.worker_id })
+      if (assignment)
+        invalidAssignments.add(assignment.id)
       continue
     }
-    parsedByAssignment.set(assignment, claim.receipt)
+    parsedByAssignment.set(assignmentIdentity, claim.receipt)
   }
 
   for (const assignment of assignments) {
-    const receipt = parsedByAssignment.get(assignment.id)
+    const assignmentIdentity = workerAssignmentIdentity(assignment)
+    const receipt = parsedByAssignment.get(assignmentIdentity)
     if (!receipt) {
       if (unassignedMissingClaims > 0)
         unassignedMissingClaims -= 1
@@ -1185,6 +1252,8 @@ export function scoreManagedWorkerAssignments(manifest, events) {
       continue
     }
     const assignmentViolations = []
+    if (!assignment.allowed_results.includes(receipt.result))
+      assignmentViolations.push({ assignment: assignment.id, kind: 'invalid-result', value: receipt.result })
     for (const path of receipt.changed_paths) {
       if ((manifest.manager_only_changes ?? []).some(pattern => matchesAuthorizedPath(pattern, path)))
         assignmentViolations.push({ assignment: assignment.id, kind: 'manager-only-path', value: path })
@@ -1208,9 +1277,9 @@ export function scoreManagedWorkerAssignments(manifest, events) {
     violations.push(...assignmentViolations)
   }
 
-  for (const assignment of parsedByAssignment.keys()) {
-    if (!knownAssignments.has(assignment)) {
-      violations.push({ assignment, kind: 'unexpected-receipt', value: assignment })
+  for (const assignmentIdentity of parsedByAssignment.keys()) {
+    if (!knownAssignmentIdentities.has(assignmentIdentity)) {
+      violations.push({ assignment: assignmentIdentity, kind: 'unexpected-receipt', value: assignmentIdentity })
       unexpectedRejectedReceipts += 1
     }
   }
@@ -1361,9 +1430,21 @@ export function prepareManagedControllerRun({ caseId, outputRoot, root, skillSou
       : []),
     ...(manifest.worker_assignments
       ? [
-          `This evaluation has a machine consumer for managed WorkerReceipts. For each settled worker, require exactly one single-line JSON transport prefixed with ${WORKER_RECEIPT_PREFIX}. The JSON object must encode the existing managed-exchange fields as: assignment, result, changed_paths, verification (objects with command, scope, outcome, omissions), boundary, evidence_status, release_claim, and optional worker and independence. Do not infer or repair a missing worker receipt.`,
+          `This evaluation has a machine consumer for managed WorkerReceipts. Treat this descriptor as one atomic return contract and copy its complete applicable transport, exact assignment identity, fields, types, and canonical value domains into every worker Assignment without summarizing, translating, or replacing values: ${JSON.stringify({
+            ...MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT,
+            assignments: manifest.worker_assignments.map(assignment => ({
+              policy_id: assignment.id,
+              assignment_identity: workerAssignmentIdentity(assignment),
+              allowed_results: assignment.allowed_results,
+            })),
+          })}. Each settled worker must return exactly one matching transport. Do not infer or repair a missing or invalid worker receipt.`,
           `Worker Assignment policy: ${JSON.stringify({
-            assignments: manifest.worker_assignments,
+            assignments: manifest.worker_assignments.map(assignment => ({
+              id: assignment.id,
+              assignment_identity: workerAssignmentIdentity(assignment),
+              allowed_changes: assignment.allowed_changes,
+              allowed_commands: assignment.allowed_commands,
+            })),
             manager_only_changes: manifest.manager_only_changes ?? [],
             manager_only_commands: manifest.manager_only_commands ?? [],
           })}.`,

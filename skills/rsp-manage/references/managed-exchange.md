@@ -6,7 +6,9 @@ Load this reference before Manage composes an Assignment or AssignmentDelta, dis
 
 Use localized labeled natural language as the default Assignment and WorkerReceipt presentation in a human-visible session. Preserve canonical identifiers and enum values secondarily in parentheses or code form. A labeled receipt is the structured claim itself; it is not free-form prose, and Manager must reject a required field that is absent rather than infer it from surrounding conversation.
 
-Use JSON only when an explicitly identified host, API, CLI, or other machine consumer requires this managed-exchange encoding. Encode the same fields as one object without changing their semantics. JSON is secondary transport, never stronger evidence, and never implies admission, validity, or acceptance. Do not emit both natural-language and JSON renderings by default; duplication requires an explicit consumer need. A maintainer `EvaluationReceipt` is a separate evaluation-harness protocol; it is never a `WorkerReceipt` encoding or part of this managed exchange.
+Use JSON only when an explicitly identified host, API, CLI, or other machine consumer requires this managed-exchange encoding. Encode the same fields as one object without changing their semantics. JSON is secondary transport, never stronger evidence, and never implies admission, validity, or acceptance. Do not emit both natural-language and JSON renderings by default; duplication requires an explicit consumer need.
+
+When the Core handoff carries a machine contract descriptor, treat it as one atomic input rather than a prose example. The complete applicable descriptor includes its consumer, version, transport prefix or encoding, exact Assignment identity constraint, fields, types, and canonical value domains. Place it unchanged in the worker Assignment as the return contract; never shorten it to field names, translate its values, or require the worker to read this Manager-owned reference.
 
 ## Assign one bounded lane
 
@@ -26,9 +28,10 @@ Allowed actions: <allowed actions>
 Prohibited actions: <prohibited actions>
 Stop conditions: <stop conditions>
 Replay safety: <idempotent | inspect-before-repeat | non-repeatable>
+Return contract: <complete machine contract descriptor when required>
 ```
 
-Manager issues a distinct transient Assignment identity for every Assignment or AssignmentDelta inside the current ExecutionFrame. The worker echoes that exact identity in its WorkerReceipt; WorkRef, WorkerSession identity, message order, or prose similarity never substitutes for this correlation. Omit an empty optional set or fact, but never omit assignment identity, WorkRef identity, objective, authority, applicable boundaries, stop conditions, or replay safety. `authority`, `read`, `write`, `verify`, `facts`, `allow`, `prohibit`, `stop`, and `replay` are contextual field labels for the canonical authority references, Read Set, Write Set, Verify Set, known facts, allowed and prohibited actions, stop conditions, and resume safety concepts.
+Manager issues a distinct transient Assignment identity for every Assignment or AssignmentDelta inside the current ExecutionFrame. Manager normally chooses the value; an identified machine consumer may constrain its exact correlation value. Manager validates uniqueness and issues that supplied value unchanged, while a duplicate or conflicting constraint stops before dispatch. The worker echoes the exact issued identity in its WorkerReceipt; WorkRef, WorkerSession identity, message order, or prose similarity never substitutes for this correlation. Omit an empty optional set or fact, but never omit assignment identity, WorkRef identity, objective, authority, applicable boundaries, stop conditions, replay safety, or a required return contract. `authority`, `read`, `write`, `verify`, `facts`, `allow`, `prohibit`, `stop`, and `replay` are contextual field labels for the canonical authority references, Read Set, Write Set, Verify Set, known facts, allowed and prohibited actions, stop conditions, and resume safety concepts.
 
 Only an observed resumed compatible WorkerSession may receive an `AssignmentDelta`. A delta carries a new Assignment identity, repeats `workRef` and the new `objective`, then supplies only changed assignment fields. An omitted field inherits only from the immediately accepted Assignment or AssignmentDelta in that same observed WorkerSession. Never inherit across sessions, uncertain identity, or an invalidated authority or safety boundary.
 
@@ -36,7 +39,7 @@ The canonical resume safety values remain `resume safety: idempotent | inspect-b
 
 ## Bound nested delegation
 
-A WorkerSession is a leaf by default. Nested delegation requires explicit Assignment authority that bounds the descendant role, authority, resources, stops, and evidence. The parent owns descendant work, background processes, and ResourceLeases, then returns one schema-valid WorkerReceipt. Descendants gain no ambient authority and cannot satisfy Manager-owned independent Verify or fixed-scope Review. Persist no descendant registry.
+A WorkerSession is a leaf by default. Nested delegation requires explicit Assignment authority that bounds the descendant role, authority, resources, stops, and evidence. The parent owns descendant work, background processes, and ResourceLeases, then returns one schema-valid WorkerReceipt. Descendants gain no ambient authority and cannot satisfy Manager-owned independent Verify or fixed-scope Review. Descendant coordination remains transient.
 
 ## Return one worker claim
 
@@ -59,6 +62,7 @@ Independence: <established | unavailable>
 ```
 
 Assignment identity, result, changed paths, verification, boundary, evidence status, and release claim are required. The release claim is worker-authored and never substitutes for the host's release observation. Worker identity and independence appear only when observed and applicable. Lane-specific result enums remain owned by Diagnose, Inspect, Fix, or Verify; this envelope never replaces them with one generic result enum. Human-facing narration follows the response language and retains an exact canonical result secondarily when needed. Never parse free-form prose to manufacture a receipt.
+Manager may reject a WorkerReceipt, but must never author, repair, reconstruct, or substitute one. Manager-authored labels, summaries, or structured output remain controller claims and cannot establish worker provenance.
 
 ## Separate observations, claims, and acceptance
 
@@ -73,7 +77,7 @@ Host observations and producer claims remain separate inputs:
 | `WorkerReceipt` | worker | attributable structured claim | accepted evidence |
 | `AcceptedLaneEvidence` | Manager | validated lane evidence | review-clean or closeout by itself |
 
-Before deriving `AcceptedLaneEvidence`, Manager matches the echoed Assignment identity to the current WorkerInvocation, then validates actual paths and local diff, exact verification and omissions, boundary validity, evidence status, the worker's release claim, and the host's lifecycle and release observations. The accepted projection retains only the validated assignment, lane result, paths, verification, applicable identity or independence, and decisive observations. It is response-only and never becomes a receipt ledger.
+Before deriving `AcceptedLaneEvidence`, Manager matches the echoed Assignment identity to the current WorkerInvocation, then validates actual paths and local diff, exact verification and omissions, boundary validity, evidence status, the worker's release claim, and the host's lifecycle and release observations. The accepted projection retains only the validated assignment, lane result, paths, verification, applicable identity or independence, and decisive observations. It remains transient.
 
 Reuse unchanged same-run evidence only inside its declared scope. A normal Fix that implements declared behavior remains same-scope. Reread the complete owner, status, authority, blockers, and decisive evidence only after an Assignment crossing, `boundary: changed`, changed behavior/acceptance/interface, a shared seam, external owner or capsule drift, unbounded impact, cross-session resume, or closeout. Uncertainty widens the reread and verification boundary; unchanged same-scope work never returns to Core merely to repeat qualification.
 

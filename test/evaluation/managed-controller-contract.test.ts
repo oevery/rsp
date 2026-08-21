@@ -6,7 +6,7 @@ import { basename, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
-import { evaluateManagedController, hashManagedControllerArtifact, hashManagedControllerComposition, loadManagedControllerCases, normalizeManagedControllerEvaluationReceipt, observeManagedControllerGit, prepareManagedControllerRun, projectManagedControllerEvaluationEvidence, readManagedControllerFlag, rescoreManagedControllerArtifact, runManagedControllerEvaluation, scoreManagedControllerObservation, scoreManagedControllerOutput, scoreManagedRecoveryOutput, scoreManagedWorkerAssignments, summarizeManagedControllerEvents } from '../../scripts/managed-controller-eval.mjs'
+import { evaluateManagedController, hashManagedControllerArtifact, hashManagedControllerComposition, loadManagedControllerCases, MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT, normalizeManagedControllerEvaluationReceipt, observeManagedControllerGit, prepareManagedControllerRun, projectManagedControllerEvaluationEvidence, readManagedControllerFlag, rescoreManagedControllerArtifact, runManagedControllerEvaluation, scoreManagedControllerObservation, scoreManagedControllerOutput, scoreManagedRecoveryOutput, scoreManagedWorkerAssignments, summarizeManagedControllerEvents } from '../../scripts/managed-controller-eval.mjs'
 import { canonicalEnum, findSemanticUnit, markdownSection, orderedMarkers } from '../support/markdown-contract'
 
 const root = fileURLToPath(new URL('../..', import.meta.url))
@@ -117,6 +117,7 @@ describe('rsp-manage research candidate', () => {
       'owner-release',
       'progress-continues',
       'provenance-does-not-grant-authority',
+      'required-worker-admission-gate',
       'required-worker-closeout',
       'same-shape-assignment-batching',
       'settlement-without-receipt',
@@ -133,6 +134,31 @@ describe('rsp-manage research candidate', () => {
       'skills/rsp/references/managed-routing.md',
     ])
     expect(evaluateManagedController(root)).toEqual(cases.map(item => ({ id: item.id, missing: [], passed: true })))
+  })
+
+  it('covers the required-worker admission gate without host-specific mechanics', () => {
+    const fixture = loadManagedControllerCases(root).find(item => item.id === 'required-worker-admission-gate')
+    expect(fixture).toBeDefined()
+    expect(fixture?.sources).toEqual([
+      'skills/rsp-manage/SKILL.md',
+      'skills/rsp-manage/references/managed-exchange.md',
+      'skills/rsp-manage/references/host-worker-lifecycle.md',
+    ])
+
+    const requiredContract = fixture?.required_contract.join('\n') ?? ''
+    expect(requiredContract).toMatch(/required.*monotonic/s)
+    expect(requiredContract).toMatch(/host-confirmed admission.*Assignment-owned mutation/s)
+    expect(requiredContract).toMatch(/Manager-side.*neither (?:a )?WorkerInvocation nor (?:a )?WorkerReceipt/s)
+    expect(requiredContract).toMatch(/never author, repair, reconstruct, or substitute/)
+    expect(requiredContract).toMatch(/topology is a plan.*host observations/s)
+    expect(requiredContract).toMatch(/stop.*before any worker-owned mutation/s)
+
+    const prohibitedActions = fixture?.prohibited_actions.join('\n') ?? ''
+    expect(prohibitedActions).toMatch(/downgrade required/)
+    expect(prohibitedActions).toMatch(/before host-confirmed admission/)
+    expect(prohibitedActions).toMatch(/Manager-authored.*WorkerReceipt/s)
+    expect(prohibitedActions).toMatch(/planned topology.*completed lifecycle/s)
+    expect(prohibitedActions).not.toMatch(/spawn_agent|create_agent|wait_agent|wait_threads/)
   })
 
   it('keeps release identity out of ordinary execution frames and in release owners', () => {
@@ -281,6 +307,18 @@ describe('rsp-manage research candidate', () => {
       expect(prepared.manifest.expected_output).not.toContain('two worker dispatches')
       expect(prepared.manifest.provider_expectations?.worker_dispatch_count).toEqual({ min: 2, max: 2 })
     }
+
+    const parallel = prepareManagedControllerRun({ caseId: 'managed-coordinated-parallel', outputRoot, root, variant: 'product' })
+    expect(parallel.manifest.worker_assignments).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'header', assignment_identity: 'normalize/header/1', allowed_results: ['changed-same-scope', 'no-change', 'boundary-changed'] }),
+      expect.objectContaining({ id: 'retry', assignment_identity: 'normalize/retry/1', allowed_results: ['changed-same-scope', 'no-change', 'boundary-changed'] }),
+    ]))
+    expect(parallel.prompt).toContain('one atomic return contract')
+    expect(parallel.prompt).toContain(JSON.stringify(MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT.enums))
+    expect(parallel.prompt).toContain('\"assignment_identity\":\"normalize/header/1\"')
+    expect(parallel.prompt).toContain('\"allowed_results\":[\"changed-same-scope\",\"no-change\",\"boundary-changed\"]')
+    expect(parallel.prompt.split('\"allowed_results\"')).toHaveLength(3)
+    expect(parallel.prompt).toContain('without summarizing, translating, or replacing values')
   })
 
   it('prepares the exact-package pause and resume recovery holdout', ({ onTestFinished }) => {
@@ -652,7 +690,7 @@ describe('rsp-manage product Skill', () => {
     expect(findSemanticUnit(managedExchange, ['localized labeled natural language', 'default', 'human-visible session'])).toBeDefined()
     expect(findSemanticUnit(managedExchange, ['JSON', 'explicitly identified', 'machine consumer', 'secondary transport'])).toBeDefined()
     expect(managedExchange).toContain('Do not emit both natural-language and JSON renderings by default')
-    expect(findSemanticUnit(managedExchange, ['`EvaluationReceipt`', 'separate evaluation-harness protocol', 'never', '`WorkerReceipt` encoding'])).toBeDefined()
+    expect(managedExchange).not.toContain('evaluation-harness protocol')
     expect(findSemanticUnit(managedExchange, ['release claim', 'worker-authored', 'never substitutes', 'host\'s release observation'])).toBeDefined()
     expect(lanes).toContain('**Diagnose:** `rsp-diagnose`; read-only until a cause or explicit no-cause result. Return `confirmed-same-scope`, `unresolved-same-scope`, or `boundary-changed`')
     expect(lanes).toContain('**Inspect:** Manager-only and read-only; parallel only with isolated paths and verification resources. Return `confirmed-same-scope`, `unresolved-same-scope`, or `boundary-changed`')
@@ -775,10 +813,10 @@ describe('rsp-manage product Skill', () => {
     expect(managedExchange).toContain('cross-session resume, or closeout')
     expect(managedExchange).toContain('unchanged same-scope work never returns to Core merely to repeat qualification')
     expect(body).toContain('Keep transient control, execution, receipt, resource, topology, and chronology data response-only')
-    expect(body).toContain('write only accepted outcomes to Tasks')
+    expect(body).toContain('persist only accepted outcomes to Tasks')
     expect(body).toContain('real unresolved dependencies or risks to Blockers')
     expect(body).toContain('Durable facts or rationale remain owned by the durable writeback decision')
-    expect(body).toContain('Create no frontier file, ticket map, ledger, registry, graph, hook, numeric routing score, run directory, or receipt/worker/verification registry')
+    expect(body).toContain('do not create another managed-state owner')
   })
 
   it('keeps a normal Fix within declared acceptance on the bounded receipt path', () => {
@@ -928,7 +966,7 @@ describe('rsp-manage product Skill', () => {
     expect(body).toContain('only Core may route authorized Shape')
     expect(body).toContain('never classify discovery or change topology')
     expect(body).toContain('Stop when discovery or a new request changes declared behavior')
-    expect(managedRouting).toContain('Never persist the goal envelope, ExecutionFrame, DispatchDisposition')
+    expect(managedRouting).toContain('The managed goal envelope and returned control objects remain transient')
   })
 
   it('prepares a product Group holdout with real waves and bounded mutations', ({ onTestFinished }) => {
@@ -1322,8 +1360,8 @@ describe('rsp-manage product Skill', () => {
   it('fails worker compliance when a receipt reports Manager-owned work', () => {
     const compliance = scoreManagedWorkerAssignments({
       worker_assignments: [
-        { id: 'header', allowed_changes: ['src/header.mjs'], allowed_commands: ['node --test test/header.test.mjs'] },
-        { id: 'retry', allowed_changes: ['src/retry.mjs'], allowed_commands: ['node --test test/retry.test.mjs'] },
+        { id: 'header', allowed_results: ['changed-same-scope', 'no-change', 'boundary-changed'], allowed_changes: ['src/header.mjs'], allowed_commands: ['node --test test/header.test.mjs'] },
+        { id: 'retry', allowed_results: ['changed-same-scope', 'no-change', 'boundary-changed'], allowed_changes: ['src/retry.mjs'], allowed_commands: ['node --test test/retry.test.mjs'] },
       ],
       manager_only_changes: ['.rsp/changes/normalize-transport-inputs.md'],
       manager_only_commands: ['npm test'],
@@ -1350,8 +1388,8 @@ describe('rsp-manage product Skill', () => {
   it('passes matching worker claims and fails a missing host dispatch', () => {
     const manifest = {
       worker_assignments: [
-        { id: 'header', allowed_changes: ['src/header.mjs'], allowed_commands: ['node --test test/header.test.mjs'] },
-        { id: 'retry', allowed_changes: ['src/retry.mjs'], allowed_commands: ['node --test test/retry.test.mjs'] },
+        { id: 'header', allowed_results: ['changed-same-scope', 'no-change', 'boundary-changed'], allowed_changes: ['src/header.mjs'], allowed_commands: ['node --test test/header.test.mjs'] },
+        { id: 'retry', allowed_results: ['changed-same-scope', 'no-change', 'boundary-changed'], allowed_changes: ['src/retry.mjs'], allowed_commands: ['node --test test/retry.test.mjs'] },
       ],
       manager_only_changes: ['.rsp/changes/normalize-transport-inputs.md'],
       manager_only_commands: ['npm test'],
@@ -1377,6 +1415,60 @@ describe('rsp-manage product Skill', () => {
       status: 'failed',
       receipt_rejection_count: 0,
       violations: [expect.objectContaining({ kind: 'host-dispatch-count', expected: 2, value: 1 })],
+    })
+  })
+
+  it('correlates policy lanes through exact runtime assignment identities and rejects synonym drift', () => {
+    const manifest = {
+      worker_assignments: [
+        { id: 'header', assignment_identity: 'normalize/header/1', allowed_results: ['changed-same-scope', 'no-change', 'boundary-changed'], allowed_changes: ['src/header.mjs'], allowed_commands: ['node --test test/header.test.mjs'] },
+      ],
+      manager_only_changes: [],
+      manager_only_commands: [],
+    }
+    const receipt = {
+      assignment: 'normalize/header/1',
+      result: 'changed-same-scope',
+      changed_paths: ['src/header.mjs'],
+      verification: [{ command: 'node --test test/header.test.mjs', scope: 'header', outcome: 'passed', omissions: [] }],
+      boundary: 'unchanged',
+      evidence_status: 'valid',
+      release_claim: 'unavailable',
+    }
+
+    expect(scoreManagedWorkerAssignments(manifest, {
+      worker_lifecycle: { dispatch_count: 1 },
+      worker_receipts: [{ worker_id: 'worker-header', status: 'parsed', error: null, receipt }],
+    })).toMatchObject({ status: 'passed', receipt_rejection_count: 0, violations: [] })
+
+    expect(scoreManagedWorkerAssignments(manifest, {
+      worker_lifecycle: { dispatch_count: 1 },
+      worker_receipts: [{ worker_id: 'worker-header', status: 'parsed', error: null, receipt: { ...receipt, evidence_status: 'fresh', release_claim: 'none' } }],
+    })).toMatchObject({
+      status: 'failed',
+      receipt_rejection_count: 1,
+      violations: [expect.objectContaining({ assignment: 'header', kind: 'invalid-receipt' })],
+    })
+
+    expect(scoreManagedWorkerAssignments(manifest, {
+      worker_lifecycle: { dispatch_count: 1 },
+      worker_receipts: [{ worker_id: 'worker-header', status: 'parsed', error: null, receipt: { ...receipt, result: 'success' } }],
+    })).toMatchObject({
+      status: 'failed',
+      receipt_rejection_count: 1,
+      violations: [expect.objectContaining({ assignment: 'header', kind: 'invalid-result', value: 'success' })],
+    })
+
+    expect(scoreManagedWorkerAssignments(manifest, {
+      worker_lifecycle: { dispatch_count: 1 },
+      worker_receipts: [{ worker_id: 'worker-header', status: 'parsed', error: null, receipt: { ...receipt, assignment: 'header' } }],
+    })).toMatchObject({
+      status: 'failed',
+      receipt_rejection_count: 2,
+      violations: expect.arrayContaining([
+        expect.objectContaining({ assignment: 'header', kind: 'unexpected-receipt' }),
+        expect.objectContaining({ assignment: 'header', kind: 'missing-receipt' }),
+      ]),
     })
   })
 

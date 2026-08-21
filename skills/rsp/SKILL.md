@@ -4,7 +4,7 @@ description: Use this skill when initializing RSP, operating an existing .rsp pr
 license: MIT
 metadata:
   author: oevery
-  version: "2026.08.18.1"
+  version: "2026.08.21.2"
 ---
 
 # RSP Skill
@@ -22,6 +22,8 @@ Use this Skill for RSP setup or repair, focused `.rsp/` work, and the durable-up
 Read user intent, nearest authority, `rsp status --json`, the selected Change and its readiness, fresh verification evidence, and blockers. Stages are derived guidance, never persisted state.
 
 Use the canonical transient control vocabulary from the maintainer Skill Control Model. Before Core returns or composes a phase result, read the canonical [control outcome](references/control-outcome.md) contract. Route and stop dispositions, dispatch disposition, topology, lane results, acceptance, and closeout remain nested phase-specific details or gates; do not expose them as peer status flows or persist any control object. Core transfers current-phase control to Manage or one Discipline and receives its bounded result. Manage-to-worker communication is delegation, not control transfer: the worker never becomes owner of the managed goal. Core may mutate only RSP control-plane state; product mutation belongs to Implement or a bounded manual Discipline action. Every stop is fail-closed until its declared resume rule succeeds.
+
+When an explicitly identified machine consumer supplies a contract, read the [machine contract kernel](references/contract-kernel.md) before composing or forwarding the selected phase handoff. Carry one complete descriptor; never reduce it to field names or examples.
 
 Apply these routes in order:
 
@@ -54,7 +56,7 @@ Read the focused Change, its sibling Group Brief when grouped, and only the rele
 
 Keep the Change a convergent snapshot of the current plan and final decisive evidence. Replace superseded content; keep routine attempts, temporary probes, and command transcripts in the response. Persist only `open` and `archived`; focus, readiness, routing, and capability availability grant no implementation, review, Git, publication, or approval authority.
 
-RSP work remains repository-native and one-shot. Derive workflow state from current artifacts and checkout evidence; do not require or recreate a Broker, SQLite observation store, managed-runtime adapter, Web Observatory, or hidden runtime synchronization layer.
+RSP remains repository-native and derives workflow state from current project artifacts and checkout evidence; it requires no hidden runtime state.
 
 When archived acceptance is incomplete, read [reopen recovery](references/reopen-recovery.md) before lifecycle mutation. Reopen requires explicit lifecycle authority and grants no Git or external authority.
 

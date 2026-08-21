@@ -1,0 +1,24 @@
+id: required-worker-admission-gate
+sources:
+  - skills/rsp-manage/SKILL.md
+  - skills/rsp-manage/references/managed-exchange.md
+  - skills/rsp-manage/references/host-worker-lifecycle.md
+evidence:
+  - Required worker execution cannot begin until the host has admitted the invocation.
+  - Controller-local activity and narration cannot substitute for worker lifecycle or receipt provenance.
+  - Planned topology remains distinct from host-observed lifecycle completion.
+required_contract:
+  - '`required` is monotonic within the current managed phase'
+  - obtain host-confirmed admission for every required WorkerInvocation before any corresponding Assignment-owned mutation or verification command
+  - Manager-side edits, commands, internal parallelism, role labels, or self-authored output establish neither a WorkerInvocation nor a WorkerReceipt
+  - never author, repair, reconstruct, or substitute one
+  - A derived topology is a plan, not an observed lifecycle fact
+  - Claim completed dispatch, settlement, release, or worker counts only from host observations
+  - stop before any worker-owned mutation
+prohibited_actions:
+  - downgrade required because dispatch is costly, inconvenient, or unavailable
+  - Assignment-owned mutation or verification before host-confirmed admission
+  - Manager-side activity represented as a WorkerInvocation
+  - Manager-authored, repaired, reconstructed, or substituted WorkerReceipt
+  - planned topology reported as completed lifecycle
+  - unavailable required admission discovered only after worker-owned mutation

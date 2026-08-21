@@ -4,7 +4,7 @@ description: Resolve one fixed rsp-review report for an RSP-tracked change. Use 
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.28.1"
+  version: "2026.08.21.1"
 ---
 
 # RSP Resolve Findings
@@ -52,7 +52,7 @@ When work stops before a clean re-review, return Core's compact artifact-scoped 
 - <localized Next action label>: <smallest bounded action and owner>
 ```
 
-The handoff contains authoritative pointers, not project truth. Return it in the response unless the user explicitly authorizes a path; never create a hidden receipt or persistent run state. It is not durable truth or a second state store. Exclude secrets, full logs, and duplicated Change text.
+The handoff contains authoritative pointers, not project truth. Return it in the response unless the user explicitly authorizes an artifact path. Exclude secrets, full logs, and duplicated Change text.
 
 To recover, reopen every authority pointer, confirm the WorkRef and comparison still identify the intended scope, inspect current worktree drift, and revalidate claimed verification. Mark stale evidence pending instead of trusting the handoff. Continue only the named pass; host threads, agents, hooks, or proprietary resume features are optional and never required.
 

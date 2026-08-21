@@ -16,6 +16,6 @@ The Manage-owned managed exchange contract defines the structured `WorkerReceipt
 
 A required worker obligation remains incomplete when creation or admission is unobserved, no schema-valid WorkerReceipt arrives, Manager validation fails, required independence is unavailable, cancellation or background ownership remains unresolved, or release cannot satisfy a declared exclusive-resource boundary. Use the most specific stop and never substitute controller self-certification.
 
-## Evaluate observer facts
+## Observe lifecycle facts
 
-When an evaluation harness exposes host events, derive lifecycle counts and order from those events. Keep agent-reported routing, correction, and dispatch values under an explicit producer-claim label. If a host does not expose one lifecycle fact, record null and an omission; never copy the agent-reported value into an observed measurement. Host observations remain evaluation/session evidence and are never persisted into `.rsp/`.
+Derive completed lifecycle and count claims from host observations. A topology records intended orchestration only, and controller or worker claims do not prove creation, admission, settlement, or release. If the host does not expose a lifecycle fact, keep it unavailable rather than inferring it.

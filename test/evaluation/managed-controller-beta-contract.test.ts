@@ -233,7 +233,7 @@ describe('managed-controller beta evidence', () => {
 
     const deterministic = evaluateManagedController(root)
     const summary = createManagedControllerBetaSummary(plan, deterministic, [])
-    expect(summary.deterministic_contracts).toEqual({ passed: true, cases: 33 })
+    expect(summary.deterministic_contracts).toEqual({ passed: true, cases: 34 })
     expect(summary.product_composition).toEqual(plan.product_composition)
     expect(Object.keys(summary.product_composition)).toEqual(['hash', 'skills'])
     expect(summary.product_composition.skills.map(skill => Object.keys(skill))).toEqual([
@@ -733,7 +733,7 @@ describe('managed-controller beta evidence', () => {
     expect(summary.product_composition.hash).toBe(
       'ee2e26aee295ea182add2102d928f016e58685cd3e53d3447d92f13268688b76',
     )
-    expect(evaluateManagedController(root)).toHaveLength(33)
+    expect(evaluateManagedController(root)).toHaveLength(34)
     expect(summary.deterministic_contracts).toEqual({
       passed: true,
       cases: 19,
@@ -805,7 +805,7 @@ describe('managed-controller beta evidence', () => {
     expect(summary.product_composition.hash).toBe(
       'ff9d3e73086d7067fa2c65f8e569a369266ea15d6a70d3971665ca84d8c2be41',
     )
-    expect(evaluateManagedController(root)).toHaveLength(33)
+    expect(evaluateManagedController(root)).toHaveLength(34)
     expect(summary.deterministic_contracts).toEqual({
       passed: true,
       cases: 19,
@@ -872,7 +872,7 @@ describe('managed-controller beta evidence', () => {
       passed: true,
       cases: 21,
     })
-    expect(evaluateManagedController(root)).toHaveLength(33)
+    expect(evaluateManagedController(root)).toHaveLength(34)
     expect(summary.runs).toEqual([
       expect.objectContaining({
         variant: 'baseline',

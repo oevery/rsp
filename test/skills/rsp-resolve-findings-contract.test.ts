@@ -61,7 +61,7 @@ describe('rsp-resolve-findings Skill contract', () => {
     expect(body).toContain('## Handoff and recovery')
     expect(body).toContain('## <localized Review Resolution Handoff heading>')
     expect(body).toContain('authoritative pointers, not project truth')
-    expect(body).toContain('never create a hidden receipt or persistent run state')
+    expect(body).toContain('Return it in the response unless the user explicitly authorizes an artifact path')
     expect(body).toContain('inspect current worktree drift')
     expect(body).toContain('Mark stale evidence pending')
     expect(body).toContain('proprietary resume features are optional and never required')

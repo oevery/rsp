@@ -8,6 +8,7 @@ import { findSemanticUnit, markdownLinks } from '../support/markdown-contract'
 const root = fileURLToPath(new URL('../..', import.meta.url))
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
 const core = read('skills/rsp/SKILL.md')
+const contractKernel = read('skills/rsp/references/contract-kernel.md')
 const controlOutcome = read('skills/rsp/references/control-outcome.md')
 const responseLanguage = read('skills/rsp/references/response-language.md')
 const manage = read('skills/rsp-manage/SKILL.md')
@@ -25,6 +26,7 @@ describe('skill runtime context composition', () => {
   it('keeps inactive procedures behind direct Core references', () => {
     expect(markdownLinks(core)).toEqual(expect.arrayContaining([
       'references/response-language.md',
+      'references/contract-kernel.md',
       'references/control-outcome.md',
       'references/managed-routing.md',
       'references/reopen-recovery.md',
@@ -57,9 +59,16 @@ describe('skill runtime context composition', () => {
     expect(managedExchange).toContain('Every WorkerInvocation expects exactly one worker-authored `WorkerReceipt`')
     expect(managedExchange).toContain('Use localized labeled natural language as the default Assignment and WorkerReceipt presentation')
     expect(managedExchange).toContain('Use JSON only when an explicitly identified host, API, CLI, or other machine consumer requires this managed-exchange encoding')
-    expect(managedExchange).toContain('A maintainer `EvaluationReceipt` is a separate evaluation-harness protocol')
+    expect(managedExchange).not.toContain('EvaluationReceipt')
     expect(managedExchange).toContain('Do not emit both natural-language and JSON renderings by default')
     expect(managedExchange).toContain('Host observations and producer claims remain separate inputs')
+    expect(contractKernel).toContain('Carry one atomic descriptor')
+    expect(contractKernel).toContain('complete applicable descriptor in that delegated Assignment')
+    expect(contractKernel).toContain('Schema validity proves transport conformance only')
+    expect(contractKernel).not.toContain('generated prompts')
+    expect(manage).toContain('preserve it under the Core machine contract kernel')
+    expect(managedExchange).toContain('Place it unchanged in the worker Assignment as the return contract')
+    expect(managedExchange).toContain('an identified machine consumer may constrain its exact correlation value')
     expect(managedExchange).toContain('Manager validation')
     expect(manageInterruption).toContain('Machine heartbeat is host-level liveness evidence')
     expect(manage).not.toContain('same Finding remains after two completed corrections')

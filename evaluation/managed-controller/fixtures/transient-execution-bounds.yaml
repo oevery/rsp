@@ -20,8 +20,8 @@ required_contract:
   - does not consume the Fix correction allowance
   - Allow at most three Resolve Findings passes per Change, separate from the worker retry limit
   - Keep transient control, execution, receipt, resource, topology, and chronology data response-only
-  - Create no frontier file, ticket map, ledger, registry, graph, hook, numeric routing score, run directory, or receipt/worker/verification registry
-  - Never persist the goal envelope, ExecutionFrame, DispatchDisposition
+  - do not create another managed-state owner
+  - The managed goal envelope and returned control objects remain transient
 prohibited_actions:
   - fixed whole-run dispatch quota
   - unbounded correction

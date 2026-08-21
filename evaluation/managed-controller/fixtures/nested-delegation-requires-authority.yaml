@@ -12,7 +12,7 @@ required_contract:
   - The parent owns descendant work, background processes, and ResourceLeases
   - returns one schema-valid WorkerReceipt
   - cannot satisfy Manager-owned independent Verify or fixed-scope Review
-  - Persist no descendant registry
+  - Descendant coordination remains transient
 prohibited_actions:
   - implicit nested delegation
   - worker-created reviewer grants review-clean

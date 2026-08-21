@@ -23,12 +23,22 @@ provider_expectations:
     max: 2
 worker_assignments:
   - id: header
+    assignment_identity: normalize/header/1
+    allowed_results:
+      - changed-same-scope
+      - no-change
+      - boundary-changed
     allowed_changes:
       - src/header.mjs
       - test/header.test.mjs
     allowed_commands:
       - node --test test/header.test.mjs
   - id: retry
+    assignment_identity: normalize/retry/1
+    allowed_results:
+      - changed-same-scope
+      - no-change
+      - boundary-changed
     allowed_changes:
       - src/retry.mjs
       - test/retry.test.mjs

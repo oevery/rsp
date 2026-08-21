@@ -4,7 +4,7 @@ description: Implement exactly one selected, ready RSP Change within explicit mu
 license: MIT
 metadata:
   author: oevery
-  version: "2026.08.17.1"
+  version: "2026.08.21.1"
 ---
 
 # RSP Implement
@@ -49,7 +49,7 @@ After final mutation, run required Change checks and narrower risk checks. Fresh
 
 Keep a new test only when it still satisfies the admission evidence, protects observable behavior or a real boundary, adds distinct future confidence, avoids duplicate or implementation-detail coverage, and has proportionate maintenance cost. Otherwise remove the disposable test, fixture, and helper before completion, then use smallest sufficient final evidence. User, Change, and project retention requirements remain authoritative.
 
-Record concise fresh evidence when Change Verify owns it. Do not create a receipt store or mandate one shell wrapper.
+Record concise fresh evidence when Change Verify owns it.
 
 ## Return ownership
 

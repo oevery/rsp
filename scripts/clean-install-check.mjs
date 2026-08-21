@@ -33,6 +33,7 @@ const EXPECTED_DESIGN_REFERENCES = [
 ]
 const EXPECTED_CORE_REFERENCES = [
   'conflict-handling.md',
+  'contract-kernel.md',
   'control-outcome.md',
   'durable-review.md',
   'groups-dependencies.md',

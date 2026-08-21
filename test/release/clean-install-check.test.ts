@@ -146,6 +146,7 @@ describe('clean install package check', () => {
       ])
       expect(report.rspCoreReferences).toEqual([
         'conflict-handling.md',
+        'contract-kernel.md',
         'control-outcome.md',
         'durable-review.md',
         'groups-dependencies.md',
@@ -168,6 +169,7 @@ describe('clean install package check', () => {
       expect(report.inventory.files).toContain('skills/rsp-structural-audit/references/structural-lenses.md')
       for (const path of [
         'skills/rsp/references/conflict-handling.md',
+        'skills/rsp/references/contract-kernel.md',
         'skills/rsp/references/control-outcome.md',
         'skills/rsp/references/durable-review.md',
         'skills/rsp/references/groups-dependencies.md',

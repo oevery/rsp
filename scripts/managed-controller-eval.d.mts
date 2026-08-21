@@ -46,6 +46,8 @@ export interface ManagedControllerHoldoutManifest extends ManagedControllerOutpu
   verification: string[]
   worker_assignments?: Array<{
     id: string
+    assignment_identity?: string
+    allowed_results: string[]
     allowed_changes: string[]
     allowed_commands: string[]
   }>
@@ -57,6 +59,17 @@ export interface ManagedControllerHoldoutManifest extends ManagedControllerOutpu
     subject_language: 'english'
     subject_pattern: string
   }
+}
+
+export const MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT: {
+  version: number
+  consumer: string
+  transport: { encoding: string, prefix: string }
+  identity: { field: string, mode: string }
+  required_fields: string[]
+  optional_fields: string[]
+  field_types: Record<string, unknown>
+  enums: Record<'boundary' | 'evidence_status' | 'release_claim', string[]>
 }
 
 export interface PreparedManagedControllerRun {

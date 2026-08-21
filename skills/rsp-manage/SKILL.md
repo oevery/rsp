@@ -4,7 +4,7 @@ description: Coordinate one eligible long-running, recovery, or multi-slice RSP 
 license: MIT
 metadata:
   author: oevery
-  version: "2026.08.18.4"
+  version: "2026.08.21.3"
 ---
 
 # RSP Manage
@@ -44,6 +44,8 @@ Derive `DispatchDisposition` independently after selection:
 | `preferred` | Delegation improves isolation or continuity without creating an acceptance obligation. | Record the fallback and continue locally inside the same owner and authority. |
 | `required` | The request, explicit delegation authority, or declared acceptance requires worker identity or an isolated resource. | Stop `capability-unavailable`; acceptance remains `incomplete`. |
 
+`required` is monotonic within the current managed phase. Cost, convenience, locally available mutation capability, or missing host capability never downgrades it to `preferred | none`; only a changed request, authority, or acceptance boundary returned to Core permits fresh derivation.
+
 Manage qualification, distinct execution/acceptance phases, and separate owners never manufacture a worker obligation. The common path is: validate → resolve frontier → choose `none | preferred | required` → execute → verify; load recovery, lifecycle, review, closeout, or provider detail only when its trigger is present.
 
 ## Resolve the execution frontier
@@ -58,7 +60,7 @@ Classify every new unknown in fail-closed order: `out-of-goal` → `owner-decisi
 
 Use the canonical `StopDisposition` supplied by the invoking Core contract. Manage applies the phase-specific mappings below but does not redefine the complete common stop vocabulary. No stop permits another worker dispatch, product mutation, lifecycle closeout, or Git action until its stated resume contract succeeds.
 
-Before composing or resuming work, validating a `WorkerReceipt`, or deriving `AcceptedLaneEvidence`, read the canonical [managed exchange](references/managed-exchange.md) contract. Send one independently executable vertical slice. Batch small same-shape edits only when role, seam, writer, authority, replay, verification, review, and ResourceLease boundaries match. Never batch distinct WorkRefs into one Assignment or WorkerReceipt. Compatible Group children may reuse a primary WorkerSession, but each child retains its own Assignment, WorkerInvocation, and WorkerReceipt.
+Before composing or resuming work, validating a `WorkerReceipt`, or deriving `AcceptedLaneEvidence`, read the canonical [managed exchange](references/managed-exchange.md) contract. When the Core handoff carries an explicit machine contract descriptor, preserve it under the Core machine contract kernel and place the complete applicable descriptor in every producer Assignment. Send one independently executable vertical slice. Batch small same-shape edits only when role, seam, writer, authority, replay, verification, review, and ResourceLease boundaries match. Never batch distinct WorkRefs into one Assignment or WorkerReceipt. Compatible Group children may reuse a primary WorkerSession, but each child retains its own Assignment, WorkerInvocation, and WorkerReceipt.
 
 Prefer the same primary WorkerSession while frame, role, seam, writer, strategy, and evidence remain compatible. Session loss, incompatible boundaries, independence, or a reasoning reset requires a fresh WorkerSession and complete Assignment. Use an `AssignmentDelta` only under the exchange contract's observed same-session inheritance rule. Identity and continuity grant no authority. Token or context cost may choose only between otherwise equally safe and authorized strategies; it never changes authority, acceptance, completion, or a required worker boundary.
 
@@ -84,7 +86,7 @@ evidence-complete + clean fixed-scope review              → review-clean
 Otherwise acceptance is `incomplete`. This includes a required worker that was not created, returned no valid receipt, reported `unavailable` or `boundary-changed`, or could not satisfy required independence. Execution and verification receipts never derive `review-clean`; the durable writeback decision never substitutes for review. Controller mutation cannot replace an unavailable required implementation worker, and ordinary Verify cannot satisfy required independent Verify.
 Implementation verification, fixed-scope change review, and the durable writeback decision remain separate gates. The first transition above is implementation verification; only the second derives `review-clean`.
 
-Keep transient control, execution, receipt, resource, topology, and chronology data response-only. After validation, write only accepted outcomes to Tasks, decisive evidence to Verify, and real unresolved dependencies or risks to Blockers. Durable facts or rationale remain owned by the durable writeback decision. Create no frontier file, ticket map, ledger, registry, graph, hook, numeric routing score, run directory, or receipt/worker/verification registry.
+Keep transient control, execution, receipt, resource, topology, and chronology data response-only. After validation, persist only accepted outcomes to Tasks, decisive evidence to Verify, and real unresolved dependencies or risks to Blockers. Durable facts or rationale remain owned by the durable writeback decision; do not create another managed-state owner.
 
 Do not impose one fixed dispatch ceiling across the whole managed run. Every dispatch requires one necessary bounded Assignment with available authority, seams, exclusive resources, replay safety, and acceptance capacity. Skip Diagnose or Inspect unless it materially reduces uncertainty for the current acceptance path.
 
@@ -94,7 +96,11 @@ An evidenced failed same-scope Assignment permits at most three correction passe
 
 Send the complete Assignment or eligible AssignmentDelta by message; workers never use the Focus Capsule for coordination. Dispatch only for `preferred | required`; `none` invokes the local Discipline without synthetic delegation. Count a dispatch or resumed delta only after host-confirmed admission. Failed creation, resume, or pre-admission delivery creates no dispatch, continuity, invocation, or inherited boundary. Manage retains receipt validation, accepted-evidence derivation, convergence, lifecycle, and commit orchestration; Commit retains the exact Git procedure.
 
-When dispatch cannot satisfy a required worker obligation, apply the AcceptanceDisposition rule above: return `StopDisposition: capability-unavailable`, keep acceptance `incomplete`, and stop. Absence of a confirmed WorkerInvocation or WorkerReceipt is never success, does not discharge the required obligation, and cannot be replaced by the controller claiming the worker's result.
+For `required`, obtain host-confirmed admission for every required WorkerInvocation before any corresponding Assignment-owned mutation or verification command. Before admission, Manager may inspect evidence, compose and deliver the Assignment, and manage lifecycle only. Manager-side edits, commands, internal parallelism, role labels, or self-authored output establish neither a WorkerInvocation nor a WorkerReceipt.
+
+A derived topology is a plan, not an observed lifecycle fact. Claim completed dispatch, settlement, release, or worker counts only from host observations; controller narration never turns planned topology into completed execution.
+
+When dispatch cannot satisfy a required worker obligation, apply the AcceptanceDisposition rule above: return `StopDisposition: capability-unavailable`, keep acceptance `incomplete`, and stop before any worker-owned mutation. Absence of a confirmed WorkerInvocation or WorkerReceipt is never success, does not discharge the required obligation, and cannot be replaced by the controller claiming the worker's result.
 
 For a Group:
 

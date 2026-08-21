@@ -38,7 +38,7 @@ Core and this reference solely own initial qualification and the `selected | dec
 - Owner identity, topology, requested route, behavior, acceptance, public interface, scope, mutation authority, or external-action authority changes return evidence to Core for fresh ownership and routing.
 - Shape is entered only through Core when durable owner refinement is independently authorized.
 
-Never persist the goal envelope, ExecutionFrame, DispatchDisposition, WorkerSession, WorkerInvocation, Assignment, WorkerReceipt, AcceptedLaneEvidence, ResourceLease, WorkSet, topology, waves, discovery classification, or transition chronology.
+The managed goal envelope and returned control objects remain transient.
 
 ## Dormant closeout fail-safe
 

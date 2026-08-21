@@ -7,6 +7,7 @@ import { markdownHeadings, markdownLinks } from '../support/markdown-contract'
 const root = fileURLToPath(new URL('../..', import.meta.url))
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
 const skill = read('skills/rsp/SKILL.md')
+const contractKernel = read('skills/rsp/references/contract-kernel.md')
 const controlOutcome = read('skills/rsp/references/control-outcome.md')
 const fallback = read('rules/rsp-rules.md')
 const controlModel = read('.rsp/specs/skill-control-model.md')
@@ -27,6 +28,7 @@ describe('rsp core routing contract', () => {
     ])
     expect(markdownLinks(skill)).toEqual(expect.arrayContaining([
       'references/response-language.md',
+      'references/contract-kernel.md',
       'references/control-outcome.md',
       'references/managed-routing.md',
       'references/setup-repair.md',
@@ -64,6 +66,9 @@ describe('rsp core routing contract', () => {
     expect(controlOutcome).toContain('localized labeled natural language')
     expect(skill).not.toContain('`RouteDisposition` is exactly')
     expect(skill).not.toContain('`StopDisposition` is exactly')
+    expect(skill).toContain('[machine contract kernel](references/contract-kernel.md)')
+    expect(contractKernel).toContain('cross-Skill transport integrity only')
+    expect(contractKernel).toContain('Schema validity proves transport conformance only')
   })
 
   it('preserves routing, fallback, and authority boundaries', () => {
