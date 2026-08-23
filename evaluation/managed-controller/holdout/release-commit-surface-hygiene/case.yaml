@@ -3,6 +3,8 @@ expected_mode: execute
 automatic_activation: true
 installed_skills: [rsp, rsp-manage, rsp-implement, rsp-commit]
 initial_commit_message: 'chore: establish formatter fixture'
+initialize_rsp: true
+sandbox: danger-full-access
 request: >-
   Implement the focused Change `normalize-display-name`, run npm test, and make the authorized local commit.
   A temporary workaround that appended a marker was discussed and rejected; the accepted result trims and

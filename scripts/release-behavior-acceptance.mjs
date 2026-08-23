@@ -274,6 +274,18 @@ function scoreRoute(holdout, metadata) {
   return { status: passed ? 'passed' : 'failed', evidence: { expected, observed: { ...observed, worker_dispatch_count: workerCount ?? null } } }
 }
 
+export function classifyReleaseBehaviorExecution(metadata, final) {
+  const startupFailed = metadata.exit_code !== 0
+    && final.trim() === ''
+    && metadata.events?.tool_calls === 0
+    && metadata.events?.usage === null
+  if (startupFailed)
+    return 'harness-failed'
+  if (metadata.timed_out)
+    return 'model-failed'
+  return 'eligible'
+}
+
 function sanitizeRun(planCase, arm, repetition, metadata, final, behavior) {
   const route = scoreRoute(behavior.holdout, metadata)
   const dimensions = {
@@ -290,7 +302,7 @@ function sanitizeRun(planCase, arm, repetition, metadata, final, behavior) {
     holdout: planCase.holdout,
     arm,
     repetition,
-    classification: metadata.timed_out ? 'model-failed' : 'eligible',
+    classification: classifyReleaseBehaviorExecution(metadata, final),
     outcome: hardPassed ? 'passed' : 'failed',
     compositionSha256: arm === 'baseline' ? planCase.identities.baselineCompositionSha256 : planCase.identities.candidateCompositionSha256,
     contractSha256: metadata.contract_sha256,

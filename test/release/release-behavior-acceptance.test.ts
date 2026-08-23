@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest'
 import { prepareManagedControllerRun } from '../../scripts/managed-controller-eval.mjs'
 import {
   buildReleaseBehaviorPlan,
+  classifyReleaseBehaviorExecution,
   executeReleaseBehaviorCases,
   runReleaseBehaviorAcceptance,
 } from '../../scripts/release-behavior-acceptance.mjs'
@@ -109,6 +110,19 @@ describe('release behavior acceptance', () => {
 
     expect(calls).toEqual(['one:1', 'one:2'])
     expect(result).toMatchObject({ verdict: 'failed', stopped: { case: 'one', arm: 'candidate', reason: 'hard-dimension-failed' } })
+  })
+
+  it('classifies a pre-turn provider startup failure as a harness failure', () => {
+    expect(classifyReleaseBehaviorExecution({
+      events: { tool_calls: 0, usage: null },
+      exit_code: 1,
+      timed_out: false,
+    }, '')).toBe('harness-failed')
+    expect(classifyReleaseBehaviorExecution({
+      events: { tool_calls: 1, usage: null },
+      exit_code: 1,
+      timed_out: false,
+    }, 'The task could not be completed.')).toBe('eligible')
   })
 
   it('treats token, time, and tool-call values as diagnostics rather than evidence gates', () => {
