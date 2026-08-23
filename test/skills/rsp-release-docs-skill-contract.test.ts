@@ -78,6 +78,12 @@ describe('rsp-release-docs Skill contract', () => {
     expect(skill).not.toMatch(/(?:print|return|record) (?:the )?(?:token|password|device code|browser-auth URL)/i)
   })
 
+  it('states material user and operator actions directly in the final handoff', () => {
+    expect(skill).toMatch(/final handoff[^.]*directly state[^.]*material user or operator action/i)
+    expect(skill).toMatch(/link or generic summary[^.]*cannot replace[^.]*action/i)
+    expect(skill).toMatch(/preserve[^.]*exact commands[^.]*API forms[^.]*versions/i)
+  })
+
   it('preserves release and external-action ownership boundaries', () => {
     expect(skill).toContain('A confirmed mechanical release does not require an RSP Change')
     expect(skill).toContain('Use an optional Release Change only when material')
