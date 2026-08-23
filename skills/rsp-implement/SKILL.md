@@ -4,7 +4,7 @@ description: Implement exactly one selected, ready RSP Change within explicit mu
 license: MIT
 metadata:
   author: oevery
-  version: "2026.08.21.1"
+  version: "2026.08.23.1"
 ---
 
 # RSP Implement
@@ -29,7 +29,7 @@ Git delivery, publication, deployment, approval, and out-of-scope deletion requi
 
 Before adding a validator, fallback, defensive copy, capability, state machine, compatibility path, or public option, identify its current producer, production consumer, actual trust or lifecycle transition, and material consequence. A typed same-process value, imagined future caller, or test/document-only consumer does not establish a production boundary. Keep an explicitly required seam, but otherwise do not create one when this evidence is missing.
 
-Before creating a permanent test, identify the observable consequence, one distinct plausible regression in the owning production seam, why existing evidence misses it, and the maintenance cost. Prefer an existing test, type or static check, build, or acceptance check when it already owns the risk. Do not add one test per touched file, wrapper, forwarding hop, branch, or shared constant. Multiple nearby tests remain justified when each protects an independent consequence.
+Before creating or extending a permanent test, identify the observable consequence, one distinct plausible regression in the owning production seam, why existing evidence misses it, and the maintenance cost. Prefer an existing test, type or static check, build, or acceptance check when it already owns the risk. When the requested behavior belongs to a consumer and downstream adapters or forwarding hops already have owners and coverage, exercise the consumer through those existing seams to the observable consequence. A nearest-spy, emitted-message, shared-constant, or forwarding assertion that only re-proves the downstream hop is not sufficient, even when added to an existing test file. Do not add one test per touched file, wrapper, forwarding hop, branch, or shared constant. Multiple nearby tests remain justified when each protects an independent consequence.
 
 ## Classify implementation evidence
 
@@ -47,7 +47,7 @@ Implement the smallest complete slice. Update Tasks after outcomes exist; keep u
 
 After final mutation, run required Change checks and narrower risk checks. Fresh verification is required, but a new test is only one evidence option; prefer the cheapest decisive existing test, static check, build, or acceptance evidence. Record command, scope, result, and omissions. Prior runs are stale; failed or unavailable verification cannot support completion. Rerun after relevant edits.
 
-Keep a new test only when it still satisfies the admission evidence, protects observable behavior or a real boundary, adds distinct future confidence, avoids duplicate or implementation-detail coverage, and has proportionate maintenance cost. Otherwise remove the disposable test, fixture, and helper before completion, then use smallest sufficient final evidence. User, Change, and project retention requirements remain authoritative.
+Keep a new or extended test only when it still satisfies the admission evidence, protects observable behavior or a real boundary, adds distinct future confidence, avoids duplicate or implementation-detail coverage, and has proportionate maintenance cost. Otherwise remove the disposable test, fixture, and helper before completion, then use smallest sufficient final evidence. User, Change, and project retention requirements remain authoritative.
 
 Before returning, reread changed comments, test names, documentation, and handoff prose from the accepted result and each surface's authoritative baseline. Build the final handoff only from the accepted Change, actual changed paths, final verification, material omissions or risks, executed external actions, and pre-existing user work that must be attributed. A rejected session-only alternative, correction, or temporary attempt is not an omission or boundary: do not name it, paraphrase it, or turn it into an unrequested `did not add` or `did not use` compliance claim.
 

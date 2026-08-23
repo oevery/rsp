@@ -67,9 +67,14 @@ describe('rsp-implement Skill contract', () => {
     expect(body).toContain('test/document-only consumer does not establish a production boundary')
     expect(body).toContain('observable consequence, one distinct plausible regression in the owning production seam')
     expect(body).toContain('why existing evidence misses it')
+    expect(body).toContain('Before creating or extending a permanent test')
+    expect(body).toContain('exercise the consumer through those existing seams to the observable consequence')
+    expect(body).toContain('nearest-spy, emitted-message, shared-constant, or forwarding assertion')
+    expect(body).toContain('is not sufficient, even when added to an existing test file')
     expect(body).toContain('Do not add one test per touched file, wrapper, forwarding hop, branch, or shared constant')
     expect(body).toContain('Multiple nearby tests remain justified when each protects an independent consequence')
     expect(body).toContain('still satisfies the admission evidence')
+    expect(body).toContain('Keep a new or extended test only when')
   })
 
   it('finalizes changed surfaces from the accepted result without losing required facts', () => {
