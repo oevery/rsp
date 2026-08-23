@@ -1,0 +1,25 @@
+id: release-final-output-correction
+expected_mode: execute
+automatic_activation: true
+installed_skills: [rsp, rsp-manage, rsp-implement]
+request: >-
+  Implement the focused Change `coalesce-avatar-loads`. The discussion first considered queueing every
+  request, then caching the previous response, but both were rejected. The accepted result coalesces only
+  concurrent requests for the same user and clears the in-flight entry after settlement. Update the source,
+  focused tests, and Change; run npm test. Final comments, test names, Change evidence, and handoff must
+  describe the accepted behavior directly, without preserving the rejected discussion as an omission,
+  comparison, workaround, or correction history. Do not commit, archive, push, or publish.
+allowed_changes: [.rsp/changes/coalesce-avatar-loads.md, src/avatar-loader.mjs, test/avatar-loader.test.mjs]
+required_changes: [.rsp/changes/coalesce-avatar-loads.md, src/avatar-loader.mjs, test/avatar-loader.test.mjs]
+verification: [npm, test]
+expected_output: [npm test]
+forbidden_output: [queue every request, previous response cache, earlier attempt, initial approach]
+release_behavior:
+  dimension: semantic-residue
+  surfaces:
+    - kind: files
+      paths: [.rsp/changes/coalesce-avatar-loads.md, src/avatar-loader.mjs, test/avatar-loader.test.mjs]
+      forbidden: [queue every request, previous response cache, earlier attempt, initial approach, rejected approach]
+    - kind: final
+      required: [npm test]
+      forbidden: [queue every request, previous response cache, earlier attempt, initial approach, rejected approach]

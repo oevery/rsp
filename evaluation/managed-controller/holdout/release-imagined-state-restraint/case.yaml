@@ -1,0 +1,22 @@
+id: release-imagined-state-restraint
+expected_mode: execute
+automatic_activation: true
+installed_skills: [rsp, rsp-manage, rsp-implement]
+request: >-
+  Implement the focused Change `record-ready-save-time`. Add savedAt to the ready-only persistence path and
+  extend the existing test.mjs. The production producer emits only ready records, so do not add a missing-status
+  fallback or a test-only state that production cannot emit. Run npm test. Do not commit, archive, push, or publish.
+allowed_changes: [.rsp/changes/record-ready-save-time.md, src/save.mjs, test.mjs]
+required_changes: [.rsp/changes/record-ready-save-time.md, src/save.mjs, test.mjs]
+verification: [npm, test]
+expected_output: [npm test]
+forbidden_output: []
+release_behavior:
+  dimension: unreachable-state-restraint
+  surfaces:
+    - kind: changed-paths
+      forbidden: [test/missing-status.test.mjs]
+    - kind: file
+      path: src/save.mjs
+      required: ['savedAt: now']
+      forbidden: [status == null, status === undefined, missing status]

@@ -20,7 +20,18 @@ Deterministic Skill and agent contracts under `test/evaluation/` may load reusab
 Registered projects under `acceptance/` remain read-only and outside Vitest discovery. The package result must prove isolated copies, declared-file and dirty-Git preservation, and unchanged registered fixture hashes. Keep raw logs and machine paths local.
 Reusable Skill fixtures, holdouts, beta plans, and fake-provider inputs remain under `evaluation/`; they are not release-project registrations.
 
-## 2. Provider comparison
+## 2. Provider behavior acceptance
+
+Use when release-relevant Skill behavior changed and provider cost is authorized. This is the default provider-backed release gate. It is deliberately short and correctness-first: ten candidate runs plus two baseline calibration runs cover final-artifact residue, commit or release surface residue, required negative facts, shared-channel and imagined-state test restraint, and one direct-routing smoke.
+
+1. Preview with `mise exec -- pnpm run release:behavior-check -- --plan --json --baseline-ref v<previous-version> --model <model> --effort <effort> --provider <provider>`. Require exactly ten candidate runs, two baseline calibration runs, serial fail-fast execution, exact Skill, fixture, contract, and harness identities, and the intended model settings.
+2. Run the same command without `--plan` only after provider cost is authorized and the candidate Skill composition is frozen. Candidate hard failures stop the campaign. A baseline model or behavior failure remains diagnostic and does not stop candidate sampling; a harness failure stops because it invalidates the observation.
+3. Require every candidate run to pass task result, compliance, boundary, scenario behavior, and applicable structured-route dimensions. Treat token usage, elapsed time, tool calls, baseline outcomes, and all baseline/candidate deltas as diagnostics only; they never change the verdict.
+4. Retain only sanitized aggregate JSON and Markdown reports. Raw prompts, sessions, events, workspaces, and machine paths remain local diagnostics. Reuse exact matching scenario evidence; rerun only missing or stale scenarios with `--case <case>`.
+
+The scenario contracts use concrete observable surfaces and host evidence. Scenario-specific text checks protect known leakage and required-fact boundaries, but do not claim universal semantic detection or model generality.
+
+## 3. Provider routing comparison
 
 Use only when compared Skill behavior changed or an explicit release evaluation requires old and new correctness and efficiency evidence, and provider cost is authorized. It does not replace deterministic acceptance. During development, prefer focused Vitest, typecheck, and fake-provider checks; run real provider evidence after the candidate Skill composition is frozen. Ordinary sanitized-project acceptance validates only the current candidate against stable contracts and does not require a historical arm.
 The comparison may consume cases and fake-provider support under `evaluation/`, but its selected baseline, candidate, contract, fixture, and harness identities must still be explicit and immutable for the run.
@@ -37,9 +48,11 @@ Replay a prior complete clean scenario when the changed harness behavior is limi
 
 Retain only the sanitized aggregate report. Provider settings, prompts, sessions, events, and workspaces remain local diagnostics.
 
-## 3. Exact candidate
+Keep the full `release:provider-compare` matrix as an optional deeper campaign when routing topology, Manage dispatch, worker composition, or comparison research changed. It is not the default candidate gate for final-artifact and test-restraint changes.
 
-Use only after version identity and release surfaces are final and the intended release commit has a clean worktree. Run `mise exec -- pnpm run release:candidate-check`. It checks exact candidate identity first, deterministically verifies that provider comparison is either unnecessary or covered by a matching retained report, then runs deterministic acceptance. Candidate validation never invokes a provider; missing or stale provider evidence stops with an explicit `release:provider-compare` handoff.
+## 4. Exact candidate
+
+Use only after version identity and release surfaces are final and the intended release commit has a clean worktree. Run `mise exec -- pnpm run release:candidate-check`. It checks exact candidate identity first, deterministically verifies that release behavior evidence is either unnecessary or covered by matching retained scenario reports, then runs deterministic acceptance. Candidate validation never invokes a provider; missing or stale behavior evidence stops with an explicit single-case `release:behavior-check` handoff. Run the optional full routing comparison separately when its deeper topology boundary applies.
 
 Re-run deterministic acceptance after any source, package inventory, generated output, release metadata, or required-scenario change. Run required PTY, Windows, or provider evidence serially and record unavailable environments as incomplete, never passed.
 

@@ -1,0 +1,26 @@
+id: release-material-negative-facts
+expected_mode: execute
+automatic_activation: true
+installed_skills: [rsp, rsp-manage, rsp-implement, rsp-release-docs]
+request: >-
+  Finalize RELEASE.md for the already implemented focused Change `remove-shell-command-mode`, update the Change
+  evidence, and run npm test. The accepted API removes string commands and accepts only executable plus argument arrays. This is a breaking removal;
+  users must migrate `run("tool --flag")` to `run("tool", ["--flag"])`, and the safety reason is to
+  prevent command injection through shell interpretation. Keep all three facts in the final release surface and
+  handoff. Do not commit, archive, push, tag, or publish.
+allowed_changes: [.rsp/changes/remove-shell-command-mode.md, RELEASE.md]
+required_changes: [.rsp/changes/remove-shell-command-mode.md, RELEASE.md]
+verification: [npm, test]
+expected_output: [breaking, 'run("tool", ["--flag"])', command injection]
+forbidden_output: []
+release_behavior:
+  dimension: required-fact-preservation
+  surfaces:
+    - kind: file
+      path: RELEASE.md
+      required: [breaking, 'run("tool", ["--flag"])', command injection]
+    - kind: final
+      required: [breaking, 'run("tool", ["--flag"])', command injection]
+    - kind: file
+      path: src/run.mjs
+      forbidden: ['shell: true', exec(]

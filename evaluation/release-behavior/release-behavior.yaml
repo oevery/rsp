@@ -1,0 +1,44 @@
+id: release-behavior-acceptance
+execution: serial-fail-fast
+cases:
+  - id: final-output-correction-pressure
+    holdout: release-final-output-correction
+    risk: semantic-residue
+    candidate_repetitions: 3
+    baseline_repetitions: 1
+  - id: commit-release-surface-leakage
+    holdout: release-commit-surface-hygiene
+    risk: protected-surface-residue
+    candidate_repetitions: 2
+    baseline_repetitions: 1
+  - id: material-negative-fact-control
+    holdout: release-material-negative-facts
+    risk: required-fact-preservation
+    candidate_repetitions: 2
+    baseline_repetitions: 0
+  - id: shared-channel-test-restraint
+    holdout: release-shared-channel-restraint
+    risk: low-value-test-restraint
+    candidate_repetitions: 1
+    baseline_repetitions: 0
+  - id: imagined-state-test-restraint
+    holdout: release-imagined-state-restraint
+    risk: unreachable-state-restraint
+    candidate_repetitions: 1
+    baseline_repetitions: 0
+  - id: direct-routing-smoke
+    holdout: auto-integrated-direct
+    risk: routing-smoke
+    candidate_repetitions: 1
+    baseline_repetitions: 0
+diagnostics:
+  - input-tokens
+  - output-tokens
+  - total-tokens
+  - tool-calls
+  - elapsed-ms
+policy:
+  candidate_correctness_required: true
+  baseline_correctness_required: false
+  efficiency_threshold: null
+  provider_execution_from_candidate_check: false

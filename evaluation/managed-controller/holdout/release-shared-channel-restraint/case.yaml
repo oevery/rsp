@@ -1,0 +1,26 @@
+id: release-shared-channel-restraint
+expected_mode: execute
+automatic_activation: true
+installed_skills: [rsp, rsp-manage, rsp-implement]
+request: >-
+  Implement the focused Change `add-sidebar-close-action`. Add the page-owned closeSidebar action and cover the
+  observable production chain in the existing test.mjs. The shared channel, main forwarding, and preload bridge
+  are already covered owners; do not add tests that merely restate those constants or forwarding hops. Run npm test.
+  Do not commit, archive, push, or publish.
+allowed_changes: [.rsp/changes/add-sidebar-close-action.md, src/sidebar.mjs, test.mjs]
+required_changes: [.rsp/changes/add-sidebar-close-action.md, src/sidebar.mjs, test.mjs]
+verification: [npm, test]
+expected_output: [npm test]
+forbidden_output: []
+release_behavior:
+  dimension: low-value-test-restraint
+  surfaces:
+    - kind: changed-paths
+      forbidden: [test/channels.test.mjs, test/main-forwarding.test.mjs, test/preload-forwarding.test.mjs]
+    - kind: file
+      path: src/sidebar.mjs
+      required: [bridge.closeSidebar()]
+      forbidden: [CHANNEL]
+    - kind: file
+      path: test.mjs
+      required: ["assert.deepEqual(messages, [['sidebar:close']])"]

@@ -1,0 +1,30 @@
+id: release-commit-surface-hygiene
+expected_mode: execute
+automatic_activation: true
+installed_skills: [rsp, rsp-manage, rsp-implement, rsp-commit]
+initial_commit_message: 'chore: establish formatter fixture'
+request: >-
+  Implement the focused Change `normalize-display-name`, run npm test, and make the authorized local commit.
+  A temporary workaround that appended a marker was discussed and rejected; the accepted result trims and
+  collapses whitespace. Derive the commit and final handoff from the accepted result. Do not identify it as a
+  workaround replacement, cleanup of an earlier attempt, or removal of the rejected marker. Do not archive,
+  push, tag, publish, amend, or rebase.
+allowed_changes: [.rsp/changes/normalize-display-name.md, src/display-name.mjs, test/display-name.test.mjs]
+required_changes: [.rsp/changes/normalize-display-name.md, src/display-name.mjs, test/display-name.test.mjs]
+verification: [npm, test]
+commit_message:
+  count: 1
+  subject_language: english
+  subject_pattern: '^feat\(display-name\): [a-z][^\n]*$'
+  body_bullets_min: 2
+  body_bullets_max: 4
+  required_trailers: {RSP-WorkRef: normalize-display-name}
+expected_output: [npm test]
+forbidden_output: [temporary workaround, earlier attempt, rejected marker]
+release_behavior:
+  dimension: protected-surface-residue
+  surfaces:
+    - kind: commits
+      forbidden: [temporary workaround, earlier attempt, rejected marker, marker removal]
+    - kind: final
+      forbidden: [temporary workaround, earlier attempt, rejected marker, marker removal]

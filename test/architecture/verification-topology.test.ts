@@ -69,6 +69,7 @@ describe('verification topology', () => {
       'discipline-composition',
       'managed-controller',
       'native-design-composition',
+      'release-behavior',
       'rsp-design-behavior',
       'rsp-diagnose',
       'rsp-shape-depth',
