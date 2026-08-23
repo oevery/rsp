@@ -1459,6 +1459,15 @@ export function prepareManagedControllerRun({ caseId, outputRoot, root, skillSou
         : 'Use $rsp-manage installed in this workspace to carry out the request.'
       : 'Carry out the request using your normal repository workflow; no managed-controller skill is installed.',
     manifest.request,
+    ...((manifest.expected_mode ?? 'execute') === 'execute'
+      ? [
+          `Top-level mutation policy: ${JSON.stringify({
+            allowed_changes: manifest.allowed_changes,
+            required_changes: manifest.required_changes ?? [],
+          })}.`,
+          'Modify only paths matched by allowed_changes. For a completed task, ensure every required_changes pattern matches at least one changed path. This policy is independently enforced by the evaluator.',
+        ]
+      : []),
     ...(manifest.continuation_contract
       ? [
           `Return the incomplete continuation with these labels exactly once and in this order: ${manifest.continuation_contract.ordered_fields.join(', ')}.`,

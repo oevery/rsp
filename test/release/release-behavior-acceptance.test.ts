@@ -188,6 +188,9 @@ describe('release behavior acceptance', () => {
           expect(subject.test('feat: normalize display name whitespace')).toBe(true)
           expect(subject.test('feat(display-name): normalize display name whitespace')).toBe(true)
           expect(subject.test('fix: normalize display name whitespace')).toBe(false)
+          expect(prepared.prompt).toContain('Top-level mutation policy: {"allowed_changes":[".rsp/changes/normalize-display-name.md","src/display-name.mjs","test/display-name.test.mjs"],"required_changes":[".rsp/changes/normalize-display-name.md","src/display-name.mjs","test/display-name.test.mjs"]}.')
+          expect(prepared.prompt).toContain('Modify only paths matched by allowed_changes')
+          expect(prepared.prompt).not.toContain('.rsp/specs/design.md')
         }
       }
     }
