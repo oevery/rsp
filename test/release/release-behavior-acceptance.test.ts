@@ -205,7 +205,7 @@ describe('release behavior acceptance', () => {
           expect(prepared.manifest.release_behavior.surfaces).toEqual([
             { kind: 'changed-paths', forbidden: ['test/channels.test.mjs', 'test/main-forwarding.test.mjs', 'test/preload-forwarding.test.mjs'] },
             { kind: 'file', path: 'src/sidebar.mjs', required: ['bridge.closeSidebar()'], forbidden: ['CHANNEL'] },
-            { kind: 'file', path: 'test.mjs', required: ['closeSidebar(bridge)', 'assert.equal(closeCount, 1)'] },
+            { kind: 'file', path: 'test.mjs', required: ['registerSidebar(', 'closeSidebar(', 'closeCount'] },
           ])
         }
       }

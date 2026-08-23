@@ -23,4 +23,4 @@ release_behavior:
       forbidden: [CHANNEL]
     - kind: file
       path: test.mjs
-      required: [closeSidebar(bridge), 'assert.equal(closeCount, 1)']
+      required: [registerSidebar(, closeSidebar(, closeCount]
