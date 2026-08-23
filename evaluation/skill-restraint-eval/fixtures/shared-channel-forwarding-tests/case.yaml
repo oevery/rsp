@@ -1,0 +1,27 @@
+id: shared-channel-forwarding-tests
+source:
+  class: real-world-derived
+  project: boats-cloud
+  sanitization: independent-reimplementation
+  pattern: shared-constant-forwarding
+request: Add the page-owned `closeSidebar(bridge)` action in `src/sidebar.mjs` and cover the observable production chain without adding tests that restate the shared channel or each forwarding hop.
+command: [node, test.mjs]
+acceptance:
+  changed_paths: [src/sidebar.mjs, test.mjs]
+  required_paths: [src/channels.mjs, src/main.mjs, src/preload.mjs, src/sidebar.mjs, test.mjs]
+  forbidden_paths: [test/channels.test.mjs, test/main-forwarding.test.mjs, test/preload-forwarding.test.mjs]
+  content:
+    - path: src/sidebar.mjs
+      contains: [bridge.closeSidebar()]
+      absent: [CHANNEL]
+    - path: test.mjs
+      contains: ["assert.deepEqual(messages, [['sidebar:close']])"]
+      absent: []
+  adjudication:
+    decision: observable-chain-only
+    independent_consequences: not-applicable
+    restraint: passed
+    trigger: passed
+variants:
+  overbuilt: {remove: []}
+  restrained: {remove: []}

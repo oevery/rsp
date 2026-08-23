@@ -36,6 +36,8 @@ Choose subject and body prose language from explicit current commit-language ins
 
 Use the repository's established Conventional Commit form when present. Derive type and scope from the owned outcome and repository history, not from the conversation. Keep the subject concise and imperative or otherwise repository-consistent.
 
+Describe the accepted diff as a reader who did not see the working session. Omit rejected session-only alternatives, corrections, and temporary attempts that never entered the authoritative baseline. Such an alternative is not an omission: do not name or paraphrase it as a `without X`, `did not add X`, or `did not use X` compliance claim. Name a removal, exclusion, failed external action, compatibility boundary, migration, safety rule, audit fact, or requested comparison when it is a real owned change or material review fact.
+
 A tiny, mechanical, or direct `Tiny` or `Small` boundary may be subject-only when that subject fully explains it. For a non-trivial Change, integration wave, Group closeout, or release commit, add two to four concise bullets covering:
 
 - the observable outcome;

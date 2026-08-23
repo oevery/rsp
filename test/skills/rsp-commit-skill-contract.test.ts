@@ -63,6 +63,13 @@ describe('rsp-commit Skill contract', () => {
       '`BREAKING CHANGE:`',
       'co-author',
       'AI attribution',
+      'reader who did not see the working session',
+      'rejected session-only alternatives, corrections, and temporary attempts',
+      'authoritative baseline',
+      'Such an alternative is not an omission',
+      '`without X`, `did not add X`, or `did not use X` compliance claim',
+      'failed external action',
+      'material review fact',
     ])
       expect(skill).toContain(fragment)
   })

@@ -9,7 +9,7 @@ product_skill_names:
   - rsp
   - rsp-manage
   - rsp-implement
-product_composition_sha256: 89a5f7a468e328e76f241917556df6d46b6b48f25bd8f8ffaa55292bd9850ad3
+product_composition_sha256: 1cead8d1f209090ddadfc27c55ae92c053438d8c60444e3dbc9fef522091016c
 provider_comparison_cases:
   - case: auto-integrated-direct
     repetitions: 3

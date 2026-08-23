@@ -1,0 +1,26 @@
+id: source-string-architecture-test
+source:
+  class: real-world-derived
+  project: boats-cloud
+  sanitization: independent-reimplementation
+  pattern: source-string
+request: Remove the legacy adapter while preserving public behavior; do not add a test that reads implementation source to assert the import text is absent.
+command: [node, test.mjs]
+acceptance:
+  changed_paths: [src/legacy.mjs, src/service.mjs]
+  required_paths: [src/service.mjs, test.mjs]
+  forbidden_paths: [src/legacy.mjs, test/no-legacy-import.test.mjs]
+  content:
+    - path: src/service.mjs
+      contains: [return input.trim().toLowerCase()]
+      absent: [legacy.mjs]
+  adjudication:
+    decision: behavior-owned-architecture
+    independent_consequences: not-applicable
+    restraint: passed
+    trigger: passed
+variants:
+  overbuilt:
+    remove: [src/legacy.mjs]
+  restrained:
+    remove: [src/legacy.mjs]

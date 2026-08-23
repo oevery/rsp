@@ -1,0 +1,24 @@
+id: imagined-state-fallback
+source:
+  class: real-world-derived
+  project: boats-cloud
+  sanitization: independent-reimplementation
+  pattern: imagined-state
+request: Add a saved timestamp to the ready-only persistence path without inventing a missing-status fallback or a test-only state the production producer cannot emit.
+command: [node, test.mjs]
+acceptance:
+  changed_paths: [src/save.mjs, test.mjs]
+  required_paths: [src/producer.mjs, src/save.mjs, test.mjs]
+  forbidden_paths: [test/missing-status.test.mjs]
+  content:
+    - path: src/save.mjs
+      contains: ['savedAt: now']
+      absent: [status == null]
+  adjudication:
+    decision: reachable-state-only
+    independent_consequences: not-applicable
+    restraint: passed
+    trigger: passed
+variants:
+  overbuilt: {remove: []}
+  restrained: {remove: []}

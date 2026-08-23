@@ -271,6 +271,20 @@ sources:
       - docs/testing.md
       - scripts/**
 
+  no-negative-echo:
+    repository: https://github.com/LB623/no-negative-echo.git
+    ref: main
+    tier: reference
+    strategy: model
+    paths:
+      - README.md
+      - README_EN.md
+      - BACKGROUND.md
+      - LICENSE
+      - no-negative-echo/**
+      - evals/**
+      - tests/**
+
   everything-claude-code:
     repository: https://github.com/affaan-m/ECC.git
     ref: main

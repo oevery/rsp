@@ -3,6 +3,7 @@ source:
   class: real-world-derived
   project: boats-cloud
   sanitization: independent-reimplementation
+  pattern: duplicate-forwarding
 request: Deepen the public module and remove forwarding code and its duplicate shallow test once the public behavior test owns the risk.
 command: [node, test.mjs]
 acceptance:

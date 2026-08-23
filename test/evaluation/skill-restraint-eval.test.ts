@@ -40,17 +40,28 @@ function score(prepared: ReturnType<typeof prepareSkillRestraintCase>, finalOutp
 }
 
 describe('real-project-derived Skill restraint evaluation', () => {
-  it('retains exactly three independently reimplemented boats-cloud cases', () => {
+  it('retains the fixed independently reimplemented boats-cloud restraint taxonomy', () => {
     const cases = listSkillRestraintCases(root)
 
     expect(cases.map(item => item.id)).toEqual([
       'deep-interface-test-pruning',
+      'imagined-state-fallback',
       'independent-desktop-consequences',
       'page-private-wrapper',
+      'shared-channel-forwarding-tests',
+      'source-string-architecture-test',
     ])
     expect(cases.every(item => item.source.class === 'real-world-derived')).toBe(true)
     expect(cases.every(item => item.source.project === 'boats-cloud')).toBe(true)
     expect(cases.every(item => item.source.sanitization === 'independent-reimplementation')).toBe(true)
+    expect(cases.map(item => item.source.pattern).sort()).toEqual([
+      'duplicate-forwarding',
+      'imagined-state',
+      'independent-consequences',
+      'shared-constant-forwarding',
+      'source-string',
+      'speculative-wrapper',
+    ])
   })
 
   it('rejects a speculative page wrapper and wrapper-only test while accepting the page-owned edit', () => {
@@ -102,6 +113,43 @@ describe('real-project-derived Skill restraint evaluation', () => {
     )
   })
 
+  it('rejects tests that restate a shared channel and each forwarding hop', () => {
+    const overbuilt = score(prepare('shared-channel-forwarding-tests', 'overbuilt'), 'Added the sidebar close behavior.')
+    const restrained = score(prepare('shared-channel-forwarding-tests', 'restrained'), 'Added the sidebar close behavior.')
+
+    expect(overbuilt.result).toBe('failed')
+    expect(overbuilt.workspace.issues).toEqual(expect.arrayContaining([
+      'forbidden path present: test/channels.test.mjs',
+      'forbidden path present: test/main-forwarding.test.mjs',
+      'forbidden path present: test/preload-forwarding.test.mjs',
+    ]))
+    expect(restrained.result).toBe('passed')
+    expect(restrained.workspace.actual_changed_paths).toEqual(['src/sidebar.mjs', 'test.mjs'])
+  })
+
+  it('rejects a source-string architecture assertion when behavior owns the removal', () => {
+    const overbuilt = score(prepare('source-string-architecture-test', 'overbuilt'), 'Removed the legacy adapter.')
+    const restrained = score(prepare('source-string-architecture-test', 'restrained'), 'Removed the legacy adapter.')
+
+    expect(overbuilt.result).toBe('failed')
+    expect(overbuilt.workspace.issues).toContain('forbidden path present: test/no-legacy-import.test.mjs')
+    expect(overbuilt.observation.dimensions.task_result.status).toBe('passed')
+    expect(restrained.result).toBe('passed')
+  })
+
+  it('rejects a fallback and test for a state the production producer cannot emit', () => {
+    const overbuilt = score(prepare('imagined-state-fallback', 'overbuilt'), 'Added the saved timestamp.')
+    const restrained = score(prepare('imagined-state-fallback', 'restrained'), 'Added the saved timestamp.')
+
+    expect(overbuilt.result).toBe('failed')
+    expect(overbuilt.workspace.issues).toEqual(expect.arrayContaining([
+      'forbidden path present: test/missing-status.test.mjs',
+      'forbidden content present in src/save.mjs: status == null',
+    ]))
+    expect(overbuilt.observation.dimensions.task_result.status).toBe('passed')
+    expect(restrained.result).toBe('passed')
+  })
+
   it('fails closed when adjudication is rebound to different localized output', () => {
     const prepared = prepare('independent-desktop-consequences', 'restrained')
     const adjudication = bindSkillRestraintAdjudication({
@@ -129,6 +177,7 @@ source:
   class: real-world-derived
   project: boats-cloud
   sanitization: independent-reimplementation
+  pattern: speculative-wrapper
 request: Reject an escaping fixture path.
 command: [node, test.mjs]
 acceptance:

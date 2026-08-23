@@ -51,6 +51,13 @@ describe('rsp-release-docs Skill contract', () => {
     expect(outputs).not.toContain('## Release evidence ledger')
     expect(outputs).not.toContain('## Reference rules')
     expect(outputs).toContain('## Migration contract')
+    expect(skill).toContain('accepted range, and observed final state')
+    expect(skill).toContain('rejected session-only proposals, corrections, and temporary attempts')
+    expect(skill).toContain('never entered the release baseline')
+    expect(skill).toContain('is not a release exclusion or omission')
+    expect(skill).toContain('`without X`, `did not add X`, or `did not use X` compliance claim')
+    expect(skill).toContain('actual removals, deprecations, compatibility boundaries, migrations')
+    expect(skill).toContain('failed external actions, requested comparisons, and unresolved risks')
   })
 
   it('adapts output without inventing repository configuration', () => {

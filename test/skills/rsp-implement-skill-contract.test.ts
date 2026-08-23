@@ -71,4 +71,21 @@ describe('rsp-implement Skill contract', () => {
     expect(body).toContain('Multiple nearby tests remain justified when each protects an independent consequence')
     expect(body).toContain('still satisfies the admission evidence')
   })
+
+  it('finalizes changed surfaces from the accepted result without losing required facts', () => {
+    const body = readSkill()
+
+    expect(body).toContain('changed comments, test names, documentation, and handoff prose')
+    expect(body).toContain('accepted result and each surface\'s authoritative baseline')
+    expect(body).toContain('Build the final handoff only from the accepted Change, actual changed paths, final verification')
+    expect(body).toContain('material omissions or risks, executed external actions')
+    expect(body).toContain('is not an omission or boundary')
+    expect(body).toContain('do not name it, paraphrase it')
+    expect(body).toContain('unrequested `did not add` or `did not use` compliance claim')
+    expect(body).toContain('reader without the session')
+    expect(body).toContain('actual baseline removal, safety or compatibility boundary')
+    expect(body).toContain('failed external action, unresolved risk')
+    expect(body).toContain('Preserve required facts and pre-existing user work')
+    expect(body).toContain('never change executable behavior, public contracts, tests, snapshots, or diagnostics merely to clean wording')
+  })
 })

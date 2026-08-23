@@ -48,6 +48,8 @@ Read [evidence and surfaces](references/evidence-and-surfaces.md) before draftin
 
 Every relevant commit and work item must map to a net outcome or explicit exclusion. Collapse implementation chronology, omit additions reverted within the range, fold prerelease fixes into final behavior, and exclude internal work unless it changes public behavior, packaging, compatibility, security, operations, or release integrity.
 
+Project each release surface from its audience, accepted range, and observed final state. Omit rejected session-only proposals, corrections, and temporary attempts that never entered the release baseline. A session-only proposal is not a release exclusion or omission: do not name or paraphrase it as a `without X`, `did not add X`, or `did not use X` compliance claim. Preserve actual removals, deprecations, compatibility boundaries, migrations, safety or security facts, failed external actions, requested comparisons, and unresolved risks when users or operators need them.
+
 ## Project distinct surfaces
 
 - **Changelog:** concise cumulative notable outcomes using the existing categories, or Keep a Changelog categories as fallback. Put breaking changes and required action first.

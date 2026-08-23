@@ -49,6 +49,10 @@ After final mutation, run required Change checks and narrower risk checks. Fresh
 
 Keep a new test only when it still satisfies the admission evidence, protects observable behavior or a real boundary, adds distinct future confidence, avoids duplicate or implementation-detail coverage, and has proportionate maintenance cost. Otherwise remove the disposable test, fixture, and helper before completion, then use smallest sufficient final evidence. User, Change, and project retention requirements remain authoritative.
 
+Before returning, reread changed comments, test names, documentation, and handoff prose from the accepted result and each surface's authoritative baseline. Build the final handoff only from the accepted Change, actual changed paths, final verification, material omissions or risks, executed external actions, and pre-existing user work that must be attributed. A rejected session-only alternative, correction, or temporary attempt is not an omission or boundary: do not name it, paraphrase it, or turn it into an unrequested `did not add` or `did not use` compliance claim.
+
+Preserve a negative fact when a reader without the session needs it to understand an actual baseline removal, safety or compatibility boundary, migration, audit result, failed external action, unresolved risk, or explicitly requested comparison. Preserve required facts and pre-existing user work; never change executable behavior, public contracts, tests, snapshots, or diagnostics merely to clean wording.
+
 Record concise fresh evidence when Change Verify owns it.
 
 ## Return ownership

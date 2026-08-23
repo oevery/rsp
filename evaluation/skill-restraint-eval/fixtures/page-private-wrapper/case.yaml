@@ -3,6 +3,7 @@ source:
   class: real-world-derived
   project: boats-cloud
   sanitization: independent-reimplementation
+  pattern: speculative-wrapper
 request: Add the settled page-private open action without introducing a single-caller wrapper or a wrapper-only unit test.
 command: [node, test.mjs]
 acceptance:

@@ -12,6 +12,14 @@ const CASE_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u
 const VARIANT_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u
 const STATUS = new Set(['passed', 'failed'])
 const CONSEQUENCE = new Set(['preserved', 'not-applicable'])
+const RESTRAINT_PATTERN = new Set([
+  'duplicate-forwarding',
+  'imagined-state',
+  'independent-consequences',
+  'shared-constant-forwarding',
+  'source-string',
+  'speculative-wrapper',
+])
 
 function isObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
@@ -68,7 +76,8 @@ function validateCase(value, id) {
   if (!isObject(value.source)
     || value.source.class !== 'real-world-derived'
     || value.source.project !== 'boats-cloud'
-    || value.source.sanitization !== 'independent-reimplementation') {
+    || value.source.sanitization !== 'independent-reimplementation'
+    || !RESTRAINT_PATTERN.has(value.source.pattern)) {
     throw new Error(`invalid real-project provenance: ${id}`)
   }
   if (!Array.isArray(value.command) || value.command.length === 0 || value.command.some(item => typeof item !== 'string'))

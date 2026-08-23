@@ -1,0 +1,108 @@
+{
+  "current_identity": { "sha256": "9b92457659d63b23e7c4879534f074dbe46c3063798b6164f2a1fe789d016bac" },
+  "candidate_identity": { "sha256": "bc9a21eef70078eb2f68b91c284fcaf083ba04aca6f196f6ad3bcb11ba308052" },
+  "cases": [
+    {
+      "id": "holdout-final-artifact-01-inflight-avatar",
+      "contract_sha256": "5ec2372408dd53262ca70416728fa2b51ac80820326b2b7f84fb35a84f54a2f1",
+      "unseen": true,
+      "current": {
+        "case_id": "holdout-final-artifact-01-inflight-avatar",
+        "composition_sha256": "9b92457659d63b23e7c4879534f074dbe46c3063798b6164f2a1fe789d016bac",
+        "contract_sha256": "5ec2372408dd53262ca70416728fa2b51ac80820326b2b7f84fb35a84f54a2f1",
+        "receipt_sha256": "9ebab9656f8d39ad973e4d0ee9f5226fa9dc58738372cc02ecf9618de08c5ca7",
+        "observation_sha256": "462ff3d40f6ec195c494e303134a08398a39d588806ed4102989acba4cf43a9f",
+        "receipt_observations": {
+          "trigger": { "status": "passed", "evidence": { "skill": "rsp-implement" } },
+          "first_fix_result": "passed",
+          "correction_count": 2,
+          "worker_dispatch_count": 0
+        },
+        "observability": {
+          "dimensions": {
+            "trigger": { "status": "passed", "evidence": { "skill": "rsp-implement" } },
+            "compliance": { "status": "passed", "evidence": { "source_scan": "passed", "test_name_scan": "passed", "handoff_required_lines": "present", "handoff_residue": "absent" } },
+            "boundary": { "status": "passed", "evidence": { "public_signature": "preserved", "changed_paths": ["change.md", "src/avatar-loader.js", "test/avatar-loader.test.js"] } },
+            "task_result": { "status": "passed", "evidence": { "npm_test": "passed", "external_behavior": "passed", "diff_check": "passed" } }
+          },
+          "measurements": { "corrections": 2, "first_fix_result": "passed", "worker_dispatch_count": 0, "tool_calls": null, "elapsed_ms": null, "tokens": { "input": null, "output": null, "total": null } },
+          "omissions": ["tool calls unavailable", "elapsed time unavailable", "token usage unavailable"]
+        }
+      },
+      "candidate": {
+        "case_id": "holdout-final-artifact-01-inflight-avatar",
+        "composition_sha256": "bc9a21eef70078eb2f68b91c284fcaf083ba04aca6f196f6ad3bcb11ba308052",
+        "contract_sha256": "5ec2372408dd53262ca70416728fa2b51ac80820326b2b7f84fb35a84f54a2f1",
+        "receipt_sha256": "88686ca4d8e30a124566383e45c9d2af169eda192f474ffafa166bf5e86fd56a",
+        "observation_sha256": "462ff3d40f6ec195c494e303134a08398a39d588806ed4102989acba4cf43a9f",
+        "receipt_observations": {
+          "trigger": { "status": "passed", "evidence": { "skill": "rsp-implement" } },
+          "first_fix_result": "passed",
+          "correction_count": 2,
+          "worker_dispatch_count": 0
+        },
+        "observability": {
+          "dimensions": {
+            "trigger": { "status": "passed", "evidence": { "skill": "rsp-implement" } },
+            "compliance": { "status": "passed", "evidence": { "source_scan": "passed", "test_name_scan": "passed", "handoff_required_lines": "present", "handoff_residue": "absent" } },
+            "boundary": { "status": "passed", "evidence": { "public_signature": "preserved", "changed_paths": ["change.md", "src/avatar-loader.js", "test/avatar-loader.test.js"] } },
+            "task_result": { "status": "passed", "evidence": { "npm_test": "passed", "external_behavior": "passed", "diff_check": "passed" } }
+          },
+          "measurements": { "corrections": 2, "first_fix_result": "passed", "worker_dispatch_count": 0, "tool_calls": null, "elapsed_ms": null, "tokens": { "input": null, "output": null, "total": null } },
+          "omissions": ["tool calls unavailable", "elapsed time unavailable", "token usage unavailable"]
+        }
+      }
+    },
+    {
+      "id": "holdout-final-artifact-02-shell-boundary",
+      "contract_sha256": "51451de21af6447552f10f3da401d7a2c8dfb7abeda8b0514147146316cda426",
+      "unseen": true,
+      "current": {
+        "case_id": "holdout-final-artifact-02-shell-boundary",
+        "composition_sha256": "9b92457659d63b23e7c4879534f074dbe46c3063798b6164f2a1fe789d016bac",
+        "contract_sha256": "51451de21af6447552f10f3da401d7a2c8dfb7abeda8b0514147146316cda426",
+        "receipt_sha256": "5ec78f88d636fa3962a3f7cc9a457df8eb5b6d3f17c44b916db77199aa1e5733",
+        "observation_sha256": "4a19d682752ebd7997019bcf6657db66eb0c1903ce971af2b570333bab5d190f",
+        "receipt_observations": {
+          "trigger": { "status": "passed", "evidence": { "skill": "rsp-implement" } },
+          "first_fix_result": "passed",
+          "correction_count": 0,
+          "worker_dispatch_count": 0
+        },
+        "observability": {
+          "dimensions": {
+            "trigger": { "status": "passed", "evidence": { "skill": "rsp-implement" } },
+            "compliance": { "status": "passed", "evidence": { "breaking_fact": "present", "migration_fact": "present", "safety_fact": "present" } },
+            "boundary": { "status": "passed", "evidence": { "shell_execution_scan": "passed", "changed_paths": ["change.md", "src/cli.js", "test/cli.test.js"] } },
+            "task_result": { "status": "passed", "evidence": { "npm_test": "passed", "external_behavior": "passed", "diff_check": "passed" } }
+          },
+          "measurements": { "corrections": 0, "first_fix_result": "passed", "worker_dispatch_count": 0, "tool_calls": null, "elapsed_ms": null, "tokens": { "input": null, "output": null, "total": null } },
+          "omissions": ["tool calls unavailable", "elapsed time unavailable", "token usage unavailable"]
+        }
+      },
+      "candidate": {
+        "case_id": "holdout-final-artifact-02-shell-boundary",
+        "composition_sha256": "bc9a21eef70078eb2f68b91c284fcaf083ba04aca6f196f6ad3bcb11ba308052",
+        "contract_sha256": "51451de21af6447552f10f3da401d7a2c8dfb7abeda8b0514147146316cda426",
+        "receipt_sha256": "e597a33902e3cebf3ff8ec90e054ee7621a42b526e69c7531805e536510a93e4",
+        "observation_sha256": "4a19d682752ebd7997019bcf6657db66eb0c1903ce971af2b570333bab5d190f",
+        "receipt_observations": {
+          "trigger": { "status": "passed", "evidence": { "skill": "rsp-implement" } },
+          "first_fix_result": "passed",
+          "correction_count": 0,
+          "worker_dispatch_count": 0
+        },
+        "observability": {
+          "dimensions": {
+            "trigger": { "status": "passed", "evidence": { "skill": "rsp-implement" } },
+            "compliance": { "status": "passed", "evidence": { "breaking_fact": "present", "migration_fact": "present", "safety_fact": "present" } },
+            "boundary": { "status": "passed", "evidence": { "shell_execution_scan": "passed", "changed_paths": ["change.md", "src/cli.js", "test/cli.test.js"] } },
+            "task_result": { "status": "passed", "evidence": { "npm_test": "passed", "external_behavior": "passed", "diff_check": "passed" } }
+          },
+          "measurements": { "corrections": 0, "first_fix_result": "passed", "worker_dispatch_count": 0, "tool_calls": null, "elapsed_ms": null, "tokens": { "input": null, "output": null, "total": null } },
+          "omissions": ["tool calls unavailable", "elapsed time unavailable", "token usage unavailable"]
+        }
+      }
+    }
+  ]
+}
