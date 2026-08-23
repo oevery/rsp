@@ -183,6 +183,12 @@ describe('release behavior acceptance', () => {
         })
         expect(prepared.contractSha256).toBe(planCase.identities.contractSha256)
         expect(prepared.installedComposition.hash).toBe(planCase.identities.candidateCompositionSha256)
+        if (planCase.id === 'commit-release-surface-leakage') {
+          const subject = new RegExp(prepared.manifest.commit_message.subject_pattern, 'u')
+          expect(subject.test('feat: normalize display name whitespace')).toBe(true)
+          expect(subject.test('feat(display-name): normalize display name whitespace')).toBe(true)
+          expect(subject.test('fix: normalize display name whitespace')).toBe(false)
+        }
       }
     }
     finally {

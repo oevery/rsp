@@ -17,7 +17,7 @@ verification: [npm, test]
 commit_message:
   count: 1
   subject_language: english
-  subject_pattern: '^feat\(display-name\): [a-z][^\n]*$'
+  subject_pattern: '^feat(?:\(display-name\))?: [a-z][^\n]*$'
   body_bullets_min: 2
   body_bullets_max: 4
   required_trailers: {RSP-WorkRef: normalize-display-name}
