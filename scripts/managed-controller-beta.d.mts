@@ -64,6 +64,8 @@ export interface ManagedControllerBetaRunMetadata {
   output?: {
     expected_missing: string[]
     forbidden_present: string[]
+    narrative_missing?: string[]
+    narrative_forbidden_present?: string[]
   } | null
   recovery?: unknown
   evaluation_receipt?: {

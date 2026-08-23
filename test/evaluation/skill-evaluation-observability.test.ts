@@ -178,7 +178,7 @@ describe('skill evaluation observability', () => {
     const result = projectSkillEvaluationObservability({
       expectedResources: [
         'rsp/references/managed-routing.md',
-        'rsp-manage/references/managed-exchange.md',
+        'rsp-manage/references/interruption-recovery.md',
       ],
       observedResources: [
         'rsp/references/managed-routing.md',
@@ -189,7 +189,7 @@ describe('skill evaluation observability', () => {
 
     expect(result.resources).toEqual({
       expected_resources: [
-        'rsp-manage/references/managed-exchange.md',
+        'rsp-manage/references/interruption-recovery.md',
         'rsp/references/managed-routing.md',
       ],
       observed_resources: [
@@ -197,7 +197,7 @@ describe('skill evaluation observability', () => {
         'rsp/references/managed-routing.md',
       ],
       unexpected_resources: ['rsp-manage/references/closeout.md'],
-      missing_resources: ['rsp-manage/references/managed-exchange.md'],
+      missing_resources: ['rsp-manage/references/interruption-recovery.md'],
     })
   })
 

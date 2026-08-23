@@ -32,6 +32,7 @@ export function executeSerialProviderPairs(options: {
   maxContaminatedPairReplacements?: number
   repetitions: number
   runArm: (schedule: Record<string, any>) => Promise<Record<string, any>>
+  runCorrectnessPassed?: (run: Record<string, any>) => boolean
 }): Promise<Array<Record<string, any>>>
 export function classifyProviderAttempt(options: {
   infrastructureStatus?: string

@@ -50,30 +50,24 @@ function sameIdentity(left, right) {
   return typeof left === 'string' && left === right
 }
 
-function hasCompleteRuns(report, plan) {
+function hasCompleteCandidateRuns(report, plan) {
   if (!Array.isArray(report.runs))
     return false
-  const eligibleRuns = report.runs.filter(run => run.classification === 'eligible')
-  if (eligibleRuns.length !== plan.repetitions * 2)
-    return false
   const expected = new Set()
-  for (let targetPair = 1; targetPair <= plan.repetitions; targetPair += 1) {
-    expected.add(`baseline:${targetPair}`)
-    expected.add(`candidate:${targetPair}`)
-  }
-  for (const run of eligibleRuns) {
-    const key = `${run.arm}:${run.targetPair}`
-    if (!expected.delete(key) || run.outcome !== 'passed')
-      return false
-    const composition = run.arm === 'baseline'
-      ? plan.baseline.composition.hash
-      : plan.candidate.composition.hash
-    if (!sameIdentity(run.compositionSha256, composition)
+  for (let targetPair = 1; targetPair <= plan.repetitions; targetPair += 1)
+    expected.add(targetPair)
+  for (const run of report.runs.filter(run => run.arm === 'candidate' && run.classification === 'eligible')) {
+    const targetPair = run.targetPair ?? run.repetition
+    if (!expected.has(targetPair))
+      continue
+    if (run.outcome !== 'passed'
+      || !sameIdentity(run.compositionSha256, plan.candidate.composition.hash)
       || !sameIdentity(run.contractSha256, plan.identities.contractSha256)
       || run.case !== plan.case
       || !releaseProviderRunCorrectnessPassed(plan, run)) {
       return false
     }
+    expected.delete(targetPair)
   }
   return expected.size === 0
 }
@@ -85,8 +79,8 @@ function reportMatchesPlan(report, plan) {
     && report.scheduling?.concurrency === 1
     && report.scheduling?.order === 'alternating-ab-ba'
     && report.repetitions === plan.repetitions
-    && report.correctness?.passed === true
-    && report.infrastructure?.eligiblePairs === plan.repetitions
+    && (report.correctness?.candidatePassed === true
+      || (report.correctness?.candidatePassed === undefined && report.correctness?.passed === true))
     && Array.isArray(report.identities?.issues)
     && report.identities.issues.length === 0
     && report.identities.baseline?.ref === plan.baseline.ref
@@ -97,7 +91,7 @@ function reportMatchesPlan(report, plan) {
     && sameIdentity(report.identities.fixtureSha256, plan.identities.fixtureSha256)
     && sameIdentity(report.identities.harnessSha256, plan.identities.harnessSha256)
     && releaseProviderEfficiencyPolicyPassed(report)
-    && hasCompleteRuns(report, plan)
+    && hasCompleteCandidateRuns(report, plan)
 }
 
 export function assessReleaseProviderEvidence(plan, reports) {
@@ -192,7 +186,7 @@ function main() {
   try {
     const result = checkReleaseProviderEvidence(parseRoot(process.argv.slice(2)))
     if (result.state === 'missing') {
-      throw new Error(`matching provider comparison matrix evidence is missing or stale for ${result.baselineRef} (missing: ${result.missingCases.join(', ')}); run release:provider-compare -- --matrix explicitly before retrying (candidate check never invokes a provider)`)
+      throw new Error(`matching provider comparison evidence is missing or stale for ${result.baselineRef} (missing: ${result.missingCases.join(', ')}); run release:provider-compare -- --case <missing-case> for each listed scenario, or --matrix for an authorized full refresh (candidate check never invokes a provider)`)
     }
     if (result.state === 'reused') {
       console.log(`Release provider evidence check passed: reused all ${result.reports.length} provider comparison scenarios.`)

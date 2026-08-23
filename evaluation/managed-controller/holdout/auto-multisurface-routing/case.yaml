@@ -6,8 +6,7 @@ installed_skills:
   - rsp-manage
   - rsp-implement
 expected_resources:
-  - rsp-manage/references/host-worker-lifecycle.md
-  - rsp-manage/references/managed-exchange.md
+  - rsp-manage/references/interruption-recovery.md
   - rsp/references/control-outcome.md
   - rsp/references/durable-review.md
   - rsp/references/managed-routing.md
@@ -31,6 +30,33 @@ provider_expectations:
   worker_dispatch_count:
     min: 2
     max: 2
+worker_assignments:
+  - id: implementation
+    assignment_identity: refresh-status-guidance/implementation/1
+    lane: Fix
+    allowed_results:
+      - changed
+      - no-change
+    allowed_changes:
+      - .rsp/changes/refresh-status-guidance.md
+      - .rsp/specs/status-presentation.md
+      - src/status-card.mjs
+      - docs/en/status.md
+      - docs/zh-CN/status.md
+      - test/status-card.test.mjs
+      - test/docs-sync.test.mjs
+    allowed_commands:
+      - npm test
+  - id: independent-verify
+    assignment_identity: refresh-status-guidance/independent-verify/1
+    lane: Verify
+    allowed_results:
+      - pass
+      - fail
+      - unavailable
+    allowed_changes: []
+    allowed_commands:
+      - npm test
 allowed_changes:
   - .rsp/changes/refresh-status-guidance.md
   - .rsp/specs/status-presentation.md
@@ -48,12 +74,14 @@ required_changes:
 verification:
   - npm
   - test
-expected_output:
+expected_output: []
+forbidden_output: []
+narrative_output:
   - selected
   - coordinated
   - independent-verify
   - npm test
-forbidden_output:
+narrative_forbidden_output:
   - 'RouteDisposition: direct'
   - declined
   - controller state created

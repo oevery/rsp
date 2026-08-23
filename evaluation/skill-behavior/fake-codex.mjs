@@ -9,7 +9,7 @@ if (process.argv.includes('--version')) {
 }
 
 const prompt = readFileSync(0, 'utf8')
-const receiptShapeMatch = prompt.match(/Use this exact top-level JSON shape: (\{[^\n]+\})\./u)
+const receiptShapeMatch = prompt.match(/exact top-level JSON shape: (\{[^\n]+\})\./iu)
 
 const outputFlag = process.argv.indexOf('--output-last-message')
 const outputPath = outputFlag >= 0 ? process.argv[outputFlag + 1] : undefined

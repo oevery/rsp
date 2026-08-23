@@ -18,6 +18,8 @@ export interface ManagedControllerContinuationContract {
 export interface ManagedControllerOutputManifest extends ManagedControllerRecoveryManifest {
   expected_output: string[]
   forbidden_output: string[]
+  narrative_output?: string[]
+  narrative_forbidden_output?: string[]
 }
 
 export interface ManagedControllerHoldoutManifest extends ManagedControllerOutputManifest {
@@ -69,11 +71,10 @@ export const MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT: {
   identity: { field: string, mode: string }
   required_fields: string[]
   optional_fields: string[]
-  field_semantics: { boundary: string }
   field_types: Record<string, unknown>
   lane_results: Record<'Diagnose' | 'Inspect' | 'Fix' | 'Verify', string[]>
   lane_fields: Record<'Diagnose' | 'Inspect' | 'Fix' | 'Verify', { required: string[] }>
-  enums: Record<'boundary' | 'evidence_delta' | 'evidence_status' | 'release_claim', string[]>
+  enums: Record<'evidence_delta', string[]>
 }
 
 export interface PreparedManagedControllerRun {
@@ -122,6 +123,8 @@ export interface ManagedControllerGitObservation {
 export interface ManagedControllerOutputScore {
   expected_missing: string[]
   forbidden_present: string[]
+  narrative_missing?: string[]
+  narrative_forbidden_present?: string[]
 }
 
 export interface ManagedControllerRecoveryScore {
@@ -249,6 +252,8 @@ export type ManagedControllerScoringManifest = Pick<
   | 'expected_output'
   | 'forbidden_output'
   | 'local_bare_remote'
+  | 'narrative_forbidden_output'
+  | 'narrative_output'
   | 'required_changes'
 >
 

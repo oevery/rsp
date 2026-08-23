@@ -38,12 +38,14 @@ required_changes:
 verification:
   - npm
   - test
-expected_output:
+expected_output: []
+forbidden_output: []
+narrative_output:
   - selected
   - solo
   - 'dispatch: none'
   - npm test
-forbidden_output:
+narrative_forbidden_output:
   - 'RouteDisposition: direct'
   - delegated
   - coordinated

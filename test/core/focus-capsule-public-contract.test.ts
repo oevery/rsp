@@ -34,10 +34,10 @@ describe('focus capsule public contract', () => {
     expect(authoredFallback).toContain('`mode: solo | delegated | coordinated`')
     expect(authoredFallback).toContain('`status: running | waiting | completed`')
     expect(authoredFallback).toContain('`running -> waiting | completed` and `waiting -> running | completed`')
-    expect(authoredFallback).toContain('route, topology, lane result, acceptance, and closeout remain nested details or gates rather than peer statuses')
+    expect(authoredFallback).toContain('route, strategy, lane result, acceptance, and closeout remain nested details or gates rather than peer statuses')
     expect(authoredFallback).toContain('unknown non-empty lines or fields are invalid')
     expect(authoredFallback).toContain('Legacy unversioned content is warning-only compatibility')
-    expect(authoredFallback).toContain('does not emulate Manage qualification, worker dispatch, topology selection, Assignment inheritance, acceptance, or closeout')
+    expect(authoredFallback).toContain('does not emulate Manage qualification, worker delegation, strategy selection, acceptance, or closeout')
   })
 
   it('keeps the self-hosted fallback synchronized from the authored source', () => {

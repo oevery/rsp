@@ -287,7 +287,7 @@ function writeReplaySource(directory: string, plan: ReturnType<typeof buildRelea
 }
 
 describe('release provider comparison', () => {
-  it('plans the six routing and worker-topology scenarios as eight serial pairs', () => {
+  it('plans the six routing and worker-topology scenarios as eighteen serial pairs', () => {
     const plans = buildReleaseProviderComparisonMatrixPlans(root, { baselineRef: 'v3.2.0' })
 
     expect(plans.map(plan => ({
@@ -298,14 +298,14 @@ describe('release provider comparison', () => {
       route: plan.providerExpectations.route,
       workers: plan.providerExpectations.worker_dispatch_count,
     }))).toEqual([
-      { case: 'auto-integrated-direct', dispatch: 'none', mode: 'direct', repetitions: 1, route: 'direct', workers: { min: 0, max: 0 } },
-      { case: 'managed-solo-integrated', dispatch: 'none', mode: 'solo', repetitions: 1, route: 'selected', workers: { min: 0, max: 0 } },
-      { case: 'managed-delegated-integrated', dispatch: 'sequential', mode: 'delegated', repetitions: 1, route: 'selected', workers: { min: 1, max: 1 } },
+      { case: 'auto-integrated-direct', dispatch: 'none', mode: 'direct', repetitions: 3, route: 'direct', workers: { min: 0, max: 0 } },
+      { case: 'managed-solo-integrated', dispatch: 'none', mode: 'solo', repetitions: 3, route: 'selected', workers: { min: 0, max: 0 } },
+      { case: 'managed-delegated-integrated', dispatch: 'sequential', mode: 'delegated', repetitions: 3, route: 'selected', workers: { min: 1, max: 1 } },
       { case: 'auto-multisurface-routing', dispatch: 'independent-verify', mode: 'coordinated', repetitions: 3, route: 'selected', workers: { min: 2, max: 2 } },
-      { case: 'managed-coordinated-sequential', dispatch: 'sequential', mode: 'coordinated', repetitions: 1, route: 'selected', workers: { min: 2, max: 2 } },
-      { case: 'managed-coordinated-parallel', dispatch: 'parallel-wave', mode: 'coordinated', repetitions: 1, route: 'selected', workers: { min: 2, max: 2 } },
+      { case: 'managed-coordinated-sequential', dispatch: 'sequential', mode: 'coordinated', repetitions: 3, route: 'selected', workers: { min: 2, max: 2 } },
+      { case: 'managed-coordinated-parallel', dispatch: 'parallel-wave', mode: 'coordinated', repetitions: 3, route: 'selected', workers: { min: 2, max: 2 } },
     ])
-    expect(plans.reduce((total, plan) => total + plan.repetitions, 0)).toBe(8)
+    expect(plans.reduce((total, plan) => total + plan.repetitions, 0)).toBe(18)
     expect(plans.every(plan => plan.scheduling.concurrency === 1)).toBe(true)
   })
 
@@ -355,7 +355,7 @@ describe('release provider comparison', () => {
       scenariosPlanned: 6,
       verdict: 'failed',
     })
-  })
+  }, 15_000)
 
   it('fails fast when passed scenarios drift from the matrix-wide fixed identities', async () => {
     const plans = buildReleaseProviderComparisonMatrixPlans(root, { baselineRef: 'v3.2.0' })
@@ -380,7 +380,7 @@ describe('release provider comparison', () => {
       scenariosPlanned: 6,
       verdict: 'failed',
     })
-  })
+  }, 15_000)
 
   it('pins the previous release, candidate, holdout, and harness before provider execution', () => {
     const plan = buildReleaseProviderComparisonPlan(root, { baselineRef: 'v3.2.0', repetitions: 3 })
@@ -458,6 +458,113 @@ describe('release provider comparison', () => {
     expect(runs).toHaveLength(7)
   })
 
+  it('continues candidate sampling after baseline model failures without retrying them', async () => {
+    const calls: string[] = []
+    const runs = await executeSerialProviderPairs({
+      repetitions: 3,
+      runArm: async ({ arm, pairAttempt, targetPair }) => {
+        calls.push(`${targetPair}:${pairAttempt}:${arm}`)
+        return {
+          arm,
+          classification: arm === 'baseline' && targetPair === 1 ? 'model-failed' : 'eligible',
+          outcome: arm === 'baseline' && targetPair === 1 ? 'failed' : 'passed',
+        }
+      },
+    })
+
+    expect(calls).toEqual([
+      '1:1:baseline',
+      '1:1:candidate',
+      '2:2:candidate',
+      '2:2:baseline',
+      '3:3:baseline',
+      '3:3:candidate',
+    ])
+    expect(runs.filter(run => run.arm === 'candidate')).toHaveLength(3)
+  })
+
+  it.each(['harness-failed', 'incomplete'])('stops when a baseline run is %s', async (classification) => {
+    const calls: string[] = []
+    await executeSerialProviderPairs({
+      repetitions: 3,
+      runArm: async ({ arm, pairAttempt, targetPair }) => {
+        calls.push(`${targetPair}:${pairAttempt}:${arm}`)
+        return {
+          arm,
+          classification: arm === 'baseline' ? classification : 'eligible',
+          outcome: arm === 'baseline' ? 'unavailable' : 'passed',
+        }
+      },
+    })
+
+    expect(calls).toEqual(['1:1:baseline'])
+  })
+
+  it('stops immediately when a candidate run fails', async () => {
+    const calls: string[] = []
+    await executeSerialProviderPairs({
+      repetitions: 3,
+      runArm: async ({ arm, pairAttempt, targetPair }) => {
+        calls.push(`${targetPair}:${pairAttempt}:${arm}`)
+        return {
+          arm,
+          classification: arm === 'candidate' ? 'model-failed' : 'eligible',
+          outcome: arm === 'candidate' ? 'failed' : 'passed',
+        }
+      },
+    })
+
+    expect(calls).toEqual(['1:1:baseline', '1:1:candidate'])
+  })
+
+  it('stops immediately when a completed candidate run fails structured correctness', async () => {
+    const calls: string[] = []
+    await executeSerialProviderPairs({
+      repetitions: 3,
+      runCorrectnessPassed: run => run.correctnessPassed,
+      runArm: async ({ arm, pairAttempt, targetPair }) => {
+        calls.push(`${targetPair}:${pairAttempt}:${arm}`)
+        return {
+          arm,
+          classification: 'eligible',
+          correctnessPassed: arm !== 'candidate',
+          outcome: 'passed',
+        }
+      },
+    })
+
+    expect(calls).toEqual(['1:1:baseline', '1:1:candidate'])
+  })
+
+  it('does not retry a terminal baseline failure when candidate infrastructure is replaced', async () => {
+    const calls: string[] = []
+    await executeSerialProviderPairs({
+      repetitions: 3,
+      runArm: async ({ arm, pairAttempt, targetPair }) => {
+        calls.push(`${targetPair}:${pairAttempt}:${arm}`)
+        const baselineFailed = targetPair === 1 && arm === 'baseline'
+        const candidateContaminated = targetPair === 1 && arm === 'candidate' && pairAttempt === 1
+        return {
+          arm,
+          classification: baselineFailed
+            ? 'model-failed'
+            : candidateContaminated ? 'infra-contaminated' : 'eligible',
+          outcome: baselineFailed ? 'failed' : 'passed',
+        }
+      },
+    })
+
+    expect(calls).toEqual([
+      '1:1:baseline',
+      '1:1:candidate',
+      '1:2:candidate',
+      '2:3:candidate',
+      '2:3:baseline',
+      '3:4:baseline',
+      '3:4:candidate',
+    ])
+  })
+
   it('installs an explicit historical Skill source instead of silently using the current product', ({ onTestFinished }) => {
     const temporaryRoot = mkdtempSync(join(tmpdir(), 'rsp-release-provider-source-'))
     onTestFinished(() => rmSync(temporaryRoot, { force: true, recursive: true }))
@@ -486,9 +593,8 @@ describe('release provider comparison', () => {
     expect(prepared.sourceComposition).toEqual(expected)
     expect(prepared.installedComposition).toEqual(expected)
     expect(expected.hash).not.toBe(current.hash)
-    const receiptShape = prepared.prompt.match(/Use this exact top-level JSON shape: (\{[^\n]+\})\./u)
-    expect(receiptShape).not.toBeNull()
-    expect(Object.keys(JSON.parse(receiptShape![1])).sort()).toEqual([
+    const receiptShape = JSON.parse(readFileSync(join(prepared.workspace, '.rsp-evaluation-receipt.json'), 'utf8'))
+    expect(Object.keys(receiptShape).sort()).toEqual([
       'case_id',
       'composition_sha256',
       'contract_sha256',
@@ -513,12 +619,20 @@ describe('release provider comparison', () => {
     })
 
     expect(result.summary.verdict).toBe('failed')
-    expect(result.summary.runs).toEqual([expect.objectContaining({
-      arm: 'baseline',
-      repetition: 1,
-      outcome: 'failed',
-      failure: 'invalid-evaluation-receipt',
-    })])
+    expect(result.summary.runs).toEqual([
+      expect.objectContaining({
+        arm: 'baseline',
+        repetition: 1,
+        outcome: 'failed',
+        failure: 'invalid-evaluation-receipt',
+      }),
+      expect.objectContaining({
+        arm: 'candidate',
+        repetition: 1,
+        outcome: 'failed',
+        failure: 'invalid-evaluation-receipt',
+      }),
+    ])
     expect(existsSync(result.jsonPath)).toBe(true)
     expect(existsSync(result.markdownPath)).toBe(true)
     expect(readFileSync(result.jsonPath, 'utf8')).not.toContain('private diagnostic')
@@ -578,9 +692,42 @@ describe('release provider comparison', () => {
     })
     expect(markdown).toContain('| total_tokens | 100 | 110 | 10% | 20% | 18.18% |')
     expect(markdown).toContain('| total_tokens | 1:20%, 2:-9.09%, 3:22.22% | 20% | -9.09% | 22.22% | 31.31% |')
+    expect(markdown).toContain('- Evidence mode: `fresh-provider`')
+    expect(markdown).toContain('## Comparison boundary')
+    expect(markdown).toContain('- Isolated difference: tagged baseline versus candidate Skill composition')
+    expect(markdown).toContain('- Shared execution surfaces: current CLI, evaluation harness, and scenario fixture')
+    expect(markdown).toContain('- Full-package release benchmark: no')
+    expect(markdown).toContain('- Efficiency interpretation: diagnostic-only')
     expect(markdown).toContain('## Agent-reported observations')
     expect(markdown).toContain('| 1 | baseline | passed | passed | 0 | 1 |')
     expect(JSON.stringify(summary)).not.toMatch(/"(?:model|provider|session|settings|workspace)"\s*:/u)
+  })
+
+  it('reports narrative coverage gaps without failing provider correctness', () => {
+    const plan = buildReleaseProviderComparisonPlan(root, { baselineRef: 'v3.2.0', repetitions: 3 })
+    const runs = []
+    for (let repetition = 1; repetition <= 3; repetition += 1) {
+      const baseline = syntheticRun(plan, 'baseline', repetition, 100)
+      const candidate = syntheticRun(plan, 'candidate', repetition, 90)
+      if (repetition === 1) {
+        candidate.narrative = {
+          missing: ['integrated check'],
+          forbidden_present: [],
+          status: 'warning',
+        }
+      }
+      runs.push(baseline, candidate)
+    }
+
+    const summary = createReleaseProviderComparisonSummary(plan, runs)
+    const markdown = renderReleaseProviderComparisonMarkdown(summary)
+
+    expect(summary.verdict).toBe('passed')
+    expect(summary.correctness.passed).toBe(true)
+    expect(summary.narrative).toEqual({ warningRuns: 1 })
+    expect(markdown).toContain('## Narrative coverage')
+    expect(markdown).toContain('- Warning runs: 1')
+    expect(markdown).toContain('| 1 | candidate | warning | integrated check | none |')
   })
 
   it('keeps baseline worker noncompliance diagnostic and makes efficiency not comparable', () => {
@@ -621,6 +768,59 @@ describe('release provider comparison', () => {
     expect(markdown).toContain('- Baseline diagnostic failures: 1')
     expect(markdown).toContain('- Status: not-comparable')
     expect(markdown).toContain('| 1 | baseline | diagnostic | failed | 0 | 2 | 2 | true | 1 |')
+  })
+
+  it('passes the candidate gate with complete candidate runs and a partial baseline comparison', () => {
+    const plan = buildReleaseProviderComparisonPlan(root, { baselineRef: 'v3.2.0', repetitions: 3 })
+    const baselineFailure = {
+      ...syntheticRun(plan, 'baseline', 1, 100, { dimensionStatus: 'failed', outcome: 'failed' }),
+      classification: 'model-failed',
+    }
+    const runs = [baselineFailure, syntheticRun(plan, 'candidate', 1, 90)]
+    for (let repetition = 2; repetition <= 3; repetition += 1) {
+      runs.push(
+        syntheticRun(plan, 'candidate', repetition, 90),
+        syntheticRun(plan, 'baseline', repetition, 100),
+      )
+    }
+
+    const summary = createReleaseProviderComparisonSummary(plan, runs)
+    const markdown = renderReleaseProviderComparisonMarkdown(summary)
+
+    expect(summary.verdict).toBe('passed')
+    expect(summary.correctness).toMatchObject({
+      passed: true,
+      candidatePassed: true,
+      candidateRuns: 3,
+      requiredCandidateRuns: 3,
+      baselineModelFailures: 1,
+    })
+    expect(summary.comparison).toEqual({ status: 'partial', eligiblePairs: 2, plannedPairs: 3 })
+    expect(summary.efficiency.status).toBe('not-conclusive')
+    expect(markdown).toContain('- Candidate runs: 3/3')
+    expect(markdown).toContain('- Baseline model failures: 1')
+    expect(markdown).toContain('- Comparison completeness: partial')
+    expect(markdown).toContain('- Eligible pairs: 2/3')
+  })
+
+  it('excludes baseline structured failures from comparison efficiency without blocking candidates', () => {
+    const plan = buildReleaseProviderComparisonPlan(root, { baselineRef: 'v3.2.0', repetitions: 3 })
+    const runs = []
+    for (let repetition = 1; repetition <= 3; repetition += 1) {
+      const baseline = syntheticRun(plan, 'baseline', repetition, 100)
+      if (repetition === 1)
+        baseline.scenario.status = 'failed'
+      runs.push(baseline, syntheticRun(plan, 'candidate', repetition, 90))
+    }
+
+    const summary = createReleaseProviderComparisonSummary(plan, runs)
+
+    expect(summary.verdict).toBe('passed')
+    expect(summary.correctness.candidatePassed).toBe(true)
+    expect(summary.comparison).toEqual({ status: 'partial', eligiblePairs: 2, plannedPairs: 3 })
+    expect(summary.efficiency.status).toBe('not-conclusive')
+    expect(summary.efficiency.baseline.total_tokens).toMatchObject({ median: 100 })
+    expect(summary.efficiency.pairedDeltaPct.total_tokens.pairs).toHaveLength(2)
   })
 
   it('fails the candidate gate when candidate worker compliance fails', () => {
@@ -752,7 +952,7 @@ describe('release provider comparison', () => {
     }))
   })
 
-  it('keeps missing usage incomplete rather than converting it into a pass', () => {
+  it('keeps missing usage non-conclusive without blocking a complete candidate gate', () => {
     const plan = buildReleaseProviderComparisonPlan(root, { baselineRef: 'v3.2.0', repetitions: 3 })
     const runs = []
     for (let repetition = 1; repetition <= 3; repetition += 1) {
@@ -761,7 +961,8 @@ describe('release provider comparison', () => {
     }
 
     const summary = createReleaseProviderComparisonSummary(plan, runs)
-    expect(summary.verdict).toBe('incomplete')
+    expect(summary.verdict).toBe('passed')
+    expect(summary.correctness.candidatePassed).toBe(true)
     expect(summary.efficiency.status).toBe('not-conclusive')
     expect(summary.omissions).toContain('one or more required measurements are unavailable')
     expect(summary.efficiency.pairedDeltaPct.total_tokens.median).toBeNull()
@@ -777,7 +978,8 @@ describe('release provider comparison', () => {
 
     expect(summary.verdict).toBe('unavailable')
     expect(summary.correctness.passed).toBe(false)
-    expect(summary.omissions).toContain('one or more paired provider runs were unavailable or not run')
+    expect(summary.omissions).toContain('one or more baseline/candidate pairs were unavailable or not eligible for comparison')
+    expect(summary.omissions).toContain('one or more required candidate runs were unavailable or not run')
   })
 
   it('rejects single-run comparisons before provider execution', () => {
@@ -823,6 +1025,7 @@ describe('release provider comparison', () => {
       sourceHarnessSha256: 'a'.repeat(64),
       sourceReportSha256: expect.stringMatching(/^[a-f0-9]{64}$/),
     })
+    expect(readFileSync(result.markdownPath, 'utf8')).toContain('- Evidence mode: `deterministic-replay`')
     expect(result.summary.runs[0]).toMatchObject({
       agent_reported: { observations: { worker_dispatch_count: 2 } },
       measurements: { corrections: 0, first_fix_result: 'passed', worker_dispatch_count: 2 },
@@ -892,8 +1095,8 @@ describe('release provider comparison', () => {
     expect(assessReleaseProviderEvidence(plan, [{ path: result.jsonPath, report: result.summary }]).state).toBe('reused')
   })
 
-  it('replays a configured one-pair scenario without weakening explicit repetition overrides', ({ onTestFinished }) => {
-    const temporaryRoot = mkdtempSync(join(tmpdir(), 'rsp-release-provider-replay-one-pair-'))
+  it('replays a scenario with the catalog-configured three pairs', ({ onTestFinished }) => {
+    const temporaryRoot = mkdtempSync(join(tmpdir(), 'rsp-release-provider-replay-catalog-pairs-'))
     onTestFinished(() => rmSync(temporaryRoot, { force: true, recursive: true }))
     const plan = buildReleaseProviderComparisonPlan(root, {
       baselineRef: 'v3.2.0',
@@ -908,9 +1111,9 @@ describe('release provider comparison', () => {
       sourceReportPath: source.reportPath,
     })
 
-    expect(plan.repetitions).toBe(1)
-    expect(result.summary).toMatchObject({ case: 'managed-solo-integrated', repetitions: 1, verdict: 'passed' })
-    expect(result.summary.runs).toHaveLength(2)
+    expect(plan.repetitions).toBe(3)
+    expect(result.summary).toMatchObject({ case: 'managed-solo-integrated', repetitions: 3, verdict: 'passed' })
+    expect(result.summary.runs).toHaveLength(6)
   })
 
   it.each([

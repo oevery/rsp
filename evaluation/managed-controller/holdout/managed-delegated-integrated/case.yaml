@@ -11,7 +11,7 @@ request: >-
   coordination makes Manage eligible, and implementation belongs to exactly one compatible primary
   worker. Delegate one complete assignment covering the coupled Spec, product card, paired guidance,
   tests, truthful Change update, and the single integrated `npm test` verification. Reuse that same
-  WorkerSession through its receipt; do not create an independent verifier or a second implementation
+  worker through its Discipline-owned result; do not create an independent verifier or a second implementation
   worker. Modify only the allowed paths. Do not archive, stage, commit, push, publish, or create controller
   state. Report `selected`, mode `delegated`, dispatch `sequential`, `one worker dispatch`, and `npm test`.
 provider_expectations:
@@ -21,6 +21,23 @@ provider_expectations:
   worker_dispatch_count:
     min: 1
     max: 1
+worker_assignments:
+  - id: implementation
+    assignment_identity: refresh-status-guidance/implementation/1
+    lane: Fix
+    allowed_results:
+      - changed
+      - no-change
+    allowed_changes:
+      - .rsp/changes/refresh-status-guidance.md
+      - .rsp/specs/status-presentation.md
+      - src/status-card.mjs
+      - docs/en/status.md
+      - docs/zh-CN/status.md
+      - test/status-card.test.mjs
+      - test/docs-sync.test.mjs
+    allowed_commands:
+      - npm test
 allowed_changes:
   - .rsp/changes/refresh-status-guidance.md
   - .rsp/specs/status-presentation.md
@@ -38,13 +55,15 @@ required_changes:
 verification:
   - npm
   - test
-expected_output:
+expected_output: []
+forbidden_output: []
+narrative_output:
   - selected
   - delegated
   - sequential
   - one worker dispatch
   - npm test
-forbidden_output:
+narrative_forbidden_output:
   - 'RouteDisposition: direct'
   - coordinated
   - independent verifier

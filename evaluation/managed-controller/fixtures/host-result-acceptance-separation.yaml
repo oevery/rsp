@@ -1,0 +1,14 @@
+id: host-result-acceptance-separation
+sources:
+  - skills/rsp-manage/SKILL.md
+  - .rsp/specs/skill-control-model.md
+evidence:
+  - Worker results, host observations, and Manager acceptance remain separate.
+required_contract:
+  - Treat three evidence sources separately
+  - Host facts are capabilities and observations, not RSP domain objects
+  - Manager must not author, repair, reconstruct, or substitute the missing worker result
+  - Hosts own worker execution and lifecycle capabilities
+prohibited_actions:
+  - worker self-certifies identity
+  - host completion substitutes for acceptance

@@ -40,11 +40,13 @@ required_changes:
 verification:
   - npm
   - test
-expected_output:
+expected_output: []
+forbidden_output: []
+narrative_output:
   - 'RouteDisposition: direct'
   - integrated check
   - npm test
-forbidden_output:
+narrative_forbidden_output:
   - 'RouteDisposition: managed'
   - 'Managed dispatch: sequential'
   - controller state created

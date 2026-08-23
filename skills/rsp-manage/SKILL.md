@@ -4,132 +4,134 @@ description: Coordinate one eligible long-running, recovery, or multi-slice RSP 
 license: MIT
 metadata:
   author: oevery
-  version: "2026.08.21.4"
+  version: "2026.08.22.3"
 ---
 
 # RSP Manage
 
-Manage one requested goal selected by Core from an explicit request or effective `manage.activation: auto`. Enter only with one selected shape-ready Change or shallow Group plus a transient handoff containing the goal, WorkRef, authority envelope, decisive qualification evidence, closeout ceiling, and return boundaries. Once selected, this Skill solely owns same-goal revalidation, interruption and resume, review convergence, acceptance, lifecycle closeout, and commit eligibility and orchestration. Exact staging, message construction, local commit execution, and post-commit observation remain owned by `rsp-commit`. Keep artifacts durable and process data transient. The goal defines authority; automatic activation grants selection, not mutation.
+Manage one requested goal selected by Core from an explicit request or effective `manage.activation: auto`. Enter only with one selected shape-ready Change or shallow Group plus the goal, WorkRef, authority envelope, decisive qualification evidence, closeout ceiling, and return boundaries. Manage owns same-goal coordination, evidence acceptance, review convergence, lifecycle closeout, and eligible Commit orchestration. Exact Git procedure remains owned by `rsp-commit`. Keep artifacts durable and process data transient. Automatic activation grants selection, not mutation.
 
 Follow Core's response-versus-artifact language boundary for all user-visible control narration; when the response language differs, keep exact canonical values only as secondary parenthesized or code-formatted tokens.
 
-## Selected-goal entry
+## Validate the selected goal
 
-Core resolves ownership before this Skill is entered. Manage has no pre-owner Intake and never creates, focuses, reshapes a durable owner, or selects an execution environment. Reject an incomplete handoff without mutation and return to Core with the missing owner, authority, qualification, closeout, or return-boundary evidence.
+Core owns initial Manage qualification and the `selected | declined` route result. Manage never creates, focuses, reshapes, or requalifies a durable owner. Before mutation, reread the selected Change or Group, relevant Specs and Decisions, authority envelope, `rsp status --json`, current checkout, and decisive evidence.
 
-## Validate the selected handoff before mutation
+Stop and return to Core when the handoff is incomplete or a true owner, WorkRef topology, route, declared behavior, acceptance, interface, scope, mutation-authority, or external-action-authority boundary changed. Otherwise continue the selected goal without repeating qualification. Use only the execution location and worker capabilities supplied by the host; never infer isolation, identity, or completion.
 
-Core and its managed-routing reference solely own initial Manage qualification and the `selected | declined` route result. Manage never repeats the direct-versus-managed eligibility test or declines a valid selected handoff back to an ordinary Core or Discipline action.
+Return one bounded managed phase result for Core's outer `ControlOutcome`:
 
-Before deriving execution, re-read the handoff against current evidence:
+- `solo`: no worker participates, including a bounded local Discipline action;
+- `delegated`: one worker participates;
+- `coordinated`: multiple workers participate or acceptance requires a separate verifier.
 
-- every selected WorkRef, including clear in-scope successors;
-- the complete owning Change, or the Group Brief and its children;
-- relevant Specs and Decisions;
-- the authority envelope, `rsp status --json`, and the current checkout.
+Mode describes observed participation, not a host lifecycle model.
 
-Validate only handoff completeness and current drift: owner and WorkRef topology, authority envelope, owned paths, qualification evidence, closeout ceiling, return boundaries, requested goal and route, and decisive evidence. If any true owner, topology, route, behavior, acceptance, interface, scope, mutation-authority, or external-action-authority boundary changed, stop without mutation and return the decisive evidence to Core. Otherwise continue the selected managed goal without repeating qualification. Use only the execution location actually provided by the host; a worker identity never proves filesystem or runtime isolation. Keep validation and execution reasoning transient.
+## Choose the smallest execution strategy
 
-Derive one transient `ExecutionFrame` with the current goal, `WorkOwner` or `WorkSet`, authority, comparison baseline, observed execution location, resource claims, and acceptance surfaces. Preserve unrelated work; never require or invent a release identity for a non-release managed goal; never persist the frame or infer isolation from worker execution.
+Use only as much coordination as the current evidence requires:
 
-Return one bounded managed phase result for Core to compose through its `ControlOutcome` contract; do not redefine the outer receipt. Report `solo` with no worker, including bounded local Discipline execution; `delegated` with one compatible primary WorkerSession; and `coordinated` with multiple workers or an independence-seeking worker obligation. Frontier, `DispatchDisposition`, topology, lane result, `AcceptanceDisposition`, and `CloseoutEligibility` stay nested details or gates rather than peer status flows.
+- `control-action`: one Manager-owned control-plane action;
+- `longitudinal`: compatible successive work through one worker when the host supports continuation;
+- `sequential`: ordered work with shared seams, writers, or verification resources;
+- `parallel-wave`: independent slices with disjoint mutation and verification resources;
+- `read-only-fan-out`: independent evidence gathering;
+- `bounded-correction`: an evidenced same-scope correction;
+- `independent-verify`: acceptance requires a different worker from the accepted implementation worker.
 
-Derive the smallest safe topology: `control-action` for a bounded Manager-owned control action; `longitudinal` for compatible successive Assignments to one primary WorkerSession; `sequential` for ordered work; `parallel-wave` for independent mutation and verification resources; `read-only-fan-out` for independent evidence; `bounded-correction` for an accepted same-scope failure; or `independent-verify` for an acceptance obligation requiring a different worker identity. Topology is response-only nested evidence and changes only after revalidating authority, scope, seams, resources, replay safety, and evidence.
+These names explain Manager strategy only. They are not runtime states, persisted objects, or proof that dispatch occurred.
 
-Derive `DispatchDisposition` independently after selection:
+Derive `DispatchDisposition` after selection:
 
-| Value | Use when | If dispatch is unavailable |
+| Value | Use when | If unavailable |
 | --- | --- | --- |
-| `none` | The bounded action has no useful or required worker seam. | Invoke the local Discipline; Manage retains orchestration and acceptance. |
-| `preferred` | Delegation improves isolation or continuity without creating an acceptance obligation. | Record the fallback and continue locally inside the same owner and authority. |
-| `required` | The request, explicit delegation authority, or declared acceptance requires worker identity or an isolated resource. | Stop `capability-unavailable`; acceptance remains `incomplete`. |
+| `none` | No useful or required worker seam exists. | Run the bounded local Discipline. |
+| `preferred` | Delegation improves focus or continuity without creating an acceptance obligation. | Continue locally within the same owner and authority. |
+| `required` | The request or declared acceptance requires delegated work or a separate verifier. | Stop `capability-unavailable`; acceptance remains `incomplete`. |
 
-`required` is monotonic within the current managed phase. Cost, convenience, locally available mutation capability, or missing host capability never downgrades it to `preferred | none`; only a changed request, authority, or acceptance boundary returned to Core permits fresh derivation.
+`required` remains fail-closed for the current phase. Invoke an actual host worker capability before worker-owned work; never perform the assigned work locally and simulate worker participation or a worker result. If the host cannot start or attribute the required worker, stop before worker-owned mutation and keep acceptance incomplete. Convenience, cost, or local capability never downgrades it.
 
-Manage qualification, distinct execution/acceptance phases, and separate owners never manufacture a worker obligation. The common path is: validate → resolve frontier → choose `none | preferred | required` → execute → verify; load recovery, lifecycle, review, closeout, or provider detail only when its trigger is present.
+## Resolve the frontier
 
-## Resolve the execution frontier
+Classify new unknowns in fail-closed order: `out-of-goal` → `owner-decision` → `fog` → `evidence-needed` → `executable`.
 
-Classify every new unknown in fail-closed order: `out-of-goal` → `owner-decision` → `fog` → `evidence-needed` → `ready-to-execute`. Canonical `FrontierDisposition` is exactly `out-of-goal`, `owner-decision`, `fog`, `evidence-needed`, or `executable`; public `ready-to-execute` maps only to `executable`.
+- `out-of-goal`: stop `reroute`.
+- `owner-decision`: ask the `DecisionOwner` one highest-impact question; stop `ask-owner`.
+- `fog`: create no synthetic work or mutation; stop `return-to-shape`.
+- `evidence-needed`: collect one bounded factual answer without crossing an earlier boundary.
+- `executable`: choose one Discipline only after ownership, authority, and required evidence are settled.
 
-- `out-of-goal`: return topology or authority resolution to Core; stop `reroute`.
-- `owner-decision`: ask the `DecisionOwner` one highest-impact question about unresolved behavior, acceptance, interface, scope, mutation, external action, or human acceptance; stop `ask-owner`. Core freshly routes after the answer.
-- `fog`: This is not yet a precise question. Create no synthetic Task, Change, Blocker, worker dispatch, or product mutation. Halt this phase; only Core may route authorized Shape. Stop `return-to-shape`. Resume after Shape returns a ready owner and Core rederives the route.
-- `evidence-needed`: answer one precise factual question. If it crosses an earlier boundary, use that boundary's stop instead of selecting Fix.
-- `executable`: select a lane only after ownership, authority, and required evidence are settled.
+Use Core's canonical stop vocabulary. No stop permits another dispatch, product mutation, lifecycle closeout, or Git action before its resume rule succeeds.
 
-Use the canonical `StopDisposition` supplied by the invoking Core contract. Manage applies the phase-specific mappings below but does not redefine the complete common stop vocabulary. No stop permits another worker dispatch, product mutation, lifecycle closeout, or Git action until its stated resume contract succeeds.
+## Delegate one bounded task
 
-Before composing or resuming work, validating a `WorkerReceipt`, or deriving `AcceptedLaneEvidence`, read the canonical [managed exchange](references/managed-exchange.md) contract. When the Core handoff carries an explicit machine contract descriptor, preserve it under the Core machine contract kernel and place the complete applicable descriptor in every producer Assignment. Send one independently executable vertical slice. Batch small same-shape edits only when role, seam, writer, authority, replay, verification, review, and ResourceLease boundaries match. Never batch distinct WorkRefs into one Assignment or WorkerReceipt. Compatible Group children may reuse a primary WorkerSession, but each child retains its own Assignment, WorkerInvocation, and WorkerReceipt.
-
-Prefer the same primary WorkerSession while frame, role, seam, writer, strategy, and evidence remain compatible. Session loss, incompatible boundaries, independence, or a reasoning reset requires a fresh WorkerSession and complete Assignment. Use an `AssignmentDelta` only under the exchange contract's observed same-session inheritance rule. Identity and continuity grant no authority. Token or context cost may choose only between otherwise equally safe and authorized strategies; it never changes authority, acceptance, completion, or a required worker boundary.
-
-- **Diagnose:** `rsp-diagnose`; read-only until a cause or explicit no-cause result. Return `result: confirmed | unresolved` and `boundary: unchanged | changed`, plus decisive evidence and the next safe discriminating check when available.
-- **Inspect:** Manager-only and read-only; parallel only with isolated paths and verification resources. Return `result: confirmed | unresolved` and `boundary: unchanged | changed`, plus one independent evidence packet.
-- **Fix:** `rsp-implement`; sole product writer with explicit in-scope mutation authority. Return `result: changed | no-change` and `boundary: unchanged | changed`, plus observed worker identity, changed paths, and fresh verification.
-- **Verify:** `rsp-verify`; read-only for declared risk or failed correction. Return the Verify-owned result with observed worker identity and independence status.
-
-Fixed-scope review remains owned by `rsp-review`.
-Verify receipts append observed worker identity and `independence: established | unavailable`.
-
-Before worker creation, resume, interruption, settlement, or release, read [host worker lifecycle](references/host-worker-lifecycle.md). Host-confirmed Assignment admission creates the WorkerInvocation and cancellation-ownership boundary; creation or resume alone does not prove admission. Settlement closes liveness only; release closes conflicting resources only. Neither proves product acceptance. A completed WorkerSession without a compatible longitudinal successor is released through the host when supported. Validate every receipt through the managed exchange contract. Never parse free-form output to manufacture a receipt, result, dispatch, or acceptance.
-
-Independent Verify is established only when its worker identity and the accepted Fix worker identity are both available and different. If the host cannot establish that identity boundary, record `independence: unavailable`; ordinary read-only Verify may still run, but Manager must not claim independent verification.
-
-Derive `AcceptanceDisposition` independently from execution:
+Send one independently executable vertical slice. Start by telling the recipient that it is the already-dispatched Discipline worker for this assignment: it executes the bounded task directly and must not rerun parent Manage routing or require another worker. A delegated task includes only what the worker needs to act safely:
 
 ```text
-accepted required receipts + fresh declared verification → evidence-complete
-evidence-complete + clean fixed-scope review              → review-clean
+Work: <exact WorkRef>
+Objective: <one bounded objective>
+Authority: <exact owner sections or paths>
+Read: <allowed read boundary>
+Write: <allowed write boundary>
+Verify: <required verification boundary>
+Known facts: <only decisive current facts>
+Prohibited actions: <explicit denials>
+Stop conditions: <when to return without continuing>
+Replay caution: <only when repeating effects may be unsafe>
 ```
 
-Otherwise acceptance is `incomplete`. This includes a required worker that was not created, returned no valid receipt, reported `evidence_status: unavailable` or `boundary: changed`, or could not satisfy required independence. Execution and verification receipts never derive `review-clean`; the durable writeback decision never substitutes for review. Controller mutation cannot replace an unavailable required implementation worker, and ordinary Verify cannot satisfy required independent Verify.
-Implementation verification, fixed-scope change review, and the durable writeback decision remain separate gates. The first transition above is implementation verification; only the second derives `review-clean`.
+Omit empty optional fields. Do not attach host lifecycle schemas, correlation identifiers, JSON transport contracts, evaluator instructions, token targets, or acceptance fields. Workers receive no implied focus, lifecycle, Git, publication, deployment, approval, or nested-delegation authority. Nested delegation is prohibited unless the task explicitly grants a bounded descendant role and the parent remains responsible for its work and result.
 
-Keep transient control, execution, receipt, resource, topology, and chronology data response-only. After validation, persist only accepted outcomes to Tasks, decisive evidence to Verify, and real unresolved dependencies or risks to Blockers. Durable facts or rationale remain owned by the durable writeback decision; do not create another managed-state owner.
+Resume the same compatible worker only when the host makes that possible and the goal, role, authority, writer boundary, strategy, and evidence remain valid. Otherwise send a complete fresh task. A concise continuation may state changed facts, but never relies on hidden inheritance for authority or safety.
 
-Do not impose one fixed dispatch ceiling across the whole managed run. Every dispatch requires one necessary bounded Assignment with available authority, seams, exclusive resources, replay safety, and acceptance capacity. Skip Diagnose or Inspect unless it materially reduces uncertainty for the current acceptance path.
+Each delegated Discipline owns its own result:
 
-An evidenced failed same-scope Assignment permits at most three correction passes by default. Start another pass only when new evidence makes it discriminating, replay is safe, and decisive acceptance remains possible; it stops earlier when the same failure repeats without new evidence, on non-convergence, changed boundary, unavailable capability, unsafe replay, or unverifiable correction. Independent Verify is a separate required acceptance obligation and does not consume the Fix correction allowance. Manual fallback stays within the same owner and authority; Manager never absorbs an unavailable worker's unauthorized implementation.
+- **Diagnose:** `rsp-diagnose`; `confirmed | unresolved` with cause evidence and scope impact.
+- **Inspect:** Manager-only read-only evidence packet.
+- **Fix:** `rsp-implement`; `changed | no-change` with changed paths, verification, omissions, and any scope issue.
+- **Verify:** `rsp-verify`; `pass | fail | unavailable` with named checks, evidence delta, omissions, and any scope issue.
 
-## Dispatch owned work
+Fixed-scope review remains owned by `rsp-review`. Manage adds no universal worker receipt and never asks a worker to report host identity, independence, admission, settlement, release, evidence validity, or acceptance.
 
-Send the complete Assignment or eligible AssignmentDelta by message; workers never use the Focus Capsule for coordination. Dispatch only for `preferred | required`; `none` invokes the local Discipline without synthetic delegation. Count a dispatch or resumed delta only after host-confirmed admission. Failed creation, resume, or pre-admission delivery creates no dispatch, continuity, invocation, or inherited boundary. Manage retains receipt validation, accepted-evidence derivation, convergence, lifecycle, and commit orchestration; Commit retains the exact Git procedure.
+## Validate results and host facts
 
-For `required`, obtain host-confirmed admission for every required WorkerInvocation before any corresponding Assignment-owned mutation or verification command. Before admission, Manager may inspect evidence, compose and deliver the Assignment, and manage lifecycle only. Manager-side edits, commands, internal parallelism, role labels, or self-authored output establish neither a WorkerInvocation nor a WorkerReceipt.
+Treat three evidence sources separately:
 
-A derived topology is a plan, not an observed lifecycle fact. Claim completed dispatch, settlement, release, or worker counts only from host observations; controller narration never turns planned topology into completed execution.
+- the worker-authored Discipline result states what the worker did and observed;
+- host observations, when available, establish dispatch, attribution, activity, cancellation, completion, and whether different workers participated;
+- Manager validates authority, actual changed paths, local diff, declared verification, omissions, and current acceptance.
 
-When dispatch cannot satisfy a required worker obligation, apply the AcceptanceDisposition rule above: return `StopDisposition: capability-unavailable`, keep acceptance `incomplete`, and stop before any worker-owned mutation. Absence of a confirmed WorkerInvocation or WorkerReceipt is never success, does not discharge the required obligation, and cannot be replaced by the controller claiming the worker's result.
+Host facts are capabilities and observations, not RSP domain objects. Missing observations remain unavailable rather than inferred from prose, handles, elapsed time, topology, or successful tests. A worker never self-certifies identity, independence, resource release, evidence validity, or acceptance.
 
-For a Group:
+For required delegation, Manage must have an attributable worker-authored result that covers the assigned boundary. For required independent Verify, the host must establish that the accepted Fix and Verify came from different workers. If either condition cannot be established, acceptance remains `incomplete`. Manager must not author, repair, reconstruct, or substitute the missing worker result.
 
-- Dispatch only children in the current `plan.waves` wave.
-- Treat actual overlap in writers, the RSP control plane, test runners, generated artifacts, browsers, Brokers, provider sessions, or hardware/classroom sessions as exclusive ResourceLease candidates.
-- Keep blockers, later waves, shared seams, conflicting leases, and dependent verification sequential. Parallel work requires independent mutation paths and evidenced distinct resources; delegation never implies concurrency or isolation.
-- Grant no implied focus, capsule, lifecycle, Git, publication, deployment, or approval authority.
-- Run lane-local checks first, then at most one affected or integration gate for shared risk. Closeout reruns required evidence fresh; do not repeat an unchanged valid lane check.
+Inspect actual paths, diff, commands, outcomes, and omissions before accepting a result. A host-reported completion, a valid transport shape, successful integration tests, or absence of an error never substitutes for this validation.
 
-## Continue from evidence
+Derive `AcceptanceDisposition` independently:
 
-Inspect changed paths, local diff, and declared verification before accepting results. For an unchanged-boundary receipt, keep status and owner reads bounded to observed invalidations; rerun `rsp status --json` and reread complete authority only on recovery, closeout, or another invalidation signal. For a Group, restrict it to declared children.
+```text
+accepted required Discipline results + fresh declared verification → evidence-complete
+evidence-complete + clean fixed-scope review                   → review-clean
+```
 
-When context growth threatens precision, treat semantic execution rollover as an interruption checkpoint and read [interruption and recovery](references/interruption-recovery.md) before returning or resuming. Do not continue from transient worker or resource claims that cannot be re-established.
+Every missing, invalid, unavailable, or boundary-changing required result keeps acceptance `incomplete`. Implementation verification, fixed-scope review, and the durable writeback decision remain separate gates.
 
-Continue a clear in-scope ready successor while the goal, WorkRef topology, route, declared behavior, acceptance, public-interface boundary, scope, and authority remain unchanged. Return to Core only when owner identity, topology, requested route, declared behavior, acceptance, public-interface boundary, scope, mutation authority, or external-action authority changes. Implementing declared acceptance does not return to Core; at a changed boundary suspend mutation, return decisive evidence, and let Core freshly route Shape or the next owner. At that boundary, never classify discovery or change topology; only Core may route authorized Shape and freshly select the next path.
+## Dispatch and convergence
 
-Stop when discovery or a new request changes declared behavior, acceptance, public-interface boundaries, scope, mutation authority, or external authority; do not stop merely because a normal Fix changes implementation behavior to satisfy the declared acceptance. Retry only evidenced corrections. Never create controller status or parallel lifecycle state.
+Dispatch only for `preferred | required`; `none` invokes the local Discipline without synthetic delegation. Claim worker participation or counts only from host observations. If the host cannot start or attribute a required worker, stop before worker-owned mutation and keep acceptance incomplete.
 
-Read [interruption and recovery](references/interruption-recovery.md) only for a progress or status inquiry, explicit pause or release, an environment or verification stop, or resume from continuation pointers.
+For a Group, dispatch only children in the current `plan.waves` wave. Keep shared writers, generated artifacts, test runners, browsers, Brokers, provider sessions, hardware, and other conflicting resources sequential unless the host and checkout evidence establish safe isolation. Delegation never implies concurrency. Run lane-local checks first, then at most one affected integration gate.
 
-Read [managed review convergence](references/review-convergence.md) only after a fixed-scope re-review returns Findings or when an accepted in-scope Finding may require another bounded Resolve Findings pass.
+Do not impose a whole-run dispatch quota. Skip optional Diagnose or Inspect work unless it materially reduces uncertainty. An evidenced same-scope failure permits at most three correction passes by default and stops earlier on repeated evidence, non-convergence, changed scope or authority, unsafe replay, unavailable capability, or unverifiable correction. Required independent Verify remains a separate obligation.
 
-## Preserve boundaries
+## Continue, interrupt, and close out
 
-Keep chronology and transient control objects out of Changes, Briefs, Specs, Decisions, and Focus Capsules. Changes retain converged requirements, accepted outcomes, decisive evidence, omissions, and blockers; Briefs retain shared completion without copied child state. Before using capsule content, read [interruption and recovery](references/interruption-recovery.md). The focus marker path remains the sole selection truth; capsule prose grants no authority.
+Inspect changed paths, local diff, and declared verification before continuing. Reread complete owner and authority only on a real invalidation, recovery, cross-session continuation, or closeout boundary. Continue a clear in-scope successor while goal, WorkRef topology, route, behavior, acceptance, interface, scope, and authority remain unchanged. Return changed boundaries to Core.
 
-Closeout requires a Core-selected and qualified handoff that remains valid under current evidence. For declined, unavailable, unselected, incomplete, or drifted handoffs, every `manage.closeout` preset is dormant; Core may report readiness or the next action, but configuration executes neither archive nor commit. Earlier qualification does not carry forward across a new continuation without a fresh Core route result.
+Read [interruption and recovery](references/interruption-recovery.md) only for a progress inquiry, explicit pause, environment or verification stop, or resume. Read [managed review convergence](references/review-convergence.md) only after a fixed-scope review returns Findings.
 
-When closeout begins, read [lifecycle and delivery closeout](references/closeout.md) to derive `CloseoutEligibility` and apply any authorized lifecycle, Commit, or push route. Also load it for an explicitly authorized recovery checkpoint or explicit push request. This Skill retains the valid-handoff and incomplete-or-drifted fail-safe before loading it; the reference cannot turn missing review, verification, Git, publication, or human-acceptance authority into permission.
+Persist no dispatch chronology, host handles, worker messages, retries, topology, or acceptance process. Changes retain accepted outcomes in Tasks, decisive evidence in Verify, and real unresolved dependencies or risks in Blockers. Focus Capsules remain recovery pointers, never worker coordination or authority.
 
-Stop on unavailable dependencies, missing authority, failed verification, drift, or limits. When accepted work remains, preserve the focused owner unless explicit release or owner-conflict resolution requires otherwise, then return the incomplete continuation in this order: `WorkRef, Authority, Current state, Changed artifacts, Fresh verification, Blockers, and Next action`. Do not expose retry chronology or claim unobserved completion.
+Closeout requires the selected handoff to remain valid and `AcceptanceDisposition: review-clean`. Otherwise every `manage.closeout` preset is dormant. Read [lifecycle and delivery closeout](references/closeout.md) only when closeout becomes eligible, for an authorized recovery checkpoint, or for an explicit push request.
+
+Stop on missing authority, unavailable capability, failed verification, drift, unsafe replay, or limits. When work remains, return `WorkRef, Authority, Current state, Changed artifacts, Fresh verification, Blockers, and Next action`. Do not claim review, archive, Commit, push, publication, deployment, approval, or human acceptance without its owning authority and evidence.

@@ -19,7 +19,7 @@ The trial was never published: the npm latest version and Git v3.2.0 tag predate
 
 RSP does not own execution-environment isolation. Core and Manage operate against the checkout actually provided and observed by the host. Local Git worktrees, alternate branches, containers, remote sandboxes, and cloud VMs are selected and managed by the user, host, or Git tooling rather than by RSP policy or workflow state.
 
-Manage remains responsible for goal coordination, worker assignments, resource conflicts, evidence acceptance, lifecycle closeout, and commit eligibility. An observed execution location may appear transiently in its ExecutionFrame, but no WorkspaceSelection, registry, activation policy, prepared branch, landing lifecycle, or cleanup state enters the RSP domain model.
+Manage remains responsible for goal coordination, bounded worker tasks, resource-conflict decisions, evidence acceptance, lifecycle closeout, and commit eligibility. It consumes execution-location and worker facts supplied by the host without modeling them as RSP runtime entities. No WorkspaceSelection, registry, activation policy, prepared branch, landing lifecycle, or cleanup state enters the RSP domain model.
 
 Commit owns one exact local Git delivery boundary in the current checkout: authorized paths, staged diff, compatible Git state, one stored message, one resulting commit, and a truthful receipt. Commit does not cherry-pick into another branch, clean another checkout, or infer remote delivery. If work occurs in a host-selected worktree or branch, the host or user owns any later handoff or integration.
 

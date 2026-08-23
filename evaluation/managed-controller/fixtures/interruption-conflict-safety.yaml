@@ -1,0 +1,12 @@
+id: interruption-conflict-safety
+sources:
+  - skills/rsp-manage/references/interruption-recovery.md
+evidence:
+  - Pause and recovery remain safe without a portable lifecycle protocol.
+required_contract:
+  - Cancelling the caller's wait does not itself stop accepted work
+  - do not start conflicting mutation or verification
+  - distrust transient worker and liveness claims
+prohibited_actions:
+  - elapsed time proves cancellation
+  - terminal message proves owned work ended

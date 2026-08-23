@@ -12,7 +12,7 @@ request: >-
   acknowledgement API. A previous worker may still own the repository writer and test-runner
   resources. Do not mutate files, replay work, infer liveness, release resources, or claim independent
   Verify. Return the truthful managed stop and downgrade result. Include `capability-unavailable`,
-  `ResourceLease remains claimed`, `no conflicting Assignment`, `independence: unavailable`,
+  `conflicting resources remain active`, `no conflicting work`, `independence unavailable`,
   `ordinary Verify`, and `heartbeat unavailable`. Do not archive, stage, commit, push, publish, or
   create a runtime capability registry.
 allowed_changes: []
@@ -20,15 +20,15 @@ verification:
   - read-only isolated capability contract
 expected_output:
   - capability-unavailable
-  - ResourceLease remains claimed
-  - no conflicting Assignment
-  - 'independence: unavailable'
+  - conflicting resources remain active
+  - no conflicting work
+  - independence unavailable
   - ordinary Verify
   - heartbeat unavailable
 forbidden_output:
-  - resumed same WorkerSession
+  - resumed the prior worker
   - cancellation acknowledged
-  - ResourceLease released
-  - 'independence: established'
+  - conflicting resources released
+  - independence established
   - archived the Change
   - capability registry created

@@ -6,6 +6,8 @@ This operation is the durable writeback decision, not implementation verificatio
 
 Run `rsp check --focused` and `rsp show --focused --json`, or `rsp ready <name> --json` for an explicit Change. Treat `durableReview.factCandidateTargets` and `decisionRecordsPath` as routing advice, not permission. Spec delta markers are planning aids and are never promoted automatically.
 
+If `rsp show --focused --json` or `rsp ready <name> --json` reports only `RSP project requires an update` after required Tasks and implementation verification already passed, and update mutation is not explicitly authorized, do not run `rsp update`. Preserve the passed implementation verification and `first_fix_result`; report the durable writeback decision and readiness as incomplete because migration evidence is unavailable, and keep archive and commit blocked. This exception never converts a failed declared implementation or independent verification check into success, and other inspection failures remain unresolved.
+
 Choose current facts and rationale independently. Use no update when there is no stable fact or lasting rationale worth rereading.
 
 Write a current-fact update only when implementation changed a stable behavior, boundary, default, or constraint that future maintainers need. Prefer the smallest existing domain Spec, `.rsp/specs/design.md` for project-wide boundaries/navigation, or an explicitly authorized scoped `CONTEXT.md`/`AGENTS.md`; create a new Spec only for reusable project-level truth that fits nowhere existing.

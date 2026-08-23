@@ -256,6 +256,15 @@ export function releaseProviderRunCorrectnessPassed(plan, run) {
     && (!plan.providerExpectations || run.scenario?.status === 'passed')
 }
 
+function releaseProviderRunIdentityPassed(plan, run) {
+  const compositionSha256 = run.arm === 'baseline'
+    ? plan.baseline.composition.hash
+    : plan.candidate.composition.hash
+  return run.case === plan.case
+    && run.contractSha256 === plan.identities.contractSha256
+    && run.compositionSha256 === compositionSha256
+}
+
 export function releaseProviderEfficiencyPolicyPassed(report) {
   const workerComplianceFailed = Array.isArray(report?.runs)
     && report.runs.some(run => run.worker_compliance?.status === 'failed')
@@ -285,16 +294,19 @@ export async function executeSerialProviderPairs({
   maxContaminatedPairReplacements = 2,
   repetitions,
   runArm,
+  runCorrectnessPassed = () => true,
 }) {
   const runs = []
   const maximumAttempts = repetitions + maxContaminatedPairReplacements
   let pairAttempt = 0
   let targetPair = 1
+  let terminalBaselineTarget = null
   while (targetPair <= repetitions && pairAttempt < maximumAttempts) {
     pairAttempt += 1
-    const order = targetPair % 2 === 1
+    const plannedOrder = targetPair % 2 === 1
       ? ['baseline', 'candidate']
       : ['candidate', 'baseline']
+    const order = plannedOrder.filter(arm => arm !== 'baseline' || terminalBaselineTarget !== targetPair)
     let contaminated = false
     for (const [index, arm] of order.entries()) {
       const run = await runArm({
@@ -311,11 +323,20 @@ export async function executeSerialProviderPairs({
         contaminated = true
         break
       }
-      if (classification !== 'eligible')
+      const correctnessPassed = classification === 'eligible' && runCorrectnessPassed(run)
+      const baselineDiagnosticFailure = arm === 'baseline'
+        && (classification === 'model-failed' || (classification === 'eligible' && !correctnessPassed))
+      if (baselineDiagnosticFailure) {
+        terminalBaselineTarget = targetPair
+        continue
+      }
+      if (classification !== 'eligible' || !correctnessPassed)
         return runs
     }
-    if (!contaminated)
+    if (!contaminated) {
       targetPair += 1
+      terminalBaselineTarget = null
+    }
   }
   return runs
 }
@@ -417,7 +438,9 @@ export function createReleaseProviderComparisonSummary(plan, runs, refreshedPlan
   const pairs = [...pairMap.values()]
   const eligiblePairs = pairs.filter(pair => pair.length === 2
     && new Set(pair.map(run => run.arm)).size === 2
-    && pair.every(run => runClassification(run) === 'eligible'))
+    && pair.every(run => runClassification(run) === 'eligible'
+      && releaseProviderRunCorrectnessPassed(plan, run)
+      && releaseProviderRunIdentityPassed(plan, run)))
   const contaminatedPairs = pairs.filter(pair => pair.some(run => runClassification(run) === 'infra-contaminated'))
   const failedPairs = pairs.filter(pair => pair.some(run => ['model-failed', 'harness-failed'].includes(runClassification(run))))
   const incompletePairs = pairs.filter(pair => !eligiblePairs.includes(pair)
@@ -429,27 +452,46 @@ export function createReleaseProviderComparisonSummary(plan, runs, refreshedPlan
     return pairs.slice(pairIndex + 1).some(next => (next[0]?.targetPair ?? next[0]?.repetition) === targetPair)
   })
   const eligibleRuns = eligiblePairs.flat()
+  const eligibleCandidateRuns = runs.filter(run => run.arm === 'candidate'
+    && runClassification(run) === 'eligible'
+    && releaseProviderRunCorrectnessPassed(plan, run)
+    && releaseProviderRunIdentityPassed(plan, run))
+  const completedCandidateTargets = new Set(eligibleCandidateRuns
+    .map(run => run.targetPair ?? run.repetition)
+    .filter(targetPair => Number.isInteger(targetPair) && targetPair >= 1 && targetPair <= plan.repetitions))
   const efficiencyBlockedByWorkerCompliance = eligibleRuns.some(run => run.worker_compliance?.status === 'failed')
   const efficiencyPairs = efficiencyBlockedByWorkerCompliance ? [] : eligiblePairs
   const efficiencyRuns = efficiencyPairs.flat()
   const baselineRuns = efficiencyRuns.filter(run => run.arm === 'baseline')
   const candidateRuns = efficiencyRuns.filter(run => run.arm === 'candidate')
-  const identityBaselineRuns = eligibleRuns.filter(run => run.arm === 'baseline')
-  const identityCandidateRuns = eligibleRuns.filter(run => run.arm === 'candidate')
+  const identityBaselineRuns = runs.filter(run => run.arm === 'baseline' && runClassification(run) === 'eligible')
+  const identityCandidateRuns = runs.filter(run => run.arm === 'candidate' && runClassification(run) === 'eligible')
   const identityIssues = []
+  const candidateIdentityIssues = []
   for (const run of identityBaselineRuns) {
     if (run.compositionSha256 !== plan.baseline.composition.hash)
       identityIssues.push(`baseline composition drift in repetition ${run.repetition}`)
   }
   for (const run of identityCandidateRuns) {
-    if (run.compositionSha256 !== plan.candidate.composition.hash)
-      identityIssues.push(`candidate composition drift in repetition ${run.repetition}`)
+    if (run.compositionSha256 !== plan.candidate.composition.hash) {
+      const issue = `candidate composition drift in repetition ${run.repetition}`
+      identityIssues.push(issue)
+      candidateIdentityIssues.push(issue)
+    }
   }
   for (const run of runs) {
-    if (run.case !== plan.case)
-      identityIssues.push(`scenario identity drift in repetition ${run.repetition}`)
-    if (run.contractSha256 !== plan.identities.contractSha256)
-      identityIssues.push(`${run.arm} contract drift in repetition ${run.repetition}`)
+    if (run.case !== plan.case) {
+      const issue = `scenario identity drift in repetition ${run.repetition}`
+      identityIssues.push(issue)
+      if (run.arm === 'candidate')
+        candidateIdentityIssues.push(issue)
+    }
+    if (run.contractSha256 !== plan.identities.contractSha256) {
+      const issue = `${run.arm} contract drift in repetition ${run.repetition}`
+      identityIssues.push(issue)
+      if (run.arm === 'candidate')
+        candidateIdentityIssues.push(issue)
+    }
   }
   if (JSON.stringify({
     baseline: refreshedPlan.baseline,
@@ -461,14 +503,19 @@ export function createReleaseProviderComparisonSummary(plan, runs, refreshedPlan
     identities: plan.identities,
   })) {
     identityIssues.push('comparison identities drifted during execution')
+    candidateIdentityIssues.push('comparison identities drifted during execution')
   }
   const candidateCorrectnessFailed = runs.some(run => run.arm === 'candidate' && hardCorrectnessFailed(plan, run))
-  const baselineCorrectnessFailed = runs.some(run => run.arm === 'baseline' && hardCorrectnessFailed(plan, run))
-  const correctnessFailed = candidateCorrectnessFailed || baselineCorrectnessFailed
+  const candidateRunCount = completedCandidateTargets.size
+  const candidateComplete = candidateRunCount === plan.repetitions
   const baselineDiagnosticFailures = runs.filter(run => run.arm === 'baseline'
     && workerComplianceEnforcement(run) === 'diagnostic'
     && run.worker_compliance?.status === 'failed').length
-  const unavailable = eligiblePairs.length !== plan.repetitions
+  const baselineModelFailures = runs.filter(run => run.arm === 'baseline'
+    && runClassification(run) === 'model-failed').length
+  const comparisonStatus = eligiblePairs.length === plan.repetitions
+    ? 'complete'
+    : eligiblePairs.length > 0 ? 'partial' : 'unavailable'
   const measurementIncomplete = !efficiencyBlockedByWorkerCompliance && efficiencyRuns.some(run => [
     run.measurements.tokens.input,
     run.measurements.tokens.output,
@@ -483,13 +530,13 @@ export function createReleaseProviderComparisonSummary(plan, runs, refreshedPlan
     percentageDelta(baseline[name].median, candidate[name].median),
   ]))
   const pairedDeltaPct = summarizePairedDeltas(efficiencyPairs)
+  const narrativeWarningRuns = runs.filter(run => run.narrative?.status === 'warning').length
   let verdict = 'passed'
-  if (identityIssues.length > 0 || correctnessFailed)
+  if (candidateIdentityIssues.length > 0 || candidateCorrectnessFailed)
     verdict = 'failed'
-  else if (unavailable)
+  else if (!candidateComplete)
     verdict = 'unavailable'
-  else if (measurementIncomplete)
-    verdict = 'incomplete'
+  const candidatePassed = verdict === 'passed'
   return {
     verdict,
     execution: plan.execution,
@@ -503,10 +550,18 @@ export function createReleaseProviderComparisonSummary(plan, runs, refreshedPlan
       issues: identityIssues,
     },
     correctness: {
-      passed: !correctnessFailed && !unavailable && identityIssues.length === 0,
-      candidatePassed: !candidateCorrectnessFailed && !unavailable && identityIssues.length === 0,
+      passed: candidatePassed,
+      candidatePassed,
+      candidateRuns: candidateRunCount,
+      requiredCandidateRuns: plan.repetitions,
       baselineDiagnosticFailures,
+      baselineModelFailures,
       requiredDimensions: plan.correctness,
+    },
+    comparison: {
+      status: comparisonStatus,
+      eligiblePairs: eligiblePairs.length,
+      plannedPairs: plan.repetitions,
     },
     infrastructure: {
       attemptedPairs: pairs.length,
@@ -520,7 +575,7 @@ export function createReleaseProviderComparisonSummary(plan, runs, refreshedPlan
     efficiency: {
       status: efficiencyBlockedByWorkerCompliance
         ? 'not-comparable'
-        : verdict === 'passed' ? 'observed' : 'not-conclusive',
+        : comparisonStatus === 'complete' && !measurementIncomplete ? 'observed' : 'not-conclusive',
       threshold: null,
       baseline,
       candidate,
@@ -528,17 +583,20 @@ export function createReleaseProviderComparisonSummary(plan, runs, refreshedPlan
       pairedDeltaPct,
       interpretation: 'diagnostic-only; correctness and boundary evidence take precedence',
     },
+    narrative: { warningRuns: narrativeWarningRuns },
     runs,
     omissions: [
       ...plan.omissions,
       ...(measurementIncomplete ? ['one or more required measurements are unavailable'] : []),
-      ...(unavailable ? ['one or more paired provider runs were unavailable or not run'] : []),
+      ...(comparisonStatus !== 'complete' ? ['one or more baseline/candidate pairs were unavailable or not eligible for comparison'] : []),
+      ...(!candidateComplete ? ['one or more required candidate runs were unavailable or not run'] : []),
       ...(efficiencyBlockedByWorkerCompliance ? ['worker assignment noncompliance makes baseline and candidate efficiency not comparable'] : []),
     ],
   }
 }
 
 export function renderReleaseProviderComparisonMarkdown(summary) {
+  const evidenceMode = summary.replay?.mode ?? 'fresh-provider'
   const lines = [
     '# Release Provider Comparison Report',
     '',
@@ -550,21 +608,40 @@ export function renderReleaseProviderComparisonMarkdown(summary) {
     `- Candidate source: ${code}${summary.identities.candidate.fingerprintSha256}${code}`,
     `- Correctness: ${summary.correctness.passed ? 'passed' : 'not passed'}`,
     `- Candidate gate: ${summary.correctness.candidatePassed ? 'passed' : 'not passed'}`,
+    `- Candidate runs: ${summary.correctness.candidateRuns ?? 'unavailable'}/${summary.correctness.requiredCandidateRuns ?? summary.repetitions}`,
     `- Baseline diagnostic failures: ${summary.correctness.baselineDiagnosticFailures}`,
+    `- Baseline model failures: ${summary.correctness.baselineModelFailures ?? 0}`,
+    `- Comparison completeness: ${summary.comparison?.status ?? (summary.infrastructure.eligiblePairs === summary.repetitions ? 'complete' : 'unavailable')}`,
     `- Eligible pairs: ${summary.infrastructure.eligiblePairs}/${summary.repetitions}`,
     `- Infrastructure-contaminated pairs: ${summary.infrastructure.contaminatedPairs}`,
+    `- Evidence mode: ${code}${evidenceMode}${code}`,
     ...(summary.replay
       ? [
-          `- Evidence mode: ${code}${summary.replay.mode}${code}`,
           `- Source report SHA-256: ${code}${summary.replay.sourceReportSha256}${code}`,
           `- Source harness SHA-256: ${code}${summary.replay.sourceHarnessSha256}${code}`,
           `- Source candidate commit: ${code}${summary.replay.sourceCandidateCommit ?? 'unavailable'}${code}`,
         ]
       : []),
     '',
+    '## Comparison boundary',
+    '',
+    '- Isolated difference: tagged baseline versus candidate Skill composition',
+    '- Shared execution surfaces: current CLI, evaluation harness, and scenario fixture',
+    '- Full-package release benchmark: no',
+    '- Efficiency interpretation: diagnostic-only',
+    '',
     '## Correctness Gate',
     '',
     `- Status: ${summary.correctness.passed ? 'passed' : 'not passed'}`,
+    '',
+    '## Narrative coverage',
+    '',
+    `- Warning runs: ${summary.narrative?.warningRuns ?? 0}`,
+    '- Interpretation: diagnostic-only; natural-language wording does not override structured or host-observed evidence',
+    '',
+    '| Pair attempt | Arm | Status | Missing narrative | Forbidden narrative |',
+    '| ---: | --- | --- | --- | --- |',
+    ...summary.runs.map(run => `| ${run.pairAttempt ?? run.repetition} | ${run.arm} | ${run.narrative?.status ?? 'passed'} | ${run.narrative?.missing?.join(', ') || 'none'} | ${run.narrative?.forbidden_present?.join(', ') || 'none'} |`),
     '',
     '## Efficiency',
     '',
@@ -698,6 +775,14 @@ function sanitizedRun(arm, schedule, summary, metadata) {
       status: contaminated ? 'contaminated' : 'no-contamination-observed',
     },
     scenario: summary.provider_expectation,
+    narrative: {
+      missing: summary.output_contract?.narrative_missing ?? [],
+      forbidden_present: summary.output_contract?.narrative_forbidden_present ?? [],
+      status: (summary.output_contract?.narrative_missing?.length ?? 0) > 0
+        || (summary.output_contract?.narrative_forbidden_present?.length ?? 0) > 0
+        ? 'warning'
+        : 'passed',
+    },
     omissions: summary.omissions,
   }
 }
@@ -963,6 +1048,8 @@ export async function runReleaseProviderComparison({
     runs = await executeSerialProviderPairs({
       maxContaminatedPairReplacements: plan.scheduling.maxContaminatedPairReplacements,
       repetitions: plan.repetitions,
+      runCorrectnessPassed: run => releaseProviderRunCorrectnessPassed(plan, run)
+        && releaseProviderRunIdentityPassed(plan, run),
       runArm: async (schedule) => {
         const arm = arms[schedule.arm]
         let metadata

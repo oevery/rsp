@@ -3,26 +3,26 @@ case: auto-multisurface-routing
 variants:
   - baseline
   - product
-holdout_manifest_sha256: d88e702e0540c518a2ca1bdab23500ac942f8edc31778aa0825ebf21ac6e9ff8
+holdout_manifest_sha256: 0404d304005438e074f0edf52a9b7f1d8551bf25f92125e3386ddd713cee65ef
 base_tree_sha256: 5581fdea1ebaf6000348340e25a7b1f1d84378fced4f2ca03bfda7aa787af7cd
 product_skill_names:
   - rsp
   - rsp-manage
   - rsp-implement
-product_composition_sha256: ac776157f57f9cd4bb158019fb2cf368975abaabfdfd4fbba092796abf45e1fc
+product_composition_sha256: 89a5f7a468e328e76f241917556df6d46b6b48f25bd8f8ffaa55292bd9850ad3
 provider_comparison_cases:
   - case: auto-integrated-direct
-    repetitions: 1
+    repetitions: 3
   - case: managed-solo-integrated
-    repetitions: 1
+    repetitions: 3
   - case: managed-delegated-integrated
-    repetitions: 1
+    repetitions: 3
   - case: auto-multisurface-routing
     repetitions: 3
   - case: managed-coordinated-sequential
-    repetitions: 1
+    repetitions: 3
   - case: managed-coordinated-parallel
-    repetitions: 1
+    repetitions: 3
 prior_retained_evidence:
   - path: research/evaluations/rsp-manage/2026-08-17-implementation-test-restraint/report.md
     sha256: 981587bd4ce9e26107682e30ddf64e863454e7fa1863343ed1c62f8f3c232b75

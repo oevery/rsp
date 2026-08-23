@@ -1,0 +1,13 @@
+id: compact-delegation
+sources:
+  - skills/rsp-manage/SKILL.md
+evidence:
+  - Managed workers receive only task semantics needed for safe execution.
+required_contract:
+  - A delegated task includes only what the worker needs to act safely
+  - Each delegated Discipline owns its own result
+  - Manage adds no universal worker receipt
+prohibited_actions:
+  - host lifecycle schemas
+  - correlation identifiers
+  - JSON transport contracts

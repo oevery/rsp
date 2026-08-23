@@ -102,6 +102,26 @@ function baselineDiagnosticReport() {
   return entry
 }
 
+function partialBaselineReport() {
+  const entry = passedReport() as any
+  const baseline = entry.report.runs.find((run: any) => run.arm === 'baseline' && run.targetPair === 1)
+  baseline.classification = 'model-failed'
+  baseline.outcome = 'failed'
+  baseline.dimensions.compliance.status = 'failed'
+  baseline.dimensions.boundary.status = 'failed'
+  entry.report.correctness = {
+    passed: true,
+    candidatePassed: true,
+    candidateRuns: 3,
+    requiredCandidateRuns: 3,
+    baselineModelFailures: 1,
+  }
+  entry.report.comparison = { status: 'partial', eligiblePairs: 2, plannedPairs: 3 }
+  entry.report.infrastructure.eligiblePairs = 2
+  entry.report.efficiency = { status: 'not-conclusive' }
+  return entry
+}
+
 describe('release provider evidence check', () => {
   it('does not require provider evidence when the compared Skill composition is unchanged', () => {
     const current = plan('baseline-composition')
@@ -130,6 +150,24 @@ describe('release provider evidence check', () => {
       state: 'reused',
       reportPath: '.cache/release-provider-comparison/scenario-a/report.json',
     })
+  })
+
+  it('reuses complete candidate evidence when the baseline comparison is partial', () => {
+    expect(assessReleaseProviderEvidence(plan(), [partialBaselineReport()])).toMatchObject({
+      state: 'reused',
+      reportPath: '.cache/release-provider-comparison/scenario-a/report.json',
+    })
+  })
+
+  it('rejects partial reports with fewer than the required candidate runs', () => {
+    const entry = partialBaselineReport()
+    entry.report.runs = entry.report.runs.filter((run: any) => !(run.arm === 'candidate' && run.targetPair === 3))
+    entry.report.correctness.candidateRuns = 2
+    entry.report.correctness.candidatePassed = false
+    entry.report.correctness.passed = false
+    entry.report.verdict = 'unavailable'
+
+    expect(assessReleaseProviderEvidence(plan(), [entry]).state).toBe('missing')
   })
 
   it('rejects candidate worker noncompliance and falsely comparable baseline diagnostics', () => {
@@ -187,7 +225,6 @@ describe('release provider evidence check', () => {
     ['fixture', (entry: ReturnType<typeof passedReport>) => { entry.report.identities.fixtureSha256 = 'stale' }],
     ['harness', (entry: ReturnType<typeof passedReport>) => { entry.report.identities.harnessSha256 = 'stale' }],
     ['serial scheduling', (entry: ReturnType<typeof passedReport>) => { entry.report.scheduling.concurrency = 2 }],
-    ['eligible pair count', (entry: ReturnType<typeof passedReport>) => { entry.report.infrastructure.eligiblePairs = 2 }],
     ['paired correctness', (entry: ReturnType<typeof passedReport>) => { entry.report.runs.pop() }],
   ])('rejects stale or incomplete %s evidence', (_label, mutate) => {
     const entry = passedReport()

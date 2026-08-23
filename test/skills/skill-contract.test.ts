@@ -181,9 +181,9 @@ describe('rsp Skill contract', () => {
     expect(verify).toContain('`boundary: unchanged | changed`')
     expect(verify).toContain('does not prove semantic review')
     expect(verify).toContain('does not grant lifecycle, Git, publication, or acceptance authority')
-    expect(manage).toContain('**Verify:** `rsp-verify`; read-only for declared risk or failed correction')
-    expect(manage).toContain('worker identity')
-    expect(manage).toContain('independence: established | unavailable')
+    expect(manage).toContain('**Verify:** `rsp-verify`; `pass | fail | unavailable`')
+    expect(manage).toContain('never asks a worker to report host identity, independence')
+    expect(manage).toContain('host must establish that the accepted Fix and Verify came from different workers')
     expect(manage).not.toContain('`StopDisposition` is exactly')
   })
 

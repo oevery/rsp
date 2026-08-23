@@ -41,7 +41,7 @@ Return:
 - investigation mutations, if explicitly authorized;
 - exactly one next action.
 
-The result expresses only whether the cause was confirmed. In a managed WorkerReceipt, report whether the declared owner, scope, or authority boundary changed independently as `boundary: unchanged | changed`; never combine either dimension into one result value. Keep the detailed impact boundary above as evidence rather than replacing it with this enum.
+The result expresses only whether the cause was confirmed. When Manage invoked the diagnosis, report any owner, scope, or authority change separately in the impact boundary; never combine it with the result value or wrap it in a second universal worker schema.
 
 For `confirmed`, name one correction entrypoint owned by the same Change; do not apply it. For `unresolved`, name the next discriminating check or blocker. Update that Change's Tasks, Verify, or Blockers only with authority and observed facts. Preserve unrelated work and never infer Git, delivery, publication, or approval authority.
 

@@ -27,7 +27,7 @@ describe('documentation command examples', () => {
 
     const custom = metadata.metadata as Record<string, unknown>
     expect(custom.author).toBe('oevery')
-    expect(custom.version).toBe('2026.08.21.2')
+    expect(custom.version).toBe('2026.08.21.3')
     expect(Object.values(custom).every(value => typeof value === 'string')).toBe(true)
     expect(custom.version).toMatch(/^\d{4}\.\d{2}\.\d{2}(?:\.\d+)?$/)
   })
@@ -94,7 +94,7 @@ describe('documentation command examples', () => {
     expect(skill).toMatch(/Do not use it for unrelated coding or create a Change for a simple session task/)
     expect(skill).toContain('metadata:')
     expect(skill).toContain('author: oevery')
-    expect(skill).toContain('version: "2026.08.21.2"')
+    expect(skill).toContain('version: "2026.08.21.3"')
     expect(contract).toContain('Executable WorkRefs are `<change>` or one direct `<group>/<change>` child.')
     expect(contract).toContain('`<group>/brief`, stored as `<group>/00-brief.md`, is not executable or focusable.')
     expect(contract).toContain('`plan.nodes`, `ready`, `edges`, `blocked`, and `waves`')
@@ -106,7 +106,7 @@ describe('documentation command examples', () => {
     expect(skill).toContain('Required verification proves acceptance or changed material risk')
     expect(skill).toContain('Optional verification adds environment, compatibility, scale, or confidence coverage')
     expect(rules).toContain('legacy unclassified items are Required')
-    expect(manage).toContain('When closeout begins, read [lifecycle and delivery closeout]')
+    expect(manage).toContain('Read [lifecycle and delivery closeout](references/closeout.md) only when closeout becomes eligible')
     expect(manageCloseout).toContain('require `completionGate: pass` plus `archiveReady: yes`')
     expect(commit).toContain('stop before staging when a Task or Required Verify item remains incomplete')
   })

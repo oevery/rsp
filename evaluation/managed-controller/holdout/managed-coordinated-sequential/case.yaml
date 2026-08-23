@@ -21,6 +21,33 @@ provider_expectations:
   worker_dispatch_count:
     min: 2
     max: 2
+worker_assignments:
+  - id: header
+    assignment_identity: normalize/header/1
+    lane: Fix
+    allowed_results:
+      - changed
+      - no-change
+    allowed_changes:
+      - src/header.mjs
+      - test/header.test.mjs
+    allowed_commands:
+      - node --test test/header.test.mjs
+  - id: retry
+    assignment_identity: normalize/retry/1
+    lane: Fix
+    allowed_results:
+      - changed
+      - no-change
+    allowed_changes:
+      - src/retry.mjs
+      - test/retry.test.mjs
+    allowed_commands:
+      - node --test test/retry.test.mjs
+manager_only_changes:
+  - .rsp/changes/normalize-transport-inputs.md
+manager_only_commands:
+  - npm test
 allowed_changes:
   - .rsp/changes/normalize-transport-inputs.md
   - src/header.mjs
@@ -34,14 +61,16 @@ required_changes:
 verification:
   - npm
   - test
-expected_output:
+expected_output: []
+forbidden_output: []
+narrative_output:
   - selected
   - coordinated
   - sequential
   - header
   - retry
   - npm test
-forbidden_output:
+narrative_forbidden_output:
   - 'RouteDisposition: direct'
   - parallel-wave
   - archived the Change

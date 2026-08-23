@@ -73,6 +73,10 @@ describe('managed-controller beta evidence', () => {
       const expected = prepared.manifest.provider_expectations
       if (!expected)
         throw new Error('provider comparison scenario is missing provider_expectations')
+      expect(prepared.manifest.expected_output).toEqual([])
+      expect(prepared.manifest.forbidden_output).toEqual([])
+      expect(prepared.manifest.narrative_output?.length).toBeGreaterThan(0)
+      expect(prepared.manifest.narrative_forbidden_output?.length).toBeGreaterThan(0)
       expect(prepared.prompt).toContain('For this provider scenario, when the expected routing is observed, set trigger exactly to')
       expect(prepared.prompt).toContain(JSON.stringify({
         status: 'passed',
@@ -86,6 +90,13 @@ describe('managed-controller beta evidence', () => {
       expect(prepared.prompt).toContain(
         `Set worker_dispatch_count to the directly observed number; the accepted range is ${expected.worker_dispatch_count.min}..${expected.worker_dispatch_count.max}.`,
       )
+      if (expected.worker_dispatch_count.min > 0) {
+        expect(prepared.manifest.worker_assignments).toHaveLength(expected.worker_dispatch_count.min)
+        expect(prepared.prompt).toContain('This evaluator needs one minimal machine result from each settled worker.')
+      }
+      else {
+        expect(prepared.manifest.worker_assignments).toBeUndefined()
+      }
     }
   })
   it('locks one baseline/product holdout before execution', () => {
@@ -233,7 +244,7 @@ describe('managed-controller beta evidence', () => {
 
     const deterministic = evaluateManagedController(root)
     const summary = createManagedControllerBetaSummary(plan, deterministic, [])
-    expect(summary.deterministic_contracts).toEqual({ passed: true, cases: 34 })
+    expect(summary.deterministic_contracts).toEqual({ passed: true, cases: 8 })
     expect(summary.product_composition).toEqual(plan.product_composition)
     expect(Object.keys(summary.product_composition)).toEqual(['hash', 'skills'])
     expect(summary.product_composition.skills.map(skill => Object.keys(skill))).toEqual([
@@ -733,7 +744,7 @@ describe('managed-controller beta evidence', () => {
     expect(summary.product_composition.hash).toBe(
       'ee2e26aee295ea182add2102d928f016e58685cd3e53d3447d92f13268688b76',
     )
-    expect(evaluateManagedController(root)).toHaveLength(34)
+    expect(evaluateManagedController(root)).toHaveLength(8)
     expect(summary.deterministic_contracts).toEqual({
       passed: true,
       cases: 19,
@@ -805,7 +816,7 @@ describe('managed-controller beta evidence', () => {
     expect(summary.product_composition.hash).toBe(
       'ff9d3e73086d7067fa2c65f8e569a369266ea15d6a70d3971665ca84d8c2be41',
     )
-    expect(evaluateManagedController(root)).toHaveLength(34)
+    expect(evaluateManagedController(root)).toHaveLength(8)
     expect(summary.deterministic_contracts).toEqual({
       passed: true,
       cases: 19,
@@ -872,7 +883,7 @@ describe('managed-controller beta evidence', () => {
       passed: true,
       cases: 21,
     })
-    expect(evaluateManagedController(root)).toHaveLength(34)
+    expect(evaluateManagedController(root)).toHaveLength(8)
     expect(summary.runs).toEqual([
       expect.objectContaining({
         variant: 'baseline',

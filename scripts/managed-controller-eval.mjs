@@ -22,29 +22,24 @@ const VARIANTS = new Set(['baseline', 'candidate', 'product'])
 const DISCIPLINE_LANES = new Set(['Diagnose', 'Inspect', 'Fix', 'Verify'])
 
 export const MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT = Object.freeze({
-  version: 2,
+  version: 1,
   consumer: 'managed-controller-evaluator',
   transport: { encoding: 'single-line-json', prefix: WORKER_RECEIPT_PREFIX },
   identity: { field: 'assignment', mode: 'exact-echo' },
-  required_fields: ['assignment', 'result', 'changed_paths', 'verification', 'boundary', 'evidence_status', 'release_claim'],
-  optional_fields: ['worker', 'independence'],
-  field_semantics: {
-    boundary: 'Report whether the declared owner, scope, paths, behavior, interface, or authority changed; in-scope work remains unchanged even when result is changed and changed_paths is non-empty.',
-  },
+  required_fields: ['assignment', 'result', 'changed_paths', 'verification', 'scope_issue'],
+  optional_fields: [],
   field_types: {
     assignment: 'non-empty string equal to assignment_identity',
     result: 'one of assignment.allowed_results',
     changed_paths: 'array of non-empty strings',
     verification: {
-      type: 'array',
-      item_required_fields: ['command', 'scope', 'outcome', 'omissions'],
+      type: 'array; non-empty for Fix and Verify',
+      item_required_fields: ['command', 'outcome', 'omissions'],
       command: 'non-empty string',
-      scope: 'non-empty string',
       outcome: 'non-empty string',
       omissions: 'string or array of strings',
     },
-    worker: 'non-empty string when present',
-    independence: 'non-empty string when present',
+    scope_issue: 'empty string when none, otherwise one concise description',
     evidence_delta: 'required for Verify and forbidden for every other lane',
   },
   lane_results: {
@@ -60,15 +55,29 @@ export const MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT = Object.freeze({
     Verify: { required: ['evidence_delta'] },
   },
   enums: {
-    boundary: ['unchanged', 'changed'],
     evidence_delta: ['new', 'none'],
-    evidence_status: ['valid', 'invalid', 'unavailable'],
-    release_claim: ['released', 'retained', 'unavailable'],
   },
 })
 
 function workerAssignmentIdentity(assignment) {
   return assignment.assignment_identity ?? assignment.id
+}
+
+function managedWorkerReceiptPayloadExample(assignment) {
+  const receipt = {
+    assignment: workerAssignmentIdentity(assignment),
+    result: assignment.allowed_results[0],
+    changed_paths: assignment.allowed_changes.slice(0, 1),
+    verification: assignment.allowed_commands.slice(0, 1).map(command => ({
+      command,
+      outcome: 'passed',
+      omissions: [],
+    })),
+    scope_issue: '',
+  }
+  if (MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT.lane_fields[assignment.lane].required.includes('evidence_delta'))
+    receipt.evidence_delta = MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT.enums.evidence_delta[0]
+  return `${WORKER_RECEIPT_PREFIX}${JSON.stringify(receipt)}`
 }
 
 function assertStringArray(value, label) {
@@ -952,7 +961,7 @@ function readHoldout(root, caseId) {
       const canonicalResults = MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT.lane_results[assignment.lane]
       if (JSON.stringify(assignment.allowed_results) !== JSON.stringify(canonicalResults))
         throw new Error(`${caseId}.worker_assignments[${index}].allowed_results must match the ${assignment.lane} result domain`)
-      assertStringArray(assignment.allowed_changes, `${caseId}.worker_assignments[${index}].allowed_changes`)
+      assertArray(assignment.allowed_changes, `${caseId}.worker_assignments[${index}].allowed_changes`)
       assertStringArray(assignment.allowed_commands, `${caseId}.worker_assignments[${index}].allowed_commands`)
     }
     if (manifest.provider_expectations
@@ -960,6 +969,9 @@ function readHoldout(root, caseId) {
         || manifest.provider_expectations.worker_dispatch_count.max !== manifest.worker_assignments.length)) {
       throw new Error(`${caseId}.worker_assignments must match the exact provider worker dispatch count`)
     }
+  }
+  else if ((manifest.provider_expectations?.worker_dispatch_count.min ?? 0) > 0) {
+    throw new Error(`${caseId}.worker_assignments are required when provider workers are required`)
   }
   if (manifest.manager_only_changes)
     assertStringArray(manifest.manager_only_changes, `${caseId}.manager_only_changes`)
@@ -986,8 +998,13 @@ function readHoldout(root, caseId) {
   }
   if (manifest.sandbox && !['workspace-write', 'danger-full-access'].includes(manifest.sandbox))
     throw new Error(`${caseId}.sandbox must be workspace-write or danger-full-access`)
-  for (const field of ['verification', 'expected_output', 'forbidden_output'])
-    assertStringArray(manifest[field], `${caseId}.${field}`)
+  assertStringArray(manifest.verification, `${caseId}.verification`)
+  for (const field of ['expected_output', 'forbidden_output'])
+    assertArray(manifest[field], `${caseId}.${field}`)
+  for (const field of ['narrative_output', 'narrative_forbidden_output']) {
+    if (manifest[field] !== undefined)
+      assertStringArray(manifest[field], `${caseId}.${field}`)
+  }
   if (manifest.commit_message) {
     const contract = manifest.commit_message
     if (!Number.isInteger(contract.count) || contract.count < 1)
@@ -1031,7 +1048,11 @@ function readRetainedScoringManifest(root, matrixPath, caseId) {
   if (!manifest || manifest.id !== caseId)
     throw new Error(`invalid retained oracle: ${caseId}`)
   for (const field of ['expected_output', 'forbidden_output'])
-    assertStringArray(manifest[field], `${caseId}.${field}`)
+    assertArray(manifest[field], `${caseId}.${field}`)
+  for (const field of ['narrative_output', 'narrative_forbidden_output']) {
+    if (manifest[field] !== undefined)
+      assertStringArray(manifest[field], `${caseId}.${field}`)
+  }
   return manifest
 }
 
@@ -1040,6 +1061,8 @@ export function scoreManagedControllerOutput(manifest, final) {
   return {
     expected_missing: manifest.expected_output.filter(fragment => !includesManagedControllerOutputFragment(normalized, fragment)),
     forbidden_present: manifest.forbidden_output.filter(fragment => includesForbiddenManagedControllerOutputFragment(normalized, fragment)),
+    narrative_missing: (manifest.narrative_output ?? []).filter(fragment => !includesManagedControllerOutputFragment(normalized, fragment)),
+    narrative_forbidden_present: (manifest.narrative_forbidden_output ?? []).filter(fragment => includesForbiddenManagedControllerOutputFragment(normalized, fragment)),
   }
 }
 
@@ -1169,7 +1192,6 @@ function workerReceiptVerificationCommands(receipt) {
     if (JSON.stringify(Object.keys(item).sort()) !== JSON.stringify(MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT.field_types.verification.item_required_fields.slice().sort()))
       return null
     if (typeof item.command !== 'string' || item.command.length === 0
-      || typeof item.scope !== 'string' || item.scope.length === 0
       || typeof item.outcome !== 'string' || item.outcome.length === 0
       || !(typeof item.omissions === 'string'
         || (Array.isArray(item.omissions) && item.omissions.every(omission => typeof omission === 'string')))) {
@@ -1200,11 +1222,7 @@ function validWorkerReceiptShape(receipt) {
     && Array.isArray(receipt.changed_paths)
     && receipt.changed_paths.every(path => typeof path === 'string' && path.length > 0)
     && workerReceiptVerificationCommands(receipt) !== null
-    && MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT.enums.boundary.includes(receipt.boundary)
-    && MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT.enums.evidence_status.includes(receipt.evidence_status)
-    && MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT.enums.release_claim.includes(receipt.release_claim)
-    && (!Object.hasOwn(receipt, 'worker') || (typeof receipt.worker === 'string' && receipt.worker.length > 0))
-    && (!Object.hasOwn(receipt, 'independence') || (typeof receipt.independence === 'string' && receipt.independence.length > 0))
+    && typeof receipt.scope_issue === 'string'
 }
 
 export function scoreManagedWorkerAssignments(manifest, events) {
@@ -1289,16 +1307,17 @@ export function scoreManagedWorkerAssignments(manifest, events) {
       else if (!assignment.allowed_changes.some(pattern => matchesAuthorizedPath(pattern, path)))
         assignmentViolations.push({ assignment: assignment.id, kind: 'unauthorized-worker-path', value: path })
     }
-    for (const command of workerReceiptVerificationCommands(receipt)) {
+    const verificationCommands = workerReceiptVerificationCommands(receipt)
+    if (['Fix', 'Verify'].includes(assignment.lane) && verificationCommands.length === 0)
+      assignmentViolations.push({ assignment: assignment.id, kind: 'missing-verification', value: [] })
+    for (const command of verificationCommands) {
       if ((manifest.manager_only_commands ?? []).includes(command))
         assignmentViolations.push({ assignment: assignment.id, kind: 'manager-only-command', value: command })
       else if (!assignment.allowed_commands.includes(command))
         assignmentViolations.push({ assignment: assignment.id, kind: 'unauthorized-worker-command', value: command })
     }
-    if (receipt.boundary !== 'unchanged')
-      assignmentViolations.push({ assignment: assignment.id, kind: 'changed-boundary', value: receipt.boundary })
-    if (receipt.evidence_status !== 'valid')
-      assignmentViolations.push({ assignment: assignment.id, kind: 'invalid-evidence', value: receipt.evidence_status })
+    if (receipt.scope_issue.length > 0)
+      assignmentViolations.push({ assignment: assignment.id, kind: 'scope-issue', value: receipt.scope_issue })
     if (assignmentViolations.length > 0)
       invalidAssignments.add(assignment.id)
     else if (!invalidAssignments.has(assignment.id))
@@ -1432,6 +1451,7 @@ export function prepareManagedControllerRun({ caseId, outputRoot, root, skillSou
       worker_dispatch_count: null,
     },
   }
+  writeFileSync(join(workspace, EVALUATION_RECEIPT_PATH), `${JSON.stringify(receiptShape, null, 2)}\n`)
   const prompt = [
     variant === 'candidate' || variant === 'product'
       ? manifest.automatic_activation
@@ -1445,7 +1465,7 @@ export function prepareManagedControllerRun({ caseId, outputRoot, root, skillSou
           `Add one Recovery evidence line containing these exact machine tokens after the seven fields: ${manifest.continuation_contract.recovery_evidence.join(', ')}.`,
         ]
       : []),
-    `Before the final response, write ${EVALUATION_RECEIPT_PATH} as one JSON object. Use this exact top-level JSON shape: ${JSON.stringify(receiptShape)}.`,
+    `Before the final response, update the pre-created ${EVALUATION_RECEIPT_PATH}. It already has this exact top-level JSON shape: ${JSON.stringify(receiptShape)}.`,
     'Keep case_id, composition_sha256, and contract_sha256 unchanged. Replace only the four observation values with directly observed values. Do not add an identity wrapper or any other key. Trigger is null or {"status":"passed|failed","evidence":<JSON>}; first_fix_result is null, passed, or failed; counts are null or non-negative integers. Do not stage or commit this transient file.',
     ...(manifest.provider_expectations
       ? [`For this provider scenario, when the expected routing is observed, set trigger exactly to ${JSON.stringify({
@@ -1459,15 +1479,7 @@ export function prepareManagedControllerRun({ caseId, outputRoot, root, skillSou
       : []),
     ...(manifest.worker_assignments
       ? [
-          `This evaluation has a machine consumer for managed WorkerReceipts. Treat this descriptor as one atomic return contract and copy its complete applicable transport, exact assignment identity, fields, types, and canonical value domains into every worker Assignment without summarizing, translating, or replacing values: ${JSON.stringify({
-            ...MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT,
-            assignments: manifest.worker_assignments.map(assignment => ({
-              policy_id: assignment.id,
-              assignment_identity: workerAssignmentIdentity(assignment),
-              lane: assignment.lane,
-              allowed_results: assignment.allowed_results,
-            })),
-          })}. Each settled worker must return exactly one matching transport. Do not infer or repair a missing or invalid worker receipt.`,
+          `This evaluator needs one minimal machine result from each settled worker. For each worker, this is evaluator-only and does not change the RSP task or acceptance contract. Give each worker only its matching payload example below, tell it to replace sample values with actual values, preserve exactly the shown keys, and append the resulting single line after its normal Discipline result. Payload examples: ${manifest.worker_assignments.map(assignment => `${managedWorkerReceiptPayloadExample(assignment)} (result must be one of ${assignment.allowed_results.join(' | ')})`).join('; ')}. Do not ask the worker to report identity, independence, lifecycle, release, evidence validity, or acceptance, and do not infer or repair a missing result.`,
           `Worker Assignment policy: ${JSON.stringify({
             assignments: manifest.worker_assignments.map(assignment => ({
               id: assignment.id,
