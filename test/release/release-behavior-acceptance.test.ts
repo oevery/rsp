@@ -208,6 +208,13 @@ describe('release behavior acceptance', () => {
             { kind: 'file', path: 'test.mjs', required: ['registerSidebar(', 'closeSidebar(', 'closeCount'] },
           ])
         }
+        if (planCase.id === 'imagined-state-test-restraint') {
+          expect(prepared.manifest.release_behavior.surfaces).toEqual([
+            { kind: 'changed-paths', forbidden: ['test/missing-status.test.mjs'] },
+            { kind: 'file', path: 'src/save.mjs', required: ['savedAt'], forbidden: ['status == null', 'status === undefined', 'missing status'] },
+            { kind: 'file', path: 'test.mjs', required: ['produceReady(', 'saveReady(', 'savedAt'] },
+          ])
+        }
       }
     }
     finally {

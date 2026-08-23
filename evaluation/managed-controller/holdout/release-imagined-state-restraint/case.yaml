@@ -18,5 +18,8 @@ release_behavior:
       forbidden: [test/missing-status.test.mjs]
     - kind: file
       path: src/save.mjs
-      required: ['savedAt: now']
+      required: [savedAt]
       forbidden: [status == null, status === undefined, missing status]
+    - kind: file
+      path: test.mjs
+      required: [produceReady(, saveReady(, savedAt]
