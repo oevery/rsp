@@ -192,6 +192,15 @@ describe('release behavior acceptance', () => {
           expect(prepared.prompt).toContain('Modify only paths matched by allowed_changes')
           expect(prepared.prompt).not.toContain('.rsp/specs/design.md')
         }
+        if (planCase.id === 'material-negative-fact-control') {
+          expect(prepared.manifest.expected_output).toEqual(['run("tool", ["--flag"])'])
+          expect(prepared.manifest.narrative_output).toEqual(['breaking', 'command injection'])
+          expect(prepared.manifest.release_behavior.surfaces).toEqual([
+            { kind: 'file', path: 'RELEASE.md', required: ['breaking', 'run("tool", ["--flag"])', 'command injection'] },
+            { kind: 'final', required: ['run("tool", ["--flag"])'] },
+            { kind: 'file', path: 'src/run.mjs', forbidden: ['shell: true', 'exec('] },
+          ])
+        }
       }
     }
     finally {

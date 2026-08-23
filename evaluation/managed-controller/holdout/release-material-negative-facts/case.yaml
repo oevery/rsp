@@ -11,8 +11,9 @@ request: >-
 allowed_changes: [.rsp/changes/remove-shell-command-mode.md, RELEASE.md]
 required_changes: [.rsp/changes/remove-shell-command-mode.md, RELEASE.md]
 verification: [npm, test]
-expected_output: [breaking, 'run("tool", ["--flag"])', command injection]
+expected_output: ['run("tool", ["--flag"])']
 forbidden_output: []
+narrative_output: [breaking, command injection]
 release_behavior:
   dimension: required-fact-preservation
   surfaces:
@@ -20,7 +21,7 @@ release_behavior:
       path: RELEASE.md
       required: [breaking, 'run("tool", ["--flag"])', command injection]
     - kind: final
-      required: [breaking, 'run("tool", ["--flag"])', command injection]
+      required: ['run("tool", ["--flag"])']
     - kind: file
       path: src/run.mjs
       forbidden: ['shell: true', exec(]
