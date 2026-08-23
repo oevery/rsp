@@ -3,6 +3,7 @@ import { basename, dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
+import { satisfiesSemanticContract } from '../support/markdown-contract'
 
 const root = fileURLToPath(new URL('../..', import.meta.url))
 const skillsRoot = join(root, 'skills')
@@ -141,11 +142,17 @@ describe('rsp Skill contract', () => {
     const { body } = readSkill(reviewSkill)
     expect(body).toContain('[Code review](references/code-review.md)')
     expect(body).toContain('[Document review](references/document-review.md)')
-    expect(body).toContain('A mixed review reads both references')
+    expect(satisfiesSemanticContract(body, [
+      { all: [/scope and authority/iu, /fixed/iu, /Do not read a pipeline reference/iu] },
+      { all: [/mixed review/iu, /loads both/iu] },
+      { all: [/authority-only artifacts/iu, /trigger neither/iu] },
+    ])).toBe(true)
     expect(reviewCode).toContain('returning `clean` for a changed seam')
     expect(reviewCode).toContain('Direct or isolated seam tests are insufficient')
     expect(reviewCode).toContain('registration, loader, generated wire-up, bin, worker, subprocess, plugin assembly')
-    expect(body).toContain('never return `clean` for authority-only documents')
+    expect(satisfiesSemanticContract(body, [
+      { all: [/no reviewed artifacts/iu, /`skipped`/u, /never `clean`/iu, /authority-only/iu] },
+    ])).toBe(true)
     expect(reviewCode).toContain('Absence of a new test is not actionable by itself')
     expect(reviewCode).toContain('Test and seam value — hard gate before `clean`')
     expect(reviewCode).toContain('classify its consumers as production, non-production, or ambiguous')

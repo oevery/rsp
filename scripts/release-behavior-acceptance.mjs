@@ -203,8 +203,13 @@ export function buildReleaseBehaviorPlan(repositoryRoot = root, { baselineRef, c
 function surfaceText(surface, metadata, final) {
   if (surface.kind === 'final')
     return final
-  if (surface.kind === 'commits')
-    return (metadata.git?.commits ?? []).map(commit => [commit.subject, ...(commit.body_bullets ?? []), ...Object.entries(commit.trailers ?? {}).map(([key, value]) => `${key}: ${value}`)].join('\n')).join('\n')
+  if (surface.kind === 'commits') {
+    return (metadata.git?.commits ?? []).map(commit => [
+      commit.subject,
+      commit.body,
+      ...(commit.trailers ?? []).map(({ key, value }) => `${key}: ${value}`),
+    ].filter(Boolean).join('\n')).join('\n')
+  }
   if (surface.kind === 'changed-paths')
     return (metadata.worktree?.changed_paths ?? []).join('\n')
   if (surface.kind === 'file')
@@ -231,7 +236,7 @@ function includesFolded(body, fragment) {
   return body.toLocaleLowerCase('en-US').includes(String(fragment).toLocaleLowerCase('en-US'))
 }
 
-function scoreBehaviorContract(holdout, metadata, final) {
+export function scoreReleaseBehaviorContract(holdout, metadata, final) {
   const contract = holdout.manifest.release_behavior
   if (!contract || typeof contract.dimension !== 'string' || !Array.isArray(contract.surfaces))
     return { status: 'passed', evidence: { dimension: 'managed-controller-contract' } }
@@ -292,7 +297,7 @@ function sanitizeRun(planCase, arm, repetition, metadata, final, behavior) {
     task_result: { status: metadata.product_result === 'passed' ? 'passed' : 'failed' },
     compliance: { status: metadata.result === 'passed' ? 'passed' : 'failed' },
     boundary: { status: metadata.composition?.stable && (metadata.worktree?.unauthorized_paths ?? []).length === 0 ? 'passed' : 'failed' },
-    behavior: scoreBehaviorContract(behavior.holdout, metadata, final),
+    behavior: scoreReleaseBehaviorContract(behavior.holdout, metadata, final),
     structured_route: route,
   }
   const hardPassed = Object.values(dimensions).every(dimension => ['passed', 'not-applicable'].includes(dimension.status))

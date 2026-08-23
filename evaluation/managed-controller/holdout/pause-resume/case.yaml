@@ -20,6 +20,10 @@ installed_skills:
   - rsp
   - rsp-manage
   - rsp-implement
+expected_resources:
+  - rsp-manage/references/interruption-recovery.md
+  - rsp/references/control-outcome.md
+  - rsp/references/response-language.md
 verification:
   - npm
   - test

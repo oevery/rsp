@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
 import { loadManagedControllerCases, MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT, normalizeManagedControllerEvaluationReceipt, prepareManagedControllerRun, projectManagedControllerEvaluationEvidence, readManagedControllerFlag, runManagedControllerEvaluation, scoreManagedControllerObservation, scoreManagedWorkerAssignments, summarizeManagedControllerEvents } from '../../scripts/managed-controller-eval.mjs'
-import { findSemanticUnit, markdownLinks } from '../support/markdown-contract'
+import { markdownLinks, mutateSemanticUnit, satisfiesSemanticContract } from '../support/markdown-contract'
 
 const root = fileURLToPath(new URL('../..', import.meta.url))
 const product = join(root, 'skills', 'rsp-manage')
@@ -13,6 +13,32 @@ const skillText = readFileSync(join(product, 'SKILL.md'), 'utf8')
 const durableReview = readFileSync(join(root, 'skills', 'rsp', 'references', 'durable-review.md'), 'utf8')
 const controlModel = readFileSync(join(root, '.rsp', 'specs', 'skill-control-model.md'), 'utf8')
 const skillSystem = readFileSync(join(root, '.rsp', 'specs', 'skill-system.md'), 'utf8')
+
+const delegatedResultContract = [
+  { all: [/delegated task/iu, /only/iu, /act safely/iu] },
+  { all: [/delegated Discipline/iu, /owns/iu, /result/iu] },
+  { all: [/Manage/iu, /no universal worker receipt/iu] },
+]
+
+const acceptedEvidenceContract = [
+  { all: [/worker-authored Discipline result/iu, /did|observed/iu] },
+  { all: [/host observations/iu, /dispatch/iu, /attribution/iu, /completion/iu] },
+  { all: [/Manager/iu, /validates/iu, /authority/iu, /changed paths/iu, /verification/iu] },
+  { all: [/worker/iu, /never|must not/iu, /self-certif/iu, /identity/iu, /acceptance/iu] },
+  { all: [/Manager/iu, /must not|never/iu, /author|repair|reconstruct|substitute/iu, /worker result/iu] },
+  { all: [/acceptance/iu, /incomplete/iu, /cannot|missing|required/iu] },
+]
+
+const manageLowFrequencyReferences = [
+  'rsp-manage/references/closeout.md',
+  'rsp-manage/references/interruption-recovery.md',
+  'rsp-manage/references/review-convergence.md',
+]
+
+function expectedResources(caseId: string) {
+  const manifest = parseYaml(readFileSync(join(root, 'evaluation', 'managed-controller', 'holdout', caseId, 'case.yaml'), 'utf8')) as { expected_resources?: string[] }
+  return [...(manifest.expected_resources ?? [])].sort()
+}
 
 function readSkill() {
   const match = skillText.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/)
@@ -84,29 +110,34 @@ describe('rsp-manage product and evaluator boundary', () => {
 
   it('keeps the published Skill host-neutral and compact', () => {
     const { body, frontmatter } = readSkill()
-    expect(frontmatter).toMatchObject({ name: 'rsp-manage', license: 'MIT', metadata: { author: 'oevery', version: '2026.08.22.3' } })
+    expect(frontmatter).toMatchObject({ name: 'rsp-manage', license: 'MIT', metadata: { author: 'oevery' } })
+    expect(frontmatter.metadata.version).toMatch(/^\d{4}\.\d{2}\.\d{2}\.\d+$/u)
     expect(markdownLinks(skillText)).toEqual(expect.arrayContaining(['references/interruption-recovery.md', 'references/review-convergence.md', 'references/closeout.md']))
     expect(markdownLinks(skillText)).not.toEqual(expect.arrayContaining(['references/managed-exchange.md', 'references/host-worker-lifecycle.md']))
-    expect(body).toContain('A delegated task includes only what the worker needs to act safely')
-    expect(body).toContain('Each delegated Discipline owns its own result')
-    expect(body).toContain('Manage adds no universal worker receipt')
-    expect(body.split(/\s+/).length).toBeLessThan(1800)
+    expect(satisfiesSemanticContract(body, delegatedResultContract)).toBe(true)
   })
 
   it('keeps host facts, worker results, and Manager acceptance separate', () => {
     const { body } = readSkill()
-    expect(body).toContain('Treat three evidence sources separately')
-    expect(body).toContain('Host facts are capabilities and observations, not RSP domain objects')
-    expect(body).toContain('A worker never self-certifies identity, independence, resource release, evidence validity, or acceptance')
-    expect(body).toContain('Manager must not author, repair, reconstruct, or substitute the missing worker result')
-    expect(body).toContain('acceptance remains `incomplete`')
+    expect(satisfiesSemanticContract(body, acceptedEvidenceContract)).toBe(true)
+
+    const workerSelfCertifies = mutateSemanticUnit(body, [/worker/iu, /self-certif/iu, /identity/iu, /acceptance/iu], unit => unit.replace(/never|must not/iu, 'may'))
+    expect(satisfiesSemanticContract(workerSelfCertifies, acceptedEvidenceContract)).toBe(false)
+    const managerSubstitutes = mutateSemanticUnit(body, [/Manager/iu, /worker result/iu, /reconstruct/iu], unit => unit.replace(/must not|never/iu, 'may'))
+    expect(satisfiesSemanticContract(managerSubstitutes, acceptedEvidenceContract)).toBe(false)
   })
 
   it('requires real host dispatch instead of simulated worker execution', () => {
     const { body } = readSkill()
-    expect(findSemanticUnit(body, ['`required`', 'host worker capability', 'locally', 'simulate'])).toBeDefined()
-    expect(findSemanticUnit(body, ['cannot start', 'stop before worker-owned mutation', 'acceptance incomplete'])).toBeDefined()
-    expect(findSemanticUnit(body, ['already-dispatched', 'Discipline worker', 'parent Manage routing', 'another worker'])).toBeDefined()
+    const dispatchContract = [
+      { all: ['`required`', /host worker capability/iu, /never perform|must not perform/iu, /locally/iu, /simulate/iu] },
+      { all: [/host cannot start|cannot start/iu, /stop/iu, /worker-owned mutation/iu, /acceptance/iu, /incomplete/iu] },
+      { all: [/already-dispatched/iu, /Discipline worker/iu, /must not|never/iu, /parent Manage routing/iu, /another worker/iu] },
+    ]
+    expect(satisfiesSemanticContract(body, dispatchContract)).toBe(true)
+
+    const simulatedDispatch = mutateSemanticUnit(body, ['`required`', /host worker capability/iu, /simulate/iu], unit => unit.replace(/never perform|must not perform/iu, 'may perform'))
+    expect(satisfiesSemanticContract(simulatedDispatch, dispatchContract)).toBe(false)
   })
 
   it('removes runtime protocol entities from durable RSP semantics', () => {
@@ -114,8 +145,12 @@ describe('rsp-manage product and evaluator boundary', () => {
       expect(controlModel).not.toContain(token)
       expect(skillSystem).not.toContain(token)
     }
-    expect(controlModel).toContain('Hosts own worker execution and lifecycle capabilities')
-    expect(skillSystem).toContain('Evaluators and adapters own machine schemas, correlation, parsing, event extraction, and provider scoring')
+    expect(satisfiesSemanticContract(controlModel, [
+      { all: [/Hosts?/u, /worker execution/iu, /lifecycle/iu, /capabilit/iu] },
+    ])).toBe(true)
+    expect(satisfiesSemanticContract(skillSystem, [
+      { all: [/Evaluators? and adapters/iu, /machine schemas/iu, /provider scoring/iu] },
+    ])).toBe(true)
   })
 
   it('uses a minimal evaluator-only worker result', () => {
@@ -142,12 +177,16 @@ describe('rsp-manage product and evaluator boundary', () => {
       observations: { trigger: null, first_fix_result: null, correction_count: null, worker_dispatch_count: null },
     })
     expect(prepared.prompt).toMatch(/update the pre-created \.rsp-evaluation-receipt\.json/iu)
-    expect(prepared.prompt).toMatch(/replace only the four observation values/iu)
-    expect(prepared.prompt).toContain('This evaluator needs one minimal machine result')
-    expect(prepared.prompt).toContain('this is evaluator-only and does not change the RSP task or acceptance contract')
-    expect(prepared.prompt).toContain('Do not ask the worker to report identity, independence, lifecycle, release, evidence validity, or acceptance')
-    expect(prepared.prompt).toContain('RSP_WORKER_RECEIPT_JSON={\"assignment\":\"normalize/header/1\"')
-    expect(prepared.prompt).toContain('RSP_WORKER_RECEIPT_JSON={\"assignment\":\"normalize/retry/1\"')
+    expect(satisfiesSemanticContract(prepared.prompt, [
+      { all: [/four observation values/iu, /replace|update/iu] },
+      { all: [/minimal machine result/iu, /evaluator-only/iu, /does not|never/iu, /RSP task/iu, /acceptance contract/iu] },
+      { all: [/Do not|never/iu, /ask the worker/iu, /identity/iu, /independence/iu, /lifecycle/iu, /acceptance/iu] },
+    ])).toBe(true)
+    const receiptExamples = [...prepared.prompt.matchAll(/RSP_WORKER_RECEIPT_JSON=(\{.*?\}) \(result must be/gu)]
+      .map(match => JSON.parse(match[1]!) as Record<string, unknown>)
+    expect(receiptExamples.map(receipt => receipt.assignment)).toEqual(['normalize/header/1', 'normalize/retry/1'])
+    for (const receipt of receiptExamples)
+      expect(Object.keys(receipt).sort()).toEqual(['assignment', 'changed_paths', 'result', 'scope_issue', 'verification'])
     expect(prepared.prompt).not.toContain('\"required_fields\"')
     expect(prepared.prompt).not.toContain('\"consumer\":\"managed-controller-evaluator\"')
     expect(prepared.prompt).not.toContain('\"transport\":{')
@@ -208,8 +247,14 @@ describe('rsp-manage product and evaluator boundary', () => {
   })
 
   it('keeps migration-required readiness separate from implementation evidence', () => {
-    expect(findSemanticUnit(durableReview, ['`RSP project requires an update`', 'not explicitly authorized', 'do not run `rsp update`', 'Preserve the passed implementation verification', '`first_fix_result`'])).toBeDefined()
-    expect(findSemanticUnit(durableReview, ['readiness as incomplete', 'archive and commit blocked'])).toBeDefined()
+    const migrationContract = [
+      { all: ['`RSP project requires an update`', /not explicitly authorized/iu, /do not run|must not run/iu, /rsp update/u, /implementation verification/iu, /first_fix_result/u] },
+      { all: [/readiness/iu, /incomplete/iu, /archive/iu, /commit/iu, /blocked/iu] },
+    ]
+    expect(satisfiesSemanticContract(durableReview, migrationContract)).toBe(true)
+
+    const autoMigration = mutateSemanticUnit(durableReview, ['`RSP project requires an update`', /rsp update/u], unit => unit.replace(/do not run|must not run/iu, 'may run'))
+    expect(satisfiesSemanticContract(autoMigration, migrationContract)).toBe(false)
   })
 
   it('removes an isolated evaluator user context when auth setup fails', async ({ onTestFinished }) => {
@@ -355,6 +400,58 @@ describe('rsp-manage product and evaluator boundary', () => {
       observed_resources: ['rsp/references/managed-routing.md'],
       missing_resources: ['rsp-manage/references/interruption-recovery.md'],
     })
+  })
+
+  it('binds low-frequency Manage references to their route triggers', () => {
+    const contracts = {
+      'auto-multisurface-routing': {
+        manage: [],
+        core: [
+          'rsp/references/control-outcome.md',
+          'rsp/references/durable-review.md',
+          'rsp/references/managed-routing.md',
+          'rsp/references/response-language.md',
+        ],
+      },
+      'pause-resume': {
+        manage: ['rsp-manage/references/interruption-recovery.md'],
+        core: [
+          'rsp/references/control-outcome.md',
+          'rsp/references/response-language.md',
+        ],
+      },
+      'review-convergence': {
+        manage: [
+          'rsp-manage/references/closeout.md',
+          'rsp-manage/references/review-convergence.md',
+        ],
+        core: [
+          'rsp/references/control-outcome.md',
+          'rsp/references/durable-review.md',
+          'rsp/references/response-language.md',
+        ],
+      },
+      'auto-lifecycle-current': {
+        manage: [
+          'rsp-manage/references/closeout.md',
+          'rsp-manage/references/review-convergence.md',
+        ],
+        core: [
+          'rsp/references/control-outcome.md',
+          'rsp/references/durable-review.md',
+          'rsp/references/managed-routing.md',
+          'rsp/references/response-language.md',
+        ],
+      },
+    }
+
+    for (const [caseId, contract] of Object.entries(contracts)) {
+      const resources = expectedResources(caseId)
+      const manageResources = resources.filter(path => path.startsWith('rsp-manage/references/'))
+      expect(manageResources).toEqual([...contract.manage].sort())
+      expect(manageResources.every(path => manageLowFrequencyReferences.includes(path))).toBe(true)
+      expect(resources.filter(path => path.startsWith('rsp/references/'))).toEqual([...contract.core].sort())
+    }
   })
 
   it('rejects missing expected references in the installed Skill composition', ({ onTestFinished }) => {

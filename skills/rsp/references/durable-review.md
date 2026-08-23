@@ -10,6 +10,21 @@ If `rsp show --focused --json` or `rsp ready <name> --json` reports only `RSP pr
 
 Choose current facts and rationale independently. Use no update when there is no stable fact or lasting rationale worth rereading.
 
+Return the durable decision in this semantic field order. Localize headings and labels while preserving the canonical values:
+
+```md
+## <localized Durable Decision heading>
+- <localized Current facts label>: <No current-fact update needed | Update existing spec or scoped instruction | Create a new durable spec>
+- <localized Current-fact target label>: <exact file path or N/A>
+- <localized Facts to write label>: <durable facts or none>
+- <localized Decision Record label>: <No Decision Record needed | Create or update a Decision Record>
+- <localized Decision Record target label>: <exact file path or N/A>
+- <localized Rationale to write label>: <lasting rationale or none>
+- <localized Archive ready label>: <yes | no>
+```
+
+Response-only Continuation and Durable Decision labels are not canonical artifact headings. In Chinese, for example, use `## 持久化决策`, `决策记录（Decision Record）`, and `可归档（Archive ready）`, not English labels alone.
+
 Write a current-fact update only when implementation changed a stable behavior, boundary, default, or constraint that future maintainers need. Prefer the smallest existing domain Spec, `.rsp/specs/design.md` for project-wide boundaries/navigation, or an explicitly authorized scoped `CONTEXT.md`/`AGENTS.md`; create a new Spec only for reusable project-level truth that fits nowhere existing.
 
 Create or update a Decision Record only for a hard-to-reverse or surprising choice with a real tradeoff. It owns rationale, alternatives, tradeoffs, and consequences—not duplicated current facts. Choose one exact file under `durableReview.decisionRecordsPath`, not the directory itself.

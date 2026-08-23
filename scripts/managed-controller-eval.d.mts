@@ -43,6 +43,16 @@ export interface ManagedControllerHoldoutManifest extends ManagedControllerOutpu
     worker_dispatch_count: { min: number, max: number }
   }
   request: string
+  release_behavior?: {
+    dimension: string
+    surfaces: Array<{
+      kind: 'changed-paths' | 'commits' | 'file' | 'files' | 'final'
+      path?: string
+      paths?: string[]
+      required?: string[]
+      forbidden?: string[]
+    }>
+  }
   required_changes?: string[]
   sandbox?: 'workspace-write' | 'danger-full-access'
   verification: string[]
@@ -176,8 +186,16 @@ export interface ManagedControllerWorkerCompliance {
 export interface ManagedControllerEvaluationMetadata {
   agent_reported: ManagedControllerAgentReportedEvaluation | null
   case_id: string
+  composition: {
+    installed_after: ManagedControllerComposition
+    installed_before: ManagedControllerComposition
+    source_after: ManagedControllerComposition
+    source_before: ManagedControllerComposition
+    stable: boolean
+  }
   contract_sha256: string
   duration_ms: number
+  ended_at: string
   exit_code: number | null
   events: {
     forbidden_actions: { force_push: number, publication: number, push: number }
@@ -190,6 +208,8 @@ export interface ManagedControllerEvaluationMetadata {
     worker_lifecycle: ManagedControllerWorkerLifecycleObservation
     worker_receipts: ManagedControllerWorkerReceiptObservation[]
   }
+  final_hash: string
+  git: ManagedControllerGitObservation
   output: ManagedControllerOutputScore
   paths: { events: string, final: string, metadata: string, workspace: string }
   evaluation_receipt: {
@@ -236,6 +256,18 @@ export interface ManagedControllerEvaluationMetadata {
   recovery?: ManagedControllerRecoveryScore
   result: 'passed' | 'failed'
   product_result?: 'passed' | 'failed'
+  settings: {
+    codex: string
+    effort: string
+    isolated_user_context: boolean
+    model: string
+    provider: string | null
+    sandbox: 'workspace-write' | 'danger-full-access'
+    timeout_ms: number
+  }
+  source_hash: string
+  started_at: string
+  timed_out: boolean
   variant: 'baseline' | 'candidate' | 'product'
   verification: { code: number | null, passed: boolean, stderr: string, stdout: string }
   worktree: { changed_paths: string[], missing_required_paths: string[], unauthorized_paths: string[] }

@@ -76,6 +76,7 @@ describe('documentation command examples', () => {
       'conflict-handling.md',
       'durable-review.md',
       'groups-dependencies.md',
+      'implementation-evidence.md',
       'managed-routing.md',
       'reopen-recovery.md',
       'setup-repair.md',
@@ -103,8 +104,8 @@ describe('documentation command examples', () => {
     expect(contract).toContain('Do not directly create command-owned files')
     expect(contract).toMatch(/does not execute archive or grant staging, commit, push, publication/)
     expect(skill).not.toContain('Minimal example:')
-    expect(skill).toContain('Required verification proves acceptance or changed material risk')
-    expect(skill).toContain('Optional verification adds environment, compatibility, scale, or confidence coverage')
+    expect(contract).toContain('Required verification proves acceptance or changed material risk')
+    expect(contract).toContain('Optional verification adds environment, compatibility, scale, or confidence coverage')
     expect(rules).toContain('legacy unclassified items are Required')
     expect(manage).toContain('Read [lifecycle and delivery closeout](references/closeout.md) only when closeout becomes eligible')
     expect(manageCloseout).toContain('require `completionGate: pass` plus `archiveReady: yes`')
@@ -114,6 +115,8 @@ describe('documentation command examples', () => {
   it('documents the localized durable decision contract and consolidated Skill guidance', () => {
     const root = fileURLToPath(new URL('../..', import.meta.url))
     const skill = readFileSync(join(root, 'skills', 'rsp', 'SKILL.md'), 'utf-8')
+    const focusContinuation = readFileSync(join(root, 'skills', 'rsp', 'references', 'focus-continuation.md'), 'utf-8')
+    const durableReview = readFileSync(join(root, 'skills', 'rsp', 'references', 'durable-review.md'), 'utf-8')
     const setup = readFileSync(join(root, 'skills', 'rsp', 'references', 'setup-repair.md'), 'utf-8')
     const readme = readFileSync(join(root, 'README.md'), 'utf-8')
     const skillsGuide = readFileSync(join(root, 'docs', 'site', 'en', 'guides', 'skills.md'), 'utf-8')
@@ -131,9 +134,11 @@ describe('documentation command examples', () => {
       'tui.md',
     ].map(name => readFileSync(join(root, '.rsp', 'specs', name), 'utf-8')).join('\n')
 
-    expect(skill).toContain('localized continuation with these semantic fields in order')
-    expect(skill).toContain('Localize headings and labels')
-    expect(skill).toContain('- <localized Current-fact target label>: <exact file path or N/A>')
+    expect(skill).toContain('[focus and continuation recovery](references/focus-continuation.md)')
+    expect(focusContinuation).toContain('localized continuation with these semantic fields in order')
+    expect(skill).toContain('[durable writeback decision](references/durable-review.md)')
+    expect(durableReview).toContain('Localize headings and labels')
+    expect(durableReview).toContain('- <localized Current-fact target label>: <exact file path or N/A>')
     expect(skill).not.toContain('Short example:')
     expect(setup).toContain('`fixed` entries are real filesystem mutations')
     expect(setup).toContain('an empty list means nothing changed')

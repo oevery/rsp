@@ -9,6 +9,7 @@ expected:
   returned_owner: the same selected Change
 sources:
   - skills/rsp/SKILL.md
+  - skills/rsp/references/implementation-evidence.md
   - skills/rsp-implement/SKILL.md
 required_contract:
   - explicitly required by the user, selected Change, or project instructions

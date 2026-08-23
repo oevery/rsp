@@ -1,5 +1,10 @@
 export type SemanticTerm = string | RegExp
 
+export interface SemanticClause {
+  all: SemanticTerm[]
+  none?: SemanticTerm[]
+}
+
 function withoutCodeFences(markdown: string): string {
   return markdown.replace(/```[\s\S]*?```/g, '')
 }
@@ -61,6 +66,24 @@ export function semanticUnits(markdown: string): string[] {
 
 export function findSemanticUnit(markdown: string, terms: SemanticTerm[]): string | undefined {
   return semanticUnits(markdown).find(unit => terms.every(term => matchesTerm(unit, term)))
+}
+
+export function satisfiesSemanticContract(markdown: string, clauses: SemanticClause[]): boolean {
+  return clauses.every(clause => semanticUnits(markdown).some(unit =>
+    clause.all.every(term => matchesTerm(unit, term))
+    && (clause.none ?? []).every(term => !matchesTerm(unit, term)),
+  ))
+}
+
+export function mutateSemanticUnit(
+  markdown: string,
+  terms: SemanticTerm[],
+  mutate: (unit: string) => string,
+): string {
+  const unit = findSemanticUnit(markdown, terms)
+  if (!unit)
+    return markdown
+  return markdown.replace(unit, mutate(unit))
 }
 
 export function inlineCodeValues(markdown: string): string[] {

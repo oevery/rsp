@@ -8,6 +8,13 @@ installed_skills:
   - rsp-resolve-findings
   - rsp-review
   - rsp-implement
+expected_resources:
+  - rsp-manage/references/closeout.md
+  - rsp-manage/references/review-convergence.md
+  - rsp/references/control-outcome.md
+  - rsp/references/durable-review.md
+  - rsp/references/managed-routing.md
+  - rsp/references/response-language.md
 initialize_rsp: true
 branch: eval/auto-lifecycle-current
 sandbox: danger-full-access

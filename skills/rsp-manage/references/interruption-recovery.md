@@ -2,6 +2,8 @@
 
 Load this reference only for a progress or status inquiry, explicit pause, an environment or verification stop, or resume from continuation pointers.
 
+Reread the complete owner and authority only on a real invalidation, recovery, cross-session continuation, or closeout boundary.
+
 Treat a status inquiry as an update, not a stop signal. Report current evidence and continuing intent, then continue while authority, verification, and blockers permit it. Host liveness signals and elapsed time do not change a Discipline result or justify cancelling healthy work.
 
 For an explicit pause, use the host's available interruption mechanism and confirm active workers or owned background processes have stopped before acknowledging the pause. Cancelling the caller's wait does not itself stop accepted work. Until stop is observed, do not start conflicting mutation or verification. A terminal message or partial output does not prove that owned work has ended.

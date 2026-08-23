@@ -25,18 +25,15 @@ Do not switch branches or mutate the worktree to discover scope. If the comparis
 
 The user request fixes the requested outcome and allowed operations subject to nearest project instructions. The selected Change defines the intended delta, Specs define stable current facts, and Decision Records define lasting rationale. Implementation and tests are evidence, not authority for missing requirements. Report missing authority instead of inventing a rule, acceptance criterion, or preference.
 
-## Classify the scope
+## Classify before loading
 
-- **Code:** executable code, tests, configuration, scripts, schemas, executable prompts, Skills, commands, hooks, and workflows.
-- **Document:** requirements, plans, Changes, Specs, Decision Records, ADRs, explanatory documentation, and user-facing documentation.
+Do not read a pipeline reference until scope and authority are fixed. Then:
 
-Determine applicability only from artifacts inside the fixed comparison scope. A Change, Spec, instruction, implementation file, or test read only as authority or evidence is not thereby a reviewed artifact. Run each applicable pipeline; return `skipped` for a pipeline with no reviewed artifacts even when authority of that kind was inspected, and never return `clean` for authority-only documents. When such authority is missing, ambiguous, or conflicting, record it in Review Scope, Coverage, and Verdict; do not emit a Finding owned by a skipped pipeline. An executable document may need both; merge evidence for the same underlying issue into one cross-artifact finding.
+1. Classify only fixed reviewed artifacts. **Code** includes executable code, tests, configuration, scripts, schemas, executable prompts, Skills, commands, hooks, and workflows. **Document** includes requirements, plans, Changes, Specs, Decision Records, ADRs, explanatory documentation, and user-facing documentation. An executable document may require both.
+2. Inputs read only as authority or evidence are authority-only, not reviewed artifacts. With no reviewed artifacts, a pipeline is `skipped`, never `clean`. Record missing, ambiguous, or conflicting authority in Review Scope, Coverage, and Verdict, not as a Finding from a skipped pipeline.
+3. Load [Code review](references/code-review.md) only if Code applies and [Document review](references/document-review.md) only if Document applies. A mixed review loads both; authority-only artifacts trigger neither.
 
-Inspect in a bounded order: fixed status and diff, selected authority, then only the smallest direct behavior chain and tests needed to resolve a concrete question. Stop when every applicable pipeline can be judged. Do not search unrelated files or broaden authority merely to fill Coverage or Findings.
-
-Read [Code review](references/code-review.md) only when the fixed reviewed artifacts make the Code pipeline applicable.
-
-Read [Document review](references/document-review.md) only when the fixed reviewed artifacts make the Document pipeline applicable. A mixed review reads both references; authority-only artifacts never trigger either reference by themselves.
+Run every applicable pipeline and merge the same underlying issue into one cross-artifact finding. Inspect in order: fixed status and diff, selected authority, then the smallest direct behavior chain and tests needed for a concrete question. Stop when all applicable pipelines can be judged; do not search unrelated files or broaden authority to fill Coverage or Findings.
 
 ## Report
 

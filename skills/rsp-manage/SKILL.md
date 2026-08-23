@@ -122,16 +122,20 @@ Dispatch only for `preferred | required`; `none` invokes the local Discipline wi
 
 For a Group, dispatch only children in the current `plan.waves` wave. Keep shared writers, generated artifacts, test runners, browsers, Brokers, provider sessions, hardware, and other conflicting resources sequential unless the host and checkout evidence establish safe isolation. Delegation never implies concurrency. Run lane-local checks first, then at most one affected integration gate.
 
-Do not impose a whole-run dispatch quota. Skip optional Diagnose or Inspect work unless it materially reduces uncertainty. An evidenced same-scope failure permits at most three correction passes by default and stops earlier on repeated evidence, non-convergence, changed scope or authority, unsafe replay, unavailable capability, or unverifiable correction. Required independent Verify remains a separate obligation.
+Do not impose a whole-run dispatch quota. Skip optional Diagnose or Inspect work unless it materially reduces uncertainty. Required independent Verify remains a separate obligation.
 
-## Continue, interrupt, and close out
+## Continue and load low-frequency branches
 
-Inspect changed paths, local diff, and declared verification before continuing. Reread complete owner and authority only on a real invalidation, recovery, cross-session continuation, or closeout boundary. Continue a clear in-scope successor while goal, WorkRef topology, route, behavior, acceptance, interface, scope, and authority remain unchanged. Return changed boundaries to Core.
+After inspecting changed paths, local diff, and declared verification, continue only while goal, WorkRef topology, route, behavior, acceptance, interface, scope, and authority remain unchanged. Return changed boundaries to Core.
 
-Read [interruption and recovery](references/interruption-recovery.md) only for a progress inquiry, explicit pause, environment or verification stop, or resume. Read [managed review convergence](references/review-convergence.md) only after a fixed-scope review returns Findings.
+Load a low-frequency procedure only after its branch trigger is established:
 
-Persist no dispatch chronology, host handles, worker messages, retries, topology, or acceptance process. Changes retain accepted outcomes in Tasks, decisive evidence in Verify, and real unresolved dependencies or risks in Blockers. Focus Capsules remain recovery pointers, never worker coordination or authority.
+- Read [interruption and recovery](references/interruption-recovery.md) only for a progress or status inquiry, explicit pause, environment or verification stop, or resume.
+- Read [managed review convergence](references/review-convergence.md) only after an evidenced same-scope correction is needed or a fixed-scope review returns Findings.
+- Read [lifecycle and delivery closeout](references/closeout.md) only when closeout becomes eligible from a valid selected handoff and `AcceptanceDisposition: review-clean`, for an authorized recovery checkpoint, or for an explicit push request. Before `review-clean`, every `manage.closeout` preset remains dormant.
 
-Closeout requires the selected handoff to remain valid and `AcceptanceDisposition: review-clean`. Otherwise every `manage.closeout` preset is dormant. Read [lifecycle and delivery closeout](references/closeout.md) only when closeout becomes eligible, for an authorized recovery checkpoint, or for an explicit push request.
+If none of these triggers applies, do not read their references.
+
+Persist only accepted Tasks, decisive Verify evidence, and real Blockers; never transient coordination or acceptance process. Focus Capsules remain recovery pointers, never worker coordination or authority.
 
 Stop on missing authority, unavailable capability, failed verification, drift, unsafe replay, or limits. When work remains, return `WorkRef, Authority, Current state, Changed artifacts, Fresh verification, Blockers, and Next action`. Do not claim review, archive, Commit, push, publication, deployment, approval, or human acceptance without its owning authority and evidence.
