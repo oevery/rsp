@@ -23,4 +23,4 @@ release_behavior:
       forbidden: [CHANNEL]
     - kind: file
       path: test.mjs
-      required: ["assert.deepEqual(messages, [['sidebar:close']])"]
+      required: [closeSidebar(bridge), 'assert.equal(closeCount, 1)']
