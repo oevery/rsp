@@ -5,8 +5,14 @@ export interface SemanticClause {
   none?: SemanticTerm[]
 }
 
+interface SemanticUnitSpan {
+  end: number
+  start: number
+  value: string
+}
+
 function withoutCodeFences(markdown: string): string {
-  return markdown.replace(/```[\s\S]*?```/g, '')
+  return markdown.replace(/```[\s\S]*?```/g, block => block.replace(/[^\r\n]/g, ' '))
 }
 
 function matchesTerm(value: string, term: SemanticTerm): boolean {
@@ -40,28 +46,43 @@ export function markdownSection(markdown: string, heading: string): string {
   return lines.slice(start + 1, end < 0 ? undefined : end).join('\n')
 }
 
-export function semanticUnits(markdown: string): string[] {
-  const units: string[] = []
+function semanticUnitSpans(markdown: string): SemanticUnitSpan[] {
+  const units: SemanticUnitSpan[] = []
   let current: string[] = []
+  let currentStart = -1
+  let currentEnd = -1
 
   const flush = () => {
     const unit = current.join(' ').replace(/\s+/g, ' ').trim()
     if (unit)
-      units.push(unit)
+      units.push({ end: currentEnd, start: currentStart, value: unit })
     current = []
+    currentStart = -1
+    currentEnd = -1
   }
 
-  for (const line of withoutCodeFences(markdown).split(/\r?\n/u)) {
+  const masked = withoutCodeFences(markdown)
+  let offset = 0
+  for (const line of masked.split(/\r?\n/u)) {
     if (!line.trim()) {
       flush()
+      offset += line.length + (masked.slice(offset + line.length).startsWith('\r\n') ? 2 : 1)
       continue
     }
     if (/^\s*(?:[-*+]|\d+\.)\s+/u.test(line))
       flush()
+    if (currentStart < 0)
+      currentStart = offset
     current.push(line.trim())
+    currentEnd = offset + line.length
+    offset += line.length + (masked.slice(offset + line.length).startsWith('\r\n') ? 2 : 1)
   }
   flush()
   return units
+}
+
+export function semanticUnits(markdown: string): string[] {
+  return semanticUnitSpans(markdown).map(unit => unit.value)
 }
 
 export function findSemanticUnit(markdown: string, terms: SemanticTerm[]): string | undefined {
@@ -80,10 +101,10 @@ export function mutateSemanticUnit(
   terms: SemanticTerm[],
   mutate: (unit: string) => string,
 ): string {
-  const unit = findSemanticUnit(markdown, terms)
+  const unit = semanticUnitSpans(markdown).find(({ value }) => terms.every(term => matchesTerm(value, term)))
   if (!unit)
     return markdown
-  return markdown.replace(unit, mutate(unit))
+  return `${markdown.slice(0, unit.start)}${mutate(unit.value)}${markdown.slice(unit.end)}`
 }
 
 export function inlineCodeValues(markdown: string): string[] {
@@ -108,9 +129,10 @@ export function markdownListItem(markdown: string, label: string): string {
 }
 
 export function orderedMarkers(markdown: string, markers: string[]): boolean {
+  const visibleMarkdown = withoutCodeFences(markdown)
   let cursor = -1
   for (const marker of markers) {
-    const next = markdown.indexOf(marker, cursor + 1)
+    const next = visibleMarkdown.indexOf(marker, cursor + 1)
     if (next < 0)
       return false
     cursor = next
