@@ -7,6 +7,8 @@ description: Plan, execute, and interpret this repository's serial pre-release a
 
 Choose the narrowest mode that matches the release decision. Run modes serially: they share build, package, provider, or terminal resources. Scripts own mechanics and report generation; this Skill owns sequencing, evidence interpretation, and authority stops.
 
+Across provider-backed modes, keep unavailable final-response, resource-event, first-fix, model-invocation, and similar host observations as explicit omissions. Never infer an observation from a successful result or neighboring events. A missing observation fails closed when it leaves a declared hard dimension or required structured evidence unevaluable; otherwise it remains diagnostic and cannot strengthen the verdict.
+
 ## 1. Deterministic acceptance
 
 Use before judging general release readiness.

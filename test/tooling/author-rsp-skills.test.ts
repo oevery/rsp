@@ -5,6 +5,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
 import { formatSkillContext, scanSkillContext } from '../../.agents/skills/author-rsp-skills/scripts/scan-skill-context.mjs'
+import { mutateSemanticUnit, satisfiesSemanticContract } from '../support/markdown-contract'
 
 const root = fileURLToPath(new URL('../..', import.meta.url))
 const fixtures: string[] = []
@@ -60,6 +61,39 @@ describe('author-rsp-skills maintainer contract', () => {
   it('is a direct maintainer package rather than a published Skill projection', () => {
     expect(readFileSync(join(root, 'test/skills/project-skill-dogfood.test.ts'), 'utf8')).not.toContain('\'author-rsp-skills\',')
     expect(() => readFileSync(join(root, 'skills/author-rsp-skills/SKILL.md'), 'utf8')).toThrow()
+  })
+
+  it('keeps branch loading classified and semantic contract evidence resilient', () => {
+    const authoring = readFileSync(join(root, '.agents/skills/author-rsp-skills/references/authoring.md'), 'utf8')
+    const evaluation = readFileSync(join(root, '.agents/skills/author-rsp-skills/references/evaluation.md'), 'utf8')
+    const loadingContract = [
+      { all: [/selection/iu, /authority/iu, /entrypoint/iu] },
+      { all: [/When choosing a branch requires classification/iu, /keep that classification/iu] },
+      { all: [/branch reference/iu, /explicit trigger or required classification/iu] },
+      { all: [/authority or evidence/iu, /does not activate/iu, /branch/iu] },
+    ]
+    const semanticEvidenceContract = [
+      { all: [/exact text assertions/iu, /stable protocol values/iu, /critical denials/iu] },
+      { all: [/replaceable prose/iu, /semantic units/iu, /headings/iu, /links/iu, /ownership/iu, /forbidden authority/iu] },
+      { all: [/negative mutation/iu, /route/iu, /owner/iu, /stop/iu, /denial/iu, /must fail/iu] },
+    ]
+
+    expect(satisfiesSemanticContract(authoring, loadingContract)).toBe(true)
+    expect(satisfiesSemanticContract(evaluation, semanticEvidenceContract)).toBe(true)
+
+    const mandatoryClassification = mutateSemanticUnit(
+      authoring,
+      [/When choosing a branch requires classification/iu],
+      unit => unit.replace(/When choosing a branch requires classification/iu, 'Always'),
+    )
+    expect(satisfiesSemanticContract(mandatoryClassification, loadingContract)).toBe(false)
+
+    const eagerAuthorityBranch = mutateSemanticUnit(
+      authoring,
+      [/authority or evidence/iu, /does not activate/iu],
+      unit => unit.replace(/does not activate/iu, 'activates'),
+    )
+    expect(satisfiesSemanticContract(eagerAuthorityBranch, loadingContract)).toBe(false)
   })
 })
 

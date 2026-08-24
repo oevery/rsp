@@ -8,6 +8,7 @@ Use evidence proportional to the candidate's behavioral risk. Structure-only edi
 2. Run `scripts/skill-security-preflight.mjs` when scripts, permissions, egress, dependencies, MCP metadata, or release candidacy make security relevant.
 3. Use `scripts/skill-candidate-evaluation.mjs` for current-versus-candidate behavior. Do not create a second receipt schema.
 4. Keep Trigger, Compliance, Boundary, and task result separate. Record nullable corrections, first-fix result, worker dispatches, tool calls, elapsed time, and tokens as observations, not inferred facts.
+5. Use exact text assertions only for stable protocol values, paths, enums, or critical denials. For replaceable prose, assert semantic units, headings, links, ownership, and forbidden authority, then add a representative negative mutation that weakens a route, owner, stop, or denial and must fail.
 
 ## Candidate comparison
 

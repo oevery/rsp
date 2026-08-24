@@ -11,8 +11,9 @@ Use for `create`, `revise`, `audit`, or `adapt`.
    - `references/*.md`: branch-specific knowledge loaded only when selected.
    - `scripts/*`: deterministic, repeatable work that should not be re-described each run.
    - `agents/openai.yaml`: UI metadata only; keep it aligned with the Skill contract.
-4. Keep references one level from `SKILL.md`. Link every intended Markdown resource directly or through a necessary selected reference.
-5. Co-locate a rule with the action it constrains. Lead sections and list items with words that expose the decision, authority, or result. Define completion with observable checks.
+4. Keep selection and authority in the entrypoint. When choosing a branch requires classification, keep that classification there too. Load a branch reference only after its explicit trigger or required classification succeeds; an input read only as authority or evidence does not activate that branch.
+5. Keep references one level from `SKILL.md`. Link every intended Markdown resource directly or through a necessary selected reference.
+6. Co-locate a rule with the action it constrains. Lead sections and list items with words that expose the decision, authority, or result. Define completion with observable checks.
 
 For `audit`, do not mutate the target unless the user also authorizes a repair. Run the corpus scanner when useful, then separate deterministic facts from semantic findings. An unreachable file, repeated paragraph, or large count is a review lead, not an automatic defect.
 
