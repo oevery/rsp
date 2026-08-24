@@ -1,5 +1,19 @@
 # Changelog
 
+## 3.3.0 (2026-08-24)
+
+- Make lifecycle completion fail closed on unfinished Tasks, Required verification, or blockers while keeping Optional verification visible as non-blocking coverage.
+- Replace generated Specs indexes with direct `rsp specs` tree, detail, and bounded literal search, including safe migration of recognized generated index files.
+- Add bounded Focus Capsule v1 recovery through `rsp focus --capsule-file`, preserving legacy marker readability without treating recovery prose as authority.
+- Add the `rsp-verify` Skill and refine Manage around explicit solo, delegated, and coordinated execution with attributable worker results and independent-verification boundaries.
+- Harden exact local commits, CLI command boundaries, dashboard Work/Specs/History presentation, and safe Markdown detail rendering.
+- Add deterministic release acceptance, Skill security preflight, provider behavior gates, and reusable six-scenario routing comparison evidence.
+- Reduce repeated Skill context through conditional loading and semantic contract checks while preserving trigger, authority, action, stop, and return behavior.
+
+Existing 3.2 projects require no dedicated migration. Run `rsp update`, refresh package-owned Skills with an explicit forced preflight and install, then run `rsp doctor`. Recognized generated Specs indexes are removed only after safe preflight; owner-controlled reserved index content stops for review.
+
+See the [3.3.0 release notes](docs/releases/3.3.0.md).
+
 ## 3.2.0 (2026-08-05)
 
 - Unify Core, Shape, Discipline, and Manage control around explicit route, owner, stop, resume, acceptance, and closeout outcomes without adding persisted controller state or widening mutation authority.

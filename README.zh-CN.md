@@ -65,7 +65,7 @@ rsp show --focused
 - [配置参考](./docs/site/zh-CN/reference/configuration.md)
 - [CLI 参考](./docs/site/zh-CN/reference/cli.md)
 - [3.0 迁移指南](./docs/migrations/3.0.md)与 [3.1 迁移指南](./docs/migrations/3.1.md)
-- [发布说明](./docs/releases/3.2.0.md)
+- [发布说明](./docs/releases/3.3.0.md)
 - [设计哲学](./docs/maintainers/design-philosophy.md)与[维护者上游研究](./docs/maintainers/upstreams.md)
 
 在本地运行文档：
