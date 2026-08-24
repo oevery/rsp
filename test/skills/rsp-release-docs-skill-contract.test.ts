@@ -21,7 +21,7 @@ describe('rsp-release-docs Skill contract', () => {
       ['references/convention-discovery.md', /when repository, personal, tool, or historical conventions/],
       ['references/evidence-and-surfaces.md', /before drafting the ledger, classifying statement lifetime, or deciding exclusions/],
       ['references/output-contracts.md', /before introducing a format, preparing a major\/breaking release, or producing multiple surfaces/],
-      ['references/publication-lifecycle.md', /before a publication handoff or post-publication reconciliation/],
+      ['references/publication-lifecycle.md', /before finalizing an exact publication candidate, preparing a publication handoff, or reconciling an observed publication/],
     ] as const
     for (const [path, trigger] of routes) {
       expect(skill).toContain(`](${path})`)
@@ -70,6 +70,10 @@ describe('rsp-release-docs Skill contract', () => {
 
   it('makes finalization checkable and credential-safe', () => {
     expect(publication).toContain('## Finalization gate')
+    expect(publication).toMatch(/inspects public release surfaces and package inventory at the exact candidate/)
+    expect(publication).toMatch(/versioned shipped surfaces are finalized in a separate release commit/)
+    expect(publication).toMatch(/`ready` means internally eligible for a separately authorized operation/)
+    expect(skill).not.toMatch(/inspects public release surfaces and package inventory at the exact candidate/)
     expect(publication).toMatch(/target changelog entry is not labeled `Unreleased`/)
     expect(publication).toMatch(/target tag or immutable ref, not `HEAD`/)
     expect(publication).toMatch(/package inventory and release checks are fresh/)

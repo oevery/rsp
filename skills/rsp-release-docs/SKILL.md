@@ -58,13 +58,9 @@ Project each release surface from its audience, accepted range, and observed fin
 
 Every claim must map to the ledger. Keep terminology aligned while respecting each surface's audience and lifetime.
 
-## Finalize the exact candidate
+## Load publication lifecycle
 
-Read [publication lifecycle](references/publication-lifecycle.md) before a publication handoff or post-publication reconciliation.
-
-Finalization inspects public release surfaces and package inventory at the exact candidate—not every internal workflow artifact present in the tag. Require version, date, changelog, notes, migration guidance, comparisons, manifests, package inventory, release checks, and lifecycle closeout to agree. Shipped prose must remain true before, during, and after publication; transient publication or authentication state belongs only in the handoff.
-
-When Git delivery is authorized, implementation Changes remain independently reviewable and versioned shipped surfaces are finalized in a separate release commit. Return the version, immutable candidate ref, required external actions, fresh checks, omissions, and `ready` or `not ready`. `ready` means internally eligible for a separately authorized operation; it is neither publication authority nor evidence of publication.
+Read [publication lifecycle](references/publication-lifecycle.md) before finalizing an exact publication candidate, preparing a publication handoff, or reconciling an observed publication. It owns exact-candidate consistency, package inventory, release-commit boundaries, readiness, and reconciliation.
 
 ## Protect authority and credentials
 

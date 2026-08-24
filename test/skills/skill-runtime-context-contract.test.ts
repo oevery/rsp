@@ -11,6 +11,7 @@ const controlOutcome = read('skills/rsp/references/control-outcome.md')
 const implementationEvidence = read('skills/rsp/references/implementation-evidence.md')
 const focusContinuation = read('skills/rsp/references/focus-continuation.md')
 const manage = read('skills/rsp-manage/SKILL.md')
+const delegation = read('skills/rsp-manage/references/delegation.md')
 const interruption = read('skills/rsp-manage/references/interruption-recovery.md')
 const reviewConvergence = read('skills/rsp-manage/references/review-convergence.md')
 const closeout = read('skills/rsp-manage/references/closeout.md')
@@ -26,6 +27,7 @@ const delegationEvidenceContract = [
 ]
 
 const manageConditionalLoadingContract = [
+  { all: [/delegation and host evidence/iu, /references\/delegation\.md/u, /preferred \| required/u, /before/iu, /worker task/iu, /worker result/iu] },
   { all: [/interruption and recovery/iu, /references\/interruption-recovery\.md/u, /only/iu, /progress or status inquiry/iu, /explicit pause/iu, /environment or verification stop/iu, /resume/iu] },
   { all: [/managed review convergence/iu, /references\/review-convergence\.md/u, /only/iu, /same-scope correction/iu, /fixed-scope review/iu, /Findings/u] },
   { all: [/lifecycle and delivery closeout/iu, /references\/closeout\.md/u, /only/iu, /selected handoff/iu, /review-clean/u, /recovery checkpoint/iu, /push request/iu] },
@@ -52,7 +54,7 @@ describe('skill runtime context composition', () => {
   })
 
   it('keeps only low-frequency Manage procedures conditional', () => {
-    expect(markdownLinks(manage)).toEqual(expect.arrayContaining(['references/interruption-recovery.md', 'references/review-convergence.md', 'references/closeout.md']))
+    expect(markdownLinks(manage)).toEqual(expect.arrayContaining(['references/delegation.md', 'references/interruption-recovery.md', 'references/review-convergence.md', 'references/closeout.md']))
     expect(markdownLinks(manage)).not.toEqual(expect.arrayContaining(['references/managed-exchange.md', 'references/host-worker-lifecycle.md']))
     expect(satisfiesSemanticContract(manage, manageConditionalLoadingContract)).toBe(true)
     expect(satisfiesSemanticContract(manage, [
@@ -79,7 +81,7 @@ describe('skill runtime context composition', () => {
   })
 
   it('keeps ordinary delegation small and host facts separate', () => {
-    expect(satisfiesSemanticContract(manage, [
+    expect(satisfiesSemanticContract(delegation, [
       { all: [/delegated task/iu, /only/iu, /act safely/iu] },
       ...delegationEvidenceContract,
     ])).toBe(true)
@@ -87,7 +89,11 @@ describe('skill runtime context composition', () => {
       { all: [/Raw worker messages/iu, /host events/iu, /unaccepted evidence/iu, /never appear|must not appear|do not appear/iu, /outer receipt fields/iu] },
     ])).toBe(true)
 
-    const managerSubstitutes = mutateSemanticUnit(manage, [/Manager/iu, /worker result/iu, /reconstruct/iu], unit => unit.replace(/must not|never/iu, 'may'))
+    expect(satisfiesSemanticContract(manage, [
+      { all: [/DispatchDisposition: none/iu, /do not read/iu, /worker delegation procedure/iu, /bounded local Discipline/iu] },
+    ])).toBe(true)
+
+    const managerSubstitutes = mutateSemanticUnit(delegation, [/Manager/iu, /worker result/iu, /reconstruct/iu], unit => unit.replace(/must not|never/iu, 'may'))
     expect(satisfiesSemanticContract(managerSubstitutes, delegationEvidenceContract)).toBe(false)
   })
 

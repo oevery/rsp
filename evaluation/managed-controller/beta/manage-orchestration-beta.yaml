@@ -3,13 +3,13 @@ case: auto-multisurface-routing
 variants:
   - baseline
   - product
-holdout_manifest_sha256: 3dd7dddc9a424812bcdc8c7ec518d50d41ed72bbcfb5fcd980578ad41f808a99
+holdout_manifest_sha256: 37d6779503dfcf7daae24b146119a9a7028f7bc4b5bb0c95073522ab93faff68
 base_tree_sha256: 5581fdea1ebaf6000348340e25a7b1f1d84378fced4f2ca03bfda7aa787af7cd
 product_skill_names:
   - rsp
   - rsp-manage
   - rsp-implement
-product_composition_sha256: 4085f7e1f6146cda09265fce2eae956b02e54372ccf8792452b85dd3bb9b44c7
+product_composition_sha256: 8e7f9de905c616cd03ced406932b15ecb5b97d2b7ecffea1be8ba3d65a30d4e2
 provider_comparison_cases:
   - case: auto-integrated-direct
     repetitions: 3

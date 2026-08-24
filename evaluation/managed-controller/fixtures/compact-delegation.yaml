@@ -1,6 +1,7 @@
 id: compact-delegation
 sources:
   - skills/rsp-manage/SKILL.md
+  - skills/rsp-manage/references/delegation.md
 evidence:
   - Managed workers receive only task semantics needed for safe execution.
 required_contract:

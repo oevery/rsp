@@ -51,6 +51,7 @@ const EXPECTED_RELEASE_REFERENCES = [
 ]
 const EXPECTED_MANAGE_REFERENCES = [
   'closeout.md',
+  'delegation.md',
   'interruption-recovery.md',
   'review-convergence.md',
 ]

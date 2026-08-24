@@ -10,6 +10,8 @@ import { markdownLinks, mutateSemanticUnit, satisfiesSemanticContract } from '..
 const root = fileURLToPath(new URL('../..', import.meta.url))
 const product = join(root, 'skills', 'rsp-manage')
 const skillText = readFileSync(join(product, 'SKILL.md'), 'utf8')
+const delegationText = readFileSync(join(product, 'references', 'delegation.md'), 'utf8')
+const managedComposition = `${skillText}\n${delegationText}`
 const durableReview = readFileSync(join(root, 'skills', 'rsp', 'references', 'durable-review.md'), 'utf8')
 const controlModel = readFileSync(join(root, '.rsp', 'specs', 'skill-control-model.md'), 'utf8')
 const skillSystem = readFileSync(join(root, '.rsp', 'specs', 'skill-system.md'), 'utf8')
@@ -31,6 +33,7 @@ const acceptedEvidenceContract = [
 
 const manageLowFrequencyReferences = [
   'rsp-manage/references/closeout.md',
+  'rsp-manage/references/delegation.md',
   'rsp-manage/references/interruption-recovery.md',
   'rsp-manage/references/review-convergence.md',
 ]
@@ -109,21 +112,20 @@ describe('rsp-manage product and evaluator boundary', () => {
   })
 
   it('keeps the published Skill host-neutral and compact', () => {
-    const { body, frontmatter } = readSkill()
+    const { frontmatter } = readSkill()
     expect(frontmatter).toMatchObject({ name: 'rsp-manage', license: 'MIT', metadata: { author: 'oevery' } })
     expect(frontmatter.metadata.version).toMatch(/^\d{4}\.\d{2}\.\d{2}\.\d+$/u)
-    expect(markdownLinks(skillText)).toEqual(expect.arrayContaining(['references/interruption-recovery.md', 'references/review-convergence.md', 'references/closeout.md']))
+    expect(markdownLinks(skillText)).toEqual(expect.arrayContaining(['references/delegation.md', 'references/interruption-recovery.md', 'references/review-convergence.md', 'references/closeout.md']))
     expect(markdownLinks(skillText)).not.toEqual(expect.arrayContaining(['references/managed-exchange.md', 'references/host-worker-lifecycle.md']))
-    expect(satisfiesSemanticContract(body, delegatedResultContract)).toBe(true)
+    expect(satisfiesSemanticContract(delegationText, delegatedResultContract)).toBe(true)
   })
 
   it('keeps host facts, worker results, and Manager acceptance separate', () => {
-    const { body } = readSkill()
-    expect(satisfiesSemanticContract(body, acceptedEvidenceContract)).toBe(true)
+    expect(satisfiesSemanticContract(delegationText, acceptedEvidenceContract)).toBe(true)
 
-    const workerSelfCertifies = mutateSemanticUnit(body, [/worker/iu, /self-certif/iu, /identity/iu, /acceptance/iu], unit => unit.replace(/never|must not/iu, 'may'))
+    const workerSelfCertifies = mutateSemanticUnit(delegationText, [/worker/iu, /self-certif/iu, /identity/iu, /acceptance/iu], unit => unit.replace(/never|must not/iu, 'may'))
     expect(satisfiesSemanticContract(workerSelfCertifies, acceptedEvidenceContract)).toBe(false)
-    const managerSubstitutes = mutateSemanticUnit(body, [/Manager/iu, /worker result/iu, /reconstruct/iu], unit => unit.replace(/must not|never/iu, 'may'))
+    const managerSubstitutes = mutateSemanticUnit(delegationText, [/Manager/iu, /worker result/iu, /reconstruct/iu], unit => unit.replace(/must not|never/iu, 'may'))
     expect(satisfiesSemanticContract(managerSubstitutes, acceptedEvidenceContract)).toBe(false)
   })
 
@@ -134,7 +136,7 @@ describe('rsp-manage product and evaluator boundary', () => {
       { all: [/host cannot start|cannot start/iu, /stop/iu, /worker-owned mutation/iu, /acceptance/iu, /incomplete/iu] },
       { all: [/already-dispatched/iu, /Discipline worker/iu, /must not|never/iu, /parent Manage routing/iu, /another worker/iu] },
     ]
-    expect(satisfiesSemanticContract(body, dispatchContract)).toBe(true)
+    expect(satisfiesSemanticContract(managedComposition, dispatchContract)).toBe(true)
 
     const simulatedDispatch = mutateSemanticUnit(body, ['`required`', /host worker capability/iu, /simulate/iu], unit => unit.replace(/never perform|must not perform/iu, 'may perform'))
     expect(satisfiesSemanticContract(simulatedDispatch, dispatchContract)).toBe(false)
@@ -405,7 +407,7 @@ describe('rsp-manage product and evaluator boundary', () => {
   it('binds low-frequency Manage references to their route triggers', () => {
     const contracts = {
       'auto-multisurface-routing': {
-        manage: [],
+        manage: ['rsp-manage/references/delegation.md'],
         core: [
           'rsp/references/control-outcome.md',
           'rsp/references/durable-review.md',

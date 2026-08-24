@@ -4,6 +4,8 @@ Load this reference before finalizing an exact publication candidate or reconcil
 
 ## Finalization gate
 
+Finalization inspects public release surfaces and package inventory at the exact candidate—not every internal workflow artifact present in the tag. Require version, date, changelog, notes, migration guidance, comparisons, manifests, package inventory, release checks, and lifecycle closeout to agree. Shipped prose must remain true before, during, and after publication; transient publication or authentication state belongs only in the handoff.
+
 Require all of the following at the exact candidate:
 
 - target version agrees across manifests, changelog heading/date, release notes, migration guidance, and exact-version assertions;
@@ -14,6 +16,8 @@ Require all of the following at the exact candidate:
 - required implementation lifecycle closeout is in the candidate revision and its worktree relationship is explicit.
 
 Any missing evidence yields `not ready` with the failed gate and owner. A `ready` result identifies the version, immutable candidate ref, required external actions, checks, and omissions without executing them.
+
+When Git delivery is authorized, implementation Changes remain independently reviewable and versioned shipped surfaces are finalized in a separate release commit. Return the version, immutable candidate ref, required external actions, fresh checks, omissions, and `ready` or `not ready`. `ready` means internally eligible for a separately authorized operation; it is neither publication authority nor evidence of publication.
 
 ## Reconciliation
 

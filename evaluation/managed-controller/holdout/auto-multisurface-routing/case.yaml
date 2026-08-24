@@ -6,6 +6,7 @@ installed_skills:
   - rsp-manage
   - rsp-implement
 expected_resources:
+  - rsp-manage/references/delegation.md
   - rsp/references/control-outcome.md
   - rsp/references/durable-review.md
   - rsp/references/managed-routing.md

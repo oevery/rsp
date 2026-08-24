@@ -179,6 +179,7 @@ describe('rsp Skill contract', () => {
   it('keeps verification as a standalone read-only Discipline while Manage owns orchestration', () => {
     const verify = readSkill(join(skillsRoot, 'rsp-verify')).body
     const manage = readSkill(join(skillsRoot, 'rsp-manage')).body
+    const delegation = readFileSync(join(skillsRoot, 'rsp-manage', 'references', 'delegation.md'), 'utf8')
 
     expect(verify).toContain('Run one bounded, read-only verification pass')
     expect(verify).toContain('Do not edit product files')
@@ -188,9 +189,10 @@ describe('rsp Skill contract', () => {
     expect(verify).toContain('`boundary: unchanged | changed`')
     expect(verify).toContain('does not prove semantic review')
     expect(verify).toContain('does not grant lifecycle, Git, publication, or acceptance authority')
-    expect(manage).toContain('**Verify:** `rsp-verify`; `pass | fail | unavailable`')
-    expect(manage).toContain('never asks a worker to report host identity, independence')
-    expect(manage).toContain('host must establish that the accepted Fix and Verify came from different workers')
+    expect(manage).toContain('[delegation and host evidence](references/delegation.md)')
+    expect(delegation).toContain('**Verify:** `rsp-verify`; `pass | fail | unavailable`')
+    expect(delegation).toContain('never asks a worker to report host identity, independence')
+    expect(delegation).toContain('host must establish that the accepted Fix and Verify came from different workers')
     expect(manage).not.toContain('`StopDisposition` is exactly')
   })
 

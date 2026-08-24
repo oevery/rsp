@@ -15,6 +15,7 @@ const fallback = read('rules/rsp-rules.md')
 const controlModel = read('.rsp/specs/skill-control-model.md')
 const managed = read('skills/rsp/references/managed-routing.md')
 const manage = read('skills/rsp-manage/SKILL.md')
+const delegation = read('skills/rsp-manage/references/delegation.md')
 const closeout = read('skills/rsp-manage/references/closeout.md')
 
 const runtimeOwners = [
@@ -116,13 +117,14 @@ describe('rsp core routing contract', () => {
       { all: [/delegated Discipline/iu, /owns/iu, /result/iu] },
       { all: [/Manage/iu, /no universal worker receipt/iu, /never asks/iu, /identity/iu, /independence/iu] },
     ]
-    expect(satisfiesSemanticContract(manage, delegationContract)).toBe(true)
+    expect(markdownLinks(manage)).toContain('references/delegation.md')
+    expect(satisfiesSemanticContract(delegation, delegationContract)).toBe(true)
     expect(markdownLinks(manage)).toContain('references/closeout.md')
     expect(satisfiesSemanticContract(closeout, [
       { all: [/give `rsp-commit`/iu, /WorkOwner/u, /paths/iu, /evidence/iu, /authority/iu, /receipt/iu] },
     ])).toBe(true)
 
-    const managerOwnedResult = mutateSemanticUnit(manage, [/delegated Discipline/iu, /owns/iu, /result/iu], unit => unit.replace(/delegated Discipline/iu, 'Manage'))
+    const managerOwnedResult = mutateSemanticUnit(delegation, [/delegated Discipline/iu, /owns/iu, /result/iu], unit => unit.replace(/delegated Discipline/iu, 'Manage'))
     expect(satisfiesSemanticContract(managerOwnedResult, delegationContract)).toBe(false)
   })
 })
