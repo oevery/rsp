@@ -100,15 +100,19 @@ describe('project status boundary', () => {
     expect(toStatusJson(view)).toEqual({
       command: 'status',
       ok: true,
-      filters: { focused: false, blocked: false, stale: null },
       focused: [],
       records: [record({ name: 'alpha', summary: '可读结果' }).output],
       groups: [],
-      plan: { nodes: [], ready: [], edges: [], blocked: [], waves: [] },
+      plan: { nodes: [], edges: [], blocked: [], waves: [] },
       summary: { total: 1, focused: 0, blocked: 0 },
+      diagnostics: [],
+    })
+    const filtered = toStatusJson(deriveStatusView(snapshot([record({ name: 'alpha' })]), { focused: true }))
+    expect(filtered.filters).toEqual({ focused: true, blocked: false, stale: null })
+    expect(toStatusJson(view, { verbose: true })).toMatchObject({
+      filters: { focused: false, blocked: false, stale: null },
       nextActions: ['Open changes: alpha', 'Run: rsp focus alpha', 'Or run: rsp create <name>'],
       archiveTrend: [],
-      diagnostics: [],
       runtime: [],
     })
     expect(toStatusJsonError({ code: 'invalid_stale_filter', message: 'invalid' }, { focused: true, blocked: false })).toEqual({
@@ -118,12 +122,9 @@ describe('project status boundary', () => {
       focused: [],
       records: [],
       groups: [],
-      plan: { nodes: [], ready: [], edges: [], blocked: [], waves: [] },
+      plan: { nodes: [], edges: [], blocked: [], waves: [] },
       summary: { total: 0, focused: 0, blocked: 0 },
-      archiveTrend: [],
-      nextActions: [],
       diagnostics: [],
-      runtime: [],
       error: { code: 'invalid_stale_filter', message: 'invalid' },
     })
 

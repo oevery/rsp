@@ -12,7 +12,6 @@ npx -y @oevery/rsp@latest init --with-project-setup
 
 ```bash
 npx -y @oevery/rsp@latest doctor
-npx -y @oevery/rsp@latest status --json
 npx -y @oevery/rsp@latest status
 ```
 

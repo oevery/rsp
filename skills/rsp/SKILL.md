@@ -19,7 +19,7 @@ Use this Skill for RSP setup or repair, focused `.rsp/` work, and the durable-up
 
 ## Derive one next action
 
-Read user intent, nearest authority, `rsp status --json`, the selected Change and its readiness, fresh verification evidence, and blockers. Stages are derived guidance, never persisted state.
+Read user intent, nearest authority, plain `rsp status`, the selected Change and its readiness, fresh verification evidence, and blockers. Use `rsp status --json` only when exact dependency fields or another explicit machine projection is needed; use `--json --verbose` for downgraded status details. Stages are derived guidance, never persisted state.
 
 Use the canonical transient control vocabulary from the maintainer Skill Control Model. Before Core returns or composes a phase result, read the canonical [control outcome](references/control-outcome.md) contract. Route and stop dispositions, dispatch disposition, topology, lane results, acceptance, and closeout remain nested phase-specific details or gates; do not expose them as peer status flows or persist any control object. Core transfers current-phase control to Manage or one Discipline and receives its bounded result. Manage-to-worker communication is delegation, not control transfer: the worker never becomes owner of the managed goal. Core may mutate only RSP control-plane state; product mutation belongs to Implement or a bounded manual Discipline action. Every stop is fail-closed until its declared resume rule succeeds.
 

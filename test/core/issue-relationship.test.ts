@@ -65,7 +65,7 @@ describe('change issue relationships', () => {
     const content = await readFile(changePath, 'utf8')
     expect(parseIssueRelationships(parseFrontmatter(content))).toEqual([{ url: issue, relation: 'closes' }])
 
-    const status = JSON.parse(execFileSync('node', [cli, 'status', '--json'], { cwd: root, encoding: 'utf8' }))
+    const status = JSON.parse(execFileSync('node', [cli, 'status', '--json', '--verbose'], { cwd: root, encoding: 'utf8' }))
     const show = JSON.parse(execFileSync('node', [cli, 'show', 'linked', '--json'], { cwd: root, encoding: 'utf8' }))
     expect(status.records[0].issues).toEqual([{ url: issue, relation: 'closes' }])
     expect(show.change.issues).toEqual([{ url: issue, relation: 'closes' }])
@@ -118,7 +118,7 @@ describe('change issue relationships', () => {
     await writeFile(join(root, '.rsp', 'archives', '2026-07-29_legacy-list.md'), list)
 
     const history = JSON.parse(execFileSync('node', [cli, 'history', '--json'], { cwd: root, encoding: 'utf8' }))
-    const status = JSON.parse(execFileSync('node', [cli, 'status', '--json'], { cwd: root, encoding: 'utf8' }))
+    const status = JSON.parse(execFileSync('node', [cli, 'status', '--json', '--verbose'], { cwd: root, encoding: 'utf8' }))
 
     expect(history.ok).toBe(true)
     expect(history.records.map((record: { workRef: string }) => record.workRef)).toEqual(['legacy-list', 'legacy-scalar', 'legacy-absent'])

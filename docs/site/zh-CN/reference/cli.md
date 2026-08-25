@@ -82,11 +82,11 @@ rsp history <work-ref> [--json [--compact]]
 
 在真实的交互式终端中，不带子命令的 RSP 会打开与 `rsp ui` 相同的面板。CI、管道、重定向流与 `TERM=dumb` 接收静态命令输出。
 
-普通 `rsp status` 以紧凑形式保留当前聚焦、Change 与 Group 摘要、进度、阻塞项和派生的下一步。增加 `--verbose` 可查看完整依赖森林、归档趋势和运行时诊断。有效项目配置请使用 `rsp config` 或 `rsp config --json`。JSON 以结构化形式提供工作流事实，不重复配置投影，也不增加执行环境状态。
+普通 `rsp status` 是人类和 AI 的默认语义视图：以紧凑形式保留当前聚焦、Change 与 Group 摘要、进度、阻塞项和派生的下一步。在交互式终端中，使用 `rsp` 或 `rsp ui` 打开面板。只有需要精确机器字段时才使用 `rsp status --json`；默认投影保留当前工作、摘要、依赖、波次和结构化诊断。使用 `rsp status --json --verbose` 可补回过滤器、下一步、归档趋势和运行时诊断。有效项目配置请使用 `rsp config` 或 `rsp config --json`。
 
 `status` 从完整工作树派生精确的依赖、就绪工作、阻塞项与稳定波次。`check` 校验 Change 结构，并警告未完成的占位符或待澄清标记。`history` 直接读取保留的归档文件，默认返回 20 条、最多 100 条；筛选参数包括 `--limit`、`--since`、`--until`、`--kind`、`--group` 与 `--search`。
 
-产生 JSON 的命令——`status`、`show`、`ready`、`check`、`doctor`、`specs` 和 `history`——支持 `--json --compact`，把相同值序列化成一行并以 LF 结尾。不带 `--json` 使用 `--compact` 无效。
+产生 JSON 的命令——`status`、`show`、`ready`、`check`、`doctor`、`specs` 和 `history`——支持 `--json --compact`，把相同投影序列化成一行并以 LF 结尾。对 `status`，`--json --verbose` 会恢复辅助展示字段和运行时诊断。不带 `--json` 使用 `--compact` 无效。
 
 ## 面板快捷键
 

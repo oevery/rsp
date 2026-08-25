@@ -15,7 +15,7 @@ Follow Core's response-versus-artifact language boundary for all user-visible co
 
 ## Validate the selected goal
 
-Core owns initial Manage qualification and the `selected | declined` route result. Manage never creates, focuses, reshapes, or requalifies a durable owner. Before mutation, reread the selected Change or Group, relevant Specs and Decisions, authority envelope, `rsp status --json`, current checkout, and decisive evidence.
+Core owns initial Manage qualification and the `selected | declined` route result. Manage never creates, focuses, reshapes, or requalifies a durable owner. Before mutation, reread the selected Change or Group, relevant Specs and Decisions, authority envelope, plain `rsp status`, current checkout, and decisive evidence. Use `rsp status --json` only when exact dependency fields are needed.
 
 Stop and return to Core when the handoff is incomplete or a true owner, WorkRef topology, route, declared behavior, acceptance, interface, scope, mutation-authority, or external-action-authority boundary changed. Otherwise continue the selected goal without repeating qualification. Use only the execution location and worker capabilities supplied by the host; never infer isolation, identity, or completion.
 

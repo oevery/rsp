@@ -254,11 +254,18 @@ export interface ChangeGroupStatusOutput {
   warnings: string[]
 }
 
+export interface StatusJsonPlanOutput {
+  nodes: ChangeDependencyNodeOutput[]
+  edges: ChangeDependencyEdgeOutput[]
+  blocked: ChangeDependencyBlockerOutput[]
+  waves: string[][]
+}
+
 /** Stable JSON envelope shared by successful and command-boundary status output. */
 export interface StatusJsonShape {
   command: 'status'
   ok: boolean
-  filters: {
+  filters?: {
     focused: boolean
     blocked: boolean
     stale: number | null
@@ -266,16 +273,16 @@ export interface StatusJsonShape {
   focused: string[]
   records: StatusRecordOutput[]
   groups: ChangeGroupStatusOutput[]
-  plan: ChangeDependencyPlanOutput
+  plan: StatusJsonPlanOutput
   summary: {
     total: number
     focused: number
     blocked: number
   }
-  nextActions: string[]
-  archiveTrend: Array<{ month: string, count: number }>
+  nextActions?: string[]
+  archiveTrend?: Array<{ month: string, count: number }>
   diagnostics: CommandDiagnostic[]
-  runtime: RuntimeDiagnostic[]
+  runtime?: RuntimeDiagnostic[]
 }
 
 /** Parsed ADDED/MODIFIED/REMOVED delta markers from a change's Spec section. */

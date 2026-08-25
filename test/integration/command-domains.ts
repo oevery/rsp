@@ -307,7 +307,7 @@ describe('typed work references', () => {
     await mkdir(nestedDir, { recursive: true })
     await writeFile(join(nestedDir, 'api.md'), renderChange('release/backend/api'))
 
-    const result = spawnSync('node', [cliPath(), 'status', '--json'], { cwd: statusDir, encoding: 'utf-8' })
+    const result = spawnSync('node', [cliPath(), 'status', '--json', '--verbose'], { cwd: statusDir, encoding: 'utf-8' })
     const output = JSON.parse(result.stdout)
 
     expect(result.status).toBe(1)
@@ -628,7 +628,7 @@ describe('change groups', () => {
     execSync(`node ${cliPath()} archive release/api`, { cwd: groupDir })
     execSync(`node ${cliPath()} archive release/ui`, { cwd: groupDir })
 
-    const before = JSON.parse(execSync(`node ${cliPath()} status --json`, { cwd: groupDir, encoding: 'utf-8' }))
+    const before = JSON.parse(execSync(`node ${cliPath()} status --json --verbose`, { cwd: groupDir, encoding: 'utf-8' }))
     expect(before.groups[0]).toEqual(expect.objectContaining({
       name: 'release',
       readyToClose: true,

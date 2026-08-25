@@ -324,12 +324,12 @@ describe('status commands', () => {
     await writeFile(join(groupDir, 'z-ready-second.md'), renderChange('delivery/z-ready-second'))
     await writeFile(join(groupDir, 'a-ready-third.md'), renderChange('delivery/a-ready-third'))
 
-    const output = JSON.parse(execSync(`node ${cliPath()} status --json`, { cwd: statusDir, encoding: 'utf-8' }))
+    const output = JSON.parse(execSync(`node ${cliPath()} status --json --verbose`, { cwd: statusDir, encoding: 'utf-8' }))
 
     expect(output.nextActions).toContain('Run: rsp focus delivery/z-ready-second')
     expect(output.nextActions).not.toContain('Run: rsp focus delivery/blocked-first')
     expect(output.nextActions).not.toContain('Run: rsp focus delivery/a-ready-third')
-    expect(output.plan.ready).toEqual(['delivery/z-ready-second', 'delivery/a-ready-third'])
+    expect(output.plan.waves[0]).toEqual(['delivery/z-ready-second', 'delivery/a-ready-third'])
   })
 
   it('inherits a Group Brief blocker into the derived child execution plan', async () => {
@@ -345,7 +345,7 @@ describe('status commands', () => {
 
     const output = JSON.parse(execSync(`node ${cliPath()} status --json`, { cwd: statusDir, encoding: 'utf-8' }))
 
-    expect(output.plan.ready).toEqual([])
+    expect(output.plan.waves[0] ?? []).toEqual([])
     expect(output.plan.waves).toEqual([])
     expect(output.plan.blocked).toEqual([
       { change: 'delivery/api', requires: [], external: true },
@@ -410,14 +410,16 @@ describe('status commands', () => {
 
     expect(result.command).toBe('status')
     expect(result.ok).toBe(true)
-    expect(result).toHaveProperty('runtime')
+    expect(result).not.toHaveProperty('runtime')
     expect(result).toHaveProperty('summary')
     expect(result.focused).toEqual(['focused-one'])
     expect(result.records[0].name).toBe('focused-one')
     expect(result.records[0].path).toBe('.rsp/changes/focused-one.md')
     expect(result.records[0].path).not.toContain('\\')
     expect(result.records[0].progress.total).toBeGreaterThan(0)
-    expect(Array.isArray(result.runtime)).toBe(true)
+    const verbose = JSON.parse(execSync(`node ${cliPath()} status --json --verbose`, { cwd: statusDir, encoding: 'utf-8' }))
+    expect(verbose).toHaveProperty('runtime')
+    expect(Array.isArray(verbose.runtime)).toBe(true)
   })
 
   it('derives a deterministic dependency plan from exact Change blockers', async () => {
@@ -447,7 +449,6 @@ describe('status commands', () => {
         { name: 'release', selection: 'selected', state: 'waiting' },
         { name: 'research', selection: 'selected', state: 'ready' },
       ],
-      ready: ['research'],
       edges: [
         { change: 'implement', requires: 'research', reason: 'needs the accepted research model', state: 'open' },
         { change: 'release', requires: 'implement', reason: 'needs the promoted implementation', state: 'open' },
@@ -462,6 +463,7 @@ describe('status commands', () => {
     expect(output.records.find((record: { name: string }) => record.name === 'research').isBlocked).toBe(false)
     expect(output.records.find((record: { name: string }) => record.name === 'implement').isBlocked).toBe(true)
     expect(focused.records.map((record: { name: string }) => record.name)).toEqual(['implement'])
+    expect(focused.filters).toEqual({ focused: true, blocked: false, stale: null })
     expect(focused.plan.edges).toEqual([
       { change: 'implement', requires: 'research', reason: 'needs the accepted research model', state: 'open' },
     ])
@@ -472,7 +474,7 @@ describe('status commands', () => {
     expect(focused.plan.blocked).toEqual([
       { change: 'implement', requires: ['research'], external: false },
     ])
-    expect(focused.plan.ready).toEqual(['research'])
+    expect(focused.plan.waves[0]).toEqual(['research'])
     expect(focused.plan.waves).toEqual([['research'], ['implement']])
 
     const human = execSync(`node ${cliPath()} status --focused`, { cwd: statusDir, encoding: 'utf-8' })
@@ -506,7 +508,7 @@ describe('status commands', () => {
       { name: 'implement', selection: 'selected', state: 'ready' },
       { name: 'research', selection: 'prerequisite', state: 'archived' },
     ])
-    expect(status.plan.ready).toEqual(['implement'])
+    expect(status.plan.waves[0]).toEqual(['implement'])
     expect(status.plan.blocked).toEqual([])
     expect(status.records[0].isBlocked).toBe(false)
     expect(ready.readiness.activeBlockers).toBe(false)
@@ -526,7 +528,7 @@ describe('status commands', () => {
     expect(result.status).toBe(1)
     expect(status.diagnostics).toContainEqual(expect.objectContaining({ code: 'archive_identity_mismatch' }))
     expect(status.plan.edges).toContainEqual(expect.objectContaining({ change: 'implement', requires: 'research', state: 'missing' }))
-    expect(status.plan.ready).toEqual([])
+    expect(status.plan.waves[0] ?? []).toEqual([])
     expect(status.records[0].isBlocked).toBe(true)
   })
 
@@ -547,7 +549,7 @@ describe('status commands', () => {
       { name: 'implement-b', selection: 'selected', state: 'waiting' },
       { name: 'research', selection: 'prerequisite', state: 'ready' },
     ])
-    expect(json.plan.ready).toEqual(['research'])
+    expect(json.plan.waves[0]).toEqual(['research'])
     expect(json.plan.waves).toEqual([['research'], ['implement-a', 'implement-b']])
 
     const human = execSync(`node ${cliPath()} status --focused --verbose`, { cwd: statusDir, encoding: 'utf-8' })
@@ -592,9 +594,9 @@ describe('status commands', () => {
       label: 'Change dependency graph is valid',
     }))
     expect(statusResult.status).toBe(1)
-    expect(status.plan.ready).toEqual([])
+    expect(status.plan.waves[0] ?? []).toEqual([])
     expect(status.plan.waves).toEqual([])
-    expect(status.nextActions).toEqual(['Run: rsp doctor'])
+    expect(status.diagnostics).toContainEqual(expect.objectContaining({ severity: 'error' }))
   })
 
   it('renders the dependency plan and shares resolved blocker truth across read commands', async () => {
@@ -662,7 +664,7 @@ operator guidance
     const statusDir = await createRspFixture('rsp-status-json-no-focus-test')
     await writeFile(join(statusDir, '.rsp', 'changes', 'unfocused-json.md'), renderChange('unfocused-json'))
 
-    const output = execSync(`node ${cliPath()} status --json`, { cwd: statusDir, encoding: 'utf-8' })
+    const output = execSync(`node ${cliPath()} status --json --verbose`, { cwd: statusDir, encoding: 'utf-8' })
     const result = JSON.parse(output)
     expect(result.focused).toEqual([])
     expect(result.nextActions).toContain('Run: rsp focus unfocused-json')
@@ -704,7 +706,7 @@ operator guidance
     expect(statusResult.status).toBe(1)
     expect(status.ok).toBe(false)
     expect(status.diagnostics).toContainEqual(expect.objectContaining({ code: 'invalid_archive_root' }))
-    expect(status.plan.ready).toEqual([])
+    expect(status.plan.waves[0] ?? []).toEqual([])
     expect(checkResult.status).toBe(1)
     expect(check.diagnostics).toContainEqual(expect.objectContaining({ code: 'invalid_archive_root' }))
     expect(ready.readiness.activeBlockers).toBe(true)
@@ -753,7 +755,7 @@ operator guidance
     expect(result.status).toBe(1)
     expect(output.ok).toBe(false)
     expect(output.diagnostics).toContainEqual(expect.objectContaining({ code: 'focused_change_missing', change: 'ghost' }))
-    expect(output.nextActions).toEqual(['Run: rsp doctor'])
+    expect(output.diagnostics).toContainEqual(expect.objectContaining({ severity: 'error' }))
   })
 
   it('does not interpret a symlinked focus group as a marker', async () => {
@@ -810,10 +812,10 @@ operator guidance
       expect(failed).toBe(true)
       expect(result.command).toBe('status')
       expect(result.ok).toBe(false)
-      expect(result).toHaveProperty('runtime')
+      expect(result).not.toHaveProperty('runtime')
       expect(result).toHaveProperty('summary')
       expect(result.diagnostics).toEqual([])
-      expect(result.nextActions).toEqual([])
+      expect(result).not.toHaveProperty('nextActions')
       expect(result.error.code).toBe('invalid_stale_filter')
     })()
   })

@@ -28,7 +28,7 @@ npx -y @oevery/rsp@latest init --with-project-setup
 # 填写 .rsp/changes/project-setup.md
 # 填写 .rsp/specs/design.md
 npx -y @oevery/rsp@latest doctor
-npx -y @oevery/rsp@latest status --json
+npx -y @oevery/rsp@latest status
 ```
 
 然后创建并聚焦一个受跟踪变更：

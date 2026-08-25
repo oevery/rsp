@@ -91,6 +91,15 @@ describe('cli command boundary foundation', () => {
     }
   })
 
+  it('describes status verbose output beyond runtime diagnostics', async () => {
+    const rootCommand = createRootCommand({ version: '0.0.0-test', deprecatedLite: false })
+    const command = await resolveCommand(rootCommand, 'status')
+    const usage = await renderUsage(command)
+
+    expect(usage).toContain('auxiliary status details')
+    expect(usage).toContain('runtime diagnostics')
+  })
+
   it('provides a typed execute-present-exit sequence without interception', async () => {
     const events: string[] = []
     const present = vi.fn((result: { ok: boolean }, args: { command: string }) => {

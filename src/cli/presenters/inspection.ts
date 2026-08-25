@@ -55,7 +55,7 @@ export function presentStatus(result: StatusCliResult, options: InspectionPresen
   if (options.verbose && !options.json)
     printStatusRuntimeDiagnostics(result.view.runtime)
   if (options.json)
-    emitJson(toStatusJson(result.view), options)
+    emitJson(toStatusJson(result.view, { verbose: options.verbose }), options)
   else
     printStatusPlain(result.view, { verbose: options.verbose })
 }

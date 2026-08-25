@@ -28,7 +28,7 @@ npx -y @oevery/rsp@latest init --with-project-setup
 # fill .rsp/changes/project-setup.md
 # fill .rsp/specs/design.md
 npx -y @oevery/rsp@latest doctor
-npx -y @oevery/rsp@latest status --json
+npx -y @oevery/rsp@latest status
 ```
 
 Then create and focus one tracked change:

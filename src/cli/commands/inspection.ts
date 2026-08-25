@@ -92,7 +92,7 @@ const statusCommand = defineCommand({
     ...compactJsonArgs,
     verbose: {
       type: 'boolean',
-      description: 'Print runtime diagnostics for suppressed I/O issues',
+      description: 'Show auxiliary status details and runtime diagnostics',
       default: false,
     },
   },
@@ -106,6 +106,7 @@ const statusCommand = defineCommand({
             output: toStatusJsonError({ code: 'invalid_stale_filter', message: '--stale must be a non-negative integer number of days' }, {
               focused: Boolean(args.focused),
               blocked: Boolean(args.blocked),
+              verbose: Boolean(args.verbose),
             }),
           }
         }

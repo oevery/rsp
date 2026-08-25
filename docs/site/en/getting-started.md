@@ -12,7 +12,6 @@ This creates the `.rsp/` foundation, ensures the RSP entry in `AGENTS.md`, and c
 
 ```bash
 npx -y @oevery/rsp@latest doctor
-npx -y @oevery/rsp@latest status --json
 npx -y @oevery/rsp@latest status
 ```
 
