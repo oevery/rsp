@@ -6,7 +6,7 @@ import type { ShowResult } from '../../commands/show.js'
 import type { SpecsResult } from '../../commands/specs.js'
 import type { SpecsDirectoryNode, SpecsInspection } from '../../specs/model.js'
 import type { ProjectStatusView } from '../../status/model.js'
-import type { RuntimeDiagnostic, StatusJsonShape } from '../../types.js'
+import type { ConfigResult, RuntimeDiagnostic, StatusJsonShape } from '../../types.js'
 import { existsSync } from 'node:fs'
 import { pc, RSP_DIR } from '../../core/config.js'
 import { emitJson } from '../../core/output.js'
@@ -18,6 +18,26 @@ export interface InspectionPresentationOptions {
   json: boolean
   compact: boolean
   verbose?: boolean
+}
+
+export function presentConfig(result: ConfigResult, options: InspectionPresentationOptions): void {
+  if (options.json) {
+    emitJson(result.ok ? result.summary : result, options)
+    return
+  }
+  if (!result.ok) {
+    console.error(`  ${pc.red('Error:')} ${result.diagnostics.map(diagnostic => diagnostic.message).join('; ')}`)
+    return
+  }
+  console.log()
+  console.log(`  ${pc.bold('RSP config')}`)
+  console.log(`  ${pc.dim('Path:')} ${result.path}`)
+  console.log(`  ${pc.dim('Valid:')} ${pc.green('yes')}`)
+  console.log(`  ${pc.dim('Kinds:')} ${result.summary.kinds.join(', ')}`)
+  console.log(`  ${pc.dim('Decision Records:')} ${result.summary.decisions.path}`)
+  console.log(`  ${pc.dim('Manage:')} activation ${result.summary.manage.activation} · closeout ${result.summary.manage.closeout}`)
+  console.log(`  ${pc.dim('Language:')} artifacts ${result.summary.language.artifacts ?? 'unset'} · commit ${result.summary.language.commit ?? 'unset'}`)
+  console.log()
 }
 
 export type StatusCliResult

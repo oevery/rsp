@@ -22,6 +22,7 @@ export function createRootCommand(options: RootCommandOptions) {
       init: setupCommands.init,
       add: setupCommands.add,
       specs: inspectionCommands.specs,
+      config: inspectionCommands.config,
       commit: workCommands.commit,
       create: workCommands.create,
       group: workCommands.group,

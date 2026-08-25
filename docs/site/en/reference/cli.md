@@ -82,7 +82,7 @@ rsp history <work-ref> [--json [--compact]]
 
 Without a subcommand, RSP opens the same dashboard as `rsp ui` in a real interactive terminal. CI, pipes, redirected streams, and `TERM=dumb` receive static command output.
 
-Plain `rsp status` keeps current focus, Change and Group summaries, progress, blockers, and the derived next action compact. Add `--verbose` to inspect effective Manage and language policy, the complete dependency forest, and archive trend. JSON exposes the same workflow facts as structured data without adding execution-environment state or a second registry.
+Plain `rsp status` keeps current focus, Change and Group summaries, progress, blockers, and the derived next action compact. Add `--verbose` to inspect the complete dependency forest, archive trend, and runtime diagnostics. Use `rsp config` or `rsp config --json` for effective project configuration. JSON exposes workflow facts without repeating configuration projections or adding execution-environment state.
 
 `status` derives exact dependencies, ready work, blockers, and stable waves from the complete work tree. `check` validates Change structure and warns about unfinished placeholders or clarification markers. `history` reads retained archive files directly and defaults to 20 results, with a maximum of 100; filters include `--limit`, `--since`, `--until`, `--kind`, `--group`, and `--search`.
 

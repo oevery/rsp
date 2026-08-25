@@ -100,8 +100,6 @@ describe('project status boundary', () => {
     expect(toStatusJson(view)).toEqual({
       command: 'status',
       ok: true,
-      manage: { activation: 'explicit', closeout: 'local' },
-      language: { artifacts: null, commit: null },
       filters: { focused: false, blocked: false, stale: null },
       focused: [],
       records: [record({ name: 'alpha', summary: '可读结果' }).output],
@@ -116,8 +114,6 @@ describe('project status boundary', () => {
     expect(toStatusJsonError({ code: 'invalid_stale_filter', message: 'invalid' }, { focused: true, blocked: false })).toEqual({
       command: 'status',
       ok: false,
-      manage: { activation: 'explicit', closeout: 'manual' },
-      language: { artifacts: null, commit: null },
       filters: { focused: true, blocked: false, stale: null },
       focused: [],
       records: [],
@@ -216,7 +212,6 @@ summary: Frontmatter summary
       log.mockRestore()
     }
 
-    expect(output).toContain('  Manage: activation explicit · closeout local')
     expect(output).toContain('  Dependency graph')
     expect(output).toContain('  Legend: ◎ focused/open  ● ready  ○ waiting  ✓ resolved prerequisite  ! blocked')
   })
@@ -255,7 +250,7 @@ summary: Frontmatter summary
       finally {
         log.mockRestore()
       }
-      expect(output).toContain('  Manage: activation explicit · closeout manual')
+      expect(output).not.toContain('  Manage: activation explicit · closeout manual')
 
       await writeFile(configPath, 'manage: [\n')
       clearConfigCache()
@@ -269,7 +264,7 @@ summary: Frontmatter summary
     }
   })
 
-  it('projects configured effective language values through JSON and plain status', async () => {
+  it('keeps configuration diagnostics separate from status projections', async () => {
     const projectDir = join(tmpdir(), 'rsp-status-language-policy-test', randomUUID())
     await mkdir(join(projectDir, '.rsp', 'changes'), { recursive: true })
     await mkdir(join(projectDir, '.rsp', 'focus.d'), { recursive: true })
@@ -283,7 +278,8 @@ summary: Frontmatter summary
       const inspected = await inspectProjectStatus()
       expect(inspected.language).toEqual({ artifacts: 'en', commit: 'zh-CN' })
       const view = deriveStatusView(inspected)
-      expect(toStatusJson(view).language).toEqual({ artifacts: 'en', commit: 'zh-CN' })
+      expect(toStatusJson(view)).not.toHaveProperty('language')
+      expect(toStatusJson(view)).not.toHaveProperty('manage')
 
       const output: string[] = []
       const log = vi.spyOn(console, 'log').mockImplementation((value = '') => output.push(String(value)))
@@ -293,7 +289,7 @@ summary: Frontmatter summary
       finally {
         log.mockRestore()
       }
-      expect(output).toContain('  Language: artifacts en · commit zh-CN')
+      expect(output).not.toContain('  Language: artifacts en · commit zh-CN')
     }
     finally {
       process.chdir(cwd)

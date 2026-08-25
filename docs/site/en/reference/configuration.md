@@ -30,6 +30,12 @@ Response language remains owned by the user and session and cannot be configured
 
 There is no WorkRef language or style configuration field. `language.default: zh-CN` can select Chinese Change prose without selecting a Chinese WorkRef. When neither explicit user input nor a nearest project/domain convention supplies the identity style, inferred WorkRefs use ASCII lowercase kebab-case. Explicit or project-owned valid Unicode WorkRefs remain supported and are preserved.
 
+## Inspecting effective configuration
+
+Use `rsp config` for a concise human-readable configuration projection or `rsp config --json` for a lightweight automation summary; append `--compact` when a single line is preferred. The command surface still has only the `config` and `config --json` entry points; `--compact` only changes the latter presentation. The command only reads and validates `.rsp/config.yaml`; it does not scan Changes, focus markers, dependency graphs, archives, or Git state.
+
+JSON returns a single-layer effective summary for Change kinds, Decision Records path, Manage policy, and durable language. For example, with only `language.default: zh-CN`, `language.artifacts` and `language.commit` are both `zh-CN`.
+
 ## Decision Records
 
 Decision Records default to `.rsp/specs/decisions/`. If the Host Project already owns ADRs elsewhere, configure exactly one project-relative authoritative directory:

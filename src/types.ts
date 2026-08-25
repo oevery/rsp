@@ -90,6 +90,33 @@ export interface EffectiveLanguagePolicy {
   commit: string | null
 }
 
+export interface ConfigSummary {
+  kinds: string[]
+  decisions: { path: string }
+  manage: ManagePolicy
+  language: EffectiveLanguagePolicy
+}
+
+export interface ConfigSuccessResult {
+  command: 'config'
+  ok: true
+  path: string
+  summary: ConfigSummary
+  diagnostics: CommandDiagnostic[]
+  runtime: RuntimeDiagnostic[]
+}
+
+export interface ConfigErrorResult {
+  command: 'config'
+  ok: false
+  path: string
+  summary: null
+  diagnostics: CommandDiagnostic[]
+  runtime: RuntimeDiagnostic[]
+}
+
+export type ConfigResult = ConfigSuccessResult | ConfigErrorResult
+
 /** User-customizable project configuration from .rsp/config.yaml. */
 export interface RspConfig {
   /** Custom kind values (override built-in defaults when present). */
@@ -231,8 +258,6 @@ export interface ChangeGroupStatusOutput {
 export interface StatusJsonShape {
   command: 'status'
   ok: boolean
-  manage: ManagePolicy
-  language: EffectiveLanguagePolicy
   filters: {
     focused: boolean
     blocked: boolean

@@ -30,6 +30,12 @@ language:
 
 RSP 不提供 WorkRef 语言或风格配置字段。`language.default: zh-CN` 可以选择中文 Change 正文，但不会选择中文 WorkRef。当用户没有显式提供标识，最近的项目或领域也没有命名约定时，推断出的 WorkRef 默认使用 ASCII 小写 kebab-case。显式提供或项目约定选择的有效 Unicode WorkRef 仍然受支持并保持不变。
 
+## 读取有效配置
+
+使用 `rsp config` 查看简洁的有效项目配置，使用 `rsp config --json` 获取自动化读取的有效配置摘要；需要单行结果时可追加 `--compact`。命令形式仍只有 `config` 和 `config --json` 两个入口，`--compact` 只是后者的输出格式选项。该命令只读取并校验 `.rsp/config.yaml`，不会扫描 Changes、focus、依赖图、归档或 Git 状态。
+
+JSON 返回 Change 类型、Decision Records 路径、Manage 策略和持久化语言的单层有效摘要。例如仅配置 `language.default: zh-CN` 时，输出中的 `language.artifacts` 和 `language.commit` 都是 `zh-CN`。
+
 ## Decision Records
 
 Decision Records 默认位于 `.rsp/specs/decisions/`。如果宿主项目已在其他位置拥有 ADR，只配置一个项目相对的权威目录：

@@ -1,5 +1,6 @@
 import { defineCommand } from 'citty'
 import { runCheck } from '../../commands/check.js'
+import { showConfig } from '../../commands/config.js'
 import { runDoctor } from '../../commands/doctor.js'
 import { showHistory } from '../../commands/history.js'
 import { showReady } from '../../commands/ready.js'
@@ -9,7 +10,24 @@ import { showStatus } from '../../commands/status.js'
 import { toStatusJsonError } from '../../status/v3-json.js'
 import { executeCliCommand } from '../adapter.js'
 import { compactJsonArgs } from '../capabilities.js'
-import { presentCheck, presentDoctor, presentHistory, presentReady, presentShow, presentSpecs, presentStatus } from '../presenters/inspection.js'
+import { presentCheck, presentConfig, presentDoctor, presentHistory, presentReady, presentShow, presentSpecs, presentStatus } from '../presenters/inspection.js'
+
+const configCommand = defineCommand({
+  meta: {
+    name: 'config',
+    description: 'Inspect effective project configuration without scanning work state',
+  },
+  args: {
+    ...compactJsonArgs,
+  },
+  async run({ args }: { args: { json: boolean, compact: boolean } }) {
+    await executeCliCommand({
+      execute: () => showConfig(),
+      present: result => presentConfig(result, args),
+      exitCode: result => result.ok ? undefined : 1,
+    }, args)
+  },
+})
 
 const specsCommand = defineCommand({
   meta: {
@@ -268,6 +286,7 @@ const historyCommand = defineCommand({
 })
 
 export const inspectionCommands = {
+  config: configCommand,
   specs: specsCommand,
   ready: readyCommand,
   show: showCommand,

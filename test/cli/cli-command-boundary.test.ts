@@ -58,6 +58,7 @@ describe('cli command boundary foundation', () => {
       'init',
       'add',
       'specs',
+      'config',
       'commit',
       'create',
       'group',
