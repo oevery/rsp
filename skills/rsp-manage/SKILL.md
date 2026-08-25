@@ -9,15 +9,15 @@ metadata:
 
 # RSP Manage
 
-Manage one requested goal selected by Core from an explicit request or effective `manage.activation: auto`. Enter only with one selected shape-ready Change or shallow Group plus the goal, WorkRef, authority envelope, decisive qualification evidence, closeout ceiling, and return boundaries. Manage owns same-goal coordination, evidence acceptance, review convergence, lifecycle closeout, and eligible Commit orchestration. Exact Git procedure remains owned by `rsp-commit`. Keep artifacts durable and process data transient. Automatic activation grants selection, not mutation.
+Manage one requested goal selected by Core from an explicit request or effective `manage.activation: auto`. Enter with one selected shape-ready Change or shallow Group plus a bounded next action, WorkRef reference, authority pointer, decisive qualification result, closeout ceiling, and return boundaries. Manage owns same-goal coordination, evidence acceptance, review convergence, lifecycle closeout, and delivery-kind orchestration. Exact Git procedure remains owned by `rsp-commit`. Keep artifacts durable and process data transient; do not create a persisted GoalEnvelope or controller record. Automatic activation may complete an authorized Shape → Core → Manage route, but configuration grants no product or delivery authority.
 
 Follow Core's response-versus-artifact language boundary for all user-visible control narration; when the response language differs, keep exact canonical values only as secondary parenthesized or code-formatted tokens.
 
 ## Validate the selected goal
 
-Core owns initial Manage qualification and the `selected | declined` route result. Manage never creates, focuses, reshapes, or requalifies a durable owner. Before mutation, reread the selected Change or Group, relevant Specs and Decisions, authority envelope, plain `rsp status`, current checkout, and decisive evidence. Use `rsp status --json` only when exact dependency fields are needed.
+Core owns initial Manage qualification and the `selected | declined` route result. Manage never creates, focuses, or reshapes a durable owner and never repeats direct-versus-managed qualification. Before mutation, reread the selected Change or Group, relevant Specs and Decisions, the current authority pointer, plain `rsp status`, current checkout, and decisive evidence. Use `rsp status --json` only when exact dependency fields are needed.
 
-Stop and return to Core when the handoff is incomplete or a true owner, WorkRef topology, route, declared behavior, acceptance, interface, scope, mutation-authority, or external-action-authority boundary changed. Otherwise continue the selected goal without repeating qualification. Use only the execution location and worker capabilities supplied by the host; never infer isolation, identity, or completion.
+Stop and return to Core when the handoff is incomplete or a true owner, WorkRef topology, route, declared behavior, acceptance, interface, scope, mutation-authority, or external-action-authority boundary changed. Otherwise continue the selected goal and re-read only the authoritative facts needed by the current checkpoint. Use only the execution location and worker capabilities supplied by the host; never infer isolation, identity, or completion.
 
 Return one bounded managed phase result for Core's outer `ControlOutcome`:
 
@@ -86,7 +86,7 @@ Do not impose a whole-run dispatch quota. Skip optional Diagnose or Inspect work
 
 ## Continue and load low-frequency branches
 
-After inspecting changed paths, local diff, and declared verification, continue only while goal, WorkRef topology, route, behavior, acceptance, interface, scope, and authority remain unchanged. Return changed boundaries to Core.
+After inspecting changed paths, local diff, and declared verification, continue only while goal, WorkRef topology, route, behavior, acceptance, interface, scope, and authority remain unchanged. Same-owner phase results stay in Manage. At closeout, derive one delivery kind: direct, change, integration, group, or release. Return changed boundaries to Core; Core may continue, invoke Shape, ask the owner, or stop.
 
 Load a low-frequency procedure only after its branch trigger is established:
 

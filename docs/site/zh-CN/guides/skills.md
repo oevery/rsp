@@ -47,7 +47,7 @@ RSP 发布一个由十二项与宿主无关的 Skill 组成的默认套件，供
 
 ## 控制结果
 
-RSP 使用唯一的临时外层 `ControlOutcome` 解释当前进展，而不会创建持久化控制器状态。它报告 WorkRef、`mode: solo | delegated | coordinated`、`status: running | waiting | completed`、阶段结果或停止原因、决定性证据、存在时的 changed artifacts、下一 owner/action，以及可选 recovery。状态只允许 `running -> waiting | completed` 与 `waiting -> running | completed`；route、topology、lane result、acceptance 和 closeout 只作为嵌套细节或门槛，不形成并列状态流。Core 仍在 specialist、direct、managed、Shape 或 stop 中选择一条 route。一个 ready owner、一个 writer、一个 execution phase、一个 integrated decisive check，且没有 recovery、独立 acceptance、受管 lifecycle 或 ready successor 时保持 direct；多个文件或文档表面本身不会改变路由。
+RSP 使用唯一的临时外层 ControlOutcome 解释当前进展，而不会创建持久化控制器状态。默认只使用 Work、Phase、Result 或 Stop、Evidence、Next；只有活跃时才加入 Mode、State、Changed、Resume。机器 mode 仍是 solo | delegated | coordinated，机器 status 仍是 running | waiting | completed。route、topology、lane result、acceptance 和 closeout 只作为嵌套细节或门槛，不形成并列状态流。Core 仍在 specialist、direct、managed、Shape 或 stop 中选择一条 route。一个 ready owner、一个 writer、一个 execution phase、一个 integrated decisive check，且没有 recovery、独立 acceptance、受管 lifecycle 或 ready successor 时保持 direct；多个文件或文档表面本身不会改变路由。
 
 工作归属、决策归属、临时交接、执行不确定性与验收是不同概念。`WorkOwner` 表示选定的 Change 或浅层 Group，`DecisionOwner` 表示必须作出实质决策的人或权限来源，`NextOwner` 表示下一个控制或执行能力。每次停止都必须说明下一位 owner、所需输入，以及工作应经 Shape 或 Core 返回，还是等待新的证据、环境、验证或能力。必需 worker 未实际创建或没有有效 receipt 时，只能视为能力不可用，绝不能视为成功完成。
 
@@ -74,7 +74,7 @@ manage:
 - `explicit`：仅在明确请求时选择 Manage。
 - `auto`：保留 specialist 路径后，Core（核心协议）先解析 ready owner，只在当前证据存在上述协调义务时选择 Manage；否则继续 direct Core 或 Discipline 路径。
 
-Core 先把一个明确的 shape-ready Change 或浅层 Group 解析为 `WorkOwner`，并独占首次 Manage 资格判断及 `selected | declined` 路由结果。缺少或未就绪的归属在独立规划产物权限下直接进入 Shape；Shape 把 ready WorkOwner 返回 Core 重新路由，绝不直接恢复 Manage。Manage 一旦被选中，只校验 handoff 完整性以及当前 owner、权限和归属差异是否漂移，不重复判断 direct 还是 managed。普通同范围 receipt 只需检查实际路径和局部 diff；正常 Fix 在已声明验收内实现行为时不会触发完整 owner 重读。只有发现或新请求改变已声明行为、验收或公共接口边界，或出现其他失效信号、跨会话恢复、closeout 时，才扩大重读并返回 Core。
+Core 先把一个明确的 shape-ready Change 或浅层 Group 解析为 `WorkOwner`，并独占首次 Manage 资格判断及 `selected | declined` 路由结果。缺少或未就绪的归属在当前请求已独立授予规划产物权限时直接进入 Shape；`manage.activation: auto` 下，明确且已授权的非 tiny 目标会在 Shape → Core → Manage 后继续，无需用户再次请求；`explicit` 则等待后续明确继续。Manage 一旦被选中，只校验当前 owner 和归属 diff 是否漂移，不重复判断 direct 还是 managed。普通同范围 receipt 留在 Manage 内，并检查实际路径和局部 diff。只有发现或新请求改变已声明行为、验收、公共接口、owner、topology、范围或权限边界，或出现其他失效信号、跨会话恢复、closeout 时，才扩大重读并返回 Core。
 
 受管执行中，`solo` 不使用 worker，`delegated` 使用一个兼容的 primary WorkerSession，`coordinated` 使用多个 worker 或一个寻求独立性的 worker 义务。Manage 派生临时 `ExecutionFrame`，并把现有七种 topology——`control-action`、longitudinal、sequential、parallel-wave、read-only-fan-out、bounded-correction 与 independent-verify——保留为内部策略。fresh WorkerSession 接收完整 `Assignment`；只有实际观察到的同一兼容 WorkerSession 才能接收 `AssignmentDelta`，省略字段仅继承它紧邻的已接受 Assignment 或 AssignmentDelta 边界。session 丢失或边界失效时必须使用 fresh worker 与完整 Assignment。Worker 返回的 `Receipt` 包含 result、changed paths、精确 verification、omissions、boundary status、证据有效性与资源释放结果。Token 或上下文成本绝不改变权限、安全、验收、完成或必需验证，只能在同样安全且获授权的策略之间打破平局。
 
@@ -86,7 +86,7 @@ Diagnose 与私有 Inspect lane 保持只读；Fix 是其修改边界内的唯�
 - `lifecycle`：所需固定范围变更审查干净且持久化写回判断完成后可以归档；提交仍然独立。
 - `local`：自动归档符合条件、已验证、非小型且归属边界干净、路径精确、无混杂或越界改动的受管终态边界，并把这些精确路径一次性路由到本地 Commit，无需用户再次请求。
 
-Manage 负责推导 commit 资格、时机和 Commit envelope；`rsp-commit` 独占精确暂存、message 构造、一次本地提交和提交后观察。
+Manage 负责推导 commit kind、时机和 compact delivery request；rsp-commit 负责重新校验 owner、精确暂存、message 构造、一次本地提交和提交后观察。
 
 `activation` 永远不授予规划或产品修改权限。对于当前已选择且通过资格判断的 Manage，`closeout` 仅作为上述自动生命周期/本地 Git 权限上限，且更近的限制仍可收窄它。推送、标签、发布、部署、批准、人工验收及其他外部操作始终需要显式授权。
 

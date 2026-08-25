@@ -54,7 +54,7 @@ RSP 分离三类信息：
 - `changes/`：open work。
 - `archives/`：completed history。
 
-`focus.d/` 是唯一 current-focus truth source。
+`focus.d/` 是 open work 的 FocusSet truth source；其中每个 marker 指向一个当前 open work 候选，AI 可以从集合中选择默认操作对象。
 
 生命周期只有两个状态：
 
@@ -274,9 +274,9 @@ Open work。
 
 ### `.rsp/focus.d/`
 
-唯一 current-focus source。
+open work 的 FocusSet source。
 
-focus marker 指向当前 open work。
+focus marker 指向一个当前 open work 候选；多个 marker 可以同时存在。
 
 ### `.rsp/archives/`
 

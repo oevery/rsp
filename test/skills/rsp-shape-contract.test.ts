@@ -38,7 +38,7 @@ describe('rsp-shape Skill contract', () => {
     expect(body).toContain('Keep a cohesive correction in the current Change')
     expect(body).toContain('one Change for an independently closable result')
     expect(body).toContain('one shallow Group for at least two such results sharing the goal')
-    expect(body).toContain('fresh qualification without another authorization round')
+    expect(body).toContain('fresh route derivation without another authorization round')
     expect(body).toContain('Stop on changed behavior, acceptance, public interfaces, goal scope, mutation authority, or external action')
   })
 

@@ -21,7 +21,7 @@ Resolve before judging:
 - nearest project instructions and only relevant Specs and Decision Records;
 - any caller-supplied implementation summary.
 
-Do not switch branches or mutate the worktree to discover scope. If the comparison point is unavailable, report the review as blocked. If multiple focus markers or authorities select different intent, name the conflict, mark dependent pipelines blocked, and do not guess. Continue only pipelines whose inputs remain authoritative.
+Do not switch branches or mutate the worktree to discover scope. If the comparison point is unavailable, report the review as blocked. If the selected WorkRefs or authorities select different intent, name the conflict, mark dependent pipelines blocked, and do not guess; multiple focus markers alone are only candidate context. Continue only pipelines whose inputs remain authoritative.
 
 The user request fixes the requested outcome and allowed operations subject to nearest project instructions. The selected Change defines the intended delta, Specs define stable current facts, and Decision Records define lasting rationale. Implementation and tests are evidence, not authority for missing requirements. Report missing authority instead of inventing a rule, acceptance criterion, or preference.
 

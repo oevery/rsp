@@ -9,7 +9,7 @@ const skill = readFileSync(join(root, 'skills', 'rsp-verify', 'SKILL.md'), 'utf8
 describe('rsp-verify Skill contract', () => {
   it('is a portable read-only Discipline with bounded results', () => {
     expect(skill).toContain('name: rsp-verify')
-    expect(skill).toContain('one explicit WorkRef or one unambiguous focus marker')
+    expect(skill).toContain('one explicit WorkRef or one AI-resolved candidate from the open FocusSet')
     expect(skill).toContain('Do not edit product files')
     expect(skill).toContain('Verify does not select worker identity or isolation')
     expect(skill).toContain('any identity or independence evidence comes from the host')

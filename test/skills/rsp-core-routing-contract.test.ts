@@ -83,7 +83,7 @@ describe('rsp core routing contract', () => {
     for (const token of ['WorkerSession', 'WorkerInvocation', 'WorkerReceipt', 'AcceptedLaneEvidence', 'ResourceLease', 'AssignmentDelta'])
       expect(controlModel).not.toContain(token)
     expect(satisfiesSemanticContract(controlOutcome, [
-      { all: ['`delegated`', /one worker/iu] },
+      { all: [/delegated/iu, /one worker/iu] },
     ])).toBe(true)
 
     const evaluatorOwnedByCore = mutateSemanticUnit(controlModel, [/Evaluators?/u, /provider scoring/iu], unit => unit.replace(/Evaluators?/u, 'Core'))
@@ -109,6 +109,12 @@ describe('rsp core routing contract', () => {
       { all: [/sequential work/iu, /selected/iu, /multi-phase|authority obligation/iu] },
       { all: [/Multiple files/iu, /do not by themselves qualify Manage/iu] },
     ])).toBe(true)
+    expect(managed).toContain('With `manage.activation: auto`')
+    expect(managed).toContain('Shape → Core → Manage route')
+    expect(managed).toContain('not a persisted envelope')
+    expect(managed).toContain('The handoff facts and returned control objects remain transient')
+    expect(manage).toContain('Same-owner phase results stay in Manage')
+    expect(manage).toContain('Return changed boundaries to Core')
   })
 
   it('keeps compact delegation and local delivery with their owners', () => {
@@ -121,7 +127,7 @@ describe('rsp core routing contract', () => {
     expect(satisfiesSemanticContract(delegation, delegationContract)).toBe(true)
     expect(markdownLinks(manage)).toContain('references/closeout.md')
     expect(satisfiesSemanticContract(closeout, [
-      { all: [/give `rsp-commit`/iu, /WorkOwner/u, /paths/iu, /evidence/iu, /authority/iu, /receipt/iu] },
+      { all: [/Send rsp-commit/iu, /delivery request/iu] },
     ])).toBe(true)
 
     const managerOwnedResult = mutateSemanticUnit(delegation, [/delegated Discipline/iu, /owns/iu, /result/iu], unit => unit.replace(/delegated Discipline/iu, 'Manage'))

@@ -13,7 +13,7 @@ Run one bounded, read-only verification pass for an existing RSP WorkRef. Verify
 
 ## Require a declared boundary
 
-Require one explicit WorkRef or one unambiguous focus marker, the selected Change or Group context, its declared `Verify` boundary, the comparison baseline, and the authority to run the named checks. Stop when the owner, scope, baseline, required evidence, or environment is ambiguous. A Group Brief is context only; verify the selected executable child or the explicitly named integration boundary.
+Require one explicit WorkRef or one AI-resolved candidate from the open FocusSet, the selected Change or Group context, its declared `Verify` boundary, the comparison baseline, and the authority to run the named checks. Multiple focus markers are valid candidates; resolve one from user intent and current status before verification. Stop when the owner, scope, baseline, required evidence, or environment is ambiguous. A Group Brief is context only; verify the selected executable child or the explicitly named integration boundary.
 
 Read the nearest project instructions, Core or fallback, selected Change and Brief, relevant Specs and Decisions, current diff, blockers, and the smallest production path needed to understand the declared check. Do not invent checks from generic testability or replace an unexplained failure with a guessed assertion; route that case to `rsp-diagnose`.
 

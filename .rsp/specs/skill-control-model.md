@@ -15,7 +15,7 @@
 - `WorkOwner` is the selected Change or shallow Group. `DecisionOwner` supplies a material decision. `NextOwner` owns the next control or execution action.
 
 ## Route and Ownership
-- Core derives exactly one `RouteDisposition`: `specialist | direct | managed | shape | stop`.
+- Core derives exactly one `RouteDisposition`: `specialist | direct | managed | shape | stop`. After Shape returns a ready owner, Core may immediately derive `managed` again when effective `manage.activation: auto` and current authority permit continuation.
 - Direct execution requires one ready owner, one writer, one execution phase, one integrated decisive check, no recovery, no independent acceptance obligation, no managed lifecycle coordination, and no ready successor.
 - Only a shape-ready WorkOwner may enter Manage qualification. Shape clarifies ownership and returns it to Core; it never executes product work.
 - Manage-to-worker communication is bounded delegation, not phase-control transfer. Manage retains selected-goal control and acceptance.
@@ -28,7 +28,7 @@
 ## Managed Delegation
 - Manage derives `DispatchDisposition: none | preferred | required` after selection. `none` permits a local Discipline action, `preferred` permits truthful local fallback, and `required` fails closed when the declared worker boundary cannot be established.
 - Strategy names such as `longitudinal`, `sequential`, `parallel-wave`, `read-only-fan-out`, `bounded-correction`, and `independent-verify` explain Manager reasoning only. They are neither runtime states nor evidence that dispatch occurred.
-- A delegated task carries only the WorkRef, bounded objective, authority, read/write/verify boundaries, decisive known facts, prohibited actions, stop conditions, and replay caution when needed. It carries no host lifecycle schema, correlation identity, evaluator contract, or acceptance fields.
+- A selected Manage handoff carries only the current WorkRef or Group reference, bounded next action, authority pointer, decisive qualification evidence, closeout ceiling, and return boundary. A delegated task carries only its WorkRef, bounded objective, authority, read/write/verify boundaries, decisive known facts, prohibited actions, stop conditions, and replay caution when needed. Neither carries a persisted GoalEnvelope, host lifecycle schema, correlation identity, evaluator contract, or acceptance fields.
 - Each delegated Discipline owns its result. Diagnose returns cause evidence, Fix returns changed paths and verification, Verify returns named checks and evidence, and Review owns fixed-scope findings. Manage adds no universal worker receipt schema.
 - A required worker result must be worker-authored, attributable through available host evidence, within authority, and validated against actual paths, diff, verification, omissions, and scope. Manager never authors, repairs, reconstructs, or substitutes it.
 - Host observations may establish dispatch, attribution, activity, cancellation, completion, isolation, or distinct workers. Missing observations remain unavailable. Workers never self-certify identity, independence, resource release, evidence validity, or acceptance.

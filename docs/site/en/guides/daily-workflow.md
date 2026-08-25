@@ -10,9 +10,9 @@ rsp focus <work-ref>
 rsp show --focused
 ```
 
-Only markers in `.rsp/focus.d/` select current work. If several focused Changes exist, the user or repository context must identify the one being operated. For grouped work, read the sibling Group Brief before the selected child.
+Markers in `.rsp/focus.d/` form a lightweight FocusSet of open work. If several Changes are focused, the AI resolves the default WorkRef from explicit user mentions, the current request, status, and dependencies; ask only when the requested mutation or delivery boundary remains materially ambiguous. For grouped work, read the sibling Group Brief before the selected child.
 
-Before mutation, inspect the worktree and preserve unrelated modified, staged, or untracked work. Focus and readiness do not grant product mutation, Git, lifecycle, publication, or approval authority.
+Before mutation, inspect the worktree and preserve unrelated modified, staged, or untracked work. Focus, automatic focus, and readiness do not grant product mutation, Git, lifecycle, publication, or approval authority.
 
 ## Route the work
 

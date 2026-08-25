@@ -21,7 +21,7 @@ A request to shape, create, or refine a Change grants artifact authority unless 
 
 Return the request directly to implementation when it is tiny and concrete or the selected Change is already ready. Do not rewrite settled work for style or completeness.
 
-During an explicit managed goal, its original planning-artifact authority remains valid for clear in-scope discovery. Keep a cohesive correction in the current Change; create one Change for an independently closable result, or one shallow Group for at least two such results sharing the goal. Return the ready WorkOwner to Core for fresh qualification without another authorization round. Stop on changed behavior, acceptance, public interfaces, goal scope, mutation authority, or external action.
+During an explicit managed goal, its original planning-artifact authority remains valid for clear in-scope discovery. Keep a cohesive correction in the current Change; create one Change for an independently closable result, or one shallow Group for at least two such results sharing the goal. Return the ready WorkOwner to Core for fresh route derivation without another authorization round. When the invoking request has effective `manage.activation: auto` and independently grants the required planning/product authority, Core may continue directly into Manage; Shape never resumes Manage itself. Stop on changed behavior, acceptance, public interfaces, goal scope, mutation authority, or external action.
 
 ## Resolve material ambiguity
 

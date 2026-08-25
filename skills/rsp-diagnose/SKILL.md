@@ -15,7 +15,7 @@ Follow Core's response-versus-artifact language boundary for all user-visible co
 
 ## Establish bounds
 
-Resolve exactly one executable open Change from an explicit work reference or unambiguous focus. Read the user request, nearest project instructions, relevant context, RSP rules, the sibling Group Brief when present, the selected Change, and only the code, tests, logs, configuration, and worktree evidence needed to investigate.
+Resolve exactly one executable open Change from an explicit WorkRef or an AI-selected candidate in the open FocusSet, using the user request and current status to choose the default. Read the user request, nearest project instructions, relevant context, RSP rules, the sibling Group Brief when present, the selected Change, and only the code, tests, logs, configuration, and worktree evidence needed to investigate.
 
 A diagnosis request grants read-only investigation and safe diagnostic command execution. Editing tests, instrumentation, fixtures, or the Change requires explicit mutation authority. Production correction is outside this Skill even when separate fix authority exists.
 

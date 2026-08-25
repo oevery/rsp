@@ -9,10 +9,10 @@ Read in order:
 1. Nearest `AGENTS.md` for project or module instructions.
 2. Root `CONTEXT-MAP.md` if present, then the relevant nearest `CONTEXT.md`.
 3. Use the project `rsp` Skill at `.agents/skills/rsp/SKILL.md`; hosts may load it through Skill discovery or read it directly. Only when it is absent or cannot be used, read `.rsp/rsp-rules.md` as the fallback protocol.
-4. `.rsp/focus.d/`; marker paths select work, while optional bounded Markdown content is recovery guidance only. For grouped work read the sibling Group Brief, then the explicitly selected focused Change.
+4. `.rsp/focus.d/`; marker paths form the open-work candidate set, while optional bounded Markdown content is recovery guidance only. For grouped work read the sibling Group Brief, then the explicitly selected child Change.
 5. Only the relevant Specs and Decision Records under the configured authoritative path.
 
-If `.rsp/focus.d/` is empty and the user has not provided a concrete task, ask what to work on or suggest `npx -y @oevery/rsp create <name>` for tracked work.
+If `.rsp/focus.d/` is empty or has several candidates, use an explicit WorkRef, the user's mentioned Change, or current status/dependency evidence to resolve the default action.
 Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENTS.md` or `CONTEXT.md`.
 <!-- rsp:end -->
 

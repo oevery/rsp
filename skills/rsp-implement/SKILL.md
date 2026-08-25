@@ -15,7 +15,7 @@ Follow Core's response-versus-artifact language boundary for all user-visible co
 
 ## Select and inspect
 
-Require an explicit WorkRef or one unambiguous focus marker. A Group Brief is context, not executable work. Stop when selection, readiness, product authority, acceptance, or required decisions are unresolved.
+Require an explicit WorkRef or one AI-resolved candidate from the open FocusSet and current user intent. A Group Brief is context, not executable work. Multiple focus markers are valid; resolve one default WorkRef before mutation and stop only when the requested owner or boundary remains materially unresolved. Stop when selection, readiness, product authority, acceptance, or required decisions are unresolved.
 
 Read nearest instructions, Core or fallback, Change and Brief, relevant Specs and decisions, current checkout, then the smallest owning code and test chain. Use normal repository discovery; do not guess owners. Operate only in the execution location actually supplied by the host; Implement never selects or migrates execution environments.
 
