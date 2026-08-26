@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
 import { renderRspAgentsBlock } from '../../src/core/artifacts.js'
 import { getDurableReviewCandidateTargets } from '../../src/core/readiness.js'
+import { satisfiesSemanticContract } from '../support/markdown-contract'
 
 describe('documentation command examples', () => {
   it('keeps the published RSP skill conformant and independently versioned', () => {
@@ -130,7 +131,7 @@ describe('documentation command examples', () => {
       'cli-contracts.md',
       'core-model.md',
       'distribution.md',
-      'skill-system.md',
+      'skill.md',
       'tui.md',
     ].map(name => readFileSync(join(root, '.rsp', 'specs', name), 'utf-8')).join('\n')
 
@@ -143,33 +144,44 @@ describe('documentation command examples', () => {
     expect(setup).toContain('`fixed` entries are real filesystem mutations')
     expect(setup).toContain('an empty list means nothing changed')
     expect(readme).not.toContain('Surface matrix:')
-    expect(skillsGuide).toContain('Compose the suite from evidence')
-    expect(skillsGuide).toContain('No Skill infers commit, push, publication, deployment, approval, or human-acceptance authority')
-    expect(skillsGuide).toContain('Missing or non-ready ownership routes directly to Shape')
-    expect(skillsGuide).toContain('solely owns initial Manage qualification plus the `selected | declined` route result')
-    expect(skillsGuide).toContain('without repeating direct-versus-managed eligibility')
-    expect(skillsGuide).toContain('Workers return a `Receipt` with result, changed paths, exact verification, omissions, boundary status, evidence validity, and resource release')
-    expect(skillsGuide).toContain('clean exact owned boundary')
-    expect(skillsGuide).toContain('continues Shape → Core → Manage without another user request')
-    expect(skillsGuide).not.toContain('Core may invoke Shape only after `needs-shape`')
+    expect(satisfiesSemanticContract(skillsGuide, [
+      { all: [/Compose the suite from evidence/iu] },
+      { all: [/No Skill infers/iu, /commit/iu, /publication/iu, /human-acceptance authority/iu] },
+      { all: [/Missing or non-ready ownership/iu, /directly to Shape/iu] },
+      { all: [/initial Manage qualification/iu, /selected \| declined/iu, /without repeating direct-versus-managed eligibility/iu] },
+      { all: [/Change uses its WorkRef/iu, /Verify/iu] },
+      { all: [/Group uses a named `Integration:` condition/iu, /Group Brief/iu] },
+      { all: [/continues Shape → Core → Manage/iu, /without another user request/iu] },
+    ])).toBe(true)
+    expect(skillsGuide).not.toMatch(/Core[^\n.]*needs-shape/iu)
     expect(cliReference).toContain('a healthy project returns `fixed: []`')
     expect(gettingStarted).toContain('Simple current-session tasks should not create RSP changes unless tracking is intentionally needed')
     expect(zhCliReference).toContain('健康项目会返回 `fixed: []`')
-    expect(zhSkillsGuide).toContain('按证据组合套件')
-    expect(zhSkillsGuide).toContain('任何 Skill 都不推断提交、推送、发布、部署、批准或人工验收权限')
-    expect(zhSkillsGuide).toContain('缺少或未就绪的归属')
-    expect(zhSkillsGuide).toContain('独占首次 Manage 资格判断')
-    expect(zhSkillsGuide).toContain('不重复判断 direct 还是 managed')
-    expect(zhSkillsGuide).toContain('普通同范围 receipt 留在 Manage 内，并检查实际路径和局部 diff')
-    expect(zhSkillsGuide).toContain('归属边界干净、路径精确、无混杂或越界改动')
-    expect(zhSkillsGuide).toContain('会在 Shape → Core → Manage 后继续')
-    expect(zhSkillsGuide).not.toContain('Core 只有在收到 `needs-shape` 后才可调用 Shape')
+    expect(satisfiesSemanticContract(zhSkillsGuide, [
+      { all: [/按证据组合套件/u] },
+      { all: [/任何 Skill 都不推断/u, /提交/u, /发布/u, /人工验收权限/u] },
+      { all: [/缺少或未就绪的归属/u, /直接进入 Shape/u] },
+      { all: [/独占首次 Manage 资格判断/u, /不重复判断 direct 还是 managed/u, /Change 使用 WorkRef/u, /Group 使用 Group reference/u] },
+      { all: [/会在 Shape → Core → Manage 后继续/u, /无需用户再次请求/u] },
+      { all: [/Change 使用 WorkRef/u, /Verify/u] },
+      { all: [/Group 使用 Group Brief/u, /Integration:/u] },
+    ])).toBe(true)
+    expect(zhSkillsGuide).not.toMatch(/Core[^\n。]*needs-shape/iu)
     expect(zhGettingStarted).toContain('简单的当前会话任务默认不应创建 RSP Change')
     expect(projectDesign).toContain('[CLI Contracts](./cli-contracts.md)')
-    expect(projectDesign).toContain('[Skill System](./skill-system.md)')
+    expect(projectDesign).toContain('[Skill](./skill.md)')
     expect(projectSpecs).toContain('`rsp update` and therefore `rsp doctor --fix` remove only reserved root `INDEX.md` or any `00-index.md`')
     expect(projectSpecs).toContain('direct `rsp specs` tree, detail, and search remain the navigation authority after removal')
     expect(projectSpecs).toContain('`rsp doctor --fix` reports only real filesystem mutations')
+    expect(projectSpecs).toContain('Manage derives a transient execution strategy from dependencies, mutation boundaries, verification resources, and host capability')
+    expect(projectSpecs).toContain('A WorkOwner identifies one selected executable owner: an individual Change or a shallow Group')
+    expect(projectSpecs).toContain('A Group reference identifies its Brief and direct child Changes; it is not a WorkRef')
+    expect(projectSpecs).toContain('Core selects the current WorkOwner and routes to Shape, one Discipline, Manage, or a stop')
+    expect(projectSpecs).toContain('Independent Group children and independent tasks within one Change may run concurrently')
+    expect(projectSpecs).toContain('`rsp show --focused` succeeds only when exactly one Focus marker exists')
+    expect(projectSpecs).toContain('included files need not overlap')
+    expect(projectSpecs).toContain('Same-worker evidence can establish `evidence-complete`')
+    expect(projectSpecs).toContain('One-worker delegation is one optional strategy')
     expect(projectSpecs).toContain('Tracked Changes of every size use the same kind-aware scaffold')
     expect(projectSpecs).toContain('`.rsp/rsp-rules.md` is the minimal fallback')
     expect(projectSpecs).toContain('Keep safety, authority, readiness, verification, and completion criteria checkable')

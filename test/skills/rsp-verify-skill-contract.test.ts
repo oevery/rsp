@@ -9,7 +9,12 @@ const skill = readFileSync(join(root, 'skills', 'rsp-verify', 'SKILL.md'), 'utf8
 describe('rsp-verify Skill contract', () => {
   it('is a portable read-only Discipline with bounded results', () => {
     expect(skill).toContain('name: rsp-verify')
-    expect(skill).toContain('one explicit WorkRef or one AI-resolved candidate from the open FocusSet')
+    expect(skill).toContain('one explicit WorkOwner reference or one AI-resolved candidate from the open FocusSet')
+    expect(skill).toContain('A Change WorkOwner uses its WorkRef')
+    expect(skill).toContain('A Group WorkOwner uses its Group reference and a named `Integration:` condition from the Group Brief')
+    expect(skill).toContain('an explicit request may supply a temporary boundary for an in-progress pass')
+    expect(skill).toContain('when a Group has no named boundary for the requested verification')
+    expect(skill).not.toContain('Group Brief alone does not define an executable verification boundary')
     expect(skill).toContain('Do not edit product files')
     expect(skill).toContain('Verify does not select worker identity or isolation')
     expect(skill).toContain('any identity or independence evidence comes from the host')

@@ -1,68 +1,39 @@
-# Project Design: @oevery/rsp
+# Design
 
 ## Purpose
-- RSP is Reliable Software Practice, a repository-native engineering workflow for humans and AI agents.
-- Its composable Skills guide work from unclear intent through implementation, review, verification, durable review, and archive without hidden workflow state or replacement of Host Project authority.
-- Managed execution remains host-native and transient: Core composes one compact outer ControlOutcome, Manage delegates bounded tasks to Discipline workers, host observations supply execution facts when available, and Manager validates results without defining a portable runtime protocol.
-- Rules, Specs, Plans is the lightweight artifact foundation beneath the workflow, not the product-name expansion.
-- The repository keeps durable knowledge, open work, product runtime, distribution, maintainer knowledge, and generated state in explicit owners.
 
-## Stable Facts
-- The canonical domain Specs are:
-  - [Core Model](./core-model.md): artifacts, WorkRefs, Change Groups, lifecycle, dependencies, focus, and durable writeback.
-  - [CLI Contracts](./cli-contracts.md): deterministic commands, filesystem safety, inspection, JSON, history, indexes, and repair.
-  - [Skill System](./skill-system.md): the default twelve-Skill suite, optional project Skills, orthogonal distribution/role/invocation classification, composition, progressive disclosure, Core-owned ready-owner routing, host-owned execution-location boundaries, bounded managed execution-frontier behavior, and authority boundaries.
-  - [Skill Control Model](./skill-control-model.md): canonical transient route, work-owner, frontier, stop/resume, acceptance, and closeout vocabulary shared across Core, Shape, Disciplines, and Manage.
-  - [Interactive TUI](./tui.md): dashboard routing, state, presentation, localization, history, layout, and terminal lifecycle.
-  - [Distribution and Maintainer Research](./distribution.md): package inventory, Skill installation, releases, evaluation provenance, repository layering, and upstream research.
-- Decision Records under the configured authoritative path own lasting rationale for hard-to-reverse choices; Specs own current facts.
-- `docs/maintainers/design-philosophy.md` is explanatory maintainer rationale, not a normative protocol source.
+Define RSP system layering, artifact ownership, dependency direction, and boundaries with the Host Project and Git.
 
-## Boundaries
-- In scope:
-  - Repository-native engineering workflow artifacts, deterministic CLI support, portable Skills, read-only interactive inspection, package distribution, and maintainer research that promotes through normal RSP Changes.
-- Out of scope:
-  - Replacing Git or project trackers; OpenSpec-style multi-file Changes; recursive work hierarchy; automatic scheduling or durable workflow engines; plugin-platform schemas; automatic Spec/Decision promotion; and binding RSP to one IDE, agent, forge, or host.
+## Current facts
 
-## Structure
+- RSP is a repository-native workflow for humans and AI agents. It guides work through durable files, Skills, deterministic CLI operations, verification, review, archive, and delivery.
+- The formal Spec model has six modules: `core`, `skill`, `design`, `cli`, `tui`, and `distribution`. Each module has one authoritative Markdown file.
+- Product runtime lives under `src/` and `bin/`. Published distribution sources live under `rules/` and `skills/`. Maintainer tooling lives under `scripts/`. Research lives under `research/`. Self-hosting workflow state lives under `.rsp/`.
+- Product runtime owns command behavior, artifact interpretation, status, history, Specs inspection, and TUI presentation. It consumes current product artifacts and host evidence.
+- Published Rules and Skills work without a source checkout, research corpus, or upstream cache.
+- Maintainer tooling may inspect product artifacts and research evidence. Product changes enter through a selected normal RSP Change.
+- The Host Project owns code, tests, project instructions, module context, Git, execution environments, and external delivery systems. RSP may read these boundaries but does not replace them.
+- Git owns staging, commit history, branches, remotes, tags, publication, and cross-branch integration. RSP can provide exact reviewed inputs without becoming Git authority.
 
-| Repository area | Directories | Ownership |
-| --- | --- | --- |
-| Product runtime | `src/`, `bin/` | CLI registration, commands, domain interpretation, status/history inspection, filesystem safety, diagnostics, and interactive UI |
-| Product distribution | `rules/`, `skills/` | Bundled fallback source, the default twelve-Skill suite, and the independently installed optional `rsp-structural-audit` project Skill |
-| Project host integration | `.agents/skills/` | Live published-Skill projections and maintainer-only research capability |
-| Maintainer tooling | `scripts/` | Deterministic repository and upstream maintenance workflows |
-| Public guidance | `docs/site/` | Paired English and Simplified Chinese user guides rendered by VitePress |
-| Repository records | `docs/maintainers/`, `docs/migrations/`, `docs/releases/`, `research/` | Explanatory maintainer material, version records, source distillations, cross-source models, and recommendations |
-| Verification | `test/` | Observable product and maintainer-tooling checks |
-| Self-hosting protocol | `.rsp/` | Durable facts, open work, focus, and archive history for this repository |
-| Transient/generated | `.cache/`, `dist/`, dependency directories | Disposable preparation evidence, build output, and installed dependencies |
+## Modules
 
-Key runtime owners:
+- [Core](./core-model.md) owns WorkRef, Change, Group, FocusSet, lifecycle, dependencies, verification, archive, and durable writeback.
+- [Skill](./skill.md) owns capability ownership, composition, routing, delegation, and control boundaries.
+- [Design](./design.md) owns system layering, artifact ownership, and Host/Git/RSP boundaries.
+- [CLI Contracts](./cli-contracts.md) owns deterministic commands, inspection, JSON, history, Specs queries, repair, and local commit boundaries.
+- [TUI](./tui.md) owns interactive scopes, presentation, localization, and terminal lifecycle.
+- [Distribution](./distribution.md) owns package, installation, release, provenance, and the product/research boundary.
 
-- `src/cli.ts` owns process entry, TTY routing, compatibility preprocessing, and the top-level error boundary.
-- `src/cli/` owns Citty registration, command capability metadata, argument mapping, presentation, and exit decisions through one typed adapter boundary.
-- `src/commands/` owns presentation-neutral typed command coordination and mutations; `src/core/` owns shared filesystem, configuration, output helpers, locking, WorkRef classification, and Group interpretation.
-- `src/status/` owns the internal project snapshot, filesystem-backed inspection, pure derivation, exact public JSON adapter, and plain presentation.
-- `src/history/` owns presentation-neutral archive-history inspection, validation, filtering, bounds, and detail projection.
-- `src/specs/` owns presentation-neutral current-file Specs and Decision Record inspection, tree/detail/search projections, bounds, diagnostics, source identity, and generated-index migration classification.
-- `src/commands/specs-index-migration.ts` owns recognized-only generated Specs-index removal, quarantine/postcheck, and rollback.
-- Execution-location selection and cross-branch integration remain outside the product. Manage observes the current host-provided checkout transiently, while `src/commands/commit.ts` owns one exact local commit from an already reviewed staged boundary and returns the complete local receipt.
-- `src/tui/` owns interactive routing state, Ink presentation, localization, layout, and terminal lifecycle.
-- `scripts/upstreams.mjs`, `.agents/skills/distill-upstream/`, and `research/` are maintainer-only owners; `rules/rsp-rules.md` and `skills/` are published sources.
+## Dependency direction
 
-## Dependency Direction
-- `bin/` loads built runtime. The CLI entry routes terminal modes, the registry selects one command adapter, and the adapter invokes one typed command operation before CLI-owned presentation and exit handling.
-- Status may depend on core, while core does not depend on status. Pure status derivation and presenters do not inspect the filesystem or depend on commands or TUI.
-- The TUI may depend on presentation-neutral status, history, and Specs seams; those domain modules and core do not depend on presenters. Ink and Yoga remain isolated to lazy terminal paths and all presentation dependencies stay outside ordinary command evaluation.
-- Product runtime does not import research, caches, host Skill projections, self-hosting `.rsp/` state, or maintainer-only scripts.
-- Published rules and Skills operate without a source checkout, research corpus, or upstream cache.
-- Maintainer tooling and research may inspect product artifacts but reach product surfaces only through a selected normal RSP Change.
-- Self-hosting `.rsp/` artifacts govern this repository's development and are not consumer runtime configuration.
+- Configuration and filesystem safety support artifact interpretation and commands.
+- Core domain interpretation supports status, history, Specs inspection, and command operations.
+- Presentation layers consume presentation-neutral projections. Domain and command layers do not depend on TUI presenters.
+- Research and maintainer tooling may depend on product artifacts for evidence, never the reverse.
+- Self-hosting `.rsp/` artifacts guide repository maintenance and are not consumer runtime configuration.
 
 ## Constraints
-- Prefer the smallest model and artifact owner that correctly solves the workflow problem.
-- Create a new directory or protocol surface only for a selected capability with a distinct owner, not for symmetry or speculative future use.
-- Preserve deterministic, platform-agnostic, human-readable artifacts and machine output without introducing hidden lifecycle state.
-- Keep Focus Capsules sparse, portable, commit-safe recovery projections; ordinary open-Change commits may include them, while cross-device continuation still requires Git transfer and complete current-evidence rederivation.
-- Keep normative runtime details in their domain Spec or owning Skill; keep explanations in README and design philosophy rather than duplicating executable contracts here.
+
+- Prefer the smallest owner and the smallest stable artifact surface.
+- Keep current truth, planned work, rationale, research evidence, and transient execution state separate.
+- Do not introduce a hidden workflow engine, durable controller, runtime protocol, or second authority store.

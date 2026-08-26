@@ -2,7 +2,7 @@ id: host-result-acceptance-separation
 sources:
   - skills/rsp-manage/SKILL.md
   - skills/rsp-manage/references/delegation.md
-  - .rsp/specs/skill-control-model.md
+  - .rsp/specs/skill.md
 evidence:
   - Worker results, host observations, and Manager acceptance remain separate.
 required_contract:

@@ -17,13 +17,13 @@ Resolve before judging:
 
 - one immutable comparison point or explicit fixed file set;
 - reviewed files, including relevant untracked files named by the user;
-- the selected Change and, for grouped work, its Group Brief;
+- the selected WorkOwner: a Change WorkRef, or a Group reference with its Group Brief and direct child Changes;
 - nearest project instructions and only relevant Specs and Decision Records;
 - any caller-supplied implementation summary.
 
-Do not switch branches or mutate the worktree to discover scope. If the comparison point is unavailable, report the review as blocked. If the selected WorkRefs or authorities select different intent, name the conflict, mark dependent pipelines blocked, and do not guess; multiple focus markers alone are only candidate context. Continue only pipelines whose inputs remain authoritative.
+Do not switch branches or mutate the worktree to discover scope. If the comparison point is unavailable, report the review as blocked. If the selected WorkOwner, included WorkRefs, or authorities select different intent, name the conflict, mark dependent pipelines blocked, and do not guess; multiple focus markers alone are only candidate context. Continue only pipelines whose inputs remain authoritative.
 
-The user request fixes the requested outcome and allowed operations subject to nearest project instructions. The selected Change defines the intended delta, Specs define stable current facts, and Decision Records define lasting rationale. Implementation and tests are evidence, not authority for missing requirements. Report missing authority instead of inventing a rule, acceptance criterion, or preference.
+The user request fixes the requested outcome and allowed operations subject to nearest project instructions. The selected WorkOwner defines the intended delta: a Change uses its WorkRef, while a Group uses its Brief and direct child Changes. Specs define stable current facts, and Decision Records define lasting rationale. Implementation and tests are evidence, not authority for missing requirements. Report missing authority instead of inventing a rule, acceptance criterion, or preference.
 
 ## Classify before loading
 
@@ -37,12 +37,13 @@ Run every applicable pipeline and merge the same underlying issue into one cross
 
 ## Report
 
-Render headings, field labels, explanations, and verdict prose in the language explicitly requested by the user; otherwise follow nearest project instructions, then the conversation language. Treat the shape below as semantic field order rather than fixed English wording: translate its human-facing labels when the output language differs. Preserve paths, commands, identifiers, WorkRefs, severity labels `P0`-`P3`, and the values `issues_found`, `clean`, `skipped`, and `blocked` unchanged; when their language differs from the response, retain those values only as secondary exact tokens beside localized narration.
+Render headings, field labels, explanations, and verdict prose in the language explicitly requested by the user; otherwise follow nearest project instructions, then the conversation language. Treat the shape below as semantic field order rather than fixed English wording: translate its human-facing labels when the output language differs. Preserve paths, commands, identifiers, WorkOwner references, WorkRefs, severity labels `P0`-`P3`, and the values `issues_found`, `clean`, `skipped`, and `blocked` unchanged; when their language differs from the response, retain those values only as secondary exact tokens beside localized narration.
 
 Use this shape:
 
 ```md
 ## <localized Review Scope heading>
+- <localized WorkOwner label>: <Change WorkRef or Group reference>
 - <localized Comparison label>: <fixed ref, range, or file set>
 - <localized Intent label>: <authorities, missing, or ambiguous>
 - <localized Code label>: <issues_found | clean | skipped | blocked>

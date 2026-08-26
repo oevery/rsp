@@ -121,18 +121,18 @@ describe('rsp Skill contract', () => {
 
   it('keeps execution-environment ownership outside the published suite', () => {
     const packageJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as { files: string[] }
-    const skillSystem = readFileSync(join(root, '.rsp', 'specs', 'skill-system.md'), 'utf8')
+    const skillSystem = readFileSync(join(root, '.rsp', 'specs', 'skill.md'), 'utf8')
 
     expect(publishedSkillNames).not.toContain('rsp-workspace')
     expect(publishedSkillNames).not.toContain('rsp-land')
     expect(packageJson.files).toContain('skills/')
-    expect(skillSystem).toContain('no Skill selects, prepares, persists, lands, or cleans an execution environment')
+    expect(skillSystem).toContain('Execution-environment selection, preparation, isolation, landing, and cleanup belong to the Host or Git boundary')
   })
 
   it('keeps published Skills independent from repository-only Specs and cross-Skill files', () => {
     for (const name of publishedSkillNames) {
       const { body } = readSkill(join(skillsRoot, name))
-      expect(body).not.toContain('.rsp/specs/skill-control-model.md')
+      expect(body).not.toContain('.rsp/specs/skill.md')
       expect(body).not.toMatch(/\]\([^)]*\.rsp\/specs\//u)
     }
   })
@@ -165,6 +165,8 @@ describe('rsp Skill contract', () => {
     expect(body).toContain('conversation language')
     expect(body).toContain('shape below as semantic field order rather than fixed English wording')
     expect(body).toContain('`issues_found`, `clean`, `skipped`, and `blocked`')
+    expect(body).toContain('selected WorkOwner')
+    expect(body).toContain('a Group uses its Brief and direct child Changes')
   })
 
   it('publishes the canonical review-resolution Skill contract', () => {
@@ -182,6 +184,8 @@ describe('rsp Skill contract', () => {
     const delegation = readFileSync(join(skillsRoot, 'rsp-manage', 'references', 'delegation.md'), 'utf8')
 
     expect(verify).toContain('Run one bounded, read-only verification pass')
+    expect(verify).toContain('A Change WorkOwner uses its WorkRef')
+    expect(verify).toContain('A Group WorkOwner uses its Group reference and a named `Integration:` condition from the Group Brief')
     expect(verify).toContain('Do not edit product files')
     for (const result of ['pass', 'fail', 'unavailable'])
       expect(verify).toContain(`\`${result}\``)

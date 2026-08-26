@@ -31,7 +31,7 @@ describe('rsp-design Skill contract', () => {
     expect(body).toContain('Tracked Design')
     expect(body).toContain('one explicit bounded design question')
     expect(body).toContain('Do not invent a WorkRef')
-    expect(body).toContain('explicit WorkRef or one AI-resolved candidate from the open FocusSet')
+    expect(body).toContain('explicit Change WorkRef or one AI-resolved Change candidate from the open FocusSet')
     expect(body).toContain('Never invent product intent')
     expect(body).toContain('write settled planned design only under its `Design` section')
     expect(body).toContain('Do not write Specs, Decision Records, `CONTEXT.md`, `AGENTS.md`, production code')
@@ -56,7 +56,7 @@ describe('rsp-design Skill contract', () => {
     const core = readFileSync(join(root, 'skills', 'rsp', 'SKILL.md'), 'utf8')
     const fallback = readFileSync(join(root, 'rules', 'rsp-rules.md'), 'utf8')
     const designRoute = core.indexOf('Without a selected Change, use report-only Pre-Change Design')
-    const noChangeRoute = core.indexOf('Core resolves the default executable WorkRef')
+    const noChangeRoute = core.indexOf('Core resolves the default executable WorkOwner')
 
     expect(designRoute).toBeGreaterThan(-1)
     expect(noChangeRoute).toBeGreaterThan(designRoute)

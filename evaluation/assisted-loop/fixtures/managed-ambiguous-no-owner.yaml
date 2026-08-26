@@ -12,7 +12,7 @@ sources:
   - skills/rsp/references/managed-routing.md
   - skills/rsp-manage/SKILL.md
 required_contract:
-  - Core derives one ownership `ControlOutcome`
+  - Core derives one WorkOwner and one route result
   - Material product or authority questions stop for their `DecisionOwner`
   - one highest-impact owner question
   - resumes through fresh Core derivation after the answer

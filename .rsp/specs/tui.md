@@ -1,39 +1,25 @@
-# Interactive TUI
+# TUI
 
 ## Purpose
-- Define Ink dashboard and Skill-manager routing, state, localization, layout, and terminal-lifecycle contracts while keeping their mutation boundaries distinct.
 
-## Stable Facts
-- Bare `rsp` opens the dashboard only when stdin and stdout are TTYs, `TERM` is not `dumb`, and `CI` is absent or exactly `false`; otherwise root help stays non-interactive. `rsp ui` is the explicit dual-TTY entry.
-- Existing subcommands, root help/version/error paths, plain output, and JSON contracts remain deterministic and non-interactive.
-- TUI-owned labels support only `en` and `zh-CN`. WorkRefs, paths, commands, canonical states, existing CLI output, JSON, Skills, and persisted artifacts are not localized.
-- The primary scopes are `Work`, `Specs`, and `History` in cycle order. Work combines Changes and Groups while retaining exact WorkRef identity and a visible kind label. The active scope is textual, and the bounded footer places the complete Tab path first so navigation remains visible at the 40-column minimum.
-- The dashboard is read-only. It presents status, deterministic next commands, lazy current-file Specs navigation, and lazy default-bounded history without mutating project state.
-- Bare `rsp skills` is a separate dual-TTY entry. Its component owns only optional selection and confirmation; it closes the terminal session before the CLI invokes the presentation-neutral atomic installer once. It is not part of the read-only dashboard.
-- Default suite and optional project Skills render as separate groups. Defaults are selected and locked, optionals start unselected, and divergent selected targets require a separate replacement confirmation. Cancellation or declining replacement returns no mutation plan.
-- `ProjectStatusSnapshot` is an immutable rich internal snapshot. The public status JSON uses an exact adapter and remains flat; TUI state does not leak into it.
-- Change and Group lists/details render a present semantic summary as secondary human-readable text while keeping the exact WorkRef first and authoritative. Current-work filtering matches WorkRef, summary, and the existing relevant identity fields.
-- History list/detail loading, errors, filters, selection, and viewport state stay separate from `ProjectStatusSnapshot`. History loads only when first visited, and structured detail loads only after `Enter`.
-- Project-relative archive path is the unique history selection identity. A TUI-owned source atomically caches validated records from the last successful bounded list so detail does not re-inspect the archive; failed refresh preserves the prior valid cache.
-- Structured Tasks, Verify, and Blockers evidence recognizes only RSP checkbox/list prefixes, preserves project-authored Markdown punctuation, and renders one count-bearing heading plus hanging-wrapped terminal-native content per section without a Markdown dependency.
-- The detail presenter shares physical rows across evidence headings and content after dynamic chrome is deducted. It prefers whitespace word boundaries with grapheme/display-cell fallback, bounds complete rows and identity fields by display-cell width, and marks source or viewport omission as truncated on the last allocated content row.
-- `src/tui/` owns dashboard state and shared terminal/display primitives; `src/skills-tui/` owns the Skill selector and its typed labels. Each dynamically loads only after its interactive route succeeds.
-- The TUI consumes status and presentation-neutral archive-history query/detail seams as sibling presenters. Status, history, and core do not depend on TUI modules.
-- Any TUI Specs presentation consumes the shared presentation-neutral current-file tree/detail/search projection; it does not parse generated indexes, duplicate query semantics, or make browser/TUI state authoritative.
-- Specs and Decision Records remain separate roots. Tree inspection loads only on first visit, exact detail and literal content search are demand-driven, paths own selection identity, and a failed refresh may retain a prior valid projection only with an explicit stale warning.
-- Specs document detail uses a bounded, display-cell-safe terminal Markdown projection for headings, paragraphs, lists and task items, blockquotes, code, emphasis, links, and thematic breaks. YAML frontmatter is hidden, raw HTML remains inert text, terminal controls are removed, and the viewport scrolls rendered physical lines with either `↑`/`↓` or `k`/`j`; the TUI adds no query cache authority.
-- Work and History preserve semantic Status and Summary as their default detail views. In detail, `v` toggles the exact bounded current or archived Markdown document; all document views reuse the same rendered-line viewport, boundary-clamped scrolling, loading, error, and position behavior.
-- Terminal Markdown supports repository-evidenced GFM pipe tables, using aligned columns when they fit and stacked `field: value` rows when narrow. Strict no-attribute lowercase hyphenated RSP metavariables and `<reason>` render as inert inline code; arbitrary HTML remains inert text.
-- React, Ink, and Yoga remain outside ordinary command evaluation.
-- The terminal host requires dual TTYs, enters and leaves alternate-screen mode safely, restores cursor/input state on every exit path, handles resize and signals, and preserves non-TUI stdout/stderr behavior.
+Define the interactive terminal presentation of current RSP projections.
+
+## Current facts
+
+- The primary scopes are `Work`, `Specs`, and `History`. Work presents Changes and Groups while retaining exact WorkRef identity and kind.
+- TUI consumes presentation-neutral status, history, and Specs projections. It does not derive lifecycle, dependency, readiness, authority, or delivery state independently.
+- TUI labels support `en` and `zh-CN`. WorkRefs, paths, commands, canonical machine values, JSON, Skills, and persisted Markdown remain unchanged.
+- Dashboard, detail, search, and history views are read-only unless an explicitly owned command action is invoked.
+- Terminal lifecycle owns TTY detection, layout, focus, input, resize, cleanup, and restoration of the terminal.
+- Missing, invalid, or unavailable data is shown as a diagnostic or empty projection; TUI does not infer successful work from missing evidence.
 
 ## Boundaries
-- In scope:
-  - Interactive routing, read-only dashboard state/presentation, localization, display-cell layout, Work/Specs/History navigation, and terminal cleanup.
-- Out of scope:
-  - Dashboard mutation, TUI-owned filesystem mutation, CLI contract localization, persisted UI state, alternative archive semantics, and loading UI dependencies on non-interactive paths.
+
+- TUI owns interactive routing state, labels, layout, and terminal lifecycle.
+- Core, command domains, status, history, and Specs inspection own the data and semantics displayed by TUI.
 
 ## Constraints
-- Maintain the public status JSON contract, including nullable Change and Group summaries, and lazy-load the TUI.
-- Render correctly at the supported 40-column minimum and cleanly recover the terminal on normal exit, errors, signals, and rejected interactive loading.
-- History detail must remain bounded, presentation-neutral at its source seam, and keyed by unique archive path.
+
+- Keep TUI presentation separate from ordinary command evaluation.
+- Preserve exact WorkRef and path identity in every interactive scope.
+- Do not persist TUI state as RSP workflow truth.

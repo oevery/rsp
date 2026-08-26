@@ -9,7 +9,7 @@ metadata:
 
 # RSP Manage
 
-Manage one requested goal selected by Core from an explicit request or effective `manage.activation: auto`. Enter with one selected shape-ready Change or shallow Group plus a bounded next action, WorkRef reference, authority pointer, decisive qualification result, closeout ceiling, and return boundaries. Manage owns same-goal coordination, evidence acceptance, review convergence, lifecycle closeout, and delivery-kind orchestration. Exact Git procedure remains owned by `rsp-commit`. Keep artifacts durable and process data transient; do not create a persisted GoalEnvelope or controller record. Automatic activation may complete an authorized Shape → Core → Manage route, but configuration grants no product or delivery authority.
+Manage one requested goal selected by Core from an explicit request or effective `manage.activation: auto`. Enter with one selected shape-ready Change or shallow Group plus a bounded next action, WorkOwner reference, authority pointer, decisive qualification result, closeout ceiling, and return boundaries. Manage owns same-goal coordination, evidence acceptance, review convergence, lifecycle closeout, and delivery-kind orchestration. Exact Git procedure remains owned by `rsp-commit`. Keep artifacts durable and process data transient; do not create a persisted GoalEnvelope or controller record. Automatic activation may complete an authorized Shape → Core → Manage route, but configuration grants no product or delivery authority.
 
 Follow Core's response-versus-artifact language boundary for all user-visible control narration; when the response language differs, keep exact canonical values only as secondary parenthesized or code-formatted tokens.
 
@@ -17,22 +17,22 @@ Follow Core's response-versus-artifact language boundary for all user-visible co
 
 Core owns initial Manage qualification and the `selected | declined` route result. Manage never creates, focuses, or reshapes a durable owner and never repeats direct-versus-managed qualification. Before mutation, reread the selected Change or Group, relevant Specs and Decisions, the current authority pointer, plain `rsp status`, current checkout, and decisive evidence. Use `rsp status --json` only when exact dependency fields are needed.
 
-Stop and return to Core when the handoff is incomplete or a true owner, WorkRef topology, route, declared behavior, acceptance, interface, scope, mutation-authority, or external-action-authority boundary changed. Otherwise continue the selected goal and re-read only the authoritative facts needed by the current checkpoint. Use only the execution location and worker capabilities supplied by the host; never infer isolation, identity, or completion.
+Stop and return to Core when the handoff is incomplete or a true owner, WorkOwner topology, route, declared behavior, acceptance, interface, scope, mutation-authority, or external-action-authority boundary changed. Otherwise continue the selected goal and re-read only the authoritative facts needed by the current checkpoint. Use only the execution location and worker capabilities supplied by the host; never infer isolation, identity, or completion.
 
-Return one bounded managed phase result for Core's outer `ControlOutcome`:
+Return one bounded managed phase result for Core's response summary:
 
 - `solo`: no worker participates, including a bounded local Discipline action;
 - `delegated`: one worker participates;
 - `coordinated`: multiple workers participate or acceptance requires a separate verifier.
 
-Mode describes observed participation, not a host lifecycle model.
+Mode describes observed participation, not a host lifecycle model. Hosts own worker execution and lifecycle capabilities; Manage consumes those host observations without creating RSP runtime objects.
 
 ## Choose the smallest execution strategy
 
 Use only as much coordination as the current evidence requires:
 
 - `control-action`: one Manager-owned control-plane action;
-- `longitudinal`: compatible successive work through one worker when the host supports continuation;
+- `longitudinal`: compatible successive work through one worker when the host supports continuation and bounded context handoff;
 - `sequential`: ordered work with shared seams, writers, or verification resources;
 - `parallel-wave`: independent slices with disjoint mutation and verification resources;
 - `read-only-fan-out`: independent evidence gathering;
@@ -40,6 +40,8 @@ Use only as much coordination as the current evidence requires:
 - `independent-verify`: acceptance requires a different worker from the accepted implementation worker.
 
 These names explain Manager strategy only. They are not runtime states, persisted objects, or proof that dispatch occurred.
+
+One selected Change may use one worker for `rsp-implement` and ordinary `rsp-verify` when context isolation, compatible continuation, or multiple phases makes delegation useful. This path is normally `preferred`; it becomes `required` only when the declared acceptance requires worker-owned execution or a separate verifier.
 
 Derive `DispatchDisposition` after selection:
 
@@ -76,6 +78,8 @@ evidence-complete + clean fixed-scope review                   → review-clean
 
 Every missing, invalid, unavailable, or boundary-changing required result keeps acceptance `incomplete`. Implementation verification, fixed-scope review, and the durable writeback decision remain separate gates.
 
+The same worker may provide the Fix and ordinary Verify results for one Change. Manage may accept that evidence as `evidence-complete` after checking paths, diff, named verification, omissions, and scope. It never satisfies `independent-verify`; that gate requires distinct worker evidence.
+
 ## Dispatch and convergence
 
 Dispatch only for `preferred | required`; `none` invokes the local Discipline without synthetic delegation. Claim worker participation or counts only from host observations. If the host cannot start or attribute a required worker, stop before worker-owned mutation and keep acceptance incomplete.
@@ -86,7 +90,7 @@ Do not impose a whole-run dispatch quota. Skip optional Diagnose or Inspect work
 
 ## Continue and load low-frequency branches
 
-After inspecting changed paths, local diff, and declared verification, continue only while goal, WorkRef topology, route, behavior, acceptance, interface, scope, and authority remain unchanged. Same-owner phase results stay in Manage. At closeout, derive one delivery kind: direct, change, integration, group, or release. Return changed boundaries to Core; Core may continue, invoke Shape, ask the owner, or stop.
+After inspecting changed paths, local diff, and declared verification, continue only while goal, WorkOwner topology, route, behavior, acceptance, interface, scope, and authority remain unchanged. Same-owner phase results stay in Manage. At closeout, derive one delivery kind: direct, change, integration, group, or release. Return changed boundaries to Core; Core may continue, invoke Shape, ask the owner, or stop.
 
 Load a low-frequency procedure only after its branch trigger is established:
 
@@ -98,4 +102,4 @@ If none of these triggers applies, do not read their references.
 
 Persist only accepted Tasks, decisive Verify evidence, and real Blockers; never transient coordination or acceptance process. Focus Capsules remain recovery pointers, never worker coordination or authority.
 
-Stop on missing authority, unavailable capability, failed verification, drift, unsafe replay, or limits. When work remains, return `WorkRef, Authority, Current state, Changed artifacts, Fresh verification, Blockers, and Next action`. Do not claim review, archive, Commit, push, publication, deployment, approval, or human acceptance without its owning authority and evidence.
+Stop on missing authority, unavailable capability, failed verification, drift, unsafe replay, or limits. When work remains, return `WorkOwner reference, Authority, Current state, Changed artifacts, Fresh verification, Blockers, and Next action`; include child WorkRefs when a Group result depends on specific Changes. Do not claim review, archive, Commit, push, publication, deployment, approval, or human acceptance without its owning authority and evidence.

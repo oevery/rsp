@@ -11,6 +11,8 @@ metadata:
 
 Create one reviewable local commit after Core or qualified Manage has derived one compact delivery request. Skill availability grants none of its facts. The request contains only the delivery kind, owner reference, real WorkRefs when relevant, exact paths, current local authority, and fresh verification pointers. Rsp-commit rereads owner and Git facts before staging; the request is not a second source of truth.
 
+When a durable owner exists, the owner reference is a WorkOwner reference: a Change uses its WorkRef and a Group uses its Group reference. Included child WorkRefs identify delivery inputs and never replace the durable owner. Direct, integration, and release kinds may have no durable WorkOwner.
+
 Accept exactly one delivery kind:
 
 | Kind | Required identity and evidence | RSP metadata |

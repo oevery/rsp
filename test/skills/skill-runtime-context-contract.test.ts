@@ -15,8 +15,8 @@ const delegation = read('skills/rsp-manage/references/delegation.md')
 const interruption = read('skills/rsp-manage/references/interruption-recovery.md')
 const reviewConvergence = read('skills/rsp-manage/references/review-convergence.md')
 const closeout = read('skills/rsp-manage/references/closeout.md')
-const controlModel = read('.rsp/specs/skill-control-model.md')
-const skillSystem = read('.rsp/specs/skill-system.md')
+const skillSystem = read('.rsp/specs/skill.md')
+const controlModel = skillSystem
 
 const delegationEvidenceContract = [
   { all: [/worker-authored Discipline result/iu, /did|observed/iu] },
@@ -49,7 +49,7 @@ describe('skill runtime context composition', () => {
       { all: [/rsp-verify/u, /Verification as one bounded action/iu] },
     ])).toBe(true)
     expect(satisfiesSemanticContract(focusContinuation, [
-      { all: [/WorkRef/u, /Authority/u, /Current state/u, /Changed artifacts/u, /Fresh verification/u, /Blockers/u, /Next action/u] },
+      { all: [/WorkOwner/u, /Authority/u, /Current state/u, /Changed artifacts/u, /Fresh verification/u, /Blockers/u, /Next action/u] },
     ])).toBe(true)
   })
 
@@ -86,7 +86,7 @@ describe('skill runtime context composition', () => {
       ...delegationEvidenceContract,
     ])).toBe(true)
     expect(satisfiesSemanticContract(controlOutcome, [
-      { all: [/Raw worker messages/iu, /host events/iu, /unaccepted evidence/iu, /never appear|must not appear|do not appear/iu, /outer receipt fields/iu] },
+      { all: [/Raw worker messages/iu, /host events/iu, /unaccepted evidence/iu, /never appear|must not appear|do not appear/iu, /response summary fields/iu] },
     ])).toBe(true)
 
     expect(satisfiesSemanticContract(manage, [
@@ -109,6 +109,17 @@ describe('skill runtime context composition', () => {
     ]
     expect(satisfiesSemanticContract(controlModel, durableOwnership)).toBe(true)
     expect(satisfiesSemanticContract(skillSystem, portableOwnership)).toBe(true)
+    expect(satisfiesSemanticContract(skillSystem, [
+      { all: [/ready single Change/iu, /delegated worker/iu, /ordinary verification/iu] },
+      { all: [/One-worker delegation/iu, /optional strategy/iu] },
+      { all: [/parallel-wave/iu, /multiple workers/iu, /independent tasks/iu] },
+    ])).toBe(true)
+    expect(satisfiesSemanticContract(manage, [
+      { all: [/same worker/iu, /Fix/iu, /ordinary Verify/iu, /one Change/iu] },
+    ])).toBe(true)
+    expect(satisfiesSemanticContract(delegation, [
+      { all: [/One worker may return/iu, /Fix/iu, /ordinary Verify/iu, /same Change/iu] },
+    ])).toBe(true)
     for (const token of ['WorkerSession', 'WorkerInvocation', 'WorkerReceipt', 'AcceptedLaneEvidence', 'ResourceLease', 'AssignmentDelta']) {
       expect(controlModel).not.toContain(token)
       expect(skillSystem).not.toContain(token)

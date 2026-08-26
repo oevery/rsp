@@ -18,7 +18,7 @@ State one explicit bounded design question. Read project authority and the small
 Choose one ownership mode:
 
 - **Pre-Change Design:** use when no Change is selected and the request already contains one bounded design question. When this Skill is installed, Core selects it instead of manually emulating the discipline; the manual fallback is only for an unavailable Skill. Remain report-only and return to the user. If outcome, scope, non-goals, acceptance, or decomposition remains materially unclear, return the request to Shape instead of creating an implicit planning owner. Do not invent a WorkRef, continuation, or artifact.
-- **Tracked Design:** require an explicit WorkRef or one AI-resolved candidate from the open FocusSet. Read the selected Change and sibling Group Brief, then return the result to the same WorkRef.
+- **Tracked Design:** require an explicit Change WorkRef or one AI-resolved Change candidate from the open FocusSet. Read the selected Change and, when grouped, its sibling Group Brief as context; return the result to the same Change WorkRef. A Group reference never becomes the design result.
 
 Stop on an ambiguous question, evidence boundary, owner intent, authorized-write owner, or required mutation authority. Never invent product intent.
 

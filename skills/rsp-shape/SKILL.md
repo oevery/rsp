@@ -70,10 +70,10 @@ A Change is ready only when:
 - Verify proves the result without process chronology; Blockers are truthful;
 - one Change or a justified shallow Group is the smallest sufficient owner.
 
-After mutation, run the focused RSP check. Return WorkRef, artifacts, validation, and next action or blocker.
+After mutation, run the focused RSP check. Return the WorkOwner reference, artifacts, validation, and next action or blocker.
 
-When the gate passes, return a `ControlOutcome` for phase Shape with the ready `WorkOwner` WorkRef, decisive readiness evidence, `NextOwner: Core`, and a resume rule that Core freshly derives the route.
+When the gate passes, return the bounded phase Shape result for phase Shape with the ready WorkOwner reference, decisive readiness evidence, `NextOwner: Core`, and a resume rule that Core freshly derives the route. A Change uses its WorkRef; a Group uses its Group reference.
 
-When a material decision prevents readiness, return a non-ready `ControlOutcome` for phase Shape with `StopDisposition: ask-owner`, the decisive evidence, the `DecisionOwner`, the required answer, and a resume rule that reruns Shape from fresh evidence after the answer.
+When a material decision prevents readiness, return a bounded non-ready Shape phase result for phase Shape with `StopDisposition: ask-owner`, the decisive evidence, the `DecisionOwner`, the required answer, and a resume rule that reruns Shape from fresh evidence after the answer.
 
-For any other blocker, return a non-ready Shape `ControlOutcome` with the applicable canonical `StopDisposition`, decisive evidence, `NextOwner`, required input, and resume rule. Do not relabel unresolved fog as ready work.
+For any other blocker, return a bounded non-ready Shape phase result for phase Shape with the applicable canonical `StopDisposition`, decisive evidence, `NextOwner`, required input, and resume rule. Do not relabel unresolved fog as ready work.

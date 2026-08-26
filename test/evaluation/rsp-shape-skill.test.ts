@@ -21,7 +21,7 @@ describe('rsp-shape deep clarification', () => {
     expect(deep).toContain('Ask exactly one owner decision per turn')
     expect(deep).toContain('Include a recommended answer grounded in inspected facts')
     expect(deep).toContain('Keep all artifacts unchanged until that confirmation')
-    expect(deep).toContain('the same returning WorkRef')
+    expect(deep).toContain('the same returning WorkOwner reference')
   })
 
   it('owns questioning modes but returns execution control through Core', () => {
@@ -33,7 +33,7 @@ describe('rsp-shape deep clarification', () => {
     expect(skill).toContain('`StopDisposition: return-to-shape` may enter either mode')
     expect(skill).toContain('returning a ready WorkOwner to Core for fresh route derivation')
     expect(skill).toContain('it never resumes Manage directly')
-    expect(skill).toContain('ready `WorkOwner` WorkRef')
+    expect(skill).toContain('ready WorkOwner reference')
     expect(skill).toMatch(/do not relabel unresolved fog as ready work/i)
 
     expect(deep).toContain('fulfills `StopDisposition: return-to-shape`')
@@ -47,9 +47,9 @@ describe('rsp-shape deep clarification', () => {
 
     const ready = skill.match(/When the gate passes[\s\S]*?derives the route\./)?.[0] ?? ''
     for (const field of [
-      '`ControlOutcome`',
+      'bounded phase Shape result',
       'phase Shape',
-      'ready `WorkOwner` WorkRef',
+      'ready WorkOwner reference',
       'decisive readiness evidence',
       '`NextOwner: Core`',
       'resume rule',

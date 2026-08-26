@@ -29,12 +29,12 @@ describe('focus capsule public contract', () => {
     expect(chinese).toContain('未知非空行或字段')
   })
 
-  it('keeps the fallback compact while matching outer receipt and recovery semantics', () => {
-    expect(authoredFallback).toContain('one outer `ControlOutcome`')
+  it('keeps the fallback compact while matching response-summary and recovery semantics', () => {
+    expect(authoredFallback).toContain('optional Core-owned response summary')
     expect(authoredFallback).toContain('`mode: solo | delegated | coordinated`')
     expect(authoredFallback).toContain('`status: running | waiting | completed`')
-    expect(authoredFallback).toContain('`running -> waiting | completed` and `waiting -> running | completed`')
-    expect(authoredFallback).toContain('route, strategy, lane result, acceptance, and closeout remain nested details or gates rather than peer statuses')
+    expect(authoredFallback).toContain('State is presentation, not a persisted lifecycle state')
+    expect(authoredFallback).toContain('Route, strategy, lane result, acceptance, and closeout remain nested details or gates rather than peer statuses')
     expect(authoredFallback).toContain('unknown non-empty lines or fields are invalid')
     expect(authoredFallback).toContain('Legacy unversioned content is warning-only compatibility')
     expect(authoredFallback).toContain('does not emulate Manage qualification, worker delegation, strategy selection, acceptance, or closeout')

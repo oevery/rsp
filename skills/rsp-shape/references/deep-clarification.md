@@ -14,7 +14,7 @@ When `rsp-design` is available, it is the canonical domain or module design capa
 - authoritative project inputs by path;
 - the expected existing artifact or decision output;
 - its permitted mutation boundary;
-- the same returning WorkRef.
+  - the same returning WorkOwner reference.
 
 The selected capability owns only the design analysis, while existing project documents retain domain and architecture authority. Consume its settled result and evidence on return, then resume Shape against the same Change.
 
@@ -28,4 +28,4 @@ This branch fulfills `StopDisposition: return-to-shape`; it does not resume the 
 
 ## Completion criterion
 
-Finish the deep branch when every material dependent decision is either owner-confirmed or recorded as one explicit blocker, the project design task has returned to the same WorkRef when used, and no artifact changed before shared understanding was confirmed.
+Finish the deep branch when every material dependent decision is either owner-confirmed or recorded as one explicit blocker, the project design task has returned to the same WorkOwner when used, and no artifact changed before shared understanding was confirmed.

@@ -30,7 +30,9 @@ Each delegated Discipline owns its own result:
 - **Fix:** `rsp-implement`; `changed | no-change` with changed paths, verification, omissions, and any scope issue.
 - **Verify:** `rsp-verify`; `pass | fail | unavailable` with named checks, evidence delta, omissions, and any scope issue.
 
-Fixed-scope review remains owned by `rsp-review`. Manage adds no universal worker receipt and never asks a worker to report host identity, independence, admission, settlement, release, evidence validity, or acceptance.
+One worker may return both the Fix and ordinary Verify results for the same Change when independent verification is not required. The combined result is implementation evidence, not self-certified acceptance.
+
+Fixed-scope review remains owned by `rsp-review`. Manage adds no universal worker receipt or result schema and never asks a worker to report host identity, independence, admission, settlement, release, evidence validity, or acceptance.
 
 ## Validate results and host facts
 
@@ -43,5 +45,7 @@ Treat three evidence sources separately:
 Host facts are capabilities and observations, not RSP domain objects. Missing observations remain unavailable rather than inferred from prose, handles, elapsed time, topology, or successful tests. A worker never self-certifies identity, independence, resource release, evidence validity, or acceptance.
 
 For required delegation, Manage must have an attributable worker-authored result that covers the assigned boundary. For required independent Verify, the host must establish that the accepted Fix and Verify came from different workers. If either condition cannot be established, acceptance remains `incomplete`. Manager must not author, repair, reconstruct, or substitute the missing worker result.
+
+When the same worker owns Fix and ordinary Verify, Manage may derive `evidence-complete` only after validating the worker result, changed paths, declared checks, omissions, and scope. `review-clean`, archive readiness, and commit eligibility remain separate gates.
 
 Inspect actual paths, diff, commands, outcomes, and omissions before accepting a result. A host-reported completion, a valid transport shape, successful integration tests, or absence of an error never substitutes for this validation.

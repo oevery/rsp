@@ -32,8 +32,9 @@ describe('daily-workflow product surface', () => {
     const deepClarification = read('skills/rsp-shape/references/deep-clarification.md')
     const rspDesign = read('skills/rsp-design/SKILL.md')
     expect(shape).toContain('references/deep-clarification.md')
-    expect(deepClarification).toContain('the same returning WorkRef')
+    expect(deepClarification).toContain('the same returning WorkOwner reference')
     expect(rspDesign).toContain('Tracked results return to Shape or the user against the same WorkRef')
+    expect(read('skills/rsp-verify/SKILL.md')).toContain('A Group WorkOwner uses its Group reference and a named `Integration:` condition from the Group Brief')
 
     expect(read('skills/rsp-manage/SKILL.md')).toContain('Keep artifacts durable and process data transient')
   })

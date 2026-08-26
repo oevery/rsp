@@ -13,8 +13,9 @@ const skillText = readFileSync(join(product, 'SKILL.md'), 'utf8')
 const delegationText = readFileSync(join(product, 'references', 'delegation.md'), 'utf8')
 const managedComposition = `${skillText}\n${delegationText}`
 const durableReview = readFileSync(join(root, 'skills', 'rsp', 'references', 'durable-review.md'), 'utf8')
-const controlModel = readFileSync(join(root, '.rsp', 'specs', 'skill-control-model.md'), 'utf8')
-const skillSystem = readFileSync(join(root, '.rsp', 'specs', 'skill-system.md'), 'utf8')
+const skillModel = readFileSync(join(root, '.rsp', 'specs', 'skill.md'), 'utf8')
+const controlModel = skillModel
+const skillSystem = skillModel
 
 const delegatedResultContract = [
   { all: [/delegated task/iu, /only/iu, /act safely/iu] },

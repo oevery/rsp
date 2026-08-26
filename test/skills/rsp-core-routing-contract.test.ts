@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { inlineCodeValues, markdownHeadings, markdownLinks, mutateSemanticUnit, satisfiesSemanticContract } from '../support/markdown-contract'
+import { markdownHeadings, markdownLinks, mutateSemanticUnit, satisfiesSemanticContract } from '../support/markdown-contract'
 
 const root = fileURLToPath(new URL('../..', import.meta.url))
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
@@ -12,7 +12,7 @@ const implementationEvidence = read('skills/rsp/references/implementation-eviden
 const focusContinuation = read('skills/rsp/references/focus-continuation.md')
 const durableReview = read('skills/rsp/references/durable-review.md')
 const fallback = read('rules/rsp-rules.md')
-const controlModel = read('.rsp/specs/skill-control-model.md')
+const controlModel = read('.rsp/specs/skill.md')
 const managed = read('skills/rsp/references/managed-routing.md')
 const manage = read('skills/rsp-manage/SKILL.md')
 const delegation = read('skills/rsp-manage/references/delegation.md')
@@ -71,14 +71,13 @@ describe('rsp core routing contract', () => {
   })
 
   it('keeps control semantic and runtime protocols outside RSP', () => {
-    expect(inlineCodeValues(controlModel)).toEqual(expect.arrayContaining([
-      'solo | delegated | coordinated',
-      'DispatchDisposition: none | preferred | required',
-      'AcceptanceDisposition',
-      'incomplete | evidence-complete | review-clean',
-      'CloseoutEligibility',
-      'not-eligible | lifecycle-ready | local-commit-ready',
-    ]))
+    expect(satisfiesSemanticContract(controlModel, [
+      { all: [/optional response-only summary/iu, /not durable workflow state/iu, /universal inter-Skill protocol/iu] },
+    ])).toBe(true)
+    expect(markdownHeadings(controlOutcome)).toContain('Compose the response summary')
+    expect(markdownHeadings(controlOutcome)).not.toContain('Compose the outer receipt')
+    expect(controlModel).not.toContain('DispatchDisposition: none | preferred | required')
+    expect(controlModel).not.toContain('CloseoutEligibility')
     expect(satisfiesSemanticContract(controlModel, runtimeOwners)).toBe(true)
     for (const token of ['WorkerSession', 'WorkerInvocation', 'WorkerReceipt', 'AcceptedLaneEvidence', 'ResourceLease', 'AssignmentDelta'])
       expect(controlModel).not.toContain(token)
@@ -109,10 +108,12 @@ describe('rsp core routing contract', () => {
       { all: [/sequential work/iu, /selected/iu, /multi-phase|authority obligation/iu] },
       { all: [/Multiple files/iu, /do not by themselves qualify Manage/iu] },
     ])).toBe(true)
-    expect(managed).toContain('With `manage.activation: auto`')
-    expect(managed).toContain('Shape → Core → Manage route')
-    expect(managed).toContain('not a persisted envelope')
-    expect(managed).toContain('The handoff facts and returned control objects remain transient')
+    expect(satisfiesSemanticContract(managed, [
+      { all: [/manage.activation: auto/iu, /observable coordination obligation/iu] },
+      { all: [/host context isolation or compatible continuation/iu, /qualification/iu] },
+      { all: [/Shape → Core → Manage route/iu, /not a persisted envelope/iu] },
+      { all: [/handoff facts and returned control objects remain transient/iu] },
+    ])).toBe(true)
     expect(manage).toContain('Same-owner phase results stay in Manage')
     expect(manage).toContain('Return changed boundaries to Core')
   })
@@ -121,7 +122,7 @@ describe('rsp core routing contract', () => {
     const delegationContract = [
       { all: [/delegated task/iu, /only/iu, /act safely/iu] },
       { all: [/delegated Discipline/iu, /owns/iu, /result/iu] },
-      { all: [/Manage/iu, /no universal worker receipt/iu, /never asks/iu, /identity/iu, /independence/iu] },
+      { all: [/Manage/iu, /no universal worker (?:result or )?receipt/iu, /never asks/iu, /identity/iu, /independence/iu] },
     ]
     expect(markdownLinks(manage)).toContain('references/delegation.md')
     expect(satisfiesSemanticContract(delegation, delegationContract)).toBe(true)

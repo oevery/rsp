@@ -8,7 +8,7 @@ required_contract:
   - authoritative project inputs by path
   - expected existing artifact or decision output
   - permitted mutation boundary
-  - the same returning WorkRef
+  - the same returning WorkOwner reference
 prohibited_actions:
   - implementation
   - git mutation
