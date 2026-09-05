@@ -37,6 +37,12 @@
   },
   "scripts": {
     "prepare": "pnpm run build",
+    "verify:test": "vitest run",
+    "verify:evaluate": "node scripts/verification-local.mjs evaluate",
+    "verify:accept": "node scripts/verification-local.mjs accept",
+    "verify:provider:fake": "node scripts/verification-local.mjs provider-fake",
+    "verify:local": "node scripts/verification-local.mjs local",
+    "verify:provider:real": "node scripts/verification-local.mjs provider-real",
     "release:acceptance": "node scripts/release-acceptance.mjs",
     "release:behavior-check": "node scripts/release-behavior-acceptance.mjs",
     "release:provider-compare": "node scripts/release-provider-comparison.mjs",

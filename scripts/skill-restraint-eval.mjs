@@ -59,7 +59,7 @@ function assertNoSymlinkPath(root, target, label) {
 }
 
 function fixtureRoot(root) {
-  return join(root, 'evaluation', 'skill-restraint-eval', 'fixtures')
+  return join(root, 'verification', 'evaluations', 'skill-restraint-eval', 'fixtures')
 }
 
 function validatePathList(value, label) {

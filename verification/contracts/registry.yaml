@@ -1,0 +1,8 @@
+version: 1
+id: rsp-verification-contracts
+agent_evaluation_registry: ../evaluations/agent-evaluation/contracts.yaml
+metrics: metrics.yaml
+artifact_surfaces: artifact-surfaces.yaml
+compatibility:
+  status: migration-input
+  rule: the referenced legacy registry is read-only compatibility input until its data is migrated here

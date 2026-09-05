@@ -1,7 +1,7 @@
 import type { ManagedControllerEvaluationMetadata } from './managed-controller-eval.mjs'
 
 export type ReleaseBehaviorArm = 'baseline' | 'candidate'
-export type ReleaseBehaviorClassification = 'eligible' | 'harness-failed' | 'model-failed'
+export type ReleaseBehaviorClassification = 'eligible' | 'harness-failed' | 'model-failed' | 'unavailable'
 export type ReleaseBehaviorOutcome = 'passed' | 'failed'
 
 export interface ReleaseBehaviorPlanCase {
@@ -61,6 +61,7 @@ export interface ReleaseBehaviorReport {
   sanitized: true
   verdict: ReleaseBehaviorOutcome
   stopped: ReleaseBehaviorExecutionResult['stopped']
+  execution: { planned: number, executed: number, skipped: number }
   plan: ReleaseBehaviorPlan
   scenarios: ReleaseBehaviorScenario[]
 }
@@ -86,10 +87,19 @@ export function classifyReleaseBehaviorExecution(
   metadata: {
     events?: { tool_calls?: number | null, usage?: unknown }
     exit_code: number | null
+    provider_retry?: { capacity_unavailable?: boolean }
     timed_out: boolean
   },
   final: string,
 ): ReleaseBehaviorClassification
+
+export function classifyReleaseBehaviorProcess(metadata: Record<string, unknown>): {
+  status: string
+  recovered: Array<Record<string, unknown>>
+  diagnostic: Array<Record<string, unknown>>
+  unresolved: Array<Record<string, unknown>>
+  all: Array<Record<string, unknown>>
+}
 
 export function executeReleaseBehaviorCases(options: {
   plan: ReleaseBehaviorPlan
@@ -101,7 +111,7 @@ export function executeReleaseBehaviorCases(options: {
 }): Promise<ReleaseBehaviorExecutionResult>
 
 export function renderReleaseBehaviorMarkdown(
-  report: Pick<ReleaseBehaviorReport, 'evidenceMode' | 'plan' | 'scenarios' | 'verdict'>,
+  report: Pick<ReleaseBehaviorReport, 'evidenceMode' | 'plan' | 'scenarios' | 'verdict'> & Partial<Pick<ReleaseBehaviorReport, 'execution' | 'stopped'>>,
 ): string
 
 export function scoreReleaseBehaviorContract(
@@ -123,4 +133,5 @@ export function runReleaseBehaviorAcceptance(options?: {
   provider?: string
   timeoutMs?: number
   evaluationRunner?: (options: Record<string, unknown>) => Promise<ManagedControllerEvaluationMetadata>
+  analysisRunner?: (options: Record<string, unknown>) => Promise<Record<string, unknown>> | Record<string, unknown>
 }): Promise<{ jsonPath: string, markdownPath: string, report: ReleaseBehaviorReport }>

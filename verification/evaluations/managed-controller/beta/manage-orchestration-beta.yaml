@@ -1,0 +1,44 @@
+id: manage-orchestration-beta
+case: auto-multisurface-routing
+variants:
+  - baseline
+  - product
+holdout_manifest_sha256: 37d6779503dfcf7daae24b146119a9a7028f7bc4b5bb0c95073522ab93faff68
+base_tree_sha256: a4622bc36bb6ee2e08e77c5723ae72a5247ca74faeac7682fa38e1153faf93de
+product_skill_names:
+  - rsp
+  - rsp-manage
+  - rsp-implement
+product_composition_sha256: 1beb911e424d469d8e9b572a8ed948a0a8b707b50412b9a655f2c0c78803397f
+provider_comparison_cases:
+  - case: auto-integrated-direct
+    repetitions: 3
+  - case: managed-solo-integrated
+    repetitions: 3
+  - case: managed-delegated-integrated
+    repetitions: 3
+  - case: auto-multisurface-routing
+    repetitions: 3
+  - case: managed-coordinated-sequential
+    repetitions: 3
+  - case: managed-coordinated-parallel
+    repetitions: 3
+prior_retained_evidence:
+  - path: research/evaluations/rsp-manage/2026-08-17-implementation-test-restraint/report.md
+    sha256: 981587bd4ce9e26107682e30ddf64e863454e7fa1863343ed1c62f8f3c232b75
+  - path: research/evaluations/rsp-manage/2026-08-17-implementation-test-restraint/summary.json
+    sha256: e9c992ae8ebdc630560756cfcddc79e390335dc401d0b39671ab9aa1412f170f
+observations:
+  - completion outcome
+  - first-fix result where observable
+  - host-observed worker lifecycle counts and ordering where observable
+  - expected and host-observed conditional Skill references where observable
+  - agent-reported routing and dispatch claims kept separate
+  - verification rounds
+  - elapsed time where observable
+  - human-intervention outcome
+conclusion_limits:
+  - no numeric promotion threshold
+  - no activation or release change
+  - no provider or real-host generality claim
+  - unavailable measurements remain explicit omissions

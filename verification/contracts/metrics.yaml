@@ -1,0 +1,18 @@
+version: 1
+id: rsp-verification-metrics
+dimensions:
+  - trigger
+  - routing
+  - compliance
+  - boundary
+  - artifact
+  - recovery
+  - handoff
+  - authority
+  - focus
+  - ambiguity
+  - dispatch
+  - lifecycle
+  - ownership
+  - serialization
+statuses: [passed, failed, incomplete, not-observed]

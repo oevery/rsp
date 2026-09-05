@@ -1,0 +1,30 @@
+version: 1
+id: rsp-verification
+root: verification
+layers:
+  tests:
+    purpose: deterministic executable checks
+    command: verify:test
+    execution_modes: [deterministic]
+  evaluations:
+    purpose: behavior and semantic evaluation campaigns
+    command: verify:evaluate
+    execution_modes: [simulated, local, fake-provider]
+  acceptance:
+    purpose: disposable project and release-facing validation
+    command: verify:accept
+    execution_modes: [disposable-project]
+shared:
+  contracts: contracts
+  scenarios: scenarios
+  fixtures: fixtures
+  harness: harness
+  artifacts: artifacts
+reports:
+  artifact_directory: verification/artifacts
+  dispositions: [verified, failed, skipped, unavailable, unverified, simulated]
+  required_fields: [scenario_id, layer, execution_mode, started_at, completed_at, errors, omissions, evidence, usage, verdict, planned, executed, verified, ai_analysis, boundaries]
+provider:
+  real_execution: disabled
+  authorization: separate-change
+  fake_command: verify:provider:fake

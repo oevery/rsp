@@ -94,7 +94,7 @@ function extractGitSkills(repositoryRoot, commit, skills, destinationRoot) {
 }
 
 function readManifest(repositoryRoot) {
-  const path = join(repositoryRoot, 'evaluation', 'release-behavior', 'release-behavior.yaml')
+  const path = join(repositoryRoot, 'verification', 'evaluations', 'release-behavior', 'release-behavior.yaml')
   const manifest = parseYaml(readFileSync(path, 'utf8'))
   if (!manifest || manifest.id !== 'release-behavior-acceptance' || manifest.execution !== 'serial-fail-fast')
     fail('behavior manifest identity or execution mode is invalid')
@@ -118,7 +118,7 @@ function readManifest(repositoryRoot) {
 }
 
 function readHoldout(repositoryRoot, holdout) {
-  const directory = join(repositoryRoot, 'evaluation', 'managed-controller', 'holdout', holdout)
+  const directory = join(repositoryRoot, 'verification', 'evaluations', 'managed-controller', 'holdout', holdout)
   const path = join(directory, 'case.yaml')
   if (!existsSync(path) || lstatSync(path).isSymbolicLink())
     fail(`holdout is missing: ${holdout}`)
@@ -127,7 +127,7 @@ function readHoldout(repositoryRoot, holdout) {
   if (!manifest || manifest.id !== holdout || !Array.isArray(skills) || skills.length === 0 || !skills.includes('rsp-manage'))
     fail(`holdout must declare installed Skills including rsp-manage: ${holdout}`)
   const baseCase = manifest.base_case ?? holdout
-  const baseDirectory = join(repositoryRoot, 'evaluation', 'managed-controller', 'holdout', baseCase, 'base')
+  const baseDirectory = join(repositoryRoot, 'verification', 'evaluations', 'managed-controller', 'holdout', baseCase, 'base')
   if (!existsSync(baseDirectory) || !lstatSync(baseDirectory).isDirectory())
     fail(`holdout base fixture is missing: ${holdout}`)
   return { baseDirectory, manifest, path, skills }
@@ -280,6 +280,8 @@ function scoreRoute(holdout, metadata) {
 }
 
 export function classifyReleaseBehaviorExecution(metadata, final) {
+  if (metadata.provider_retry?.capacity_unavailable)
+    return 'unavailable'
   const startupFailed = metadata.exit_code !== 0
     && final.trim() === ''
     && metadata.events?.tool_calls === 0
@@ -291,16 +293,82 @@ export function classifyReleaseBehaviorExecution(metadata, final) {
   return 'eligible'
 }
 
-function sanitizeRun(planCase, arm, repetition, metadata, final, behavior) {
+export function classifyReleaseBehaviorProcess(metadata) {
+  const events = metadata.events ?? {}
+  const failures = [
+    ...(events.command_failures ?? []),
+    ...(events.parse_failures ?? []).map(failure => ({ ...failure, kind: 'parse-failure' })),
+  ]
+  const recovered = []
+  const diagnostic = []
+  const unresolved = []
+  for (const failure of failures) {
+    if (failure.kind === 'parse-failure') {
+      unresolved.push({ ...failure, classification: 'unresolved-parse-failure' })
+      continue
+    }
+    const command = String(failure.command ?? '')
+    if (/\bnpm\s+test\b/iu.test(command) && metadata.verification?.passed === true) {
+      recovered.push({ ...failure, classification: 'recovered-required-verification' })
+      continue
+    }
+    if (/\brg\b/iu.test(command) && [1, 2].includes(failure.exit_code)) {
+      diagnostic.push({
+        ...failure,
+        classification: failure.exit_code === 2
+          ? 'diagnostic-search-command-failure'
+          : 'diagnostic-search-no-match',
+      })
+      continue
+    }
+    if (/\bready\b/iu.test(command)) {
+      diagnostic.push({ ...failure, classification: 'diagnostic-readiness-check' })
+      continue
+    }
+    if (/\bnode\s+<absolute-path>\s+(?:change\s+)?(?:status|show|update|ready|check)\b/iu.test(command)) {
+      diagnostic.push({ ...failure, classification: 'diagnostic-rsp-probe' })
+      continue
+    }
+    if (/\bsed\b/iu.test(command) && /\.codex-home[^']*\/skills\/\.system\//iu.test(command)) {
+      diagnostic.push({ ...failure, classification: 'diagnostic-skill-discovery' })
+      continue
+    }
+    if (/\bnode\s+-e\b/iu.test(command)
+      && /JSON\.parse|Object\.keys/iu.test(command)
+      && /receipt|observation|hash/iu.test(command)
+      && !/writeFile|exec|spawn|git\b/iu.test(command)) {
+      diagnostic.push({ ...failure, classification: 'diagnostic-evidence-probe' })
+      continue
+    }
+    unresolved.push({ ...failure, classification: 'unresolved-command-failure' })
+  }
+  const status = unresolved.length > 0
+    ? 'failed'
+    : recovered.length > 0
+      ? 'recovered'
+      : diagnostic.length > 0
+        ? 'diagnostic'
+        : 'passed'
+  return { status, recovered, diagnostic, unresolved, all: [...recovered, ...diagnostic, ...unresolved] }
+}
+
+function sanitizeRun(planCase, arm, repetition, metadata, final, behavior, aiAnalysis = null) {
   const route = scoreRoute(behavior.holdout, metadata)
+  const events = metadata.events ?? {}
+  const process = classifyReleaseBehaviorProcess(metadata)
+  const contamination = events.context_contamination ?? []
   const dimensions = {
     task_result: { status: metadata.product_result === 'passed' ? 'passed' : 'failed' },
-    compliance: { status: metadata.result === 'passed' ? 'passed' : 'failed' },
-    boundary: { status: metadata.composition?.stable && (metadata.worktree?.unauthorized_paths ?? []).length === 0 ? 'passed' : 'failed' },
+    compliance: { status: metadata.product_result === 'passed' && metadata.worker_compliance?.status !== 'failed' ? 'passed' : 'failed' },
+    boundary: { status: metadata.composition?.stable && (metadata.worktree?.unauthorized_paths ?? []).length === 0 && contamination.length === 0 ? 'passed' : 'failed' },
+    process: { status: process.status, evidence: { command_failures: events.command_failures ?? [], parse_failures: events.parse_failures ?? [], warnings: events.warnings ?? [], classifications: process.all } },
+    isolation: { status: contamination.length === 0 ? 'passed' : 'failed', evidence: contamination },
     behavior: scoreReleaseBehaviorContract(behavior.holdout, metadata, final),
     structured_route: route,
   }
-  const hardPassed = Object.values(dimensions).every(dimension => ['passed', 'not-applicable'].includes(dimension.status))
+  const hardPassed = Object.entries(dimensions).every(([name, dimension]) => name === 'process'
+    ? ['passed', 'recovered', 'diagnostic', 'not-applicable'].includes(dimension.status)
+    : ['passed', 'not-applicable'].includes(dimension.status))
   const measurements = metadata.observability?.measurements ?? {}
   return {
     case: planCase.id,
@@ -317,7 +385,17 @@ function sanitizeRun(planCase, arm, repetition, metadata, final, behavior) {
       elapsedMs: metadata.duration_ms ?? null,
       toolCalls: measurements.tool_calls ?? metadata.events?.tool_calls ?? null,
       tokens: measurements.tokens ?? metadata.events?.usage ?? null,
+      hostObservations: {
+        commandFailures: events.command_failures ?? [],
+        contextContamination: contamination,
+        modelInvocations: events.model_invocations ?? null,
+        parseFailures: events.parse_failures ?? [],
+        resources: metadata.observability?.resources ?? null,
+        warnings: events.warnings ?? [],
+        workerLifecycle: events.worker_lifecycle ?? null,
+      },
     },
+    aiAnalysis: aiAnalysis ?? { status: 'not-requested', findings: [] },
   }
 }
 
@@ -332,7 +410,8 @@ function failedRun(planCase, arm, repetition) {
     compositionSha256: arm === 'baseline' ? planCase.identities.baselineCompositionSha256 : planCase.identities.candidateCompositionSha256,
     contractSha256: planCase.identities.contractSha256,
     dimensions: { harness: { status: 'failed', evidence: 'harness execution failed; inspect local raw diagnostics' } },
-    diagnostics: { elapsedMs: null, toolCalls: null, tokens: null },
+    diagnostics: { elapsedMs: null, toolCalls: null, tokens: null, hostObservations: null },
+    aiAnalysis: { status: 'not-requested', findings: [] },
   }
 }
 
@@ -353,6 +432,8 @@ export async function executeReleaseBehaviorCases({ plan, runArm }) {
       for (let repetition = 1; repetition <= planCase.candidateRepetitions; repetition += 1) {
         const run = await runArm({ arm: 'candidate', planCase, repetition })
         runs.push(run)
+        if (run.classification === 'unavailable')
+          continue
         if (run.classification !== 'eligible' || run.outcome !== 'passed') {
           stopped = { case: planCase.id, arm: 'candidate', reason: run.classification === 'eligible' ? 'hard-dimension-failed' : run.classification }
           break
@@ -385,13 +466,22 @@ export function renderReleaseBehaviorMarkdown(report) {
     `- Baseline: ${report.plan.baseline.ref}`,
     `- Candidate runs: ${report.plan.counts.candidateRuns}`,
     `- Baseline calibration runs: ${report.plan.counts.baselineRuns}`,
+    `- Executed runs: ${report.execution?.executed ?? 0}`,
+    `- Skipped runs: ${report.execution?.skipped ?? 0}`,
+    `- Stopped: ${report.stopped ? `${report.stopped.case}:${report.stopped.arm} (${report.stopped.reason})` : 'no'}`,
     `- Model identity: ${report.plan.settings.model} / ${report.plan.settings.effort} / ${report.plan.settings.provider}`,
     '- Efficiency: diagnostic only; no token, time, or tool-call threshold affects the verdict.',
     '',
     '## Scenarios',
     '',
     ...report.scenarios.flatMap(scenario => [
-      `- ${scenario.id}: ${scenario.runs.filter(run => run.arm === 'candidate' && run.outcome === 'passed').length}/${scenario.candidateRepetitions} candidate runs passed; ${scenario.runs.filter(run => run.arm === 'baseline').length}/${scenario.baselineRepetitions} baseline calibrations observed.`,
+      `- ${scenario.id}: ${scenario.runs.filter(run => run.arm === 'candidate' && run.outcome === 'passed').length}/${scenario.candidateRepetitions} candidate runs passed; ${scenario.runs.filter(run => run.arm === 'baseline').length}/${scenario.baselineRepetitions} baseline calibrations observed; ${scenario.runs.filter(run => run.classification === 'unavailable').length} provider-unavailable run(s).`,
+      ...scenario.runs.flatMap(run => [
+        `  - ${run.arm}:${run.repetition}: process=${run.dimensions.process?.status ?? 'not-observed'}, isolation=${run.dimensions.isolation?.status ?? 'not-observed'}, AI analysis=${run.aiAnalysis?.status ?? 'not-requested'}`,
+        ...(run.dimensions.process?.evidence?.classifications ?? []).map(failure => `    - process classification: ${failure.classification}`),
+        ...(run.diagnostics.hostObservations?.warnings ?? []).map(warning => `    - warning: ${warning.message}`),
+        ...(run.diagnostics.hostObservations?.commandFailures ?? []).map(failure => `    - command failure: event ${failure.event_index}, exit ${failure.exit_code ?? 'unknown'}`),
+      ]),
     ]),
     '',
     'This report grants no commit, archive, push, tag, publication, release approval, or human acceptance authority.',
@@ -413,6 +503,7 @@ export async function runReleaseBehaviorAcceptance({
   provider,
   timeoutMs = 600000,
   evaluationRunner = runManagedControllerEvaluation,
+  analysisRunner = null,
 } = {}) {
   if (!model || !effort || !provider)
     fail('provider execution requires explicit model, effort, and provider')
@@ -446,7 +537,10 @@ export async function runReleaseBehaviorAcceptance({
             variant: arm === 'baseline' ? 'candidate' : 'product',
           })
           const final = metadata.paths?.final && existsSync(metadata.paths.final) ? readFileSync(metadata.paths.final, 'utf8') : ''
-          return sanitizeRun(planCase, arm, repetition, metadata, final, behavior)
+          const aiAnalysis = typeof analysisRunner === 'function'
+            ? await analysisRunner({ arm, behavior, final, metadata, planCase, repetition })
+            : null
+          return sanitizeRun(planCase, arm, repetition, metadata, final, behavior, aiAnalysis)
         }
         catch {
           return failedRun(planCase, arm, repetition)
@@ -457,7 +551,10 @@ export async function runReleaseBehaviorAcceptance({
   finally {
     rmSync(baselineSnapshot, { force: true, recursive: true })
   }
-  const report = { schemaVersion: 1, evidenceMode: 'fresh-provider', sanitized: true, verdict: result.verdict, stopped: result.stopped, plan, scenarios: result.scenarios }
+  const executedRuns = result.scenarios.reduce((total, scenario) => total + scenario.runs.length, 0)
+  const plannedRuns = plan.counts.candidateRuns + plan.counts.baselineRuns
+  const skippedRuns = Math.max(plannedRuns - executedRuns, 0)
+  const report = { schemaVersion: 1, evidenceMode: 'fresh-provider', sanitized: true, verdict: result.verdict, stopped: result.stopped, execution: { planned: plannedRuns, executed: executedRuns, skipped: skippedRuns }, plan, scenarios: result.scenarios }
   const jsonPath = join(runDirectory, 'report.json')
   const markdownPath = join(runDirectory, 'report.md')
   writeFileSync(jsonPath, `${JSON.stringify(report, null, 2)}\n`)

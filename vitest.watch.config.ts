@@ -3,6 +3,6 @@ import baseConfig from './vitest.config.js'
 
 export default mergeConfig(baseConfig, defineConfig({
   test: {
-    globalSetup: ['./test/support/watch-build-setup.ts'],
+    globalSetup: ['./verification/tests/support/watch-build-setup.ts'],
   },
 }))

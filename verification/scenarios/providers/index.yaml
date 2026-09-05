@@ -1,0 +1,11 @@
+version: 1
+id: fake-provider-scenarios
+layer: evaluation
+owner: agent-release-provider-gate
+execution_mode: fake-provider
+scenario_ids: [provider/fake-baseline-candidate]
+fixture_refs: [verification/evaluations/agent-evaluation, verification/evaluations/skill-behavior/fake-codex.mjs]
+required_evidence: [host-trace, final-handoff]
+oracle: provider-gate-fake
+rubric: provider-boundary-and-usage
+artifact_policy: local-report

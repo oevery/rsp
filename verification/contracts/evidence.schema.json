@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rsp-verification-evidence",
+  "type": "object",
+  "required": ["id", "source_kind", "locator", "provenance", "value"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "source_kind": { "type": "string", "minLength": 1 },
+    "locator": { "type": "string", "minLength": 1 },
+    "provenance": { "type": "object" },
+    "value": {}
+  },
+  "additionalProperties": false
+}

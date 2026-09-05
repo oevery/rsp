@@ -181,6 +181,8 @@ function parsePackageEvidence(output) {
       projectCoverage: parsed.projectCoverage,
       projectScenarios: parsed.projectScenarios,
       tarballSha256: parsed.tarballSha256,
+      tarballPath: parsed.tarballPath,
+      tarballBytes: parsed.tarballBytes,
     }
   }
   catch {
@@ -188,14 +190,14 @@ function parsePackageEvidence(output) {
   }
 }
 
-async function executeStep(step, root, logPath) {
+async function executeStep(step, root, logPath, environment = {}) {
   const startedAt = new Date()
   process.stdout.write(`\n→ ${step.label}\n`)
   const stdout = []
   const stderr = []
   const status = await new Promise((resolveStatus) => {
     const executable = step.command === 'node' ? process.execPath : step.command
-    const child = spawn(executable, step.args, { cwd: root, env: process.env, stdio: ['ignore', 'pipe', 'pipe'] })
+    const child = spawn(executable, step.args, { cwd: root, env: { ...process.env, ...environment }, stdio: ['ignore', 'pipe', 'pipe'] })
     child.stdout.on('data', (chunk) => {
       stdout.push(chunk)
       if (step.streamStdout !== false)
@@ -311,7 +313,10 @@ async function main() {
   const startedAt = new Date().toISOString()
   const results = []
   for (const step of plan.steps) {
-    const result = await executeStep(step, root, join(runDirectory, 'logs', `${step.id}.log`))
+    const environment = step.id === 'package'
+      ? { RSP_PACKAGE_CHECK_ARTIFACT_OUTPUT: join(runDirectory, 'artifacts', 'package.tgz') }
+      : {}
+    const result = await executeStep(step, root, join(runDirectory, 'logs', `${step.id}.log`), environment)
     results.push(result)
     if (result.status !== 'passed')
       break

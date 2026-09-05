@@ -9,7 +9,7 @@ import { parse as parseYaml } from 'yaml'
 const RESULTS = new Set(['findings', 'clean', 'scoped uncertainty'])
 
 function holdoutRoot(root) {
-  return join(root, 'evaluation', 'structural-audit', 'holdout')
+  return join(root, 'verification', 'evaluations', 'structural-audit', 'holdout')
 }
 
 function readCase(root, id) {

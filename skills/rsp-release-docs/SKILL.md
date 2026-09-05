@@ -4,7 +4,7 @@ description: Draft, audit, finalize, or reconcile evidence-based changelogs, rel
 license: MIT
 metadata:
   author: oevery
-  version: "2026.08.23.1"
+  version: "2026.08.30.1"
 ---
 
 # RSP Release Docs
@@ -73,5 +73,9 @@ Treat one-time passwords, browser-auth URLs, device codes, tokens, and token-bea
 Before returning, confirm consistent range and identity; ledger coverage or explicit exclusions; claims bounded by evidence; prominent breaking, migration, security, deprecation, and known-limit information; convention-compatible links, dates, headings, language, and terminology; publication-invariant shipped prose; transient state with its owner; credential-free retained output; and edits limited to authorized paths.
 
 The final handoff must directly state every material user or operator action needed to use, migrate, validate, rollback, or remain safe. A file link or generic summary may accompany the result but cannot replace the action. Preserve exact commands, API forms, versions, and other canonical action tokens while keeping the surrounding explanation concise and localized.
+
+Before returning, run a final-handoff checklist against every material fact or action explicitly required by the request or release contract. Repeat each canonical action token in the handoff even when the release file already contains it; do not replace an exact migration form, safety reason, rollback command, or validation command with phrases such as "included in the notes", "migration example", or "documented". For a breaking API, state the concrete before/after call form and the material safety or compatibility consequence.
+
+Literal-token rule: when the request or release contract provides a canonical token in code formatting, copy that exact token verbatim into the final handoff. Do not paraphrase it, shorten it, or report only that it appears in a file. If any required literal token or material consequence is missing from the handoff, report the result as incomplete instead of claiming completion.
 
 Return the range, branch, changed or audited artifacts, coverage and exclusions, unresolved owner decisions, validation, handoff readiness when applicable, and whether any external action occurred.

@@ -18,6 +18,9 @@ const CASE_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const ASSIGNMENT_IDENTITY = /^\w[\w.:/-]*$/
 const EVALUATION_RECEIPT_PATH = '.rsp-evaluation-receipt.json'
 const WORKER_RECEIPT_PREFIX = 'RSP_WORKER_RECEIPT_JSON='
+const CONFIG_PROVIDER = 'config'
+const MAX_PROVIDER_CAPACITY_RETRIES = 2
+const DEFAULT_PROVIDER_CAPACITY_RETRY_DELAY_MS = 1000
 const VARIANTS = new Set(['baseline', 'candidate', 'product'])
 const DISCIPLINE_LANES = new Set(['Diagnose', 'Inspect', 'Fix', 'Verify'])
 
@@ -107,6 +110,23 @@ function assertSafeFile(root, path, label) {
     throw new Error(`${label} escapes its allowed root`)
 }
 
+function assertSafeDirectory(root, path, label) {
+  const canonicalRoot = realpathSync(root)
+  const stats = lstatSync(path)
+  if (stats.isSymbolicLink() || !stats.isDirectory())
+    throw new Error(`${label} must be a regular non-symlink directory`)
+  const canonicalPath = realpathSync(path)
+  if (canonicalPath !== canonicalRoot && !canonicalPath.startsWith(`${canonicalRoot}${sep}`))
+    throw new Error(`${label} escapes its allowed root`)
+  for (const entry of readdirSync(path, { withFileTypes: true })) {
+    const child = join(path, entry.name)
+    if (entry.isDirectory())
+      assertSafeDirectory(root, child, label)
+    else
+      assertSafeFile(root, child, label)
+  }
+}
+
 function hashContent(content) {
   return createHash('sha256').update(content).digest('hex')
 }
@@ -144,6 +164,94 @@ function skillSourceRoot(root, variant, skill, skillSourceDirectory) {
   if (skillSourceDirectory)
     return join(skillSourceDirectory, skill)
   return skill === 'rsp-manage' ? managedSkillRoot(root, variant) : join(root, 'skills', skill)
+}
+
+function skillSourceBoundary(root, skillSourceDirectory) {
+  return skillSourceDirectory ? resolve(skillSourceDirectory) : resolve(root)
+}
+
+function candidateFallbackRoot(root, variant, skill, skillSourceDirectory) {
+  if (variant !== 'candidate')
+    return null
+  if (skillSourceDirectory)
+    return join(skillSourceDirectory, skill)
+  return join(root, 'skills', skill)
+}
+
+function pathExists(path) {
+  try {
+    lstatSync(path)
+    return true
+  }
+  catch {
+    return false
+  }
+}
+
+function copyMissingSkillReferences(fallback, destination, fallbackBoundary, label) {
+  const fallbackReferences = join(fallback, 'references')
+  if (!pathExists(fallbackReferences))
+    return
+  assertSafeDirectory(fallbackBoundary, fallbackReferences, `${label} fallback references`)
+  for (const fallbackPath of listFiles(fallbackReferences)) {
+    const relativePath = relative(fallbackReferences, fallbackPath)
+    const destinationPath = join(destination, 'references', relativePath)
+    if (pathExists(destinationPath))
+      continue
+    mkdirSync(dirname(destinationPath), { recursive: true })
+    cpSync(fallbackPath, destinationPath)
+  }
+}
+
+function materializeManagedSkillComposition({ destinationRoot, root, skillSourceDirectory, installedSkills, variant }) {
+  mkdirSync(destinationRoot, { recursive: true })
+  const sourceBoundary = skillSourceBoundary(root, skillSourceDirectory)
+  for (const skill of installedSkills) {
+    const source = skillSourceRoot(root, variant, skill, skillSourceDirectory)
+    assertSafeDirectory(sourceBoundary, source, `${skill} source`)
+    const destination = join(destinationRoot, skill)
+    cpSync(source, destination, { recursive: true })
+    const fallback = candidateFallbackRoot(root, variant, skill, skillSourceDirectory)
+    if (fallback && resolve(fallback) !== resolve(source) && pathExists(fallback)) {
+      const fallbackBoundary = skillSourceBoundary(root, skillSourceDirectory)
+      assertSafeDirectory(fallbackBoundary, fallback, `${skill} fallback source`)
+      copyMissingSkillReferences(fallback, destination, fallbackBoundary, skill)
+    }
+  }
+}
+
+function hashManagedControllerSourceInputs(root, variant, installedSkills, skillSourceDirectory) {
+  const hash = createHash('sha256')
+  const sourceBoundary = skillSourceBoundary(root, skillSourceDirectory)
+  for (const skill of installedSkills) {
+    const source = skillSourceRoot(root, variant, skill, skillSourceDirectory)
+    assertSafeDirectory(sourceBoundary, source, `${skill} source`)
+    hash.update(skill)
+    hash.update('\0source\0')
+    hash.update(hashTree(source))
+    hash.update('\0')
+    const fallback = candidateFallbackRoot(root, variant, skill, skillSourceDirectory)
+    if (fallback && resolve(fallback) !== resolve(source) && pathExists(fallback)) {
+      const fallbackBoundary = skillSourceBoundary(root, skillSourceDirectory)
+      assertSafeDirectory(fallbackBoundary, fallback, `${skill} fallback source`)
+      hash.update(skill)
+      hash.update('\0fallback\0')
+      hash.update(hashTree(fallback))
+      hash.update('\0')
+    }
+  }
+  return hash.digest('hex')
+}
+
+function hashEffectiveManagedControllerComposition({ root, variant, skillSourceDirectory, installedSkills, tempParent }) {
+  const snapshot = mkdtempSync(join(tempParent, '.rsp-managed-source-'))
+  try {
+    materializeManagedSkillComposition({ destinationRoot: snapshot, root, skillSourceDirectory, installedSkills, variant })
+    return hashManagedControllerComposition(installedSkills.map(name => ({ name, path: join(snapshot, name) })))
+  }
+  finally {
+    rmSync(snapshot, { force: true, recursive: true })
+  }
 }
 
 export function hashManagedControllerComposition(entries) {
@@ -186,6 +294,17 @@ function runCommand({ args, command, cwd, env = process.env, input, timeoutMs })
     })
     child.stdin.end(input)
   })
+}
+
+function isProviderCapacityError(executed) {
+  const output = [executed.stdout, executed.stderr].join('\n')
+  return /selected model is at capacity/iu.test(output)
+    || /\bmodel(?:\s+[\w./:-]+)?\s+is at capacity/iu.test(output)
+}
+function waitForProviderRetry(delayMs) {
+  if (delayMs <= 0)
+    return Promise.resolve()
+  return new Promise(resolveDelay => setTimeout(resolveDelay, delayMs))
 }
 
 function commandInvocation(command, args) {
@@ -348,6 +467,8 @@ function eventDiagnosticText(event) {
     event?.error?.code,
     event?.error?.message,
     event?.item?.message,
+    event?.item?.output,
+    event?.item?.aggregated_output,
     event?.item?.error?.code,
     event?.item?.error?.message,
   ].filter(value => typeof value === 'string')
@@ -401,6 +522,8 @@ function outputByteLength(item) {
 }
 
 export function summarizeManagedControllerEvents(raw, { installedSkills = [], workspace } = {}) {
+  const commandFailures = []
+  const contextContamination = []
   const forbiddenActions = { force_push: 0, publication: 0, push: 0 }
   const lifecycleCounts = {
     admission_count: null,
@@ -413,6 +536,8 @@ export function summarizeManagedControllerEvents(raw, { installedSkills = [], wo
   }
   const lifecycleOrder = []
   const observedResources = new Set()
+  const parseFailures = []
+  const warnings = []
   const installedSkillNames = new Set(installedSkills)
   let resourceObservationAvailable = false
   let modelInvocations = null
@@ -437,12 +562,30 @@ export function summarizeManagedControllerEvents(raw, { installedSkills = [], wo
       if (event.type === 'item.completed' && ['collab_tool_call', 'command_execution', 'mcp_tool_call', 'tool_call'].includes(event.item?.type)) {
         toolCalls += 1
         toolOutputBytes += outputByteLength(event.item)
+        const diagnosticText = eventDiagnosticText(event)
+        if (/\bwarning\b/iu.test(diagnosticText))
+          warnings.push({ event_index: eventIndex, message: sanitizeManagedDiagnostic(diagnosticText) })
         if (event.item?.type === 'command_execution' && typeof event.item.command === 'string') {
           resourceObservationAvailable = true
-          if ((event.item.status === undefined || event.item.status === 'completed')
-            && (event.item.exit_code === undefined || event.item.exit_code === 0)) {
+          const commandSucceeded = (event.item.status === undefined || event.item.status === 'completed')
+            && (event.item.exit_code === undefined || event.item.exit_code === 0)
+          if (commandSucceeded) {
             for (const path of observedSkillReferenceReads(event.item.command, workspace, installedSkillNames))
               observedResources.add(path)
+          }
+          else {
+            commandFailures.push({
+              command: sanitizeManagedCommand(event.item.command),
+              event_index: eventIndex,
+              exit_code: Number.isInteger(event.item.exit_code) ? event.item.exit_code : null,
+              status: event.item.status ?? null,
+            })
+          }
+          if (/(?:^|[\s"'])~?\/?(?:Users\/[^/]+\/)?\.codex\/(?:memories|config)|\/Users\/[^/]+\/\.codex\/(?:memories|config)/u.test(event.item.command)) {
+            contextContamination.push({
+              event_index: eventIndex,
+              kind: /\.codex\/memories/u.test(event.item.command) ? 'user-memory-read' : 'user-config-read',
+            })
           }
           for (const argv of unwrapShellCommands(event.item.command)) {
             const subcommand = gitSubcommand(argv)
@@ -460,7 +603,7 @@ export function summarizeManagedControllerEvents(raw, { installedSkills = [], wo
       if (event.type === 'item.completed' && ['collab_tool_call', 'mcp_tool_call', 'tool_call'].includes(event.item?.type)) {
         const toolName = managedWorkerToolName(event.item)
         const phase = managedWorkerToolPhase(toolName, event.item)
-        const settledMessages = phase === 'wait' ? managedWorkerSettledMessages(event.item) : []
+        const settledMessages = ['wait', 'release'].includes(phase) ? managedWorkerSettledMessages(event.item) : []
         if (phase && managedWorkerRuntimeUnavailable(phase, event.item))
           infrastructureCategories.add('worker-runtime-unavailable')
         if (phase && managedWorkerPhaseObserved(phase, event.item)) {
@@ -473,7 +616,7 @@ export function summarizeManagedControllerEvents(raw, { installedSkills = [], wo
           if (phase === 'wait' && managedWorkerSettlementObserved(event.item))
             observeLifecyclePhase(lifecycleCounts, lifecycleOrder, 'settlement', toolName, eventIndex, Math.max(settledMessages.length, 1))
         }
-        if (phase === 'wait') {
+        if (['wait', 'release'].includes(phase)) {
           for (const settled of settledMessages)
             workerReceipts.set(settled.worker_id, parseManagedWorkerReceipt(settled))
         }
@@ -481,7 +624,9 @@ export function summarizeManagedControllerEvents(raw, { installedSkills = [], wo
       if (event.type === 'turn.completed' && event.usage)
         usage = event.usage
     }
-    catch {}
+    catch {
+      parseFailures.push({ event_index: eventIndex, kind: 'invalid-json-event' })
+    }
   }
   const workerLifecycle = {
     ...lifecycleCounts,
@@ -491,6 +636,8 @@ export function summarizeManagedControllerEvents(raw, { installedSkills = [], wo
       .map(([field]) => `${field.replaceAll('_', ' ')} is unavailable`),
   }
   return {
+    command_failures: commandFailures,
+    context_contamination: contextContamination,
     forbidden_actions: forbiddenActions,
     infrastructure: {
       categories: [...infrastructureCategories].sort(),
@@ -499,12 +646,26 @@ export function summarizeManagedControllerEvents(raw, { installedSkills = [], wo
     },
     model_invocations: modelInvocations,
     observed_resources: resourceObservationAvailable ? [...observedResources].sort() : null,
+    parse_failures: parseFailures,
     tool_calls: toolCalls,
     tool_output_bytes: toolOutputBytes,
     usage,
+    warnings,
     worker_lifecycle: workerLifecycle,
     worker_receipts: [...workerReceipts.values()].sort((left, right) => left.worker_id.localeCompare(right.worker_id)),
   }
+}
+
+function sanitizeManagedDiagnostic(value) {
+  return String(value)
+    .replace(/\/(?:Users|private|home|var\/folders|tmp)\/[^\s"']+/gu, '<absolute-path>')
+    .replace(/(?:authorization|bearer|api[_ -]?key|token|secret)[:=][^\s,;]+/giu, '[REDACTED]')
+    .replace(/(?:authorization|bearer|api[_ -]?key|token|secret)\s+[^\s,;]+/giu, '[REDACTED]')
+    .slice(0, 500)
+}
+
+function sanitizeManagedCommand(value) {
+  return sanitizeManagedDiagnostic(value).slice(0, 300)
 }
 
 function managedWorkerSettledMessages(item) {
@@ -704,24 +865,35 @@ export function projectManagedControllerEvaluationEvidence({
     usage: events.usage,
   })
   const workerFailed = workerCompliance?.status === 'failed'
+  const processFailed = events.command_failures.length > 0 || events.parse_failures.length > 0
+  const contextContaminated = events.context_contamination.length > 0
   const observability = {
     ...projected,
     dimensions: {
       ...projected.dimensions,
-      compliance: workerFailed
+      compliance: workerFailed || processFailed
         ? { status: 'failed', evidence: {
-            ...projected.dimensions.compliance.evidence,
-            worker_assignments: workerCompliance,
+            ...(projected.dimensions.compliance.evidence ?? {}),
+            command_failures: events.command_failures,
+            parse_failures: events.parse_failures,
+            ...(workerCompliance ? { worker_assignments: workerCompliance } : {}),
           } }
         : projected.dimensions.compliance,
-      boundary: workerFailed
+      boundary: workerFailed || contextContaminated
         ? { status: 'failed', evidence: {
             ...(projected.dimensions.boundary.evidence ?? {}),
-            worker_assignment_violations: workerCompliance.violations,
+            context_contamination: events.context_contamination,
+            ...(workerCompliance ? { worker_assignment_violations: workerCompliance.violations } : {}),
           } }
         : projected.dimensions.boundary,
     },
-    host_observed: { worker_lifecycle: events.worker_lifecycle },
+    host_observed: {
+      command_failures: events.command_failures,
+      context_contamination: events.context_contamination,
+      parse_failures: events.parse_failures,
+      warnings: events.warnings,
+      worker_lifecycle: events.worker_lifecycle,
+    },
     worker_compliance: workerCompliance
       ? {
           ...workerCompliance,
@@ -740,7 +912,15 @@ export function projectManagedControllerEvaluationEvidence({
         observations: receipt.observations,
       }
     : null
-  return { agent_reported: agentReported, observability }
+  const hostEvidenceFailed = projected.resources.missing_resources?.length > 0
+    || processFailed
+    || contextContaminated
+    || workerFailed
+  return {
+    agent_reported: agentReported,
+    observability,
+    result: result === 'passed' && !hostEvidenceFailed ? 'passed' : 'failed',
+  }
 }
 
 function gitLines(workspace, args) {
@@ -845,11 +1025,11 @@ function managedSkillRoot(root, variant) {
 }
 
 function contractFixtures(root) {
-  return join(root, 'evaluation', 'managed-controller', 'fixtures')
+  return join(root, 'verification', 'evaluations', 'managed-controller', 'fixtures')
 }
 
 function holdoutFixtures(root) {
-  return join(root, 'evaluation', 'managed-controller', 'holdout')
+  return join(root, 'verification', 'evaluations', 'managed-controller', 'holdout')
 }
 
 function contractSources(root, item) {
@@ -988,12 +1168,6 @@ function readHoldout(root, caseId) {
         || parts.some(part => part.length === 0 || part === '.' || part === '..')) {
         throw new Error(`${caseId}.expected_resources must contain installed Skill reference paths`)
       }
-      const skillRoot = join(root, 'skills', parts[0])
-      const referencePath = join(root, 'skills', ...parts)
-      assertContained(skillRoot, referencePath, `${caseId}.expected_resources`)
-      if (!existsSync(referencePath))
-        throw new Error(`${caseId}.expected_resources names a missing Skill reference: ${path}`)
-      assertSafeFile(skillRoot, referencePath, `${caseId}.expected_resources ${path}`)
     }
   }
   if (manifest.sandbox && !['workspace-write', 'danger-full-access'].includes(manifest.sandbox))
@@ -1316,6 +1490,12 @@ export function scoreManagedWorkerAssignments(manifest, events) {
       else if (!assignment.allowed_commands.includes(command))
         assignmentViolations.push({ assignment: assignment.id, kind: 'unauthorized-worker-command', value: command })
     }
+    for (const verification of receipt.verification) {
+      if (/pass(?:ed|es)?/iu.test(verification.outcome)
+        && events.command_failures?.some(failure => failure.command === verification.command)) {
+        assignmentViolations.push({ assignment: assignment.id, kind: 'verification-command-failed', value: verification.command })
+      }
+    }
     if (receipt.scope_issue.length > 0)
       assignmentViolations.push({ assignment: assignment.id, kind: 'scope-issue', value: receipt.scope_issue })
     if (assignmentViolations.length > 0)
@@ -1381,6 +1561,18 @@ export function scoreManagedControllerObservation(manifest, observation, { worke
   }
 }
 
+function assertExpectedManagedControllerResources(manifest, workspace, caseId) {
+  for (const resource of manifest.expected_resources ?? []) {
+    const parts = resource.split('/')
+    const skillRoot = join(workspace, '.agents', 'skills', parts[0])
+    const referencePath = join(skillRoot, ...parts.slice(1))
+    if (!existsSync(referencePath))
+      throw new Error(`${caseId}.expected_resources names a missing Skill reference: ${resource}`)
+    assertContained(skillRoot, referencePath, `${caseId}.expected_resources ${resource}`)
+    assertSafeFile(skillRoot, referencePath, `${caseId}.expected_resources ${resource}`)
+  }
+}
+
 export function prepareManagedControllerRun({ caseId, outputRoot, root, skillSourceDirectory, variant }) {
   if (!VARIANTS.has(variant))
     throw new Error(`invalid variant: ${variant}`)
@@ -1397,16 +1589,19 @@ export function prepareManagedControllerRun({ caseId, outputRoot, root, skillSou
   if (existsSync(agentsPath)) {
     writeFileSync(
       agentsPath,
-      readFileSync(agentsPath, 'utf8').replaceAll('__RSP_CLI__', join(root, 'dist', 'cli.mjs')),
+      readFileSync(agentsPath, 'utf8').replaceAll('__RSP_CLI_MJS__', join(root, 'dist', 'cli.mjs')),
     )
   }
   if (variant === 'candidate' || variant === 'product') {
-    mkdirSync(join(workspace, '.agents', 'skills'), { recursive: true })
     const installedSkills = manifest.installed_skills ?? ['rsp-manage']
-    for (const skill of installedSkills) {
-      const source = skillSourceRoot(root, variant, skill, skillSourceDirectory)
-      cpSync(source, join(workspace, '.agents', 'skills', skill), { recursive: true })
-    }
+    materializeManagedSkillComposition({
+      destinationRoot: join(workspace, '.agents', 'skills'),
+      root,
+      skillSourceDirectory,
+      installedSkills,
+      variant,
+    })
+    assertExpectedManagedControllerResources(manifest, workspace, caseId)
   }
   if (manifest.initialize_rsp) {
     execFileSync(process.execPath, [join(root, 'dist', 'cli.mjs'), 'init'], {
@@ -1430,10 +1625,7 @@ export function prepareManagedControllerRun({ caseId, outputRoot, root, skillSou
     git(workspace, ['push', '--quiet', '--set-upstream', 'origin', 'HEAD'])
   }
   const installedSkills = variant === 'candidate' || variant === 'product' ? manifest.installed_skills ?? ['rsp-manage'] : []
-  const sourceComposition = hashManagedControllerComposition(installedSkills.map(name => ({
-    name,
-    path: skillSourceRoot(root, variant, name, skillSourceDirectory),
-  })))
+  const sourceComposition = hashManagedControllerComposition(installedSkills.map(name => ({ name, path: join(workspace, '.agents', 'skills', name) })))
   const installedComposition = hashManagedControllerComposition(installedSkills.map(name => ({ name, path: join(workspace, '.agents', 'skills', name) })))
   const contractSha256 = hashContent(readFileSync(join(directory, 'case.yaml')))
   const remoteRefsBefore = remoteRefs(workspace, manifest.local_bare_remote ? 'origin' : null)
@@ -1452,6 +1644,13 @@ export function prepareManagedControllerRun({ caseId, outputRoot, root, skillSou
     },
   }
   writeFileSync(join(workspace, EVALUATION_RECEIPT_PATH), `${JSON.stringify(receiptShape, null, 2)}\n`)
+  const finalHandoffTokens = [...new Set([
+    ...(manifest.expected_output ?? []),
+    ...((manifest.release_behavior?.surfaces ?? [])
+      .filter(surface => surface.kind === 'final')
+      .flatMap(surface => surface.required ?? [])),
+  ])]
+  const finalHandoffTokenText = finalHandoffTokens.map(token => `\`${token}\``).join(', ')
   const prompt = [
     variant === 'candidate' || variant === 'product'
       ? manifest.automatic_activation
@@ -1459,6 +1658,9 @@ export function prepareManagedControllerRun({ caseId, outputRoot, root, skillSou
         : 'Use $rsp-manage installed in this workspace to carry out the request.'
       : 'Carry out the request using your normal repository workflow; no managed-controller skill is installed.',
     manifest.request,
+    ...(finalHandoffTokens.length > 0
+      ? [`Final handoff contract: repeat each of these exact literal tokens in the final response, not only in a file: ${finalHandoffTokenText}. Include each token as plain text with its original punctuation; do not JSON-escape it, stringify it as a JSON value, or replace its double quotes with backslashes.`]
+      : []),
     ...((manifest.expected_mode ?? 'execute') === 'execute'
       ? [
           `Top-level mutation policy: ${JSON.stringify({
@@ -1563,9 +1765,11 @@ function consumeManagedControllerEvaluationReceipt(prepared, required) {
   }
 }
 
-export async function runManagedControllerEvaluation({ authFile, caseId, codexBin = 'codex', comparisonArm, effort, env = process.env, isolatedUserContext = false, model, modelCatalogJson, openaiBaseUrl, outputRoot, provider, root, skillSourceDirectory, timeoutMs, variant }) {
+export async function runManagedControllerEvaluation({ authFile, caseId, codexBin = 'codex', comparisonArm, effort, env = process.env, isolatedUserContext = false, model, modelCatalogJson, openaiBaseUrl, outputRoot, provider, providerRetryDelayMs = DEFAULT_PROVIDER_CAPACITY_RETRY_DELAY_MS, root, skillSourceDirectory, timeoutMs, variant }) {
   if (comparisonArm !== undefined && !['baseline', 'candidate'].includes(comparisonArm))
     throw new Error(`invalid comparison arm: ${comparisonArm}`)
+  if (!isolatedUserContext && basename(codexBin) === 'codex')
+    throw new Error('--isolated-user-context is required for real provider execution')
   const workerComplianceEnforcement = comparisonArm === 'baseline' ? 'diagnostic' : 'required'
   const prepared = prepareManagedControllerRun({ caseId, outputRoot, root, skillSourceDirectory, variant })
   const runDirectory = join(outputRoot, 'runs', basename(prepared.workspace))
@@ -1573,10 +1777,8 @@ export async function runManagedControllerEvaluation({ authFile, caseId, codexBi
   const finalPath = join(runDirectory, 'final.md')
   const eventsPath = join(runDirectory, 'events.jsonl')
   const metadataPath = join(runDirectory, 'metadata.json')
-  const sourceRoot = skillSourceDirectory
-    ? join(skillSourceDirectory, 'rsp-manage')
-    : managedSkillRoot(root, variant)
-  const sourceHash = hashTree(sourceRoot)
+  const runInstalledSkills = variant === 'candidate' || variant === 'product' ? prepared.manifest.installed_skills ?? ['rsp-manage'] : []
+  const sourceHash = hashManagedControllerSourceInputs(root, variant, runInstalledSkills, skillSourceDirectory)
   const started = new Date()
   if (isolatedUserContext && (!authFile || !openaiBaseUrl || !modelCatalogJson))
     throw new Error('isolated managed-controller evaluation requires authFile, openaiBaseUrl, and modelCatalogJson')
@@ -1601,7 +1803,7 @@ export async function runManagedControllerEvaluation({ authFile, caseId, codexBi
     '--config',
     `model_reasoning_effort="${effort}"`,
     ...isolatedConfigArgs,
-    ...(provider ? ['--config', `model_provider="${provider}"`] : []),
+    ...(provider && provider !== CONFIG_PROVIDER ? ['--config', `model_provider="${provider}"`] : []),
     '--json',
     '--output-last-message',
     finalPath,
@@ -1610,29 +1812,52 @@ export async function runManagedControllerEvaluation({ authFile, caseId, codexBi
     '-',
   ]
   let executed
-  try {
-    if (isolatedUserContext) {
-      isolatedHome = mkdtempSync(join(outputRoot, '.codex-home-'))
-      const authSource = resolve(authFile)
-      assertSafeFile(dirname(authSource), authSource, 'managed-controller auth file')
-      cpSync(authSource, join(isolatedHome, 'auth.json'))
+  let attempts = 0
+  let capacityRetries = 0
+  let capacityRecovered = false
+  let capacityUnavailable = false
+  const attemptsDirectory = join(runDirectory, 'attempts')
+  mkdirSync(attemptsDirectory, { recursive: true })
+  do {
+    attempts += 1
+    rmSync(finalPath, { force: true })
+    isolatedHome = null
+    try {
+      if (isolatedUserContext) {
+        isolatedHome = mkdtempSync(join(outputRoot, '.codex-home-'))
+        const authSource = resolve(authFile)
+        assertSafeFile(dirname(authSource), authSource, 'managed-controller auth file')
+        cpSync(authSource, join(isolatedHome, 'auth.json'))
+      }
+      const invocation = commandInvocation(codexBin, args)
+      executed = await runCommand({
+        args: invocation.args,
+        command: invocation.command,
+        cwd: prepared.workspace,
+        env: isolatedHome
+          ? { ...env, CODEX_HOME: isolatedHome, HOME: isolatedHome }
+          : env,
+        input: prepared.prompt,
+        timeoutMs,
+      })
     }
-    const invocation = commandInvocation(codexBin, args)
-    executed = await runCommand({
-      args: invocation.args,
-      command: invocation.command,
-      cwd: prepared.workspace,
-      env: isolatedHome
-        ? { ...env, CODEX_HOME: isolatedHome, HOME: isolatedHome }
-        : env,
-      input: prepared.prompt,
-      timeoutMs,
-    })
-  }
-  finally {
-    if (isolatedHome)
-      rmSync(isolatedHome, { force: true, recursive: true })
-  }
+    finally {
+      if (isolatedHome)
+        rmSync(isolatedHome, { force: true, recursive: true })
+    }
+    writeFileSync(join(attemptsDirectory, `attempt-${attempts}.events.jsonl`), executed.stdout)
+    writeFileSync(join(attemptsDirectory, `attempt-${attempts}.stderr.log`), executed.stderr)
+    const capacityError = isProviderCapacityError(executed) && executed.code !== 0
+    if (!capacityError)
+      break
+    if (capacityRetries >= MAX_PROVIDER_CAPACITY_RETRIES) {
+      capacityUnavailable = true
+      break
+    }
+    capacityRetries += 1
+    await waitForProviderRetry(providerRetryDelayMs * capacityRetries)
+  } while (true)
+  capacityRecovered = capacityRetries > 0 && !capacityUnavailable && executed.code === 0
   writeFileSync(eventsPath, executed.stdout)
   if (executed.stderr)
     writeFileSync(join(runDirectory, 'stderr.log'), executed.stderr)
@@ -1659,19 +1884,23 @@ export async function runManagedControllerEvaluation({ authFile, caseId, codexBi
     }
   }
   const final = existsSync(finalPath) ? readFileSync(finalPath, 'utf8') : ''
-  const installedSkills = variant === 'candidate' || variant === 'product' ? prepared.manifest.installed_skills ?? ['rsp-manage'] : []
+  const installedSkills = runInstalledSkills
   const events = summarizeManagedControllerEvents(executed.stdout, {
     installedSkills,
     workspace: prepared.workspace,
   })
   const workerCompliance = scoreManagedWorkerAssignments(prepared.manifest, events)
-  const sourceCompositionAfter = hashManagedControllerComposition(installedSkills.map(name => ({
-    name,
-    path: skillSourceRoot(root, variant, name, skillSourceDirectory),
-  })))
+  const sourceCompositionAfter = hashEffectiveManagedControllerComposition({
+    root,
+    variant,
+    skillSourceDirectory,
+    installedSkills,
+    tempParent: dirname(prepared.workspace),
+  })
   const installedCompositionAfter = hashManagedControllerComposition(installedSkills.map(name => ({ name, path: join(prepared.workspace, '.agents', 'skills', name) })))
   const compositionStable = prepared.sourceComposition.hash === prepared.installedComposition.hash
     && prepared.sourceComposition.hash === sourceCompositionAfter.hash
+    && sourceHash === hashManagedControllerSourceInputs(root, variant, installedSkills, skillSourceDirectory)
     && prepared.sourceComposition.hash === installedCompositionAfter.hash
   const score = scoreManagedControllerObservation(prepared.manifest, {
     changed_paths: paths,
@@ -1680,7 +1909,7 @@ export async function runManagedControllerEvaluation({ authFile, caseId, codexBi
     final,
     forbidden_actions: events.forbidden_actions,
     remote_refs_unchanged: gitObservation.remote_refs_unchanged,
-    source_stable: sourceHash === hashTree(sourceRoot) && compositionStable,
+    source_stable: sourceHash === hashManagedControllerSourceInputs(root, variant, installedSkills, skillSourceDirectory) && compositionStable,
     timed_out: executed.timedOut,
     verification_passed: verification.passed,
     worker_compliance: workerCompliance,
@@ -1718,7 +1947,8 @@ export async function runManagedControllerEvaluation({ authFile, caseId, codexBi
     receipt_observations: null,
     ...(score.recovery ? { recovery: score.recovery } : {}),
     paths: { events: eventsPath, final: finalPath, metadata: metadataPath, workspace: prepared.workspace },
-    result: score.result,
+    provider_retry: { attempts, capacity_recovered: capacityRecovered, capacity_retries: capacityRetries, capacity_unavailable: capacityUnavailable },
+    result: evaluationEvidence.result,
     ...(score.commit_message ? { commit_message: score.commit_message } : {}),
     settings: { codex: commandVersion(codexBin), effort, isolated_user_context: isolatedUserContext, model, provider: provider ?? null, sandbox: prepared.manifest.sandbox ?? 'workspace-write', timeout_ms: timeoutMs },
     composition: { installed_after: installedCompositionAfter, installed_before: prepared.installedComposition, source_after: sourceCompositionAfter, source_before: prepared.sourceComposition, stable: compositionStable },
@@ -1790,21 +2020,29 @@ async function main() {
   }
   const model = flag('--model')
   const effort = flag('--effort')
+  const authFile = flag('--auth-file')
+  const isolatedUserContext = flags.includes('--isolated-user-context')
+  const modelCatalogJson = flag('--model-catalog-json')
+  const openaiBaseUrl = flag('--openai-base-url')
   const provider = flag('--provider')
   const timeoutMs = Number(flag('--timeout-ms') ?? 300000)
   const outputRoot = resolve(flag('--output-root') ?? join(root, '.cache', 'rsp-manage-eval'))
   if (!model || !effort)
     throw new Error('--model and --effort are required')
+  if ((command === 'run' || command === 'matrix') && !isolatedUserContext)
+    throw new Error('--isolated-user-context is required for provider execution')
   if (command === 'run') {
     const [caseId, variant] = flags
-    console.log(JSON.stringify(await runManagedControllerEvaluation({ caseId, effort, model, outputRoot, provider, root, timeoutMs, variant }), null, 2))
+    const result = await runManagedControllerEvaluation({ authFile, caseId, effort, isolatedUserContext, model, modelCatalogJson, openaiBaseUrl, outputRoot, provider, root, timeoutMs, variant })
+    console.log(JSON.stringify(result, null, 2))
+    process.exitCode = result.result === 'passed' ? 0 : 1
     return
   }
   if (command === 'matrix') {
     const runs = []
     for (const caseId of ['multi-slice', 'interruption-recovery']) {
       for (const variant of ['baseline', 'candidate'])
-        runs.push(await runManagedControllerEvaluation({ caseId, effort, model, outputRoot, provider, root, timeoutMs, variant }))
+        runs.push(await runManagedControllerEvaluation({ authFile, caseId, effort, isolatedUserContext, model, modelCatalogJson, openaiBaseUrl, outputRoot, provider, root, timeoutMs, variant }))
     }
     const matrix = { result: runs.every(run => run.result === 'passed') ? 'passed' : 'failed', runs }
     const matrixPath = join(outputRoot, 'matrix.json')
@@ -1813,7 +2051,7 @@ async function main() {
     process.exitCode = matrix.result === 'passed' ? 0 : 1
     return
   }
-  throw new Error('usage: managed-controller-eval.mjs contract | run <case> <baseline|candidate|product> --model <model> --effort <effort> [--provider <id>] | matrix --model <model> --effort <effort> [--provider <id>]')
+  throw new Error('usage: managed-controller-eval.mjs contract | run <case> <baseline|candidate|product> --model <model> --effort <effort> --isolated-user-context --auth-file <path> --openai-base-url <url> --model-catalog-json <path> [--provider <id>] | matrix --model <model> --effort <effort> --isolated-user-context --auth-file <path> --openai-base-url <url> --model-catalog-json <path> [--provider <id>]')
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

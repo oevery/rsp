@@ -198,13 +198,17 @@ export interface ManagedControllerEvaluationMetadata {
   ended_at: string
   exit_code: number | null
   events: {
+    command_failures: Array<{ command: string, event_index: number, exit_code: number | null, status: string | null }>
+    context_contamination: Array<{ event_index: number, kind: 'user-memory-read' | 'user-config-read' }>
     forbidden_actions: { force_push: number, publication: number, push: number }
     infrastructure: { categories: string[], retry_count: number, status: 'contaminated' | 'no-contamination-observed' }
     model_invocations: number | null
     observed_resources: string[] | null
+    parse_failures: Array<{ event_index: number, kind: 'invalid-json-event' }>
     tool_calls: number
     tool_output_bytes: number
     usage: unknown
+    warnings: Array<{ event_index: number, message: string }>
     worker_lifecycle: ManagedControllerWorkerLifecycleObservation
     worker_receipts: ManagedControllerWorkerReceiptObservation[]
   }
@@ -212,6 +216,12 @@ export interface ManagedControllerEvaluationMetadata {
   git: ManagedControllerGitObservation
   output: ManagedControllerOutputScore
   paths: { events: string, final: string, metadata: string, workspace: string }
+  provider_retry: {
+    attempts: number
+    capacity_recovered: boolean
+    capacity_retries: number
+    capacity_unavailable: boolean
+  }
   evaluation_receipt: {
     case_id: string
     composition_sha256: string
@@ -244,7 +254,13 @@ export interface ManagedControllerEvaluationMetadata {
     }
     omissions: string[]
     resources: ManagedControllerResourceObservation
-    host_observed: { worker_lifecycle: ManagedControllerWorkerLifecycleObservation }
+    host_observed: {
+      command_failures: ManagedControllerEvaluationMetadata['events']['command_failures']
+      context_contamination: ManagedControllerEvaluationMetadata['events']['context_contamination']
+      parse_failures: ManagedControllerEvaluationMetadata['events']['parse_failures']
+      warnings: ManagedControllerEvaluationMetadata['events']['warnings']
+      worker_lifecycle: ManagedControllerWorkerLifecycleObservation
+    }
     worker_compliance: ManagedControllerWorkerCompliance | null
   }
   receipt_observations: {
@@ -349,6 +365,7 @@ export function runManagedControllerEvaluation(options: {
   openaiBaseUrl?: string
   outputRoot: string
   provider?: string
+  providerRetryDelayMs?: number
   root: string
   skillSourceDirectory?: string
   timeoutMs: number
@@ -374,19 +391,23 @@ export function scoreManagedControllerObservation(manifest: ManagedControllerSco
 }
 export function scoreManagedWorkerAssignments(
   manifest: Pick<ManagedControllerHoldoutManifest, 'manager_only_changes' | 'manager_only_commands' | 'worker_assignments'>,
-  events: { worker_lifecycle?: Partial<ManagedControllerWorkerLifecycleObservation>, worker_receipts?: ManagedControllerWorkerReceiptObservation[] },
+  events: { command_failures?: ManagedControllerEvaluationMetadata['events']['command_failures'], worker_lifecycle?: Partial<ManagedControllerWorkerLifecycleObservation>, worker_receipts?: ManagedControllerWorkerReceiptObservation[] },
 ): ManagedControllerWorkerCompliance
 export function summarizeManagedControllerEvents(raw: string, options?: {
   installedSkills?: string[]
   workspace?: string
 }): {
+  command_failures: Array<{ command: string, event_index: number, exit_code: number | null, status: string | null }>
+  context_contamination: Array<{ event_index: number, kind: 'user-memory-read' | 'user-config-read' }>
   forbidden_actions: { force_push: number, publication: number, push: number }
   infrastructure: { categories: string[], retry_count: number, status: 'contaminated' | 'no-contamination-observed' }
   model_invocations: number | null
   observed_resources: string[] | null
+  parse_failures: Array<{ event_index: number, kind: 'invalid-json-event' }>
   tool_calls: number
   tool_output_bytes: number
   usage: unknown
+  warnings: Array<{ event_index: number, message: string }>
   worker_lifecycle: ManagedControllerWorkerLifecycleObservation
   worker_receipts: ManagedControllerWorkerReceiptObservation[]
 }
@@ -407,6 +428,7 @@ export function projectManagedControllerEvaluationEvidence(options: {
 }): {
   agent_reported: ManagedControllerAgentReportedEvaluation | null
   observability: ManagedControllerEvaluationMetadata['observability']
+  result: 'passed' | 'failed'
 }
 export function readManagedControllerFlag(flags: string[], name: string): string | undefined
 export function scoreManagedControllerOutput(manifest: ManagedControllerOutputManifest, final: string): ManagedControllerOutputScore

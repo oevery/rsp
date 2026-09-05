@@ -1,0 +1,21 @@
+version: 1
+id: rsp-verification-scenarios
+sources:
+  - id: tests
+    path: scenarios/tests/index.yaml
+    layer: test
+  - id: skills
+    path: scenarios/skills/index.yaml
+    layer: evaluation
+  - id: routing
+    path: scenarios/routing/index.yaml
+    layer: evaluation
+  - id: workers
+    path: scenarios/workers/index.yaml
+    layer: evaluation
+  - id: projects
+    path: scenarios/projects/index.yaml
+    layer: acceptance
+  - id: providers
+    path: scenarios/providers/index.yaml
+    layer: evaluation

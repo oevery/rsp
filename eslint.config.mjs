@@ -4,7 +4,7 @@ export default antfu({
   ignores: [
     'node_modules/',
     '.git/',
-    'evaluation/skill-behavior/fixtures/',
+    'verification/evaluations/skill-behavior/fixtures/',
     'research/evaluations/rsp-skill-runtime-context/*/inputs/**/prompt.md',
     'research/evaluations/rsp-skill-runtime-context/*/runs/**/final.json',
     'research/evaluations/rsp-skill-runtime-context/*/run.mjs',

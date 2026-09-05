@@ -2,7 +2,7 @@
 
 import { execFileSync, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, dirname, join, relative, resolve, sep } from 'node:path'
 import process from 'node:process'
@@ -297,6 +297,39 @@ function expectedPackageInventory(root) {
   for (const entry of EXPECTED_DIST_ENTRIES)
     visit(entry)
   return [...EXPECTED_STATIC_PACKAGE_FILES, ...distFiles].sort()
+}
+
+function copyTarballArtifact(root, tarball) {
+  const configuredPath = process.env.RSP_PACKAGE_CHECK_ARTIFACT_OUTPUT
+  if (!configuredPath)
+    return null
+  const repositoryRoot = resolve(root)
+  const outputPath = resolve(repositoryRoot, configuredPath)
+  if (outputPath !== repositoryRoot && !outputPath.startsWith(repositoryRoot + sep))
+    fail('Package artifact output escapes the repository')
+  const outputDirectory = dirname(outputPath)
+  mkdirSync(outputDirectory, { recursive: true })
+  const canonicalRoot = realpathSync(repositoryRoot)
+  const canonicalDirectory = realpathSync(outputDirectory)
+  if (canonicalDirectory !== canonicalRoot && !canonicalDirectory.startsWith(canonicalRoot + sep))
+    fail('Package artifact output escapes the repository through a symlink')
+  const content = readFileSync(tarball)
+  try {
+    writeFileSync(outputPath, content, { flag: 'wx', mode: 0o600 })
+  }
+  catch (error) {
+    const existingOutput = lstatSync(outputPath, { throwIfNoEntry: false })
+    if (existingOutput?.isSymbolicLink())
+      fail('Package artifact output must not be a symlink')
+    if (error?.code === 'EEXIST')
+      fail('Package artifact output already exists')
+    throw error
+  }
+  return {
+    path: relative(repositoryRoot, outputPath).split(sep).join('/'),
+    bytes: content.byteLength,
+    sha256: createHash('sha256').update(content).digest('hex'),
+  }
 }
 
 function main() {
@@ -755,6 +788,8 @@ function main() {
     const installedFiles = walkNoSymlinks(installedRoot)
       .map(path => relative(installedRoot, path).split(sep).join('/'))
       .sort()
+    const tarballSha256 = createHash('sha256').update(readFileSync(tarball)).digest('hex')
+    const tarballArtifact = copyTarballArtifact(root, tarball)
     report = {
       inventory: {
         files: packageFiles,
@@ -803,7 +838,8 @@ function main() {
       prepareReleaseNotesReferences: releaseReferences,
       rspCoreReferences: coreReferences,
       rspDesignReferences: designReferences,
-      tarballSha256: createHash('sha256').update(readFileSync(tarball)).digest('hex'),
+      tarballSha256,
+      ...(tarballArtifact ? { tarballPath: tarballArtifact.path, tarballBytes: tarballArtifact.bytes } : {}),
     }
   }
   finally {

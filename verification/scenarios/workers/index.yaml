@@ -1,0 +1,11 @@
+version: 1
+id: worker-routing-scenarios
+layer: evaluation
+owner: agent-worker-routing-evaluation
+execution_mode: local
+scenario_ids: [worker/direct, worker/solo, worker/delegated, worker/coordinated-sequential, worker/coordinated-parallel, worker/interruption-recovery]
+fixture_refs: [verification/evaluations/managed-controller]
+required_evidence: [host-trace, worker-receipts, final-handoff]
+oracle: deterministic-agent-evaluation
+rubric: managed-worker-routing
+artifact_policy: local-report

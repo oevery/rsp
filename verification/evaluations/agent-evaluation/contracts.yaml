@@ -1,0 +1,210 @@
+version: 1
+id: agent-evaluation-platform
+evidence_schema:
+  id_format: source-kind-sequence
+  source_kinds: [event, command-failure, warning, unavailable, artifact, final-handoff, deterministic]
+  sanitization: required-before-id-assignment
+artifact_surfaces:
+  - id: host-trace
+    kind: trace
+    required: true
+    host_evidence_source: host_observed
+    deterministic_checks: [present, evidence_refs_known]
+    semantic_goals: [host observations are independent from self-report]
+    primary_dimension: compliance
+  - id: workspace-artifacts
+    kind: workspace
+    required: false
+    host_evidence_source: artifacts
+    deterministic_checks: [present, evidence_refs_known]
+    semantic_goals: [declared workspace outputs are attributable]
+    primary_dimension: artifact
+  - id: final-handoff
+    kind: handoff
+    required: true
+    host_evidence_source: final
+    deterministic_checks: [present, non_empty, evidence_refs_known]
+    semantic_goals: [handoff states result, omissions, and next action truthfully]
+    primary_dimension: handoff
+  - id: route-decision
+    kind: routing
+    required: true
+    host_evidence_source: host_observed.route
+    deterministic_checks: [present, self_report_conflict_checked]
+    semantic_goals: [route is derived from host and authority evidence]
+    primary_dimension: routing
+  - id: worker-receipts
+    kind: worker
+    required: true
+    host_evidence_source: worker_receipts
+    deterministic_checks: [present, lifecycle_settled, evidence_refs_known]
+    semantic_goals: [worker participation is host-observed]
+    primary_dimension: dispatch
+defaults:
+  skill:
+    goals:
+      - select the correct Skill from user intent and repository authority
+      - execute the Skill procedure without omitting required evidence or crossing authority boundaries
+      - return a truthful artifact and final handoff
+    required_events: [skill_selected, skill_loaded, authority_checked, result_returned]
+    forbidden_events: [unauthorized_mutation, unauthorized_git, unauthorized_publication]
+    artifact_surfaces: [host-trace, workspace-artifacts, final-handoff]
+  core:
+    goals:
+      - derive one correct next action from intent, FocusSet, readiness, blockers, and available capabilities
+      - stop when ownership or authority is materially unresolved
+    required_events: [context_loaded, focus_resolved, route_selected, result_returned]
+    forbidden_events: [invented_workref, unauthorized_mutation, unauthorized_lifecycle]
+    artifact_surfaces: [host-trace, route-decision, final-handoff]
+  worker:
+    goals:
+      - select the smallest sufficient direct, solo, delegated, or coordinated execution strategy
+      - dispatch the exact required workers and preserve writer, verification, and shared-resource boundaries
+      - recover or stop truthfully when host lifecycle evidence is unavailable
+    required_events: [route_selected, dispatch_decided, lifecycle_observed, result_returned]
+    forbidden_events: [simulated_worker, unauthorized_worker, unobserved_acceptance]
+    artifact_surfaces: [host-trace, worker-receipts, workspace-artifacts, final-handoff]
+objects:
+  - id: skill-rsp
+    kind: skill
+    owner: rsp
+    installed_skill: rsp
+    fixtures:
+      - verification/evaluations/skill-routing/cases.yaml
+      - verification/evaluations/daily-workflow-depth
+    metrics: [trigger, routing, compliance, boundary, artifact, recovery, handoff]
+  - id: skill-rsp-manage
+    kind: skill
+    owner: rsp-manage
+    installed_skill: rsp-manage
+    fixtures:
+      - verification/evaluations/managed-controller/holdout
+      - verification/evaluations/daily-workflow-depth
+    metrics: [trigger, routing, compliance, boundary, artifact, recovery, handoff]
+  - id: skill-rsp-shape
+    kind: skill
+    owner: rsp-shape
+    installed_skill: rsp-shape
+    fixtures:
+      - verification/evaluations/rsp-shape-depth
+      - verification/evaluations/skill-routing/cases.yaml
+    metrics: [trigger, routing, compliance, boundary, artifact, recovery, handoff]
+  - id: skill-rsp-design
+    kind: skill
+    owner: rsp-design
+    installed_skill: rsp-design
+    fixtures:
+      - verification/evaluations/rsp-design-behavior
+      - verification/evaluations/skill-routing/cases.yaml
+    metrics: [trigger, routing, compliance, boundary, artifact, recovery, handoff]
+  - id: skill-rsp-diagnose
+    kind: skill
+    owner: rsp-diagnose
+    installed_skill: rsp-diagnose
+    fixtures:
+      - verification/evaluations/rsp-diagnose
+      - verification/evaluations/discipline-composition/holdout/diagnose
+    metrics: [trigger, routing, compliance, boundary, artifact, recovery, handoff]
+  - id: skill-rsp-implement
+    kind: skill
+    owner: rsp-implement
+    installed_skill: rsp-implement
+    fixtures:
+      - verification/evaluations/skill-behavior
+      - verification/evaluations/skill-restraint-eval
+    metrics: [trigger, routing, compliance, boundary, artifact, recovery, handoff]
+  - id: skill-rsp-review
+    kind: skill
+    owner: rsp-review
+    installed_skill: rsp-review
+    fixtures:
+      - verification/evaluations/skill-behavior
+      - verification/evaluations/managed-controller/holdout/review-convergence
+    metrics: [trigger, routing, compliance, boundary, artifact, recovery, handoff]
+  - id: skill-rsp-resolve-findings
+    kind: skill
+    owner: rsp-resolve-findings
+    installed_skill: rsp-resolve-findings
+    fixtures:
+      - verification/evaluations/managed-controller/holdout/review-convergence
+      - verification/evaluations/skill-routing/cases.yaml
+    metrics: [trigger, routing, compliance, boundary, artifact, recovery, handoff]
+  - id: skill-rsp-tdd
+    kind: skill
+    owner: rsp-tdd
+    installed_skill: rsp-tdd
+    fixtures:
+      - verification/evaluations/rsp-tdd-behavior
+      - verification/evaluations/rsp-tdd-forward
+      - verification/evaluations/discipline-composition/holdout/tdd
+    metrics: [trigger, routing, compliance, boundary, artifact, recovery, handoff]
+  - id: skill-rsp-verify
+    kind: skill
+    owner: rsp-verify
+    installed_skill: rsp-verify
+    fixtures:
+      - verification/evaluations/skill-routing/cases.yaml
+      - verification/evaluations/managed-controller/holdout/cross-session-reverify
+    metrics: [trigger, routing, compliance, boundary, artifact, recovery, handoff]
+  - id: skill-rsp-commit
+    kind: skill
+    owner: rsp-commit
+    installed_skill: rsp-commit
+    fixtures:
+      - verification/evaluations/managed-controller/holdout/commit-message-quality
+      - verification/evaluations/skill-behavior
+    metrics: [trigger, routing, compliance, boundary, artifact, recovery, handoff]
+  - id: skill-rsp-release-docs
+    kind: skill
+    owner: rsp-release-docs
+    installed_skill: rsp-release-docs
+    fixtures:
+      - verification/evaluations/managed-controller/holdout/release-material-negative-facts
+      - verification/evaluations/release-behavior
+    metrics: [trigger, routing, compliance, boundary, artifact, recovery, handoff]
+  - id: skill-rsp-structural-audit
+    kind: skill
+    owner: rsp-structural-audit
+    installed_skill: rsp-structural-audit
+    fixtures:
+      - verification/evaluations/structural-audit
+      - verification/evaluations/skill-routing/cases.yaml
+    metrics: [trigger, routing, compliance, boundary, artifact, recovery, handoff]
+  - id: rsp-core-routing
+    kind: core
+    owner: rsp-core-routing
+    fixtures:
+      - verification/evaluations/skill-routing/cases.yaml
+      - verification/evaluations/daily-workflow-depth
+    metrics: [routing, authority, focus, ambiguity, handoff]
+  - id: worker-routing
+    kind: worker
+    owner: managed-worker-routing
+    fixtures:
+      - verification/evaluations/managed-controller/holdout/auto-integrated-direct
+      - verification/evaluations/managed-controller/holdout/managed-solo-integrated
+      - verification/evaluations/managed-controller/holdout/managed-delegated-integrated
+      - verification/evaluations/managed-controller/holdout/managed-coordinated-sequential
+      - verification/evaluations/managed-controller/holdout/managed-coordinated-parallel
+      - verification/evaluations/managed-controller/holdout/interruption-recovery
+      - verification/evaluations/managed-controller/holdout/pause-resume
+    metrics: [routing, dispatch, lifecycle, ownership, serialization, recovery, handoff]
+campaigns:
+  - id: project-fixture-local
+    kind: project-fixture
+    owner: project-acceptance-evaluation
+    fixtures:
+      - verification/evaluations/release-behavior/release-behavior.yaml
+      - verification/evaluations/skill-behavior/fixtures/real-stateful-media-round-3
+    metrics: [artifact, compliance, boundary, handoff, recovery]
+    artifact_surfaces: [workspace-artifacts, final-handoff]
+    real_provider: false
+  - id: provider-gate-fake
+    kind: provider-gate
+    owner: release-provider-gate
+    fixtures:
+      - verification/evaluations/managed-controller/beta/manage-orchestration-beta.yaml
+      - verification/evaluations/skill-behavior/fake-codex.mjs
+    metrics: [compliance, boundary, artifact, recovery, handoff]
+    artifact_surfaces: [host-trace, final-handoff]
+    real_provider: false
