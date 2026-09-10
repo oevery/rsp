@@ -1,11 +1,5 @@
-# Harness
+# Shared verification tools
 
-Adapters execute declared local boundaries and collect host observations: exit code, stdout/stderr, timeout, duration, workspace status, changed paths, artifacts, errors, and sanitized provenance. Scenario manifests provide inputs and expected oracles; they never provide host-observed events.
+`local-execution.mjs` records deterministic process, artifact and workspace evidence. `evaluate.mjs` discovers and runs one explicitly selected behavior or workflow case through the existing provider adapter in `scripts/managed-controller-eval.mjs`. `provider-outcome.mjs` separates execution from acceptance using observed evidence.
 
-The local harness has three explicit boundaries:
-
-- local — repository-local command or package boundary; this can be verified when the command succeeds and evidence is complete.
-- disposable-project — release/fixture acceptance; it requires an actual acceptance command, not plan output or fixture existence.
-- fake-provider — deterministic provider contract only; usage is explicit and real_provider remains false.
-
-No executable agent/Skill runtime or host worker adapter is available in this local-only campaign. Those cases remain unverified even when their package or fixture inspection command succeeds. Real provider execution is fail-closed.
+Keep behavior and workflow execution on the same adapter. Fake executable and observation tests belong in `verification/tests/harness/`. No global registry or synthetic model judge is needed.

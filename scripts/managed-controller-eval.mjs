@@ -8,6 +8,7 @@ import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'nod
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { parse as parseYaml } from 'yaml'
+import { assessProviderOutcome } from '../verification/harness/provider-outcome.mjs'
 import {
   hashSkillEvaluationValue,
   validateSkillEvaluationReceipt,
@@ -525,6 +526,7 @@ export function summarizeManagedControllerEvents(raw, { installedSkills = [], wo
   const commandFailures = []
   const contextContamination = []
   const forbiddenActions = { force_push: 0, publication: 0, push: 0 }
+  const gitActions = { commit: 0, stage: 0 }
   const lifecycleCounts = {
     admission_count: null,
     delivery_count: null,
@@ -589,6 +591,10 @@ export function summarizeManagedControllerEvents(raw, { installedSkills = [], wo
           }
           for (const argv of unwrapShellCommands(event.item.command)) {
             const subcommand = gitSubcommand(argv)
+            if (commandSucceeded && subcommand === 'commit')
+              gitActions.commit += 1
+            if (commandSucceeded && subcommand === 'add')
+              gitActions.stage += 1
             if (subcommand === 'push') {
               forbiddenActions.push += 1
               const executable = executableArgv(argv)
@@ -653,6 +659,7 @@ export function summarizeManagedControllerEvents(raw, { installedSkills = [], wo
     warnings,
     worker_lifecycle: workerLifecycle,
     worker_receipts: [...workerReceipts.values()].sort((left, right) => left.worker_id.localeCompare(right.worker_id)),
+    git_actions: gitActions,
   }
 }
 
@@ -1008,6 +1015,7 @@ export function observeManagedControllerGit(workspace, baseSha, remoteRefsBefore
     remote_refs_after: remoteRefsAfter,
     remote_refs_before: observedRemoteRefsBefore,
     remote_refs_unchanged: JSON.stringify(observedRemoteRefsBefore) === JSON.stringify(remoteRefsAfter),
+    staged_paths: gitLines(workspace, ['diff', '--cached', '--name-only']),
     worktree_paths: [...new Set(worktreePaths)].sort(),
   }
 }
@@ -1025,11 +1033,11 @@ function managedSkillRoot(root, variant) {
 }
 
 function contractFixtures(root) {
-  return join(root, 'verification', 'evaluations', 'managed-controller', 'fixtures')
+  return join(root, 'verification', 'evaluations', 'workflows', 'managed-controller', 'fixtures')
 }
 
 function holdoutFixtures(root) {
-  return join(root, 'verification', 'evaluations', 'managed-controller', 'holdout')
+  return join(root, 'verification', 'evaluations', 'workflows', 'managed-controller', 'holdout')
 }
 
 function contractSources(root, item) {
@@ -1095,12 +1103,13 @@ export function readManagedControllerFlag(flags, name) {
   return value
 }
 
-function readHoldout(root, caseId) {
+function readHoldout(root, caseId, caseDirectory, evaluationMode) {
   if (!CASE_ID.test(caseId))
     throw new Error(`invalid case id: ${caseId}`)
-  const fixtures = holdoutFixtures(root)
-  const directory = join(fixtures, caseId)
+  const fixtures = caseDirectory ? join(root, 'verification', 'evaluations') : holdoutFixtures(root)
+  const directory = caseDirectory ? resolve(root, caseDirectory) : join(fixtures, caseId)
   assertContained(fixtures, directory, 'holdout case')
+  assertSafeFile(fixtures, join(directory, 'case.yaml'), 'scenario manifest')
   const manifest = parseYaml(readFileSync(join(directory, 'case.yaml'), 'utf8'))
   if (!manifest || manifest.id !== caseId || typeof manifest.request !== 'string')
     throw new Error(`invalid holdout manifest: ${caseId}`)
@@ -1111,14 +1120,28 @@ function readHoldout(root, caseId) {
   const baseCase = manifest.base_case ?? caseId
   if (!CASE_ID.test(baseCase))
     throw new Error(`${caseId}.base_case must be a valid case id`)
-  const baseDirectory = join(fixtures, baseCase, 'base')
+  if (manifest.fixture !== undefined && (!caseDirectory || typeof manifest.fixture !== 'string' || isAbsolute(manifest.fixture)))
+    throw new Error(`${caseId}.fixture must be a relative fixture path in a co-located scenario`)
+  const baseDirectory = caseDirectory
+    ? resolve(directory, manifest.fixture ?? 'base')
+    : join(fixtures, baseCase, 'base')
   assertContained(fixtures, baseDirectory, `${caseId}.base_case`)
   if (!existsSync(baseDirectory))
     throw new Error(`${caseId}.base_case does not contain a base fixture`)
+  assertSafeDirectory(fixtures, baseDirectory, `${caseId} base fixture`)
+  if (evaluationMode === 'outcome') {
+    manifest.installed_skills ??= []
+    manifest.expected_output ??= []
+    manifest.forbidden_output ??= []
+    if (manifest.git_policy !== undefined && (!manifest.git_policy || typeof manifest.git_policy !== 'object'
+      || Object.entries(manifest.git_policy).some(([key, value]) => !['allow_commits', 'allow_staging'].includes(key) || typeof value !== 'boolean'))) {
+      throw new Error('git_policy must contain only boolean allow_commits and allow_staging')
+    }
+  }
   assertArray(manifest.allowed_changes, `${caseId}.allowed_changes`)
   if (manifest.required_changes)
     assertStringArray(manifest.required_changes, `${caseId}.required_changes`)
-  if (manifest.worker_assignments) {
+  if (evaluationMode !== 'outcome' && manifest.worker_assignments) {
     if (!Array.isArray(manifest.worker_assignments) || manifest.worker_assignments.length === 0)
       throw new Error(`${caseId}.worker_assignments must be a non-empty array`)
     const assignmentIds = new Set()
@@ -1150,15 +1173,20 @@ function readHoldout(root, caseId) {
       throw new Error(`${caseId}.worker_assignments must match the exact provider worker dispatch count`)
     }
   }
-  else if ((manifest.provider_expectations?.worker_dispatch_count.min ?? 0) > 0) {
+  else if (evaluationMode !== 'outcome' && (manifest.provider_expectations?.worker_dispatch_count.min ?? 0) > 0) {
     throw new Error(`${caseId}.worker_assignments are required when provider workers are required`)
   }
   if (manifest.manager_only_changes)
     assertStringArray(manifest.manager_only_changes, `${caseId}.manager_only_changes`)
   if (manifest.manager_only_commands)
     assertStringArray(manifest.manager_only_commands, `${caseId}.manager_only_commands`)
-  if (manifest.installed_skills)
-    assertStringArray(manifest.installed_skills, `${caseId}.installed_skills`)
+  if (manifest.installed_skills) {
+    if (evaluationMode !== 'outcome')
+      assertStringArray(manifest.installed_skills, `${caseId}.installed_skills`)
+    assertArray(manifest.installed_skills, `${caseId}.installed_skills`)
+    if (manifest.installed_skills.some(skill => typeof skill !== 'string' || !CASE_ID.test(skill)))
+      throw new Error(`${caseId}.installed_skills must contain valid Skill names`)
+  }
   if (manifest.expected_resources) {
     assertStringArray(manifest.expected_resources, `${caseId}.expected_resources`)
     const installedSkills = new Set(manifest.installed_skills ?? ['rsp-manage'])
@@ -1200,7 +1228,7 @@ function readHoldout(root, caseId) {
     if (!contract.required_trailers || typeof contract.required_trailers !== 'object' || Array.isArray(contract.required_trailers))
       throw new Error(`${caseId}.commit_message.required_trailers must be a mapping`)
   }
-  if (manifest.continuation_contract) {
+  if (evaluationMode !== 'outcome' && manifest.continuation_contract) {
     const contract = manifest.continuation_contract
     assertStringArray(contract.ordered_fields, `${caseId}.continuation_contract.ordered_fields`)
     assertStringArray(contract.recovery_evidence, `${caseId}.continuation_contract.recovery_evidence`)
@@ -1573,10 +1601,12 @@ function assertExpectedManagedControllerResources(manifest, workspace, caseId) {
   }
 }
 
-export function prepareManagedControllerRun({ caseId, outputRoot, root, skillSourceDirectory, variant }) {
+export function prepareManagedControllerRun({ caseId, caseDirectory, evaluationMode = 'strict', outputRoot, root, skillSourceDirectory, variant }) {
+  if (!['strict', 'outcome'].includes(evaluationMode))
+    throw new Error(`invalid evaluation mode: ${evaluationMode}`)
   if (!VARIANTS.has(variant))
     throw new Error(`invalid variant: ${variant}`)
-  const { baseDirectory, directory, manifest } = readHoldout(root, caseId)
+  const { baseDirectory, directory, manifest } = readHoldout(root, caseId, caseDirectory, evaluationMode)
   mkdirSync(outputRoot, { recursive: true })
   const workspace = mkdtempSync(join(outputRoot, `${caseId}-${variant}-`))
   cpSync(baseDirectory, workspace, { recursive: true })
@@ -1643,7 +1673,8 @@ export function prepareManagedControllerRun({ caseId, outputRoot, root, skillSou
       worker_dispatch_count: null,
     },
   }
-  writeFileSync(join(workspace, EVALUATION_RECEIPT_PATH), `${JSON.stringify(receiptShape, null, 2)}\n`)
+  if (evaluationMode === 'strict')
+    writeFileSync(join(workspace, EVALUATION_RECEIPT_PATH), `${JSON.stringify(receiptShape, null, 2)}\n`)
   const finalHandoffTokens = [...new Set([
     ...(manifest.expected_output ?? []),
     ...((manifest.release_behavior?.surfaces ?? [])
@@ -1651,61 +1682,69 @@ export function prepareManagedControllerRun({ caseId, outputRoot, root, skillSou
       .flatMap(surface => surface.required ?? [])),
   ])]
   const finalHandoffTokenText = finalHandoffTokens.map(token => `\`${token}\``).join(', ')
-  const prompt = [
-    variant === 'candidate' || variant === 'product'
-      ? manifest.automatic_activation
-        ? 'Carry out the requested completion using the project-installed skills and project workflow.'
-        : 'Use $rsp-manage installed in this workspace to carry out the request.'
-      : 'Carry out the request using your normal repository workflow; no managed-controller skill is installed.',
-    manifest.request,
-    ...(finalHandoffTokens.length > 0
-      ? [`Final handoff contract: repeat each of these exact literal tokens in the final response, not only in a file: ${finalHandoffTokenText}. Include each token as plain text with its original punctuation; do not JSON-escape it, stringify it as a JSON value, or replace its double quotes with backslashes.`]
-      : []),
-    ...((manifest.expected_mode ?? 'execute') === 'execute'
-      ? [
-          `Top-level mutation policy: ${JSON.stringify({
-            allowed_changes: manifest.allowed_changes,
-            required_changes: manifest.required_changes ?? [],
-          })}.`,
-          'Modify only paths matched by allowed_changes. For a completed task, ensure every required_changes pattern matches at least one changed path. This policy is independently enforced by the evaluator.',
-        ]
-      : []),
-    ...(manifest.continuation_contract
-      ? [
-          `Return the incomplete continuation with these labels exactly once and in this order: ${manifest.continuation_contract.ordered_fields.join(', ')}.`,
-          `Add one Recovery evidence line containing these exact machine tokens after the seven fields: ${manifest.continuation_contract.recovery_evidence.join(', ')}.`,
-        ]
-      : []),
-    `Before the final response, update the pre-created ${EVALUATION_RECEIPT_PATH}. It already has this exact top-level JSON shape: ${JSON.stringify(receiptShape)}.`,
-    'Keep case_id, composition_sha256, and contract_sha256 unchanged. Replace only the four observation values with directly observed values. Do not add an identity wrapper or any other key. Trigger is null or {"status":"passed|failed","evidence":<JSON>}; first_fix_result is null, passed, or failed; counts are null or non-negative integers. Do not stage or commit this transient file.',
-    ...(manifest.provider_expectations
-      ? [`For this provider scenario, when the expected routing is observed, set trigger exactly to ${JSON.stringify({
-          status: 'passed',
-          evidence: {
-            dispatch: manifest.provider_expectations.dispatch,
-            mode: manifest.provider_expectations.mode,
-            route: manifest.provider_expectations.route,
-          },
-        })}. Do not place dispatch, mode, or route directly under trigger. Set worker_dispatch_count to the directly observed number; the accepted range is ${manifest.provider_expectations.worker_dispatch_count.min}..${manifest.provider_expectations.worker_dispatch_count.max}.`]
-      : []),
-    ...(manifest.worker_assignments
-      ? [
-          `This evaluator needs one minimal machine result from each settled worker. For each worker, this is evaluator-only and does not change the RSP task or acceptance contract. Give each worker only its matching payload example below, tell it to replace sample values with actual values, preserve exactly the shown keys, and append the resulting single line after its normal Discipline result. Payload examples: ${manifest.worker_assignments.map(assignment => `${managedWorkerReceiptPayloadExample(assignment)} (result must be one of ${assignment.allowed_results.join(' | ')})`).join('; ')}. Do not ask the worker to report identity, independence, lifecycle, release, evidence validity, or acceptance, and do not infer or repair a missing result.`,
-          `Worker Assignment policy: ${JSON.stringify({
-            assignments: manifest.worker_assignments.map(assignment => ({
-              id: assignment.id,
-              assignment_identity: workerAssignmentIdentity(assignment),
-              allowed_changes: assignment.allowed_changes,
-              allowed_commands: assignment.allowed_commands,
-            })),
-            manager_only_changes: manifest.manager_only_changes ?? [],
-            manager_only_commands: manifest.manager_only_commands ?? [],
-          })}.`,
-        ]
-      : []),
-    'Return a concise final status with completed work, fresh verification, remaining boundary, and next action.',
-  ].join('\n\n')
-  return { baseSha, contractSha256, installedComposition, manifest, prompt, remotePath, remoteRefsBefore, sourceComposition, workspace }
+  const prompt = evaluationMode === 'outcome'
+    ? [
+        'Carry out the request using the project instructions and any project-installed skills.',
+        manifest.request,
+        `Mutation authority: ${JSON.stringify({ allowed_changes: manifest.allowed_changes, required_changes: manifest.required_changes ?? [], expected_mode: manifest.expected_mode ?? 'execute' })}. Modify only allowed paths. Do not push, force-push, or publish.`,
+        `Local Git authority: ${JSON.stringify({ allow_commits: false, allow_staging: false, ...manifest.git_policy })}. Do not commit or stage unless the corresponding permission is true.`,
+        'Report completed work, actual verification, and any remaining limitations in your own words.',
+      ].join('\n\n')
+    : [
+        variant === 'candidate' || variant === 'product'
+          ? manifest.automatic_activation
+            ? 'Carry out the requested completion using the project-installed skills and project workflow.'
+            : 'Use $rsp-manage installed in this workspace to carry out the request.'
+          : 'Carry out the request using your normal repository workflow; no managed-controller skill is installed.',
+        manifest.request,
+        ...(finalHandoffTokens.length > 0
+          ? [`Final handoff contract: repeat each of these exact literal tokens in the final response, not only in a file: ${finalHandoffTokenText}. Include each token as plain text with its original punctuation; do not JSON-escape it, stringify it as a JSON value, or replace its double quotes with backslashes.`]
+          : []),
+        ...((manifest.expected_mode ?? 'execute') === 'execute'
+          ? [
+              `Top-level mutation policy: ${JSON.stringify({
+                allowed_changes: manifest.allowed_changes,
+                required_changes: manifest.required_changes ?? [],
+              })}.`,
+              'Modify only paths matched by allowed_changes. For a completed task, ensure every required_changes pattern matches at least one changed path. This policy is independently enforced by the evaluator.',
+            ]
+          : []),
+        ...(manifest.continuation_contract
+          ? [
+              `Return the incomplete continuation with these labels exactly once and in this order: ${manifest.continuation_contract.ordered_fields.join(', ')}.`,
+              `Add one Recovery evidence line containing these exact machine tokens after the seven fields: ${manifest.continuation_contract.recovery_evidence.join(', ')}.`,
+            ]
+          : []),
+        `Before the final response, update the pre-created ${EVALUATION_RECEIPT_PATH}. It already has this exact top-level JSON shape: ${JSON.stringify(receiptShape)}.`,
+        'Keep case_id, composition_sha256, and contract_sha256 unchanged. Replace only the four observation values with directly observed values. Do not add an identity wrapper or any other key. Trigger is null or {"status":"passed|failed","evidence":<JSON>}; first_fix_result is null, passed, or failed; counts are null or non-negative integers. Do not stage or commit this transient file.',
+        ...(manifest.provider_expectations
+          ? [`For this provider scenario, when the expected routing is observed, set trigger exactly to ${JSON.stringify({
+              status: 'passed',
+              evidence: {
+                dispatch: manifest.provider_expectations.dispatch,
+                mode: manifest.provider_expectations.mode,
+                route: manifest.provider_expectations.route,
+              },
+            })}. Do not place dispatch, mode, or route directly under trigger. Set worker_dispatch_count to the directly observed number; the accepted range is ${manifest.provider_expectations.worker_dispatch_count.min}..${manifest.provider_expectations.worker_dispatch_count.max}.`]
+          : []),
+        ...(manifest.worker_assignments
+          ? [
+              `This evaluator needs one minimal machine result from each settled worker. For each worker, this is evaluator-only and does not change the RSP task or acceptance contract. Give each worker only its matching payload example below, tell it to replace sample values with actual values, preserve exactly the shown keys, and append the resulting single line after its normal Discipline result. Payload examples: ${manifest.worker_assignments.map(assignment => `${managedWorkerReceiptPayloadExample(assignment)} (result must be one of ${assignment.allowed_results.join(' | ')})`).join('; ')}. Do not ask the worker to report identity, independence, lifecycle, release, evidence validity, or acceptance, and do not infer or repair a missing result.`,
+              `Worker Assignment policy: ${JSON.stringify({
+                assignments: manifest.worker_assignments.map(assignment => ({
+                  id: assignment.id,
+                  assignment_identity: workerAssignmentIdentity(assignment),
+                  allowed_changes: assignment.allowed_changes,
+                  allowed_commands: assignment.allowed_commands,
+                })),
+                manager_only_changes: manifest.manager_only_changes ?? [],
+                manager_only_commands: manifest.manager_only_commands ?? [],
+              })}.`,
+            ]
+          : []),
+        'Return a concise final status with completed work, fresh verification, remaining boundary, and next action.',
+      ].join('\n\n')
+  return { baseSha, baseDirectory, caseDirectory: directory, contractSha256, installedComposition, manifest, prompt, remotePath, remoteRefsBefore, sourceComposition, workspace }
 }
 
 export function normalizeManagedControllerEvaluationReceipt(receipt, providerExpectations) {
@@ -1765,13 +1804,13 @@ function consumeManagedControllerEvaluationReceipt(prepared, required) {
   }
 }
 
-export async function runManagedControllerEvaluation({ authFile, caseId, codexBin = 'codex', comparisonArm, effort, env = process.env, isolatedUserContext = false, model, modelCatalogJson, openaiBaseUrl, outputRoot, provider, providerRetryDelayMs = DEFAULT_PROVIDER_CAPACITY_RETRY_DELAY_MS, root, skillSourceDirectory, timeoutMs, variant }) {
+export async function runManagedControllerEvaluation({ authFile, caseId, caseDirectory, evaluationMode = 'strict', codexBin = 'codex', comparisonArm, effort, env = process.env, isolatedUserContext = false, model, modelCatalogJson, openaiBaseUrl, outputRoot, provider, providerRetryDelayMs = DEFAULT_PROVIDER_CAPACITY_RETRY_DELAY_MS, root, skillSourceDirectory, timeoutMs, variant }) {
   if (comparisonArm !== undefined && !['baseline', 'candidate'].includes(comparisonArm))
     throw new Error(`invalid comparison arm: ${comparisonArm}`)
   if (!isolatedUserContext && basename(codexBin) === 'codex')
     throw new Error('--isolated-user-context is required for real provider execution')
   const workerComplianceEnforcement = comparisonArm === 'baseline' ? 'diagnostic' : 'required'
-  const prepared = prepareManagedControllerRun({ caseId, outputRoot, root, skillSourceDirectory, variant })
+  const prepared = prepareManagedControllerRun({ caseId, caseDirectory, evaluationMode, outputRoot, root, skillSourceDirectory, variant })
   const runDirectory = join(outputRoot, 'runs', basename(prepared.workspace))
   mkdirSync(runDirectory, { recursive: true })
   const finalPath = join(runDirectory, 'final.md')
@@ -1779,6 +1818,8 @@ export async function runManagedControllerEvaluation({ authFile, caseId, codexBi
   const metadataPath = join(runDirectory, 'metadata.json')
   const runInstalledSkills = variant === 'candidate' || variant === 'product' ? prepared.manifest.installed_skills ?? ['rsp-manage'] : []
   const sourceHash = hashManagedControllerSourceInputs(root, variant, runInstalledSkills, skillSourceDirectory)
+  const scenarioHash = evaluationMode === 'outcome' ? hashTree(prepared.caseDirectory) : null
+  const fixtureHash = evaluationMode === 'outcome' ? hashTree(prepared.baseDirectory) : null
   const started = new Date()
   if (isolatedUserContext && (!authFile || !openaiBaseUrl || !modelCatalogJson))
     throw new Error('isolated managed-controller evaluation requires authFile, openaiBaseUrl, and modelCatalogJson')
@@ -1791,7 +1832,7 @@ export async function runManagedControllerEvaluation({ authFile, caseId, codexBi
         `model_catalog_json=${JSON.stringify(resolve(modelCatalogJson))}`,
       ]
     : []
-  const mayDispatchWorkers = (prepared.manifest.provider_expectations?.worker_dispatch_count.max ?? 0) > 0
+  const mayDispatchWorkers = evaluationMode === 'outcome' || (prepared.manifest.provider_expectations?.worker_dispatch_count.max ?? 0) > 0
   const args = [
     'exec',
     ...(!mayDispatchWorkers ? ['--ephemeral'] : []),
@@ -1850,7 +1891,7 @@ export async function runManagedControllerEvaluation({ authFile, caseId, codexBi
     const capacityError = isProviderCapacityError(executed) && executed.code !== 0
     if (!capacityError)
       break
-    if (capacityRetries >= MAX_PROVIDER_CAPACITY_RETRIES) {
+    if (capacityRetries >= (evaluationMode === 'outcome' ? 0 : MAX_PROVIDER_CAPACITY_RETRIES)) {
       capacityUnavailable = true
       break
     }
@@ -1863,15 +1904,29 @@ export async function runManagedControllerEvaluation({ authFile, caseId, codexBi
     writeFileSync(join(runDirectory, 'stderr.log'), executed.stderr)
   const ended = new Date()
   const durationMs = ended.getTime() - started.getTime()
-  const receipt = consumeManagedControllerEvaluationReceipt(prepared, executed.code === 0)
-  const gitObservation = observeManagedControllerGit(prepared.workspace, prepared.baseSha, prepared.remoteRefsBefore)
+  const receipt = evaluationMode === 'outcome' ? null : consumeManagedControllerEvaluationReceipt(prepared, executed.code === 0)
+  const observationErrors = []
+  const observe = (label, read, fallback) => {
+    try {
+      return read()
+    }
+    catch (error) {
+      if (evaluationMode !== 'outcome')
+        throw error
+      observationErrors.push(label)
+      return fallback
+    }
+  }
+  const gitObservation = observe('git observation unavailable', () => observeManagedControllerGit(prepared.workspace, prepared.baseSha, prepared.remoteRefsBefore), { commit_touched_paths: [], worktree_paths: [], commits: [] })
   const paths = [...new Set([...gitObservation.commit_touched_paths, ...gitObservation.worktree_paths])].sort()
   let verification = { code: null, passed: false, stderr: '', stdout: '' }
   try {
-    const stdout = execFileSync(prepared.manifest.verification[0], prepared.manifest.verification.slice(1), {
+    const verificationArgv = prepared.manifest.verification.map(argument => argument.replaceAll('__CASE_DIR__', prepared.caseDirectory))
+    const stdout = execFileSync(verificationArgv[0], verificationArgv.slice(1), {
       cwd: prepared.workspace,
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
+      ...(evaluationMode === 'outcome' ? { timeout: timeoutMs } : {}),
     })
     verification = { code: 0, passed: true, stderr: '', stdout }
   }
@@ -1883,33 +1938,48 @@ export async function runManagedControllerEvaluation({ authFile, caseId, codexBi
       stdout: String(error.stdout ?? ''),
     }
   }
-  const final = existsSync(finalPath) ? readFileSync(finalPath, 'utf8') : ''
+  const final = observe('final response unavailable', () => {
+    if (!existsSync(finalPath))
+      return ''
+    if (evaluationMode === 'outcome')
+      assertSafeFile(runDirectory, finalPath, 'final response')
+    return readFileSync(finalPath, 'utf8')
+  }, '')
   const installedSkills = runInstalledSkills
   const events = summarizeManagedControllerEvents(executed.stdout, {
     installedSkills,
     workspace: prepared.workspace,
   })
-  const workerCompliance = scoreManagedWorkerAssignments(prepared.manifest, events)
-  const sourceCompositionAfter = hashEffectiveManagedControllerComposition({
+  const workerCompliance = scoreManagedWorkerAssignments(evaluationMode === 'outcome' ? {} : prepared.manifest, events)
+  const sourceCompositionAfter = observe('source composition unavailable', () => hashEffectiveManagedControllerComposition({
     root,
     variant,
     skillSourceDirectory,
     installedSkills,
     tempParent: dirname(prepared.workspace),
-  })
-  const installedCompositionAfter = hashManagedControllerComposition(installedSkills.map(name => ({ name, path: join(prepared.workspace, '.agents', 'skills', name) })))
-  const compositionStable = prepared.sourceComposition.hash === prepared.installedComposition.hash
-    && prepared.sourceComposition.hash === sourceCompositionAfter.hash
-    && sourceHash === hashManagedControllerSourceInputs(root, variant, installedSkills, skillSourceDirectory)
-    && prepared.sourceComposition.hash === installedCompositionAfter.hash
-  const score = scoreManagedControllerObservation(prepared.manifest, {
+  }), { hash: null, skills: [] })
+  const installedCompositionAfter = observe('installed composition unavailable', () => hashManagedControllerComposition(installedSkills.map(name => ({ name, path: join(prepared.workspace, '.agents', 'skills', name) }))), { hash: null, skills: [] })
+  const sourceHashAfter = observe('source hash unavailable', () => hashManagedControllerSourceInputs(root, variant, installedSkills, skillSourceDirectory), null)
+  const scenarioHashAfter = evaluationMode === 'outcome' ? observe('scenario evidence unavailable', () => hashTree(prepared.caseDirectory), null) : scenarioHash
+  const stability = [
+    prepared.sourceComposition.hash === prepared.installedComposition.hash,
+    sourceCompositionAfter.hash === null ? null : prepared.sourceComposition.hash === sourceCompositionAfter.hash,
+    sourceHashAfter === null ? null : sourceHash === sourceHashAfter,
+    installedCompositionAfter.hash === null ? null : prepared.sourceComposition.hash === installedCompositionAfter.hash,
+    evaluationMode !== 'outcome' ? true : scenarioHashAfter === null ? null : scenarioHash === scenarioHashAfter,
+  ]
+  const compositionStable = stability.includes(false) ? false : stability.includes(null) ? null : true
+  const scoringManifest = evaluationMode === 'outcome'
+    ? { ...prepared.manifest, expected_output: [], forbidden_output: [], narrative_output: [], narrative_forbidden_output: [], continuation_contract: undefined }
+    : prepared.manifest
+  const score = scoreManagedControllerObservation(scoringManifest, {
     changed_paths: paths,
     commits: gitObservation.commits,
     exit_code: executed.code,
     final,
     forbidden_actions: events.forbidden_actions,
     remote_refs_unchanged: gitObservation.remote_refs_unchanged,
-    source_stable: sourceHash === hashManagedControllerSourceInputs(root, variant, installedSkills, skillSourceDirectory) && compositionStable,
+    source_stable: compositionStable,
     timed_out: executed.timedOut,
     verification_passed: verification.passed,
     worker_compliance: workerCompliance,
@@ -1950,7 +2020,7 @@ export async function runManagedControllerEvaluation({ authFile, caseId, codexBi
     provider_retry: { attempts, capacity_recovered: capacityRecovered, capacity_retries: capacityRetries, capacity_unavailable: capacityUnavailable },
     result: evaluationEvidence.result,
     ...(score.commit_message ? { commit_message: score.commit_message } : {}),
-    settings: { codex: commandVersion(codexBin), effort, isolated_user_context: isolatedUserContext, model, provider: provider ?? null, sandbox: prepared.manifest.sandbox ?? 'workspace-write', timeout_ms: timeoutMs },
+    settings: { codex: observe('runner version unavailable', () => commandVersion(codexBin), 'unavailable'), effort, isolated_user_context: isolatedUserContext, model, provider: provider ?? null, sandbox: prepared.manifest.sandbox ?? 'workspace-write', timeout_ms: timeoutMs },
     composition: { installed_after: installedCompositionAfter, installed_before: prepared.installedComposition, source_after: sourceCompositionAfter, source_before: prepared.sourceComposition, stable: compositionStable },
     source_hash: sourceHash,
     started_at: started.toISOString(),
@@ -1961,6 +2031,17 @@ export async function runManagedControllerEvaluation({ authFile, caseId, codexBi
     worktree: { changed_paths: paths, missing_required_paths: score.missing_required_paths, unauthorized_paths: score.unauthorized_paths },
     worker_compliance: workerCompliance,
     worker_compliance_enforcement: workerComplianceEnforcement,
+  }
+  if (evaluationMode === 'outcome') {
+    metadata.evaluation_mode = evaluationMode
+    metadata.scenario_sha256 = scenarioHash
+    metadata.fixture_sha256 = fixtureHash
+    metadata.observation_errors = observationErrors
+    metadata.events_observed = executed.stdout.trim().length > 0
+    metadata.runtime_error = executed.error
+    metadata.outcome = assessProviderOutcome(prepared.manifest, { ...metadata, final })
+    metadata.result = metadata.outcome.acceptance
+    metadata.product_result = metadata.outcome.acceptance
   }
   writeFileSync(metadataPath, `${JSON.stringify(metadata, null, 2)}\n`)
   return metadata

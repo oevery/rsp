@@ -94,7 +94,7 @@ function extractGitSkills(repositoryRoot, commit, skills, destinationRoot) {
 }
 
 function readManifest(repositoryRoot) {
-  const path = join(repositoryRoot, 'verification', 'evaluations', 'release-behavior', 'release-behavior.yaml')
+  const path = join(repositoryRoot, 'verification', 'evaluations', 'behaviors', 'release-behavior', 'release-behavior.yaml')
   const manifest = parseYaml(readFileSync(path, 'utf8'))
   if (!manifest || manifest.id !== 'release-behavior-acceptance' || manifest.execution !== 'serial-fail-fast')
     fail('behavior manifest identity or execution mode is invalid')
@@ -118,7 +118,7 @@ function readManifest(repositoryRoot) {
 }
 
 function readHoldout(repositoryRoot, holdout) {
-  const directory = join(repositoryRoot, 'verification', 'evaluations', 'managed-controller', 'holdout', holdout)
+  const directory = join(repositoryRoot, 'verification', 'evaluations', 'workflows', 'managed-controller', 'holdout', holdout)
   const path = join(directory, 'case.yaml')
   if (!existsSync(path) || lstatSync(path).isSymbolicLink())
     fail(`holdout is missing: ${holdout}`)
@@ -127,7 +127,7 @@ function readHoldout(repositoryRoot, holdout) {
   if (!manifest || manifest.id !== holdout || !Array.isArray(skills) || skills.length === 0 || !skills.includes('rsp-manage'))
     fail(`holdout must declare installed Skills including rsp-manage: ${holdout}`)
   const baseCase = manifest.base_case ?? holdout
-  const baseDirectory = join(repositoryRoot, 'verification', 'evaluations', 'managed-controller', 'holdout', baseCase, 'base')
+  const baseDirectory = join(repositoryRoot, 'verification', 'evaluations', 'workflows', 'managed-controller', 'holdout', baseCase, 'base')
   if (!existsSync(baseDirectory) || !lstatSync(baseDirectory).isDirectory())
     fail(`holdout base fixture is missing: ${holdout}`)
   return { baseDirectory, manifest, path, skills }

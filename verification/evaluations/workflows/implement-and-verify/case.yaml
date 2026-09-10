@@ -1,0 +1,22 @@
+id: implement-and-verify
+goal: Complete a tracked product change across its source, specification, documentation, and verification.
+fixture: ../managed-controller/holdout/auto-multisurface-routing/base
+automatic_activation: true
+installed_skills: [rsp, rsp-manage, rsp-implement, rsp-verify]
+request: >-
+  Complete the focused Change refresh-status-guidance. Present ready status consistently as
+  Status: Ready in the product, authoritative Spec, and English and Chinese documentation.
+  Run the relevant tests and update the Change with actual results. Choose the appropriate workflow.
+  Do not archive, stage, commit, push, publish, or change unrelated files.
+allowed_changes:
+  - .rsp/changes/refresh-status-guidance.md
+  - .rsp/specs/status-presentation.md
+  - src/status-card.mjs
+  - docs/en/status.md
+  - docs/zh-CN/status.md
+  - test/status-card.test.mjs
+  - test/docs-sync.test.mjs
+verification: [node, __CASE_DIR__/check.mjs]
+rubric:
+  - The Change and final handoff accurately describe completed work, verification, and any unresolved limitation.
+  - Verification is proportionate to the change; tool sequence and final wording are not prescribed.

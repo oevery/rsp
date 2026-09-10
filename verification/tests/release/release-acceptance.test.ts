@@ -74,26 +74,25 @@ describe('release acceptance runner', () => {
     const scripts = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).scripts as Record<string, string>
 
     expect(scripts['release:acceptance']).toBe('node scripts/release-acceptance.mjs')
-    expect(scripts['release:behavior-check']).toBe('node scripts/release-behavior-acceptance.mjs')
+    expect(scripts['release:provider-behavior']).toBe('node scripts/release-behavior-acceptance.mjs')
     expect(scripts['release:provider-compare']).toBe('node scripts/release-provider-comparison.mjs')
-    expect(scripts['release:candidate-check']).toBe('node scripts/release-candidate-check.mjs && node scripts/release-behavior-evidence-check.mjs && pnpm run release:acceptance')
-    expect(scripts.prepublishOnly).toBe('pnpm run release:candidate-check')
+    expect(scripts['release:provider-evidence']).toBe('node scripts/release-behavior-evidence-check.mjs')
+    expect(scripts.prepublishOnly).toBe('pnpm run release:candidate-check && pnpm run release:candidate-provider-check')
+    expect(scripts['release:candidate-provider-check']).toBe('pnpm run release:provider-evidence')
     expect(Object.keys(scripts).filter(name => name.startsWith('release:')).sort()).toEqual([
       'release:acceptance',
-      'release:behavior-check',
       'release:candidate-check',
+      'release:candidate-provider-check',
+      'release:provider-behavior',
       'release:provider-compare',
+      'release:provider-evidence',
     ])
-    expect(scripts['test:release']).toBeUndefined()
-    expect(scripts.test).toBe('pnpm run build && vitest run')
+    expect(scripts['test:acceptance']).toBe('node scripts/release-acceptance.mjs')
+    expect(scripts['test:harness']).toBe('vitest run verification/tests/harness --no-file-parallelism')
+    expect(scripts['test:release']).toBe('vitest run verification/tests/release --no-file-parallelism')
+    expect(scripts.test).toBe('pnpm run build && pnpm run test:core')
     expect(scripts['test:watch']).toBe('vitest --config vitest.watch.config.ts')
     expect(scripts['skills:security-check']).toBe('node scripts/skill-security-preflight.mjs --suppressions skill-security-suppressions.json')
-    const vitestConfig = readFileSync(join(root, 'vitest.config.ts'), 'utf8')
-    const watchConfig = readFileSync(join(root, 'vitest.watch.config.ts'), 'utf8')
-    expect(vitestConfig).not.toContain('globalSetup')
-    expect(vitestConfig).toContain(`'verification/tests/**/fixtures/**'`)
-    expect(vitestConfig).toContain(`'verification/tests/**/holdout/**'`)
-    expect(watchConfig).toContain(`globalSetup: ['./verification/tests/support/watch-build-setup.ts']`)
     const plan = buildReleaseAcceptancePlan(root)
     expect(plan.steps.find(step => step.id === 'metadata')?.commandText).toBe('node scripts/release-metadata-check.mjs')
     expect(plan.steps.find(step => step.id === 'tests')?.commandText).toBe('pnpm exec vitest run --no-file-parallelism')

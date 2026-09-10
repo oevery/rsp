@@ -45,17 +45,14 @@ describe('release candidate check', () => {
     const candidateEntry = scripts['release:candidate-check'] ?? ''
 
     expect(publishEntry).toMatch(/(?:^|&&\s*)pnpm run release:candidate-check(?:\s*&&|$)/u)
+    expect(publishEntry).toMatch(/(?:^|&&\s*)pnpm run release:candidate-provider-check(?:\s*&&|$)/u)
     expect(candidateEntry).toMatch(/(?:^|&&\s*)node scripts\/release-candidate-check\.mjs(?:\s*&&|$)/u)
-    expect(candidateEntry).toMatch(/(?:^|&&\s*)node scripts\/release-behavior-evidence-check\.mjs(?:\s*&&|$)/u)
     expect(candidateEntry).toMatch(/(?:^|&&\s*)pnpm run release:acceptance(?:\s*&&|$)/u)
     const identityIndex = candidateEntry.indexOf('release-candidate-check.mjs')
-    const providerEvidenceIndex = candidateEntry.indexOf('release-behavior-evidence-check.mjs')
     const acceptanceIndex = candidateEntry.indexOf('pnpm run release:acceptance')
-    expect(identityIndex).toBeLessThan(providerEvidenceIndex)
-    expect(providerEvidenceIndex).toBeLessThan(acceptanceIndex)
+    expect(identityIndex).toBeLessThan(acceptanceIndex)
     expect(candidateEntry).not.toContain('release:provider-compare')
-    expect(candidateEntry).not.toContain('release:behavior-check')
-    expect(candidateEntry).toContain('release-behavior-evidence-check.mjs')
+    expect(candidateEntry).not.toContain('release:provider-behavior')
   })
 
   it('accepts a clean checkout when the version tag is absent', () => {

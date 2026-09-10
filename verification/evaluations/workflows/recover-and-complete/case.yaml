@@ -1,0 +1,14 @@
+id: recover-and-complete
+goal: Recover the focused work from repository evidence and finish the observable product behavior.
+fixture: ../managed-controller/holdout/review-convergence/base
+automatic_activation: true
+installed_skills: [rsp, rsp-manage, rsp-implement, rsp-resolve-findings, rsp-verify]
+request: >-
+  Continue the focused normalize-label Change from the repository state and review evidence.
+  Finish normalizeLabel so it trims, collapses whitespace, and lowercases labels. Preserve unrelated.txt.
+  Verify the result and update the Change truthfully. Do not stage, commit, archive, push, or publish.
+allowed_changes: [src/normalize.mjs, .rsp/changes/normalize-label.md]
+verification: [node, __CASE_DIR__/check.mjs]
+rubric:
+  - Recovery uses repository evidence rather than invented prior progress.
+  - The final handoff accurately distinguishes completed work and remaining limitations without a fixed field order.

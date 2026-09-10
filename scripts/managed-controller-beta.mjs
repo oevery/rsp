@@ -147,7 +147,7 @@ function validatePriorRetainedEvidence(projectRoot, entries) {
 function loadProviderComparisonCase(projectRoot, caseId, productSkillNames) {
   if (typeof caseId !== 'string' || !CASE_ID.test(caseId))
     throw new Error(`invalid beta provider comparison case: ${caseId}`)
-  const holdoutRoot = join(projectRoot, 'verification', 'evaluations', 'managed-controller', 'holdout')
+  const holdoutRoot = join(projectRoot, 'verification', 'evaluations', 'workflows', 'managed-controller', 'holdout')
   const caseDirectory = join(holdoutRoot, caseId)
   const manifestPath = join(caseDirectory, 'case.yaml')
   if (!existsSync(manifestPath))
@@ -190,7 +190,7 @@ function loadProviderComparisonCase(projectRoot, caseId, productSkillNames) {
 }
 
 export function loadManagedControllerBetaPlan(projectRoot = root, { caseId } = {}) {
-  const path = join(projectRoot, 'verification', 'evaluations', 'managed-controller', 'beta', 'manage-orchestration-beta.yaml')
+  const path = join(projectRoot, 'verification', 'evaluations', 'workflows', 'managed-controller', 'beta', 'manage-orchestration-beta.yaml')
   const plan = parseYaml(readFileSync(path, 'utf8'))
   if (!plan || plan.id !== 'manage-orchestration-beta' || typeof plan.case !== 'string')
     throw new Error('invalid managed-controller beta plan')

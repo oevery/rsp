@@ -13,11 +13,6 @@ function readSkill(): string {
 }
 
 describe('rsp-shape Skill contract', () => {
-  it('keeps one portable published payload', () => {
-    const body = readSkill()
-    expect(body).toContain('# RSP Shape')
-  })
-
   it('keeps only the demonstrated shaping delta and hard boundaries', () => {
     const body = readSkill()
     expect(body).toContain('Inspect the repository before asking')

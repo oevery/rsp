@@ -1,3 +1,5 @@
+import type { ProviderOutcome } from '../verification/harness/provider-outcome.mjs'
+
 export interface ManagedControllerCase {
   id: string
   sources?: string[]
@@ -26,6 +28,9 @@ export interface ManagedControllerHoldoutManifest extends ManagedControllerOutpu
   automatic_activation?: boolean
   allowed_changes: string[]
   base_case?: string
+  fixture?: string
+  git_policy?: { allow_commits?: boolean, allow_staging?: boolean }
+  rubric?: unknown
   branch?: string
   expected_mode?: 'decline' | 'execute'
   expected_resources?: string[]
@@ -88,6 +93,7 @@ export const MANAGED_WORKER_RECEIPT_MACHINE_CONTRACT: {
 }
 
 export interface PreparedManagedControllerRun {
+  caseDirectory: string
   baseSha: string
   contractSha256: string
   installedComposition: ManagedControllerComposition
@@ -128,6 +134,7 @@ export interface ManagedControllerGitObservation {
   remote_refs_before: Array<{ ref: string, sha: string }>
   remote_refs_unchanged: boolean
   worktree_paths: string[]
+  staged_paths?: string[]
 }
 
 export interface ManagedControllerOutputScore {
@@ -183,7 +190,11 @@ export interface ManagedControllerWorkerCompliance {
   violations: Array<{ assignment: string | null, kind: string, value: unknown, expected?: unknown }>
 }
 
-export interface ManagedControllerEvaluationMetadata {
+export interface ManagedControllerEvaluationMetadata<Mode extends 'strict' | 'outcome' = 'strict'> {
+  outcome?: ProviderOutcome
+  observation_errors?: string[]
+  events_observed?: boolean
+  runtime_error?: string | null
   agent_reported: ManagedControllerAgentReportedEvaluation | null
   case_id: string
   composition: {
@@ -198,6 +209,7 @@ export interface ManagedControllerEvaluationMetadata {
   ended_at: string
   exit_code: number | null
   events: {
+    git_actions?: { commit: number, stage: number }
     command_failures: Array<{ command: string, event_index: number, exit_code: number | null, status: string | null }>
     context_contamination: Array<{ event_index: number, kind: 'user-memory-read' | 'user-config-read' }>
     forbidden_actions: { force_push: number, publication: number, push: number }
@@ -270,8 +282,8 @@ export interface ManagedControllerEvaluationMetadata {
     worker_dispatch_count: number | null
   } | null
   recovery?: ManagedControllerRecoveryScore
-  result: 'passed' | 'failed'
-  product_result?: 'passed' | 'failed'
+  result: Mode extends 'outcome' ? ProviderOutcome['acceptance'] : 'passed' | 'failed'
+  product_result?: Mode extends 'outcome' ? ProviderOutcome['acceptance'] : 'passed' | 'failed'
   settings: {
     codex: string
     effort: string
@@ -347,14 +359,18 @@ export function loadManagedControllerCases(root: string): ManagedControllerCase[
 export function evaluateManagedController(root: string): Array<{ id: string, missing: string[], passed: boolean }>
 export function prepareManagedControllerRun(options: {
   caseId: string
+  caseDirectory?: string
+  evaluationMode?: 'strict' | 'outcome'
   outputRoot: string
   root: string
   skillSourceDirectory?: string
   variant: 'baseline' | 'candidate' | 'product'
 }): PreparedManagedControllerRun
-export function runManagedControllerEvaluation(options: {
+export function runManagedControllerEvaluation<Mode extends 'strict' | 'outcome' = 'strict'>(options: {
   authFile?: string
   caseId: string
+  caseDirectory?: string
+  evaluationMode?: Mode
   codexBin?: string
   comparisonArm?: 'baseline' | 'candidate'
   effort: string
@@ -370,7 +386,7 @@ export function runManagedControllerEvaluation(options: {
   skillSourceDirectory?: string
   timeoutMs: number
   variant: 'baseline' | 'candidate' | 'product'
-}): Promise<ManagedControllerEvaluationMetadata>
+}): Promise<ManagedControllerEvaluationMetadata<Mode>>
 export function hashManagedControllerArtifact(content: string): string
 export function hashManagedControllerComposition(entries: Array<{ name: string, path: string }>): ManagedControllerComposition
 export function observeManagedControllerGit(workspace: string, baseSha: string, remoteRefsBefore?: Array<{ ref: string, sha: string }> | null): ManagedControllerGitObservation

@@ -154,7 +154,7 @@ function caseList(value, kind, catalogNames) {
 }
 
 export function loadSkillRoutingManifest(root, catalog = loadPublishedSkillCatalog(root)) {
-  const path = join(root, 'verification', 'evaluations', 'skill-routing', 'cases.yaml')
+  const path = join(root, 'verification', 'evaluations', 'behaviors', 'skill-routing', 'cases.yaml')
   const raw = parseYaml(readFileSync(path, 'utf8'))
   if (!isObject(raw))
     throw new Error('skill routing manifest must be an object')

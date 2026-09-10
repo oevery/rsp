@@ -39,8 +39,7 @@ describe('project Skill dogfooding', () => {
     const instructions = readFileSync(join(root, 'AGENTS.md'), 'utf8')
 
     expect(instructions).toContain('## Project Skill Dogfooding')
-    expect(instructions).toContain('Codex currently supports Skill disablement in user config, not project `.codex/config.toml`')
-    expect(instructions).toContain('do not use Skill body or reference word-count ceilings as correctness gates')
-    expect(instructions).toContain('without losing trigger, authority, action, stop, return, or conditional-loading behavior')
+    expect(instructions).toContain('repository-discovered')
+    expect(instructions).toContain('authored package sources')
   })
 })

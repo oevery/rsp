@@ -1,19 +1,9 @@
-# Evaluation datasets
+# Dataset conventions
 
-This directory owns reusable inputs for evaluating RSP Skills, agents, controllers, and provider-backed workflows. It is separate from executable code tests under `verification/tests/` and release-project acceptance inputs under `verification/acceptance/`.
+Active cases are co-located under `behaviors/<case>/` and `workflows/<case>/`. Only immediate directories with `case.yaml` are discovered by the new commands. No registry duplicates that list.
 
-## Dataset semantics
+Nested collections such as `workflows/managed-controller/` retain fixtures, holdouts and comparison plans for existing specialized callers. Their `fixtures/`, `holdout/`, `beta/`, `base/` and `changed/` directories are input data, not repository tests or mandatory default coverage.
 
-- `fixtures/` contains known, repeatable contract cases.
-- `holdout/` contains intentionally separated unseen or forward-evaluation cases.
-- `beta/` contains bounded evaluation plans that compose cases and acceptance contracts.
-- `base/`, `changed/`, and similar directories are project states consumed by a case; they are data, even when they contain files named `*.test.ts`.
-- Fake Codex or provider executables belong beside the evaluation datasets that consume them.
+Keep single-owner fixtures local. Share through an explicit relative reference only for actual shared consumers. Source fixtures are read-only during evaluation; prepared workspaces and raw provider evidence are local artifacts.
 
-Do not merge fixtures and holdouts, mutate registered source cases during a run, or collect project files in this tree as repository Vitest tests. Historical reports under `research/evaluations/` retain the paths and identities observed when they were created.
-
-## Execution boundary
-
-Deterministic contracts under `verification/tests/evaluation/` may load these datasets during `pnpm test`. Provider-backed, token-bearing, retained-evidence, and baseline/candidate campaigns remain explicit maintainer operations owned by their scripts; relocating a dataset does not add them to ordinary code verification or release acceptance.
-
-Release acceptance continues to use only registered projects under `verification/acceptance/`. Add a small fixture under `verification/tests/` only when it is exclusively owned by one deterministic test and is not a reusable Skill or agent evaluation case.
+Historical reports under `research/evaluations/` and existing caches retain their original paths and hashes. Do not rewrite them or assert their hashes against current source in ordinary tests. Explicit evidence reuse still requires identity compatibility.
