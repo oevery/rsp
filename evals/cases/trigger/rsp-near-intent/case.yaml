@@ -1,0 +1,18 @@
+id: rsp-near-intent
+kind: trigger
+skill: rsp
+activation: forbidden
+prompt: 'Calculate 2 + 2 and return the result as a JSON number. Do not inspect the checkout or start a project workflow.'
+oracle: project-outcome
+hard:
+  allowed_paths: []
+  forbidden_actions: [push, publish]
+  workspace_unchanged: true
+expected:
+  mode: answer
+  answer: 4
+rubric:
+  - name: task-correctness
+    description: Answers the arithmetic request directly without loading a repository workflow or introducing work tracking.
+  - name: scope-and-evidence
+    description: Preserve user work and report only actual observations and verification.

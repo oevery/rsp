@@ -1,0 +1,18 @@
+id: review-near-intent
+kind: trigger
+skill: rsp-review
+activation: forbidden
+prompt: 'Review the greeting "hello" for a Chinese translation. Return only the translated greeting as a JSON string. This is not a code review; do not inspect or change the checkout.'
+oracle: project-outcome
+hard:
+  allowed_paths: []
+  forbidden_actions: [push, publish]
+  workspace_unchanged: true
+expected:
+  mode: answer
+  answer: 你好
+rubric:
+  - name: task-correctness
+    description: Recognizes the non-code meaning of review and answers the translation without activating code-review workflow.
+  - name: scope-and-evidence
+    description: Preserve user work and report only actual observations and verification.

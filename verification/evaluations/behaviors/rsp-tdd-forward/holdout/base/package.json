@@ -1,8 +1,0 @@
-{
-  "name": "rsp-tdd-forward-holdout",
-  "type": "module",
-  "private": true,
-  "scripts": {
-    "test": "node --test"
-  }
-}

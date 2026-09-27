@@ -1,0 +1,2 @@
+# Fixture project
+This project uses RSP. Use available repository Skills as appropriate. Read the selected Change before acting. Use the supplied .tooling/node interpreter for Node checks and query project state with .tooling/node .tooling/rsp/bin/rsp.mjs. The host shell may reset PATH; do not search the host for another runtime. Preserve unrelated user changes. Do not archive, commit, push or publish.

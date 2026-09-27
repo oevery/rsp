@@ -1,0 +1,20 @@
+id: rsp-resume-existing
+kind: workflow
+skill: rsp
+activation: required
+prompt: 'Resume context for the focused requested-export Change after an interruption. Inspect its current state, but do not change files. Return JSON with workRef="requested-export", state="partial", and next="verify". Explain any evidence limitation in a separate explanation field.'
+oracle: project-outcome
+fixture: fixture
+tooling: rsp-cli
+project_check: requested-export
+hard:
+  allowed_paths: []
+  forbidden_actions: [push, publish]
+  workspace_unchanged: true
+expected:
+  mode: partial
+rubric:
+  - name: task-correctness
+    description: Recognizes that implementation already exists but verification remains unfinished; keeps the same WorkOwner and does not claim completion.
+  - name: scope-and-evidence
+    description: Preserve user work and report only actual observations and verification.

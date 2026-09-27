@@ -1,0 +1,16 @@
+{
+  "schema": "rsp-release-suite-v1",
+  "publicCases": [
+    "preserve-user-files",
+    "rsp-resume-existing",
+    "rsp-owner-decision",
+    "rsp-near-intent",
+    "implement-ready-workflow",
+    "implement-interrupted-verification",
+    "implement-review-only",
+    "review-dirty-workflow",
+    "review-preserve-staged-work",
+    "review-near-intent"
+  ],
+  "holdoutNegativeSkills": ["rsp", "rsp-implement", "rsp-review"]
+}

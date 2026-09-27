@@ -1,0 +1,19 @@
+id: implement-ready-workflow
+kind: workflow
+skill: rsp-implement
+activation: required
+prompt: 'Implement the focused, ready requested-export Change end to end. Preserve unrelated notes and the Git index, verify the actual exported value, and update the same Change Tasks/Verify truthfully. Do not archive, commit, push or publish.'
+oracle: project-outcome
+fixture: fixture
+tooling: rsp-cli
+project_check: requested-export
+hard:
+  allowed_paths: [src/requested.mjs, .rsp/changes/requested-export.md]
+  forbidden_actions: [push, publish]
+expected:
+  mode: implemented
+rubric:
+  - name: task-correctness
+    description: 'Implements the selected owner, verifies the actual result, and records truthful completion without widening scope or inventing validation.'
+  - name: scope-and-evidence
+    description: Preserve user work and report only actual observations and verification.

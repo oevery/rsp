@@ -2,7 +2,7 @@ node_modules/
 dist/
 .vitest/
 .cache/
-verification/artifacts/*
-!verification/artifacts/.gitkeep
+evals/reports/*
+!evals/reports/.gitkeep
 docs/.vitepress/cache/
 docs/.vitepress/dist/

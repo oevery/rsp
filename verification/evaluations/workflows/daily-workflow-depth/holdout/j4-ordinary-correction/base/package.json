@@ -1,8 +1,0 @@
-{
-  "name": "rsp-j4-ordinary-correction",
-  "type": "module",
-  "private": true,
-  "scripts": {
-    "test": "node --test test/cache.test.ts"
-  }
-}

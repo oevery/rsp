@@ -21,7 +21,8 @@ Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENT
 - Bundled assets in the repository root are the authored package sources.
 - Edit `rules/rsp-rules.md`, build the CLI, then run `node dist/cli.mjs update` to sync the self-hosted `.rsp/rsp-rules.md` fallback.
 - Validate implementation changes with `mise exec -- pnpm run build`, `mise exec -- pnpm run lint`, and `mise exec -- pnpm run test`.
-- Keep tests focused on observable behavior and public command output rather than duplicated generated content.
+- Keep deterministic code tests under `tests/`, Skill and agent evaluations under `evals/`, and release-candidate checks under `release/`.
+- Keep tests focused on observable behavior and public command output rather than duplicated generated content or Skill prose fragments.
 
 ## Project Skill Dogfooding
 

@@ -1,8 +1,0 @@
-{
-  "name": "rsp-manage-auto-multisurface-routing",
-  "type": "module",
-  "private": true,
-  "scripts": {
-    "test": "node --test"
-  }
-}
