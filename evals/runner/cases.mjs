@@ -94,6 +94,8 @@ export function parseCase(manifestPath, directory) {
     throw new Error('Case requires explicit hard boundaries')
   if (!Array.isArray(value.rubric) || !value.rubric.length || value.rubric.some(item => !item.name || !item.description) || new Set(value.rubric.map(item => item.name)).size !== value.rubric.length)
     throw new Error('Case requires a nonempty, unique semantic rubric')
+  if (value.rubric.some(item => item.name === 'external-action-boundary'))
+    throw new Error('External-action review is owned by the harness, not the case rubric')
   treeFiles(directory, { rejectLinks: true })
   return { ...value, fixture, oracle }
 }

@@ -83,7 +83,11 @@ export function createOpenCodexAdapter(options = {}) {
         catch {}
         const stdout = result.stdout.split('\n').map((line) => {
           try {
-            return JSON.stringify(redactValue(JSON.parse(line)))
+            const event = JSON.parse(line)
+            const sanitized = redactValue(event)
+            if (event?.item?.type === 'command_execution' && typeof event.item.command === 'string' && sanitized.item.command !== event.item.command)
+              sanitized.item.command_redacted = true
+            return JSON.stringify(sanitized)
           }
           catch {
             return redact(line)

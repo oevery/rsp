@@ -6,7 +6,7 @@ import { gradeEvidence } from '../graders/evidence.mjs'
 import { createReviewPacket } from '../graders/packet.mjs'
 import { observeProjectChecks } from '../observers/checks.mjs'
 import { observeEvents } from '../observers/events.mjs'
-import { skillReadReference } from '../observers/skill-reads.mjs'
+import { knownOutputReference, skillReadReference } from '../observers/skill-reads.mjs'
 import { compositionIdentity, prepareWorkspace, workspaceObservation } from '../observers/workspace.mjs'
 import { hash, treeFiles, writeJson } from './files.mjs'
 import { executionIdentity, gradingIdentity } from './identity.mjs'
@@ -81,6 +81,7 @@ export async function runCase(entry, root, options = {}) {
     if (baseline.skillTreeHash !== expectedCompositionHash)
       throw new Error('Installed composition does not match frozen source')
     run.context.skillReadReference = skillReadReference(join(workspace, '.agents', 'skills'), composition.skills)
+    run.context.knownOutputReference = knownOutputReference(baseline, join(workspace, '.agents', 'skills'), composition.skills)
     if (sourceIdentity(root) !== identity.sourceHash)
       throw new Error('Source or built CLI changed during workspace preparation')
     stage = 'adapter'
@@ -89,7 +90,7 @@ export async function runCase(entry, root, options = {}) {
     stage = 'observation'
     if (sourceIdentity(root) !== identity.sourceHash)
       throw new Error('Source or built CLI changed during execution')
-    const events = observeEvents(result.stdout, run.context.skillReadReference)
+    const events = observeEvents(result.stdout, run.context.skillReadReference, run.context.knownOutputReference)
     events.writes = events.writes.map(path => isAbsolute(path) ? relative(workspace, path) : path)
     result.finalOutput ??= events.finalOutput
     const observation = workspaceObservation(workspace, baseline)
@@ -97,7 +98,7 @@ export async function runCase(entry, root, options = {}) {
     Object.assign(run, { observation, events })
     stage = 'oracle'
     const graded = await gradeEvidence(entry, { ...run, result, observation, events, arm: run.context.arm })
-    const packet = createReviewPacket({ prompt: entry.manifest.prompt, observation, result, rubric: entry.manifest.rubric, events, workspace })
+    const packet = createReviewPacket({ prompt: entry.manifest.prompt, observation, result, rubric: entry.manifest.rubric, events, workspace, forbiddenActions: entry.manifest.hard.forbidden_actions })
     run = { ...run, result, observation, events, ...graded, packet, semantic: { status: 'inconclusive', reason: 'independent review pending' } }
   }
   catch {

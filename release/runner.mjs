@@ -6,6 +6,7 @@ import { checkCampaignEvidence } from './evidence.mjs'
 
 const steps = [
   ['build', ['run', 'build']],
+  ['skill-package', ['run', 'skills:package-check']],
   ['skill-security', ['run', 'skills:security-check']],
   ['docs-check', ['run', 'docs:check']],
   ['docs-build', ['run', 'docs:build']],

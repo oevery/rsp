@@ -21,9 +21,10 @@ describe('paired evaluation comparison', () => {
     expect(result.runs[0].arm).toBe(result.runs[3].arm)
     expect(result.runs[1].arm).toBe(result.runs[2].arm)
     expect(result.summary).toMatchObject({
-      candidate: { passed: 2, failed: 0 },
-      status: 'passed',
-      regression: 'not-observed',
+      execution: { candidate: { passed: 2, failed: 0 }, status: 'passed' },
+      semantic: 'inconclusive',
+      status: 'inconclusive',
+      regression: 'undetermined',
     })
   })
 })

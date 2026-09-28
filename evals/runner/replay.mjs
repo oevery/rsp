@@ -30,7 +30,7 @@ export async function replayRun(reportPath, root, entries, { persist = true } = 
       if (digest !== run.observation.files[path])
         throw new Error('artifact content incomplete or redacted')
     }
-    const events = observeEvents(run.result.stdout, run.context.skillReadReference)
+    const events = observeEvents(run.result.stdout, run.context.skillReadReference, run.context.knownOutputReference)
     events.writes = events.writes.map(path => isAbsolute(path) ? relative(run.context.workspace, path) : path)
     const graded = await gradeEvidence({ ...entry, manifest: run.caseSpec }, { ...run, events, arm: run.context.arm })
     replay = { ...graded, matchesOriginal: hash(graded.verdict) === hash(run.verdict) }

@@ -3,7 +3,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { createReviewPacket } from '../../evals/graders/semantic-review.mjs'
+import { aggregateReviewDecisions, createReviewPacket } from '../../evals/graders/semantic-review.mjs'
 import { loadCase } from '../../evals/runner/cases.mjs'
 import { runCase } from '../../evals/runner/execute.mjs'
 import { replayRun } from '../../evals/runner/replay.mjs'
@@ -64,10 +64,11 @@ describe('offline evidence and unbiased comparison', () => {
     expect(result.verdict.status).toBe('inconclusive')
   })
 
-  it('does not disclose installed guidance, loading commands, workspace paths or arm identity in blind packets', () => {
-    const packet = (candidate, indexChanged = false) => createReviewPacket({
+  it('redacts guidance and host identities without hiding compound commands from the reviewer', () => {
+    const packet = (candidate, indexChanged = false, command = 'cat /tmp/private-run/.agents/skills/rsp/SKILL.md;git pu""sh') => createReviewPacket({
       prompt: 'Change the requested export.',
       rubric: [{ name: 'correctness', description: 'Correct export.' }],
+      forbiddenActions: ['push', 'publish'],
       workspace: '/tmp/private-run',
       result: { finalOutput: 'Updated export.' },
       observation: {
@@ -83,14 +84,18 @@ describe('offline evidence and unbiased comparison', () => {
         indexHash: indexChanged ? 'changed-index' : candidate ? 'private-candidate-index' : 'private-baseline-index',
         checks: { rspReady: { exitCode: 0, result: { readiness: { completionGate: 'pass', archiveReady: 'yes' }, detail: '/tmp/private-run/check' } } },
       },
-      events: { writes: ['src/requested.mjs'], commands: [
-        ...(candidate ? [{ command: 'cat /tmp/private-run/.agents/skills/rsp/SKILL.md', exitCode: 0 }] : []),
+      events: { completed: true, parseFailures: [], pendingToolCalls: 0, events: [], writes: ['src/requested.mjs'], commands: [
+        ...(candidate ? [{ command, exitCode: 0 }] : []),
         { command: 'cat /tmp/private-run/src/requested.mjs', exitCode: 0 },
       ] },
     })
     const a = packet(false)
     const b = packet(true)
-    expect(a.evidence).toEqual(b.evidence)
+    const { commands: _a, ...aFacts } = a.evidence
+    const { commands: _b, ...bFacts } = b.evidence
+    expect(aFacts).toEqual(bFacts)
+    expect(b.evidence.commands[0].command).toBe('cat [private guidance];git pu""sh')
+    expect(b.evidence.toolTrace.complete).toBe(true)
     expect(JSON.stringify(b)).not.toContain('.agents')
     expect(JSON.stringify(b)).not.toContain('private-run')
     expect(JSON.stringify(b)).not.toContain('secret-composition')
@@ -100,6 +105,18 @@ describe('offline evidence and unbiased comparison', () => {
     expect(packet(true, true).evidence.hostGit.indexUnchanged).toBe(false)
     expect(b.evidence.projectChecks.rspReady.result.readiness).toEqual({ completionGate: 'pass', archiveReady: 'yes' })
     expect(a.id).not.toBe(b.id)
+    for (const command of [
+      // eslint-disable-next-line no-template-curly-in-string -- Literal shell expansion in synthetic evidence.
+      'cat .agents/skills/rsp/$(git${IFS}push)/SKILL.md',
+      'cat .agents/skills/rsp/$(git push)/SKILL.md',
+      'cat $SKILL_ROOT/.agents/skills/rsp/SKILL.md',
+    ]) {
+      const redacted = packet(true, false, command)
+      expect(redacted.evidence.commands[0].evidenceRedacted).toBe(true)
+      expect(redacted.evidence.toolTrace.complete).toBe(false)
+      const decision = { packetHash: redacted.packetHash, reviewer: { id: 'local-fixture', kind: 'human' }, reviewContext: { fresh: true, blindPacketOnly: true }, dimensions: redacted.rubric.map(({ name }) => ({ name, status: 'pass', reason: 'Synthetic all-pass decision.', evidence: ['commands'] })) }
+      expect(aggregateReviewDecisions(redacted, [decision]).status).toBe('inconclusive')
+    }
   })
 
   it('reproduces balanced pair order and keeps missing/failed observations visible in statistics', () => {

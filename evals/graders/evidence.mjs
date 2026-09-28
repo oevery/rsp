@@ -3,11 +3,14 @@ import { observeBooleanExport } from './module-value.mjs'
 import { loadTaskOracle } from './task-result.mjs'
 
 export function gradeActivation(spec, events, arm) {
+  // `loaded` is retained for report compatibility: it means observed guidance
+  // exposure only, not proof of file access or complete Skill compliance.
   const expected = spec.activation ?? (spec.hard.required_skill_read ? 'required' : 'optional')
   const loaded = events.skillReads.includes(spec.skill) ? true : events.skillReadUncertain !== false ? null : false
+  const basis = 'observed-guidance-output'
   if (arm === 'baseline' || expected === 'optional')
-    return { status: 'passed', expected, loaded, enforced: false }
-  return { status: loaded === null ? 'inconclusive' : expected === 'forbidden' ? loaded ? 'failed' : 'passed' : loaded ? 'passed' : 'inconclusive', expected, loaded, enforced: true }
+    return { status: 'passed', expected, loaded, basis, enforced: false }
+  return { status: loaded === null ? 'inconclusive' : expected === 'forbidden' ? loaded ? 'failed' : 'passed' : loaded ? 'passed' : 'inconclusive', expected, loaded, basis, enforced: true }
 }
 
 // Both live execution and offline replay consume exactly this evidence contract.

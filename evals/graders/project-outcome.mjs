@@ -22,6 +22,8 @@ export async function verify({ case: spec, result, observation, helpers }) {
   }
   const ready = observation.checks?.rspReady?.result
   const expectedNext = mode === 'blocked' ? 'ask-owner' : 'verify'
-  const validState = ready?.ok && ready.readiness.archiveReady === 'no' && (mode !== 'blocked' || ready.readiness.activeBlockers)
-  return { status: validState && answer.workRef === 'requested-export' && answer.state === mode && answer.next === expectedNext ? 'passed' : 'failed', evidence: { ready } }
+  const validState = ready?.ok && ready.readiness.archiveReady === 'no' && (mode === 'blocked'
+    ? ready.readiness.activeBlockers
+    : ready.readiness.activeBlockers === false && ready.readiness.incompleteRequiredVerify > 0)
+  return { status: validState && answer?.workRef === 'requested-export' && answer.state === mode && answer.next === expectedNext ? 'passed' : 'failed', evidence: { ready } }
 }

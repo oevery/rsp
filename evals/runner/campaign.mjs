@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path'
 import { aggregateReviewDecisions } from '../graders/semantic-review.mjs'
 import { compositionIdentity } from '../observers/workspace.mjs'
 import { budgetStop, withBatchLock } from './batch-state.mjs'
-import { summarizeRuns } from './compare.mjs'
+import { summarizeEvaluation } from './compare.mjs'
 import { harnessIdentity, runCase, sourceIdentity } from './execute.mjs'
 import { hash, treeFiles, writeJson } from './files.mjs'
 import { executionIdentity, gradingIdentity } from './identity.mjs'
@@ -13,10 +13,7 @@ import { readReleaseSuite } from './suite.mjs'
 
 export function summarizeCampaign(report) {
   const runs = report.comparisons.flatMap(comparison => comparison.runs)
-  const execution = summarizeRuns(runs)
-  const candidates = runs.filter(run => run.arm === 'candidate')
-  const semantic = candidates.some(run => run.semantic?.status === 'failed') ? 'failed' : candidates.length && candidates.every(run => run.semantic?.status === 'passed') ? 'passed' : 'inconclusive'
-  return { execution, semantic, status: execution.status === 'failed' || semantic === 'failed' ? 'failed' : report.complete !== false && execution.status === 'passed' && semantic === 'passed' ? 'passed' : 'inconclusive' }
+  return summarizeEvaluation(runs, { complete: report.complete !== false })
 }
 
 export async function runCampaign(entries, root, options) {
@@ -115,7 +112,7 @@ export async function runCampaign(entries, root, options) {
         const run = await runCase(entry, root, { ...options, sourceHash: plan.sourceHash, compositionHash: plan[slot.arm].hash, timeoutMs: plan.timeoutMs, composition: slot.arm === 'candidate' ? options.candidateComposition : options.baselineComposition, arm: slot.arm, outputRoot: directory })
         comparison.runs.push({ ...slot, ...run })
         invocation.push({ usage: run.events?.usage })
-        comparison.summary = summarizeRuns(comparison.runs)
+        comparison.summary = summarizeEvaluation(comparison.runs, { complete: comparison.runs.length === schedule.length })
         delete report.inFlight
         report.stopReason = run.verdict.status === 'inconclusive' ? 'execution-failure' : slot.arm === 'candidate' && run.verdict.status === 'failed' ? 'candidate-failure' : null
         save()
@@ -144,6 +141,8 @@ export function applyReviews(report, decisions) {
     run.decisions = decisions.filter(decision => decision.packetHash === run.packet.packetHash)
     run.semantic = aggregateReviewDecisions(run.packet, run.decisions)
   }
+  for (const comparison of copy.comparisons)
+    comparison.summary = summarizeEvaluation(comparison.runs, { complete: copy.complete !== false })
   copy.summary = summarizeCampaign(copy)
   return copy
 }

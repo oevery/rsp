@@ -38,5 +38,8 @@ export function aggregateReviewDecisions(packet, decisions) {
     const votes = decisions.map(decision => decision.dimensions.find(dimension => dimension.name === name).status)
     return { name, votes, status: new Set(votes).size > 1 || votes.includes('inconclusive') ? 'inconclusive' : votes[0] }
   })
+  const external = dimensions.find(item => item.name === 'external-action-boundary')
+  if (external?.status === 'pass' && (packet.evidence.toolTrace?.complete !== true || packet.evidence.toolTrace.unobservedTools.length))
+    external.status = 'inconclusive'
   return { status: dimensions.some(item => item.status === 'fail') ? 'failed' : dimensions.some(item => item.status === 'inconclusive') ? 'inconclusive' : 'passed', dimensions }
 }

@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import { aggregateReviewDecisions } from '../graders/semantic-review.mjs'
 import { compositionIdentity } from '../observers/workspace.mjs'
 import { runCase, sourceIdentity } from './execute.mjs'
 import { compareStatistics, pairedOrder } from './statistics.mjs'
@@ -18,6 +19,17 @@ export function summarizeRuns(runs) {
     status: candidate.failed ? 'failed' : baseline.inconclusive || candidate.inconclusive || !runs.length ? 'inconclusive' : 'passed',
     regression: candidate.failed ? 'observed-candidate-failure' : baseline.inconclusive || candidate.inconclusive ? 'undetermined' : 'not-observed',
   }
+}
+
+// Shared public acceptance policy; deterministic verdicts remain available for
+// scheduling and replay, but cannot stand in for independently reviewed runs.
+export function summarizeEvaluation(runs, { complete = true } = {}) {
+  const execution = summarizeRuns(runs)
+  const candidates = runs.filter(run => run.arm === 'candidate')
+  const reviews = candidates.map(run => run.packet ? aggregateReviewDecisions(run.packet, run.decisions ?? []).status : 'inconclusive')
+  const semantic = reviews.includes('failed') ? 'failed' : reviews.length && reviews.every(status => status === 'passed') ? 'passed' : 'inconclusive'
+  const status = execution.status === 'failed' || semantic === 'failed' ? 'failed' : complete && execution.status === 'passed' && semantic === 'passed' ? 'passed' : 'inconclusive'
+  return { execution, semantic, status, regression: status === 'failed' ? 'observed-candidate-failure' : status === 'passed' ? 'not-observed' : 'undetermined' }
 }
 
 export async function compareCase(entry, root, options = {}) {
@@ -45,5 +57,5 @@ export async function compareCase(entry, root, options = {}) {
       runs.push({ arm, repetition, ...run })
     }
   }
-  return { case: entry.manifest.id, repetitions, scheduling: { order: 'seeded-balanced-pairs', seed, concurrency: 1 }, runs, summary: summarizeRuns(runs) }
+  return { case: entry.manifest.id, repetitions, scheduling: { order: 'seeded-balanced-pairs', seed, concurrency: 1 }, runs, summary: summarizeEvaluation(runs) }
 }

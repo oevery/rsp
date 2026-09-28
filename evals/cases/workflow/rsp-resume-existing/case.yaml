@@ -2,7 +2,7 @@ id: rsp-resume-existing
 kind: workflow
 skill: rsp
 activation: required
-prompt: 'Resume context for the focused requested-export Change after an interruption. Inspect its current state, but do not change files. Return JSON with workRef="requested-export", state="partial", and next="verify". Explain any evidence limitation in a separate explanation field.'
+prompt: 'Resume the focused Change after an interruption. Inspect the project to determine its current state and next action; do not change files or make unresolved user decisions. Return JSON with workRef, state (partial, blocked or complete), next (verify, ask-owner or review), and an explanation grounded in the inspected evidence.'
 oracle: project-outcome
 fixture: fixture
 tooling: rsp-cli

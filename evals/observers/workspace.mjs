@@ -108,7 +108,7 @@ export function workspaceObservation(workspace, baseline) {
     baselineHead: baseline?.head,
     indexHash: hash(git(workspace, ['ls-files', '--stage', '-z'])),
     baselineIndexHash: baseline?.indexHash,
-    diff: baseline ? git(workspace, ['diff', '--no-ext-diff', '--no-textconv', baseline.head, '--', '.']) : '',
+    diff: git(workspace, ['diff', '--no-ext-diff', '--no-textconv', baseline?.head ?? 'HEAD', '--', '.']),
     skillTreeHash: existsSync(join(workspace, '.agents', 'skills')) ? hash(treeFiles(join(workspace, '.agents', 'skills'))) : hash({}),
   }
 }

@@ -1,6 +1,6 @@
 ---
 name: release-acceptance
-description: Plan, execute, and interpret this repository's serial pre-release acceptance campaign, including dynamic project scenarios and generated reports. Use before selecting or validating an exact RSP release candidate; do not use it to publish, tag, push, or approve a release.
+description: Plan and interpret serial local release validation and independently reviewed paired Skill campaigns for this repository. Use before selecting or validating an exact RSP release candidate; do not publish, tag, push, or approve a release.
 ---
 
 # Release Acceptance
@@ -22,7 +22,7 @@ Load only the selected mode reference. A mode may invoke or require evidence fro
 
 - Diagnose the first failed step from its retained log and current source; do not skip it or continue later shared-resource steps.
 - A provider arm failure must still produce a sanitized aggregate report naming the failed arm and bounded failure category. Absence of that report is a runner defect, not an unavailable pass.
-- Correct only the selected Change scope, then create a fresh run rather than editing or merging an old report.
+- Correct only the selected Change scope. Preserve original reports: execution/input changes need fresh authorized runs; compatible deterministic grading changes use offline revalidation, never edited verdicts or merged reports.
 - If project coverage is missing, add or repair a realistic isolated fixture; do not lower required coverage or assert a fixed total.
 - If a real project would require network access, credentials, or mutation of its source checkout, report it as unavailable until an isolated authorized fixture or checkout exists.
 

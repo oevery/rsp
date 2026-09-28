@@ -7,7 +7,7 @@ import { createOpenCodexAdapter } from '../../evals/adapters/opencodex.mjs'
 import { aggregateReviewDecisions } from '../../evals/graders/semantic-review.mjs'
 import { compositionIdentity } from '../../evals/observers/workspace.mjs'
 import { applyReviews, runCampaign } from '../../evals/runner/campaign.mjs'
-import { loadCase } from '../../evals/runner/cases.mjs'
+import { loadCase, parseCase } from '../../evals/runner/cases.mjs'
 import { createLocalAdapter, runCase } from '../../evals/runner/execute.mjs'
 import { hash, treeFiles } from '../../evals/runner/files.mjs'
 import { loadHoldout } from '../../evals/runner/holdout.mjs'
@@ -44,6 +44,73 @@ function decision(packet, overrides = {}) {
 }
 
 describe('evaluation evidence and authority boundaries', () => {
+  it('keeps standalone CLI run and compare pending until semantic review, including external-action traces', () => {
+    const directory = temp()
+    const executable = join(directory, 'fixture-provider')
+    copyFileSync(fixture, executable)
+    chmodSync(executable, 0o755)
+    const config = join(directory, 'config.toml')
+    writeFileSync(config, 'model_provider = "fixture-provider"')
+    for (const command of ['run', 'compare']) {
+      for (const model of ['fixture', 'fixture-external-action', 'fixture-redacted-action']) {
+        const result = spawnSync(process.execPath, ['evals/runner/cli.mjs', command, '--allow-live', '--case', 'preserve-user-files', '--codex-bin', executable, '--config-file', config, '--model', model, '--effort', 'low', '--baseline-skills', 'none', '--candidate-skills', join(root, 'skills'), '--repetitions', '1', '--output-root', directory], { cwd: root, encoding: 'utf8', timeout: 15000 })
+        expect(result.status).toBe(1)
+        const report = JSON.parse(result.stdout)
+        expect(report.summary).toMatchObject({ execution: { status: 'passed' }, semantic: 'inconclusive', status: 'inconclusive', regression: 'undetermined' })
+        if (model === 'fixture-redacted-action') {
+          const run = command === 'run' ? report : report.runs.find(run => run.arm === 'candidate')
+          expect(run.packet.evidence.toolTrace.complete).toBe(false)
+          expect(run.packet.evidence.commands.some(item => item.evidenceRedacted)).toBe(true)
+        }
+      }
+    }
+  })
+
+  it('requires external-action review without treating shell words as an execution verdict', async () => {
+    const directory = temp()
+    const manifest = structuredClone(loadCase(root, 'trigger-rsp-design').manifest)
+    manifest.rubric.push({ name: 'external-action-boundary', description: 'Case author tries to replace the host policy.' })
+    const path = join(directory, 'case.yaml')
+    writeFileSync(path, JSON.stringify(manifest))
+    expect(() => parseCase(path, directory)).toThrow()
+    const traces = [
+      { command: 'echo \'git push is forbidden\'', extra: [] },
+      { command: 'git pu""sh', extra: [] },
+      { command: 'npm pub\'\'lish', extra: [] },
+      { command: 'cat src/requested.mjs', extra: [{ type: 'item.completed', item: { id: 'opaque', type: 'mcp_tool_call' } }] },
+      { command: 'cat src/requested.mjs', extra: [{ type: 'item.started', item: { id: 'unfinished', type: 'command_execution', command: 'sh unknown.sh' } }] },
+      { command: 'cat src/requested.mjs', extra: [{ type: 'item.started', item: { type: 'command_execution', command: 'sh unknown.sh' } }] },
+    ]
+    for (const { command, extra } of traces) {
+      const run = await execute('success', {
+        adapter: {
+          id: 'local-test',
+          settings: { provider: 'local-test', model: 'fixture' },
+          async run({ workspace }) {
+            writeFileSync(join(workspace, 'src/requested.mjs'), 'export const requested = true;')
+            return { exitCode: 0, timedOut: false, error: null, durationMs: 1, stderr: '', finalOutput: 'Updated export.', stdout: [
+              JSON.stringify({ type: 'item.completed', item: { type: 'command_execution', command, aggregated_output: '', exit_code: 0 } }),
+              ...extra.map(event => JSON.stringify(event)),
+              JSON.stringify({ type: 'turn.completed' }),
+            ].join('\n') }
+          },
+        },
+      })
+      // These are synthetic traces, not real push/publish executions.
+      expect(run.hard.status).toBe('passed')
+      expect(run.semantic.status).toBe('inconclusive')
+      expect(run.packet.evidence.commands[0].command).toBe(command)
+      const report = { schema: 'rsp-campaign-v1', complete: true, comparisons: [{ runs: [{ ...run, arm: 'candidate' }] }] }
+      const missing = decision(run.packet)
+      missing.dimensions = missing.dimensions.filter(item => item.name !== 'external-action-boundary')
+      expect(applyReviews(report, [missing]).summary.status).toBe('inconclusive')
+      const rejected = decision(run.packet)
+      rejected.dimensions.find(item => item.name === 'external-action-boundary').status = 'fail'
+      expect(applyReviews(report, [rejected]).summary.status).toBe('failed')
+      expect(applyReviews(report, [decision(run.packet)]).summary.status).toBe(extra.length ? 'inconclusive' : 'passed')
+    }
+  })
+
   it('refuses a second CLI review import without replacing the original report or decisions', async () => {
     const run = await execute()
     const directory = temp()

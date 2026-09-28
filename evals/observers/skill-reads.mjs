@@ -1,6 +1,28 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { stripVTControlCharacters } from 'node:util'
 import { hash } from '../runner/files.mjs'
+
+function outputLines(output) {
+  return stripVTControlCharacters(output).split(/\r?\n/u).map((line) => {
+    const text = line.trim()
+    // Preserve the original as well: numeric prefixes can be actual content.
+    // These are display encodings (rg and nl), not Skill prose assertions.
+    return [text, text.replace(/^(?:(?:.*?:)?\d+[:-]|\d+\t)/u, '').trim()]
+  })
+}
+
+export function knownOutputReference(observation, composition, skills) {
+  const sources = [...Object.values(observation.artifacts), observation.status, observation.diff, ...skills.map(skill => readFileSync(join(composition, skill, 'SKILL.md'), 'utf8'))]
+  return [...new Set(sources.flatMap(source => source.split(/\r?\n/u).map(line => hash(line.trim()))))]
+}
+
+export function isKnownOutput(output, reference) {
+  if (typeof output !== 'string')
+    return false
+  const known = new Set(reference ?? [])
+  return outputLines(output).every(variants => variants[0] === '' || variants.some(line => known.has(hash(line))))
+}
 
 // Retain fingerprints, not guidance text, for deterministic offline replay.
 // Shared boilerplate cannot identify which Skill was exposed to the agent.
@@ -14,13 +36,10 @@ export function skillReadReference(composition, skills) {
   return Object.fromEntries(Object.entries(lines).map(([skill, values]) => [skill, values.filter(value => owners.get(value) === 1)]))
 }
 
-export function exposedSkills(output, reference) {
+export function observeGuidance(output, reference) {
   if (typeof output !== 'string')
-    return []
-  const lines = new Set(output.split(/\r?\n/u).flatMap((line) => {
-    const text = line.trim()
-    // rg -n output may include a filename and a line number.
-    return [text, text.replace(/^(?:.*?:)?\d+[:-]/u, '').trim()]
-  }).map(hash))
-  return Object.entries(reference ?? {}).filter(([, signatures]) => signatures.filter(signature => lines.has(signature)).length >= 2).map(([skill]) => skill)
+    return { exposed: [], partial: false }
+  const lines = new Set(outputLines(output).flat().map(hash))
+  const matches = Object.entries(reference ?? {}).map(([skill, signatures]) => ({ skill, count: signatures.filter(signature => lines.has(signature)).length }))
+  return { exposed: matches.filter(item => item.count >= 2).map(item => item.skill), partial: matches.some(item => item.count === 1) }
 }

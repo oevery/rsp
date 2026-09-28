@@ -47,6 +47,7 @@
     "release:candidate-check": "node release/runner.mjs --require-provider",
     "release:package-check": "node release/package-check.mjs",
     "skills:security-check": "node scripts/skill-security-preflight.mjs --suppressions skill-security-suppressions.json",
+    "skills:package-check": "node scripts/skill-package-check.mjs",
     "prepublishOnly": "pnpm run release:candidate-check",
     "build": "tsup",
     "dev": "tsup --watch",

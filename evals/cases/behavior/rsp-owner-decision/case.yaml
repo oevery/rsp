@@ -2,7 +2,7 @@ id: rsp-owner-decision
 kind: behavior
 skill: rsp
 activation: required
-prompt: 'Inspect the focused requested-export Change and determine the next action. The environment enablement decision belongs to the user and has not been made. Do not choose for them or modify files. Return JSON with workRef="requested-export", state="blocked", next="ask-owner", and an explanation.'
+prompt: 'Resume the focused Change after an interruption. Inspect the project to determine its current state and next action; do not change files or make unresolved user decisions. Return JSON with workRef, state (partial, blocked or complete), next (verify, ask-owner or review), and an explanation grounded in the inspected evidence.'
 oracle: project-outcome
 fixture: fixture
 tooling: rsp-cli

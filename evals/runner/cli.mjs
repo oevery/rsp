@@ -7,7 +7,7 @@ import { loadTaskOracle } from '../graders/task-result.mjs'
 import { loadCalibration, scoreCalibration } from './calibration.mjs'
 import { applyReviews, reviewCampaign, runCampaign } from './campaign.mjs'
 import { discoverCases, loadCase } from './cases.mjs'
-import { compareCase } from './compare.mjs'
+import { compareCase, summarizeEvaluation } from './compare.mjs'
 import { runCase } from './execute.mjs'
 import { writeJson } from './files.mjs'
 import { loadHoldout } from './holdout.mjs'
@@ -183,8 +183,9 @@ async function main(args) {
     const result = command === 'run'
       ? await runCase(entries[0], root, { ...execution, composition: execution.candidateComposition })
       : await compareCase(entries[0], root, execution)
-    print(result)
-    process.exitCode = (result.verdict ?? result.summary).status === 'passed' ? 0 : 1
+    const summary = command === 'run' ? summarizeEvaluation([{ ...result, arm: 'candidate' }]) : result.summary
+    print({ ...result, summary })
+    process.exitCode = summary.status === 'passed' ? 0 : 1
   }
 }
 main(process.argv.slice(2)).catch((error) => {
