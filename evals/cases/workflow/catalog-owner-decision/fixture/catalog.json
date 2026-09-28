@@ -1,0 +1,15 @@
+{
+  "currency": "USD",
+  "items": [
+    {
+      "id": "notebook",
+      "title": "Notebook",
+      "priceCents": 1200
+    },
+    {
+      "id": "pencil",
+      "title": "Pencil",
+      "priceCents": 200
+    }
+  ]
+}

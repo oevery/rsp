@@ -1,0 +1,15 @@
+{
+  "currency": "USD",
+  "products": [
+    {
+      "sku": "notebook",
+      "label": "Notebook",
+      "price": "12.00"
+    },
+    {
+      "sku": "pencil",
+      "label": "Pencil",
+      "price": "2.00"
+    }
+  ]
+}
