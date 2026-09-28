@@ -57,6 +57,7 @@ sources:
       - LICENSE*
       - src/**
       - docs/**/*.md
+      - docs-lab/**/*.md
       - schemas/**
       - openspec/**
 
@@ -97,7 +98,7 @@ sources:
       - README.md
       - LICENSE*
       - skills/**
-      - docs/skills/**
+      - docs/guides/**
       - docs/solutions/skill-design/**
       - tests/**
 
