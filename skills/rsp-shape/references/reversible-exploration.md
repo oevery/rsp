@@ -1,4 +1,4 @@
-# Reversible exploration
+# Reversible exploration (Shape design method)
 
 Use this procedure only when a material design conclusion depends on behavior that available code, tests, documentation, or runtime evidence does not establish.
 

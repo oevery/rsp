@@ -1,35 +1,35 @@
 ---
 name: rsp-shape
-description: Shape or rigorously challenge unclear non-trivial work into one executable RSP Change or a justified shallow Change Group without implementing it.
+description: Resolve a bounded design question read-only, or shape authorized unclear work into one executable Change or justified shallow Group; never infer artifact mutation from advice.
 license: MIT
 metadata:
   author: oevery
-  version: "2026.08.05.1"
+  version: "2026.09.29.1"
 ---
 
 # RSP Shape
 
-Do not implement the shaped work.
+Choose the branch before loading detail: bounded design advice is read-only and may have no Change; explicit planning-artifact work shapes or refines a Change/Group. Neither branch implements product behavior.
 
-Follow Core's response-versus-artifact language boundary for all user-visible control narration; when the response language differs, keep exact canonical values only as secondary parenthesized or code-formatted tokens.
+Use explicit response language, then personal instruction, then conversation language for narration. Preserve the language of existing artifacts and exact canonical values. For a new artifact use explicit artifact instruction, then effective configured artifact language, then scoped project instruction, then conversation language; inspect `rsp config --json` or the configuration file when configuration matters, not status. Resolve a material conflict with the owner; this rule works without Core installed.
 
 ## Establish the boundary
 
-Read the request, authority, Core or fallback, Change and Brief, then only decisive evidence.
+Read the request, authority, nearest project context, Change and Brief when selected, then only decisive evidence. A direct design question without a Change does not require one. A design question inside a tracked Change retains that WorkRef, but defaults to report-only; only explicit artifact authority permits updating its Design.
 
 A request to shape, create, or refine a Change grants artifact authority unless no-edit; advice does not. If creation focuses it, preserve the exact prior focus and restore it immediately unless selection was requested. Shaping grants no other authority; preserve unrelated work.
 
-Return the request directly to implementation when it is tiny and concrete or the selected Change is already ready. Do not rewrite settled work for style or completeness.
+Only route tiny, concrete or already-ready work directly to implementation when the current request authorizes implementation and has no unresolved design or planning question. Complete an explicitly requested read-only design mode with its report even when the work is otherwise ready. Do not rewrite settled work for style or completeness.
 
-During an explicit managed goal, its original planning-artifact authority remains valid for clear in-scope discovery. Keep a cohesive correction in the current Change; create one Change for an independently closable result, or one shallow Group for at least two such results sharing the goal. Return the ready WorkOwner to Core for fresh route derivation without another authorization round. When the invoking request has effective `manage.activation: auto` and independently grants the required planning/product authority, Core may continue directly into Manage; Shape never resumes Manage itself. Stop on changed behavior, acceptance, public interfaces, goal scope, mutation authority, or external action.
+During a qualified coordinated goal, original planning-artifact authority remains valid for clear in-scope discovery. Keep a cohesive correction in the current Change; create one for an independently closable result, or a shallow Group for at least two. Return the ready WorkOwner for continuation without another authorization round. Configuration alone grants no planning or product authority. Stop on changed behavior, acceptance, public interfaces, goal scope, mutation authority, or external action.
 
 ## Resolve material ambiguity
 
 Inspect the repository before asking. Ask only for an owner decision changing behavior, data, interfaces, compatibility, safety, ownership, migration, or acceptance. Write only authorized answers.
 
-Shape owns two transient questioning modes. Ordinary clarification asks one to three related material questions, while explicit deep clarification asks exactly one DecisionOwner question per turn. A Core or Manage `StopDisposition: return-to-shape` may enter either mode, but Shape resumes execution only by returning a ready WorkOwner to Core for fresh route derivation; it never resumes Manage directly.
+Ordinary clarification asks one to three related material questions; explicit deep clarification asks one DecisionOwner question per turn. A return for material fog or changed ownership resumes within Shape from fresh relevant facts, then returns the ready WorkOwner to Core. Do not restart the full workflow on mere method change.
 
-Read [deep clarification](references/deep-clarification.md) when the user explicitly asks for rigorous challenge, a high-risk decision remains, or one design question returns. Prefer the installed `rsp-design` capability; otherwise use its fallback.
+For a bounded design question, load only the relevant [domain modeling](references/domain-modeling.md), [module and seam design](references/module-seams.md), or [reversible exploration](references/reversible-exploration.md) method. Read [deep clarification](references/deep-clarification.md) only for explicit rigorous challenge or dependent high-risk decisions. Advice does not create or modify an artifact, authorize a disposable code probe, or turn a recommendation into product authority.
 
 Read [external issue input](references/external-issue-input.md) only when a Change declares an issue relationship or the request asks to shape from an issue URL.
 
@@ -70,10 +70,8 @@ A Change is ready only when:
 - Verify proves the result without process chronology; Blockers are truthful;
 - one Change or a justified shallow Group is the smallest sufficient owner.
 
-After mutation, run the focused RSP check. Return the WorkOwner reference, artifacts, validation, and next action or blocker.
+After authorized planning mutation, run the focused RSP check. Return the WorkOwner reference, artifacts, validation, and next action or blocker. For read-only design, return question, evidence, recommendation, credible tradeoff, owner decision and smallest next action; no automatic Change creation or plan mutation.
 
-When the gate passes, return the bounded phase Shape result for phase Shape with the ready WorkOwner reference, decisive readiness evidence, `NextOwner: Core`, and a resume rule that Core freshly derives the route. A Change uses its WorkRef; a Group uses its Group reference.
+When the gate passes, return the ready WorkOwner reference and decisive evidence for Core to continue the authorized objective. A Change uses its WorkRef; a Group uses its Group reference. Do not require the user to request continuation.
 
-When a material decision prevents readiness, return a bounded non-ready Shape phase result for phase Shape with `StopDisposition: ask-owner`, the decisive evidence, the `DecisionOwner`, the required answer, and a resume rule that reruns Shape from fresh evidence after the answer.
-
-For any other blocker, return a bounded non-ready Shape phase result for phase Shape with the applicable canonical `StopDisposition`, decisive evidence, `NextOwner`, required input, and resume rule. Do not relabel unresolved fog as ready work.
+When a material decision prevents readiness, stop with decisive evidence, the DecisionOwner and required answer; resume from fresh relevant evidence after that answer. For other blockers, state the actual missing input, next owner and safe resume condition. Use canonical machine fields such as `StopDisposition` only when a real consumer requires them. Do not relabel unresolved fog as ready work.

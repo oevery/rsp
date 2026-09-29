@@ -8,7 +8,7 @@ Inspect the available code, tests, project instructions, Specs, and Decision Rec
 
 ## RSP design return
 
-When `rsp-design` is available, it is the canonical domain or module design capability for an RSP-tracked question. Otherwise use an equivalent project-selected capability or Core's compact manual design fallback. Return one bounded design task containing:
+For an RSP-tracked domain or module design question, use Shape's conditional design method and return one bounded result containing:
 
 - the unresolved design question;
 - authoritative project inputs by path;
@@ -16,7 +16,7 @@ When `rsp-design` is available, it is the canonical domain or module design capa
 - its permitted mutation boundary;
   - the same returning WorkOwner reference.
 
-The selected capability owns only the design analysis, while existing project documents retain domain and architecture authority. Consume its settled result and evidence on return, then resume Shape against the same Change.
+Design analysis does not grant artifact mutation; existing project documents retain domain and architecture authority. Consume settled evidence in the same Shape request and continue against the same Change only when authorized.
 
 ## Traverse one decision at a time
 

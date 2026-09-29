@@ -1,23 +1,24 @@
 # Skills 与受管工作
 
-RSP 发布一个由十二项与宿主无关的 Skill 组成的默认套件，供按需加载。每项 Skill 都有明确且狭窄的权限边界，并把结果返回已有的项目或 RSP 归属位置。
+当前源码候选定义七项与宿主无关的默认 Skill，供按需加载；它尚未作为版本发布，也未完成行为验收，已发布稳定包仍以自身清单为准。每项 Skill 有明确的权限边界；普通会话工作不必制造 Change。
 
 | Skill | 职责 |
 |---|---|
-| `rsp` | 派生下一步操作，指导接入、持久化写回判断与归档判断。 |
-| `rsp-shape` | 塑造一个可执行 Change 或合理的浅层 Group。 |
-| `rsp-design` | 解决一个边界明确的领域、模块或接缝设计问题，或一个以寻找证据为目的的设计问题。 |
-| `rsp-implement` | 实现一个已选定且就绪的 Change，并提供最新验证。 |
-| `rsp-diagnose` | 在修正前确认原因，或如实返回尚未解决的诊断。 |
-| `rsp-tdd` | 让一个合理的行为经过 RED、GREEN 与安全的 REFACTOR。 |
+| `rsp` | 选择当前分支；让普通已授权工作完成检查和必要写回，符合条件时才协调。 |
+| `rsp-shape` | 回答有界只读设计问题，或在规划获授权时塑造可执行 Change／浅层 Group。 |
+| `rsp-implement` | 按需只读诊断；实现已授权修正，在有理由时测试先行，按固定发现修正并作最新检查。 |
 | `rsp-verify` | 针对已选 WorkOwner 声明的证据边界执行一次有界、只读验证。 |
 | `rsp-review` | 对固定的代码、文档或混合比较范围做只读审查。 |
-| `rsp-resolve-findings` | 处置固定的审查发现，修正已接受的项目，验证并请求复审。 |
 | `rsp-commit` | 创建一个已授权、范围精确的本地提交。 |
 | `rsp-release-docs` | 起草、审计、定稿或校准明确的发布文档范围。 |
-| `rsp-manage` | 协调符合条件的长时间运行、恢复或多切片延续工作。 |
 
 `rsp-structural-audit` 是可选的纯报告项目 Skill，在授予实现权限前审计一个边界明确的仓库或子树。
+
+## 旧 Skill 名称迁移
+
+对此尚未发布的源码候选，将 `rsp-design` 交给 `rsp-shape`；将 `rsp-diagnose`、`rsp-tdd`、`rsp-resolve-findings` 作为 `rsp-implement` 的按需方法；将 `rsp-manage` 作为 `rsp` 内部的按需协调。更早的 `rsp-address-review` 别名也归 `rsp-implement`。这是职责映射，不是永久兼容 Skill，更不是要求删除项目自有说明。
+
+待精确候选 CLI 可用后，全程使用同一个已选候选 CLI；`@latest` 不代表此未发布候选。先查看 `rsp skills list`，并用 `rsp skills install --dry-run` 预检。已选 Skill 树内容不一致或存在已识别的过时包自有名称时，普通 dry-run 会直接报错，不会展示完整的替换／移除结果。先检查并备份用户定制内容，再用同一个 CLI 运行 `rsp skills install --dry-run --force`，查看明确的替换／删除范围；确认后才用该 CLI 运行 `rsp skills install --force`。未知 Skill 保持不动。安装器对已识别的替换／移除在激活失败时回滚，但这不意味着静默更新安全。`rsp update` 不刷新 Skills。这里不声称候选已有版本、发布、外部安装或行为验收。
 
 安装方式、运行时角色和调用方式彼此独立：
 
@@ -25,29 +26,27 @@ RSP 发布一个由十二项与宿主无关的 Skill 组成的默认套件，供
 |---|---|---|---|
 | `rsp` | 默认 | Core | 直接作为项目入口 |
 | `rsp-shape` | 默认 | Shape | 由 Core 路由，或显式请求塑形 |
-| Design、Implement、Diagnose、TDD、Verify、Review、Resolve Findings 与 Release Docs | 默认 | Discipline | 由 Core 路由为专门能力，或接受边界明确的显式请求 |
-| `rsp-commit` | 默认 | 本地交付 Discipline | 在精确边界获得授权后由 Core 或 Manage 路由 |
-| `rsp-manage` | 默认 | Controller | Core 根据显式请求或有效项目策略选择 |
+| Implement、Verify、Review 与 Release Docs | 默认 | Discipline | 由 Core 路由为专门能力，或接受边界明确的显式请求 |
+| `rsp-commit` | 默认 | 本地交付 Discipline | 精确边界显式授权；合格协调收尾还须通过自身门禁 |
+| `rsp` 的按需协调 | Core 内部 | 协调分支 | 仅在有效项目策略下存在真实协调义务时选择 |
 | `rsp-structural-audit` | 可选 | Discovery | 显式纯报告请求 |
 
-“默认”表示随套件安装，并不表示自动调用。普通 Discipline Skill 不递归编排面向用户的流程；只有通过 Core 资格判断的 Manage Controller 才能组合有边界的 worker lanes。
+“默认”表示属于本源码候选的默认套件，不表示自动调用。Skill 边界不等于 worker 边界。Core 通过资格判断后才可按需组合有界 worker；进入协调分支本身不代表委派。发布的 Skill 保持独立可用；缺少可选兄弟 Skill 时保留有界安全 fallback。
 
 ## 按证据组合套件
 
-- Shape 建立可执行的归属位置。
-- Design 回答一个实质性问题并返回该归属位置。
-- 失败原因不明时，Diagnose 优先于 TDD。
-- 仅在显式要求，或具体的变更风险使修改前的 RED 明显更安全时选择 TDD。
-- Verify 只执行一个已声明的只读证据边界。Change 使用 WorkRef 和 `Verify` 边界；Group 使用 Group Brief 的 `Completion Conditions` 中明确命名的 `Integration:` 条件。仅由当前请求提供的边界只是临时边界，Group closeout 前必须写回 Group Brief；worker identity、独立性、验收与收尾仍由 Manage 拥有。
-- Review 保持只读；Resolve Findings 拥有已接受修正的修改权限。
-- Release Docs 要求显式确认的发布操作。
-- 执行位置选择和跨分支集成由宿主、用户与 Git 负责。Manage 只在实际观察到的 checkout 或环境中工作；不存在负责选择或回迁执行环境的规范 Skill。
+- Shape 可只读回答一个有界设计问题，无需制造 WorkRef 或计划；规划写回需独立授权及实际归属。
+- Implement 在修正不明失败前先调查原因；纯诊断保持只读，无需制造 owner。已授权的修正从已确认原因出发，在同一权限和范围内继续；仅在显式要求或具体风险支持时先运行 RED。
+- Implement 对固定发现逐条给出接受、拒绝或需澄清的处置，在权限内修正已接受项，重跑受影响检查，并交由独立只读 Review 复审；不得自行宣称 review-clean。
+- Verify 在需要时执行已声明的只读证据边界，普通 Implement 检查不必转 Verify。Change 使用 WorkRef 与 `Verify` 边界；Group 使用 Brief 中命名的 `Integration:` 条件。临时边界必须在 Group closeout 前写回；要求独立验收时需要宿主证明不同 worker。
+- Review 保持固定范围和只读；Release Docs 需要明确的发布文档请求，但不因此获得发布权限。
+- 执行位置选择和跨分支集成由宿主、用户与 Git 负责。Core 的按需协调分支只在实际观察到的 checkout 或环境中工作；不存在负责选择或回迁执行环境的规范 Skill。
 - Commit 只负责当前 checkout 中一个边界精确的本地提交，不吸收 cherry-pick、cleanup 或跨分支集成。
 - 任何 Skill 都不推断提交、推送、发布、部署、批准或人工验收权限。
 
 ## 控制结果
 
-RSP 可以使用 Core 所有的可选响应摘要解释当前进展，而不会创建持久化控制器状态。默认只使用 Work、Phase、Result 或 Stop、Evidence、Next；只有活跃时才加入 Mode、State、Changed、Resume。Work 表示当前 `WorkOwner`：Change 使用其 WorkRef，Group 使用其 Group reference。可选机器 mode 为 solo | delegated | coordinated，可选机器 status 为 running | waiting | completed；State 只是展示字段，不是持久化生命周期状态。route、topology、lane result、acceptance 和 closeout 只作为嵌套细节或门槛，不形成并列状态流。Core 仍在 specialist、direct、managed、Shape 或 stop 中选择一条 route。一个 ready owner、一个 writer、一个 execution phase、一个 integrated decisive check，且没有 recovery、独立 acceptance、受管 lifecycle 或 ready successor 时保持 direct；多个文件或文档表面本身不会改变路由。
+Core 从意图、权限、现有归属和 checkout 证据选择分支，然后只加载相应方法。普通单 owner 工作在同一次授权请求中完成相称检查与必要写回，不要求再次说 `continue`；简单会话任务无需制造 Change，也不因此获得归档或提交权限。同范围同权限的方法切换及可修复失败留在负责的能力内；只有职责完成、目标／owner／范围／权限变化、真实跨职责独立验收或无法在范围内解决的 blocker 才返回 Core。返回 Core 本身也不要求用户再次发话。不持久化 route、controller 状态或第二本台账。
 
 工作归属、决策归属、临时交接、执行不确定性与验收是不同概念。`WorkOwner` 表示选定的 Change 或浅层 Group，`DecisionOwner` 表示必须作出实质决策的人或权限来源，`NextOwner` 表示下一个控制或执行能力。每次停止都必须说明下一位 owner、所需输入，以及工作应经 Shape 或 Core 返回，还是等待新的证据、环境、验证或能力。必需 worker 未实际创建、没有 worker-authored result，或在要求时没有 Host attribution 时，只能视为能力不可用，绝不能视为成功完成。
 
@@ -61,7 +60,7 @@ RSP 可以使用 Core 所有的可选响应摘要解释当前进展，而不会�
 
 ## 受管自动化
 
-Manage 只处理存在可观察协调义务的工作：独立切片、恢复、不同的执行与验收 owner、真实宿主/provider/hardware 验证、有界 Review 收敛、受管 lifecycle、明确 ready successor，或真实的多阶段权限边界。文件数量、Specs、产品呈现、公开文档和验证文件本身不构成资格信号；但只要真实义务存在，即使工作量较大且必须串行，仍然选择 Manage。
+Core 的按需协调分支只处理真实的耦合切片、恢复、执行与验收 owner 分离、共享验证资源、有界 Review 收敛、受管 lifecycle 或交付协调。文件数量、公开文档与普通的顺序方法切换本身不构成资格。这个分支不是另一个 controller，也不会自动产生 worker 边界。
 
 ```yaml
 manage:
@@ -71,27 +70,27 @@ manage:
 
 `activation` 控制选择方式：
 
-- `explicit`：仅在明确请求时选择 Manage。
-- `auto`：保留 specialist 路径后，Core（核心协议）先解析 ready owner，只在当前证据存在上述协调义务时选择 Manage；否则继续 direct Core 或 Discipline 路径。
+- `explicit`：按需协调需要明确请求。
+- `auto`：只有当前证据显示真实协调义务时 Core 才选择该分支；否则普通工作在同一请求中继续。
 
-Core 先把一个明确的 shape-ready Change 或浅层 Group 解析为 `WorkOwner`，并独占首次 Manage 资格判断及 `selected | declined` 路由结果。Change 使用 WorkRef，Group 使用 Group reference 及其直接子 Change。缺少或未就绪的归属在当前请求已独立授予规划产物权限时直接进入 Shape；`manage.activation: auto` 下，明确且已授权的非 tiny 目标会在 Shape → Core → Manage 后继续，无需用户再次请求；`explicit` 则等待后续明确继续。Manage 一旦被选中，只校验当前 owner 和归属 diff 是否漂移，不重复判断 direct 还是 managed。普通同范围 phase result 留在 Manage 内，并检查实际路径和局部 diff。只有发现或新请求改变已声明行为、验收、公共接口、owner、topology、范围或权限边界，或出现其他失效信号、跨会话恢复、closeout 时，才扩大重读并返回 Core。
+协调需要持久归属时，Core 先解析选中的 Change 或浅层 Group，再按有效 activation 和权限选中或拒绝分支。纯设计／诊断的只读请求不能凭空制造归属；规划需独立授权。进入分支后 Core 检查 owner 与 diff 漂移，同范围的方法与可恢复失败留在内部处理。目标、owner、范围、权限、独立验收或未解决 blocker 变化时重新派生；仅仅跨越阶段不要求用户说继续。
 
-受管执行中，Manage 根据依赖、修改边界、验证资源和 Host 能力选择临时的串行或并行策略。它可以委派一个 worker，也可以协调多个独立 worker；Assignment、result、Host observation 与执行策略都保持临时。Manage 在推导验收前校验观察到的结果；独立 Verify 要求不同 worker 的证据。
+协调时 Core 根据依赖、修改边界、验证资源及 Host 能力选择临时串行或并行策略。worker 参与必须由宿主实际证明，不能从 Skill 路由推断；共享资源除非宿主证明隔离安全，否则保持串行。独立 Verify 要求不同 worker 的证据。
 
-Diagnose 与私有 Inspect lane 保持只读；Fix 拥有其修改边界。连续性、恢复或独立验证需要时，Manage 使用新的 worker 证据；所需 Host attribution 或已接受证据不可用时停止。
+纯诊断与检查保持只读；已授权修正拥有其修改边界。缺少必需的宿主归属证明或已接受证据时停止，不能模拟独立性。
 
-`closeout` 设置 Manage 已被实际选择并通过资格判断后的收尾上限：
+`closeout` 保留既有兼容值，只在协调分支实际通过资格判断且被选择后设置收尾上限；普通工作不从该配置获得归档或提交权限：
 
 - `manual`：归档与提交都保持手动。
 - `lifecycle`：所需固定范围变更审查干净且持久化写回判断完成后可以归档；提交仍然独立。
 - `local`：自动归档符合条件、已验证、非小型且归属边界干净、路径精确、无混杂或越界改动的受管终态边界，并把这些精确路径一次性路由到本地 Commit，无需用户再次请求。
 
-Manage 负责推导 commit kind、时机和 compact delivery request；rsp-commit 负责重新校验 owner、精确暂存、message 构造、一次本地提交和提交后观察。
+合格的协调分支推导符合条件的交付请求；rsp-commit 独占 owner 重校验、精确暂存、message 构造、一次本地提交和提交后观察。
 
-`activation` 永远不授予规划或产品修改权限。对于当前已选择且通过资格判断的 Manage，`closeout` 仅作为上述自动生命周期/本地 Git 权限上限，且更近的限制仍可收窄它。推送、标签、发布、部署、批准、人工验收及其他外部操作始终需要显式授权。
+`activation` 永远不授予规划或产品修改权限。仅对当前合格且已选择的协调分支，`closeout` 保持上述通过最新门禁后的有限生命周期／本地 Git 权限上限；更近的禁止优先。推送、标签、发布、部署、批准、人工验收及其他外部操作始终需要显式授权。
 
 受管工作的中断与恢复会重新检查已接受状态、权限、diff 与证据。取消、heartbeat、重放安全和资源释放由 Host 负责；RSP 不持久化 controller 或暂停状态。
 
-Manager 可在选中的 marker 中保存稀疏的已接受状态 Focus Capsule 作为恢复指针。它是有界指针，不具备权限，也不包含 worker 或运行时数据；跨设备使用需要单独授权的 Git 传输并重新派生状态，unfocus 或 archive 会删除它。
+选中的协调分支可在 marker 中保存稀疏的已接受状态 Focus Capsule 作为恢复指针。它是有界指针，不具备权限，也不包含 worker 或运行时数据；跨设备使用需要单独授权的 Git 传输并重新派生状态，unfocus 或 archive 会删除它。
 
 精确键见[配置](../reference/configuration.md)，普通操作见[日常工作流](./daily-workflow.md)。

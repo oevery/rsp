@@ -1,7 +1,7 @@
 id: trigger-rsp-manage
 kind: trigger
-skill: rsp-manage
-prompt: 'Use rsp-manage to assess whether you can resume a managed goal after interruption. No WorkRef, continuation artifact or product scope is supplied. This is read-only: do not dispatch workers, create ownership artifacts or change files.'
+skill: rsp
+prompt: 'Use rsp to assess whether you can resume a coordinated goal after interruption. No WorkRef, continuation artifact or product scope is supplied. This is read-only: do not dispatch workers, create ownership artifacts or change files.'
 oracle: read-only
 hard:
   allowed_paths: []

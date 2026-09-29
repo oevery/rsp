@@ -1,4 +1,4 @@
-# Module and seam design
+# Module and seam design (Shape design method)
 
 Use this procedure only for a question about an interface, caller complexity, adapter, test surface, or seam placement.
 

@@ -17,14 +17,14 @@ import { reviewPacket } from './review.mjs'
 import { readReleaseSuite } from './suite.mjs'
 
 const root = process.cwd()
-const valued = new Set(['case', 'model', 'effort', 'config-file', 'auth-file', 'codex-bin', 'baseline-skills', 'candidate-skills', 'repetitions', 'timeout-ms', 'holdout-registry', 'holdout-root', 'report', 'decisions', 'seed', 'packet', 'output-root', 'resume', 'max-sessions', 'max-tokens'])
+const valued = new Set(['case', 'role', 'model', 'effort', 'config-file', 'auth-file', 'codex-bin', 'baseline-skills', 'candidate-skills', 'repetitions', 'timeout-ms', 'holdout-registry', 'holdout-root', 'report', 'decisions', 'seed', 'packet', 'output-root', 'resume', 'max-sessions', 'max-tokens'])
 function parse(args) {
   const options = {}
   for (let index = 0; index < args.length; index++) {
     if (args[index] === '--')
       continue
     const key = args[index].replace(/^--/u, '')
-    if (key === 'allow-live') {
+    if (key === 'allow-live' || key === 'require-worker') {
       options[key] = true
     }
     else if (args[index].startsWith('--') && valued.has(key) && args[index + 1] && !args[index + 1].startsWith('--')) {
@@ -48,6 +48,22 @@ function positive(value, fallback) {
 async function main(args) {
   const command = args.shift() ?? 'list'
   const options = parse(args)
+  if (options['require-worker'] && !['run', 'compare', 'campaign', 'preflight'].includes(command))
+    throw new Error('Required-worker mode applies only to execution/preflight')
+  if (options['require-worker']) {
+    print({ status: 'unavailable', reason: 'required-worker dispatch is unproven by the single-turn runner', providerInvocations: 0, requiredWorkerAvailable: 'unknown' })
+    process.exitCode = 1
+    return
+  }
+  if (command === 'preflight') {
+    if (options['allow-live'])
+      throw new Error('Preflight is offline')
+    const adapter = createOpenCodexAdapter({ role: options.role ?? 'implementer', model: options.model, effort: options.effort, configFile: options['config-file'], authFile: options['auth-file'], codexBin: options['codex-bin'] })
+    const result = adapter.preflight()
+    print(result)
+    process.exitCode = result.status === 'passed' ? 0 : 1
+    return
+  }
   if (command === 'list') {
     print(discoverCases(root).map(entry => ({ id: entry.id, kind: entry.manifest.kind, skill: entry.manifest.skill })))
     return
@@ -108,7 +124,7 @@ async function main(args) {
     if (packets.some(p => !p))
       throw new Error('Campaign has missing review packets')
     const result = await reviewBatch(packets, {
-      adapter: createOpenCodexAdapter({ model: options.model ?? 'AI-HUB/gpt-6-astra', effort: options.effort ?? 'low', configFile: options['config-file'], authFile: options['auth-file'], codexBin: options['codex-bin'] }),
+      adapter: createOpenCodexAdapter({ role: 'reviewer', model: options.model, effort: options.effort, configFile: options['config-file'], authFile: options['auth-file'], codexBin: options['codex-bin'] }),
       outputRoot: resolve(options['output-root'] ?? join(root, 'evals/reports')),
       resume: options.resume && resolve(options.resume),
       initialDecisions: options.decisions ? JSON.parse(readFileSync(resolve(options.decisions), 'utf8')) : [],
@@ -135,7 +151,7 @@ async function main(args) {
     if (!options['allow-live'] || !options.packet)
       throw new Error('Live review requires --allow-live and --packet')
     const result = await reviewPacket(JSON.parse(readFileSync(resolve(options.packet), 'utf8')), {
-      adapter: createOpenCodexAdapter({ model: options.model ?? 'AI-HUB/gpt-6-astra', effort: options.effort ?? 'low', configFile: options['config-file'], authFile: options['auth-file'], codexBin: options['codex-bin'] }),
+      adapter: createOpenCodexAdapter({ role: 'reviewer', model: options.model, effort: options.effort, configFile: options['config-file'], authFile: options['auth-file'], codexBin: options['codex-bin'] }),
       outputRoot: resolve(options['output-root'] ?? join(root, 'evals/reports')),
       timeoutMs: positive(options['timeout-ms'], 180000),
     })
@@ -144,7 +160,7 @@ async function main(args) {
     return
   }
   if (!['run', 'compare', 'campaign'].includes(command))
-    throw new Error('Expected list, plan, check, run, compare, campaign, review, review-live or replay')
+    throw new Error('Expected list, plan, check, preflight, run, compare, campaign, review, review-live or replay')
   if (!options['allow-live'])
     throw new Error('External execution requires explicit --allow-live')
   if (command === 'campaign' && !options['max-sessions'])
@@ -161,7 +177,7 @@ async function main(args) {
   if (options['holdout-registry'])
     entries.push(...loadHoldout(root, resolve(options['holdout-registry']), resolve(options['holdout-root'])))
   const execution = {
-    adapter: createOpenCodexAdapter({ model: options.model, effort: options.effort, configFile: options['config-file'], authFile: options['auth-file'], codexBin: options['codex-bin'] }),
+    adapter: createOpenCodexAdapter({ role: options.role ?? 'implementer', model: options.model, effort: options.effort, configFile: options['config-file'], authFile: options['auth-file'], codexBin: options['codex-bin'] }),
     candidateComposition: resolve(options['candidate-skills'] ?? join(root, 'skills')),
     baselineComposition: !options['baseline-skills'] || options['baseline-skills'] === 'none' ? null : resolve(options['baseline-skills']),
     repetitions: positive(options.repetitions, resumed?.plan.repetitions ?? 2),

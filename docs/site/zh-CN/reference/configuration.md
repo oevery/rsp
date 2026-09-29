@@ -55,7 +55,7 @@ manage:
   closeout: local
 ```
 
-`activation` 接受 `explicit` 或 `auto`。Core 会先解析一个 shape-ready owner，并独占首次 Manage 资格判断及 `selected | declined` 路由结果。自动选择必须存在可观察的协调义务，例如独立切片、恢复、不同的执行与验收 owner、真实宿主验证、有界 Review 收敛、受管 lifecycle 或 ready successor；多个文件或文档表面本身不构成资格。缺少或未就绪的归属先进入 Shape。已选择的 Manage 校验 handoff，但不重复判断 direct 还是 managed。激活不会授予规划、产品修改、生命周期或外部操作权限。
+`activation` 接受 `explicit` 或 `auto`。Core 仅在有可观察的耦合切片、恢复、独立验收、共享资源、审查收敛或交付／生命周期协调义务时，才为其内部按需协调分支判断资格；文件数量与普通连续工作本身不构成资格。需要持久归属的协调先解析 ready Change 或 Group；纯只读设计／诊断不制造 owner。选择 Skill 不等于委派 worker。激活不授予规划、产品修改、生命周期或外部权限。
 
 `closeout` 接受：
 
@@ -63,6 +63,6 @@ manage:
 - `lifecycle`：成功完成持久化审查后可以归档；提交仍然独立。
 - `local`：自动归档符合条件、已验证、非小型且归属边界干净、路径精确、无混杂或越界改动的受管终态边界，并把这些精确路径一次性路由到本地 Commit，无需用户再次请求。
 
-省略 `manage` 时，兼容默认值解析为 `activation: explicit` 与 `closeout: local`。最近的项目限制与宿主强制规则只能缩小这些上限。RSP 有意不提供 `full` 预设；推送、标签、发布、部署、批准与人工验收保持显式。
+省略 `manage` 时，兼容默认值仍为 `activation: explicit` 与 `closeout: local`。只有真实合格且已选择的协调分支，通过最新门禁后才可考虑既有的有限生命周期／本地 Git 收尾上限；普通工作不因此获得归档或提交权限。更近的禁止与宿主限制优先。RSP 不提供 `full` 预设；推送、标签、发布、部署、批准与人工验收保持显式。
 
 选择行为见 [Skills 与受管工作](../guides/skills.md)。

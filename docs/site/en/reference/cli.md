@@ -15,7 +15,7 @@ rsp skills install [name] [--dry-run] [--force]
                                 Install the default suite or one exact optional Skill
 ```
 
-`rsp update` does not refresh installed package-owned Skills; run `rsp skills install` separately. `--force` is required to replace differing selected Skill directories or remove recognized obsolete package-owned identities.
+`rsp update` does not refresh installed package-owned Skills. `rsp skills list` inspects the package and exact target state; `rsp skills install --dry-run` previews before mutation. Differing selected Skill trees or recognized obsolete package-owned identities require explicit `--force`. Inspect and preserve customized trees before force; unknown Skills are not migration targets. Recognized replacements and removals roll back on activation failure, not a guarantee that silent upgrades are safe. For the unreleased seven-entry source candidate's old-name routing, see [Skills and managed work](../guides/skills.md); `@latest` still invokes the published package, not this candidate.
 
 `rsp doctor --fix` reports only real filesystem mutations; a healthy project returns `fixed: []` and explains that no safe repair was needed.
 

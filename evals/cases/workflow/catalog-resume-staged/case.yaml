@@ -1,6 +1,6 @@
 id: catalog-resume-staged
 kind: regression
-skill: rsp-manage
+skill: rsp
 activation: optional
 prompt: Finish the agreed catalog update so the storefront is ready to use, and let me know the result.
 fixture: fixture

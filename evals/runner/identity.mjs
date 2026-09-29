@@ -2,11 +2,11 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { hash, treeFiles } from './files.mjs'
 
-// Execution includes packet projection, not judge prompts, defaults or policy.
+// Execution binds shared runtime policy and execution roles, not reviewer defaults.
 export function executionIdentity(root) {
   return hash({
     trees: Object.fromEntries(['adapters', 'observers'].map(name => [name, treeFiles(join(root, 'evals', name), { rejectLinks: true })])),
-    files: Object.fromEntries(['runner/execute.mjs', 'runner/files.mjs', 'runner/cases.mjs', 'runner/identity.mjs', 'graders/packet.mjs'].map(name => [name, hash(readFileSync(join(root, 'evals', name)))])),
+    files: Object.fromEntries(['config/base.toml', 'config/coordinator.toml', 'config/implementer.toml', 'config/verifier.toml', 'runner/execute.mjs', 'runner/files.mjs', 'runner/cases.mjs', 'runner/identity.mjs', 'graders/packet.mjs'].map(name => [name, hash(readFileSync(join(root, 'evals', name)))])),
   })
 }
 

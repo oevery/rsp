@@ -1,4 +1,4 @@
-# Domain modeling
+# Domain modeling (Shape design method)
 
 Use this procedure only for a question about domain language, identity, lifecycle, invariants, relationships, or ownership.
 

@@ -12,7 +12,7 @@ const skillsInstallCommand = defineCommand({
   args: {
     'name': {
       type: 'positional',
-      description: 'Exact packaged Skill name (default: lifecycle suite)',
+      description: 'Exact packaged Skill name (default: seven core Skills)',
       required: false,
     },
     'dry-run': {
@@ -22,7 +22,7 @@ const skillsInstallCommand = defineCommand({
     },
     'force': {
       type: 'boolean',
-      description: 'Replace divergent package-owned Skill directories',
+      description: 'Explicitly replace divergent and remove named obsolete Skill directories',
       default: false,
     },
   },

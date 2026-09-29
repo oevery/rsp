@@ -14,7 +14,61 @@ Before each campaign session, both composition directories must still match the 
 
 RSP workflow fixtures opt into tooling: rsp-cli. Both arms receive the built CLI and fallback rules, with a link to the existing dependency cache and a .tooling/node link to the interpreter running the harness, but no bundled Skill package outside the selected composition. Fixture instructions use .tooling/node explicitly so host shell startup files that replace PATH do not force runtime discovery. Run the build first. This is a common test toolchain, not filesystem read isolation. Readiness probes use the repository-owned CLI against the resulting fixture and preserve its JSON result in the observation.
 
-The fixed OpenCodex adapter requires an explicit model, effort and isolated config file. It uses the provider selected by that config, without constructing service endpoints or replacing its model_provider with a literal provider named config. The report's provider: config denotes this routing strategy. Config/auth are snapshotted into a temporary private HOME/CODEX_HOME, which is removed after execution. Ambient credentials and global configuration are not inherited. The operator-supplied config must contain the intended provider definition and any required absolute catalog paths; do not supply a personal config that enables unrelated plugins, MCP servers or global Skills.
+The fixed OpenCodex adapter consumes repository-owned runtime policy and role settings under evals/config/, plus an explicitly supplied private provider configuration. It uses the selected provider without inventing service endpoints or replacing model_provider with a literal provider named config. The report's provider: config denotes this routing strategy. Runtime config/auth are materialized into a temporary private HOME/CODEX_HOME, removed after execution. Do not pass a personal Codex config: model routing, extensions, hooks, instructions and memory policy are not private-provider inputs.
+
+## Reproducible local configuration
+
+evals/config/base.toml owns shared evaluation policy. The role files own maintainer defaults, not RSP product requirements:
+
+| Role | Model | Reasoning effort |
+| --- | --- | --- |
+| coordinator | AI-HUB/gpt-6-astra | low |
+| implementer | AI-HUB/gpt-6-sol | medium |
+| verifier | AI-HUB/gpt-6-astra | low |
+| reviewer | AI-HUB/gpt-6-astra | low |
+
+Memory use and generation are both disabled; disabling generation alone would leave existing-memory injection possible. The shared policy also disables unrelated extension features. A fresh runtime home excludes ambient user instructions, Skills and persistent memory. These are configuration/context controls, not an operating-system read sandbox: an agent on the same host may still attempt to read outside its workspace. Do not call a native desktop child run equivalent to an adapter run without observing the same policy and capabilities.
+
+Keep provider routing, private endpoints and credentials outside versioned files. A provider-only config selects model_provider and its provider table, plus model_catalog_json when the selected model is not in the client catalog. Supply credentials through --auth-file; inline credentials and ambient provider environment variables are not accepted by this overlay. Existing full personal or historical evaluation configs need a separate provider-only copy; do not overwrite global configuration or historical evidence to migrate them.
+
+Example private overlay (replace the placeholder endpoint and catalog path locally; never commit the real file):
+
+```toml
+model_provider = "evaluation"
+model_catalog_json = "/absolute/path/model-catalog.json"
+
+[model_providers.evaluation]
+name = "Evaluation provider"
+base_url = "https://provider.example.invalid/v1"
+wire_api = "responses"
+requires_openai_auth = true
+```
+
+Run the preflight without --allow-live:
+
+    mise exec -- node evals/runner/cli.mjs preflight \
+      --role implementer --config-file /absolute/path/provider.toml \
+      --auth-file /absolute/path/auth.json
+
+Use --role coordinator, verifier or reviewer to inspect another role, and --model/--effort for an explicit recorded override. The preflight output includes identities and capability status, not the provider endpoint, auth values or full catalog. A --require-worker request fails closed: this runner does not establish native worker availability. A configured coordinator model is not a worker capability probe.
+
+Use offline preflight before spending a session. It checks local configuration and known client/model metadata without requesting a model response. A local parse/feature check is not proof of authentication, provider availability, model quality, memory filesystem isolation or worker dispatch. Required independent-worker execution remains unavailable in the single-turn adapter until actual host capability can be observed; a coordinator role file does not create that capability.
+
+The adapter also runs preflight automatically before task execution, including when --codex-bin is explicit. It rejects an existing .codex directory in the task directory or its ancestors rather than silently layering project configuration onto the isolated policy. Memory/extension disablement is repeated as command-line overrides for execution; the temporary config is loaded, not skipped. The native version, selected executable content, private overlay, auth, explicit catalog and selected policy identities are frozen before execution and checked for drift. Effective config hashes normalize the temporary catalog location to its content identity.
+
+This integration targets the locally validated Codex/OpenCodex command contract, not arbitrary clients. The offline checks verify bootstrap loading, disabled feature states, supported exec flags and model/effort metadata. They explicitly report strictFullSchemaValidated: false; live exec uses --strict-config. A clean native desktop session still needs its own host/context evidence and cannot inherit a CLI preflight pass.
+
+Changing execution policy changes the relevant execution identity. Preserve earlier reports with their original settings: passing an older campaign does not certify the new startup policy, and offline revalidation cannot substitute for fresh execution after an execution-identity change. Reviewer-only settings remain a separate evidence boundary.
+
+### Native coordination preparation
+
+evals/config/native-coordinator.toml is a separate native root-session overlay, not a fifth --role and not a bypass for --require-worker. The maintainer selects v1: multi_agent = true and multi_agent_v2 = false. Compose it explicitly with base.toml, coordinator.toml and a provider-only private config in a fresh private runtime home: merge the features tables so only v1 becomes enabled, and preserve both memory booleans and all other disabled integration flags. Never concatenate TOML tables or replace the entire features table with the overlay. Keep the catalog snapshot and resulting config private; record their hashes. Do not edit the global Codex home.
+
+The overlay enables agents, limits concurrent child threads to two and depth to one, and selects Sol/medium as the child default. An independently required Astra verifier must receive an explicit model/effort selection supported by that host; do not silently use the implementer or default model as a substitute. Concurrency/depth settings describe topology, not a cumulative invocation budget. Record actual invocations, but do not invent a hard invocation ceiling or require a pre-dispatch quota mechanism for an authorized native acceptance run. Additional paid evaluation scope still requires separate authorization.
+
+Before a live turn, use the isolated native client's offline prompt rendering and strict app-server startup/config read to inspect what it actually loads. The earlier direct functions.collaboration guidance was observed with v2 enabled and must not be used as the v1 tool contract or as an explanation of earlier v1 discovery failures. Inspect v1's actual host-exposed tools; configuration and prompt evidence do not prove invocation, child completion, filesystem read confinement or provider authentication.
+
+The ordinary single-turn adapter keeps multi-agent disabled and its required-worker refusal intact. Native coordination has separate host traces, attribution and invocation accounting; do not import native preparation as a passed campaign or silently switch a budgeted single-turn campaign into this mode. Offline schema generation, initialize and config/read do not require a model turn. Do not call turn/start or a send-message helper during offline preparation.
 
 ## Commands
 
@@ -47,7 +101,7 @@ Standalone run and compare commands use the same overall acceptance policy as ca
 
 The isolated configuration must explicitly select a simple model_provider identifier at the top level. Reports retain it as configuredProvider, separately from provider: config (the routing strategy). Review may use the same provider and even the same model as execution; independence here means a fresh, blind-packet-only review context, not a different service or model. Gateway/upstream identity still requires truthful operator attribution; the harness cannot attest opaque remote routing.
 
-The project-default execution model is AI-HUB/gpt-6-sol with medium effort; the default semantic reviewer is AI-HUB/gpt-6-astra with low effort. Supply execution settings explicitly to the live command. review-live, review-batch and calibrate apply the reviewer defaults when --model or --effort is omitted; explicit overrides remain supported. These defaults are not model-identity acceptance gates and do not change global host configuration.
+The project-default execution role is implementer; semantic review and calibration use reviewer. Explicit --model and --effort overrides remain supported and are recorded in effective execution settings. Defaults come from the authored role files above; they are not model-identity acceptance gates and do not change global host configuration.
 
 Omit --case to run the public suite. Add --holdout-registry and --holdout-root to include externally supplied private cases. See holdout/README.md before doing so. A campaign with pending semantic reviews exits nonzero with an inconclusive result; this is not a provider failure.
 
@@ -180,11 +234,15 @@ This writes a separate .reviewed.json report and preserves the original executio
 
 ## Current coverage and limits
 
-The natural catalog cases share one ordinary request without naming a Skill or supplying an expected answer. catalog-completion starts from an approved price update with stale generated storefront data; catalog-owner-decision has an unresolved price choice; catalog-resume-staged has the approved source change already staged and only generation/verification remaining. The executor sees project instructions, a real Change, source data and unchanged build/check scripts, not case manifests or host expectations. The blocked fixture checks its current price, so its project script cannot silently supply the unresolved new price.
+The natural catalog cases target the consolidated rsp owner and share one ordinary request without naming a Skill or supplying an expected answer. catalog-completion starts from an approved price update with stale generated storefront data; catalog-owner-decision has an unresolved price choice; catalog-resume-staged has the approved source change already staged and only generation/verification remaining. The executor sees project instructions, a real Change, source data and unchanged build/check scripts, not case manifests or host expectations. The blocked fixture's tools/check.mjs asserts only the current 1200-cent snapshot; it cannot validate a future 1500- or 1800-cent decision. A real after-decision continuation needs a ready fixture/checker for that chosen price and fresh execution, not reuse of the blocked snapshot as acceptance evidence.
 
 These cases leave activation optional: recognizable guidance exposure is recorded, but a valid direct or managed route is acceptable. The host oracle checks parsed public source/storefront JSON and current Change readiness; hard boundaries preserve unrelated files, tools, owner identity, staging and HEAD. Local positive and failing controls run through the normal execution/replay path, including plan-only, checkbox-only, partial output, wrong price, rewritten staged input, restaging, extra owner and weakened-checker variants. JSON formatting and response language are not acceptance criteria.
 
-This is one-request behavior under three initial project states, not a multi-turn conversation or real worker-dispatch test. Host readiness is not proof the executor ran validation, and a no-write completion claim is not a meaningful owner question. Independent semantic review must judge actual verification evidence, appropriate clarification and unnecessary stopping; local execution can pass while overall acceptance remains inconclusive. Real provider baselines, route quality, cost improvement, mid-run status/pause handling and evolving user authority remain unverified. The new cases are available to scoped campaigns but do not alter the mandatory release suite.
+This is one-request behavior under three initial project states, not a multi-turn conversation or real worker-dispatch test. Host readiness is not proof the executor ran validation, and a no-write completion claim is not a meaningful owner question. Independent semantic review must judge actual verification evidence, appropriate clarification and unnecessary stopping; local execution can pass while overall acceptance remains inconclusive. Real interactive continuation after an owner decision, provider baselines, route quality, cost improvement, mid-run status/pause handling and evolving user authority remain unverified. The new cases are available to scoped campaigns but do not alter the mandatory release suite.
+
+The historical trigger-rsp-design, trigger-rsp-manage, trigger-rsp-diagnose, trigger-rsp-tdd and trigger-rsp-resolve-findings IDs remain for traceability; their skill targets and explicit Skill-name prompts now use rsp-shape, rsp or rsp-implement according to the consolidated owner. They are read-only missing-input/authority checks, not evidence that the owner continues a positive task through internal diagnosis, TDD, findings repair or coordination. The natural completion/staged cases are positive task conditions for future live comparison, but deterministic controls establish only fixture and oracle discrimination. Paid runs, independent review and a genuine interactive continuation still require separate execution and authorization.
+
+scripts/native-design-composition-eval.mjs is a dated 2026-07 historical harness with its frozen 13-Skill package identity; it is not part of the current active validation or a consumer of the consolidated inventory. Do not reinterpret its retained evidence as a current seven-default-Skill run.
 
 Preview this scoped set without contacting a provider:
 

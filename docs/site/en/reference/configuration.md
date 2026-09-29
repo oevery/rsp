@@ -55,7 +55,7 @@ manage:
   closeout: local
 ```
 
-`activation` accepts `explicit` or `auto`. Core first resolves one shape-ready owner and solely owns initial Manage qualification plus the `selected | declined` route result. Automatic selection requires an observable coordination obligation—such as independent slices, recovery, distinct execution and acceptance owners, real-host verification, bounded review convergence, managed lifecycle work, or a ready successor—not merely multiple files or documentation surfaces. Missing or non-ready ownership goes to Shape and returns to Core before qualification. Selected Manage validates the handoff without repeating eligibility. Activation grants no planning, product mutation, lifecycle, or external authority.
+`activation` accepts `explicit` or `auto`. Core uses it only to qualify its internal coordination branch for an observable coupled-slice, recovery, independent-acceptance, shared-resource, review-convergence, or delivery/lifecycle obligation—not file count or ordinary continuous work. Coordination requiring durable ownership resolves a ready Change or Group; pure read-only design or diagnosis does not invent one. Skill selection is not worker delegation. Activation grants no planning, product mutation, lifecycle, or external authority.
 
 `closeout` accepts:
 
@@ -63,6 +63,6 @@ manage:
 - `lifecycle`: archive may follow a successful durable review; commit remains separate.
 - `local`: automatically archives an eligible, verified, non-small terminal managed boundary with a clean exact owned boundary and routes its exact paths once to local Commit without another user request.
 
-When `manage` is omitted, compatibility defaults resolve to `activation: explicit` and `closeout: local`. Nearest project restrictions and host enforcement can only narrow these ceilings. RSP intentionally has no `full` preset; push, tag, publication, deployment, approval, and human acceptance stay explicit.
+When `manage` is omitted, compatibility defaults remain `activation: explicit` and `closeout: local`. Only a genuinely qualified and selected coordination branch may consider this existing limited lifecycle/local-Git closeout ceiling after fresh gates; ordinary work gains no archive or commit authority. Nearest denials and host enforcement narrow it. RSP has no `full` preset; push, tag, publication, deployment, approval, and human acceptance stay explicit.
 
 See [Skills and managed work](../guides/skills.md) for selection behavior.

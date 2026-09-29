@@ -1,7 +1,7 @@
 id: trigger-rsp-tdd
 kind: trigger
-skill: rsp-tdd
-prompt: 'Use rsp-tdd for "fix the broken parser". No parser, failing input or agreed expected output is present. Identify what is required before RED. Do not create files or fabricate a failing test.'
+skill: rsp-implement
+prompt: 'Use rsp-implement for "fix the broken parser" with a test-first request. No parser, failing input or agreed expected output is present. Identify what is required before RED. Do not create files or fabricate a failing test.'
 oracle: read-only
 hard:
   allowed_paths: []

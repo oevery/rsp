@@ -46,7 +46,7 @@ rsp show --focused
 
 ## 安装项目 Skills
 
-从当前精确版本的 RSP 包预览并安装十二项默认 Skills：
+从所调用的稳定包预览并安装默认 Skills。以下 `@latest` 命令不安装尚未发布的七入口源码候选；替换已有包自有或用户定制树前请阅读 [Skill 职责与候选迁移](./guides/skills.md)：
 
 ```bash
 npx -y @oevery/rsp@latest skills install --dry-run

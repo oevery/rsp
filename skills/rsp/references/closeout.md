@@ -1,6 +1,6 @@
-# Lifecycle and delivery closeout
+# Coordinated lifecycle and delivery closeout
 
-Load this reference when closeout begins and CloseoutEligibility must be derived, when an explicitly authorized recovery checkpoint is being considered, or when the user explicitly requests push. The main Skill must first establish a valid selected handoff and retain its incomplete-or-drifted fail-safe.
+Load only after current coordination qualification when closeout eligibility begins, or for an explicitly authorized recovery checkpoint or push request. Core retains its incomplete-or-drifted fail-safe. Ordinary continuous execution does not activate this preset.
 
 Derive CloseoutEligibility independently as not-eligible, lifecycle-ready, or local-commit-ready. Before deriving a ready value, run rsp ready <change-work-ref> --json for every terminal Change and require completionGate: pass plus archiveReady: yes. Only that machine gate, review-clean acceptance, fresh owner, authority, exact diff, and decisive Required verification evidence can derive a ready value. Optional coverage warnings remain in the result but do not block. Any other acceptance state is not-eligible; neither archive nor commit runs. Human acceptance remains separate and unperformed unless explicitly established.
 
@@ -20,6 +20,6 @@ auth: current local authority
 life: lifecycle evidence only when required
 ```
 
-Terminal small owners default to no commit. An integration request requires at least two real WorkRefs, one evidenced shared boundary, exact paths, fresh verification, and local authority; it does not create a Group. A qualified local terminal non-small Change or Group routes exactly once to rsp-commit after lifecycle closeout. Ambiguous, mixed, stale, or denied boundaries stop without staging. If Commit is unavailable, return capability-unavailable to Core; Manage does not stage or commit. Archive grants no Git or publication authority.
+Terminal small owners default to no commit. An integration request requires at least two real WorkRefs, one evidenced shared boundary, exact paths, fresh verification, and local authority; it does not create a Group. A qualified local terminal non-small Change or Group routes exactly once to rsp-commit after lifecycle closeout. Ambiguous, mixed, stale, or denied boundaries stop without staging. If Commit is unavailable, return capability-unavailable; Core does not stage or commit. Archive grants no Git or publication authority.
 
 Push is opt-in only when the user explicitly mentions push and the remote, branch, and milestone are unambiguous or accepted. Never force-push, infer push from commit authority, or push a protected or ambiguous branch. Failure preserves local commits and stops at the remote boundary. Return to Core before a separate release operation and dedicated release commit.

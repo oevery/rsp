@@ -1,27 +1,27 @@
 ---
 name: rsp-implement
-description: Implement exactly one selected, ready RSP Change within explicit mutation authority. Use when the user asks to implement or fix tracked work and requires code and tests plus truthful Tasks, Blockers, and fresh verification evidence; never infer Git, publication, review, TDD, or diagnosis authority.
+description: Diagnose an unexplained symptom read-only, or implement an authorized bounded direct task or ready RSP Change, including risk-selected test-first work and bounded fixed-report finding disposition. Preserve ownership and fresh verification without inferring mutation from diagnosis.
 license: MIT
 metadata:
   author: oevery
-  version: "2026.08.23.1"
+  version: "2026.09.29.1"
 ---
 
 # RSP Implement
 
-Implement one selected Change and return facts.
+Choose the mode before loading its method: read-only diagnosis for unexplained symptoms or a diagnosis-only request; authorized correction for a bounded direct task or selected ready Change; test-first only when explicitly required or a concrete changed risk makes RED safer; fixed-report finding disposition with investigation authority, and correction only when separately authorized. Continue the same authorized request through own checks and necessary tracked Change evidence without an artificial handoff. No mode grants Git, review, lifecycle, external action, or approval authority.
 
-Follow Core's response-versus-artifact language boundary for all user-visible control narration; when the response language differs, keep exact canonical values only as secondary parenthesized or code-formatted tokens.
+Use explicit response language, then personal instruction, then conversation language for narration. Preserve the language of existing artifacts and exact identifiers, commands and machine values. For a new artifact use explicit artifact instruction, then effective configured artifact language, then scoped project instruction, then conversation language; inspect `rsp config --json` or the configuration file when configuration matters, not status. Resolve a material conflict with the owner; this rule works without Core installed.
 
 ## Select and inspect
 
-Require an explicit WorkRef or one AI-resolved candidate from the open FocusSet and current user intent. A Group Brief is context, not executable work. Multiple focus markers are valid; resolve one default WorkRef before mutation and stop only when the requested owner or boundary remains materially unresolved. Stop when selection, readiness, product authority, acceptance, or required decisions are unresolved.
+For mutation accept either a bounded direct user task with explicit scope and acceptance (no WorkRef or RSP writeback), or an explicit/AI-resolved ready Change from the open FocusSet with settled acceptance and exact product authority. A Group Brief is context, not executable work; multiple focus markers are candidates. Diagnosis-only can investigate a bounded symptom without a ready mutation owner or WorkRef; it remains read-only and cannot turn a suspected cause into mutation authority. An authorized fix with an unexplained cause first diagnoses; after confirmation it continues under the same request only if owner, scope and mutation authority are settled.
 
-Read nearest instructions, Core or fallback, Change and Brief, relevant Specs and decisions, current checkout, then the smallest owning code and test chain. Use normal repository discovery; do not guess owners. Operate only in the execution location actually supplied by the host; Implement never selects or migrates execution environments.
+Read nearest instructions, relevant Change and Brief when tracked, Specs and decisions, current checkout, then the smallest owning code and test chain. Use normal repository discovery; do not guess owners. Operate only in the execution location supplied by the host. For unexplained symptoms load [diagnosis](references/diagnosis.md) before any fix; for selected test-first work load [test-first](references/test-first.md); for a fixed review report load [finding-resolution](references/finding-resolution.md). These are conditional methods, not separate controllers. Do not read them for an ordinary clear implementation.
 
 ## Preserve authority
 
-Identify outcome, owners, verification, and pre-existing work. Modify only Change requirements, Tasks, Verify, and Blockers. Preserve unrelated modified, staged, and untracked work. Stop when overlap would discard, guess, or rewrite pre-existing intent.
+Identify outcome, owner, verification, and pre-existing work. For tracked work, update only authorized Change sections; a direct task creates no Change, WorkRef, or RSP lifecycle state. Preserve unrelated modified, staged, and untracked work. Stop when overlap would discard, guess, or rewrite pre-existing intent.
 
 Git delivery, publication, deployment, approval, and out-of-scope deletion require separate explicit authority. For conflicts, inspect base/ours/theirs, preserve unrelated work, resolve only evidenced scope, rerun checks, and stop before staging, continuing, aborting, or committing. Verify named findings first.
 
@@ -33,32 +33,28 @@ Before creating or extending a permanent test, identify the observable consequen
 
 ## Classify implementation evidence
 
-Apply these routes in order before mutation and after failure:
+Diagnosis precedes test-first work when the cause is unknown. A diagnosis-only request ends with cause evidence or an unresolved discriminating check, without production or artifact mutation. With separate fix authority, confirm cause, then select test-first only for an explicit requirement or material pre-mutation risk; mere testability or being a fix is insufficient. Otherwise implement normally. A fixed review report selects finding-resolution with a known report and bounded investigation scope; decide each finding as accepted, rejected, or needs-clarification. Only an accepted finding with correction authority and exact scope may be changed. A report alone grants no mutation.
 
-1. Unexplained failure → return `rsp-diagnose`, or Core's manual diagnosis fallback when unavailable.
-2. No unexplained failure, plus test-first explicitly required by the user, selected Change, or project instructions, or a concrete changed risk that makes pre-mutation RED materially safer → return `rsp-tdd`, or Core's manual TDD fallback when unavailable. Behavior being testable, a test being possible, or the work being a fix is not sufficient.
-3. Otherwise, sufficiently evidenced behavior, cause, and owner → continue ordinary implementation.
-
-Diagnosis precedes TDD. Do not invoke another Skill from inside this Skill. If evidence changes the route, stop mutation and return the next action, evidence, and same selected Change. Do not reproduce either discipline inside Implement or invoke review or delivery.
+After an in-scope check failure, investigate the new evidence and correct within the same authority; do not return merely because a method changed. Stop for a repeated failure without new discriminating evidence, non-convergence, changed owner/scope/acceptance/authority, unsafe replay, or unavailable mandatory environment. An independent reviewer or verifier required by acceptance remains a separate read-only owner and cannot be replaced by the implementer's checks.
 
 ## Implement and verify
 
-Implement the smallest complete slice. Update Tasks after outcomes exist; keep unresolved issues in Blockers.
+Implement the smallest complete slice. For tracked work update Tasks after outcomes exist and keep unresolved issues in Blockers; direct work reports those facts without RSP artifact mutation.
 
-After final mutation, run required Change checks and narrower risk checks. Fresh verification is required, but a new test is only one evidence option; prefer the cheapest decisive existing test, static check, build, or acceptance evidence. Record command, scope, result, and omissions. Prior runs are stale; failed or unavailable verification cannot support completion. Rerun after relevant edits.
+After final mutation, run required Change checks when tracked or the direct request's acceptance checks otherwise, plus narrower risk checks. Fresh verification is required, but a new test is only one evidence option; prefer the cheapest decisive existing test, static check, build, or acceptance evidence. Record command, scope, result, and omissions. Prior runs are stale; failed or unavailable verification cannot support completion. Rerun after relevant edits.
 
 Keep a new or extended test only when it still satisfies the admission evidence, protects observable behavior or a real boundary, adds distinct future confidence, avoids duplicate or implementation-detail coverage, and has proportionate maintenance cost. Otherwise remove the disposable test, fixture, and helper before completion, then use smallest sufficient final evidence. User, Change, and project retention requirements remain authoritative.
 
-Before returning, reread changed comments, test names, documentation, and handoff prose from the accepted result and each surface's authoritative baseline. Build the final handoff only from the accepted Change, actual changed paths, final verification, material omissions or risks, executed external actions, and pre-existing user work that must be attributed. A rejected session-only alternative, correction, or temporary attempt is not an omission or boundary: do not name it, paraphrase it, or turn it into an unrequested `did not add` or `did not use` compliance claim.
+Before returning, reread changed comments, test names, documentation, and handoff prose from the accepted result and each surface's authoritative baseline. Build the final handoff only from the selected Change or explicit direct task, actual changed paths, final verification, material omissions or risks, executed external actions, and pre-existing user work that must be attributed. A rejected session-only alternative, correction, or temporary attempt is not an omission or boundary: do not name it, paraphrase it, or turn it into an unrequested `did not add` or `did not use` compliance claim.
 
 Preserve a negative fact when a reader without the session needs it to understand an actual baseline removal, safety or compatibility boundary, migration, audit result, failed external action, unresolved risk, or explicitly requested comparison. Preserve required facts and pre-existing user work; never change executable behavior, public contracts, tests, snapshots, or diagnostics merely to clean wording.
 
-Record concise fresh evidence when Change Verify owns it.
+Record concise fresh evidence when a tracked Change Verify owns it. Direct work reports evidence in the response only.
 
 ## Return ownership
 
-Report whether the Change is completed, partial, blocked before implementation, verification-failed, verification-unavailable, or verification-blocked. Use failed for an exercised defect; use unavailable when a missing tool, dependency, service, credential, or environment prevents execution. Use blocked only when scoped checks pass but a required gate fails solely from a confirmed pre-existing or out-of-scope baseline defect; never waive affected gates.
+Report whether the selected Change or direct task is completed, partial, blocked before implementation, verification-failed, verification-unavailable, or verification-blocked. Use failed for an exercised defect; use unavailable when a missing tool, dependency, service, credential, or environment prevents execution. Use blocked only when scoped checks pass but a required gate fails solely from a confirmed pre-existing or out-of-scope baseline defect; never waive affected gates.
 
-When work remains, return `WorkRef`, `Authority`, `Current state`, `Changed artifacts`, `Fresh verification`, `Blockers`, and `Next action`. They are not durable truth; persistence requires explicit path authority.
+When work remains, report owner (WorkRef for tracked work, direct request otherwise), authority, changed artifacts, fresh checks, blockers and next action as needed for safe continuation. A non-trivial handoff may use Core's fuller continuation; ordinary same-owner corrections need no template or new request. The response is not durable truth.
 
-Claim completion only when required Tasks and checks pass and no blocker remains. Do not claim review, archive, Git delivery, or release unless separately performed with explicit authority.
+Claim completion only when tracked required Tasks (if any) and applicable checks pass and no blocker remains. Do not claim review, archive, Git delivery, or release unless separately performed with explicit authority.

@@ -353,9 +353,9 @@ Spec 不是 archive summary。
 
 ## 原生设计与 artifact continuation
 
-设计问题会直接改变 Change 的可执行性与后续 durable writeback，因此 RSP 内置一个精简的 `rsp-design` discipline，而不是要求每个项目另外安装完整的 design suite。
+设计问题可能影响 Change 的可执行性与后续 durable writeback，因此由 `rsp-shape` 按需处理有界设计问题，而不是要求项目另外安装完整的 design suite。纯设计请求保持只读，无需制造 Change；只有明确获得规划写入权限时才写回既有归属。
 
-它只解决一个边界明确的 material question：按需选择 domain modeling、module/seam design 或 reversible exploration，从最小权威证据链得出结论。Pre-Change Design 不要求 WorkRef，严格 report-only 并将结果返回用户；若 outcome、scope、non-goals、acceptance 或 decomposition 仍不明确，则返回 Shape。Tracked Design 将 recommendation、alternatives、unresolved owner decisions 和 artifact routing 返回同一个 WorkRef；只有显式授权时才更新 selected Change 的 `## Design`，并且不得把 planned design 提前写入 Specs、Decision Records、`CONTEXT.md` 或 `AGENTS.md`。
+它只解决一个边界明确的 material question：按需选择 domain modeling、module/seam design 或 reversible exploration，从最小权威证据链得出结论。Pre-Change Design 不要求 WorkRef，严格 report-only 并将结果返回用户；若 outcome、scope、non-goals、acceptance 或 decomposition 仍不明确，在 Shape 内按需转入澄清／塑形方法，规划产物写入仍需独立授权，不制造外部交接。Tracked Design 将 recommendation、alternatives、unresolved owner decisions 和 artifact routing 交还同一个 WorkRef；只有显式授权时才更新 selected Change 的 `## Design`，不得把 planned design 提前写入 Specs、Decision Records、`CONTEXT.md` 或 `AGENTS.md`。
 
 RSP 内置的是写入判断与所有权路由，不是对项目文档的接管：
 
@@ -368,13 +368,13 @@ Continuation 必须包含 WorkRef、authority pointers、current state、changed
 
 普通 Git conflict 不需要独立 RSP Skill。Core 只保留 compact fallback：识别当前 Git operation，理解 base/ours/theirs 语义，保护无关工作，仅解决有证据且在 WorkRef authority 内的内容，并重新验证。缺少证据、涉及无关工作或 owner decision 时停止；resolve authority 不自动包含 stage、continue、abort、commit、push 或 delivery authority。
 
-`rsp-manage` 是可选能力，不是无条件 controller。项目可以保留显式激活，也可以允许 Core 为已经请求完成或继续、且通过资格判断的工作自动选择它；小型或紧耦合任务保持直接执行。自动路由只改变 capability selection，不从配置推导 planning、product mutation 或外部 authority。
+Core 内部的按需协调分支不是另一个 controller。项目保留 `manage.activation` 的显式或自动选择语义，仅在真实耦合切片、恢复、独立验收、共享资源或收尾协调义务存在时选择；普通工作即使跨多个方法也在同一权限范围内连续完成，方法边界并不等于 worker 边界。自动选择不从配置推导 planning、product mutation 或外部 authority。
 
-Managed goal、dispatch、重试、预算和 convergence count 都是 transient process state。Change、Group、Spec、Decision Record 与项目指令继续拥有 durable truth；每次进展后重新从这些 owner 和当前证据派生下一动作。缺少 owner 时返回 Shape，涉及产品、接口、scope 或 authority 决策时停止。
+协调中的 dispatch、重试、预算和 convergence count 都是 transient process state。Change、Group、Spec、Decision Record 与项目指令继续拥有 durable truth；受影响的事实和证据在恢复或边界变化时重读。同范围方法切换与可修复失败留在当前能力内；纯只读设计／诊断不制造 owner，实质产品、接口、scope 或 authority 决策则停止。
 
-Managed review 必须有界，且 Resolve Findings 不自行循环。Lifecycle closeout 与 Git delivery 仍是独立能力，但项目可以用 `manual`、`lifecycle`、`local` 三个小型 preset 选择本地收尾上限：不自动收尾、仅 archive，或 archive 加有独立依据的 recovery checkpoint，并在 clean、已验证的非小型终态边界上确定性调用一次 Commit。Change 按语义结果与共享验收/回滚边界塑形，不按 commit 数量拆分。省略配置保持 explicit activation 与既有 local closeout 兼容；nearest restriction 和 host boundary 只能缩小上限。
+按需协调下的 review 必须有界；固定发现由 Implement 逐条处置与有界修正，另由只读 Review 复审，不自行宣称 review-clean。Lifecycle closeout 与 Git delivery 仍是独立能力；`manual`、`lifecycle`、`local` 的既有本地收尾上限只适用于真实合格且已选择的协调分支，通过最新门禁且不受更近禁止时才考虑。普通连续工作不因配置自动 archive/commit。Change 按语义结果与共享验收/回滚边界塑形，不按 commit 数量拆分；省略配置仍保持 explicit activation 与 local closeout 的兼容默认值。
 
-RSP 不建立通用权限系统，也不提供容易误解为宿主完全授权的 `full` 模式。Push、tag、publication、deployment、approval 和 human acceptance 始终保持显式且在项目配置之外。具体资格、预算、命令和停止条件由 `rsp` 与 `rsp-manage` Skills 拥有，不在设计哲学中复制。
+RSP 不建立通用权限系统，也不提供容易误解为宿主完全授权的 `full` 模式。Push、tag、publication、deployment、approval 和 human acceptance 始终保持显式且在项目配置之外。具体资格、预算、命令和停止条件由 `rsp` 的按需分支及相关独立能力拥有，不在设计哲学中复制。
 
 ## 输出与可观测性
 

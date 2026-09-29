@@ -1,6 +1,6 @@
 # Daily workflow
 
-RSP derives one next action from user intent, repository authority, the selected Change, current evidence, verification, and blockers. The stage is guidance, not persisted state.
+RSP derives the current action from user intent, repository authority, available ownership, checkout evidence, verification, and blockers. An ordinary session task need not create a Change. The stage is guidance, not persisted state; sufficient authority allows completion in the same request without an artificial continuation prompt.
 
 ## Select current work
 
@@ -18,16 +18,16 @@ Before mutation, inspect the worktree and preserve unrelated modified, staged, o
 
 ```text
 unclear outcome or scope → shape
-material design question → design
-unexplained failure → diagnose
-explicit or concrete-risk test-first need → TDD
-evidenced ordinary change → implement
+bounded design question → shape (read-only unless planning is authorized)
+unexplained failure → implement's read-only diagnosis; fix only if authorized and cause confirmed
+explicit or concrete-risk test-first need → implement's test-first method
+evidenced ordinary change → implement and its own proportionate checks
 fixed comparison request → review
-accepted findings → resolve findings
+accepted fixed findings → implement; independent read-only re-review when required
 explicit confirmed release operation → release docs
 ```
 
-Each capability returns to the same Change or existing repository owner. Avoid creating a second plan, workflow state, or receipt store.
+Same-scope methods and repairable failures stay with their responsible capability. Pure design or diagnosis needs no invented WorkOwner; tracked work returns results to its existing Change. Return to Core for completed responsibility, changed goal/owner/scope/authority, required independent acceptance, or an unresolved blocker. Avoid a second plan, workflow state, or receipt store.
 
 ## Keep the Change current
 
@@ -56,7 +56,7 @@ When Tasks and required checks pass with no blocker, decide independently whethe
 - update an existing Spec or scoped instruction, or create a new durable Spec;
 - create or update a Decision Record for lasting rationale.
 
-Then archive explicitly:
+For a tracked Change with separate lifecycle authority, check readiness and archive when permitted. Ordinary untracked work has no archive step:
 
 ```bash
 rsp ready <work-ref>

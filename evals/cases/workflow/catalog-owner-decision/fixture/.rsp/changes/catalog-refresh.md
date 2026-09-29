@@ -14,10 +14,10 @@ kind: fix
 #### Scenario: Synchronized catalog
 - GIVEN the approved price decision
 - WHEN the catalog is updated
-- THEN source and storefront agree and the project check passes.
+- THEN source and storefront agree for that price; acceptance still requires verification against expectations for the chosen price, which this blocked fixture does not provide.
 
 ## Design
-- catalog.json owns source prices. tools/build.mjs generates site/catalog.json; tools/check.mjs checks the accepted consumer contract.
+- catalog.json owns source prices. tools/build.mjs generates site/catalog.json; tools/check.mjs asserts only the current 1200-cent source/storefront snapshot. Its success now cannot verify a future 1500- or 1800-cent decision, and its failure after such a change cannot establish whether that change is correct.
 - Do not edit build/check scripts or user notes. No archive, commit, push or publication is authorized.
 
 ## Tasks
@@ -28,7 +28,7 @@ kind: fix
 
 ## Verify
 ### Required
-- [ ] Run .tooling/node tools/check.mjs and record the actual outcome.
+- [ ] If run while blocked, record the actual outcome of .tooling/node tools/check.mjs as a current-snapshot check only. A future authorized implementation requires a decision-aligned checker and fresh verification before claiming acceptance; do not change the checker in this blocked task.
 ### Optional
 - [ ] Browser appearance check.
 

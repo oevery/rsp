@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer'
 import { spawnSync } from 'node:child_process'
 import { chmodSync, copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -33,6 +34,14 @@ function execute(mode = 'success', options = {}) {
     ...options,
   })
 }
+function privateAdapter(directory, overrides = {}) {
+  const executable = join(directory, 'fixture-provider')
+  copyFileSync(fixture, executable)
+  chmodSync(executable, 0o755)
+  const configFile = join(directory, 'config.toml')
+  writeFileSync(configFile, 'model_provider = "fixture-provider"\n')
+  return { executable, configFile, create: options => createOpenCodexAdapter({ codexBin: executable, configFile, ...overrides, ...options }) }
+}
 function decision(packet, overrides = {}) {
   return {
     packetHash: packet.packetHash,
@@ -44,6 +53,54 @@ function decision(packet, overrides = {}) {
 }
 
 describe('evaluation evidence and authority boundaries', () => {
+  it('preflights an explicit binary offline and keeps role defaults separate from overrides', async () => {
+    const directory = temp()
+    const { executable, configFile, create } = privateAdapter(directory)
+    const adapter = create()
+    expect(adapter.settings).toMatchObject({ role: 'implementer', model: 'AI-HUB/gpt-6-sol', effort: 'medium' })
+    expect(adapter.preflight()).toMatchObject({ providerInvocations: 0, strictFullSchemaValidated: false, singleTurnWorkerDispatchProven: false, requiredWorkerAvailable: 'unknown', bundledMetadataReadable: true, modelEffortListed: true, status: 'passed' })
+    const unlisted = create({ model: 'unlisted-model' })
+    expect(unlisted.preflight()).toMatchObject({ status: 'inconclusive', modelEffortListed: false, providerInvocations: 0 })
+    mkdirSync(join(directory, 'src'))
+    const taskFile = join(directory, 'src/requested.mjs')
+    writeFileSync(taskFile, 'unchanged')
+    await expect(unlisted.run({ workspace: directory, prompt: 'do not execute' })).rejects.toThrow('preflight inconclusive')
+    expect(readFileSync(taskFile, 'utf8')).toBe('unchanged')
+    mkdirSync(join(directory, '.codex'))
+    await expect(create({ model: 'fixture', effort: 'low' }).run({ workspace: directory, prompt: 'do not execute' })).rejects.toThrow('Project Codex configuration')
+    expect(readFileSync(taskFile, 'utf8')).toBe('unchanged')
+    expect(create({ model: 'fixture', effort: 'low' }).preflight()).toMatchObject({ status: 'passed', featuresDisabled: true, providerInvocations: 0 })
+    for (const role of ['coordinator', 'verifier', 'reviewer'])
+      expect(create({ role }).settings).toMatchObject({ role, model: 'AI-HUB/gpt-6-astra', effort: 'low' })
+    expect(create({ role: 'reviewer', model: 'fixture', effort: 'medium' }).settings).toMatchObject({ role: 'reviewer', model: 'fixture', effort: 'medium' })
+    const command = spawnSync(process.execPath, ['evals/runner/cli.mjs', 'preflight', '--require-worker', '--codex-bin', executable, '--config-file', configFile], { cwd: root, encoding: 'utf8' })
+    expect(command.status).toBe(1)
+    expect(JSON.parse(command.stdout)).toMatchObject({ status: 'unavailable', providerInvocations: 0, requiredWorkerAvailable: 'unknown' })
+    expect(() => create({ requireWorker: true })).toThrow('Required-worker mode unavailable')
+  })
+
+  it('rejects malformed and forbidden private TOML before execution, then detects external identity drift', async () => {
+    const directory = temp()
+    const { executable, configFile, create } = privateAdapter(directory)
+    for (const source of ['model_provider = "fixture-provider"\n[agents]\ndefault = "unsafe"', 'model_provider = "fixture-provider"\n[model_providers.fixture-provider]\nenv_key = "TOKEN"', 'model_provider = [']) {
+      writeFileSync(configFile, source)
+      expect(() => create({ model: 'fixture', effort: 'low' })).toThrow()
+    }
+    const catalogFile = join(directory, 'models.json')
+    writeFileSync(catalogFile, JSON.stringify({ models: [{ slug: 'fixture', supported_reasoning_levels: [{ effort: 'low' }] }] }))
+    writeFileSync(configFile, `model_provider = "fixture-provider"\nmodel_catalog_json = ${JSON.stringify(catalogFile)}\n`)
+    const authFile = join(directory, 'auth.json')
+    writeFileSync(authFile, JSON.stringify({ token: 'private-test-token' }))
+    for (const target of [configFile, catalogFile, authFile, executable]) {
+      const adapter = create({ model: 'fixture', effort: 'low', authFile })
+      expect(adapter.preflight().status).toBe('passed')
+      const original = readFileSync(target)
+      writeFileSync(target, Buffer.concat([original, Buffer.from('\n')]))
+      await expect(adapter.run({ workspace: directory, prompt: 'do not execute' })).rejects.toThrow('identity drift')
+      writeFileSync(target, original)
+    }
+  })
+
   it('keeps standalone CLI run and compare pending until semantic review, including external-action traces', () => {
     const directory = temp()
     const executable = join(directory, 'fixture-provider')
@@ -258,7 +315,7 @@ describe('evaluation evidence and authority boundaries', () => {
       const result = await runCase(entry, root, { adapter, outputRoot: directory })
       expect(result.verdict.status).toBe('passed')
       const final = JSON.parse(result.result.finalOutput)
-      expect(final).toMatchObject({ isolated: true, leakedEnv: null, configPresent: true, selectedProvider: 'fixture-provider' })
+      expect(final).toMatchObject({ isolated: true, leakedEnv: null, configPresent: true, selectedProvider: 'fixture-provider', memoryDisabled: true, integrationsDisabled: true, ignoredUserConfig: false, strictConfig: true })
       expect(JSON.stringify(result)).not.toContain('test-credential-never-persist')
       expect(readFileSync(join(result.reportDirectory, 'events.jsonl'), 'utf8')).not.toContain('test-credential-never-persist')
     }
@@ -272,7 +329,7 @@ describe('evaluation evidence and authority boundaries', () => {
 
   it('accepts complete independently reviewed evidence and rejects tampering, missing artifacts and source drift', async () => {
     const project = temp()
-    for (const name of ['src', 'bin', 'rules', 'skills', 'dist', 'evals/cases/behavior', 'evals/adapters', 'evals/observers', 'evals/graders', 'evals/runner'])
+    for (const name of ['src', 'bin', 'rules', 'skills', 'dist', 'evals/cases/behavior', 'evals/adapters', 'evals/observers', 'evals/graders', 'evals/runner', 'evals/config'])
       mkdirSync(join(project, name), { recursive: true })
     for (const name of ['tsup.config.ts', 'tsconfig.json'])
       copyFileSync(join(root, name), join(project, name))
@@ -282,7 +339,7 @@ describe('evaluation evidence and authority boundaries', () => {
     mkdirSync(join(project, 'release/suites'), { recursive: true })
     writeFileSync(join(project, 'release/suites/required-cases.json'), JSON.stringify({ schema: 'rsp-release-suite-v1', publicCases: ['preserve-user-files'], holdoutNegativeSkills: [] }))
     cpSync(join(root, 'skills/rsp-implement'), join(project, 'skills/rsp-implement'), { recursive: true })
-    for (const name of ['adapters', 'observers', 'graders', 'runner'])
+    for (const name of ['adapters', 'observers', 'graders', 'runner', 'config'])
       cpSync(join(root, 'evals', name), join(project, 'evals', name), { recursive: true })
     cpSync(loadCase(root, 'preserve-user-files').directory, join(project, 'evals/cases/behavior/preserve-user-files'), { recursive: true })
     const publicCase = loadCase(project, 'preserve-user-files')
@@ -325,6 +382,14 @@ describe('evaluation evidence and authority boundaries', () => {
       })).rejects.toThrow('Resume identity drift')
       writeFileSync(target, original)
     }
+    expect(checkCampaignEvidence(project, path)).toEqual({ status: 'passed', reasons: [] })
+    const reviewerPolicy = join(project, 'evals/config/reviewer.toml')
+    writeFileSync(reviewerPolicy, `${readFileSync(reviewerPolicy, 'utf8')}\n# reviewer-only policy revision\n`)
+    expect(checkCampaignEvidence(project, path)).toEqual({ status: 'passed', reasons: [] })
+    const runtimePolicy = join(project, 'evals/config/base.toml')
+    writeFileSync(runtimePolicy, `${readFileSync(runtimePolicy, 'utf8')}\n# execution policy revision\n`)
+    expect(checkCampaignEvidence(project, path).reasons).toContain('stale source, candidate or harness identity')
+    writeFileSync(runtimePolicy, readFileSync(join(root, 'evals/config/base.toml')))
     expect(checkCampaignEvidence(project, path)).toEqual({ status: 'passed', reasons: [] })
     const cliFile = join(project, 'evals/runner/cli.mjs')
     writeFileSync(cliFile, `${readFileSync(cliFile, 'utf8') + String.fromCharCode(10)}// changed reviewer default only`)

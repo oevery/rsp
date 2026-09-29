@@ -13,22 +13,22 @@ export interface InstallPackagedSkillsArgs {
 
 export const DEFAULT_PACKAGED_SKILL_NAMES = [
   'rsp',
-  'rsp-commit',
-  'rsp-design',
-  'rsp-diagnose',
-  'rsp-implement',
-  'rsp-manage',
-  'rsp-release-docs',
-  'rsp-resolve-findings',
-  'rsp-review',
   'rsp-shape',
-  'rsp-tdd',
+  'rsp-implement',
   'rsp-verify',
+  'rsp-review',
+  'rsp-commit',
+  'rsp-release-docs',
 ] as const
 
 const OBSOLETE_PACKAGED_SKILL_RENAMES = {
-  'rsp-address-review': 'rsp-resolve-findings',
+  'rsp-address-review': 'rsp-implement',
   'rsp-codebase-audit': 'rsp-structural-audit',
+  'rsp-design': 'rsp-shape',
+  'rsp-diagnose': 'rsp-implement',
+  'rsp-manage': 'rsp',
+  'rsp-resolve-findings': 'rsp-implement',
+  'rsp-tdd': 'rsp-implement',
 } as const
 
 export interface SkillInstallResult {
@@ -331,7 +331,7 @@ export async function installPackagedSkills(
   if (obsoleteConflicts.length > 0)
     conflictMessages.push(`obsolete packaged Skill renames: ${obsoleteConflicts.join(', ')}`)
   if (conflictMessages.length > 0)
-    throw new Error(`${conflictMessages.join('; ')}; rerun with --force to replace or remove only these package-owned directories`)
+    throw new Error(`${conflictMessages.join('; ')}; inspect the named directories and rerun with --force to replace or remove them explicitly`)
   if (args.dryRun)
     return result
 

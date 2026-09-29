@@ -17,6 +17,11 @@ offline replay, workflow fixtures, holdout, independent review and release
 evidence contracts. Provider tests use an explicit local executable fixture;
 they do not contact a model or establish real provider acceptance.
 
+The installer migration tests exercise the seven-default inventory, explicit
+old-name conflicts/force preview, optional audit mapping, rollback, unrelated
+content and symlink refusal. They do not install into an external project or
+establish real interactive continuation through a user decision.
+
 This set is not a claim of equivalence to every removed legacy assertion.
 Add coverage for observable risk at the owning seam, not copies of Skill prose
 or generated artifacts. External/hardware/UI acceptance remains separate.

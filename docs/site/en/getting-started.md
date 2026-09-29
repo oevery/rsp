@@ -46,7 +46,7 @@ Archive does not grant Git, publication, or deployment authority. Reinspect the 
 
 ## Install project Skills
 
-Preview and install the twelve default Skills from the exact RSP package being used:
+Preview and install the default Skills from the stable package you invoke. These `@latest` commands do not install the unreleased seven-entry source candidate; see [Skill ownership and candidate migration](./guides/skills.md) before replacing any existing package-owned or customized tree:
 
 ```bash
 npx -y @oevery/rsp@latest skills install --dry-run

@@ -1,10 +1,12 @@
-# Delegation and host evidence
+# Worker delegation and resource evidence
 
-Load this reference only after Manage derives `DispatchDisposition: preferred | required` and before preparing a worker task or accepting a worker result.
+Load only after qualified Core coordination needs an actual worker, independent acceptance, or resource arbitration. Derive `DispatchDisposition: none | preferred | required` from the current obligation: none runs locally; preferred can fall back locally; required stops if worker attribution is unavailable. Distinct-worker evidence is additionally required only for explicit independent Verify or Review. Qualification is not delegation. Do not infer parallel safety from delegation.
 
 ## Delegate one bounded task
 
-Send one independently executable vertical slice. Start by telling the recipient that it is the already-dispatched Discipline worker for this assignment: it executes the bounded task directly and must not rerun parent Manage routing or require another worker. A delegated task includes only what the worker needs to act safely:
+For grouped or dependent work, load [groups and dependencies](groups-dependencies.md) and inspect the current `rsp status --json` plan. Dispatch only ready child WorkRefs in the first non-empty `plan.waves` wave; never execute a child whose prerequisite remains in `plan.blocked`. Recheck the derived plan before another wave. Parallelize only when actual writer and resource isolation is established.
+
+Send one independently executable vertical slice. Tell the recipient it is already dispatched and must not rerun parent routing or delegate further. Include only what it needs to act safely:
 
 ```text
 Work: <exact WorkRef>
@@ -25,14 +27,14 @@ Resume the same compatible worker only when the host makes that possible and the
 
 Each delegated Discipline owns its own result:
 
-- **Diagnose:** `rsp-diagnose`; `confirmed | unresolved` with cause evidence and scope impact.
-- **Inspect:** Manager-only read-only evidence packet.
+- **Diagnose:** `rsp-implement` read-only diagnosis mode; `confirmed | unresolved` with cause evidence and scope impact.
+- **Inspect:** Core-owned read-only evidence packet.
 - **Fix:** `rsp-implement`; `changed | no-change` with changed paths, verification, omissions, and any scope issue.
 - **Verify:** `rsp-verify`; `pass | fail | unavailable` with named checks, evidence delta, omissions, and any scope issue.
 
 One worker may return both the Fix and ordinary Verify results for the same Change when independent verification is not required. The combined result is implementation evidence, not self-certified acceptance.
 
-Fixed-scope review remains owned by `rsp-review`. Manage adds no universal worker receipt or result schema and never asks a worker to report host identity, independence, admission, settlement, release, evidence validity, or acceptance.
+Fixed-scope review remains owned by `rsp-review`, including a required independent reviewer. Core adds no universal worker receipt and never asks a worker to self-report identity, independence, settlement, or acceptance.
 
 ## Validate results and host facts
 
@@ -40,12 +42,12 @@ Treat three evidence sources separately:
 
 - the worker-authored Discipline result states what the worker did and observed;
 - host observations, when available, establish dispatch, attribution, activity, cancellation, completion, and whether different workers participated;
-- Manager validates authority, actual changed paths, local diff, declared verification, omissions, and current acceptance.
+- Core validates authority, actual changed paths, local diff, declared verification, omissions, and current acceptance.
 
 Host facts are capabilities and observations, not RSP domain objects. Missing observations remain unavailable rather than inferred from prose, handles, elapsed time, topology, or successful tests. A worker never self-certifies identity, independence, resource release, evidence validity, or acceptance.
 
-For required delegation, Manage must have an attributable worker-authored result that covers the assigned boundary. For required independent Verify, the host must establish that the accepted Fix and Verify came from different workers. If either condition cannot be established, acceptance remains `incomplete`. Manager must not author, repair, reconstruct, or substitute the missing worker result.
+For required delegation, Core must have an attributable worker-authored result covering the assigned boundary. For required independent Verify or Review, host observations must establish distinct workers from the accepted implementation. If not, acceptance remains `incomplete`. Core cannot author or substitute the missing result.
 
-When the same worker owns Fix and ordinary Verify, Manage may derive `evidence-complete` only after validating the worker result, changed paths, declared checks, omissions, and scope. `review-clean`, archive readiness, and commit eligibility remain separate gates.
+When the same worker owns Fix and ordinary checks, Core may derive `evidence-complete` only after validating result, paths, checks, omissions, and scope. `review-clean` requires an actual required Review result; archive and commit remain separate gates. Shared writers, generated artifacts, test runners, browsers, providers and hardware run sequentially unless host and checkout evidence establish isolation.
 
 Inspect actual paths, diff, commands, outcomes, and omissions before accepting a result. A host-reported completion, a valid transport shape, successful integration tests, or absence of an error never substitutes for this validation.

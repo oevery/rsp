@@ -29,7 +29,13 @@ try {
 
   const files = listing.stdout.split('\n').filter(Boolean).map(path => path.replace(/^package\//, ''))
   const forbidden = files.filter(path => /^(?:tests|evals|release)(?:\/|$)/u.test(path))
-  const required = ['bin/rsp.mjs', 'dist/cli.mjs', 'rules/rsp-rules.md', 'skills/rsp/SKILL.md']
+  const required = [
+    'bin/rsp.mjs',
+    'dist/cli.mjs',
+    'rules/rsp-rules.md',
+    ...['rsp', 'rsp-shape', 'rsp-implement', 'rsp-verify', 'rsp-review', 'rsp-commit', 'rsp-release-docs', 'rsp-structural-audit']
+      .map(name => `skills/${name}/SKILL.md`),
+  ]
   const missing = required.filter(path => !files.includes(path))
   const installation = forbidden.length === 0 && missing.length === 0 ? checkInstalledPackage(root, tarball, temporaryRoot) : null
   const report = { status: installation ? 'passed' : 'failed', package: filename, files: files.length, required, missing, forbidden, installation }

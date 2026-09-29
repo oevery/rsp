@@ -1,7 +1,7 @@
 id: trigger-rsp-resolve-findings
 kind: trigger
-skill: rsp-resolve-findings
-prompt: 'Use rsp-resolve-findings to assess a requested review fix, but the fixed review report and comparison scope are missing. Return the missing input and next action. Do not alter product files, write a review, commit or publish.'
+skill: rsp-implement
+prompt: 'Use rsp-implement to assess a requested review fix, but the fixed review report and comparison scope are missing. Return the missing input and next action. Do not alter product files, write a review, commit or publish.'
 oracle: read-only
 hard:
   allowed_paths: []

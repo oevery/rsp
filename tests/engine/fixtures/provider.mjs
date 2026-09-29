@@ -2,6 +2,31 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
+// Standalone fixture copied outside the repository: inspect only our generated policy.
+function fixtureConfig() {
+  const source = readFileSync(join(process.env.CODEX_HOME, 'config.toml'), 'utf8')
+  const configuredProvider = source.match(/^model_provider\s*=\s*"([\w.-]+)"/mu)?.[1]
+  const featureSection = source.split('[features]')[1]?.split(/\n\[/u)[0] ?? ''
+  const memorySection = source.split('[memories]')[1]?.split(/\n\[/u)[0] ?? ''
+  const disabled = name => new RegExp(`^${name}\\s*=\\s*false$`, 'mu').test(featureSection)
+  return { source, configuredProvider, disabled, memoryDisabled: disabled('memories') && /^use_memories\s*=\s*false$/mu.test(memorySection) && /^generate_memories\s*=\s*false$/mu.test(memorySection) }
+}
+
+if (process.argv.includes('exec') && process.argv.includes('--help')) {
+  process.stdout.write('Usage: exec --strict-config\n')
+  process.exit(0)
+}
+if (process.argv.includes('features') && process.argv.includes('list')) {
+  const config = fixtureConfig()
+  for (const name of ['memories', 'multi_agent', 'multi_agent_v2', 'plugins', 'hooks', 'apps', 'browser_use', 'browser_use_external', 'computer_use', 'in_app_browser', 'remote_plugin', 'skill_mcp_dependency_install', 'external_agent_memory_import'])
+    process.stdout.write(`${name} stable ${!config.disabled(name)}\n`)
+  process.exit(0)
+}
+if (process.argv.includes('debug') && process.argv.includes('models')) {
+  process.stdout.write(JSON.stringify({ models: ['fixture', 'fixture-external-action', 'fixture-redacted-action', 'test', 'AI-HUB/gpt-6-astra', 'AI-HUB/gpt-6-sol', 'explicit-reviewer'].map(slug => ({ slug, supported_reasoning_levels: [{ effort: 'low' }, { effort: 'medium' }] })) }))
+  process.exit(0)
+}
+
 if (process.argv.includes('--version')) {
   process.stdout.write('fixture-provider 1.0\n')
   process.exit(0)
@@ -64,10 +89,11 @@ else {
   if (prompt.includes('isolation-probe')) {
     const config = readFileSync(join(process.env.CODEX_HOME, 'config.toml'), 'utf8')
     const auth = readFileSync(join(process.env.CODEX_HOME, 'auth.json'), 'utf8')
-    const configuredProvider = config.match(/^model_provider\s*=\s*"([^"]+)"/mu)?.[1]
+    const parsed = fixtureConfig()
+    const configuredProvider = parsed.configuredProvider
     const providerOverride = process.argv.find(value => value.startsWith('model_provider='))
     const selectedProvider = providerOverride ? JSON.parse(providerOverride.slice('model_provider='.length)) : configuredProvider
-    final = JSON.stringify({ isolated: process.env.HOME === process.env.CODEX_HOME, leakedEnv: process.env.RSP_TEST_SECRET ?? null, configPresent: config.includes('fixture-provider'), selectedProvider, auth })
+    final = JSON.stringify({ isolated: process.env.HOME === process.env.CODEX_HOME, leakedEnv: process.env.RSP_TEST_SECRET ?? null, configPresent: config.includes('fixture-provider'), selectedProvider, auth, memoryDisabled: parsed.memoryDisabled, integrationsDisabled: ['plugins', 'hooks', 'apps', 'browser_use', 'computer_use', 'in_app_browser'].every(parsed.disabled), ignoredUserConfig: process.argv.includes('--ignore-user-config'), strictConfig: process.argv.includes('--strict-config') })
   }
   const finalIndex = process.argv.indexOf('--output-last-message')
   if (finalIndex >= 0)

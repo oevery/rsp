@@ -1,15 +1,15 @@
 ---
 name: rsp-commit
-description: Create one authorized, exact-scope local commit for a Core- or Manage-derived direct, Change, integration, Group, or release boundary with a repository-consistent structured message.
+description: Create one authorized, exact-scope local commit for a Core-derived direct, Change, integration, Group, or release boundary with a repository-consistent structured message.
 license: MIT
 metadata:
   author: oevery
-  version: "2026.08.25.1"
+  version: "2026.09.29.1"
 ---
 
 # RSP Commit
 
-Create one reviewable local commit after Core or qualified Manage has derived one compact delivery request. Skill availability grants none of its facts. The request contains only the delivery kind, owner reference, real WorkRefs when relevant, exact paths, current local authority, and fresh verification pointers. Rsp-commit rereads owner and Git facts before staging; the request is not a second source of truth.
+Create one reviewable local commit after Core derives one compact delivery request, either through ordinary explicit authority or qualified coordinated closeout. Skill availability grants none of its facts. The request contains only the delivery kind, owner reference, real WorkRefs when relevant, exact paths, current local authority, and fresh verification pointers. Rsp-commit rereads owner and Git facts before staging; the request is not a second source of truth.
 
 When a durable owner exists, the owner reference is a WorkOwner reference: a Change uses its WorkRef and a Group uses its Group reference. Included child WorkRefs identify delivery inputs and never replace the durable owner. Direct, integration, and release kinds may have no durable WorkOwner.
 
