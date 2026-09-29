@@ -21,7 +21,11 @@ Use this Skill for RSP setup or repair, focused `.rsp/` work, coordination when 
 
 Read the request and authority, nearest project context, open focus candidates and relevant owner, status/readiness when tracked, checkout state, and decisive evidence. Resolve an explicit WorkRef first; multiple focus markers are candidates, not a stop. Use plain `rsp status` for ordinary state, JSON for exact dependency fields, and verbose JSON for downgraded details. Status does not project effective Manage or language configuration; only `rsp config --json` or the configuration file does. Do not read coordination configuration for routine work. Stages are derived, never persisted.
 
+Check for a root legacy `CONTEXT-MAP.md` during entry. When it or a relevant local legacy map is found, or context migration is requested, load [context migration](references/context-migration.md). Until migration is resolved, retain relevant legacy context; discovery does not authorize edits or interrupt unrelated work.
+
 Core owns goal, owner, authority, cross-responsibility decisions, results, and necessary writeback, not product edits. Choose the next responsibility before loading its detail. For a fixed-scope read-only review use `rsp-review`; release documentation uses `rsp-release-docs`. Design advice or planned shaping uses `rsp-shape`, without assuming artifact authority. An unexplained symptom, authorized fix, or fixed review report with a bounded investigation request uses `rsp-implement` with its matching conditional mode; only an accepted finding with separate correction authority permits mutation. Explicit read-only or independently required verification uses `rsp-verify`; the implementer performs ordinary own checks without a forced Verify handoff. Local delivery uses `rsp-commit` only with exact separate authority. Optional open-ended read-only discovery uses `rsp-structural-audit`. Do not treat a change of method inside one owner as a new phase requiring another user request.
+
+For substantial authorized repository-document writing or revision, use `rsp-doc`, included in the default suite. Tiny text edits remain direct, read-only document review stays Review, and product decisions stay Shape. If Doc is unavailable in a partial or older installation, the owning writer still checks the reader's purpose, factual grounding, usability, artifact ownership, and maintenance of references. Default distribution does not make Doc a required stage or an additional authority owner.
 
 Continue within the same authorized objective through edits, fresh Required checks and necessary writeback. Stop for a material owner decision, scope or authority change, an unavailable required capability, unsafe replay, or evidence that fails without a new discriminating step. Same-scope failure may be diagnosed and corrected internally; do not force a Core return for every failed check. Do not claim independent review from self-checks. Before a final response, load [control outcome](references/control-outcome.md) only when its technical rendering is needed by a real consumer; otherwise report outcome, evidence, limits and next action naturally.
 
@@ -54,7 +58,16 @@ Load detailed procedures only when active:
 
 ## Ownership and safety
 
-Route planned design to the selected Change; implemented facts to the smallest fact owner; rationale to one Decision Record; stable navigation to project-owned `CONTEXT.md`; operating rules to project-owned `AGENTS.md`; temporary continuation to the response. Never write planned state as current truth or duplicate facts into rationale.
+Route each durable item by its responsibility, not its presentation:
+
+- `README`: introduction, usage, and starting points, not a duplicate specification.
+- `AGENTS.md`: scoped operating rules, authority, and checks, not product behavior definitions.
+- `CONTEXT.md`: canonical vocabulary, domain relationships, and navigation, not implementation notes or session history. Root and local files share this model; define a term once in its domain and link it elsewhere.
+- Specs: current capability and collaboration contracts, boundaries, and necessary constraints, not code inventories or future plans. Design references belong here when they define normative evidence.
+- Change: this outcome's contract delta, design, work, and evidence, not a full baseline copy or execution log.
+- Decision Record: significant choices, alternatives, and consequences, not another definition of current behavior. Archives retain historical evidence, not current authority.
+
+Use short summaries and links instead of maintaining the same rule twice. Keep temporary continuation in the response. Never promote planned state to current truth. A Spec/code disagreement needs a decision about the discrepancy, not automatic documentation of whatever the code does.
 
 Use RSP commands for command-owned files. Preserve unrelated work. Ordinary Core never automatically archives or commits; a currently qualified coordination branch may execute lifecycle closeout only within its effective ceiling, fresh readiness and actual authority. Activation alone grants nothing; a qualified closeout setting is a limited ceiling, narrowed by nearer denial. Core never infers push, publication, deletion, deployment, approval, or human-acceptance authority. Exact local Commit and conditional conflict/recovery rules retain their owners. Execution location and cross-branch integration remain host, user, or Git concerns.
 

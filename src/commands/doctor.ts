@@ -79,6 +79,15 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
   reportCheck(checks, 'specs/design.md exists', existsSync(designPath), 'Run: rsp init')
 
   await checkAgents(checks, reportRuntime)
+  if (existsSync('CONTEXT-MAP.md')) {
+    checks.push({
+      status: 'info',
+      code: 'legacy_context_map',
+      label: 'legacy root context map detected',
+      message: 'CONTEXT-MAP.md remains; its semantic migration requires owner review.',
+      hint: 'Use Core context migration (or the fallback). Retain relevant legacy context until an authorized merge updates CONTEXT.md and active references; doctor --fix does not migrate or delete it.',
+    })
+  }
   await checkSpecsTree(checks, reportRuntime)
   await checkArchiveNaming(checks)
   const decisionRecordsConfigValid = await checkConfigSemantics(checks, reportRuntime)

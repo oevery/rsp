@@ -48,7 +48,7 @@ Follow the nearest `AGENTS.md`, edit the focused Change as work progresses, run 
 ```text
 .rsp/
 ├── rsp-rules.md       # minimal fallback protocol
-├── specs/             # durable current facts
+├── specs/             # current contracts, boundaries, and constraints
 ├── changes/           # open work
 ├── focus.d/           # markers selecting work; optional short recovery capsules
 └── archives/          # completed history

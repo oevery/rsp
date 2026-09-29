@@ -150,7 +150,16 @@ function getChangeTemplateByKind(kind?: string) {
 }
 
 function changeSectionHeading(sectionId: typeof CHANGE_DOCUMENT_SCHEMA.sections[number]['id']): string {
-  return renderDocumentSectionHeading(CHANGE_DOCUMENT_SCHEMA, sectionId)
+  const guidance = {
+    proposal: 'State the intended outcome, why it matters, scope, and non-goals; do not narrate execution.',
+    spec: 'Describe the contract delta and acceptance conditions, referencing affected existing Specs; do not copy the full baseline or implementation steps.',
+    design: 'Explain the approach, responsibility boundaries, and necessary tradeoffs; keep simple changes brief and avoid repeating requirements or tasks.',
+    tasks: 'List checkable work remaining; prescribe order only where correctness, safety, or migration requires it.',
+    verify: 'Connect acceptance to verification methods; after execution retain actual results, gaps, and limits, not command transcripts.',
+    blockers: 'Name unresolved decisions or dependencies that prevent progress; use none when there are no blockers.',
+  }
+  return `${renderDocumentSectionHeading(CHANGE_DOCUMENT_SCHEMA, sectionId)}
+<!-- ${guidance[sectionId]} -->`
 }
 
 /** Render the managed RSP block for AGENTS.md. */
@@ -162,7 +171,7 @@ RSP tracks current work, stable specs, and archives under \`.rsp/\`.
 
 Read in order:
 1. Nearest \`AGENTS.md\` for project or module instructions.
-2. Root \`CONTEXT-MAP.md\` if present, then the relevant nearest \`CONTEXT.md\`.
+2. Root \`CONTEXT.md\` if present, then the relevant nearest \`CONTEXT.md\` for domain language, relationships, and navigation. If a legacy \`CONTEXT-MAP.md\` remains, retain its relevant context and use Core's context-migration branch (or the fallback); discovery alone does not authorize migration.
 3. Use the project \`rsp\` Skill at \`.agents/skills/rsp/SKILL.md\`; hosts may load it through Skill discovery or read it directly. Only when it is absent or cannot be used, read \`.rsp/rsp-rules.md\` as the fallback protocol.
 4. \`.rsp/focus.d/\`; marker paths form the open-work candidate set, while optional bounded Markdown content is recovery guidance only. For grouped work read the sibling Group Brief, then the explicitly selected child Change.
 5. Only the relevant Specs and Decision Records under the configured authoritative path.
@@ -194,21 +203,26 @@ export function generateDesignContent(projectName: string): string {
   return `# Project Design: ${projectName}
 
 ## Purpose
-- ${placeholder}
-
-## Stable Facts
+<!-- Define the system's purpose and consumers, not the current change. -->
 - ${placeholder}
 
 ## Boundaries
+<!-- Define system responsibilities, exclusions, and responsibility handoffs. -->
 - In scope:
   - ${placeholder}
 - Out of scope:
   - ${placeholder}
 
+## Contracts
+<!-- State current architectural obligations and invariants that must survive implementation changes. -->
+- ${placeholder}
+
 ## Structure
+<!-- Describe stable ownership and dependency direction; leave repository navigation to CONTEXT.md. -->
 - ${placeholder}
 
 ## Constraints
+<!-- Record necessary technical, security, protocol, or compatibility limits; link lasting rationale rather than duplicating it. -->
 - ${placeholder}
 `
 }
@@ -219,18 +233,26 @@ export function generateSpecContent(name: string): string {
   return `# ${title}
 
 ## Purpose
-- ${placeholder}
-
-## Stable Facts
+<!-- Define the capability, its consumers, and its value; do not describe this change. -->
 - ${placeholder}
 
 ## Boundaries
+<!-- Define responsibilities, exclusions, and handoffs to other capabilities. -->
 - In scope:
   - ${placeholder}
 - Out of scope:
   - ${placeholder}
 
+## Contracts
+<!-- State current behavior, inputs and outputs, invariants, and failure semantics by capability, not internal implementation steps. -->
+- ${placeholder}
+
+## Scenarios
+<!-- Clarify key cross-boundary, failure, or ambiguous behavior with a few examples; omit when unnecessary and keep test execution results in the Change. -->
+- ${placeholder}
+
 ## Constraints
+<!-- Record necessary technical, protocol, security, or compatibility limits; do not repeat behavior requirements or decision rationale. -->
 - ${placeholder}
 `
 }

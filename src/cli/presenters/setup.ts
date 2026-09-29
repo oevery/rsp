@@ -64,6 +64,10 @@ export function presentUpdate(result: UpdateResult): void {
       console.log(`  ${pc.dim('Run: rsp doctor')}`)
       console.log()
     }
+    else if (event.type === 'legacy-context-map') {
+      console.log(`  ${pc.yellow('Note:')} CONTEXT-MAP.md remains; context migration needs owner review.`)
+      console.log(`  ${pc.dim('Use Core context migration (or the fallback). Keep relevant legacy context until an authorized merge updates CONTEXT.md and active references; update does not migrate or delete it.')}`)
+    }
     else if (event.type === 'specs-indexes-removed') {
       console.log(`  ${pc.green('✓')} generated Specs indexes removed`)
       for (const path of event.paths)

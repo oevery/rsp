@@ -25,7 +25,13 @@ Return the durable decision in this semantic field order. Localize headings and 
 
 Response-only Continuation and Durable Decision labels are not canonical artifact headings. In Chinese, for example, use `## 持久化决策`, `决策记录（Decision Record）`, and `可归档（Archive ready）`, not English labels alone.
 
-Write a current-fact update only when implementation changed a stable behavior, boundary, default, or constraint that future maintainers need. Prefer the smallest existing domain Spec, `.rsp/specs/design.md` for project-wide boundaries/navigation, or an explicitly authorized scoped `CONTEXT.md`/`AGENTS.md`; create a new Spec only for reusable project-level truth that fits nowhere existing.
+Write a current-fact update only when implementation changed a stable behavior, boundary, default, or constraint that future maintainers need. Prefer the smallest existing domain Spec, or `.rsp/specs/design.md` for project-wide architectural contracts. Vocabulary, domain relationships, and navigation belong in an explicitly authorized scoped `CONTEXT.md`; operating instructions belong in `AGENTS.md`. Create a Spec only for reusable truth with no suitable existing owner.
+
+For a new domain Spec, use Purpose, Boundaries, Contracts, Scenarios, and Constraints as a writing scaffold, not a mandatory schema. State consumers and value, responsibility handoffs, observable behavior and invariants, then necessary limits. Use a few discriminating scenarios only when useful; Given/When/Then is optional. Specialized architecture, protocol, or design-reference documents may retain domain headings. Classify design references by their normative role, not by table or index format.
+
+Preserve contracts that should survive replaceable implementation details. Link significant rationale to its Decision Record and verification results to the Change. Plain-prose template hints may stay, but actual requirements and limitations remain visible. Do not rewrite existing Specs merely to match headings or infer new promises from code. Resolve Spec/code discrepancies before choosing which owner needs correction.
+
+For substantial authorized writeback, `rsp-doc` from the default suite provides the writing method; unavailability in a partial or older installation does not block the owning writer. Check Purpose, Grounding, Usability, Ownership, and Maintenance: the future reader can use the document, factual meaning survives revision, and references remain valid. This author self-check does not substitute for a separately required Review.
 
 Create or update a Decision Record only for a hard-to-reverse or surprising choice with a real tradeoff. It owns rationale, alternatives, tradeoffs, and consequences—not duplicated current facts. Choose one exact file under `durableReview.decisionRecordsPath`, not the directory itself.
 

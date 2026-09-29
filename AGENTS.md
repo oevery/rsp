@@ -7,7 +7,7 @@ RSP tracks current work, stable specs, and archives under `.rsp/`.
 
 Read in order:
 1. Nearest `AGENTS.md` for project or module instructions.
-2. Root `CONTEXT-MAP.md` if present, then the relevant nearest `CONTEXT.md`.
+2. Root `CONTEXT.md` if present, then the relevant nearest `CONTEXT.md` for domain language, relationships, and navigation. If a legacy `CONTEXT-MAP.md` remains, retain its relevant context and use Core's context-migration branch (or the fallback); discovery alone does not authorize migration.
 3. Use the project `rsp` Skill at `.agents/skills/rsp/SKILL.md`; hosts may load it through Skill discovery or read it directly. Only when it is absent or cannot be used, read `.rsp/rsp-rules.md` as the fallback protocol.
 4. `.rsp/focus.d/`; marker paths form the open-work candidate set, while optional bounded Markdown content is recovery guidance only. For grouped work read the sibling Group Brief, then the explicitly selected child Change.
 5. Only the relevant Specs and Decision Records under the configured authoritative path.
@@ -28,6 +28,7 @@ Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENT
 
 - Use the repository-discovered `rsp`, `rsp-shape`, `rsp-implement`, `rsp-verify`, `rsp-review`, `rsp-commit`, and `rsp-release-docs` Skills for matching work in this checkout. Shape owns bounded read-only design; Implement owns diagnosis, justified test-first work, and authorized fixed-finding corrections. `rsp-structural-audit` stays optional and report-only. Core selects conditional coordination only for a real obligation, not ordinary single-owner continuity. This self-host keeps `.rsp/config.yaml` Manage activation and closeout keys, values, and defaults: only a qualified and selected coordination branch may use the existing limited local lifecycle/Git closeout ceiling after fresh gates, subject to nearer denial; ordinary flow gains none. Configuration never grants planning, product-mutation, remote, publication, approval, or human-acceptance authority.
 - These entries are live projections of the authored package sources under `skills/`; edit the authored source, not `.agents/skills/`.
+- Default `rsp-doc` handles substantial authorized repository-document writing on demand; read-only document review remains `rsp-review`. Both use the same reader-centered quality dimensions without requiring each other to be installed.
 - Treat host metadata limits as hard constraints, but do not use Skill body or reference word-count ceilings as correctness gates. Review concision semantically: remove duplication and unnecessary prose without losing trigger, authority, action, stop, return, or conditional-loading behavior.
 - Keep overlapping global engineering workflow Skills disabled in the maintainer environment while dogfooding so RSP capability gaps remain visible. Codex currently supports Skill disablement in user config, not project `.codex/config.toml`; do not add a misleading project-local disable list.
 

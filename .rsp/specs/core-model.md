@@ -24,7 +24,10 @@ Define RSP durable work identity, ownership, lifecycle, dependencies, focus, ver
 ## Boundaries
 
 - Core owns artifact identity, lifecycle derivation, dependency interpretation, focus candidates, and durable-writeback routing.
-- Change and Group own planned work. Specs own current facts. Decision Records own lasting rationale. Archives own historical snapshots.
+- Change and Group own planned work. Specs own current capability and collaboration contracts, responsibility boundaries, and necessary constraints. Decision Records own lasting rationale. Archives own historical snapshots, not current authority.
+- Root and local CONTEXT.md files share vocabulary, domain-relationship, and navigation ownership; AGENTS.md owns scoped operating rules and README owns introduction and usage. Legacy context maps require owner-authorized semantic migration, never automatic deletion.
+- Before migration, relevant legacy context remains discoverable and usable; conflicts block only dependent work. Retirement requires preserved meaning, updated active references, and explicit authority, not merely a successful managed update.
+- Artifact placement follows responsibility, not presentation. Normative design references belong in Specs; short summaries and links may cross owners without duplicating full definitions. Spec/code disagreements require resolution rather than automatic promotion of observed implementation.
 - Focus is selection input only. It is not a controller, lock, lease, scheduler, or execution record.
 - Runtime observations and temporary continuation belong to the host or response unless an explicit durable artifact owner accepts them.
 

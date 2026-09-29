@@ -12,7 +12,7 @@ const skillsInstallCommand = defineCommand({
   args: {
     'name': {
       type: 'positional',
-      description: 'Exact packaged Skill name (default: seven core Skills)',
+      description: 'Exact packaged Skill name (default: the core suite)',
       required: false,
     },
     'dry-run': {

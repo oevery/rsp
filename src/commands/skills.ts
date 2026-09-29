@@ -15,6 +15,7 @@ export const DEFAULT_PACKAGED_SKILL_NAMES = [
   'rsp',
   'rsp-shape',
   'rsp-implement',
+  'rsp-doc',
   'rsp-verify',
   'rsp-review',
   'rsp-commit',

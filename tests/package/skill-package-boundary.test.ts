@@ -20,7 +20,7 @@ describe('published Skill package boundary', () => {
       .filter(entry => entry.isDirectory())
       .map(entry => entry.name)
       .sort()
-    const expected = ['rsp', 'rsp-shape', 'rsp-implement', 'rsp-verify', 'rsp-review', 'rsp-commit', 'rsp-release-docs', 'rsp-structural-audit'].sort()
+    const expected = ['rsp', 'rsp-shape', 'rsp-implement', 'rsp-verify', 'rsp-review', 'rsp-commit', 'rsp-release-docs', 'rsp-structural-audit', 'rsp-doc'].sort()
 
     expect(discovered).toEqual(expected)
     expect([...DEFAULT_PACKAGED_SKILL_NAMES].sort()).toEqual(expected.filter(name => name !== 'rsp-structural-audit'))

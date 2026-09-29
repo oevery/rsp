@@ -6,8 +6,9 @@ Define Skill capability ownership, composition, routing, delegation, control bou
 
 ## Capability ownership
 
-- The default suite contains `rsp`, `rsp-shape`, `rsp-implement`, `rsp-verify`, `rsp-review`, `rsp-commit`, and `rsp-release-docs`.
+- The default suite contains `rsp`, `rsp-shape`, `rsp-implement`, `rsp-doc`, `rsp-verify`, `rsp-review`, `rsp-commit`, and `rsp-release-docs`.
 - `rsp-structural-audit` is an optional report-only Discovery Skill. Installation does not grant mutation, lifecycle, Git, publication, approval, or human-acceptance authority.
+- `rsp-doc` is a default, on-demand writing Discipline for substantial authorized repository documentation. It accepts bounded direct requests without a Change or preserves the selected tracked WorkRef. Read-only review, product decisions, release notes, and Skill authoring retain their existing owners; tiny edits need no Doc phase. Default installation does not imply unconditional invocation; partial or older installations retain a bounded writing fallback.
 - `rsp` owns project entry, current-action routing, durable-artifact routing, ordinary authorized continuity, and conditional coordination. Routine work need not invent a tracked Change. Entrypoint branch selection precedes loading detailed guidance; same-owner/scope/authority method switches and repairable failures remain with the responsible capability without another user continuation request. Return to Core only on completed responsibility, changed goal/owner/scope/authority, necessary cross-capability independent acceptance, or an evidenced blocker that cannot be resolved in scope.
 - `rsp-shape` owns clarification and ready-owner planning, plus a bounded read-only design question without requiring a WorkRef. Design-only advice neither mutates product nor automatically creates or changes a plan. Separately authorized planned design updates only the selected Change; a Group Brief supplies context, not the design result.
 - `rsp-implement` owns bounded implementation and ordinary fresh checks. Diagnosis-only investigates read-only and returns evidence; an authorized fix proceeds from confirmed cause within the same scope and authority. Test-first RED requires explicit instruction or concrete risk. Fixed findings receive individual accepted/rejected/needs-clarification dispositions, bounded correction, fresh checks, and separate read-only re-review. Implement never certifies itself review-clean.
@@ -20,10 +21,19 @@ Define Skill capability ownership, composition, routing, delegation, control bou
 
 - One Skill owns one bounded capability. Core continues ordinary authorized work through proportionate checks and necessary writeback without automatic archive or commit. A separately qualified coordination branch may delegate bounded tasks while retaining the selected goal and acceptance.
 - Published Skills are standalone and never require another installed Skill, a runtime glossary, repository Specs, generated indexes, research data, or hidden runtime state.
+- Doc and Document Review independently express the same quality dimensions: Purpose, Grounding, Usability, Ownership, and Maintenance. Their shared factual evaluation corpus checks agreement without a cross-package runtime dependency.
+- Core detects legacy context during ordinary entry and loads a separate context-migration reference only for a detected map or explicit migration request. Detection permits inspection, not mutation. The branch owns source/target reconciliation and retirement gates; Doc supplies authorized writing, and unrelated work need not wait for migration. No new Skill or persisted migration state is required.
 - Entrypoints keep authority and preservation rules always available and select branches before loading low-frequency procedures; shared composition loads only the context required by the current action.
 - Skills exchange only the smallest phase-relevant identity, authority, result, and evidence. Phase-specific fields remain with the owning Skill.
 - Execution-environment selection, preparation, isolation, landing, and cleanup belong to the Host or Git boundary.
 - Commit delivery receives a WorkOwner reference when a durable owner exists and separately receives included child WorkRefs. Direct, integration, and release delivery kinds may have no durable WorkOwner.
+
+## Documentation quality
+
+- Purpose ties content to a reader and useful reading outcome. Grounding preserves evidence-backed claims, conditions, defaults, and limits through revision. Usability supplies the explanation or actions needed without author-only context. Ownership prevents conflicting definitions or invented authority. Maintenance preserves meaningful terms and relevant reading paths.
+- Doc performs author self-checks and proportionate command/example/link verification; no self-check establishes independent acceptance. Missing or unsafe execution is reported, not invented.
+- Document Review remains fixed-scope and read-only. Retained findings identify the affected reader and task, exact evidence, and a consequential misunderstanding or blocked action. Adequate unconventional documents may be clean; style alone is not a blocking defect.
+- Word counts, blanket forbidden vocabulary, forced templates, and fixed reviewer-round counts are not quality gates. Meaning-preserving explanation can legitimately make a document longer.
 
 ## Control boundaries
 

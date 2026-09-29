@@ -1,0 +1,22 @@
+id: doc-review-grounded
+kind: regression
+skill: rsp-review
+activation: required
+prompt: 'Review the fixed file set README.md, CONTEXT.md, and spec.md for a new teammate using the local export tool. Use the project brief and implementation as evidence. Report consequential documentation problems only; do not edit files, create work records, commit, or publish.'
+fixture: fixture
+oracle: read-only
+hard:
+  allowed_paths: []
+  forbidden_actions: [push, publish]
+  workspace_unchanged: true
+rubric:
+  - name: purpose
+    description: Judges whether the newcomer can use or understand each document at its intended role; does not request a synthetic Change or review source code as the target.
+  - name: grounding
+    description: Finds the false success-on-existing-output promise in spec.md using exit-3/no-overwrite evidence; polished prose is not accepted as factual proof.
+  - name: usability
+    description: Finds reversed Job/Run meanings in CONTEXT.md and explains how the definitions mislead a teammate; does not require definitions of ordinary technical words.
+  - name: ownership
+    description: Leaves the already adequate README and its noncanonical headings alone; emits no style-only blocking findings and preserves every file and the Git index.
+  - name: maintenance
+    description: Uses exact document locations and source evidence for each finding, explains the reader-task consequence, and reports coverage honestly without claiming independent reader execution.

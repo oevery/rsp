@@ -1,18 +1,21 @@
 # Skills 与受管工作
 
-当前源码候选定义七项与宿主无关的默认 Skill，供按需加载；它尚未作为版本发布，也未完成行为验收，已发布稳定包仍以自身清单为准。每项 Skill 有明确的权限边界；普通会话工作不必制造 Change。
+当前源码候选定义八项与宿主无关的默认 Skill，供按需加载；它尚未作为版本发布，也未完成行为验收，已发布稳定包仍以自身清单为准。每项 Skill 有明确的权限边界；普通会话工作不必制造 Change。
 
 | Skill | 职责 |
 |---|---|
 | `rsp` | 选择当前分支；让普通已授权工作完成检查和必要写回，符合条件时才协调。 |
 | `rsp-shape` | 回答有界只读设计问题，或在规划获授权时塑造可执行 Change／浅层 Group。 |
 | `rsp-implement` | 按需只读诊断；实现已授权修正，在有理由时测试先行，按固定发现修正并作最新检查。 |
+| `rsp-doc` | 面向明确读者与任务，编写或较大范围修订已授权的仓库文档。 |
 | `rsp-verify` | 针对已选 WorkOwner 声明的证据边界执行一次有界、只读验证。 |
 | `rsp-review` | 对固定的代码、文档或混合比较范围做只读审查。 |
 | `rsp-commit` | 创建一个已授权、范围精确的本地提交。 |
 | `rsp-release-docs` | 起草、审计、定稿或校准明确的发布文档范围。 |
 
 `rsp-structural-audit` 是可选的纯报告项目 Skill，在授予实现权限前审计一个边界明确的仓库或子树。
+
+使用所选候选 CLI 执行不带名称的 `rsp skills install` 时，默认包含 `rsp-doc`；仍可用 `rsp skills install rsp-doc` 单独安装，指定任意 Skill 名称时只安装所选项。Doc 只在较大范围、已授权的 README、CONTEXT、Spec 和技术指南编写时按需加载，不接管只读 Review、Shape 决策、Release Docs 或维护者 Skill 编写。小范围修改仍可直接完成，部分安装或旧安装缺少 Doc 时保留有界写作 fallback。
 
 ## 旧 Skill 名称迁移
 
@@ -30,6 +33,7 @@
 | `rsp-commit` | 默认 | 本地交付 Discipline | 精确边界显式授权；合格协调收尾还须通过自身门禁 |
 | `rsp` 的按需协调 | Core 内部 | 协调分支 | 仅在有效项目策略下存在真实协调义务时选择 |
 | `rsp-structural-audit` | 可选 | Discovery | 显式纯报告请求 |
+| `rsp-doc` | 默认 | 写作 Discipline | 较大范围、已授权的仓库文档编写 |
 
 “默认”表示属于本源码候选的默认套件，不表示自动调用。Skill 边界不等于 worker 边界。Core 通过资格判断后才可按需组合有界 worker；进入协调分支本身不代表委派。发布的 Skill 保持独立可用；缺少可选兄弟 Skill 时保留有界安全 fallback。
 
@@ -40,6 +44,7 @@
 - Implement 对固定发现逐条给出接受、拒绝或需澄清的处置，在权限内修正已接受项，重跑受影响检查，并交由独立只读 Review 复审；不得自行宣称 review-clean。
 - Verify 在需要时执行已声明的只读证据边界，普通 Implement 检查不必转 Verify。Change 使用 WorkRef 与 `Verify` 边界；Group 使用 Brief 中命名的 `Integration:` 条件。临时边界必须在 Group closeout 前写回；要求独立验收时需要宿主证明不同 worker。
 - Review 保持固定范围和只读；Release Docs 需要明确的发布文档请求，但不因此获得发布权限。
+- Doc 与文档审查使用相同的语义质量维度：Purpose（读者目标）、Grounding（事实依据）、Usability（可理解与可使用）、Ownership（归属）、Maintenance（可维护性）。Doc 据此写作和自检，Review 据此发现有实际影响的阅读障碍或错误承诺，保持只读。合格的非标准结构可以不改；两个包独立可用，不互相构成必经阶段。
 - 执行位置选择和跨分支集成由宿主、用户与 Git 负责。Core 的按需协调分支只在实际观察到的 checkout 或环境中工作；不存在负责选择或回迁执行环境的规范 Skill。
 - Commit 只负责当前 checkout 中一个边界精确的本地提交，不吸收 cherry-pick、cleanup 或跨分支集成。
 - 任何 Skill 都不推断提交、推送、发布、部署、批准或人工验收权限。

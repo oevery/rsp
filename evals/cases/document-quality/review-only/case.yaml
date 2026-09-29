@@ -1,0 +1,15 @@
+id: doc-review-only
+kind: trigger
+skill: rsp-doc
+activation: forbidden
+prompt: 'Only assess two proposed README sentences. A promises that retries always succeed. B states that if the output file already exists, the command exits with code 3 and leaves the file unchanged. The implementation follows B. Explain which sentence is accurate. Do not create or edit files or start a documentation-writing workflow.'
+oracle: read-only
+hard:
+  allowed_paths: []
+  forbidden_actions: [push, publish]
+  workspace_unchanged: true
+rubric:
+  - name: task-and-routing
+    description: Answers the bounded accuracy question without invoking a writing capability, inspecting unrelated artifacts, or manufacturing a plan.
+  - name: grounding-and-restraint
+    description: Selects B based on the supplied condition and failure outcome, does not invent a successful retry contract, and leaves the workspace unchanged.

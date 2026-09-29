@@ -46,11 +46,13 @@ Prefer one ordinary Change only for one observable outcome sharing a consistency
 Keep one observable outcome per Change:
 
 - `Proposal`: outcome, scope, non-goals;
-- `Spec`: requirements and acceptance;
-- `Design`: boundaries and choices;
-- `Tasks`: executable steps;
-- `Verify`: decisive evidence;
+- `Spec`: this change's contract delta and acceptance, referencing affected existing Specs rather than copying the baseline;
+- `Design`: approach, responsibility boundaries, and necessary tradeoffs, not repeated requirements or tasks;
+- `Tasks`: checkable work, with prescribed order only where correctness, safety, or migration requires it;
+- `Verify`: methods linked to acceptance, then actual decisive results, gaps, and limits, not repeated requirements or transcripts;
 - `Blockers`: dependencies and decisions, or `none`.
+
+Keep the six sections; small changes need only proportionate content. Plain-prose HTML scaffold hints may remain or be removed; they guide writing, never supply requirements, evidence, or completed content. Resolve body placeholders and keep all material decisions visible outside comments.
 
 Plan a test only when it protects observable behavior or a real boundary, adds distinct future confidence, avoids duplicate or implementation-detail coverage, and costs proportionately. Otherwise prefer smallest sufficient evidence and keep probes temporary.
 

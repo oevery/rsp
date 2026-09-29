@@ -7,7 +7,7 @@ Define package contents, Skill installation, release boundaries, provenance, and
 ## Current facts
 
 - Bundled package sources are authored under `rules/` and `skills/`. `.agents/skills/` contains repository-local projections and maintainer-only capabilities.
-- The current source candidate's seven default Skill identities and their responsibilities are owned by [Skill](./skill.md); this does not assert a released package version or completed behavioral acceptance.
+- The current source candidate's eight default Skill identities and their responsibilities are owned by [Skill](./skill.md); this does not assert a released package version or completed behavioral acceptance.
 - Package installation validates package-owned files, preserves unrelated and unknown Skills, and reports differing selected trees or recognized obsolete package-owned identities before mutation. Preview with `--dry-run`; replacing or removing recognized targets requires explicit `--force` and rollback on activation failure. User-customized trees require inspection and preservation before force; silent upgrade safety is not implied. Installation grants no workflow, lifecycle, Git, publication, or external authority.
 - Release checks bind the candidate version, package inventory, Skill composition, contract identity, fixtures, and required verification evidence. Publication remains separately authorized.
 - Release and evaluation reports retain sanitized evidence and provenance. Disposable caches, provider sessions, credentials, raw events, and workspace paths remain outside tracked product artifacts.

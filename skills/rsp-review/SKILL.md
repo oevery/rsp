@@ -1,6 +1,6 @@
 ---
 name: rsp-review
-description: Review an RSP-tracked code, document, or mixed change against a fixed comparison scope and project authorities without modifying files. Use for read-only findings before fixes, durable review, archive, or delivery; keep Code and Document states separate and never implement, commit, publish, or approve.
+description: Review an RSP-tracked change or an explicit document file set against fixed scope and project authorities without modifying files. Use for read-only findings before fixes, durable review, archive, or delivery; keep Code and Document states separate and never implement, commit, publish, or approve.
 license: MIT
 metadata:
   author: oevery
@@ -17,13 +17,13 @@ Resolve before judging:
 
 - one immutable comparison point or explicit fixed file set;
 - reviewed files, including relevant untracked files named by the user;
-- the selected WorkOwner: a Change WorkRef, or a Group reference with its Group Brief and direct child Changes;
+- the selected WorkOwner when tracked: a Change WorkRef, or a Group reference with its Group Brief and direct child Changes; an untracked document review may use the explicit request and fixed file set without creating a Change;
 - nearest project instructions and only relevant Specs and Decision Records;
 - any caller-supplied implementation summary.
 
 Do not switch branches or mutate the worktree to discover scope. If the comparison point is unavailable, report the review as blocked. If the selected WorkOwner, included WorkRefs, or authorities select different intent, name the conflict, mark dependent pipelines blocked, and do not guess; multiple focus markers alone are only candidate context. Continue only pipelines whose inputs remain authoritative.
 
-The user request fixes the requested outcome and allowed operations subject to nearest project instructions. The selected WorkOwner defines the intended delta: a Change uses its WorkRef, while a Group uses its Brief and direct child Changes. Specs define stable current facts, and Decision Records define lasting rationale. Implementation and tests are evidence, not authority for missing requirements. Report missing authority instead of inventing a rule, acceptance criterion, or preference.
+The user request fixes the requested outcome and allowed operations subject to nearest project instructions. The selected WorkOwner defines the intended delta: a Change uses its WorkRef, while a Group uses its Brief and direct child Changes. Specs define current contracts, boundaries, and necessary constraints; Decision Records define lasting rationale. Implementation and tests are evidence, not authority for missing requirements. Report missing authority instead of inventing a rule, acceptance criterion, or preference.
 
 ## Classify before loading
 
@@ -43,7 +43,7 @@ Use this shape:
 
 ```md
 ## <localized Review Scope heading>
-- <localized WorkOwner label>: <Change WorkRef or Group reference>
+- <localized WorkOwner label>: <Change WorkRef, Group reference, or direct document request>
 - <localized Comparison label>: <fixed ref, range, or file set>
 - <localized Intent label>: <authorities, missing, or ambiguous>
 - <localized Code label>: <issues_found | clean | skipped | blocked>

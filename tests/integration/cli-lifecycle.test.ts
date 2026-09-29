@@ -209,10 +209,27 @@ describe('public CLI lifecycle', () => {
     const agents = join(directory, 'AGENTS.md')
     writeFileSync(agents, `${readFileSync(agents, 'utf8')}\n## User policy\nKeep this exact paragraph.\n`)
     const note = join(directory, '.rsp/specs/user-owned.md')
-    writeFileSync(note, 'User-authored fact.\n')
-    run(directory, 'update')
+    const existingSpec = '# Existing Spec\n\n## Stable Facts\nUser-authored contract.\n'
+    writeFileSync(note, existingSpec)
+    expect(JSON.parse(run(directory, 'doctor', '--json')).checks.some((check: { code?: string }) => check.code === 'legacy_context_map')).toBe(false)
+    const legacyMap = join(directory, 'CONTEXT-MAP.md')
+    writeFileSync(legacyMap, '# Domains\nOrdering hands off to billing.\n')
+    expect(run(directory, 'update')).toContain('CONTEXT-MAP.md')
     expect(readFileSync(agents, 'utf8')).toContain('Keep this exact paragraph.')
-    expect(readFileSync(note, 'utf8')).toBe('User-authored fact.\n')
+    expect(readFileSync(note, 'utf8')).toBe(existingSpec)
+    expect(readFileSync(legacyMap, 'utf8')).toBe('# Domains\nOrdering hands off to billing.\n')
+    expect(readFileSync(agents, 'utf8')).toContain('Root `CONTEXT.md`')
+    expect(readFileSync(agents, 'utf8')).toContain('CONTEXT-MAP.md')
+    const context = join(directory, 'CONTEXT.md')
+    expect(existsSync(context)).toBe(false)
+    // Coexistence is not evidence of semantic migration, and --fix must not merge either file.
+    const currentContext = '# Context\nBilling owns invoice issuance.\n'
+    writeFileSync(context, currentContext)
+    const doctor = JSON.parse(run(directory, 'doctor', '--fix', '--json'))
+    expect(doctor).toMatchObject({ ok: true, fixed: [], summary: { issues: 0 } })
+    expect(doctor.checks).toContainEqual(expect.objectContaining({ code: 'legacy_context_map', status: 'info' }))
+    expect(readFileSync(context, 'utf8')).toBe(currentContext)
+    expect(readFileSync(legacyMap, 'utf8')).toBe('# Domains\nOrdering hands off to billing.\n')
     const external = join(directory, 'external.md')
     writeFileSync(external, 'Never overwrite this file.\n')
     rmSync(agents)
@@ -238,11 +255,38 @@ describe('public CLI lifecycle', () => {
     projects.push(project)
 
     run(project, 'init')
+    run(project, 'add', 'spec', 'billing')
+    const spec = readFileSync(join(project, '.rsp/specs/billing.md'), 'utf8')
+    expect(spec.match(/^## .+$/gm)).toEqual(['## Purpose', '## Boundaries', '## Contracts', '## Scenarios', '## Constraints'])
+    const design = readFileSync(join(project, '.rsp/specs/design.md'), 'utf8')
+    expect(design.match(/^## .+$/gm)).toEqual(['## Purpose', '## Boundaries', '## Contracts', '## Structure', '## Constraints'])
     run(project, 'create', 'sample-change', 'A sample change', '--kind', 'fix')
     const status = JSON.parse(run(project, 'status', '--json')) as { records?: Array<{ name: string }> }
 
     expect(readFileSync(join(project, '.rsp', 'changes', 'sample-change.md'), 'utf8')).toContain('A sample change')
     expect(status.records?.map(record => record.name)).toContain('sample-change')
+  })
+
+  it.each(['guided-change', 'project-setup'])('keeps %s scaffold hints inert while unfinished work still blocks completion', (name) => {
+    const directory = project()
+    run(directory, 'create', name, 'Preserve the note', '--kind', 'fix')
+    const file = join(directory, '.rsp/changes', `${name}.md`)
+    const generated = readFileSync(file, 'utf8')
+    expect(generated).toContain('<!--')
+    const unfinished = JSON.parse(run(directory, 'check', '--json'))
+    expect(unfinished.diagnostics.some((item: { code: string }) => item.code === 'unfinished_template_placeholders')).toBe(true)
+    expect(JSON.parse(run(directory, 'ready', name, '--json')).readiness.archiveReady).toBe('no')
+
+    const filled = generated.replaceAll('<…>', 'Concrete note-preservation behavior').replaceAll('- [ ]', '- [x]')
+    writeFileSync(file, filled)
+    const withHints = JSON.parse(run(directory, 'ready', name, '--json')).readiness
+    const diagnostics = JSON.parse(run(directory, 'check', '--json')).diagnostics
+    expect(withHints).toMatchObject({ archiveReady: 'yes', completionGate: 'pass', activeBlockers: false })
+    expect(diagnostics.some((item: { severity: string }) => item.severity === 'error' || item.severity === 'warning')).toBe(false)
+
+    writeFileSync(file, filled.replace(/<!--[\s\S]*?-->/g, ''))
+    expect(JSON.parse(run(directory, 'ready', name, '--json')).readiness).toEqual(withHints)
+    expect(JSON.parse(run(directory, 'check', '--json')).diagnostics).toEqual(diagnostics)
   })
 
   it('keeps non-interactive UI explicit and fail-closed', () => {

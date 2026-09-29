@@ -53,6 +53,7 @@ export type UpdateEvent
     | { type: 'migration-diagnostics', diagnostics: RuntimeDiagnostic[] }
     | { type: 'residual-rules', entries: string[] }
     | { type: 'specs-indexes-removed', paths: string[] }
+    | { type: 'legacy-context-map' }
     | { type: 'not-initialized' }
 
 export class UpdateTransactionError extends Error {
@@ -93,6 +94,8 @@ export async function updateProject(options: UpdateOptions = {}): Promise<Update
     let updated = false
     const actions: string[] = []
     const events: UpdateEvent[] = []
+    if (existsSync('CONTEXT-MAP.md'))
+      events.push({ type: 'legacy-context-map' })
 
     clearConfigCache()
     const configInspection = await inspectRspConfig()

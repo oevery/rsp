@@ -33,7 +33,7 @@ try {
     'bin/rsp.mjs',
     'dist/cli.mjs',
     'rules/rsp-rules.md',
-    ...['rsp', 'rsp-shape', 'rsp-implement', 'rsp-verify', 'rsp-review', 'rsp-commit', 'rsp-release-docs', 'rsp-structural-audit']
+    ...['rsp', 'rsp-shape', 'rsp-implement', 'rsp-verify', 'rsp-review', 'rsp-commit', 'rsp-release-docs', 'rsp-structural-audit', 'rsp-doc']
       .map(name => `skills/${name}/SKILL.md`),
   ]
   const missing = required.filter(path => !files.includes(path))

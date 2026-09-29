@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { DEFAULT_PACKAGED_SKILL_NAMES, inspectPackagedSkillInventory, installPackagedSkills } from '../../src/commands/skills.js'
 
 const temporary: string[] = []
-const expectedDefaults = ['rsp', 'rsp-shape', 'rsp-implement', 'rsp-verify', 'rsp-review', 'rsp-commit', 'rsp-release-docs'].sort()
+const expectedDefaults = ['rsp', 'rsp-shape', 'rsp-implement', 'rsp-doc', 'rsp-verify', 'rsp-review', 'rsp-commit', 'rsp-release-docs'].sort()
 afterEach(() => {
   for (const path of temporary.splice(0))
     rmSync(path, { recursive: true, force: true })
@@ -32,15 +32,28 @@ function fixture() {
 }
 
 describe('packaged Skill migration', () => {
-  it('lists seven default owners and the optional audit; default install does not require removed packages', async () => {
+  it('installs eight defaults including documentation while named installation stays selective', async () => {
     const context = fixture()
     const inventory = await inspectPackagedSkillInventory(context)
     expect(inventory.skills.filter(skill => skill.kind === 'default').map(skill => skill.name).sort()).toEqual(expectedDefaults)
     expect(inventory.skills.find(skill => skill.name === 'rsp-structural-audit')).toMatchObject({ kind: 'optional', status: 'missing' })
+    expect(inventory.skills.find(skill => skill.name === 'rsp-doc')).toMatchObject({ kind: 'default', status: 'missing' })
     const result = await installPackagedSkills({}, context)
     expect(result.installed).toEqual(expectedDefaults)
     expect(result.removed).toEqual([])
     expect(existsSync(join(context.targetRoot, 'rsp-structural-audit'))).toBe(false)
+    expect(readFileSync(join(context.targetRoot, 'rsp-doc', 'SKILL.md'), 'utf8')).toBe('packaged rsp-doc')
+    const selected = fixture()
+    const doc = await installPackagedSkills({ names: ['rsp-doc'] }, selected)
+    expect(doc.installed).toEqual(['rsp-doc'])
+    expect(doc.removed).toEqual([])
+    expect(readFileSync(join(selected.targetRoot, 'rsp-doc', 'SKILL.md'), 'utf8')).toBe('packaged rsp-doc')
+    expect(existsSync(join(selected.targetRoot, 'rsp'))).toBe(false)
+    const customDoc = join(selected.targetRoot, 'rsp-doc', 'SKILL.md')
+    writeFileSync(customDoc, 'User-customized documentation guidance.')
+    await expect(installPackagedSkills({}, selected)).rejects.toThrow('rsp-doc')
+    expect(readFileSync(customDoc, 'utf8')).toBe('User-customized documentation guidance.')
+    expect(existsSync(join(selected.targetRoot, 'rsp'))).toBe(false)
   })
 
   it('conflicts on old names including the ancestor alias and previews only explicitly forced removals', async () => {

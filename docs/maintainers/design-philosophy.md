@@ -114,7 +114,7 @@ Change Group 是唯一例外且仍保持浅层：只有两个或更多可独立�
 
 ### 4. Durable truth 与 history 分离
 
-`specs/` 只存未来会反复使用的当前事实；配置的唯一 Decision Record 路径只存难以逆转选择的长期理由、备选方案、取舍和后果；最近的项目自有 `AGENTS.md` 只存 agent 必须遵循的稳定 scoped instructions。
+`specs/` 保存未来会反复使用的当前契约、边界与必要约束；配置的唯一 Decision Record 路径保存重要选择的长期理由、备选方案、取舍和后果；项目自有 `CONTEXT.md` 保存统一语言、领域关系和导航，`AGENTS.md` 保存稳定的 scoped instructions。
 
 适合 durable layer 的内容：
 
@@ -291,10 +291,10 @@ Archive 不等于 durable truth。
 每个 change 保持六个固定 section：
 
 - `Proposal`：为什么存在，目标是什么。
-- `Spec`：预期行为变化。
-- `Design`：实现形态、影响区域、约束。
-- `Tasks`：具体实现工作。
-- `Verify`：验证和 durable decision 清单。
+- `Spec`：本次契约变化与验收条件，引用而不复制现有规范。
+- `Design`：实现方案、责任边界与必要取舍，不重复需求和任务。
+- `Tasks`：可检查的工作，仅在正确性、安全或迁移需要时固定顺序。
+- `Verify`：验收对应的验证方法、真实结果、缺口和限制，不重复需求或命令流水。
 - `Blockers`：活跃 blocker；可使用 ``- requires `<change-work-ref>`: <reason>`` 声明一个确定性的可执行 Change 依赖，其余 prose 不会被猜测为依赖边。
 
 依赖图不是新的持久化产物。Change 与 archive heading 继续拥有事实，CLI 只集中投影 `ready`、带原因的 `edges`、`blocked` 和 `waves`。这使人类和 AI 获得同一份紧凑视图，同时避免 Brief、YAML 或独立 graph 文件成为第二份状态来源。
@@ -305,12 +305,19 @@ Archive 不等于 durable truth。
 
 ## Spec 结构
 
-Durable project specs 应优先使用：
+新领域 Spec 的默认写作支架为：
 
-- `Purpose`。
-- `Stable Facts`。
-- `Boundaries`。
-- `Constraints`。
+- `Purpose`：能力、服务对象与价值。
+- `Boundaries`：职责、非职责及责任交界。
+- `Contracts`：当前有效的行为、输入输出、不变量与失败语义。
+- `Scenarios`：少量关键协作、失败或易混淆场景，按需保留。
+- `Constraints`：必要技术、协议、安全或兼容性限制。
+
+支架不是强制 schema；架构、协议与设计依据文档可以使用有表达力的领域标题，不强制 Given/When/Then。普通文本 HTML 提示可以保留或删除；实际要求与限制必须在可见正文中，占位符仍需填写。不为标题一致批量重写既有 Spec 或历史 Change。
+
+根和局部 `CONTEXT.md` 统一承担术语、领域关系和导航；`CONTEXT-MAP.md` 只作为显式迁移输入，合并语义并修复引用后才退役。AGENTS 承担操作规则，README 承担介绍与使用入口。按内容责任而非表格或索引形式判断归属，DesignRef 可以承载规范依据。
+
+上下文迁移是 Core 的按需分支：常规入口只负责发现旧文件并保留相关上下文，迁移细节在命中时加载。发现不授予修改权限，也不阻塞无关工作。CLI 仅提示根目录旧文件；Core 在授权范围内协调语义归属、引用和退役，Doc 负责具体写作。文件共存和命令成功都不能证明迁移完成。
 
 Spec 不是自由备注区。
 
@@ -341,7 +348,8 @@ Spec 不是 archive summary。
 优先目标：
 
 - 现有的最小领域 Spec。
-- 项目级边界与导航 owner `.rsp/specs/design.md`。
+- 项目级架构契约 owner `.rsp/specs/design.md`。
+- nearest project-owned `CONTEXT.md` 中的统一语言、领域关系和导航。
 - nearest project-owned `AGENTS.md` 中有作用域的稳定指令。
 - 配置的唯一 Decision Record 路径下的精确文件。
 

@@ -256,6 +256,36 @@ sources:
       - THIRD_PARTY_NOTICES.md
       - skills/skill-creator/**
 
+  anthropic-doc-coauthoring:
+    repository: https://github.com/anthropics/skills.git
+    ref: main
+    tier: reference
+    strategy: adapt
+    paths:
+      - README.md
+      - THIRD_PARTY_NOTICES.md
+      - skills/doc-coauthoring/**
+
+  prisma-docs:
+    repository: https://github.com/prisma/web.git
+    ref: main
+    tier: reference
+    strategy: adapt
+    paths:
+      - README.md
+      - .claude/skills/docs-writer/**
+      - .claude/skills/docs-reader-review/**
+      - .claude/skills/docs-agent-ready/**
+
+  gemini-docs:
+    repository: https://github.com/google-gemini/gemini-cli.git
+    ref: main
+    tier: reference
+    strategy: adapt
+    paths:
+      - LICENSE
+      - .gemini/skills/docs-writer/**
+
   deepseek-harness:
     repository: https://github.com/deepseek-ai/deepseek-harness.git
     ref: master

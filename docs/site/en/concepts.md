@@ -16,13 +16,23 @@ RSP separates open work, durable truth, lasting rationale, scoped instructions, 
 ```
 
 - `.rsp/rsp-rules.md` is the generated, tool-agnostic fallback protocol. Prefer the `rsp` Skill when it is available.
-- `.rsp/specs/` stores durable current facts and agreed design. Use `rsp specs` to derive its current tree, inspect one exact document, or run bounded literal search directly from readable Markdown.
+- `.rsp/specs/` stores current capability and collaboration contracts, boundaries, and necessary constraints, not code inventories or future plans. Use `rsp specs` to derive its current tree, inspect one exact document, or run bounded literal search directly from readable Markdown.
 - `.rsp/specs/decisions/` is the default authoritative Decision Record directory. It stores lasting rationale, alternatives, tradeoffs, and consequences.
 - `.rsp/changes/` stores open work. Each executable Change is one Markdown file.
 - `.rsp/focus.d/` contains marker files whose paths select current work. A marker may hold a short optional Markdown Focus Capsule with accepted recovery pointers from qualified coordination. Its path is the only selection truth; its prose is not authority, lifecycle state, acceptance, or worker transport. A valid portable v1 capsule permits only one leading version declaration, blank lines, exactly one non-empty single-line `Current`, `Evidence`, and `Next`, and at most one non-empty single-line `Resume check`; unknown non-empty lines or fields are invalid. It excludes machine/runtime data, may be committed with an open Change, and is removed by unfocus or archive.
 - `.rsp/archives/` retains completed Change history.
 
 Stable scoped workflow and validation instructions belong in the nearest project-owned `AGENTS.md`, outside the managed RSP block.
+
+Root and local `CONTEXT.md` files share one model: canonical vocabulary, domain relationships, and navigation. Create them only when useful; root context links to local owners instead of copying their definitions. `CONTEXT-MAP.md` is a migration input, not a separate model. An authorized migration preserves its meaning in CONTEXT files and updates references before retiring the map; `rsp update` never performs that semantic migration or deletes project context. README remains the introduction and usage entry, not another full specification.
+
+Ordinary entry keeps legacy context discoverable and selects Core's context-migration branch only when a map is found or migration is requested. Until authorized migration, use relevant legacy content without blocking unrelated tasks; resolve conflicting definitions before dependent work. `rsp update` and `rsp doctor` report a root legacy map as guidance, even if CONTEXT already exists. `doctor --fix` does not merge or retire either file. Core owns reconciliation and retirement gates; Doc supplies substantial writing within that authority.
+
+## Spec writing scaffold
+
+New domain Specs start with Purpose, Boundaries, Contracts, Scenarios, and Constraints. These guide the writer through consumers/value, responsibility handoffs, behavior/invariants/failure semantics, key examples, and necessary limits. Scenarios are optional when they add no clarity; Given/When/Then is not required. Architectural Specs can use Structure, and protocol or design-reference Specs may retain their own meaningful headings. A design-reference table belongs in the Spec system when it supplies normative evidence, not merely because it contains links.
+
+This is a default scaffold, not a required schema. Plain-prose HTML hints may remain or be removed; they do not fill placeholders or provide requirements or evidence. Keep material decisions and limitations visible outside comments. Put test results in the Change and significant rationale in a Decision Record. Prefer contracts that survive replaceable internals, and resolve Spec/code discrepancies rather than automatically documenting the implementation as correct. Update existing Specs when their meaning changes, not merely to normalize headings; historical Changes remain untouched.
 
 Direct Specs queries are read-only and service-independent. They identify Decision Records separately, return checkout and source-path attribution, and never make a query result authoritative over the source file. Fresh initialization and Spec creation generate no Specs indexes. During compatibility migration, `rsp update` and `rsp doctor --fix` remove only metadata-recognized reserved indexes after complete preflight and direct-query postcheck; owner-controlled reserved content fails closed and is preserved.
 
@@ -33,6 +43,8 @@ RSP derives workflow state from repository Markdown and current checkout evidenc
 ## One Change, one outcome
 
 A Change owns one observable outcome with a shared acceptance, verification, review, archive, and rollback boundary. It keeps canonical sections for Proposal, Spec, Design, Tasks, Verify, and Blockers. Under Verify, `### Required` contains acceptance-critical evidence and `### Optional` contains additional environment, compatibility, scale, or confidence coverage. Legacy unclassified Verify items are treated as Required.
+
+Proposal owns intent and scope; Spec owns the contract delta and acceptance, linked to existing Specs; Design owns the approach and tradeoffs; Tasks owns checkable work; Verify owns verification methods and actual results/gaps; Blockers owns unresolved decisions and dependencies. Keep small changes brief, reference rather than copy the full baseline, and prescribe task order only where correctness, safety, or migration requires it.
 
 Keep it as a convergent snapshot of the current plan and final decisive evidence. Temporary probes, debugging chronology, and routine command transcripts belong in the working conversation, not durable artifacts.
 

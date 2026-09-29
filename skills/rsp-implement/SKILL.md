@@ -41,6 +41,8 @@ After an in-scope check failure, investigate the new evidence and correct within
 
 Implement the smallest complete slice. For tracked work update Tasks after outcomes exist and keep unresolved issues in Blockers; direct work reports those facts without RSP artifact mutation.
 
+Substantial repository-document writing uses `rsp-doc` from the default suite within the same authority; small inline corrections need no handoff. If it is unavailable, write for the reader's task, ground claims in evidence, preserve artifact ownership, and check relevant examples and links. A request to review documents remains read-only; a writing self-check never certifies independent review.
+
 After final mutation, run required Change checks when tracked or the direct request's acceptance checks otherwise, plus narrower risk checks. Fresh verification is required, but a new test is only one evidence option; prefer the cheapest decisive existing test, static check, build, or acceptance evidence. Record command, scope, result, and omissions. Prior runs are stale; failed or unavailable verification cannot support completion. Rerun after relevant edits.
 
 Keep a new or extended test only when it still satisfies the admission evidence, protects observable behavior or a real boundary, adds distinct future confidence, avoids duplicate or implementation-detail coverage, and has proportionate maintenance cost. Otherwise remove the disposable test, fixture, and helper before completion, then use smallest sufficient final evidence. User, Change, and project retention requirements remain authoritative.

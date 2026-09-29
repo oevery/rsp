@@ -48,7 +48,7 @@ rsp show --focused
 ```text
 .rsp/
 ├── rsp-rules.md       # 最小后备协议
-├── specs/             # 持久化的当前事实
+├── specs/             # 当前契约、边界与必要约束
 ├── changes/           # 未完成工作
 ├── focus.d/           # 选择当前工作的空标记文件
 └── archives/          # 已完成历史
