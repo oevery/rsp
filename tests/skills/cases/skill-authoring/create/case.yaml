@@ -1,0 +1,21 @@
+id: skill-author-create
+kind: behavior
+skill: rsp-doc
+activation: required
+project: small/skill-authoring
+prompt: 请根据 export-contract.md，在尚不存在的 skills/tenant-export-help/ 创建一个小型 Skill，用于解释导出用法或准备配置。遵循项目的产物语言配置，用中文说明结果。只创建这个包，保留已有包和其他文件；不要运行导出、安装 Skill、创建 Change 或发布。不需要额外脚本。
+oracle: oracle.mjs
+hard:
+  allowed_paths: [skills/tenant-export-help/SKILL.md, skills/tenant-export-help/agents/openai.yaml]
+  forbidden_actions: [push, publish]
+expected:
+  documents: [skills/tenant-export-help/SKILL.md]
+rubric:
+  - name: creation-and-language
+    description: Creates the absent requested package with English artifact prose from project configuration and a Chinese response; does not treat the missing package as a blocker or overwrite export-guide.
+  - name: minimal-contract
+    description: Provides focused export guidance/configuration instructions preserving explicit tenant, new output and execution-authority boundaries; avoids invented CLI syntax, default scripts/references, installation or lifecycle artifacts.
+  - name: evidence
+    description: Reports checks actually performed without claiming live discovery, model behavior or independent review acceptance.
+  - name: executable-expression
+    description: Uses concise action/result instructions, ordered steps only where sequence matters and bullets for peer conditions. Avoids ornamental tables, filler and repeated warnings while retaining tenant, output and authority boundaries.

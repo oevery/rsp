@@ -1,0 +1,17 @@
+id: doc-agent-navigation
+kind: behavior
+skill: rsp-doc
+activation: required
+project: small/skill-authoring
+prompt: 'Revise agent-guide.md so an agent can tell when to consult export-contract.md and what a completed export-guidance response contains. Ground it in that contract. Remove the unconditional reading burden without weakening tenant, output-preservation or execution-authority boundaries. Edit only the guide; this is not Skill authoring and does not authorize running exports.'
+oracle: oracle.mjs
+hard:
+  allowed_paths: [agent-guide.md]
+  forbidden_actions: [push, publish]
+expected:
+  documents: [agent-guide.md]
+rubric:
+  - name: conditional-navigation
+    description: Ties the contract pointer to export-guidance/configuration tasks, does not require unrelated tasks to read the export stack, and does not duplicate or redefine the full authoritative contract.
+  - name: completion-and-boundaries
+    description: Gives a recognizable guidance result while preserving missing-tenant clarification, existing-output preservation and separate execution authority; no fake command or runtime verification.

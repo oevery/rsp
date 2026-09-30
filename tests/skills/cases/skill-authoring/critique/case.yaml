@@ -1,0 +1,16 @@
+id: skill-author-critique
+kind: behavior
+skill: rsp-review
+activation: required
+project: small/skill-authoring
+prompt: 'Review the export-guide Skill against export-contract.md. Our writing contract requires concise action/result instructions, necessary order in numbered steps, and peer conditions in bullets; ornamental repetition is not acceptable. Explain the smallest useful corrections to meaning and expression. This is read-only: do not edit files, execute exports or create a plan artifact.'
+oracle: read-only
+hard:
+  allowed_paths: []
+  forbidden_actions: [push, publish]
+  workspace_unchanged: true
+rubric:
+  - name: bounded-critique
+    description: Reviews the executable Skill through Code, optionally consulting Doc's Skill method. Identifies overbroad selection and artificial stopping without repair authority or claims that self-checks are independent review.
+  - name: agreed-expression
+    description: Treats the stated concise-expression requirements as contracts, identifies vague/repetitive instructions with concrete evidence, and preserves real input/permission conditions. Does not invent word limits, required headings or personal style findings.

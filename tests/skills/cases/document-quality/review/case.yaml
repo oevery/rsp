@@ -17,6 +17,6 @@ rubric:
   - name: usability
     description: Finds reversed Job/Run meanings in CONTEXT.md and explains how the definitions mislead a teammate; does not require definitions of ordinary technical words.
   - name: ownership
-    description: Leaves the already adequate README and its noncanonical headings alone; emits no style-only blocking findings and preserves every file and the Git index.
+    description: Leaves the adequate README intact, including its opening summary, prerequisites, command and success/failure guidance. Does not treat useful local context as duplicate authority, require paired contrasts or invent style findings. Preserves every file and the Git index.
   - name: maintenance
     description: Uses exact document locations and source evidence for each finding, explains the reader-task consequence, and reports coverage honestly without claiming independent reader execution.

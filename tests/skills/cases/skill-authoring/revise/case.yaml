@@ -1,0 +1,20 @@
+id: skill-author-revise
+kind: behavior
+skill: rsp-doc
+activation: required
+project: small/skill-authoring
+prompt: 请根据 export-contract.md 改进 skills/export-guide/SKILL.md。现在它在普通文件任务上也会触发，正文要求读取所有文档并过早停下。只修改这个 Skill，保留权限边界，不执行导出、不创建 Change、不提交。报告实际检查和仍未验证的效果。
+hard:
+  allowed_paths: [skills/export-guide/SKILL.md]
+  forbidden_actions: [push, publish]
+expected:
+  documents: [skills/export-guide/SKILL.md]
+rubric:
+  - name: selection-and-scope
+    description: Narrows discovery to export guidance/configuration rather than generic files or documentation; preserves the supplied tenant and existing-output boundaries.
+  - name: useful-instructions
+    description: Keeps the small Skill self-contained, removes indiscriminate reading and artificial approval stops without granting export execution, and does not invent helpers, lifecycle artifacts or unrelated rules.
+  - name: evidence
+    description: Reports actual checks separately from untested activation and behavior; no fabricated model benchmark or independent acceptance.
+  - name: semantic-concision
+    description: Replaces vague modifiers and repetitive process narration with useful actions and recognizable results. List structure exposes necessary sequence and peer conditions without losing facts or introducing a fixed step count.

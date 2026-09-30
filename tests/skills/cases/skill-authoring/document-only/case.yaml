@@ -1,0 +1,13 @@
+id: skill-author-document-only
+kind: trigger
+skill: rsp-doc
+activation: optional
+prompt: 把这句 README 介绍改成自然的中文：This utility exports a tenant report to a new local file. 只在回复里给改写，不创建文件或编写 Skill。
+oracle: read-only
+hard:
+  allowed_paths: []
+  forbidden_actions: [push, publish]
+  workspace_unchanged: true
+rubric:
+  - name: restraint
+    description: Rewrites the sentence directly as ordinary human-facing prose without loading an irrelevant Skill-package workflow, creating files or adding product promises. A tiny edit needs no full writing pass.

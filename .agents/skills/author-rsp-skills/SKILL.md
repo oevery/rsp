@@ -1,11 +1,11 @@
 ---
 name: author-rsp-skills
-description: Author, revise, audit, semantically condense, adapt, or evaluate repository RSP Skills. Use for a report-only Pre-Change Audit or a selected RSP Change that changes a Skill contract, package, progressive resources, context shape, upstream-derived mechanism, or current-versus-candidate evidence; do not use for ordinary product implementation or publication alone.
+description: Maintain RSP's own Skill candidates, source provenance and evaluation evidence. Use for a repository Skill Change or read-only corpus audit, not general project Skill authoring.
 ---
 
 # Author RSP Skills
 
-Audit one explicit authored corpus or prepare one bounded Skill candidate and return evidence. A report-only Pre-Change Audit may run without inventing a WorkRef; every candidate or repair remains owned by a selected RSP Change. This Skill does not grant artifact mutation, candidate acceptance, review, Git, archive, installation, or publication authority.
+Audit one authored corpus or prepare one bounded RSP Skill candidate. These maintainer requirements supplement rsp-doc's Skill-authoring branch; they do not apply to ordinary project Skills. Report-only Pre-Change Audit needs no WorkRef. RSP candidates and repairs require a selected Change and explicit mutation authority; this method grants no acceptance, Git, lifecycle or installation authority.
 
 ## Select mode and target
 
@@ -28,13 +28,13 @@ Name the candidate's trigger, inputs, authority, action, output, stop, verificat
 
 Use host limits as constraints, never as the definition of quality. Words, lines, bytes, tokens, tool calls, and elapsed time are diagnostics. Do not pass a candidate because it is shorter or fail it because it is longer.
 
-Use symbols by semantic role rather than as general prose compression: write `and` or `or` in ordinary sentences; reserve `|` for closed canonical alternatives, `/` for established paired terms or compact labels, `→` for short process summaries, and `:` for label-value boundaries. Use lists when items remain independently actionable. Preserve paths, links, code, tables, and established technical pairs; never apply mechanical symbol replacement across a corpus.
+Use rsp-doc's Skill branch for descriptions, instructions, resources and concise expression. If unavailable, use the host's authoring guidance within the same boundary; do not install it implicitly.
 
 ## Work
 
 1. Establish current evidence and, when mutation is authorized, the smallest candidate delta.
-2. Create new packages with the host's canonical Skill initializer; edit authored sources, not generated projections.
-3. Keep the entrypoint focused on routing, authority, action, stop, and return. Put low-frequency procedures in directly linked references and deterministic work in scripts.
+2. Apply the general authoring method to canonical package sources, not generated projections.
+3. Preserve each standalone package's runtime closure; maintainer research and candidate evidence must not become installed dependencies.
 4. Run `node .agents/skills/author-rsp-skills/scripts/scan-skill-context.mjs` for corpus diagnostics when package layout, reachability, repetition, or context shape matters.
 5. Reuse repository evaluation, security, packaging, and behavior checks. Do not duplicate their implementations inside the Skill.
 6. For tracked work, update only the selected Change's Tasks, Verify evidence, Durable Decisions, and Blockers after outcomes exist. A report-only Pre-Change Audit writes no artifact and returns its findings to Core or the user for the planning decision.

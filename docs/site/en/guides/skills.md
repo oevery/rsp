@@ -7,7 +7,7 @@ The current source candidate defines eight default host-neutral Skills for on-de
 | `rsp` | Select the current branch; continue ordinary authorized work through checks and necessary writeback, or coordinate only when qualified. |
 | `rsp-shape` | Answer a bounded read-only design question or, with planning authority, shape one executable Change or justified shallow Group. |
 | `rsp-implement` | Diagnose read-only when requested; implement authorized fixes, use test-first work when warranted, and correct accepted fixed findings with fresh checks. |
-| `rsp-doc` | Write or substantially revise authorized repository documentation for its intended reader and task. |
+| `rsp-doc` | Write repository documents and Skills for a defined reader and result. |
 | `rsp-verify` | Run one bounded read-only verification pass against a selected WorkOwner's declared evidence boundary. |
 | `rsp-review` | Review a fixed code, document, or mixed comparison without mutation. |
 | `rsp-commit` | Create one authorized exact-scope local commit. |
@@ -15,7 +15,7 @@ The current source candidate defines eight default host-neutral Skills for on-de
 
 `rsp-structural-audit` is an optional report-only project Skill. It audits one bounded repository or subtree before implementation authority is granted.
 
-`rsp-doc` is included when the selected candidate CLI runs `rsp skills install` without a name. Selective installation remains available with `rsp skills install rsp-doc`; naming any Skill installs only that selection. Doc is loaded for substantial authorized README, CONTEXT, Spec, and technical-guide work, not every edit. It does not replace read-only Review, Shape decisions, Release Docs, or maintainer Skill authoring. Small edits remain direct, and partial or older installations retain a bounded writing fallback.
+`rsp-doc` is installed by the default suite, or explicitly with `rsp skills install rsp-doc`. It owns repository-document and Skill writing through conditional methods. Use artifact lenses for README, CONTEXT, Spec, Change and guides; use the internal Skill branch for package creation or revision. Tiny edits remain direct. The maintainer-only `author-rsp-skills` adds local Change, provenance and evaluation requirements.
 
 ## Migrating the earlier Skill names
 
@@ -33,7 +33,7 @@ Installation, runtime role, and invocation are separate:
 | `rsp-commit` | default | local-delivery Discipline | explicitly authorized exact boundary; eligible coordination closeout only after its gates |
 | Conditional coordination in `rsp` | within Core | coordination branch | selected under effective project policy only for an actual obligation |
 | `rsp-structural-audit` | optional | Discovery | explicit report-only request |
-| `rsp-doc` | default | writing Discipline | substantial authorized repository-document writing |
+| `rsp-doc` | default | writing Discipline | repository-document or Skill writing |
 
 `default` means included in this source candidate's default suite; it does not mean automatically invoked. A Skill boundary is not a worker boundary. Core's qualified coordination branch can compose bounded worker lanes, but selection alone does not imply delegation. Published Skills remain standalone; missing optional siblings do not remove their bounded safe fallback.
 
@@ -44,7 +44,8 @@ Installation, runtime role, and invocation are separate:
 - Implement disposes each fixed finding as accepted, rejected, or needing clarification. Correct accepted findings within authority, rerun affected checks, and obtain separate read-only Review; Implement cannot self-certify review-clean.
 - Verify executes a declared read-only evidence boundary when required; ordinary Implement checks need no Verify handoff. A Change uses its WorkRef and `Verify` boundary; a Group uses a named `Integration:` condition from its Brief. A request-only boundary must be written back before Group closeout. Required independent acceptance needs host-observed distinct workers.
 - Review remains fixed-scope and read-only. Release Docs requires an explicit release-documentation request and does not confer publication authority.
-- Doc and Document Review share Purpose, Grounding, Usability, Ownership, and Maintenance as semantic quality dimensions. Doc uses them to write and self-check; Review uses them to identify consequential reader obstacles and false claims without editing. A clean unconventional document needs no changes. The packages are standalone and do not call each other as a mandatory phase.
+- Doc and Review apply the adopted writing-quality contract: grounded facts, useful structure, concise result steps, stable notation and preserved meaning. Skill tables are sparse fixed mappings; human documents use tables for reader-relevant comparison. Agreed expression rules are reviewable contracts, not personal preference.
+- Doc owns writing/self-checks; formal Review stays read-only. Executable Skills use Code review and semantic documents use Document. Review grants no repair authority; originally authorized corrections may continue. Static checks do not prove live behavior or independent acceptance.
 - The host, user, and Git own execution-location selection and cross-branch integration. Core's coordination branch operates only in the checkout or environment it actually observes; no canonical Skill selects or lands an execution environment.
 - Commit owns one exact local commit in the current checkout and never absorbs cherry-pick, cleanup, or cross-branch integration.
 - No Skill infers commit, push, publication, deployment, approval, or human-acceptance authority.
