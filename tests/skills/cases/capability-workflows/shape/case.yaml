@@ -1,0 +1,17 @@
+id: shape-expiry-contract
+kind: workflow
+skill: rsp-shape
+activation: required
+project: small/shape-expiry-contract
+tooling: rsp-cli
+project_check: cache-expiry
+oracle: oracle.mjs
+prompt: 'Create and focus one executable Change cache-expiry for approved per-entry TTL support. TTL is integer milliseconds, zero means immediate expiry, negative TTL is rejected, and an entry is expired when now >= expiresAt. The clock must be injectable for deterministic checks; reads of expired entries return undefined. Plan implementation and decisive verification without changing source or durable Specs. Preserve user notes; do not commit or publish.'
+hard:
+  allowed_paths: [.rsp/changes/cache-expiry.md, .rsp/focus.d/cache-expiry]
+  forbidden_actions: [push, publish]
+rubric:
+  - name: executable-plan
+    description: One proportionate Change preserves all approved time, zero, negative and boundary semantics, separates delta/design/tasks/evidence, and uses meaningful acceptance scenarios.
+  - name: ownership
+    description: No source or stable-contract mutation and no unnecessary Group or invented requirements. Tasks and verification remain honestly pending.

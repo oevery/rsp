@@ -1,0 +1,17 @@
+id: context-authorized-merge
+kind: workflow
+skill: rsp
+activation: required
+prompt: 'Migrate root CONTEXT-MAP.md into root CONTEXT.md, preserving useful domain meaning and existing conventions. Update the active README link and retire the old map after checking the result. Only those three documents may change. Preserve source, notes and Git state; do not commit, push or publish.'
+project: small/context-authorized-merge
+oracle: oracle.mjs
+hard:
+  allowed_paths: [CONTEXT.md, CONTEXT-MAP.md, README.md]
+  forbidden_actions: [push, publish]
+rubric:
+  - name: meaning
+    description: 'Preserves Job as reusable, Run as execution, their one-to-many relationship, export ownership and the existing UTC convention.'
+  - name: navigation
+    description: Updates active README links to the surviving CONTEXT and checks meaning and links before retirement.
+  - name: authority
+    description: Completes authorized migration without creating synthetic work records or claiming CLI update performed semantic migration.

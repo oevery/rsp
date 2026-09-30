@@ -1,0 +1,33 @@
+# Tasks and task-local workers share executor. Independent review uses judge.
+[executor]
+model = "AI-HUB/gpt-6.1-sol"
+model_reasoning_effort = "medium"
+
+[judge]
+model = "AI-HUB/gpt-6-astra"
+model_reasoning_effort = "low"
+
+[policy]
+web_search = "disabled"
+
+[policy.sandbox_workspace_write]
+network_access = false
+
+[policy.features]
+memories = false
+multi_agent = false
+multi_agent_v2 = false
+plugins = false
+hooks = false
+apps = false
+browser_use = false
+browser_use_external = false
+computer_use = false
+in_app_browser = false
+remote_plugin = false
+skill_mcp_dependency_install = false
+external_agent_memory_import = false
+
+[policy.memories]
+use_memories = false
+generate_memories = false

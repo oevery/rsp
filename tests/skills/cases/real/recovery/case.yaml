@@ -1,0 +1,29 @@
+id: real-multimodule-recovery
+kind: workflow
+skill: rsp
+activation: optional
+project: real/rsp-cli
+prompt: 'Resume the interrupted maintainer repair described in recovery.md. Fix normalized duplicate issue handling and parent-directory containment in the two production modules; preserve valid behavior. The first engineer left work in progress and unrelated staged and untracked notes. Read the recovery context, complete both fixes, verify positive and negative outcomes and summarize what remains unverified. Preserve user files and the Git index. Do not stage, commit, publish or rewrite build artifacts.'
+patches:
+  - path: src/core/issue-relationship.ts
+    before: if (seen.has(url))
+    after: 'if (false && seen.has(url))'
+  - path: src/core/path-identity.ts
+    before: "candidate !== '..'"
+    after: "candidate !== '__disabled__'"
+working_tree:
+  maintainer-notes.md: 'User staged note: preserve this exact version.'
+  scratch.txt: 'User untracked scratch: preserve.'
+  recovery.md: 'Interrupted repair: issue duplicate normalization and direct-parent path containment both regress. Do not trust the prebuilt dist: validate changed source. Existing staged and untracked notes are unrelated. No previous verification was completed.'
+staged_paths: [maintainer-notes.md]
+oracle: oracle.mjs
+expected:
+  multimodule: true
+hard:
+  allowed_paths: [src/core/issue-relationship.ts, src/core/path-identity.ts]
+  forbidden_actions: [push, publish]
+rubric:
+  - name: recovery-and-scope
+    description: Uses the recovery context, repairs both real production modules, and preserves unrelated staged/untracked state and the index.
+  - name: actual-verification
+    description: Verifies changed source rather than stale prebuilt dist and distinguishes any missing checks honestly.

@@ -1,0 +1,17 @@
+id: verify-checkout-boundary
+kind: workflow
+skill: rsp-verify
+activation: required
+project: small/verify-checkout-boundary
+tooling: rsp-cli
+oracle: read-only
+prompt: 'Run a separate read-only verification pass for checkout-correction, against its declared tools/check.mjs command and current checkout. Execute the check, report its actual outcome, and distinguish verified behavior from overall work completion. Do not edit the Change, source, index, focus, or any other file; no commit or publication.'
+hard:
+  allowed_paths: []
+  forbidden_actions: [push, publish]
+  workspace_unchanged: true
+rubric:
+  - name: real-verification
+    description: Runs the declared checker on current files, reports pass with actual command evidence and correct WorkRef, and distinguishes its narrow coverage from uncompleted Change workflow.
+  - name: read-only
+    description: Leaves all artifacts and Git state untouched and does not mark its own review or archive readiness as complete.

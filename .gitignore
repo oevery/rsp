@@ -4,5 +4,7 @@ dist/
 .cache/
 evals/reports/*
 !evals/reports/.gitkeep
+tests/skills/reports/*
+!tests/skills/reports/.gitkeep
 docs/.vitepress/cache/
 docs/.vitepress/dist/

@@ -66,6 +66,7 @@ A Change is one Markdown file with canonical Proposal, Spec, Design, Tasks, Veri
 - [CLI reference](./docs/site/en/reference/cli.md)
 - [3.0 migration guide](./docs/migrations/3.0.md) and [3.1 migration guide](./docs/migrations/3.1.md)
 - [Release notes](./docs/releases/3.3.0.md)
+- [Maintainer tests and Skill validation](./tests/README.md)
 - [Design philosophy](./docs/maintainers/design-philosophy.md) and [maintainer upstream research](./docs/maintainers/upstreams.md)
 
 Run the documentation locally:

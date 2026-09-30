@@ -1,9 +1,5 @@
-# Provider routing comparison
+# Optional comparison
 
-Load only for an explicitly requested baseline/candidate routing, worker-composition or efficiency comparison with authorized provider cost. This uses the same paired campaign as behavior acceptance; it does not establish a separate release gate or an implicit fixed scenario matrix.
+Only run an explicitly authorized comparison. Select matching cases and fixed project inputs with one shared configuration. Execute each explicit composition through `test:skills run --composition <directory>` and retain independent results and reviews. Baseline pairing is not required for normal candidate validation.
 
-1. Select real cases from `evals/cases/` that exercise the requested routing or worker behavior. If the capability has no case, report the coverage gap and shape the missing fixture before running or claiming acceptance. Explicit Skill invocation alone does not prove automatic selection.
-2. Preview with `mise exec -- pnpm run eval:plan -- --case <ids> --repetitions 2`. Use `pnpm run eval:campaign` with one frozen provider configuration, distinct explicit baseline/candidate Skill directories, the selected cases and an authorized session bound; follow [provider behavior acceptance](provider-behavior-acceptance.md) for execution and independent review.
-3. Compare correctness before resource metrics. Both arms share the current CLI, harness, fixtures and execution settings: this measures Skill-composition differences, not full historical package performance. Do not infer worker dispatch or topology from final prose or substitute lower token counts for successful behavior. Review both arms when claiming semantic non-regression; the release gate's candidate-only semantic acceptance does not establish baseline semantic quality.
-
-Reuse only exact matching execution evidence. For compatible deterministic-grader changes, use `node evals/runner/cli.mjs revalidate --report <campaign-report>`. Changed source/build, Skill composition, inputs or execution requires a fresh campaign. Historical reports remain historical; missing required observations or incomplete pairing makes the comparison inconclusive.
+Compare correctness and authority before cost. State source, dependency, composition and model identities and gaps; this experiment is not historical full-package performance unless the whole package was held appropriately. Native topology requires attributed host evidence, not final prose. Never merge independent reports into a manufactured release pass.

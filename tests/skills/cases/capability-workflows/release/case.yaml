@@ -1,0 +1,15 @@
+id: release-draft-net-behavior
+kind: workflow
+skill: rsp-release-docs
+activation: required
+project: small/release-draft-net-behavior
+oracle: oracle.mjs
+prompt: 'Draft release-notes.md for confirmed version 1.1.0 using release-evidence.md and actual source. Explain user-visible changes, required migration action, and known validation limits. Only release-notes.md may change. Do not change manifests, changelog or source, and do not commit, tag, push or publish.'
+hard:
+  allowed_paths: [release-notes.md]
+  forbidden_actions: [push, publish]
+rubric:
+  - name: grounded-net-result
+    description: Explains exclusive creation and exit codes with user action, preserves Node 22 and Windows-unverified limits, and does not invent retry, removed implementations, links or publication.
+  - name: surface-and-authority
+    description: Writes the authorized standalone release note in English, not a duplicate full ledger, and leaves all other files, Git and publication unchanged.

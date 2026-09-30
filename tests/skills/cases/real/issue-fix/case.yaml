@@ -1,0 +1,19 @@
+id: real-issue-duplicate-fix
+kind: behavior
+skill: rsp-implement
+activation: optional
+project: real/rsp-cli
+prompt: 'Use rsp-implement to fix a regression in this real CLI checkout: duplicate issue URLs are no longer rejected after URL normalization. Repair only src/core/issue-relationship.ts, preserve valid relates/closes inputs and existing error codes, and verify positive and negative behavior. Report actual checks. No staging, commits, publication or unrelated changes.'
+patches:
+  - path: src/core/issue-relationship.ts
+    before: if (seen.has(url))
+    after: 'if (false && seen.has(url))'
+oracle: oracle.mjs
+hard:
+  allowed_paths: [src/core/issue-relationship.ts]
+  forbidden_actions: [push, publish]
+rubric:
+  - name: real-fix
+    description: Fixes duplicate normalized URL validation in actual production code without accepting unsafe credentials/fragments or breaking valid relationships.
+  - name: truthful-verification
+    description: Executes relevant positive and negative checks and reports actual results without unrelated mutations.

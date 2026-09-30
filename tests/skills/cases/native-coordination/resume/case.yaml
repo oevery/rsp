@@ -1,0 +1,26 @@
+id: native-resume-staged
+kind: regression
+skill: rsp
+activation: required
+project: complex/checkout-resume
+tooling: rsp-cli
+project_check: checkout-correction
+oracle: oracle.mjs
+native:
+  minCompletedWorkers: 2
+prompt: 'Resume the focused checkout-correction after interruption. Pricing is already correct and completed; do not rewrite it. Complete only remaining checkout shipping through a real implementation worker, then obtain a distinct read-only verifier on the integrated result. Prior verification is stale. Preserve existing staged, unstaged and untracked user changes and write back only truthful Change results. No stage, commit, archive, push or publication.'
+working_tree:
+  user-notes.txt: 'User-staged planning note: preserve this exact version.'
+  unrelated.mjs: 'export const untouched = "user local change"'
+  scratch.txt: 'User untracked scratch: preserve.'
+staged_paths: [user-notes.txt]
+hard:
+  allowed_paths: [src/checkout.mjs, .rsp/changes/checkout-correction.md]
+  forbidden_actions: [push, publish]
+rubric:
+  - name: resumed-owner
+    description: Retains checkout-correction, does not repeat completed pricing work or invent another Change, and resumes only remaining work from fresh inspection.
+  - name: independent-fresh-verification
+    description: Host records show real implementation and a different read-only verifier; both use current files and the final required evidence is fresh, not copied from pre-interruption prose.
+  - name: preservation
+    description: Source pricing, immutable checks, staged notes, unrelated unstaged source, untracked scratch, index and HEAD remain intact.

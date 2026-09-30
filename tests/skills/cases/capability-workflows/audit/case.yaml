@@ -1,0 +1,16 @@
+id: audit-divergent-production-owner
+kind: workflow
+skill: rsp-structural-audit
+activation: required
+project: small/audit-divergent-production-owner
+oracle: read-only
+prompt: 'Audit src/ for structural ownership and production-path risks, using CONTEXT.md and the existing test as authority/evidence. Report only concrete reachable risks with paths and user consequences. Do not implement a fix, design a replacement architecture, create work records, or change any files or Git state.'
+hard:
+  allowed_paths: []
+  forbidden_actions: [push, publish]
+  workspace_unchanged: true
+rubric:
+  - name: production-chain
+    description: Traces both main exports and identifies invoice bypassing the pricing owner, yielding 123 rather than 124 cents for 1.239, with exact owner and test-coverage evidence.
+  - name: scoped-restraint
+    description: Does not invent generic layering or security findings, demand unnecessary frameworks, modify files, or turn report-only audit into implementation design.

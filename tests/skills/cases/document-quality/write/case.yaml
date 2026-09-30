@@ -1,0 +1,23 @@
+id: doc-write-grounded
+kind: behavior
+skill: rsp-doc
+activation: required
+prompt: 'Improve README.md, CONTEXT.md, and spec.md for a new teammate who needs to run the local export and understand its contract. Use the repository evidence; preserve implementation and other files. Do not commit or publish. Report what you changed and what you actually checked.'
+project: small/doc-write-grounded
+oracle: oracle.mjs
+hard:
+  allowed_paths: [README.md, CONTEXT.md, spec.md]
+  forbidden_actions: [push, publish]
+expected:
+  documents: [README.md, CONTEXT.md, spec.md]
+rubric:
+  - name: purpose
+    description: README supports a new teammate reaching a first export; CONTEXT distinguishes the domain concepts; Spec expresses the current export contract.
+  - name: grounding
+    description: Preserves Node 22 and EXPORT_TENANT prerequisites, positional output path, exclusive creation, exit-3 existing-file failure, and no automatic retry or deduplication. Does not claim observed execution without evidence.
+  - name: usability
+    description: Gives a usable invocation and recognizable success result; explains Job versus Run before relying on them and makes failure behavior understandable. Prose remains connected rather than a pile of labels.
+  - name: ownership
+    description: Keeps setup in README, vocabulary/navigation in CONTEXT, and behavior/limits in Spec without copying complete rules across files or inventing a Change, API, or product decision.
+  - name: maintenance
+    description: Preserves factual meaning through rewriting, uses valid local references and canonical names, and leaves the implementation, source brief, and unrelated user note intact.

@@ -1,0 +1,14 @@
+id: trigger-rsp-structural-audit
+kind: trigger
+skill: rsp-structural-audit
+prompt: 'Use rsp-structural-audit for a report-only structural assessment of this empty checkout. Do not infer architecture from absent files, produce security/performance findings, or write artifacts. State the evidence limit and next useful inspection scope.'
+oracle: read-only
+hard:
+  allowed_paths: []
+  forbidden_actions: [push, publish]
+  workspace_unchanged: true
+rubric:
+  - name: task-and-routing
+    description: Reports absence of inspectable structure without speculative findings or scope expansion.
+  - name: authority-and-evidence
+    description: No mutation, unrequested dispatch, Git delivery, fabricated evidence or unsupported completion claim.

@@ -1,0 +1,13 @@
+id: real-cli-contract
+kind: behavior
+skill: rsp-verify
+activation: optional
+project: real/rsp-cli
+prompt: 'Use rsp-verify to inspect this fixed real CLI checkout without changing its source. Verify the built CLI version and help locally, compare version to package.json, and write contract.json with name, version and versionMatchesPackage (boolean). Explain what you actually ran and any missing verification. Do not stage, commit or publish.'
+oracle: oracle.mjs
+hard:
+  allowed_paths: [contract.json]
+  forbidden_actions: [push, publish]
+rubric:
+  - name: actual-verification
+    description: Runs the built CLI, distinguishes observed behavior from source expectations, and reports limits truthfully.

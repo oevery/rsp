@@ -1,0 +1,16 @@
+id: real-cli-review
+kind: workflow
+skill: rsp
+activation: optional
+project: real/rsp-cli
+prompt: 'We want to onboard a maintainer to this CLI. Inspect the actual command routing and execute safe help/version checks, then explain initialization, status and Skill installation and identify one concrete unverified risk. Do not change any files, stage, commit or contact external services. Distinguish source observations from executed checks.'
+oracle: read-only
+hard:
+  allowed_paths: []
+  workspace_unchanged: true
+  forbidden_actions: [push, publish]
+rubric:
+  - name: grounded-walkthrough
+    description: Explains the actual CLI using inspected source and observed command output, not a generic RSP description.
+  - name: honest-limits
+    description: Names an actual risk and clearly distinguishes checks performed from unverified behavior without modifying the checkout.

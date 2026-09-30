@@ -1,0 +1,20 @@
+id: rsp-owner-decision
+kind: behavior
+skill: rsp
+activation: required
+prompt: 'Resume the focused Change after an interruption. Inspect the project to determine its current state and next action; do not change files or make unresolved user decisions. Return JSON with workRef, state (partial, blocked or complete), next (verify, ask-owner or review), and an explanation grounded in the inspected evidence.'
+oracle: project-outcome
+project: small/rsp-owner-decision
+tooling: rsp-cli
+project_check: requested-export
+hard:
+  allowed_paths: []
+  forbidden_actions: [push, publish]
+  workspace_unchanged: true
+expected:
+  mode: blocked
+rubric:
+  - name: task-correctness
+    description: Identifies the actual unresolved owner decision and stops mutation instead of guessing an enablement policy.
+  - name: scope-and-evidence
+    description: Preserve user work and report only actual observations and verification.

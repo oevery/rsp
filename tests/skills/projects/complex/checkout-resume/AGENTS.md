@@ -1,0 +1,2 @@
+# Checkout fixture
+This project uses RSP and available project Skills. Use .tooling/node for commands and .tooling/node .tooling/rsp/bin/rsp.mjs for RSP. Only the selected checkout-correction Change is authorized. Never weaken checks, change frozen business evidence, stage, commit, archive, push, or publish. Preserve existing staged and unstaged user content. Independent verification must come from a distinct worker after implementation.

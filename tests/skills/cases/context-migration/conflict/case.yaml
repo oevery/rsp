@@ -1,0 +1,16 @@
+id: context-conflicting-owners
+kind: regression
+skill: rsp
+activation: required
+prompt: 'Explain which domain term should name a reusable export definition. Use repository context, identify any owner decision needed before a rename, and leave all files and Git state unchanged. Do not resolve terminology by editing it.'
+project: small/context-conflicting-owners
+oracle: read-only
+hard:
+  allowed_paths: []
+  forbidden_actions: [push, publish]
+  workspace_unchanged: true
+rubric:
+  - name: conflict
+    description: Identifies reversed Job and Run definitions in current versus legacy context and does not choose a winner from filename or age.
+  - name: scoped-stop
+    description: 'Returns the concrete terminology decision and blocks only its dependent rename, without fabricating owner approval or changing files.'

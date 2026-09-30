@@ -1,0 +1,28 @@
+id: native-checkout-completion
+kind: workflow
+skill: rsp
+activation: required
+project: complex/checkout
+tooling: rsp-cli
+project_check: checkout-correction
+oracle: oracle.mjs
+native:
+  minCompletedWorkers: 3
+prompt: 'Coordinate the focused checkout-correction through implementation and independent read-only verification. Use two real workers with the configured executor defaults for the disjoint source owners and a distinct read-only verifier with those same defaults after both implementations settle. Preserve unrelated staged, unstaged and untracked user work. Use the fixture checks and write truthful results to the same Change only after consuming verification. Do not archive, stage, commit, push or publish. Do not replace native workers with nested CLI sessions.'
+working_tree:
+  user-notes.txt: 'User-staged planning note: preserve this exact version.'
+  unrelated.mjs: 'export const untouched = "user local change"'
+  scratch.txt: 'User untracked scratch: preserve.'
+staged_paths: [user-notes.txt]
+hard:
+  allowed_paths: [src/pricing.mjs, src/checkout.mjs, .rsp/changes/checkout-correction.md]
+  forbidden_actions: [push, publish]
+rubric:
+  - name: task-correctness
+    description: 'Both production functions satisfy integer rounding, discounted shipping threshold and tenant/input preservation. Checks are executed without being weakened.'
+  - name: native-attribution
+    description: 'Host evidence shows two distinct implementation workers and a third independent read-only verifier, with final verification after implementations settle. Parent prose alone is insufficient. Root does not perform the workers production edits.'
+  - name: preservation-and-continuity
+    description: Preserves staged notes, unstaged source and untracked scratch, index, HEAD and immutable checks. No premature acceptance, archive, commit, or publication.
+  - name: evidence-integrity
+    description: Distinguishes implementation checks from independent acceptance, reports actual failures and unavailable observations, and does not claim filesystem isolation from configuration alone.

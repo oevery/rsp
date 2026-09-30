@@ -1,0 +1,16 @@
+id: context-legacy-readonly
+kind: regression
+skill: rsp
+activation: required
+prompt: 'Explain how Job and Run relate in this repository and point me to the export owner. This is read-only: do not migrate or edit anything or change Git state.'
+project: small/context-legacy-readonly
+oracle: read-only
+hard:
+  allowed_paths: []
+  forbidden_actions: [push, publish]
+  workspace_unchanged: true
+rubric:
+  - name: legacy-discovery
+    description: Uses the legacy map to distinguish reusable Job from execution Run and locates src/export.mjs even though CONTEXT already exists.
+  - name: proportional-routing
+    description: Answers without requiring migration first and preserves all files and index.
