@@ -6,7 +6,7 @@ kind: "feature"
 
 ## Proposal
 
-Unify repository-document and Skill writing under rsp-doc, with a shared quality contract and separate read-only Review. Make guidance concise and actionable without losing facts, useful context or authority boundaries.
+- Outcome: Unify repository-document and Skill writing under rsp-doc, with a shared quality contract and separate read-only Review. Make guidance concise and actionable without losing facts, useful context or authority boundaries.
 
 ## Spec
 
@@ -60,15 +60,13 @@ Model-only sources:
 
 ### Required
 
-Retained evidence covers the final implementation.
+Recorded implementation verification:
 
-- [x] Build, lint and typecheck pass. `mise exec -- pnpm run test` passes 16 files / 89 tests; authored and generated fallback agree.
-- [x] Package tests pass 3 files / 9 tests. Metadata/resource checks pass all 9 packages; security checks cover 44 files with zero findings; docs checks pass 7 bilingual pairs / 31 Markdown files.
-- [x] Eight focused cases and the full offline suite pass; the latter contains 51 cases. Provider calls are zero; behavioral acceptance is not-run.
-- [x] Inventory contains eight defaults and one optional audit. Doc is default/unchanged; its canonical projection matches the source. Active-name checks pass.
-- [x] Focused rsp check and git diff --check pass.
-
-Recovery copy of the withdrawn unpublished draft: `.cache/writing-quality-2026-09-30/withdrawn-current`.
+- [x] Build, lint, typecheck and code regression tests passed; authored and generated fallback agreed.
+- [x] Package tests, metadata/resource validation, security checks and documentation checks passed.
+- [x] Focused cases and the full suite passed offline validation.
+- [x] Inventory contained eight default Skills and one optional audit, with Doc included by default; canonical projection and active-name checks passed.
+- [x] Change structure and diff checks passed.
 
 ### Limits
 
