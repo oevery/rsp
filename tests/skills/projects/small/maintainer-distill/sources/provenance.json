@@ -1,0 +1,42 @@
+{
+  "source": "Google for Developers, Google developer documentation style guide: Procedures",
+  "url": "https://developers.google.com/style/procedures",
+  "snapshot": {
+    "identity": "snapshot-2026-09-30",
+    "retrievedOn": "2026-09-30",
+    "retrievalDateBasis": "Existing retained snapshot record; no retrieval performed for this fixture.",
+    "originalFile": "google-procedures.html",
+    "sha256": "7218a570017f3b73b8677e82f4b2aedc925382a20bac886854463520af480003",
+    "pageLastUpdated": "2026-06-08 UTC",
+    "originalHashCheckedDuringPreparation": true
+  },
+  "excerpt": {
+    "identity": "maintainer-smoke-google-procedures-excerpt-v1",
+    "exportedOn": "2026-09-30",
+    "path": "sources/procedures-excerpt.txt",
+    "bytes": 1911,
+    "sha256": "2fd0d71adfca5fd70c9e39938103257bc37dfcfce5dc059e05def9d782d6c117",
+    "sections": [
+      "Introductory sentences",
+      "Optional steps",
+      "Steps that say where to complete a task"
+    ],
+    "method": "Python standard-library HTMLParser(convert_charrefs=True): select div.devsite-article-body; omit script, style and devsite-key-takeaways-panel (AI summary); add line boundaries for p/li/h1-h4/pre/br/tr/div, collapse whitespace within lines, discard blank lines. Keep the three named sections through their next heading, join sections with a blank line and retain one final newline. No source execution."
+  },
+  "license": {
+    "attribution": "Google for Developers — Procedures. Text excerpted and whitespace-normalized; examples and guidance remain attributable to the source.",
+    "prose": "CC BY 4.0, except as otherwise noted",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "noticeBasis": "The retained HTML footer states that page content is CC BY 4.0 and code samples are Apache 2.0, except as otherwise noted. No separate notice was observed in these selected sections.",
+    "codeSamples": "Apache 2.0 per the footer; no code was executed."
+  },
+  "limits": [
+    "Only selected sections are retained in this fixture.",
+    "Original HTML layout, list markers and link destinations are omitted; linked pages were not retrieved.",
+    "Original HTML identity was checked at preparation; runtime readiness uses only tracked excerpt bytes and this manifest, not the ignored cache.",
+    "Retained identity and the recorded retrieval date do not establish current web freshness."
+  ],
+  "adoptionMode": "model-only",
+  "freshFetch": false,
+  "sourceExecution": false
+}

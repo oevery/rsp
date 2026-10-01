@@ -3,6 +3,7 @@ import { execFileSync, spawnSync } from 'node:child_process'
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { delimiter, dirname, isAbsolute, join, resolve } from 'node:path'
+import { setImmediate } from 'node:timers/promises'
 import { parse as parseToml, stringify as stringifyToml } from 'smol-toml'
 import { configPath, loadConfig } from '../core/config.mjs'
 import { hash } from '../core/files.mjs'
@@ -255,7 +256,7 @@ function createAdapter(options, native) {
         rmSync(home, { force: true, recursive: true })
       }
     },
-    async run({ workspace, prompt, timeoutMs = 600000, outputSchema, writableGit = false }) {
+    async run({ workspace, prompt, timeoutMs, signal, writableGit = false, onActivity }) {
       assertFrozen()
       for (let directory = realpathSync(workspace); ; directory = dirname(directory)) {
         if (existsSync(join(directory, '.codex')))
@@ -268,20 +269,17 @@ function createAdapter(options, native) {
       const { home, env } = isolatedHome()
       const finalPath = join(home, 'final.md')
       try {
-        const args = ['exec', '--strict-config', '--sandbox', role === 'judge' ? 'read-only' : 'workspace-write', '--model', model, '--config', `model_reasoning_effort=${JSON.stringify(effort)}`, '--json', '--output-last-message', finalPath, '--cd', workspace, '-']
+        const args = [...(role === 'judge' ? ['--ask-for-approval', 'never'] : []), 'exec', '--strict-config', '--sandbox', role === 'judge' ? 'read-only' : 'workspace-write', '--model', model, '--config', `model_reasoning_effort=${JSON.stringify(effort)}`, '--json', '--output-last-message', finalPath, '--cd', workspace, '-']
         for (const name of disabledFeatures)
           args.push('--config', ['features.', name, '=', native && name === 'multi_agent' ? 'true' : 'false'].join(''))
         // Exact commit fixtures need only their disposable Git metadata writable.
         // Keep workspace-write isolation; never use an unsandboxed execution mode.
-        if (writableGit)
+        if (writableGit && role !== 'judge')
           args.push('--add-dir', join(workspace, '.git'))
         args.push('--config', 'memories.use_memories=false', '--config', 'memories.generate_memories=false', '--config', 'web_search="disabled"')
-        if (outputSchema) {
-          const schemaPath = join(home, 'output-schema.json')
-          writeFileSync(schemaPath, JSON.stringify(outputSchema), { mode: 0o600 })
-          args.splice(1, 0, '--output-schema', schemaPath)
-        }
-        const result = await runProcess(executable, args, { cwd: workspace, env, input: `${prompt}\n`, timeoutMs })
+        // Deliver signals queued during synchronous preflight before spawning a session.
+        await setImmediate()
+        const result = await runProcess(executable, args, { cwd: workspace, env, input: `${prompt}\n`, timeoutMs, signal, onActivity })
         const nativeResult = native ? collectNativeEvidence(home, result.stdout) : null
         let finalOutput = null
         try {

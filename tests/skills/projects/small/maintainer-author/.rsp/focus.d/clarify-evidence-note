@@ -1,0 +1,4 @@
+<!-- rsp-focus:v1 -->
+Current: The selected candidate revision has an executable plan.
+Evidence: .rsp/changes/clarify-evidence-note.md
+Next: Revise the candidate and record actual static checks and gaps.

@@ -6,6 +6,9 @@ export interface ProcessResult {
   stderr: string
   error: string | null
   timedOut: boolean
+  timeoutMs?: number | null
+  cancelled?: boolean
+  cancellationReason?: string | null
   outputLimited?: boolean
   durationMs: number
   finalOutput?: string | null
@@ -14,15 +17,26 @@ export interface Adapter {
   id: string
   settings: Record<string, string | boolean>
   redact?: (value: string) => string
-  run: (input: { workspace: string, prompt: string, outputRoot: string, timeoutMs?: number }) => Promise<ProcessResult>
+  run: (input: { workspace: string, prompt: string, outputRoot: string, timeoutMs?: number | null, signal?: AbortSignal, onActivity?: (activity: ActivityMetadata) => void }) => Promise<ProcessResult>
+}
+export interface ActivityMetadata {
+  phase?: string
+  state?: string
+  startedAt?: string
+  lastOutputAt?: string | null
+  stdoutBytes?: number
+  stderrBytes?: number
+  outputChunks?: number
 }
 export interface RunOptions {
+  onActivity?: (activity: ActivityMetadata) => void
   compositionHash?: string
   sourceHash?: string
   adapter?: Adapter
   command?: string
   args?: string[]
-  timeoutMs?: number
+  timeoutMs?: number | null
+  signal?: AbortSignal
   composition?: string | null
   outputRoot?: string
 }
@@ -42,6 +56,7 @@ export interface WorkspaceObservation {
   status: string
   changedPaths: string[]
   artifacts: Record<string, string>
+  committedFilesMatchWorktree?: Record<string, boolean | null>
   omittedArtifacts: string[]
   fileModes: Record<string, number>
   indexHash: string
@@ -56,6 +71,9 @@ export interface EvaluationRunResult {
   id: string
   case: string
   reportDirectory: string
+  timeoutMs: number | null
+  cancelled: boolean
+  cancellationReason: string | null
   result?: ProcessResult
   observation?: WorkspaceObservation
   verdict: { status: string, category: string, reason?: string }

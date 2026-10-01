@@ -7,6 +7,13 @@ export interface SkillContextDiagnostics {
 
 export interface SkillContextPackage {
   diagnostics: SkillContextDiagnostics
+  diagnostics_by_role: {
+    total: SkillContextDocumentDiagnostics
+    entrypoint: SkillContextDocumentDiagnostics
+    references: SkillContextDocumentDiagnostics
+    distribution: SkillContextDocumentDiagnostics
+  }
+  distribution_files: string[]
   distribution_markdown: string[]
   entrypoint: string
   kind: 'maintainer' | 'published'
@@ -27,7 +34,11 @@ export interface SkillContextResult {
   schema_version: 1
 }
 
-export function scanSkillContext(options?: { root?: string }): SkillContextResult
+export interface SkillContextDocumentDiagnostics extends SkillContextDiagnostics {
+  files: number
+}
+
+export function scanSkillContext(options?: { root?: string, packages?: string[] }): SkillContextResult
 
 export function formatSkillContext(result: SkillContextResult): string
 

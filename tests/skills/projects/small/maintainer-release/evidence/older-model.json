@@ -1,0 +1,20 @@
+{
+  "synthetic": true,
+  "kind": "retained-model-task-and-review",
+  "identity": {
+    "version": "0.0.0-maintainer-smoke",
+    "sourceHash": "1111111111111111111111111111111111111111111111111111111111111111",
+    "compositionHash": "3333333333333333333333333333333333333333333333333333333333333333"
+  },
+  "status": "passed",
+  "complete": true,
+  "execution": {
+    "status": "passed",
+    "scope": "One representative instruction task"
+  },
+  "independentReview": {
+    "status": "passed",
+    "scope": "That same recorded execution"
+  },
+  "scope": "Historical evidence for the recorded composition. No run for any other composition is supplied."
+}

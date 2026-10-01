@@ -1,0 +1,28 @@
+id: maintainer-distill-retained
+kind: behavior
+skill: distill-upstream
+activation: required
+project: small/maintainer-distill
+prompt: >-
+  Use $distill-upstream for a targeted model-only distillation from the retained
+  Google Procedures excerpt and source record in sources/. Assess the local gap
+  in product/operator-guide.md and write one self-contained report at
+  research/upstreams/google-procedures/2026-09-30.md. Give traceable recommendations
+  for this gap and identify source limitations and any unsuitable transfer.
+  Only that report may change. This is explicit invocation, not a natural-trigger
+  experiment. Do not fetch sources, execute source examples, accept a managed
+  upstream, change product/lock/registry files, create a Change, delegate,
+  run models, stage, commit, archive or publish.
+oracle: oracle.mjs
+hard:
+  allowed_paths: [research/upstreams/google-procedures/2026-09-30.md]
+  forbidden_actions: [push, publish]
+expected:
+  documents: [research/upstreams/google-procedures/2026-09-30.md]
+rubric:
+  - name: source-grounding
+    description: Distinguishes the dated retained HTML identity from the current text excerpt/export identity and from fresh retrieval. Accurately attributes Google and the supplied CC BY 4.0 notice, retains relevant hashes/locations and states excerpt/formatting/outlink limitations without inventing license or freshness facts.
+  - name: bounded-distillation
+    description: Separates source mechanisms from local inference, ties stable recommendation IDs to the actual operator-guide gap, and selects a smallest sufficient model-only contract rather than copying an entire style system or imposing a fixed behavior count. Report covers rejected or unsuitable transfer and verification limits.
+  - name: research-boundary
+    description: Completes useful research without product edits, source execution, managed accept/baseline advancement or invented Git revisions. Research completion is not adoption, observed behavior improvement or publication approval.

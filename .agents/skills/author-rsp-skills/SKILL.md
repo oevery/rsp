@@ -18,7 +18,7 @@ Choose one primary mode:
 - `audit`: the target corpus needs structural, reachability, duplication, or clarity findings.
 - `concise`: equivalent behavior should use less or clearer context.
 - `adapt`: an accepted upstream mechanism is selected for local use.
-- `evaluate`: current and candidate behavior need comparison.
+- `evaluate`: a candidate needs task evidence, or an explicit comparative claim needs matched runs.
 
 Load only the selected reference: [authoring](references/authoring.md) for `create | revise | audit | adapt`, [concision](references/concision.md) for `concise`, or [evaluation](references/evaluation.md) for `evaluate`. Load evaluation additionally before completing `create`, `revise`, `concise`, or `adapt` when observable behavior changes.
 
@@ -35,7 +35,7 @@ Use rsp-doc's Skill branch for descriptions, instructions, resources and concise
 1. Establish current evidence and, when mutation is authorized, the smallest candidate delta.
 2. Apply the general authoring method to canonical package sources, not generated projections.
 3. Preserve each standalone package's runtime closure; maintainer research and candidate evidence must not become installed dependencies.
-4. Run `node .agents/skills/author-rsp-skills/scripts/scan-skill-context.mjs` for corpus diagnostics when package layout, reachability, repetition, or context shape matters.
+4. When layout, reachability or repetition matters, use `node scripts/scan-skill-context.mjs --package <canonical-path>` from the repository root. Read [context diagnostics](references/authoring.md#context-diagnostics) for selection and interpretation; scan results are clues, not quality gates.
 5. Reuse repository evaluation, security, packaging, and behavior checks. Do not duplicate their implementations inside the Skill.
 6. For tracked work, update only the selected Change's Tasks, Verify evidence, Durable Decisions, and Blockers after outcomes exist. A report-only Pre-Change Audit writes no artifact and returns its findings to Core or the user for the planning decision.
 

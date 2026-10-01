@@ -114,10 +114,14 @@ export function workspaceObservation(workspace, baseline, priorityPaths = []) {
     }
   }
   const committedContentHashes = Object.create(null)
+  const committedFilesMatchWorktree = Object.create(null)
   if (baseline?.git) {
     for (const path of Object.keys(tree)) {
-      if (tree[path] !== baseline.git.tree[path] && tree[path].startsWith('100644 '))
+      if (tree[path] !== baseline.git.tree[path] && tree[path].startsWith('100644 ')) {
         committedContentHashes[path] = hash(git(workspace, ['cat-file', 'blob', tree[path].split(' ')[1]], null))
+        // Compare original bytes here, never persisted/scrubbed artifact text.
+        committedFilesMatchWorktree[path] = Object.hasOwn(artifacts, path) ? hash(readFileSync(join(workspace, path))) === committedContentHashes[path] : null
+      }
     }
   }
   const commit = unchangedHead ? null : git(workspace, ['show', '-s', '--format=%P%x00%B', head])
@@ -139,6 +143,7 @@ export function workspaceObservation(workspace, baseline, priorityPaths = []) {
     files,
     changedPaths,
     artifacts,
+    committedFilesMatchWorktree,
     omittedArtifacts,
     fileModes,
     baseline: baseline?.files,
@@ -148,4 +153,47 @@ export function workspaceObservation(workspace, baseline, priorityPaths = []) {
     diff: git(workspace, ['diff', '--no-ext-diff', '--no-textconv', baseline?.head ?? 'HEAD', '--', '.']),
     skillTreeHash: existsSync(join(workspace, '.agents', 'skills')) ? hash(treeFiles(join(workspace, '.agents', 'skills'))) : hash({}),
   }
+}
+
+// Retain task text and installed guidance before the disposable workspace is
+// removed. Never follow links or copy Git/dependency/provider state. The normal
+// snapshot budget bounds this pass; omissions remain explicit review evidence.
+export function retainWorkspace(workspace, destination, redact, priorityPaths = []) {
+  const files = treeFiles(workspace, { excludeGit: true })
+  const retained = []
+  const omitted = []
+  for (const path of Object.keys(files)) {
+    const source = join(workspace, path)
+    const stat = lstatSync(source)
+    const parts = path.split('/')
+    let reason
+    if (parts.some(part => ['.git', '.codex', '.tooling', 'node_modules'].includes(part))
+      || (parts.includes('dist') && !priorityPaths.includes(path))) {
+      reason = 'runtime-or-dependency'
+    }
+    else if (parts.some(part => /^\.env(?:\.|$)|^(?:auth|credentials|secrets)(?:\.|$)|\.(?:pem|key)$/iu.test(part))) {
+      reason = 'sensitive-file'
+    }
+    else if (!stat.isFile()) {
+      reason = 'link-or-special-file'
+    }
+    if (reason) {
+      omitted.push({ path, reason })
+      continue
+    }
+    try {
+      const bytes = readFileSync(source)
+      if (bytes.includes(0)) {
+        omitted.push({ path, reason: 'binary' })
+        continue
+      }
+      const content = redact(bytes.toString('utf8'))
+      const target = join(destination, path)
+      mkdirSync(dirname(target), { recursive: true, mode: 0o700 })
+      writeFileSync(target, content, { mode: 0o600 })
+      retained.push(path)
+    }
+    catch { omitted.push({ path, reason: 'unreadable' }) }
+  }
+  return { retained, omitted, textSemantics: 'Sanitized UTF-8 text; not original-byte or executable evidence.' }
 }

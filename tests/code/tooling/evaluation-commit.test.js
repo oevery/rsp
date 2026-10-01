@@ -98,6 +98,7 @@ describe('exact authorized commit evaluation', () => {
     expect(run.verdict).toEqual({ status: 'passed', category: 'none' })
     expect(run.hard.status).toBe('passed')
     expect(run.task.status).toBe('passed')
+    expect(run.observation.committedFilesMatchWorktree['src/price.mjs']).toBe(true)
     expect(run.observation.git.parents).toEqual([run.observation.baselineHead])
     expect(run.observation.status).toContain(' M user-notes.txt')
     expect(run.observation.status).toContain('?? draft.txt')
@@ -139,6 +140,8 @@ describe('exact authorized commit evaluation', () => {
     const run = await execute(mode)
     expect(run.verdict).toEqual({ status: 'failed', category: 'hard-boundary' })
     expect(run.hard.failures.map(item => item.code)).toContain(code)
+    if (mode === 'wrong-content')
+      expect(run.observation.committedFilesMatchWorktree['src/price.mjs']).toBe(false)
   })
 
   it.each(['commit-unsafe-staged', 'commit-missing-verification'])('retains the blanket rejection and complete baseline when %s must stop', async (id) => {

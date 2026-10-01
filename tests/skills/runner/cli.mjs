@@ -2,19 +2,23 @@
 import { randomUUID } from 'node:crypto'
 import { mkdirSync, readFileSync, rmSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { setImmediate } from 'node:timers/promises'
 import { createNativeOpenCodexAdapter, createOpenCodexAdapter } from './adapters/opencodex.mjs'
+import { cancellationReason, validateTimeout } from './adapters/process.mjs'
 import { discoverCases, resolveCase } from './core/cases.mjs'
 import { loadConfig } from './core/config.mjs'
 import { prepareWorkspace, runCase, sourceIdentity } from './core/execute.mjs'
 import { hash, writeJson } from './core/files.mjs'
-import { reviewPacket } from './core/review.mjs'
+import { createProgress } from './core/progress.mjs'
+import { optionalBaseline, reassess } from './core/reassess.mjs'
+import { reviewRun } from './core/review.mjs'
 import { loadTaskOracle } from './graders/task-result.mjs'
 import { compositionIdentity } from './observers/workspace.mjs'
 
 const root = process.cwd()
 function options(args) {
   const result = {}
-  const valued = new Set(['case', 'suite', 'config-file', 'auth-file', 'codex-bin', 'max-sessions', 'timeout-ms', 'output-root', 'composition'])
+  const valued = new Set(['case', 'suite', 'matrix', 'baseline', 'config-file', 'auth-file', 'codex-bin', 'max-sessions', 'timeout-ms', 'output-root', 'composition'])
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--')
       continue
@@ -69,8 +73,17 @@ function print(value) {
 async function main(args) {
   const command = args[0] && !args[0].startsWith('--') ? args.shift() : 'check'
   const opts = options(args)
+  if (command === 'reassess') {
+    const result = await reassess(root, opts)
+    print(result)
+    process.exitCode = ['preview', 'passed'].includes(result.status) ? 0 : 1
+    return
+  }
+  if (opts.matrix)
+    throw new Error('Matrix selection is only supported by reassess')
   const config = loadConfig()
   const entries = select(opts).map(entry => resolveCase(root, entry))
+  const comparisons = opts.baseline && command === 'run' ? new Map(entries.map(entry => [entry.id, optionalBaseline(opts.baseline, entry.id)])) : null
   if (!entries.length)
     throw new Error('Empty selection')
   const selected = entries.map(e => ({ id: e.id, project: e.manifest.project ?? 'empty', kind: e.manifest.kind, skill: e.manifest.skill, inputHash: e.inputHash }))
@@ -101,57 +114,105 @@ async function main(args) {
     return
   }
   if (command !== 'run')
-    throw new Error('Expected check, list, plan or run')
+    throw new Error('Expected check, list, plan, run or reassess')
   if (!opts['allow-live'] || !opts['config-file'] || !opts['max-sessions'])
     throw new Error('Live run requires permission, private overlay and explicit root-session budget')
   const maxSessions = positive(opts['max-sessions'])
   if (maxSessions < entries.length * 2)
     throw new Error('Budget must cover tasks and independent reviews')
-  const timeoutMs = positive(opts['timeout-ms'], 600000)
+  const timeoutMs = validateTimeout(opts['timeout-ms'] === undefined ? null : Number(opts['timeout-ms']))
   const outputRoot = join(resolve(opts['output-root'] ?? 'tests/skills/reports'), randomUUID())
   mkdirSync(outputRoot, { recursive: true, mode: 0o700 })
   const reportPath = join(outputRoot, 'matrix.json')
   const sourceHash = sourceIdentity(root)
   const composition = resolve(opts.composition ?? 'skills')
   const frozenComposition = compositionIdentity(composition)
-  const report = { schema: 'skill-matrix-v1', lane: 'model', status: 'inconclusive', complete: false, composition: frozenComposition, config: { executor: config.executor, judge: config.judge, hash: config.hash }, selected, runs: [], rootSessions: 0 }
+  const report = { schema: 'skill-matrix-v1', lane: 'model', status: 'inconclusive', complete: false, timeoutMs, cancelled: false, cancellationReason: null, composition: frozenComposition, config: { executor: config.executor, judge: config.judge, hash: config.hash }, selected, runs: [], rootSessions: 0 }
+  const controller = new AbortController()
+  const { signal } = controller
+  const interrupt = () => controller.abort('SIGINT')
+  const terminate = () => controller.abort('SIGTERM')
+  process.on('SIGINT', interrupt)
+  process.on('SIGTERM', terminate)
   const save = () => writeJson(reportPath, report)
-  save()
+  const progress = createProgress(outputRoot)
   try {
+    save()
+    await setImmediate()
+    signal.throwIfAborted()
     const common = { configFile: opts['config-file'], authFile: opts['auth-file'], codexBin: opts['codex-bin'] }
     const judge = createOpenCodexAdapter({ ...common, role: 'judge' })
     for (const entry of entries) {
+      await setImmediate()
+      signal.throwIfAborted()
       if (loadConfig().hash !== config.hash)
         throw new Error('Shared configuration changed during matrix execution')
       const factory = entry.manifest.native ? createNativeOpenCodexAdapter : createOpenCodexAdapter
       const adapter = factory({ ...common, role: 'executor' })
+      await setImmediate()
+      signal.throwIfAborted()
+      if (report.rootSessions >= maxSessions)
+        break
       report.rootSessions++
       save()
-      const run = await runCase(entry, root, { adapter, composition, compositionHash: frozenComposition.hash, outputRoot, timeoutMs, sourceHash })
+      progress.activity({ caseId: entry.id, role: 'executor', phase: 'execution', state: 'observing' })
+      const run = await runCase(entry, root, { adapter, composition, compositionHash: frozenComposition.hash, outputRoot, timeoutMs, signal, sourceHash, onActivity: progress.activity })
       const item = { case: entry.id, run: join(run.reportDirectory, 'run.json'), runHash: hash(readFileSync(join(run.reportDirectory, 'run.json'))), mechanical: run.verdict, status: run.verdict.status === 'failed' ? 'failed' : 'inconclusive' }
       report.runs.push(item)
       save()
-      if (run.verdict.status !== 'passed')
+      await setImmediate()
+      signal.throwIfAborted()
+      if (report.rootSessions >= maxSessions)
         break
       report.rootSessions++
       save()
-      const review = await reviewPacket(run.packet, { adapter: judge, outputRoot, timeoutMs, formatRetries: 0 })
+      progress.activity({ caseId: entry.id, role: 'judge', phase: 'review', state: 'observing' })
+      const comparison = comparisons?.get(entry.id)
+      const review = await reviewRun(run, { adapter: judge, outputRoot, timeoutMs, signal, baseline: comparison?.run, warnings: comparison?.warnings ?? [], onActivity: progress.activity })
       item.review = review.reportPath
       item.reviewHash = hash(readFileSync(review.reportPath))
-      item.status = review.status
+      item.reviewReport = review.report
+      item.reviewStatus = review.status
+      item.parsed = review.parsed
+      item.executionComplete = Boolean(run.result && run.result.exitCode === 0 && !run.result.timedOut && !run.result.outputLimited && !run.result.cancelled && !run.result.error && !run.events?.failed)
+      item.status = [run.hard, run.task, run.coordination].some(fact => fact?.status === 'failed') ? 'failed' : item.executionComplete ? review.status : 'inconclusive'
       save()
-      if (item.status !== 'passed')
+      await setImmediate()
+      signal.throwIfAborted()
+      // A task failure is reviewable and does not cancel independent cases.
+      // Concrete authority violations and frozen-input changes stop expansion.
+      if (run.hard?.status === 'failed' || run.verdict.reason === 'composition-failed' || sourceIdentity(root) !== sourceHash) {
+        report.stopReason = 'authority-or-frozen-input-boundary'
         break
+      }
     }
-    report.complete = report.runs.length === entries.length && report.runs.every(r => r.review || r.status === 'failed')
+    report.complete = !report.stopReason && report.runs.length === entries.length && report.runs.every(r => r.review)
     report.status = report.runs.some(r => r.status === 'failed') ? 'failed' : report.complete && report.runs.every(r => r.status === 'passed') ? 'passed' : 'inconclusive'
   }
   catch { report.reason = 'execution-or-review-unavailable' }
-  finally { save() }
+  finally {
+    await setImmediate()
+    if (signal.aborted) {
+      report.cancelled = true
+      report.cancellationReason = cancellationReason(signal)
+      report.reason = 'execution-cancelled'
+      report.status = 'inconclusive'
+      report.complete = false
+    }
+    try {
+      progress.finish()
+      report.progressError = progress.error
+      save()
+    }
+    finally {
+      process.removeListener('SIGINT', interrupt)
+      process.removeListener('SIGTERM', terminate)
+    }
+  }
   print({ report: reportPath, status: report.status, complete: report.complete, rootSessions: report.rootSessions })
   process.exitCode = report.status === 'passed' ? 0 : 1
 }
 main(process.argv.slice(2).filter(arg => arg !== '--')).catch((error) => {
-  process.stderr.write(error.code === 'PROJECT_UNAVAILABLE' ? `${error.message}\n` : 'Skill validation failed. Check selection, project readiness, private inputs and explicit live permission.\n')
+  process.stderr.write(error.code?.startsWith('REASSESS_') ? `${error.code}: ${error.message}\n` : error.code === 'PROJECT_UNAVAILABLE' ? `${error.message}\n` : 'Skill validation failed. Check selection, project readiness, private inputs and explicit live permission.\n')
   process.exitCode = 2
 })

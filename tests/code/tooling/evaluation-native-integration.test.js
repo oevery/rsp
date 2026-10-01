@@ -7,7 +7,6 @@ import { verify as verifyResume } from '../../skills/cases/native-coordination/r
 import { verify as verifyUnavailable } from '../../skills/cases/native-coordination/verification-failure/oracle.mjs'
 import { createNativeOpenCodexAdapter, createOpenCodexAdapter } from '../../skills/runner/adapters/opencodex.mjs'
 import { gradeNativeCoordination } from '../../skills/runner/graders/native-coordination.mjs'
-import { createReviewPacket } from '../../skills/runner/graders/packet.mjs'
 
 const temporary = []
 afterEach(() => {
@@ -91,12 +90,5 @@ export function checkout(tenant, lines) {
     }
     completed.threads[0].model = 'other-model'
     expect(gradeNativeCoordination(spec, completed, executor).status).toBe('failed')
-  })
-
-  it('exposes incomplete child action evidence to the blind reviewer', () => {
-    const input = { prompt: 'Verify independently.', observation: { diff: '', changedPaths: [], files: {}, artifacts: {} }, result: { finalOutput: 'Claimed success.', native: { complete: false, reasons: ['thread:missing-session'] } }, rubric: [], forbiddenActions: ['push'], events: { completed: true, parseFailures: [], pendingToolCalls: 0, commands: [], writes: [], events: [{ type: 'item.completed', item: { type: 'collab_tool_call' } }] } }
-    expect(createReviewPacket(input).evidence.toolTrace).toMatchObject({ complete: false, unobservedTools: ['collab_tool_call'] })
-    const complete = createReviewPacket({ ...input, result: { ...input.result, native: { complete: true } } })
-    expect(complete.evidence.toolTrace).toMatchObject({ complete: true, unobservedTools: [] })
   })
 })

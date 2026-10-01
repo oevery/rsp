@@ -14,7 +14,9 @@ export async function gradeEvidence(entry, run) {
   if (!['passed', 'failed', 'inconclusive'].includes(task?.status))
     throw new Error('Oracle returned an invalid verdict')
   let verdict
-  if (result.error || result.timedOut || result.outputLimited || result.exitCode !== 0 || events.failed)
+  if (result.cancelled)
+    verdict = { status: 'inconclusive', category: 'infrastructure', reason: 'execution-cancelled' }
+  else if (result.error || result.timedOut || result.outputLimited || result.exitCode !== 0 || events.failed)
     verdict = { status: 'inconclusive', category: 'infrastructure', reason: 'execution-incomplete' }
   else if (events.parseFailures.length || events.pendingToolCalls || !events.completed || !result.finalOutput)
     verdict = { status: 'inconclusive', category: 'evidence', reason: 'trace-or-final-output-incomplete' }

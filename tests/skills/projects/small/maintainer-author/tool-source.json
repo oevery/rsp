@@ -1,0 +1,9 @@
+{
+  "source": "scripts/skill-package-check.mjs",
+  "sourceCommit": "0ab61cb063b3af50460e67abb8a5cfbb809da47e",
+  "sourceGitBlob": "6c154d935de5b81e3f14542a2a56e52e1ee4bbd6",
+  "sha256": "9e9d8f08995063ce988343627afd8e1cc7f587380cfb8cb3da3e8b0458074a28",
+  "fixturePath": ".tooling/rsp/scripts/skill-package-check.mjs",
+  "copiedOn": "2026-09-30",
+  "policy": "Exact source copy; readiness fails if the fixture or current source differs. CLI/dependencies are supplied separately by tooling:rsp-cli."
+}

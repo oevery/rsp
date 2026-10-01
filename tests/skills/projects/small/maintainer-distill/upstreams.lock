@@ -1,0 +1,3 @@
+# Protected fixture input; targeted web research must not advance this baseline.
+version: 1
+revisions: {}

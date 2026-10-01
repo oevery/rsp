@@ -1,0 +1,17 @@
+{
+  "synthetic": true,
+  "kind": "retained-local-code-checks",
+  "identity": {
+    "version": "0.0.0-maintainer-smoke",
+    "sourceHash": "1111111111111111111111111111111111111111111111111111111111111111",
+    "compositionHash": "2222222222222222222222222222222222222222222222222222222222222222"
+  },
+  "status": "passed",
+  "checks": [
+    "build",
+    "typecheck",
+    "lint",
+    "code tests"
+  ],
+  "scope": "These named checks only; no complete release aggregation, model execution or human approval is recorded."
+}

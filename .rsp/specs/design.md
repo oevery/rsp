@@ -12,6 +12,7 @@ Define RSP system layering, artifact ownership, dependency direction, and bounda
 - Product runtime owns command behavior, artifact interpretation, status, history, Specs inspection, and TUI presentation. It consumes current product artifacts and host evidence.
 - Published Rules and Skills work without a source checkout, research corpus, or upstream cache.
 - Maintainer tooling may inspect product artifacts and research evidence. Product changes enter through a selected normal RSP Change.
+- Root maintainer scripts own executable diagnostics and preparation; code tests verify their results, while maintainer Skills own invocation and interpretation. Context counts, static reachability and repeated prose are diagnostic leads, not quality or behavioral-acceptance gates. Package/resource and security validation retain their existing owners.
 - The Host Project owns code, tests, project instructions, module context, Git, execution environments, and external delivery systems. RSP may read these boundaries but does not replace them.
 - Git owns staging, commit history, branches, remotes, tags, publication, and cross-branch integration. RSP can provide exact reviewed inputs without becoming Git authority.
 

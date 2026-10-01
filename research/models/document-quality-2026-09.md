@@ -13,7 +13,7 @@ sources:
 
 ## Local gap
 
-Artifact ownership alone does not establish usable writing. The selected design gives default rsp-doc one writing entrypoint, with a conditional Skill method and separate read-only Review. A prior candidate removed concrete maintainer expression rules without moving them into that method; the current correction restores those rules under one writing owner.
+Artifact ownership alone does not establish usable writing. The selected design gives default rsp-doc one writing entrypoint, with a conditional Skill method and separate read-only Review. The claim that a temporary candidate removed expression rules was an author observation at the time; the exact uncommitted candidate is not identified by retained evidence, so its deletion process cannot be reproduced. The verifiable local baseline and adopted result are pinned below. The local requirement was to preserve useful expression guidance under one writing owner, not to demonstrate a measured quality gain.
 
 ## Shared mechanisms
 
@@ -41,7 +41,9 @@ These dimensions are semantic criteria, not a document schema, scoring formula, 
 
 Reader confusion is evidence, not authority to change facts. Human explanation may need causal prose; execution instructions still require concise actions and results. Agreed expression requirements are contracts, while unsupported personal taste is not a defect. Reject fixed interview counts, blanket splitting, mandatory workers, host-specific invocation, review-time fixes and word/format gates.
 
-The local expression contract also draws on `.rsp/archives/2026-08-18_streamline-published-skill-prose.md`, `.rsp/archives/2026-07-29_compact-skill-runtime-context.md`, and the pre-change HEAD maintainer concision/symbol guidance. These are historical design evidence, not fresh model acceptance. Restored mechanisms include necessary sequence, parallel lists, sparse closed-mapping tables, defined symbols, canonical terms, conditional disclosure, co-location, action-leading items, demonstrated no-op pruning and short discriminating examples. The adopted contract lives in `.rsp/specs/writing-quality.md`.
+The local expression contract also draws on `.rsp/archives/2026-08-18_streamline-published-skill-prose.md`, `.rsp/archives/2026-07-29_compact-skill-runtime-context.md`, and `7c6aef6231d3d225cca7c0a4fdd352043bcf2fee:.agents/skills/author-rsp-skills/references/concision.md`. That fixed baseline's `Safe transforms` records necessary sequence, parallel lists, sparse tables, defined symbols, canonical terms, conditional disclosure, co-location, action-leading items, no-op pruning and short examples. Verify it with `git show <commit>:<path>`. It is not the unidentified temporary candidate.
+
+The adopted result is fixed at `0ab61cb063b3af50460e67abb8a5cfbb809da47e:.rsp/specs/writing-quality.md` and the same commit's `skills/rsp-doc/SKILL.md`: one writing owner with explicit expression guidance and a conditional Skill method. These objects establish the baseline and adopted contract, not the intermediate deletion process or fresh model acceptance. Current behavior remains owned by the current Spec and Skill.
 
 ## Candidate and validation boundary
 

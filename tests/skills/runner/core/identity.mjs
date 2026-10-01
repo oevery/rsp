@@ -12,7 +12,5 @@ export function executionIdentity(root) {
 
 export function gradingIdentity(root) {
   const files = treeFiles(join(root, 'tests/skills/runner/graders'), { rejectLinks: true })
-  delete files['packet.mjs']
-  delete files['semantic-review.mjs']
   return hash(files)
 }

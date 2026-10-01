@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { spawn } from 'node:child_process'
+import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 // Standalone fixture copied outside the repository: inspect only our generated policy.
@@ -41,12 +42,16 @@ else {
   for await (const chunk of process.stdin)
     chunks.push(chunk)
   const prompt = chunks.join('')
+  const sandboxIndex = process.argv.indexOf('--sandbox')
+  const isJudge = sandboxIndex >= 0 && process.argv[sandboxIndex + 1] === 'read-only'
+  const controlPath = new URL('./provider-control.json', import.meta.url)
+  const control = existsSync(controlPath) ? JSON.parse(readFileSync(controlPath, 'utf8')) : {}
   const event = value => process.stdout.write(`${JSON.stringify(value)}\n`)
   if (mode === 'capacity') {
     process.stderr.write('Provider unavailable\n')
     process.exit(1)
   }
-  if (mode !== 'noop' && existsSync('src/requested.mjs'))
+  if (!isJudge && mode !== 'noop' && !control.failTask && existsSync('src/requested.mjs'))
     writeFileSync('src/requested.mjs', 'export const requested = true\n')
   if (mode === 'delete')
     rmSync('user-notes.txt')
@@ -65,7 +70,7 @@ else {
     writeFileSync('.gitignore', 'hidden.txt\n')
     writeFileSync('hidden.txt', 'unauthorized\n')
   }
-  if (mode === 'malformed')
+  if (mode === 'malformed' || (!isJudge && control.traceGap))
     process.stdout.write('not-json\n')
   // Synthetic command traces only: never execute these external actions.
   if (process.argv.includes('fixture-external-action') || process.argv.includes('fixture-redacted-action')) {
@@ -81,16 +86,24 @@ else {
     }
   }
   let final = 'Changed requested export; no tests run.'
-  const schemaIndex = process.argv.indexOf('--output-schema')
-  if (schemaIndex >= 0) {
-    const schema = JSON.parse(readFileSync(process.argv[schemaIndex + 1], 'utf8'))
-    final = JSON.stringify({ dimensions: schema.properties.dimensions.items.properties.name.enum.map(name => ({ name, status: 'pass', reason: 'Observed the supplied evidence.', evidence: ['finalOutput'] })) })
-    // Test-only external-source drift after the first task was graded.
-    const control = new URL('./provider-control.json', import.meta.url)
-    if (existsSync(control)) {
-      const { compositionFile } = JSON.parse(readFileSync(control, 'utf8'))
-      writeFileSync(compositionFile, `${readFileSync(compositionFile, 'utf8')}\nChanged between matrix tasks.\n`)
+  if (isJudge) {
+    if (process.argv[process.argv.indexOf('--ask-for-approval') + 1] !== 'never' || process.argv.includes('--add-dir'))
+      throw new Error('Judge native permission selection is incorrect')
+    const index = JSON.parse(readFileSync('evidence-index.json', 'utf8'))
+    const run = JSON.parse(readFileSync('current/run.json', 'utf8'))
+    if (index.baseline)
+      event({ type: 'item.completed', item: { type: 'command_execution', command: 'cat comparison/run.json comparison/events.jsonl', exit_code: 0, aggregated_output: readFileSync('comparison/run.json', 'utf8') + readFileSync('comparison/events.jsonl', 'utf8') } })
+    event({ type: 'item.completed', item: { type: 'command_execution', command: 'cat evidence-index.json current/events.jsonl current/diff.patch', exit_code: 0, aggregated_output: readFileSync('evidence-index.json', 'utf8') + readFileSync('current/events.jsonl', 'utf8') + readFileSync('current/diff.patch', 'utf8') } })
+    let retainedText = ''
+    const source = 'current/workspace/src/requested.mjs'
+    if (existsSync(source)) {
+      retainedText = readFileSync(source, 'utf8')
+      event({ type: 'item.completed', item: { type: 'command_execution', command: `cat ${source}`, exit_code: 0, aggregated_output: retainedText } })
     }
+    const status = run.verdict?.status === 'failed' ? 'failed' : 'passed'
+    final = control.unparsedReview ? '# Review\nUseful report without machine status.' : `# Review\nResult: ${status}. Evidence: current/run.json, current/events.jsonl, current/workspace/src/requested.mjs.\n${index.baseline ? 'Comparison: original records available; task/model differences may be non-comparable.\n' : ''}\n\`\`\`json\n${JSON.stringify({ status })}\n\`\`\``
+    if (control.compositionFile)
+      writeFileSync(control.compositionFile, `${readFileSync(control.compositionFile, 'utf8')}\nChanged between matrix tasks.\n`)
   }
   if (prompt.includes('isolation-probe')) {
     const config = readFileSync(join(process.env.CODEX_HOME, 'config.toml'), 'utf8')
@@ -107,6 +120,24 @@ else {
   if (finalIndex >= 0)
     writeFileSync(process.argv[finalIndex + 1], final)
   event({ type: 'item.completed', item: { type: 'agent_message', text: final } })
-  if (mode !== 'incomplete')
+  if (mode !== 'incomplete' && (isJudge || !control.traceGap))
     event({ type: 'turn.completed', usage: { input_tokens: 12, output_tokens: 8 } })
+  if (existsSync(controlPath)) {
+    const role = isJudge ? 'judge' : 'executor'
+    if (control.sessionsFile)
+      appendFileSync(control.sessionsFile, `${JSON.stringify({ role, pid: process.pid })}\n`)
+    if (control.holdRole === role) {
+      let descendant
+      if (process.platform !== 'win32')
+        descendant = spawn(process.execPath, ['-e', 'process.on("SIGTERM", () => {}); setInterval(() => {}, 1000)'], { stdio: 'ignore' })
+      process.on('SIGTERM', () => process.exit(0))
+      writeFileSync(control.readyFile, JSON.stringify({ pid: process.pid, descendant: descendant?.pid ?? null }))
+      if (Array.isArray(control.activityChunks)) {
+        control.activityChunks.forEach((chunk, index) => {
+          setTimeout(() => process.stderr.write(chunk), 600 + index * 100)
+        })
+      }
+      setInterval(() => {}, 1000)
+    }
+  }
 }

@@ -1,12 +1,13 @@
 import { randomUUID } from 'node:crypto'
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { isAbsolute, join, relative } from 'node:path'
-import { runProcess } from '../adapters/process.mjs'
+import { setImmediate } from 'node:timers/promises'
+import { cancellationReason, runProcess, validateTimeout } from '../adapters/process.mjs'
 import { gradeEvidence } from '../graders/evidence.mjs'
-import { createReviewPacket } from '../graders/packet.mjs'
 import { observeProjectChecks } from '../observers/checks.mjs'
 import { observeEvents } from '../observers/events.mjs'
-import { compositionIdentity, prepareWorkspace, workspaceObservation } from '../observers/workspace.mjs'
+import { compositionIdentity, prepareWorkspace, retainWorkspace, workspaceObservation } from '../observers/workspace.mjs'
+import { loadConfig } from './config.mjs'
 import { hash, treeFiles, writeJson } from './files.mjs'
 import { executionIdentity, gradingIdentity } from './identity.mjs'
 import { projectIdentity } from './projects.mjs'
@@ -19,8 +20,8 @@ export function createLocalAdapter(command, args = []) {
   return {
     id: 'local-test',
     settings: { provider: 'local-test', model: 'none', effort: 'none' },
-    async run({ workspace, prompt, timeoutMs }) {
-      return runProcess(command, args, { cwd: workspace, env: { PATH: process.env.PATH, HOME: workspace }, input: prompt, timeoutMs })
+    async run({ workspace, prompt, timeoutMs, signal, onActivity }) {
+      return runProcess(command, args, { cwd: workspace, env: { PATH: process.env.PATH, HOME: workspace }, input: prompt, timeoutMs, signal, onActivity })
     },
   }
 }
@@ -39,6 +40,7 @@ export function sourceIdentity(root) {
 }
 
 export async function runCase(entry, root, options = {}) {
+  const timeoutMs = validateTimeout(options.timeoutMs)
   const adapter = options.adapter ?? (options.command ? createLocalAdapter(options.command, options.args) : null)
   if (!adapter)
     throw new Error('An explicit evaluation adapter is required')
@@ -65,23 +67,32 @@ export async function runCase(entry, root, options = {}) {
     skills: composition.skills,
     harnessHash: harnessIdentity(root),
     executionHash: executionIdentity(root),
+    sharedConfigHash: loadConfig(join(root, 'tests/skills/config.toml')).hash,
     gradingHash: gradingIdentity(root),
     visibility: entry.visibility ?? 'public',
   }
   let workspace
   let stage = 'workspace'
-  let run = { id, lane: adapter.id === 'local-test' ? 'local-control' : 'model', case: entry.manifest.id, skill: entry.manifest.skill, caseSpec: structuredClone(entry.manifest), context: {}, identity, reportDirectory: outputRoot }
+  const activity = phase => options.onActivity?.({ phase, state: 'observing' })
+  activity(stage)
+  let run = { id, lane: adapter.id === 'local-test' ? 'local-control' : 'model', case: entry.manifest.id, skill: entry.manifest.skill, caseSpec: structuredClone(entry.manifest), context: {}, identity, timeoutMs, cancelled: false, cancellationReason: null, reportDirectory: outputRoot }
   const redact = adapter.redact ?? (value => value)
   try {
     stage = 'composition'
+    activity(stage)
     if (composition.hash !== expectedCompositionHash)
       throw new Error('Composition changed after selection')
     stage = 'workspace'
+    activity(stage)
     if (options.sourceHash && identity.sourceHash !== options.sourceHash)
       throw new Error('Source or built CLI changed after selection')
     workspace = prepareWorkspace(entry, root, options.composition)
     run.context.workspace = workspace
     const baseline = workspaceObservation(workspace)
+    try {
+      run.retainedEvidence = { baseline: retainWorkspace(workspace, join(outputRoot, 'baseline'), redact, entry.manifest.hard.allowed_paths) }
+    }
+    catch { run.retainedEvidence = { baseline: { error: 'baseline-retention-incomplete' } } }
     identity.dependencies = { lockHash: hash(readFileSync(join(root, 'pnpm-lock.yaml'))), contentHash: hash(Object.fromEntries(Object.entries(baseline.files).filter(([path]) => path.includes('node_modules/')))) }
     identity.fixtureHash = hash(Object.fromEntries(Object.entries(baseline.files).filter(([path]) => !path.startsWith('.agents/skills/'))))
     if (baseline.skillTreeHash !== expectedCompositionHash)
@@ -89,9 +100,18 @@ export async function runCase(entry, root, options = {}) {
     if (sourceIdentity(root) !== identity.sourceHash)
       throw new Error('Source or built CLI changed during workspace preparation')
     stage = 'adapter'
-    const result = await adapter.run({ workspace, prompt: entry.manifest.prompt, outputRoot, timeoutMs: options.timeoutMs, writableGit: entry.manifest.hard.commit !== undefined })
+    activity(stage)
+    await setImmediate()
+    const result = options.signal?.aborted
+      ? { exitCode: null, stdout: '', stderr: '', finalOutput: null, timedOut: false, timeoutMs, cancelled: true, cancellationReason: cancellationReason(options.signal), durationMs: 0 }
+      : await adapter.run({ workspace, prompt: entry.manifest.prompt, outputRoot, timeoutMs, signal: options.signal, writableGit: entry.manifest.hard.commit !== undefined, onActivity: options.onActivity })
     run.result = result
+    if (options.signal?.aborted) {
+      result.cancelled = true
+      result.cancellationReason = cancellationReason(options.signal)
+    }
     stage = 'observation'
+    activity(stage)
     if (sourceIdentity(root) !== identity.sourceHash)
       throw new Error('Source or built CLI changed during execution')
     const events = observeEvents(result.stdout)
@@ -104,20 +124,38 @@ export async function runCase(entry, root, options = {}) {
     const observation = workspaceObservation(workspace, baseline, entry.manifest.hard.allowed_paths)
     observation.checks = observeProjectChecks(root, workspace, entry.manifest)
     Object.assign(run, { observation, events })
+    await setImmediate()
+    if (options.signal?.aborted) {
+      result.cancelled = true
+      result.cancellationReason = cancellationReason(options.signal)
+    }
     stage = 'oracle'
+    activity(stage)
     const graded = await gradeEvidence(entry, { ...run, result, observation, events })
-    const rubric = [...entry.manifest.rubric]
-    if (entry.manifest.activation && entry.manifest.activation !== 'optional')
-      rubric.push({ name: 'routing', description: `Assess whether ${entry.manifest.skill} was appropriately used (${entry.manifest.activation}) from observed actions and task boundaries. Do not require printed Skill text or a particular reading command. Missing evidence remains inconclusive.` })
-    const packet = createReviewPacket({ prompt: entry.manifest.prompt, observation, result, rubric, events, workspace, forbiddenActions: entry.manifest.hard.forbidden_actions })
-    run = { ...run, result, observation, events, ...graded, packet, semantic: { status: 'inconclusive', reason: 'independent review pending' } }
+    run = { ...run, result, observation, events, ...graded, semantic: { status: 'inconclusive', reason: 'independent review pending' } }
   }
   catch {
     run.verdict = { status: 'inconclusive', category: stage === 'adapter' ? 'infrastructure' : 'harness', reason: `${stage}-failed` }
   }
   finally {
-    if (workspace)
-      rmSync(workspace, { recursive: true, force: true, maxRetries: 3 })
+    if (workspace) {
+      try {
+        run.retainedEvidence ??= {}
+        run.retainedEvidence.workspace = retainWorkspace(workspace, join(outputRoot, 'workspace'), redact, entry.manifest.hard.allowed_paths)
+      }
+      catch {
+        run.retainedEvidence = { ...run.retainedEvidence, error: 'workspace-retention-incomplete' }
+      }
+      finally { rmSync(workspace, { recursive: true, force: true, maxRetries: 3 }) }
+    }
+  }
+  await setImmediate()
+  if (options.signal?.aborted || run.result?.cancelled) {
+    run.cancelled = true
+    run.cancellationReason = options.signal?.aborted ? cancellationReason(options.signal) : run.result.cancellationReason ?? 'cancelled'
+    if (run.result)
+      Object.assign(run.result, { cancelled: true, cancellationReason: run.cancellationReason })
+    run.verdict = { status: 'inconclusive', category: 'infrastructure', reason: 'execution-cancelled' }
   }
   // Apply redaction to every persisted evidence surface, not just stdout.
   function sanitize(value) {
@@ -130,15 +168,11 @@ export async function runCase(entry, root, options = {}) {
     return value
   }
   run = sanitize(run)
-  if (run.packet) {
-    const { packetHash: _oldHash, ...packet } = run.packet
-    run.packet = { ...packet, packetHash: hash(packet) }
-    writeJson(join(outputRoot, 'review-packet.json'), run.packet)
-  }
   run.evidenceHash = hash({ caseSpec: run.caseSpec, context: run.context, identity: run.identity, result: run.result, observation: run.observation })
   writeJson(join(outputRoot, 'run.json'), run)
   writeFileSync(join(outputRoot, 'events.jsonl'), run.result?.stdout ?? '', { mode: 0o600 })
   writeFileSync(join(outputRoot, 'stderr.log'), run.result?.stderr ?? '', { mode: 0o600 })
   writeFileSync(join(outputRoot, 'final.md'), run.result?.finalOutput ?? '', { mode: 0o600 })
+  activity('execution-retained')
   return run
 }
