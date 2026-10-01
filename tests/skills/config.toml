@@ -4,8 +4,8 @@ model = "AI-HUB/gpt-6.1-sol"
 model_reasoning_effort = "medium"
 
 [judge]
-model = "AI-HUB/gpt-6-astra"
-model_reasoning_effort = "low"
+model = "AI-HUB/gpt-6.1-sol"
+model_reasoning_effort = "high"
 
 [policy]
 web_search = "disabled"
