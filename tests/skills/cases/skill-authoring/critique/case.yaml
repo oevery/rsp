@@ -11,6 +11,6 @@ hard:
   workspace_unchanged: true
 rubric:
   - name: bounded-critique
-    description: Reviews the executable Skill through Code, optionally consulting Doc's Skill method. Identifies overbroad selection and artificial stopping without repair authority or claims that self-checks are independent review.
+    description: Reviews the fixed Skill instructions through Code for behavior and Document for explanation, keeping export-contract.md authority-only. Identifies overbroad selection and artificial stopping, deduplicates shared defects, and returns findings without repair authority or independent-self-review claims. Judge actual responsibilities and outcomes, not reference-reading fingerprints; no Doc writing workflow is needed.
   - name: agreed-expression
-    description: Treats the stated concise-expression requirements as contracts, identifies vague/repetitive instructions with concrete evidence, and preserves real input/permission conditions. Does not invent word limits, required headings or personal style findings.
+    description: Treats the stated concise-expression requirements as contracts, identifies vague/repetitive instructions with concrete evidence, and preserves real input/permission conditions. Separates alternative tasks from necessary sequence and expresses peer conditions as peers. Does not invent word limits, required headings or personal style findings.

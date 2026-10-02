@@ -1,6 +1,6 @@
 id: release-draft-net-behavior
 kind: workflow
-skill: rsp-release-docs
+skill: rsp-doc
 activation: required
 project: small/release-draft-net-behavior
 oracle: oracle.mjs

@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { DEFAULT_PACKAGED_SKILL_NAMES, inspectPackagedSkillInventory, installPackagedSkills } from '../../../src/commands/skills.js'
 
 const temporary: string[] = []
-const expectedDefaults = ['rsp', 'rsp-shape', 'rsp-implement', 'rsp-doc', 'rsp-verify', 'rsp-review', 'rsp-commit', 'rsp-release-docs'].sort()
+const expectedDefaults = ['rsp', 'rsp-shape', 'rsp-implement', 'rsp-doc', 'rsp-verify', 'rsp-review', 'rsp-commit'].sort()
 afterEach(() => {
   for (const path of temporary.splice(0))
     rmSync(path, { recursive: true, force: true })
@@ -32,7 +32,7 @@ function fixture() {
 }
 
 describe('packaged Skill migration', () => {
-  it('installs eight defaults including documentation while named installation stays selective', async () => {
+  it('installs seven defaults including documentation while named installation stays selective', async () => {
     const context = fixture()
     const inventory = await inspectPackagedSkillInventory(context)
     expect(inventory.skills.filter(skill => skill.kind === 'default').map(skill => skill.name).sort()).toEqual(expectedDefaults)
@@ -41,6 +41,7 @@ describe('packaged Skill migration', () => {
     const result = await installPackagedSkills({}, context)
     expect(result.installed).toEqual(expectedDefaults)
     expect(result.removed).toEqual([])
+    await expect(installPackagedSkills({ names: ['rsp-release-docs'] }, context)).rejects.toThrow('unknown packaged Skill: rsp-release-docs')
     expect(existsSync(join(context.targetRoot, 'rsp-structural-audit'))).toBe(false)
     expect(readFileSync(join(context.targetRoot, 'rsp-doc', 'SKILL.md'), 'utf8')).toBe('packaged rsp-doc')
     const selected = fixture()
@@ -58,7 +59,7 @@ describe('packaged Skill migration', () => {
 
   it('conflicts on old names including the ancestor alias and previews only explicitly forced removals', async () => {
     const context = fixture()
-    const oldNames = ['rsp-address-review', 'rsp-design', 'rsp-diagnose', 'rsp-manage', 'rsp-resolve-findings', 'rsp-tdd']
+    const oldNames = ['rsp-address-review', 'rsp-design', 'rsp-diagnose', 'rsp-manage', 'rsp-release-docs', 'rsp-resolve-findings', 'rsp-tdd']
     for (const name of oldNames)
       context.installed(name)
     context.installed('unrelated-skill')
@@ -80,10 +81,22 @@ describe('packaged Skill migration', () => {
     context.installed('rsp-manage')
     context.installed('rsp-design')
     context.installed('rsp-codebase-audit')
+    context.installed('rsp-release-docs', 'Customized release guidance.')
     const result = await installPackagedSkills({ names: ['rsp-shape'], force: true }, context)
     expect(result.removed).toEqual(['rsp-design'])
     expect(existsSync(join(context.targetRoot, 'rsp-manage'))).toBe(true)
     expect(existsSync(join(context.targetRoot, 'rsp-codebase-audit'))).toBe(true)
+    expect(readFileSync(join(context.targetRoot, 'rsp-release-docs', 'SKILL.md'), 'utf8')).toBe('Customized release guidance.')
+    await installPackagedSkills({ names: ['rsp-review'], force: true }, context)
+    await expect(installPackagedSkills({ names: ['rsp-doc'] }, context)).rejects.toThrow('rsp-release-docs -> rsp-doc')
+    expect(readFileSync(join(context.targetRoot, 'rsp-release-docs', 'SKILL.md'), 'utf8')).toBe('Customized release guidance.')
+    expect(existsSync(join(context.targetRoot, 'rsp-doc'))).toBe(false)
+    const docPreview = await installPackagedSkills({ names: ['rsp-doc'], dryRun: true, force: true }, context)
+    expect(docPreview.removed).toEqual(['rsp-release-docs'])
+    expect(readFileSync(join(context.targetRoot, 'rsp-release-docs', 'SKILL.md'), 'utf8')).toBe('Customized release guidance.')
+    const doc = await installPackagedSkills({ names: ['rsp-doc'], force: true }, context)
+    expect(doc.removed).toEqual(['rsp-release-docs'])
+    expect(existsSync(join(context.targetRoot, 'rsp-release-docs'))).toBe(false)
     const audit = await installPackagedSkills({ names: ['rsp-structural-audit'], force: true }, context)
     expect(audit.removed).toEqual(['rsp-codebase-audit'])
   })
@@ -91,8 +104,9 @@ describe('packaged Skill migration', () => {
   it('restores old trees after failed activation and refuses symlinked old names', async () => {
     const context = fixture()
     context.installed('rsp-address-review')
+    context.installed('rsp-release-docs', 'Customized release guidance.')
     context.installed('unrelated-skill')
-    await expect(installPackagedSkills({ names: ['rsp-implement'], force: true }, {
+    await expect(installPackagedSkills({ names: ['rsp-doc', 'rsp-implement'], force: true }, {
       ...context,
       onMutationStep(step) {
         if (step.phase === 'before-activate')
@@ -101,6 +115,8 @@ describe('packaged Skill migration', () => {
     })).rejects.toThrow('activation failed')
     expect(readFileSync(join(context.targetRoot, 'rsp-address-review', 'SKILL.md'), 'utf8')).toBe('user rsp-address-review')
     expect(existsSync(join(context.targetRoot, 'rsp-implement'))).toBe(false)
+    expect(readFileSync(join(context.targetRoot, 'rsp-release-docs', 'SKILL.md'), 'utf8')).toBe('Customized release guidance.')
+    expect(existsSync(join(context.targetRoot, 'rsp-doc'))).toBe(false)
     expect(readFileSync(join(context.targetRoot, 'unrelated-skill', 'SKILL.md'), 'utf8')).toBe('user unrelated-skill')
     symlinkSync(join(context.packageRoot, 'skills', 'rsp'), join(context.targetRoot, 'rsp-manage'))
     await expect(installPackagedSkills({ names: ['rsp'], force: true }, context)).rejects.toThrow('unsupported entry')

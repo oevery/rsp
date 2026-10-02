@@ -1,10 +1,10 @@
 ---
 name: rsp-structural-audit
-description: Audit one explicitly bounded repository or subtree for evidence-backed structural risks before implementation work is selected. Use for report-only discovery of ownership, dependency, production-path, change-amplification, or verification mismatches; do not use for security, performance, dependency, framework, style, or production-readiness audits.
+description: Audit an explicitly bounded codebase for structural risks in ownership, module dependencies, production paths, change amplification or verification. Report-only discovery, not fixed-change review, design or specialist audits.
 license: MIT
 metadata:
   author: oevery
-  version: "2026.07.28.1"
+  version: "2026.10.02.1"
 ---
 
 # RSP Structural Audit
@@ -17,7 +17,7 @@ Use this Skill when the user wants to discover material structural risks in an e
 
 Read nearest project instructions and context first. Then inspect only the smallest useful chain of entry points, direct callers or consumers, state and data owners, relevant configuration, and focused tests. Treat implementation, tests, comments, and directory structure as evidence rather than product authority.
 
-Do not substitute this audit for security, performance, dependency, framework, style, production-readiness, or speculative cleanup work. Return that mismatch and the required specialist owner instead.
+Module dependency direction is in scope. Third-party package selection, version or vulnerability audits are not. Do not substitute this audit for security, performance, framework, style, production-readiness or speculative cleanup work. Return that mismatch and the required specialist owner instead.
 
 ## Authority
 
@@ -27,7 +27,7 @@ This Skill owns only its response report. It never modifies project code, tests,
 
 ## Action and verification
 
-After scope and authority are fixed, read [structural audit lenses](references/structural-lenses.md) and select only the lenses relevant to evidence already encountered. Trace concrete owners and live paths; do not scan every directory or apply every lens mechanically.
+After scope and authority are fixed, read [structural audit lenses](references/structural-lenses.md) and select only the lenses relevant to evidence already encountered. Trace concrete owners and live paths with suitable read/search tools; do not scan every directory or apply every lens mechanically. A diagnosed inspection-tool fault permits another read-only method within the same boundary and evidence requirement. Missing decisive evidence remains uncertainty; tools grant no repair, probe or expanded audit authority.
 
 Qualify a finding only when exact repository evidence establishes a reachable trigger, a realistic impact, and the implicated ownership or behavior chain. Verify a seam-dependent finding by naming the direct production consumer and confirming whether its actual callee reaches or bypasses the seam. Compare focused tests or other verification evidence with that same live path when the finding depends on claimed coverage.
 

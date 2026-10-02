@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from 'node:child_process'
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { chmodSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -23,6 +23,38 @@ function project(): string {
   projects.push(directory)
   run(directory, 'init')
   return directory
+}
+
+function commitProject(unborn = false) {
+  const directory = mkdtempSync(join(tmpdir(), 'rsp-commit-integrity-'))
+  projects.push(directory)
+  const git = (...args: string[]) => execFileSync('git', args, { cwd: directory, encoding: 'utf8' }).trimEnd()
+  git('init', '--quiet')
+  git('config', 'user.name', 'Integrity fixture')
+  git('config', 'user.email', 'integrity@example.invalid')
+  git('config', 'commit.gpgsign', 'false')
+  git('config', 'core.hooksPath', join(directory, '.git/hooks'))
+  if (!unborn) {
+    writeFileSync(join(directory, 'selected.txt'), 'before\n')
+    git('add', 'selected.txt')
+    git('commit', '--quiet', '-m', 'baseline')
+  }
+  writeFileSync(join(directory, 'selected.txt'), 'reviewed\n')
+  git('add', 'selected.txt')
+  const head = unborn ? 'unborn' : git('rev-parse', 'HEAD')
+  const tree = git('write-tree')
+  const message = join(directory, '.git/prepared-message')
+  writeFileSync(message, 'fix: reviewed delivery\n\nExact body.\n')
+  const invoke = (...args: string[]) => {
+    const result = spawnSync(process.execPath, [cli, 'commit', '--message-file', message, '--json', ...args], { cwd: directory, encoding: 'utf8' })
+    return { status: result.status, receipt: JSON.parse(result.stdout) }
+  }
+  const hook = (name: string, body: string) => {
+    const path = join(directory, '.git/hooks', name)
+    writeFileSync(path, `#!/bin/sh\nset -eu\n${body}\n`)
+    chmodSync(path, 0o755)
+  }
+  return { directory, git, head, tree, invoke, hook }
 }
 
 function completeChange(directory: string, name: string, blocker = '- none'): string {
@@ -61,6 +93,89 @@ function completeChange(directory: string, name: string, blocker = '- none'): st
 }
 
 describe('public CLI lifecycle', () => {
+  it.each([false, true])('returns exact tree, parents and unusual paths for guarded delivery (unborn=%s)', (unborn) => {
+    const fixture = commitProject(unborn)
+    const unusual = 'quote"tab\tline\nbreak.txt'
+    writeFileSync(join(fixture.directory, unusual), 'content\n')
+    fixture.git('add', unusual)
+    const tree = fixture.git('write-tree')
+    const result = fixture.invoke('--expected-head', fixture.head, '--expected-tree', tree)
+    expect(result.status).toBe(0)
+    expect(result.receipt).toMatchObject({ ok: true, stagedTree: tree, committedTree: tree, parents: unborn ? [] : [fixture.head], attempt: 'succeeded', creation: 'confirmed' })
+    expect(result.receipt.committedPaths).toEqual([unusual, 'selected.txt'])
+    expect(result.receipt.commit).toBe(fixture.git('rev-parse', 'HEAD'))
+  })
+
+  it('rejects malformed pairs and reviewed snapshot drift without invoking hooks or changing the index', () => {
+    const fixture = commitProject()
+    fixture.hook('pre-commit', 'touch .git/hook-ran')
+    for (const args of [
+      ['--expected-head', fixture.head],
+      ['--expected-tree', fixture.tree],
+      ['--expected-head', 'HEAD', '--expected-tree', fixture.tree],
+      ['--expected-head', fixture.head, '--expected-tree', 'abc'],
+    ]) {
+      expect(fixture.invoke(...args)).toMatchObject({ status: 1, receipt: { code: 'invalid_expected_snapshot', attempt: 'not_attempted' } })
+    }
+    writeFileSync(join(fixture.directory, 'selected.txt'), 'drifted\n')
+    fixture.git('add', 'selected.txt')
+    expect(fixture.invoke('--expected-head', fixture.head, '--expected-tree', fixture.tree)).toMatchObject({ status: 1, receipt: { code: 'expected_snapshot_mismatch', attempt: 'not_attempted' } })
+    fixture.git('commit', '--quiet', '--no-verify', '-m', 'competing commit')
+    writeFileSync(join(fixture.directory, 'selected.txt'), 'reviewed\n')
+    fixture.git('add', 'selected.txt')
+    const changedHead = fixture.git('rev-parse', 'HEAD')
+    expect(fixture.invoke('--expected-head', fixture.head, '--expected-tree', fixture.tree)).toMatchObject({ status: 1, receipt: { code: 'expected_snapshot_mismatch', attempt: 'not_attempted' } })
+    expect(fixture.git('rev-parse', 'HEAD')).toBe(changedHead)
+    expect(fixture.git('write-tree')).toBe(fixture.tree)
+    expect(existsSync(join(fixture.directory, '.git/hook-ran'))).toBe(false)
+  })
+
+  it.each(['content', 'message', 'parent'])('reports created commits changed by a real %s hook without retrying', (effect) => {
+    const fixture = commitProject()
+    if (effect === 'content')
+      fixture.hook('pre-commit', 'printf "hook content\\n" > selected.txt\ngit add selected.txt')
+    else if (effect === 'message')
+      fixture.hook('commit-msg', 'printf "hook message\\n" > "$1"')
+    else
+      fixture.hook('post-commit', 'parent=$(printf "competing parent\\n" | git commit-tree HEAD~1^{tree} -p HEAD~1)\nchanged=$(git log -1 --format=%B | git commit-tree HEAD^{tree} -p "$parent")\ngit update-ref HEAD "$changed"')
+    const result = fixture.invoke()
+    expect(result.status).toBe(1)
+    expect(result.receipt).toMatchObject({ ok: false, code: effect === 'message' ? 'message_mismatch' : 'commit_boundary_mismatch', attempt: 'succeeded', creation: 'confirmed', stagedTree: fixture.tree })
+    expect(result.receipt.commit).toBe(fixture.git('rev-parse', 'HEAD'))
+    expect(result.receipt.committedTree).toBe(fixture.git('rev-parse', 'HEAD^{tree}'))
+    expect(result.receipt.parents).toEqual(fixture.git('show', '-s', '--format=%P', 'HEAD').split(' '))
+    expect(Number(fixture.git('rev-list', '--count', 'HEAD'))).toBe(effect === 'parent' ? 3 : 2)
+  })
+
+  it('distinguishes a failed hook from observed history effects without claiming no write after an attempt', () => {
+    const fixture = commitProject()
+    fixture.hook('pre-commit', 'exit 1')
+    expect(fixture.invoke()).toMatchObject({ status: 1, receipt: { code: 'git_commit_failed', attempt: 'failed', creation: 'unknown' } })
+    expect(fixture.git('rev-parse', 'HEAD')).toBe(fixture.head)
+    fixture.hook('pre-commit', 'created=$(printf "hook commit\\n" | git commit-tree $(git write-tree) -p HEAD)\ngit update-ref HEAD "$created"\nexit 1')
+    const result = fixture.invoke()
+    expect(result).toMatchObject({ status: 1, receipt: { code: 'commit_boundary_mismatch', attempt: 'failed', creation: 'unknown' } })
+    expect(result.receipt.commit).toBe(fixture.git('rev-parse', 'HEAD'))
+    expect(result.receipt.commit).not.toBe(fixture.head)
+  })
+
+  it('fails closed on invalid HEAD inspection before or after Git without misclassifying it as unborn', () => {
+    const before = commitProject()
+    before.hook('pre-commit', 'touch .git/hook-ran')
+    const headRef = before.git('symbolic-ref', 'HEAD')
+    writeFileSync(join(before.directory, '.git', headRef), 'invalid-object-id\n')
+    expect(before.invoke('--expected-head', 'unborn', '--expected-tree', before.tree)).toMatchObject({ status: 1, receipt: { code: 'receipt_observation_failed', attempt: 'not_attempted', creation: 'not_attempted' } })
+    expect(existsSync(join(before.directory, '.git/hook-ran'))).toBe(false)
+    expect(before.git('write-tree')).toBe(before.tree)
+
+    const after = commitProject()
+    after.hook('post-commit', 'printf "invalid-object-id\\n" > "$(git rev-parse --git-path "$(git symbolic-ref HEAD)")"')
+    // Git itself exits nonzero when its final summary observes the corrupted ref,
+    // even though the reflog confirms creation. The CLI must report uncertainty.
+    expect(after.invoke()).toMatchObject({ status: 1, receipt: { code: 'receipt_observation_failed', attempt: 'failed', creation: 'unknown' } })
+    expect(readFileSync(join(after.directory, '.git/logs/HEAD'), 'utf8')).toContain('commit: fix: reviewed delivery')
+  })
+
   it('commits only the staged boundary and leaves invalid attempts and unstaged work untouched', () => {
     const directory = mkdtempSync(join(tmpdir(), 'rsp-commit-boundary-'))
     projects.push(directory)
@@ -77,22 +192,22 @@ describe('public CLI lifecycle', () => {
     const originalHead = git('rev-parse', 'HEAD')
     const message = join(directory, 'message.txt')
     writeFileSync(message, 'fix: selected change\n\nPreserve the unrelated note.\n')
-    const commit = () => spawnSync(process.execPath, [cli, 'commit', '--message-file', message, '--json'], { cwd: directory, encoding: 'utf8' })
+    const commit = (messageFile = message) => spawnSync(process.execPath, [cli, 'commit', '--message-file', messageFile, '--json'], { cwd: directory, encoding: 'utf8' })
     expect(JSON.parse(commit().stdout).code).toBe('no_staged_boundary')
     writeFileSync(join(directory, 'selected.txt'), 'after\n')
     writeFileSync(join(directory, 'notes.txt'), 'unstaged user note\n')
     git('add', 'selected.txt')
     const stagedTree = git('write-tree')
-    writeFileSync(message, `invalid literal${String.fromCharCode(92)}nmessage`)
-    const refused = commit()
+    const refused = commit(join(directory, 'missing-message.txt'))
     expect(refused.status).not.toBe(0)
+    expect(JSON.parse(refused.stdout)).toMatchObject({ code: 'message_file_read_failed', attempt: 'not_attempted', creation: 'not_attempted' })
     expect(git('rev-parse', 'HEAD')).toBe(originalHead)
     expect(git('write-tree')).toBe(stagedTree)
-    const prepared = 'fix: selected change\n\nPreserve the unrelated note.\n'
+    const prepared = 'fix: selected change\n\nPreserve the unrelated note and document literal \\n without decoding it.\n'
     writeFileSync(message, prepared)
     const accepted = commit()
     expect(accepted.status).toBe(0)
-    expect(JSON.parse(accepted.stdout)).toMatchObject({ ok: true, committedPaths: ['selected.txt'] })
+    expect(JSON.parse(accepted.stdout)).toMatchObject({ ok: true, storedMessage: prepared, committedPaths: ['selected.txt'] })
     expect(git('show', 'HEAD:selected.txt')).toBe('after\n')
     expect(git('show', 'HEAD:notes.txt')).toBe('original note\n')
     expect(readFileSync(join(directory, 'notes.txt'), 'utf8')).toBe('unstaged user note\n')

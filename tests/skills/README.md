@@ -1,21 +1,48 @@
 # Skill validation
 
-One runner owns small, real and complex tasks. Projects hold starting content; cases hold the task, permitted changes and acceptance rubric; suites select cases. All executions and task-local workers use `config.toml` executor; independent reviews use its judge. Cases do not override models.
+One runner executes small, real and complex task cases and retains their observations; the independent judge interprets task outcomes against the rubric. Projects hold starting content; cases hold the task, permitted changes and acceptance rubric; suites select cases. All executions and task-local workers use `config.toml` executor; independent reviews use its judge. Cases do not override models.
 
 ## Run locally
 
 Build first: `mise exec -- pnpm run build`. Then:
 
-- `mise exec -- pnpm run test:skills -- list --suite full` lists the matrix.
-- `mise exec -- pnpm run test:skills -- check --suite full` parses cases, materializes projects and runs declared readiness probes.
-- `mise exec -- pnpm run test:skills -- check --case real-cli-contract` checks the fixed CLI's build, version and help.
-- `mise exec -- pnpm run test:skills -- plan --suite workflows` shows selection and configuration without model calls.
+- `mise exec -- node tests/skills/runner/cli.mjs list --suite full` lists the matrix.
+- `mise exec -- node tests/skills/runner/cli.mjs check --suite full` parses cases, materializes projects and runs declared readiness probes.
+- `mise exec -- node tests/skills/runner/cli.mjs check --case real-cli-contract` checks the fixed CLI's build, version and help.
+- `mise exec -- node tests/skills/runner/cli.mjs plan --suite workflows` shows selection and configuration without model calls.
 
-Default selection is `smoke`; full coverage is explicit. Offline results say `behavioralAcceptance: not-run`. Fixture-provider controls belong to code/tooling and do not demonstrate Skill quality.
+These direct runner invocations avoid package-manager separator forwarding differences; the `test:skills` script remains available.
+
+Default selection is `smoke`; full coverage is explicit. A passing `check` means the selected inputs and declared probes are ready, not that an agent completed the task. Offline results say `behavioralAcceptance: not-run`. Fixture-provider controls belong to code/tooling and do not demonstrate Skill quality.
+
+## Select task evidence
+
+`full` is the discovered case catalog for offline readiness, not a mandatory paid-model or release matrix. `workflows` is a curated set of representative Core continuity, standalone implementation, document writing, verification, checkpoint delivery, real CLI and independent-worker tasks. Its standalone implementation case also covers replacement of an unavailable convenience checker; the retired method-continuity-export case is consolidated there. Core continuity remains covered by catalog-completion and the real/native workflows.
+
+Select additional cases by the changed risk using the existing `--case` option:
+
+| Changed boundary | Suggested case selection |
+| --- | --- |
+| Exact Git delivery or method equivalence | commit-native-equivalence,commit-snapshot-refusal,commit-missing-verification,commit-unsafe-staged |
+| Required evidence or investigation-only authority | method-required-check-unavailable,finding-investigation-only |
+| Effective RSP configuration | config-inherited-artifact-language,config-rejected-closeout-policy |
+| Recovery or unavailable independent verification | real-multimodule-recovery,native-resume-staged,native-verification-unavailable |
+
+Use `plan --suite workflows` or `plan --case <selected-ids>` to inspect inputs and the root-session budget before separately authorized execution. No fixed case count is a quality gate. A case's existence does not make it required for every Change; readiness does not validate its eventual live composition. Keep published Skills standalone: the explicit Implement case must not be replaced solely by a Core workflow. Case retirement changes current selection, not retained historical verdicts; reassessment can still read the old recorded task with a missing-current-case warning.
+
+### Missing Commit capability
+
+core-missing-commit requires an actual composition containing Core and omitting Commit. Prepare it without editing or uninstalling authored packages:
+
+```sh
+mise exec -- node scripts/prepare-internal-targets.mjs skills/rsp
+```
+
+Verify the printed identity lists only rsp. For separately authorized execution, select `--case core-missing-commit --composition <printed-composition>` and retain that identity with the run. The CLI remains installed through its tooling fixture; the task does not assert missing capability in its prompt or prohibit commit merely to obtain a stop. Judge the actual absent owner, attempted actions and preservation. A full composition is invalid input for this case, not an agent regression. Do not run a mixed-composition catalog as one uniform live matrix; partition it by applicable inputs using existing selections.
 
 ## Authorized model execution
 
-Use `mise exec -- pnpm run test:skills -- run --case preserve-user-files --allow-live --config-file /absolute/private/provider.toml --auth-file /absolute/private/auth.json --max-sessions 2`. The private overlay supplies provider routing/catalog, not model or safety overrides. Auth is separate; `--codex-bin` selects the executable. Personal configuration is not modified or inherited: each session gets an isolated CODEX_HOME and strict configuration.
+Use `mise exec -- node tests/skills/runner/cli.mjs run --case preserve-user-files --allow-live --config-file /absolute/private/provider.toml --auth-file /absolute/private/auth.json --max-sessions 2`. The private overlay supplies provider routing/catalog, not model or safety overrides. Auth is separate; `--codex-bin` selects the executable. Personal configuration is not modified or inherited: each session gets an isolated CODEX_HOME and strict configuration.
 
 1. The executor performs the case task in a disposable Git workspace.
 2. The runner retains safe evidence and deterministic observations, even when execution fails or stops.
@@ -26,7 +53,7 @@ The judge uses native `--sandbox read-only`. Read/search shell tools are allowed
 
 `--suite` selects multiple cases. Budgets include executor and judge root sessions; native cases report bounded task-local workers separately. Ordinary task failures, missing trace metadata and unparsed reports do not stop unrelated cases. Cancellation, budget exhaustion, concrete authority violations and frozen-input changes still stop expansion. No stage automatically retries or reruns execution.
 
-`--composition /absolute/skills` selects an explicit candidate composition. Separate immutable results can support comparisons; they do not create a release gate. Current task inputs, model, environment and composition must be considered when interpreting differences.
+`--composition /absolute/skills` selects an explicit candidate composition. Separate immutable results can support comparisons; they do not create a release gate. Current task inputs, model, environment and composition must be considered when interpreting differences. Run completion and a parsed judge verdict are separate observations, not release, publication or human approval. Missing required evidence or judge execution remains a gap; a local self-check cannot replace required independent judging.
 
 ### Evidence and reports
 
@@ -52,7 +79,7 @@ SIGINT/SIGTERM cancels the active session, retains collected output/observations
 
 ## Reassess retained execution
 
-Preview: `mise exec -- pnpm run test:skills -- reassess --matrix /absolute/reports/run/matrix.json --case preserve-user-files`. This selects one readable matrix member and performs no provider call, task execution or retained-oracle replay.
+Preview: `mise exec -- node tests/skills/runner/cli.mjs reassess --matrix /absolute/reports/run/matrix.json --case preserve-user-files`. This selects one readable matrix member and performs no provider call, task execution or retained-oracle replay.
 
 Separately authorized judging adds `--allow-live --config-file /absolute/private/provider.toml --max-sessions 1`, with optional auth/executable paths. A positive budget is required; this command uses at most one judge and zero executors, regardless of a larger budget. `--baseline /absolute/previous/matrix.json` selects optional comparison evidence for the same case. Both commands use the same review path and timeout/cancellation behavior.
 

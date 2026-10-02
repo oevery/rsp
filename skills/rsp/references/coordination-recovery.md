@@ -10,10 +10,14 @@ For an explicit pause, use the host's available interruption mechanism and confi
 
 Preserve the focused owner (`WorkOwner`) and focused child WorkRef when applicable during ordinary pause or blockers. Only an explicit release or unfocus request, archive, or another authorized lifecycle action changes selection. Update the Change only with accepted outcomes, decisive verification, and durable blockers.
 
-Core may atomically replace the focused marker's optional Focus Capsule at a meaningful checkpoint. A valid v1 capsule contains one version declaration, exactly one single-line `Current`, `Evidence`, and `Next`, and at most one single-line `Resume check`. Exclude worker identities, host handles, machine-specific paths, raw messages, retry chronology, topology, authority, acceptance, logs, diffs, and duplicated Tasks. The capsule is a recovery pointer, never worker coordination, authority, or acceptance.
+When a Focus Capsule exists or is inspected or replaced, or accepted work needs a continuation, read [focus and continuation recovery](focus-continuation.md) for the portable format and handoff. The capsule is a recovery pointer, never worker coordination, authority or acceptance.
 
-On resume, inspect actual effects before repeating work. An idempotent action may repeat after boundary inspection; an action requiring inspection must first check its prior effects; a non-repeatable action stops for recovery or owner input. Resume a compatible worker only when the host supports it and current authority, scope, writer boundary, strategy, and evidence still match. Otherwise send a complete fresh task.
+## Resume from effects, not tool status
+
+Inspect actual effects before repeating work. An idempotent action may repeat after boundary inspection; an action requiring inspection must first check its prior effects; a non-repeatable action stops for recovery or owner input. An exit code or partial result alone does not prove that nothing happened. Unknown mutation blocks replay, not safe read-only observation.
+
+A permitted method may change only while authority, owner, scope, baseline and required evidence remain the same. Named checks, provenance operations and required independent workers retain their declared obligations. Resume a compatible worker only when the host supports it and writer boundary, strategy and evidence also match; otherwise send a complete fresh task.
 
 For cross-session or cross-device recovery, distrust transient worker and liveness claims. Reread current authority, focused owner, status and index, checkout diff, dirty paths, blockers, execution location, and decisive evidence before mutation or delegation. Validate the selected handoff again, revalidate required verification, and re-establish any host evidence needed for worker attribution or independent verification. Host completion without an attributable required worker result keeps acceptance incomplete. Current authority always wins.
 
-If incomplete archived child acceptance belongs to a closed Group, recovery requires separate explicit lifecycle authority for `rsp group reopen <group> --reason <text>` before `rsp reopen <group>/<child>`. Restore neither children nor dependents implicitly.
+For incomplete archived acceptance, read [reopen recovery](reopen-recovery.md) before any lifecycle mutation. It requires separate explicit lifecycle authority and owns exact archive selection and the closed-Group-before-child sequence. Restore neither children nor dependents implicitly.

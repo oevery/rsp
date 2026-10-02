@@ -12,7 +12,7 @@ node scripts/prepare-internal-targets.mjs .agents/skills/author-rsp-skills .agen
 
 The helper prechecks all inputs, rejects links, special files and duplicate package names, then creates a unique temporary `root/skills`. It preserves sources and verifies copied bytes, executable bits and the selected package list. Success returns JSON `root`, `composition`, `identity` and actual `fileCount`. Failure exits nonzero without a success identity; stderr identifies any temporary root left after allocation. There is no overwrite or source-deletion option.
 
-Retain the printed paths and identity with the evidence. Recreate the snapshot after source edits. Keep copies until their evidence consumers finish, then remove only the exact disposable directory under applicable cleanup authority. Run root maintenance tools from the repository, not the prepared packages. Package security coverage excludes those root tools; their behavior is verified by code tests and lint.
+Retain the printed paths and identity with the evidence. Recreate the snapshot after source edits. On helper failure, inspect any reported temporary root and source effects before a permitted rerun; do not invent a success identity or reuse an unverified partial copy. Keep copies until their evidence consumers finish, then remove only the exact disposable directory under applicable cleanup authority. Run root maintenance tools from the repository, not the prepared packages. Package security coverage excludes those root tools; their behavior is verified by code tests and lint.
 
 ## Bind checks and preserve gaps
 

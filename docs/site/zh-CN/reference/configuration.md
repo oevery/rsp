@@ -36,6 +36,10 @@ RSP 不提供 WorkRef 语言或风格配置字段。`language.default: zh-CN` �
 
 JSON 返回 Change 类型、Decision Records 路径、Manage 策略和持久化语言的单层有效摘要。例如仅配置 `language.default: zh-CN` 时，输出中的 `language.artifacts` 和 `language.commit` 都是 `zh-CN`。
 
+Agent 仅在当前决定依赖有效 RSP 配置时，使用同一选定 CLI 成功返回的 `rsp config --json` 摘要。CLI 负责校验、默认值与继承解析，Agent 负责解释结果。相关事实未变时可复用；配置漂移、恢复或依赖配置的收尾前重新读取，不必每个阶段都读取。原始 YAML 只用于诊断，status 也不是配置摘要。
+
+无效配置以非零退出码返回错误，不提供有效摘要。投影失败或选定 CLI 不可用时，应诊断原因，不绕过校验或手算默认值。依赖配置的决定与自动收尾保持不可用；不依赖未解析配置的独立授权工作可以继续。显式语言覆盖和已有文件语言仍然有效。其他工具的配置保留各自的读取方式。
+
 ## Decision Records
 
 Decision Records 默认位于 `.rsp/specs/decisions/`。如果宿主项目已在其他位置拥有 ADR，只配置一个项目相对的权威目录：
@@ -60,7 +64,7 @@ manage:
 `closeout` 接受：
 
 - `manual`：不自动归档或提交。
-- `lifecycle`：成功完成持久化审查后可以归档；提交仍然独立。
+- `lifecycle`：所需固定范围审查干净且持久化写回判断完成后可以归档；提交仍然独立。
 - `local`：自动归档符合条件、已验证、非小型且归属边界干净、路径精确、无混杂或越界改动的受管终态边界，并把这些精确路径一次性路由到本地 Commit，无需用户再次请求。
 
 省略 `manage` 时，兼容默认值仍为 `activation: explicit` 与 `closeout: local`。只有真实合格且已选择的协调分支，通过最新门禁后才可考虑既有的有限生命周期／本地 Git 收尾上限；普通工作不因此获得归档或提交权限。更近的禁止与宿主限制优先。RSP 不提供 `full` 预设；推送、标签、发布、部署、批准与人工验收保持显式。

@@ -3,10 +3,10 @@
 The full suite discovers these cases through its `all: true` selection. Run their offline readiness with:
 
 ```sh
-mise exec -- pnpm run test:skills -- check --case skill-author-create,skill-author-revise,skill-author-critique,skill-author-document-only,doc-agent-navigation
+mise exec -- node tests/skills/runner/cli.mjs check --case skill-author-create,skill-author-revise,skill-author-critique,skill-author-document-only,doc-agent-navigation
 ```
 
-The shared project separates an export contract from a flawed Skill and an unconditional document pointer. Doc's Skill branch handles creation and revision. Creation covers a Chinese request, English artifact configuration, an absent target and no installation. Review checks the executable Skill read-only, including agreed expression requirements.
+The shared project separates an export contract from a flawed Skill and an unconditional document pointer. Doc's Skill branch handles creation and revision. Creation uses the real CLI tooling and valid language configuration: English artifacts override the Chinese default, while the response remains Chinese. It covers an absent target and no installation. Review checks the fixed Skill instructions read-only through behavior and explanation perspectives, including agreed expression requirements; the export contract stays authority-only and shared defects are reported once.
 
 The ordinary-document case checks that a tiny human-facing edit does not require Skill-package work; agent-document checks navigation without package edits. Natural requests do not explicitly invoke the tested capability. Semantic rubrics cover result steps, sequence versus peers and preserved meaning without counting words or matching phrases.
 

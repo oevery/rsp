@@ -2,6 +2,8 @@
 
 Choose the document's reading outcome, not a mandatory template. Preserve project formats and canonical headings.
 
+For a document set, start with the reader's entry point and follow only the links needed for the task. Check that each handoff supplies its prerequisites and that summaries agree with the linked owner. An owner outside the authorized write set remains read-only; return its conflicting claim rather than expanding the edit boundary.
+
 ## README
 
 - Give a newcomer a first useful result: prerequisites, entry path and success signal.
@@ -31,6 +33,7 @@ For example, “retries are safe” is incomplete when deduplication applies onl
 - Concepts: explain definitions, causes and relationships needed for understanding or a decision.
 - References: provide exact contracts and navigable details, not a forced tutorial.
 - Label illustrative snippets; do not present invented output as observed execution. Preserve incoming links after heading changes.
+- API/TSDoc comments: explain the consumer's real inputs, returns, failures and use. Compare examples and claims with their authoritative contract and implementation; report unresolved discrepancies rather than silently documenting whatever code does. Writing authority does not permit implementation changes, execution or dependency installation.
 
 ## Operating instructions and work records
 
@@ -38,4 +41,4 @@ For example, “retries are safe” is incomplete when deduplication applies onl
 - Change: retain the six canonical sections and selected delta. Proposal gives the outcome; Spec gives acceptance; Design gives the approach; Tasks list work; Verify records final evidence; Blockers name unresolved dependencies.
 - Decision Record: explain alternatives and consequences without redefining the contract.
 - Audit/run records: retain required observations, actions and evidence. Remove irrelevant session narration, not the record's purpose.
-- Skill packages: use Doc's Skill-authoring branch. Release prose retains its specialized owner.
+- Skill packages: use Doc's Skill-authoring branch. Release communication uses Doc's conditional release method.

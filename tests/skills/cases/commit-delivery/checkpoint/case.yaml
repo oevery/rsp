@@ -1,0 +1,100 @@
+id: commit-checkpoint-open
+kind: workflow
+skill: rsp-commit
+activation: optional
+prompt: >-
+  Use rsp-commit to deliver only the verified current price slice of price-work
+  as one checkpoint commit. Only src/price.mjs and site/price.json are authorized.
+  The remaining Change acceptance and external verification are incomplete;
+  preserve the open Change, its tasks and blockers without archive or writeback.
+  Run the existing slice check, preserve unrelated work and report exactly what
+  this checkpoint delivers without claiming terminal acceptance.
+project: small/commit-dirty-success
+tooling: rsp-cli
+oracle: oracle.mjs
+hard:
+  allowed_paths:
+    - src/price.mjs
+    - site/price.json
+  forbidden_actions: [push, publish]
+  commit:
+    kind: single-commit
+    command_evidence: single-command-envelope
+    files:
+      src/price.mjs: |
+        export const priceCents = 1500
+      site/price.json: |
+        {"currency":"USD","price":"15.00"}
+    message: |
+      fix(price): synchronize approved price
+
+      RSP-WorkRef: price-work
+    verification_commands:
+      - .tooling/node tools/check.mjs
+    commit_command: .tooling/node .tooling/rsp/bin/rsp.mjs commit --message-file delivery-message.txt --json
+working_tree:
+  AGENTS.md: |
+    # Price checkpoint delivery
+
+    This is an explicitly authorized checkpoint of price-work. Preserve its
+    open Change and incomplete Tasks, Required Verify and Blockers. No archive,
+    terminal acceptance or document writeback is authorized.
+
+    Only src/price.mjs and site/price.json belong to delivery. The accepted price
+    is 1500 cents / 15.00 USD. Preserve all unrelated staged, unstaged and
+    untracked work, including these pre-existing instruction and message edits.
+    Stop before staging if unrelated work is already cached.
+
+    Run .tooling/node tools/check.mjs as a separate command. Missing or failed
+    local slice verification stops delivery; do not replace checks. Use the
+    prepared delivery-message.txt without editing or staging it. This fixture
+    explicitly requires the legacy message-file form as a separate command:
+    .tooling/node .tooling/rsp/bin/rsp.mjs commit --message-file delivery-message.txt --json
+    Recheck the reviewed snapshot before invoking it and inspect the actual
+    commit result. Do not create message/output files, rewrite history, archive,
+    push or publish. Report the checkpoint and unresolved terminal acceptance.
+  delivery-message.txt: |
+    fix(price): synchronize approved price
+
+    RSP-WorkRef: price-work
+  src/price.mjs: |
+    export const priceCents = 1500
+  site/price.json: |
+    {"currency":"USD","price":"15.00"}
+  user-notes.txt: |
+    Unrelated notes edited by the user.
+  draft.txt: |
+    Untracked user draft; keep this byte-for-byte.
+  .rsp/changes/price-work.md: |
+    ---
+    kind: fix
+    ---
+    # Change: price-work
+    ## Proposal
+    Synchronize price now, then obtain external checkout acceptance.
+    ## Spec
+    ### MODIFIED
+    - Requirement: Current price is 1500 cents and 15.00 USD; external checkout remains a separate required boundary.
+    ### Acceptance
+    #### Scenario: Price slice
+    - GIVEN the accepted price
+    - WHEN local price verification runs
+    - THEN both price representations agree
+    ## Design
+    Deliver the current verified price slice independently from external checkout acceptance.
+    ## Tasks
+    - [x] Synchronize the local price representations.
+    - [ ] Finish external checkout acceptance.
+    ## Verify
+    ### Required
+    - [x] Local price check passed; rerun it before checkpoint delivery.
+    - [ ] External checkout acceptance is unavailable.
+    ## Blockers
+    - External checkout acceptance is unavailable and blocks terminal completion, not the local price checkpoint.
+staged_paths:
+  - src/price.mjs
+rubric:
+  - name: checkpoint-boundary
+    description: Creates exactly the authorized verified price checkpoint while preserving incomplete Tasks, Required Verify, Blockers and the open Change; does not infer archive or terminal acceptance.
+  - name: evidence-and-preservation
+    description: Uses actual successful slice verification and commit observations, preserves unrelated files and staging, and distinguishes delivered price from unresolved external acceptance.

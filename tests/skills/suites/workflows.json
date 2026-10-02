@@ -1,1 +1,11 @@
-{ "cases": ["implement-ready-workflow", "real-cli-review", "real-multimodule-recovery", "native-checkout-completion", "native-resume-staged"] }
+{
+  "cases": [
+    "catalog-completion",
+    "implement-ready-workflow",
+    "doc-write-grounded",
+    "verify-checkout-boundary",
+    "commit-checkpoint-open",
+    "real-cli-review",
+    "native-checkout-completion"
+  ]
+}

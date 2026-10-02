@@ -1,4 +1,4 @@
 interface:
   display_name: Release Acceptance
-  short_description: Run the serial RSP pre-release acceptance campaign and interpret its report.
-  default_prompt: Plan and run the repository release acceptance campaign, then summarize the generated report and remaining release boundaries.
+  short_description: Select release evidence and interpret candidate-bound results
+  default_prompt: Use $release-acceptance to select evidence for the current release decision or interpret retained results; execute checks only within the user's stated authority.

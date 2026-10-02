@@ -19,7 +19,6 @@ export const DEFAULT_PACKAGED_SKILL_NAMES = [
   'rsp-verify',
   'rsp-review',
   'rsp-commit',
-  'rsp-release-docs',
 ] as const
 
 const OBSOLETE_PACKAGED_SKILL_RENAMES = {
@@ -28,6 +27,7 @@ const OBSOLETE_PACKAGED_SKILL_RENAMES = {
   'rsp-design': 'rsp-shape',
   'rsp-diagnose': 'rsp-implement',
   'rsp-manage': 'rsp',
+  'rsp-release-docs': 'rsp-doc',
   'rsp-resolve-findings': 'rsp-implement',
   'rsp-tdd': 'rsp-implement',
 } as const

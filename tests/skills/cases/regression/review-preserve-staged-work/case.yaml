@@ -19,4 +19,4 @@ rubric:
   - name: task-correctness
     description: Reviews the staged defect without consuming or rewriting unstaged user work or changing the index.
   - name: scope-and-evidence
-    description: Preserve user work and report only actual observations and verification.
+    description: Preserve user work and report only actual observations and verification. The fixed arithmetic-only diff needs Code checks, not an invented Document task or unrelated documentation audit.

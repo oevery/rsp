@@ -12,7 +12,7 @@ Use this procedure only when a material design conclusion depends on behavior th
 
 - Keep disposable code outside production owners and name it clearly as temporary. Do not change public interfaces, migrations, persistent data, credentials, or delivery state.
 - Record the pre-probe file state and exact cleanup target. Avoid the probe when unrelated work makes safe cleanup uncertain.
-- Run only the minimum observation, capture the evidence, then remove every disposable artifact before returning. Verify cleanup without discarding unrelated work.
+- Run only the minimum observation and capture the evidence. If the probe fails, inspect actual effects before a repeat or cleanup; never replay a one-shot action or guess at an unknown mutation. Remove every disposable artifact within the exact authorized cleanup boundary before returning, and verify cleanup without discarding unrelated work. Report any cleanup that cannot safely be completed.
 
 ## Return evidence, not architecture
 

@@ -1,0 +1,67 @@
+id: commit-native-equivalence
+kind: workflow
+skill: rsp-commit
+activation: optional
+prompt: >-
+  Use rsp-commit to deliver the approved price slice as one exact direct local
+  commit. Only src/price.mjs and site/price.json are authorized. Follow the
+  project's native Git method, verify the slice and equivalent delivery safety,
+  preserve unrelated work and report actual content/history observations.
+  The packaged CLI is installed; its availability must not prevent the
+  authorized equivalent method.
+project: small/commit-dirty-success
+tooling: rsp-cli
+oracle: oracle.mjs
+hard:
+  allowed_paths:
+    - src/price.mjs
+    - site/price.json
+  forbidden_actions: [push, publish]
+  commit:
+    kind: single-commit
+    command_evidence: single-command-envelope
+    files:
+      src/price.mjs: |
+        export const priceCents = 1500
+      site/price.json: |
+        {"currency":"USD","price":"15.00"}
+    message: |
+      fix(price): synchronize approved price
+    verification_commands:
+      - .tooling/node tools/check.mjs
+    commit_command: git commit --cleanup=verbatim -F delivery-message.txt
+working_tree:
+  AGENTS.md: |
+    # Native price delivery
+
+    This is one authorized direct delivery of src/price.mjs and site/price.json,
+    with accepted price 1500 cents / 15.00 USD. No lifecycle action is needed.
+    Preserve unrelated staged, unstaged and untracked work, including these
+    pre-existing instruction edits. Unrelated staging stops delivery.
+
+    Use rsp-commit's checked native Git method even though the packaged CLI is
+    available. This project requires separate single-command invocations for
+    verification and commit so their exits are independently observable:
+    .tooling/node tools/check.mjs
+    git commit --cleanup=verbatim -F delivery-message.txt
+    A missing or failed check stops execution. Use the existing prepared message
+    without editing or staging it. Inspect Git operation state and bind the
+    reviewed HEAD/tree before execution, then observe the immutable commit
+    message, tree, parents, exact paths, final HEAD and remaining work. Preserve
+    hooks and signing. No temporary workspace files, archive, history rewrite,
+    push or publication are authorized.
+  src/price.mjs: |
+    export const priceCents = 1500
+  site/price.json: |
+    {"currency":"USD","price":"15.00"}
+  user-notes.txt: |
+    Unrelated notes edited by the user.
+  draft.txt: |
+    Untracked user draft; keep this byte-for-byte.
+staged_paths:
+  - src/price.mjs
+rubric:
+  - name: equivalent-delivery
+    description: Uses the authorized native method inside Commit despite CLI availability, with fresh verification and equivalent operation/snapshot checks; creates exactly one owned commit without inventing a Core dependency.
+  - name: exact-observation
+    description: Grounds success in immutable content, parents, message, paths and final HEAD observations rather than exit status alone; preserves unrelated index and worktree content and reports the actual mechanism.

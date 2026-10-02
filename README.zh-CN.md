@@ -21,7 +21,7 @@ RSP 把模糊意图转化为经过塑造、实现、审查和验证的软件变�
 
 ## 五分钟入门
 
-RSP 需要 Node.js 22（`>=22`）。使用当前稳定版本：
+RSP 需要 Node.js 22（`>=22`），从目标项目根目录执行初始化。后续 `rsp` 示例要求该命令已可用；否则通过 `npx -y @oevery/rsp@latest <command>` 调用同一选定包。使用当前稳定版本：
 
 ```bash
 npx -y @oevery/rsp@latest init --with-project-setup
@@ -36,10 +36,12 @@ npx -y @oevery/rsp@latest status
 ```bash
 rsp create improve-login "让登录失败信息可供用户采取行动"
 rsp focus improve-login
-rsp show --focused
+rsp show improve-login
 ```
 
-遵循最近的 `AGENTS.md`，在工作推进时同步当前聚焦的 Change，运行最新的项目检查，判断是否需要持久化更新，并仅在满足验收条件后归档。
+Focus 是一个集合：project-setup 和 improve-login 可以同时聚焦。使用明确名称查看目标；show --focused 要求恰好一个标记。
+
+确认 `doctor` 显示预期的项目设置，`status` 显示预期工作；这些是确定性观察，不是语义验收。遵循最近的 `AGENTS.md`，保持选中的 Change 与实际结果同步，运行最新的必需检查并判断持久化更新。只有验收满足且具备生命周期权限时，才通过 `rsp archive` 归档。
 
 [阅读完整入门指南](./docs/site/zh-CN/getting-started.md)。
 
@@ -50,7 +52,7 @@ rsp show --focused
 ├── rsp-rules.md       # 最小后备协议
 ├── specs/             # 当前契约、边界与必要约束
 ├── changes/           # 未完成工作
-├── focus.d/           # 选择当前工作的空标记文件
+├── focus.d/           # 工作选择标记；可附短恢复胶囊
 └── archives/          # 已完成历史
 ```
 
@@ -66,6 +68,7 @@ rsp show --focused
 - [CLI 参考](./docs/site/zh-CN/reference/cli.md)
 - [3.0 迁移指南](./docs/migrations/3.0.md)与 [3.1 迁移指南](./docs/migrations/3.1.md)
 - [发布说明](./docs/releases/3.3.0.md)
+- [维护者测试与 Skill 验证](./tests/README.md)
 - [设计哲学](./docs/maintainers/design-philosophy.md)与[维护者上游研究](./docs/maintainers/upstreams.md)
 
 在本地运行文档：
@@ -80,6 +83,6 @@ pnpm docs:build
 
 ## 平台支持
 
-RSP 是与工具无关的文件约定，适用于任何能读取项目文件的助手或编辑器。人类从这里开始；AI 智能体遵循最近的 `AGENTS.md`，优先加载 `skills/rsp/SKILL.md`，仅在 Skill 不可用时使用 `.rsp/rsp-rules.md` 后备协议。
+RSP 是与工具无关的文件约定，适用于任何能读取项目文件的助手或编辑器。人类从这里开始；AI 智能体遵循最近的 `AGENTS.md`，通过宿主 Skill discovery 或 `.agents/skills/rsp/SKILL.md` 加载可用的项目 Core，仅在 Skill 不可用时使用 `.rsp/rsp-rules.md` 后备协议。根目录 `skills/` 是 RSP 仓库中的分发源码，不是消费者的安装入口。
 
 RSP 使用 [MIT 许可证](./LICENSE)。

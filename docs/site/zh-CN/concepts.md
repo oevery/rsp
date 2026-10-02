@@ -40,6 +40,8 @@ RSP 把未完成工作、持久化事实、长期理由、作用域指令和已�
 
 RSP 从仓库 Markdown 与当前 checkout 证据派生工作流状态。CLI、软件包与 Skills 不提供 daemon、数据库、宿主同步 adapter、Web runtime、浏览器观测面或隐藏 runtime 状态。
 
+Agent 与归属能力解释证据，并决定下一步允许的操作。命令与脚本执行确定性操作并返回观察；退出成功、就绪值或建议操作都不是语义批准。Focus 与生命周期修改仍由相应 CLI 拥有，工具完成标签不能替代必需证据与独立验收。
+
 ## 一个 Change，一个结果
 
 一个 Change 拥有一个可观察结果，以及共享的验收、验证、审查、归档和回滚边界。它保留规范的 Proposal、Spec、Design、Tasks、Verify 与 Blockers 章节。Verify 下的 `### Required` 保存验收关键证据，`### Optional` 保存额外环境、兼容性、规模或信心覆盖；未分类的旧 Verify 项按 Required 处理。

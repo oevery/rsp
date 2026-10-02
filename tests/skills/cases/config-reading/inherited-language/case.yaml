@@ -1,0 +1,37 @@
+id: config-inherited-artifact-language
+kind: regression
+skill: rsp-doc
+activation: required
+prompt: >-
+  Write a new guide.md for a teammate who needs to run the local snapshot export
+  and understand its failure behavior. Ground it in export.mjs and the project
+  brief. Follow this project's artifact conventions. Change only guide.md;
+  preserve existing files, configuration and Git. Do not commit or publish.
+  Report the result and what you actually checked.
+project: small/doc-write-grounded
+tooling: rsp-cli
+oracle: oracle.mjs
+hard:
+  allowed_paths: [guide.md]
+  forbidden_actions: [push, publish]
+expected:
+  documents: [guide.md]
+working_tree:
+  AGENTS.md: |
+    # Snapshot export workspace
+
+    This project uses RSP. Use the installed rsp-doc for repository writing.
+    New artifacts follow effective project language before this fallback: English.
+    Preserve existing artifact language, source and user notes. The bundled
+    CLI is .tooling/node .tooling/rsp/bin/rsp.mjs; the local runtime is .tooling/node.
+    No Change or lifecycle mutation is needed for this bounded writing task.
+  .rsp/config.yaml: |
+    language:
+      default: zh-CN
+rubric:
+  - name: inherited-language
+    description: The new guide's ordinary prose is Chinese under the effective inherited artifact language, while commands, environment variables and canonical identifiers stay exact. Existing English documents remain unchanged. Judge the artifact language, not reading-command fingerprints.
+  - name: usable-grounded-guide
+    description: A teammate can identify Node 22, EXPORT_TENANT, positional output path, new-file-only success, and exit-3 existing-output refusal. No overwrite, automatic retry, deduplication or invented API is promised; claimed execution has actual evidence.
+  - name: scope
+    description: Only guide.md changes. Source, project instructions, raw configuration, existing artifacts, index and history remain intact.

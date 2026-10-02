@@ -33,6 +33,16 @@ Define RSP system layering, artifact ownership, dependency direction, and bounda
 - Research and maintainer tooling may depend on product artifacts for evidence, never the reverse.
 - Self-hosting `.rsp/` artifacts guide repository maintenance and are not consumer runtime configuration.
 
+## Agent and tool boundary
+
+Owning Skills retain semantic judgment and workflow responsibility. CLI and scripts supply deterministic operations, diagnostics and observations. Availability, version, exit status, warnings and recommendations grant neither authority nor semantic acceptance.
+
+An owning Skill may change a permitted method while the goal, scope, authoritative baseline, permissions and required evidence remain fixed. A nearer named mandatory command, immutable provenance operation or required independent capability remains obligatory. Equivalent execution cannot substitute an easier acceptance condition. Published Skills retain the minimum local guidance needed to apply this boundary without a runtime dependency on this Spec.
+
+Recovery follows actual effects and the operation's repeat safety. Diagnose a tool-only obstacle and inspect state before continuing read-only or proven repeat-safe work. Unsafe facts, missing decisive evidence, unknown mutation or a changed authority/evidence boundary require the corresponding stop or owner decision. Unknown effects permit safe observation, not blind mutation replay; one-shot Commit delivery retains its stricter attempt boundary.
+
+Protected RSP artifact mutations use their owning commands and safety checks. Method flexibility does not authorize manual archive/focus repair, waive managed-path validation, or create a second workflow controller.
+
 ## Constraints
 
 - Prefer the smallest owner and the smallest stable artifact surface.

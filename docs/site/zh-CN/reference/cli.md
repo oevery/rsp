@@ -15,7 +15,9 @@ rsp skills install [name] [--dry-run] [--force]
                                 安装默认套件或一个指定的 Skill
 ```
 
-`rsp update` 不刷新已安装的包自有 Skills。先用 `rsp skills list` 检查包与精确目标状态，再用 `rsp skills install --dry-run` 预检。内容不一致的已选 Skill 树或已识别的过时包自有标识需要显式 `--force`；强制替换前检查并保留用户定制树，未知 Skills 不作为迁移目标。已识别的替换／移除在激活失败时回滚，但不保证静默升级安全。尚未发布的源码候选如何映射旧名称，见 [Skills 与受管工作](../guides/skills.md)；`@latest` 仍调用已发布包，不代表这个候选。
+`rsp update` 不刷新已安装的包自有 Skills。先用 `rsp skills list` 检查包与精确目标状态，再用 `rsp skills install --dry-run` 预检。内容不一致的已选 Skill 树或已识别的过时包自有标识需要显式 `--force`；强制替换前检查并保留用户定制树，未知 Skills 不作为迁移目标。
+
+激活失败会触发已识别替换／移除的回滚。回滚不完整时，命令会报告保留的恢复位置；先检查实际安装树与备份，再决定是否重试或清理。静默升级安全不因此得到保证。尚未发布的源码候选如何映射旧名称，见 [Skills 与受管工作](../guides/skills.md)；`@latest` 仍调用已发布包，不代表这个候选。
 
 `rsp doctor --fix` 只报告真实的文件系统修改；健康项目会返回 `fixed: []`，并说明无需安全修复。
 
@@ -67,7 +69,13 @@ rsp reopen <name> --reason <text> [--from <archive-path>]
 rsp commit --message-file <path> [--json]
 ```
 
-`rsp commit` 基于当前已经暂存的边界创建一个本地 commit。存在进行中的 merge、cherry-pick、revert、rebase 或 sequencer 操作时会拒绝提交。它不会主动 stage、push、tag、发布、amend、创建修复提交或执行跨分支集成。消息文件必须包含真实换行；字面量 `\n` 会被拒绝。Git 通过直接子进程的 stdin 路径接收消息，并使用 `--cleanup=verbatim`。提交完成后，RSP 会核对完整存储消息和实际提交路径，并返回提交前后 HEAD、存储消息、已提交路径与工作树剩余路径。如果提交后的消息或路径不匹配，命令会报告失败，但保留已经创建的 commit，后续历史修复仍需单独授权。
+`rsp commit` 基于当前已经暂存的边界创建一个本地 commit。存在进行中的 merge、cherry-pick、revert、rebase、mail-apply 或 sequencer 操作时会拒绝提交。它不会主动 stage、push、tag、发布、amend、创建修复提交或执行跨分支集成。预期的多行正文应使用真实换行。Git 通过直接子进程的 stdin 路径接收消息，并使用 `--cleanup=verbatim`；当前源码候选原样传输字面量 `\n`，不解码转义或猜测消息意图。
+
+当前源码候选新增可选的成对参数 `--expected-head <full-oid|unborn>` 与 `--expected-tree <full-oid>`。同时提供两者可将执行绑定到已审查的 HEAD 和 index tree；无效或不匹配的预期在 Git commit 前停止。上面的 message-file 形式仍受支持，快照检查不构成跨进程锁。
+
+执行后，候选把不可变 commit 的 tree、parents、完整存储消息与实际路径对照已捕获边界，并检查最终 HEAD 仍指向该 commit。JSON 保留提交前后 HEAD、存储消息、已提交路径与工作树剩余路径，并新增 `stagedTree`、`committedTree`、`parents`、`attempt: not_attempted | succeeded | failed` 与 `creation: not_attempted | confirmed | unknown` 观察。Git 成功证明创建发生，不证明观察到的 HEAD 属于该次尝试。失败会保留任何已创建 commit；失败结果不代表已回滚、没有副作用或允许重试。
+
+`rsp-commit` 拥有方法选择与交付判断，CLI 诊断不提供这些结论。经检查的原生 Git 仅允许在该能力不变的权限、已审查快照与证据边界内使用。真实安全拒绝、已尝试提交或未知副作用都须停止；仅有 `not_attempted` 标签不能授权切换。缺少 Commit 能力时，Core 停止交付，不暂存也不手动替代。历史修复仍需单独授权。
 
 ## 检查与查询
 

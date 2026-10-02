@@ -2,6 +2,8 @@
 
 RSP requires Node.js 22 (`>=22`). Use the current stable release for setup and maintenance commands.
 
+Run setup from the target project root. Later `rsp` examples assume the command is available; otherwise use `npx -y @oevery/rsp@latest <command>` with the same selected package.
+
 ## Initialize a project
 
 ```bash
@@ -15,6 +17,8 @@ npx -y @oevery/rsp@latest doctor
 npx -y @oevery/rsp@latest status
 ```
 
+Confirm that `doctor` reports the intended setup and `status` shows the expected work. Neither result establishes semantic acceptance or grants further mutation authority.
+
 Use `init --agents-mode print` when you need RSP to print the resulting `AGENTS.md` content as well as initialize the project. RSP owns only the block between `<!-- rsp:begin -->` and `<!-- rsp:end -->`; surrounding project instructions remain project-owned.
 
 ## Start one change
@@ -22,8 +26,10 @@ Use `init --agents-mode print` when you need RSP to print the resulting `AGENTS.
 ```bash
 rsp create improve-login "Make login failures actionable"
 rsp focus improve-login
-rsp show --focused
+rsp show improve-login
 ```
+
+Focus is a set, so project-setup may remain focused alongside improve-login. Inspect the explicit name; show --focused succeeds only with exactly one marker. Starting this Change does not require archiving setup.
 
 Edit `.rsp/changes/improve-login.md`. Keep its canonical Proposal, Spec, Design, Tasks, Verify, and Blockers sections. A focus marker selects current work; an open Change is not automatically current merely because its file exists.
 
@@ -40,7 +46,7 @@ When no Change is focused and the user has not supplied a concrete task, ask wha
 3. Implement within explicit mutation authority and run fresh, proportionate verification.
 4. Update Tasks, Verify, and Blockers with current outcomes rather than an execution transcript.
 5. Decide whether stable facts, lasting rationale, or scoped instructions need a durable owner.
-6. Archive only after acceptance and required checks pass and no blocker remains.
+6. With lifecycle authority, use `rsp archive` only after acceptance and required checks pass and no blocker remains.
 
 Archive does not grant Git, publication, or deployment authority. Reinspect the worktree and obtain those permissions separately.
 

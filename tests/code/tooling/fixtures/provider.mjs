@@ -24,7 +24,7 @@ if (process.argv.includes('features') && process.argv.includes('list')) {
   process.exit(0)
 }
 if (process.argv.includes('debug') && process.argv.includes('models')) {
-  process.stdout.write(JSON.stringify({ models: ['fixture', 'fixture-external-action', 'fixture-redacted-action', 'test', 'AI-HUB/gpt-6-astra', 'AI-HUB/gpt-6-sol', 'AI-HUB/gpt-6.1-sol', 'explicit-reviewer'].map(slug => ({ slug, supported_reasoning_levels: [{ effort: 'low' }, { effort: 'medium' }] })) }))
+  process.stdout.write(JSON.stringify({ models: ['fixture', 'fixture-external-action', 'fixture-redacted-action', 'test', 'AI-HUB/gpt-6-astra', 'AI-HUB/gpt-6-sol', 'AI-HUB/gpt-6.1-sol', 'explicit-reviewer'].map(slug => ({ slug, supported_reasoning_levels: [{ effort: 'low' }, { effort: 'medium' }, { effort: 'high' }] })) }))
   process.exit(0)
 }
 

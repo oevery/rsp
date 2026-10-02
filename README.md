@@ -21,7 +21,7 @@ intent → shape → design when needed → diagnose | TDD | implement
 
 ## Five-minute start
 
-RSP requires Node.js 22 (`>=22`). Use the current stable release:
+RSP requires Node.js 22 (`>=22`). Run setup from the target project root. Later `rsp` examples assume that command is available; otherwise invoke the same selected package through `npx -y @oevery/rsp@latest <command>`. Use the current stable release:
 
 ```bash
 npx -y @oevery/rsp@latest init --with-project-setup
@@ -36,10 +36,12 @@ Then create and focus one tracked change:
 ```bash
 rsp create improve-login "Make login failures actionable"
 rsp focus improve-login
-rsp show --focused
+rsp show improve-login
 ```
 
-Follow the nearest `AGENTS.md`, edit the focused Change as work progresses, run fresh project checks, make the durable-update decision, and archive only after acceptance is satisfied.
+Focus is a set: the setup Change may still be focused alongside improve-login. Use the explicit name to inspect it; show --focused requires exactly one marker.
+
+Confirm that `doctor` reports the intended setup and `status` shows the expected work. These are deterministic observations, not semantic acceptance. Follow the nearest `AGENTS.md`, keep the selected Change current, run fresh required checks, and make the durable-update decision. Use `rsp archive` only after acceptance is satisfied and lifecycle authority permits it.
 
 [Read the full getting-started guide](./docs/site/en/getting-started.md).
 
@@ -81,6 +83,6 @@ The site is only a presentation layer over the Markdown in this repository. It a
 
 ## Platform support
 
-RSP is a tool-agnostic file convention and works with any assistant or editor that can read project files. Humans start here; agents follow the nearest `AGENTS.md`, load `skills/rsp/SKILL.md` when available, and use `.rsp/rsp-rules.md` only when the Skill is unavailable.
+RSP is a tool-agnostic file convention and works with any assistant or editor that can read project files. Humans start here; agents follow the nearest `AGENTS.md`, load the project Core through host Skill discovery or `.agents/skills/rsp/SKILL.md` when available, and use `.rsp/rsp-rules.md` only when the Skill is unavailable. Root `skills/` contains authored sources in the RSP repository, not the consumer installation entry.
 
 RSP is licensed under the [MIT License](./LICENSE).

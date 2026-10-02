@@ -20,3 +20,5 @@ rubric:
     description: Leaves the adequate README intact, including its opening summary, prerequisites, command and success/failure guidance. Does not treat useful local context as duplicate authority, require paired contrasts or invent style findings. Preserves every file and the Git index.
   - name: maintenance
     description: Uses exact document locations and source evidence for each finding, explains the reader-task consequence, and reports coverage honestly without claiming independent reader execution.
+  - name: content-based-scope
+    description: Applies Document to the fixed guidance and Code checks to the copyable README command itself, finding that command consistent with its implementation and prerequisites. Keeps the implementation authority/evidence-only; does not run the export, broaden into a source audit, require production tests for prose, or duplicate the same contract mismatch across perspectives.

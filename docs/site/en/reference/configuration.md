@@ -36,6 +36,10 @@ Use `rsp config` for a concise human-readable configuration projection or `rsp c
 
 JSON returns a single-layer effective summary for Change kinds, Decision Records path, Manage policy, and durable language. For example, with only `language.default: zh-CN`, `language.artifacts` and `language.commit` are both `zh-CN`.
 
+Agents use the same selected CLI's successful `rsp config --json` summary when a decision needs effective RSP settings. The CLI owns validation, defaults and inheritance; the Agent interprets the result. Reuse observed values while relevant facts hold; refresh on configuration drift, recovery or dependent closeout, not every phase. Raw YAML inspection is diagnostic only, and status is not a configuration summary.
+
+Invalid configuration exits nonzero with an error and no effective summary. If projection fails or the selected CLI is unavailable, diagnose without bypassing validation or hand-computing defaults. Leave configuration-dependent choices and automatic closeout unavailable; independently authorized work needing no unresolved setting may continue. Explicit language overrides and existing-file language remain valid. Other tools' configuration retains its own reader.
+
 ## Decision Records
 
 Decision Records default to `.rsp/specs/decisions/`. If the Host Project already owns ADRs elsewhere, configure exactly one project-relative authoritative directory:
@@ -60,7 +64,7 @@ manage:
 `closeout` accepts:
 
 - `manual`: no automatic archive or commit.
-- `lifecycle`: archive may follow a successful durable review; commit remains separate.
+- `lifecycle`: archive may follow clean required fixed-scope review and a complete durable writeback decision; commit remains separate.
 - `local`: automatically archives an eligible, verified, non-small terminal managed boundary with a clean exact owned boundary and routes its exact paths once to local Commit without another user request.
 
 When `manage` is omitted, compatibility defaults remain `activation: explicit` and `closeout: local`. Only a genuinely qualified and selected coordination branch may consider this existing limited lifecycle/local-Git closeout ceiling after fresh gates; ordinary work gains no archive or commit authority. Nearest denials and host enforcement narrow it. RSP has no `full` preset; push, tag, publication, deployment, approval, and human acceptance stay explicit.

@@ -8,4 +8,6 @@ Durable artifact prose is repository-owned. For a new authorized artifact: expli
 
 Commit-message prose: explicit current instruction → configured effective commit language → nearest repository authority → clear recent non-merge history.
 
+When precedence needs configured RSP language, use the same selected CLI's successful `rsp config --json` summary, optionally `--compact`; the CLI resolves defaults and inheritance. Reuse it until relevant configuration changes or recovery requires refresh. Raw YAML and status do not resolve effective language. On failed or unavailable projection, diagnose without inventing values or silently dropping configured precedence. Only the dependent choice waits; existing-file preservation, explicit overrides and independently authorized work needing no unresolved setting may continue. Other configuration systems retain their own readers.
+
 Preserve canonical headings, paths, commands, identifiers, WorkRefs, Conventional Commit types and scopes, trailers, severity labels, and machine values. Language and locale never rename or translate an existing WorkRef. Persistent prose belongs to the domain, system, user, or operator; mention AI or agents only when they are actual product actors or constraints.

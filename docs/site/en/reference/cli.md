@@ -15,7 +15,9 @@ rsp skills install [name] [--dry-run] [--force]
                                 Install the default suite or one exact Skill
 ```
 
-`rsp update` does not refresh installed package-owned Skills. `rsp skills list` inspects the package and exact target state; `rsp skills install --dry-run` previews before mutation. Differing selected Skill trees or recognized obsolete package-owned identities require explicit `--force`. Inspect and preserve customized trees before force; unknown Skills are not migration targets. Recognized replacements and removals roll back on activation failure, not a guarantee that silent upgrades are safe. For the unreleased source candidate's old-name routing, see [Skills and managed work](../guides/skills.md); `@latest` still invokes the published package, not this candidate.
+`rsp update` does not refresh installed package-owned Skills. `rsp skills list` inspects the package and exact target state; `rsp skills install --dry-run` previews before mutation. Differing selected Skill trees or recognized obsolete package-owned identities require explicit `--force`. Inspect and preserve customized trees before force; unknown Skills are not migration targets.
+
+Activation failure triggers rollback of recognized replacements/removals. Incomplete rollback retains and reports a recovery location; inspect actual installed trees and backups before retrying or cleanup. Silent upgrade safety is not guaranteed. For the unreleased source candidate's old-name routing, see [Skills and managed work](../guides/skills.md); `@latest` still invokes the published package, not this candidate.
 
 `rsp doctor --fix` reports only real filesystem mutations; a healthy project returns `fixed: []` and explains that no safe repair was needed.
 
@@ -67,7 +69,13 @@ Existing bounded unversioned UTF-8 content remains readable for compatibility. `
 rsp commit --message-file <path> [--json]
 ```
 
-`rsp commit` creates one local commit from the existing staged boundary. It refuses an in-progress merge, cherry-pick, revert, rebase, or sequencer operation. It never stages paths, pushes, tags, publishes, amends, creates a repair commit, or performs cross-branch integration. The message file must contain actual line breaks; literal `\n` sequences are rejected. Git receives the message through a direct child-process stdin path with `--cleanup=verbatim`. After the commit, RSP verifies the complete stored message and exact committed paths, then reports the before/after HEAD values, stored message, committed paths, and remaining worktree paths. A post-commit mismatch is reported as a failure while leaving any created commit for separately authorized history repair.
+`rsp commit` creates one local commit from the existing staged boundary. It refuses an in-progress merge, cherry-pick, revert, rebase, mail-apply, or sequencer operation. It never stages paths, pushes, tags, publishes, amends, creates a repair commit, or performs cross-branch integration. Prepare actual line breaks for intended multiline prose. Git receives the message through a direct child-process stdin path with `--cleanup=verbatim`; the current source candidate transports literal `\n` verbatim rather than decoding escapes or guessing message intent.
+
+The current source candidate adds optional paired `--expected-head <full-oid|unborn>` and `--expected-tree <full-oid>` parameters. Supply both to bind execution to the reviewed HEAD and index tree; invalid or mismatched expectations stop before Git commit. The message-file form above remains supported. These snapshot checks are not cross-process locks.
+
+After execution, the candidate checks the immutable commit's tree, parents, complete stored message and exact paths against the captured boundary, and checks that final HEAD still identifies that commit. JSON retains before/after HEAD, stored message, committed paths and remaining worktree paths, with additive `stagedTree`, `committedTree`, `parents`, `attempt: not_attempted | succeeded | failed` and `creation: not_attempted | confirmed | unknown` observations. Git success confirms creation, not ownership of the observed HEAD by that attempt. Failures preserve any created commit; an unsuccessful result does not imply rollback, no effects or permission to retry.
+
+`rsp-commit` owns method selection and delivery judgment; CLI diagnostics do not supply them. Checked native Git is permitted only within that capability's unchanged authority, reviewed snapshot and evidence boundary. A real safety refusal, attempted commit or unknown effects stops delivery; a `not_attempted` label alone cannot authorize a switch. Missing Commit capability stops Core delivery without staging or a manual substitute. History repair remains separately authorized.
 
 ## Inspection
 

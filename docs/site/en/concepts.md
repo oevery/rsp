@@ -40,6 +40,8 @@ Direct Specs queries are read-only and service-independent. They identify Decisi
 
 RSP derives workflow state from repository Markdown and current checkout evidence. Its CLI, package, and Skills provide no daemon, database, host synchronization adapter, Web runtime, browser observatory, or hidden runtime state.
 
+The agent and owning capability interpret evidence and decide the next permitted action. Commands and scripts perform deterministic operations and return observations; a successful exit, readiness value or recommended action is not semantic approval. Focus and lifecycle mutations retain their owning CLI. Required evidence and independent acceptance cannot be replaced by a tool-completion label.
+
 ## One Change, one outcome
 
 A Change owns one observable outcome with a shared acceptance, verification, review, archive, and rollback boundary. It keeps canonical sections for Proposal, Spec, Design, Tasks, Verify, and Blockers. Under Verify, `### Required` contains acceptance-critical evidence and `### Optional` contains additional environment, compatibility, scale, or confidence coverage. Legacy unclassified Verify items are treated as Required.

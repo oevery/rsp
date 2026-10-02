@@ -1,62 +1,70 @@
 ---
 name: rsp-commit
-description: Create one authorized, exact-scope local commit for a Core-derived direct, Change, integration, Group, or release boundary with a repository-consistent structured message.
+description: Inspect or create one authorized exact-scope local commit for direct, Change, integration, Group or release delivery. Preserve unrelated work; do not infer lifecycle, remote delivery or history-rewrite authority.
 license: MIT
 metadata:
   author: oevery
-  version: "2026.09.29.1"
+  version: "2026.10.01.3"
 ---
 
 # RSP Commit
 
-Create one reviewable local commit after Core derives one compact delivery request, either through ordinary explicit authority or qualified coordinated closeout. Skill availability grants none of its facts. The request contains only the delivery kind, owner reference, real WorkRefs when relevant, exact paths, current local authority, and fresh verification pointers. Rsp-commit rereads owner and Git facts before staging; the request is not a second source of truth.
+Own precise local Git delivery, whether invoked directly or routed by Core. This is a default core capability, not an optional extension. Availability grants no authority. A readiness-only request remains read-only; create a commit only with current local authority, one exact owned boundary and fresh applicable verification.
 
-When a durable owner exists, the owner reference is a WorkOwner reference: a Change uses its WorkRef and a Group uses its Group reference. Included child WorkRefs identify delivery inputs and never replace the durable owner. Direct, integration, and release kinds may have no durable WorkOwner.
+Use explicit response language, then personal instructions, then conversation language for narration. Existing artifact language stays unchanged. Commit prose follows explicit current commit-language instruction, effective configured commit language, nearest repository authority, then the clear style of recent non-merge commits. In RSP projects, when precedence needs configuration, use the same selected CLI's successful `rsp config --json` summary (optional `--compact`); it resolves defaults and inheritance. Refresh on relevant drift or recovery. Raw YAML is diagnostic only; failed or unavailable projection leaves the dependent language choice unresolved before staging, not replaced by history. Independently authorized read-only inspection needing no unknown setting may continue. Response language does not select commit language. Preserve commands, identifiers, Conventional types, scopes and trailers; return a material unresolved language choice to the owner. These rules work without Core installed.
 
-Accept exactly one delivery kind:
+## Establish the delivery boundary
 
-| Kind | Required identity and evidence | RSP metadata |
+Resolve the smallest request: kind, purpose, owner or summary, real included WorkRefs when relevant, exact paths, current local authority, fresh verification pointers and lifecycle evidence only when applicable. Derive these facts from direct user intent or Core's bounded handoff; do not require a transport schema or create a second source of truth.
+
+| Kind | Identity and applicable evidence | RSP trailers |
 | --- | --- | --- |
-| direct | a concise owner summary for one confirmed direct Tiny/Small boundary | none |
-| change | one real WorkRef and its applicable checkpoint or lifecycle evidence | RSP-WorkRef |
-| integration | at least two real WorkRefs, one evidenced shared integration boundary, and exact paths | one RSP-WorkRef per included WorkRef |
-| group | one integration-coupled wave or Group closeout, its Group ref, included WorkRefs, and applicable lifecycle evidence | RSP-Group and included RSP-WorkRef values |
-| release | one confirmed release identity and release-boundary evidence | only real included WorkRefs, when supplied |
+| direct | One confirmed direct outcome permitted by project tracking rules | none |
+| change | One real WorkRef | RSP-WorkRef |
+| integration | At least two real WorkRefs and one evidenced shared delivery boundary | included RSP-WorkRef values |
+| group | Group reference, included WorkRefs and one wave or closeout boundary | RSP-Group and included RSP-WorkRef values |
+| release | Confirmed release identity and release-boundary evidence | only real included WorkRefs |
 
-A direct kind is a transient Git delivery boundary, not a durable RSP WorkOwner. Never require it to create a Change, invent a WorkRef, or supply lifecycle evidence. Integration is also a transient delivery kind and never creates a Group.
+A durable owner is a Change WorkRef or Group reference; included children never replace it. Direct, integration and release may have no durable WorkOwner. Integration creates no Group, direct creates no Change, and commit count is independent from Change count.
 
-Follow Core's response-versus-artifact language boundary for all user-visible control narration; when the response language differs, keep exact canonical values only as secondary parenthesized or code-formatted tokens.
+Purpose is separate from kind:
 
-## Audit the delivery request
+- A checkpoint delivers a verified current slice without claiming completed acceptance, closing an issue or requiring archive.
+- A terminal delivery claims completion only for its selected boundary. Tracked terminal inputs require complete Tasks, decisive Required Verify and no active blocker; legacy unclassified Verify is Required. Optional omissions remain explicit but do not block. Direct work uses its own acceptance, not an invented lifecycle gate.
 
-Read nearest project authority and the selected owner evidence: the delivery kind, owner reference, WorkRefs, relevant open Change, Group Brief and children, archive, or confirmed release boundary. Then inspect git status, staged, unstaged, and untracked paths, the cached diff, and recent non-merge commit messages. Reread verification and lifecycle facts from the owner instead of trusting copied request prose. For integration, prove at least two real WorkRefs and one shared exact boundary. For a terminal Change or Group child, inspect its Verify section and stop before staging when a Task or Required Verify item remains incomplete or a blocker is active. Legacy unclassified Verify items are Required. Optional coverage warnings do not block a terminal commit, but include a material omission in the commit body when it affects review. A checkpoint commit remains explicitly non-terminal and does not claim completed acceptance.
+Lifecycle authority stays upstream. If terminal delivery includes authorized archive or Group closeout, require that action and its inspected diff before staging. Do not archive, update Specs or clean up a Change inside Commit. A valid explicitly authorized local commit without lifecycle authority does not gain it or require an invented archive.
 
-Stop without staging when kind, work, refs, paths, auth, verify, applicable life evidence, or the logical boundary is missing, ambiguous, stale, or conflicts with unrelated work. A missing WorkRef or lifecycle state is not a defect for a valid direct kind. An integration kind with fewer than two real WorkRefs or no shared boundary is invalid. Refuse an active merge, cherry-pick, revert, rebase, mail-apply, or sequencer operation before commit execution. Stop when an allowed path contains mixed owned and unrelated changes that cannot be staged without guessing. Never infer archive, Group closeout, commit, cross-branch integration, push, tag, publication, approval, amend, rebase, force-push, or history-rewrite authority.
+## Audit before staging
 
-## Derive the message
+Read nearest authority and the selected current owner, relevant Brief/children or archive when needed. Inspect status, the complete staged, unstaged and untracked boundary, cached diff and recent non-merge messages. Reread decisive verification and applicable lifecycle facts instead of trusting copied handoff prose. Run an authorized missing local check only when its scope and method are settled; unavailable or failed evidence is a stop.
 
-Choose subject and body prose language from explicit current commit-language instruction, then configured effective commit language, nearest repository commit authority, and finally the clear style of recent non-merge commits. Response language and preferences remembered from another repository do not select it. Preserve Conventional Commit types, scopes, and trailers as technical values. When recent history is materially mixed and no nearer rule resolves it, return the language decision to its owner.
+Stop without changing the index on missing or ambiguous authority, stale evidence, an invalid kind/purpose, unrelated staged work, mixed ownership that cannot be separated without guessing, or active merge, cherry-pick, revert, rebase, mail-apply or sequencer state. Preserve pre-existing owned partial staging unless the exact additional content is authorized. Never broaden paths, unstage unrelated work or reset the index to make a boundary fit.
 
-Use the repository's established Conventional Commit form when present. Derive type and scope from the owned outcome and repository history, not from the conversation. Keep the subject concise and repository-consistent.
+For readiness-only work, report eligibility, gaps and the next owner here; do not stage, prepare files or commit.
 
-Describe the accepted diff as a reader who did not see the working session. Omit rejected session-only alternatives, corrections, and temporary attempts that never entered the authoritative baseline. Name a removal, exclusion, failed external action, compatibility boundary, migration, safety rule, audit fact, or material review fact when it is real and affects review.
+## Review the final index and message
 
-A tiny, mechanical, or direct Tiny/Small boundary may be subject-only. For a non-trivial Change, integration, Group closeout, or release commit, add two to four concise bullets covering the observable outcome, material compatibility boundaries, and an important omission or risk when one affects review. Do not copy file lists, command transcripts, routine verification output, execution chronology, or the full Change.
+1. Stage only the authorized content with exact path handling. Reread status, complete cached paths and diff, including sensitive material, and prove one reviewable logical boundary. Stop if it does not match; do not repair unrelated staging.
+2. Record the reviewed HEAD (or unborn state) and index tree. These bind content, file modes and deletions, not only names; keep them transient.
+3. Derive the message from that final cached diff, not conversation chronology or a copied Change. Use the established Conventional form when present and a concise repository-consistent subject. A small mechanical outcome may be subject-only. For material behavior, compatibility or risk, add only the body needed by a reader without the session.
+4. Load [message and references](references/message.md) for tracked, integration, Group, release, issue-related or non-trivial messages. Keep real removals, migration constraints and important omissions; omit session-only attempts, file inventories and routine command output. A supplied prepared message must still match the reviewed boundary; do not edit it when nearer authority forbids editing.
+5. Prepare actual multiline text, preferably outside the worktree or at an explicitly allowed path. Never use literal backslash-n as a newline transport or include a temporary message file in delivery. Legitimate escape notation in prose stays literal; do not decode it or reject it merely for containing backslash-n.
 
-Project trailers from the delivery kind: add one RSP-WorkRef trailer per real included WorkRef and RSP-Group only when a Group is the owner. A direct or release owner with no included WorkRefs emits no RSP trailer. Integration does not emit RSP-Group. Add authoritative external references already owned by the work and BREAKING CHANGE only for an actual breaking change. Never invent a WorkRef, Group, issue, co-author, sign-off, breaking change, or AI attribution.
+## Execute once and observe
 
-Project every owned issue relationship as a non-closing Issue reference when proportionate. Only a terminal commit whose selected Change acceptance is complete may additionally use a provider-supported closing keyword for an explicit closes relation. Checkpoints, relates relations, ambiguous ownership, and unresolved provider or repository identity emit no closing keyword. When safe shorthand cannot be resolved, keep only the canonical URL; never infer an issue from changed files or mutate the external tracker.
+Select the execution method inside this capability. Prefer the packaged rsp commit command with --message-file, --expected-head (full OID or unborn), --expected-tree and --json, passing the reviewed snapshot. Inspect help read-only when the installed surface is unknown; do not probe capability by trying a commit. A snapshot check narrows drift; it is not a cross-process lock.
 
-## Commit the exact boundary
+Load [checked Git equivalence](references/git-equivalence.md) for native Git, missing older-CLI protection/observations or a pre-execution tool fault. Before changing methods:
 
-Stage only the explicit allowed paths. Re-read git status, the complete cached path list and cached diff, and confirm they represent exactly one delivery boundary with no sensitive material. If the cached boundary is wrong, stop and leave unrelated work untouched; do not repair it by broad staging, destructive reset, or history rewrite.
+- Independently prove no attempted commit or uncertain effects, then refresh authority, verification, Git operation state and reviewed HEAD/tree. Absence, version or exit status alone is insufficient.
+- Stop for unsafe facts, failed verification, snapshot drift or a nearer method restriction; these are not tool faults. Report the diagnosed cause and equivalent checks.
 
-Transport a structured multiline message with actual line breaks or a safely prepared message file. Do not rely on ordinary quoted backslash-n escape sequences as portable newlines; a host shell may pass those characters through literally.
+Unavailable Commit capability has no Core substitute.
 
-When the packaged CLI is available, use rsp commit --message-file path [--json] for the exact local execution step. The command reads the prepared message file, rejects unintended literal backslash-n sequences, and invokes git commit through Node's direct child-process API. It operates only on the existing staged boundary; it never stages paths itself.
+Attempt one local commit. Observe before/after HEAD, immutable commit SHA, complete stored message, committed paths, staged and committed trees, parents and remaining worktree paths. For a normal commit require one parent equal to reviewed HEAD; an unborn commit has none. Require the final HEAD to identify that commit, content tree and paths to match the reviewed index, and message to match exactly except one terminal LF. Collect missing observations by immutable SHA, not several movable HEAD reads.
 
-Create one local commit with the prepared subject, optional body, and trailers. Do not cherry-pick, clean another checkout, push, tag, publish, amend, rebase, or force-push. Afterward observe exact before and after HEAD, the raw complete committed message, committed paths, remaining worktree paths, and remote refs when required. Confirm that committed paths equal the reviewed staged boundary. Compare the observed stored message with the prepared message exactly, allowing only one terminal LF difference for Git's message-file boundary. A successful commit is still a post-commit mismatch when paths or message differ; stop without inferring amend or a second commit.
+A command exit alone is not exact delivery. Distinguish refusal before execution, Git failure with observed unchanged HEAD, a created commit with mismatch, and incomplete observation. If a commit exists or its effects are uncertain, stop without retry, amend, rollback or a second commit. Preserve unrelated work and report what actually happened.
 
-## Return the delivery result
+## Return the result
 
-Return the compact result: kind, work or refs, commit SHA, paths, message, remaining paths, and omissions when present. Preserve complete stored-message and post-commit path observations as evidence, but do not repeat the full request or owner narrative. Report a stop before staging, commit failure, observation failure, or post-commit mismatch truthfully. Manual fallback is only for capability unavailability.
+Report kind and purpose, owner or refs when relevant, commit SHA when observed, delivered paths, message, remaining work and material omissions. Retain the complete message and content/history observations as evidence without repeating the owner narrative. For a stop, name the missing condition, observed Git effects and safe next action. No stage grants push, tag, publication, deployment, approval, cross-branch integration or history rewrite.

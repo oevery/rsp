@@ -2,11 +2,17 @@ id: review-dirty-workflow
 kind: workflow
 skill: rsp-review
 activation: required
-prompt: 'Review the pending src/discount.mjs diff against HEAD. Return JSON {"findings":[{"path":"...","line":1,"reason":"..."}]} with the concrete calculation defect. Keep the working tree and index exactly as found; do not fix or stage anything.'
+prompt: 'Review the pending src/discount.mjs diff, including its API comment and calculation, against HEAD. The function must return the final payable price, not the discount amount. Return JSON {"findings":[{"path":"...","line":1,"reason":"..."}]} with concrete defects. Keep the working tree and index exactly as found; do not fix or stage anything.'
 oracle: project-outcome
 project: small/review-dirty-workflow
 working_tree:
-  src/discount.mjs: "export function discount(price, rate) { return price * rate }\n"
+  src/discount.mjs: |
+    /**
+     * @param {number} price Original price.
+     * @param {number} rate Discount rate.
+     * @returns {number} The discount amount rather than the final price.
+     */
+    export function discount(price, rate) { return price * rate }
   user-notes.txt: "Unstaged user notes: preserve exactly.\n"
 hard:
   allowed_paths: []
@@ -16,6 +22,6 @@ expected:
   mode: findings
 rubric:
   - name: task-correctness
-    description: 'Finds the real arithmetic regression in the provided diff, cites its location, and preserves unrelated dirty work.'
+    description: Finds the arithmetic regression against the final-price contract and the API comment that now promises the discount amount. Checks behavior and explanation in the same source diff, deduplicates the shared contract defect, cites both sides, and preserves unrelated dirty work. Agreement between buggy code and its new comment does not override project authority.
   - name: scope-and-evidence
     description: Preserve user work and report only actual observations and verification.

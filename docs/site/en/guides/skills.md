@@ -1,27 +1,34 @@
 # Skills and managed work
 
-The current source candidate defines eight default host-neutral Skills for on-demand loading. It is not yet a released or behavior-accepted package; the published stable package retains its own inventory. Each Skill has a narrow authority boundary; routine session work does not require inventing a Change.
+The current source candidate defines seven default host-neutral Skills for on-demand loading. It is not yet a released or behavior-accepted package; the published stable package retains its own inventory. Each Skill has a narrow authority boundary; routine session work does not require inventing a Change.
 
 | Skill | Responsibility |
 |---|---|
 | `rsp` | Select the current branch; continue ordinary authorized work through checks and necessary writeback, or coordinate only when qualified. |
 | `rsp-shape` | Answer a bounded read-only design question or, with planning authority, shape one executable Change or justified shallow Group. |
 | `rsp-implement` | Diagnose read-only when requested; implement authorized fixes, use test-first work when warranted, and correct accepted fixed findings with fresh checks. |
-| `rsp-doc` | Write repository documents and Skills for a defined reader and result. |
+| `rsp-doc` | Write repository documents, Skills and release communication for a defined reader and result. |
 | `rsp-verify` | Run one bounded read-only verification pass against a selected WorkOwner's declared evidence boundary. |
-| `rsp-review` | Review a fixed code, document, or mixed comparison without mutation. |
+| `rsp-review` | Review a fixed code, document, or mixed comparison, including release communication, without mutation. |
 | `rsp-commit` | Create one authorized exact-scope local commit. |
-| `rsp-release-docs` | Draft, audit, finalize, or reconcile an explicit release documentation surface. |
 
 `rsp-structural-audit` is an optional report-only project Skill. It audits one bounded repository or subtree before implementation authority is granted.
 
-`rsp-doc` is installed by the default suite, or explicitly with `rsp skills install rsp-doc`. It owns repository-document and Skill writing through conditional methods. Use artifact lenses for README, CONTEXT, Spec, Change and guides; use the internal Skill branch for package creation or revision. Tiny edits remain direct. The maintainer-only `author-rsp-skills` adds local Change, provenance and evaluation requirements.
+`rsp-doc` is installed by the default suite, or explicitly with `rsp skills install rsp-doc`. Use artifact lenses for README, CONTEXT, Spec, Change and guides; use the Skill branch for package creation or revision, and release communication for changelogs, release notes, migration or authorized document reconciliation. Review loads release checks only for reviewed release documents. Neither method controls publication or establishes release readiness. Tiny edits remain direct. The maintainer-only `author-rsp-skills` adds local Change, provenance and evaluation requirements.
 
 ## Migrating the earlier Skill names
 
 For this unreleased source candidate, route `rsp-design` to `rsp-shape`; route `rsp-diagnose`, `rsp-tdd`, and `rsp-resolve-findings` to methods within `rsp-implement`; route `rsp-manage` to conditional coordination within `rsp`. The older `rsp-address-review` alias also resolves to `rsp-implement`. These are responsibility mappings, not permanent compatibility Skills or a request to erase project-owned guidance.
 
-When the exact candidate CLI becomes available, use that same selected CLI throughout; `@latest` is not a synonym for this unreleased source. Inspect `rsp skills list` and start with `rsp skills install --dry-run`. If selected trees differ or recognized obsolete package-owned names are present, ordinary dry-run errors instead of showing the full replacement/removal result. Inspect and back up user-customized content first, then run `rsp skills install --dry-run --force` with the same CLI to preview exactly what would be replaced or removed. Only after confirming that scope, run `rsp skills install --force` with that CLI. Unknown Skills must remain untouched. The installer's recognized replacements/removals use rollback on activation failure, but this does not make a silent update safe. Do not use `rsp update` as a Skill refresh. No candidate version, release, external install, or behavior acceptance is claimed here.
+`rsp-release-docs` is removed: writing belongs to Doc and fixed-scope read-only checks to Review. Selecting Doc, directly or through the default suite, checks the obsolete installed directory before replacement; other named installations leave it untouched. Update explicit old-name calls to the appropriate owner. Back up any custom release guidance before an authorized forced migration.
+
+When the exact candidate CLI becomes available, use that same selected CLI throughout; `@latest` is not a synonym for this unreleased source. With installation authority:
+
+1. Inspect `rsp skills list` and run `rsp skills install --dry-run`. Differing selected trees or recognized obsolete package-owned names stop ordinary dry-run before a full replacement/removal preview.
+2. Inspect and back up user-customized content before using `rsp skills install --dry-run --force` to preview the exact replacement/removal scope. Unknown Skills must remain untouched.
+3. Only after confirming that scope, run `rsp skills install --force` with the same CLI and inspect the resulting installation state.
+
+Activation failure triggers rollback of recognized replacements/removals. If rollback is incomplete, the command reports a retained recovery location; inspect actual installed trees and backups before retrying or cleanup. This does not make a silent update safe. `rsp update` is not a Skill refresh. No candidate version, release, external install, or behavior acceptance is claimed here.
 
 Installation, runtime role, and invocation are separate:
 
@@ -29,11 +36,11 @@ Installation, runtime role, and invocation are separate:
 |---|---|---|---|
 | `rsp` | default | Core | direct project entry |
 | `rsp-shape` | default | Shape | Core-routed or explicit shaping |
-| Implementation, verification, review, and Release Docs | default | Discipline | Core-routed specialist or explicit bounded request |
+| Implementation, verification, and review | default | Discipline | Core-routed specialist or explicit bounded request |
 | `rsp-commit` | default | local-delivery Discipline | explicitly authorized exact boundary; eligible coordination closeout only after its gates |
 | Conditional coordination in `rsp` | within Core | coordination branch | selected under effective project policy only for an actual obligation |
 | `rsp-structural-audit` | optional | Discovery | explicit report-only request |
-| `rsp-doc` | default | writing Discipline | repository-document or Skill writing |
+| `rsp-doc` | default | writing Discipline | repository-document, Skill or release writing |
 
 `default` means included in this source candidate's default suite; it does not mean automatically invoked. A Skill boundary is not a worker boundary. Core's qualified coordination branch can compose bounded worker lanes, but selection alone does not imply delegation. Published Skills remain standalone; missing optional siblings do not remove their bounded safe fallback.
 
@@ -43,16 +50,19 @@ Installation, runtime role, and invocation are separate:
 - Implement investigates unexplained failures before correction. Diagnosis-only remains read-only without creating an owner. An authorized fix proceeds within the same scope after confirming cause; use pre-mutation RED only when explicitly required or justified by concrete risk.
 - Implement disposes each fixed finding as accepted, rejected, or needing clarification. Correct accepted findings within authority, rerun affected checks, and obtain separate read-only Review; Implement cannot self-certify review-clean.
 - Verify executes a declared read-only evidence boundary when required; ordinary Implement checks need no Verify handoff. A Change uses its WorkRef and `Verify` boundary; a Group uses a named `Integration:` condition from its Brief. A request-only boundary must be written back before Group closeout. Required independent acceptance needs host-observed distinct workers.
-- Review remains fixed-scope and read-only. Release Docs requires an explicit release-documentation request and does not confer publication authority.
+- Release writing uses Doc; release-document review uses Review. Both load only their applicable method, preserve evidence and migration boundaries, and confer no publication authority.
+- Release checks without a selected WorkOwner stay with Core and the project's declared checks, not an invented Change or ownerless Verify request. Require an exact candidate, any range the checks need, and authority for their actual effects; missing prerequisites stop dependent checks. Preserve required independent acceptance and separate Git/publication authority.
 - Doc and Review apply the adopted writing-quality contract: grounded facts, useful structure, concise result steps, stable notation and preserved meaning. Skill tables are sparse fixed mappings; human documents use tables for reader-relevant comparison. Agreed expression rules are reviewable contracts, not personal preference.
-- Doc owns writing/self-checks; formal Review stays read-only. Executable Skills use Code review and semantic documents use Document. Review grants no repair authority; originally authorized corrections may continue. Static checks do not prove live behavior or independent acceptance.
+- Doc owns writing/self-checks; formal Review stays read-only. Review selects Code for behavior/tool semantics and Document for explanation/usage within fixed content. Complete Skill instructions normally need both; comments and embedded examples receive proportionate applicable checks, not classification by extension. Authority-only reads do not enlarge the target. Review grants no repair authority; originally authorized corrections may continue. Static checks do not prove live behavior or independent acceptance.
 - The host, user, and Git own execution-location selection and cross-branch integration. Core's coordination branch operates only in the checkout or environment it actually observes; no canonical Skill selects or lands an execution environment.
 - Commit owns one exact local commit in the current checkout and never absorbs cherry-pick, cleanup, or cross-branch integration.
 - No Skill infers commit, push, publication, deployment, approval, or human-acceptance authority.
 
 ## Control outcomes
 
-Core selects from intent, authority, available ownership, and checkout evidence, then loads only the chosen branch's detailed guidance. Within one authorized request, ordinary single-owner work continues through proportionate checks and necessary writeback without another `continue`. It needs no invented Change for a trivial session task and gains no archive or commit authority. Repairable failures and method changes in the same scope/authority remain with the responsible capability; return to Core for completed responsibility, changed goal/owner/scope/authority, required cross-capability independent acceptance, or a real unresolved blocker. Returning to Core does not itself require another user turn. No route, controller state, or second ledger is persisted.
+Core selects from intent, authority, available ownership, and checkout evidence, then loads only the chosen branch's detailed guidance. Within one authorized request, ordinary single-owner work continues through required and proportionate checks and necessary writeback without another `continue`. It needs no invented Change for a trivial session task and gains no archive or commit authority.
+
+The owning capability chooses permitted methods under the same goal, scope, authority, authoritative baseline and evidence requirements. CLI and scripts provide deterministic diagnostics and observations, not semantic approval. A method change cannot waive a named mandatory command, required independent worker or protected RSP operation. For effect-aware recovery and stops, follow [Verify and review](./daily-workflow.md#verify-and-review). Return to Core for completed responsibility, a changed boundary, required cross-capability independent acceptance, or a real unresolved blocker; that return does not itself require another user turn. No route, controller state, or second ledger is persisted.
 
 Work ownership, decision ownership, transient handoff, execution uncertainty, and acceptance are separate concepts. `WorkOwner` means the selected Change or shallow Group, `DecisionOwner` means the human or authority source required for a material decision, and `NextOwner` means the next control or execution capability. A stop must say who acts next, what input is required, and whether work returns through Shape or Core, or waits for fresh evidence, environment, verification, or capability. Missing required worker creation, a worker-authored result, or required host attribution is unavailable evidence, never successful completion.
 
@@ -80,6 +90,8 @@ manage:
 - `auto`: Core selects coordination only when current evidence shows a qualifying obligation; otherwise ordinary work continues in the same request.
 
 Core first resolves the selected Change or shallow Group when coordination requires durable ownership, checks effective activation and authority, and selects or declines the branch. Missing ownership cannot be invented from read-only design or diagnosis; planning requires independent authority. Within the selected branch Core checks owner/diff drift and keeps same-scope methods and recoverable failures local. Changed goal, owner, scope, authority, independent acceptance, or unresolved blockers cause rederivation; a phase boundary alone does not ask the user to continue.
+
+Read effective Manage policy through the same selected CLI's successful `rsp config --json` summary, refreshing on configuration drift, recovery or dependent closeout. Raw YAML and status cannot replace it. Failed or unavailable projection prevents configuration-dependent selection and automatic closeout, not independently authorized work needing no unresolved setting. See [configuration consumption](../reference/configuration.md#inspecting-effective-configuration) for defaults, inheritance and failure handling.
 
 During coordination, Core chooses a transient sequential or parallel strategy from dependencies, mutation boundaries, verification resources, and host capability. Worker participation is observed at the host boundary, not inferred from Skill routing. Shared resources stay sequential unless the host proves safe isolation; independent Verify needs distinct-worker evidence.
 

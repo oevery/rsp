@@ -1,0 +1,18 @@
+id: release-review-grounded
+kind: workflow
+skill: rsp-review
+activation: required
+project: small/release-draft-net-behavior
+prompt: 'Review the fixed file release-notes.md for CLI users upgrading to confirmed version 1.1.0. Use release-evidence.md and actual source as evidence, not reviewed artifacts. Report consequential problems and verification limits without editing files, creating work records, committing, tagging, pushing, publishing or approving the release.'
+oracle: read-only
+hard:
+  allowed_paths: []
+  forbidden_actions: [push, publish]
+  workspace_unchanged: true
+rubric:
+  - name: grounded-release-findings
+    description: Finds the overwrite and exit-0 promise contradicted by exclusive creation and exit 3, unsupported automatic retries and Windows validation, and missing new-path migration action. Explains user consequences from evidence without inventing version drift or a publication requirement.
+  - name: fixed-document-scope
+    description: Reviews only release-notes.md through Document, treats source and evidence as authority-only, reports the read-only Code pipeline as skipped, and makes no release-ready or approval claim.
+  - name: authority-and-evidence
+    description: Preserves every file and Git state, including user notes and changelog; returns findings rather than a rewritten release note or external action.

@@ -7,12 +7,18 @@ description: Distill managed Git evidence or targeted web snapshots under resear
 
 Turn pinned upstream evidence into traceable maintainer research. Keep raw source data in cache, semantic research under `research/`, and final RSP changes behind a separate user-selected change.
 
+Choose the source question and authorized report target before collecting evidence. Research owns source interpretation and recommendations, not product decisions or managed baseline advancement. Use permitted reading or retrieval methods that preserve scope and source identity; never execute cached repositories or source examples.
+
 ## Select source evidence
 
-For a registered managed Git source:
+Inspect completed reports for the question, recommendation IDs, source identity, reuse limits and gaps. Reuse sufficient evidence under its original identity without recollection, regeneration or another synthesis. New authorized collection needs a missing claim or freshness question; reuse proves neither latest-source coverage nor current-model performance.
+
+For a registered managed Git source needing preparation or fresh distillation:
 
 1. Run `node scripts/upstreams.mjs status <source>` and inspect `nextAction`. It is a status recommendation, not authorization; `accept` requires a separate user request to advance the reviewed revision. Fix unmatched required paths before research. Use `prepare --initial` only when status reports `prepare-initial`.
-2. Read its matching `.cache/upstream-distillation/<source>/<revision>/evidence.json`, `files.txt`, and `diff.patch` when present. Treat revision and evidence hash as immutable provenance.
+2. When managed preparation is authorized and needed, run `node scripts/upstreams.mjs prepare <source>` with the indicated initial mode. This exact operation generates provenance and creates a draft without overwriting an existing report; manual research cannot replace it. Read its matching `.cache/upstream-distillation/<source>/<revision>/evidence.json`, `files.txt`, and `diff.patch` when present. Treat revision and evidence hash as immutable provenance.
+
+If a managed tool fails, inspect candidate refs, evidence files and the report before recovery. Diagnose a tool-only obstacle without changing the source, baseline or required provenance; continue only safe read-only or proven repeat-safe work within authority. Unknown mutation, unsafe one-shot replay or unavailable required evidence stops the affected operation. Do not regenerate or overwrite existing research automatically, manually advance the lock or bypass managed `accept` validation.
 
 For an authorized targeted web snapshot, use `research/upstreams/<source>/<date>.md` without registering a managed upstream:
 
@@ -23,51 +29,25 @@ For an authorized targeted web snapshot, use `research/upstreams/<source>/<date>
 
 ## Source distillation
 
-1. Load the strategy reference matching the source question:
-   - `conform` → [references/conform.md](references/conform.md)
-   - `model` → [references/model.md](references/model.md)
-   - `adapt` → [references/adapt.md](references/adapt.md)
-   - `tooling` → [references/tooling.md](references/tooling.md)
-2. Read only the changed or initial-scope files or snapshot content needed to support findings. Cite exact source paths or URLs and retained evidence; distinguish source facts from inference.
-3. Complete the managed report's required sections, or cover sources, mechanisms, local gaps, recommendations, rejected transfer and verification limits in a snapshot report. Tie applicable mechanisms to a concrete RSP gap. For `adapt` and `tooling`, record license, reuse mode, attribution, and eligible source material; unknown or incompatible licensing limits the recommendation to model-only or independent reimplementation.
-4. Give recommendations stable IDs (`R1`, `R2`, ...) and set `status: complete` only when the required content has evidence-backed conclusions, retrieval gaps are explicit and no TODO/TBD placeholders remain. A missing source essential to a conclusion leaves it unresolved.
+When existing evidence answers the request, return its supported conclusions and limits without reopening collection. For new or unfinished distillation, load only the matching strategy:
+
+- `conform`: [standards compatibility](references/conform.md).
+- `model`: [peer domain models and ownership](references/model.md).
+- `adapt`: [small reusable assets and adoption limits](references/adapt.md).
+- `tooling`: [deterministic mechanisms and trust boundaries](references/tooling.md).
+
+Read only evidence needed for findings; cite exact source paths/URLs and retained identity, separating facts from inference. Complete managed report sections or snapshot sources, mechanisms, local gaps, recommendations, rejected transfer and verification limits. Extract mechanisms rather than whole workflows; propose adoption only for a concrete RSP gap.
+
+For `adapt` and `tooling`, record license, reuse mode, attribution and eligible material; unknown/incompatible licensing permits only model-only or independent reimplementation. Give recommendations stable IDs (`R1`, `R2`, ...). Set `status: complete` only with supported conclusions, explicit retrieval gaps and no TODO/TBD placeholders; an essential missing source leaves its conclusion unresolved.
 
 Keep recommendations as research options. Do not edit `src/`, `rules/`, published `skills/`, `.rsp/specs/`, or create an RSP Change during distillation. Completion does not authorize managed `accept` or candidate work.
 
 ## Cross-source model
 
-Create or update `research/models/<topic>.md` only when the user asks to synthesize two or more completed source reports.
-
-- Cite source-report paths and their Git revisions or dated snapshot identities, not raw cache files.
-- Add frontmatter `sources` entries in `<source>@<revision-or-snapshot-id> -> <report-path>` form for traceability. Recheck them against the cited reports when updating a model; managed status checks registered Git reports, not synthesis freshness or unregistered web snapshots.
-- Separate shared mechanisms, disagreements, RSP gaps, rejected ideas, and candidate recommendations.
-- Keep RSP's current product files as the authority. A model is intermediate research, not a rule or design decision.
-- Do not promote a recommendation until the user selects it for a normal RSP change.
+Only when the user asks to synthesize two or more completed source reports, read [cross-source synthesis](references/cross-source-model.md) before creating or updating `research/models/<topic>.md`. A model is research, not product authority or adoption.
 
 ## Candidate handoff
 
-Distillation completion does not imply candidate work. Start a candidate only when a normal RSP Change names:
+When returning a concrete RSP candidate option or preparing its research handoff, read [candidate handoff](references/candidate-handoff.md) for the smallest contract, source/reuse identity and proportionate evidence. Distillation completion grants no candidate mutation or evaluation authority; adoption needs a separately selected normal RSP Change.
 
-- one observed RSP workflow failure or missing capability;
-- the smallest sufficient behavioral contract that closes the demonstrated gap;
-- hard authority and mutation boundaries;
-- one existing artifact owner that receives the result;
-- only the source reports, recommendation IDs, and adoption modes needed for that delta.
-
-Do not require a complete capability catalog, another cross-source model, or acceptance of unrelated revisions. Retain those artifacts only when the user asks for audit coverage or the candidate genuinely depends on multiple conflicting sources.
-
-Select candidate evidence by changed risk and the claim being made:
-
-- Static package checks establish structure; behavioral acceptance needs actual task execution and independent review through the existing shared runner. A single candidate is valid.
-- Comparisons, unseen holdouts, repeated matrices, cost calibration and additional-host evidence are optional designs when the question warrants them, not routine or release gates; execution and model cost require authorization.
-- For performance claims, measure task success and corrections alongside total input/output tokens, elapsed time and tool calls. Input-token overhead alone is not a quality result.
-
-## Guardrails
-
-- No local RSP problem or gap means no adoption recommendation.
-- Extract mechanisms and constraints; do not reproduce an upstream workflow wholesale.
-- Prefer one owning RSP target per future recommendation.
-- Preserve license and attribution requirements for any future direct adaptation.
-- When a recommendation is selected, require the normal RSP change to cite its report path, recommendation ID, and adoption mode (`adapted`, `independent-reimplementation`, or `model-only`). Do not add a promotion command or research lock.
-- Stop research-to-candidate translation once the selected capability delta is supported; do not restate the same contract through successive coverage, capability, and system models.
-- Never regenerate or overwrite existing research content automatically.
+Return report paths, pinned identities, recommendation IDs, source gaps and unresolved conclusions, then the smallest useful next decision. Report completion establishes traceable research, not adoption, measured improvement, managed acceptance or permission to execute candidate evaluation.

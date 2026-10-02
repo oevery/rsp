@@ -2,22 +2,14 @@
 
 ## 目的
 
-本文记录 RSP 的长期设计哲学。
-
-它回答：
+本文记录 RSP 的长期设计哲学，帮助维护者判断产品与工作流变更：
 
 - RSP 解决什么问题。
 - RSP 给人类和 agent 什么心智模型。
 - RSP 优先优化什么。
 - RSP 明确避免什么。
 
-本文是解释性设计材料。
-
-它不是 agent 的规范源。
-
-项目级稳定指令以最近的项目自有 `AGENTS.md` 为准。
-
-操作流程优先以 `rsp` skill 为准；skill 不可用时才使用 `.rsp/rsp-rules.md` 最小 fallback protocol。
+本文是解释性设计材料，不是 agent 的规范源。项目级稳定指令以最近的项目自有 `AGENTS.md` 为准；操作流程优先以 `rsp` skill 为准，skill 不可用时才使用 `.rsp/rsp-rules.md` 最小 fallback protocol。
 
 ## 产品定位
 
@@ -61,9 +53,7 @@ RSP 分离三类信息：
 - `open`：change 文件在 `.rsp/changes/`。
 - `archived`：change 文件已移动到 `.rsp/archives/`。
 
-不要引入中间状态。
-
-不要从 `changes/` 推断当前工作。
+不引入中间状态，也不从 `changes/` 文件的存在推断当前工作。
 
 ## 第一原则
 
@@ -91,15 +81,11 @@ RSP 应选择能正确解决问题的最小模型。
 - 中小项目更需要低认知负担。
 - 多文件 change bundle 会把 RSP 推向框架复杂度。
 
-RSP 可以借鉴 OpenSpec。
-
-RSP 不复制 OpenSpec 的多文件 change 结构。
+RSP 可以借鉴 OpenSpec，但不复制它的多文件 change 结构。
 
 ### 3. `change` 是 open work 容器
 
-RSP 使用 `change`，不使用 `feature` 作为顶层工作模型。
-
-`change` 覆盖：
+RSP 使用 `change` 而非 `feature` 作为顶层工作模型，因为 `change` 覆盖：
 
 - feature。
 - bug fix。
@@ -133,27 +119,21 @@ Change Group 是唯一例外且仍保持浅层：只有两个或更多可独立�
 - archived changes 的重复拷贝。
 - 一次性实现上下文。
 
-Archive 很有价值。
-
-Archive history 不等于 durable truth。
+Archive 用于保留有价值的历史，不构成 durable truth。
 
 ### 5. Deterministic checks 与 semantic judgment 分离
 
-CLI 负责 deterministic 工作。
-
-例如：
+CLI 与脚本负责 deterministic 操作、检查和观察，例如：
 
 - 文件结构检查。
 - 必需 section 检查。
 - template placeholder 检查。
 - clarification marker 检查。
 - focus/archive 一致性检查。
-- generated index 维护。
+- 可识别生成索引的兼容迁移与直接 Specs 查询。
 - 幂等修复。
 
-Skill 或人工 reviewer 负责 semantic judgment。
-
-例如：
+Agent、归属 Skill 或人工 reviewer 负责 semantic judgment，例如：
 
 - 是否产生 durable knowledge。
 - durable fact 应写到哪里。
@@ -161,13 +141,15 @@ Skill 或人工 reviewer 负责 semantic judgment。
 - warning 是否代表真实语义风险。
 - archive 是否语义上 ready。
 
-CLI warning 不能替代语义判断。
+CLI warning、退出成功、readiness 或脚本完成都不能提供语义批准。归属能力在目标、范围、权限、权威基线与必需证据不变时选择允许的方法；工具的存在、版本或返回标签不替它作决定。明确命名的强制检查、溯源操作与必需独立 worker 不因方法切换而消失，focus 和 archive 等命令拥有的 RSP 修改仍使用相应 CLI。
+
+纯工具障碍先诊断原因、检查实际副作用，再继续只读或已证明可安全重复的工作。必需证据缺失、未知修改、一次性操作的未知重放安全性或权限变化仍须停止。日常验证与恢复的操作路径见[日常工作流](../site/zh-CN/guides/daily-workflow.md#验证与审查)。
+
+以本地交付为例，`rsp-commit` 的责任不可替代，但执行可选择配套 CLI 或经过等价检查的原生 Git。工具缺失、旧版本能力不足或已确认发生在执行前的工具故障，应在相同授权和已评审边界内处理；真实安全拒绝、已尝试提交或未知副作用必须停止。不能仅凭退出码或 `not_attempted` 字段切换，也不能据此手动替代 RSP 管理产物的命令操作。规范边界由仓库内 `.rsp/specs/design.md` 维护。
 
 ### 6. 低扩展性是有意设计
 
-RSP 不追求最大可扩展性。
-
-低扩展性带来：
+RSP 有意限制扩展性，以获得：
 
 - 更少 agent 决策分支。
 - 更低幻觉概率。
@@ -188,9 +170,7 @@ RSP 应优先追求：
 
 ## 外部工作流取舍
 
-RSP、spec-kit、OpenSpec 都关心 AI 辅助下的规格、计划与实现一致性。
-
-三者心智模型不同。
+RSP、spec-kit、OpenSpec 都关心 AI 辅助下的规格、计划与实现一致性，但心智模型不同。
 
 ### 与 spec-kit 的边界
 
@@ -204,9 +184,7 @@ spec-kit 更像阶段化 spec-driven development。
 - tasks。
 - implementation gates。
 
-RSP 不采用强阶段门。
-
-RSP 更关注：
+RSP 不采用强阶段门，更关注：
 
 - durable truth 与 open work 分离。
 - 单文件 change。
@@ -215,15 +193,7 @@ RSP 更关注：
 
 ### 与 OpenSpec 的边界
 
-OpenSpec 使用更结构化的 proposal、tasks、spec delta 模型。
-
-它适合更正式的 spec evolution。
-
-RSP 借鉴 delta thinking。
-
-RSP 不采用多文件 change artifact。
-
-RSP 不自动把 change `Spec` delta 合并进 durable specs。
+OpenSpec 使用更结构化的 proposal、tasks、spec delta 模型，适合更正式的 spec evolution。RSP 借鉴 delta thinking，但不采用多文件 change artifact，也不自动把 change `Spec` delta 合并进 durable specs。
 
 ### 当前采纳的折中
 
@@ -246,27 +216,17 @@ RSP 不把简单当前会话任务自动提升为 RSP change；需要跟踪时�
 
 ### `.rsp/rsp-rules.md`
 
-不支持 Agent Skills 时的最小 fallback protocol。
-
-它不是项目指令或设计存储；RSP 不使用 `.rsp/rules/` 作为运行时或 durable authority。
-
-它应短、稳定、tool-agnostic，只保留无 skill 时安全操作 `.rsp/` 所需的核心约束。
+不支持 Agent Skills 时的最小 fallback protocol。它应短、稳定、tool-agnostic，只保留无 skill 时安全操作 `.rsp/` 所需的核心约束，不承担项目指令或设计存储；RSP 不使用 `.rsp/rules/` 作为运行时或 durable authority。
 
 旧 `.rsp/rules/rsp-rules.md` 只由 `rsp update` 识别并迁移，普通命令不读取它；任意旧自定义 rules 必须经过人工语义判断后迁入最近的项目自有 `AGENTS.md`。
 
 ### `.rsp/specs/`
 
-Durable project facts。
-
-它存长期事实、边界、约束。
-
-它不存任务历史。
+Durable project facts：保存长期事实、边界与约束，不存任务历史。
 
 ### `.rsp/changes/`
 
-Open work。
-
-每个 change 是一个 Markdown 文件。
+Open work：每个 change 是一个 Markdown 文件。
 
 可选 Change Group 只允许一个 `00-brief.md` 和直接子 Change；`Slices` 声明成员边界与导航顺序，实际 open、archived、blocked 和 ready 状态全部派生。声明顺序本身不创建依赖边；精确依赖只由子 Change `Blockers` 中的 `requires` WorkRef 声明，CLI 负责派生当前依赖计划。
 
@@ -274,17 +234,11 @@ Open work。
 
 ### `.rsp/focus.d/`
 
-open work 的 FocusSet source。
-
-focus marker 指向一个当前 open work 候选；多个 marker 可以同时存在。
+Open work 的 FocusSet source。每个 focus marker 指向一个当前 open work 候选，多个 marker 可以同时存在。
 
 ### `.rsp/archives/`
 
-Completed history。
-
-Archive 保留最终上下文、结果、决定性证据、缺口和风险，不保留执行流水。
-
-Archive 不等于 durable truth。
+Completed history：保留最终上下文、结果、决定性证据、缺口和风险，不保留执行流水，也不成为 durable truth。
 
 ## Change 文件结构
 
@@ -299,9 +253,7 @@ Archive 不等于 durable truth。
 
 依赖图不是新的持久化产物。Change 与 archive heading 继续拥有事实，CLI 只集中投影 `ready`、带原因的 `edges`、`blocked` 和 `waves`。这使人类和 AI 获得同一份紧凑视图，同时避免 Brief、YAML 或独立 graph 文件成为第二份状态来源。
 
-`Verify` 是 section，不是 workflow state。
-
-`Tasks` 比 `Plan` 更直接，因此 RSP 使用 `Tasks`。
+`Verify` 是 section，不是 workflow state；`Tasks` 比 `Plan` 更直接，因此 RSP 使用 `Tasks`。
 
 ## Spec 结构
 
@@ -319,19 +271,11 @@ Archive 不等于 durable truth。
 
 上下文迁移是 Core 的按需分支：常规入口只负责发现旧文件并保留相关上下文，迁移细节在命中时加载。发现不授予修改权限，也不阻塞无关工作。CLI 仅提示根目录旧文件；Core 在授权范围内协调语义归属、引用和退役，Doc 负责具体写作。文件共存和命令成功都不能证明迁移完成。
 
-Spec 不是自由备注区。
-
-Spec 不是 archive summary。
-
-如果一个 spec 退化成叙事笔记，就降低了 durable layer 的信噪比。
+Spec 不是自由备注区或 archive summary。把 Spec 写成叙事笔记会降低 durable layer 的信噪比。
 
 ## Durable update 哲学
 
-不是每个 change 都更新 `specs/` 或项目自有 `AGENTS.md` 指令。
-
-只有长期事实才值得提升。
-
-适合提升的条件：
+不是每个 change 都更新 `specs/` 或项目自有 `AGENTS.md` 指令。适合提升的长期事实包括：
 
 - 改变稳定系统行为。
 - 改变项目边界、默认值或约束。
@@ -353,11 +297,7 @@ Spec 不是 archive summary。
 - nearest project-owned `AGENTS.md` 中有作用域的稳定指令。
 - 配置的唯一 Decision Record 路径下的精确文件。
 
-避免创建兜底式 `.rsp/specs/changes.md`。
-
-把 durable fact 写入最小正确目标文件。
-
-不要把同一 fact 无理由复制到多个 durable 文件，也不要用 Decision Record 重复当前事实。
+把 durable fact 写入最小正确目标文件，避免创建兜底式 `.rsp/specs/changes.md`。不要把同一 fact 无理由复制到多个 durable 文件，也不要用 Decision Record 重复当前事实。
 
 ## 原生设计与 artifact continuation
 
@@ -372,7 +312,7 @@ RSP 内置的是写入判断与所有权路由，不是对项目文档的接管�
 - lasting rationale 独立属于唯一 authoritative Decision Record path；
 - temporary execution state 只作为 response continuation 返回，除非用户显式授权 exact path。
 
-Continuation 必须包含 WorkRef、authority pointers、current state、changed artifacts、fresh verification、blockers 和 smallest next action。恢复时重新读取这些 owner、检查 drift 并刷新证据；它不是 durable truth、隐藏 receipt 或第二套 lifecycle state。
+需要 continuation 时，按需说明 WorkOwner、authority pointers、current state、changed artifacts、fresh verification、blockers 和 smallest next action。Change 使用 WorkRef，Group 使用 Group reference 及直接子项；有界直接请求以该请求标识归属，不制造 WorkRef。恢复时重新读取归属与证据、检查 drift 并刷新判断；continuation 不是 durable truth、隐藏 receipt 或第二套 lifecycle state。
 
 普通 Git conflict 不需要独立 RSP Skill。Core 只保留 compact fallback：识别当前 Git operation，理解 base/ours/theirs 语义，保护无关工作，仅解决有证据且在 WorkRef authority 内的内容，并重新验证。缺少证据、涉及无关工作或 owner decision 时停止；resolve authority 不自动包含 stage、continue、abort、commit、push 或 delivery authority。
 
@@ -386,9 +326,7 @@ RSP 不建立通用权限系统，也不提供容易误解为宿主完全授权�
 
 ## 输出与可观测性
 
-RSP 更适合作为稳定协议，不是平台 API。
-
-`--json` 输出应是：
+RSP 更适合作为稳定协议，而非平台 API；`--json` 输出应是：
 
 - 轻量。
 - 稳定。
@@ -420,9 +358,7 @@ RSP 的输出表面按职责分层：
 
 ## 表面角色
 
-RSP 有多个表面。
-
-每个表面只承担自己的职责。
+各表面按读者与任务分工：
 
 - `README.md`：人类概览、入门、示例。
 - `.rsp/rsp-rules.md`：skill 不可用时的最小 fallback protocol。
@@ -430,25 +366,9 @@ RSP 有多个表面。
 - `docs/maintainers/design-philosophy.md`：设计理由。
 - `AGENTS.md`：RSP 受管 block 是入口导航层，项目自有 section 可承载稳定 scoped instructions。
 
-这些表面应互相强化。
+这些表面通过任务导航互相强化，不复制完整内容。`.rsp/rsp-rules.md` 是 skill 不可用时仍能安全运行的最小兼容协议，表达跨工具的核心约束，保持短、稳定、少歧义，不成为完整操作手册或项目规则仓库。
 
-它们不应互相复制完整内容。
-
-`.rsp/rsp-rules.md` 不是完整规范副本，而是 skill 不可用时仍能安全运行的最小协议，因此必须短、稳定、少歧义。
-
-fallback protocol 应表达跨工具也必须成立的核心约束。
-
-fallback protocol 不应成为完整操作手册或项目规则仓库。
-
-`skills/` 是按需加载的 agent 操作手册，因此可以比 rules 更详尽。
-
-`skills/` 应把规则转化为可执行步骤。
-
-`skills/` 的详细度服务于减少 agent 幻觉和误操作。
-
-fallback protocol 保持为最小兼容层，`skills/` 保持为详细操作层。
-
-体积预算不能优先于准确性。
+`skills/` 是按需加载的 agent 操作手册，把规则转化为可执行步骤。它可以比 rules 更详尽，但详细度必须服务于减少误判和误操作；体积预算不能优先于准确性。
 
 如果内容影响以下判断，应保留在 skill 中：
 
@@ -458,8 +378,6 @@ fallback protocol 保持为最小兼容层，`skills/` 保持为详细操作层�
 - 是否判断 archive ready。
 - 是否误改 generated/core files。
 - 是否把 deterministic CLI warning 当成 semantic decision。
-
-Skill 的具体性只服务于减少操作误判。
 
 适合进入 skill：
 
@@ -477,15 +395,15 @@ Skill 的具体性只服务于减少操作误判。
 - 重复规则解释。
 - 设计理念展开。
 
+精简时优先保留任务特有的判断、边界和完成证据，减少通用教学与不必要的固定路线，让 Agent 在权限和证据边界内选择方法。模型升级不是删除安全约束的理由，文本变短也不等于质量提高。规范由 [Skill Spec](../../.rsp/specs/skill.md#instruction-and-resource-design) 和[写作质量 Spec](../../.rsp/specs/writing-quality.md)维护。
+
+References 服务于实际的条件分支，不追求入口最短或文件最多。只把当前任务不需要的实质细节放到条件引用中；小 Skill 可以直接写完，必要安全条件不藏在引用链末端。已有上游依据见[维护者来源说明](upstreams.md#reuse-completed-source-evidence)，无需为同一结论重新采集资料。
+
 RSP skill 要求 agent 将 `## Tasks`、实现和 `## Verify` 回写保持同步。
 
 ## 语言分层原则
 
-Human-facing docs may be localized。
-
-Agent-distributed normative surfaces should stay in English。
-
-原因：
+Human-facing docs 可本地化，agent-distributed normative surfaces 保持英文，原因是：
 
 - 英文跨模型更稳定。
 - 英文减少不同语言环境下的行为偏移。
@@ -499,9 +417,7 @@ Agent-distributed normative surfaces should stay in English。
 
 ## AGENTS 哲学
 
-RSP 管理的 `AGENTS.md` block 是导航层；block 外的项目自有 section 是 scoped instruction 层。
-
-它帮助 agent 以正确顺序找到正确文件。
+RSP 管理的 `AGENTS.md` block 是导航层，帮助 agent 按正确顺序找到文件；block 外的项目自有 section 是 scoped instruction 层。
 
 RSP 受管 block 不是：
 

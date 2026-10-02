@@ -7,6 +7,12 @@ export function presentCommit(result: CommitResult, json: boolean): void {
     return
   }
   if (!result.ok) {
+    if (result.attempt !== 'not_attempted') {
+      console.error(`  Git attempt: ${result.attempt}; creation: ${result.creation}`)
+      if (result.commit)
+        console.error(`  Observed commit: ${result.commit}`)
+      console.error('  Inspect Git state before any further action; no automatic retry or amend.')
+    }
     console.error(`  Commit stopped: ${result.message}`)
     return
   }

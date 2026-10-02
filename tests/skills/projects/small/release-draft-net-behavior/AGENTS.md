@@ -1,2 +1,2 @@
 # Export release
-Use available repository release-writing capability. Draft only the explicitly named note. Existing package identity, source, changelog and user notes are immutable for this request.
+Use the matching repository document capability. For writing, change only the explicitly named note; for review, inspect the fixed document set without edits. Existing package identity, source, changelog and user notes remain immutable. No task here grants Git delivery or publication.

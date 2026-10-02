@@ -221,11 +221,19 @@ const commitCommand = defineCommand({
       description: 'Path to the prepared commit message file',
       required: true,
     },
+    'expected-head': {
+      type: 'string',
+      description: 'Reviewed full HEAD object ID or unborn; requires --expected-tree',
+    },
+    'expected-tree': {
+      type: 'string',
+      description: 'Reviewed full index tree object ID; requires --expected-head',
+    },
     ...jsonArgs,
   },
-  async run({ args }: { args: { 'message-file': string, 'json': boolean } }) {
+  async run({ args }: { args: { 'message-file': string, 'expected-head'?: string, 'expected-tree'?: string, 'json': boolean } }) {
     await executeCliCommand({
-      execute: () => commitFromMessageFile(args['message-file']),
+      execute: () => commitFromMessageFile(args['message-file'], { expectedHead: args['expected-head'], expectedTree: args['expected-tree'] }),
       present: result => presentCommit(result, Boolean(args.json)),
       exitCode: result => result.ok ? undefined : 1,
     }, args)

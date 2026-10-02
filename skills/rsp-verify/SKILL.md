@@ -4,24 +4,40 @@ description: Verify one selected RSP WorkOwner against its declared evidence bou
 license: MIT
 metadata:
   author: oevery
-  version: "2026.08.21.1"
+  version: "2026.10.01.2"
 ---
 
 # RSP Verify
 
-Run one bounded, read-only verification pass for an existing RSP WorkOwner. Verify owns evidence collection and the verification result; it is a Discipline, not a router, controller, lifecycle owner, reviewer, or Git delivery capability. A Change WorkOwner uses its WorkRef and declared `Verify` boundary. A Group WorkOwner uses its Group reference and a named `Integration:` condition from the Group Brief's `Completion Conditions`; child Change evidence remains attached to each child WorkRef.
+Collect evidence and return one bounded read-only result for an existing RSP WorkOwner. Verify is a Discipline, not a router, controller, lifecycle owner, reviewer or Git delivery capability.
 
 ## Require a declared boundary
 
-Require one explicit WorkOwner reference or one AI-resolved candidate from the open FocusSet, the selected Change or Group, its declared boundary, the comparison baseline, and the authority to run the named checks. Multiple focus markers are valid candidates; resolve one from user intent and current status before verification. A Change boundary comes from its `Verify` section. A Group boundary comes from a named `Integration:` condition in the Group Brief's `Completion Conditions`; an explicit request may supply a temporary boundary for an in-progress pass, but that boundary must be written back before Group closeout. Stop when the owner, scope, baseline, required evidence, or environment is ambiguous, or when a Group has no named boundary for the requested verification.
+Require one selected WorkOwner, declared boundary, comparison baseline and authority for the named checks. An explicit reference wins; otherwise resolve one FocusSet candidate from user intent and status. Multiple markers are valid.
 
-Read the nearest project instructions, Core or fallback, selected Change and Brief, relevant Specs and Decisions, current diff, blockers, and the smallest production path needed to understand the declared check. Do not invent checks from generic testability or replace an unexplained failure with a guessed assertion; return that symptom for Implement's read-only diagnosis mode.
+- **Change:** use its WorkRef and `Verify` section.
+- **Group:** use its Group reference and named `Integration:` condition in the Brief's `Completion Conditions`; child evidence stays with each child WorkRef. An explicit request may supply an in-progress temporary boundary, which must be written back before Group closeout.
+
+Stop for ambiguous owner, scope, baseline, required evidence or environment, or a Group without a named boundary for the requested verification.
+
+Read nearest project instructions and the available project protocol, selected Change and Brief, relevant Specs and Decisions, current diff, blockers, and the smallest production path needed to understand the declared check. This package needs no installed Core Skill. Do not invent checks from generic testability or replace an unexplained failure with a guessed assertion; return that symptom for read-only diagnosis.
 
 ## Preserve read-only authority
 
 Do not edit product files, Changes, Specs, Decisions, focus markers, archives, configuration, or Git state. Do not start publication, deployment, approval, or human-acceptance actions. Running a declared local test, build, typecheck, lint, browser check, or other environment check is evidence collection only and retains the authority required by that command.
 
-Reuse the invoking Core contract. Core owns the optional response summary and, on a qualified coordination branch, dispatch, result validation, acceptance and closeout. Verify's result is nested phase evidence. Verify does not select worker identity or isolation, derive `review-clean`, or claim `archiveReady`; identity and independence come from the host.
+Reuse a caller's result contract when supplied; otherwise the result below is sufficient for direct invocation. When Core invokes Verify, Core owns response coordination, dispatch, result validation, acceptance and closeout; Verify supplies the bounded evidence. Verify never selects worker identity or isolation, derives `review-clean`, or claims `archiveReady`. Identity and independence come from the host.
+
+## Collect the declared evidence
+
+Run the named checks and retain their commands, scope and observed results against the declared comparison baseline. Interpret the observations rather than treating a tool's exit or recommendation as acceptance. A failed required check remains failure evidence; an unavailable check remains a gap.
+
+For a tool-only obstacle, diagnose read-only and inspect actual effects before continuing:
+
+- Change a permitted collection method only with unchanged goal, owner, scope, baseline, authority and required evidence, and demonstrably safe replay.
+- Run a named mandatory command/check as required; substitutes supply no pass.
+- Do not repair product/workflow state, manually replace command-owned RSP operations, replay one-shot work or continue with unknown mutation effects.
+- This pass cannot supply missing required independent-worker evidence.
 
 ## Return one bounded result
 
@@ -31,10 +47,21 @@ Return exactly one canonical result:
 - `fail`: at least one named required check failed.
 - `unavailable`: a required tool, dependency, service, credential, or environment could not be used.
 
-Every result includes `evidence_delta: new | none` to state independently whether the pass, failure, or unavailability produced evidence that changes the next diagnosis or correction. It also includes `boundary: unchanged | changed` to state independently whether the observed owner, paths, baseline, behavior, interface, scope, or authority still matches the declared boundary. Include the WorkOwner reference, the Change WorkRef or Group `Integration:` boundary when applicable, lane objective, effective authority, named checks, comparison baseline, observed diff boundary, decisive evidence, omissions, and stop boundary. Preserve exact result and field values as machine-facing values; human-facing narration follows the invoking response-language contract.
+Include these independent fields and their evidence:
 
-`pass` proves only the declared verification boundary. It does not prove semantic review, durable writeback, archive readiness, commit eligibility, publication, deployment, approval, or human acceptance, and it does not grant lifecycle, Git, publication, or acceptance authority. Verify never self-reports worker identity or independence; Core uses host observations when required. Long-running verification remains active while its declared boundary and stop conditions hold; elapsed time, heartbeat, polling, and progress messages do not change the result.
+- `evidence_delta: new | none`: whether the result changes the next diagnosis or correction.
+- `boundary: unchanged | changed`: whether observed owner, paths, baseline, behavior, interface, scope and authority still match the declared boundary.
+- WorkOwner and applicable Change WorkRef or Group `Integration:` condition; lane objective and effective authority.
+- Named checks, comparison baseline, observed diff, decisive evidence, omissions and stop boundary.
+
+Preserve exact machine values. Human-facing narration follows a supplied response-language contract; otherwise use explicit user instruction, then personal instructions, then conversation language.
+
+`pass` proves only the declared checks, not semantic review, durable writeback, archive readiness, commit eligibility, publication, deployment, approval or human acceptance. It grants no lifecycle, Git, publication or acceptance authority. Identity and independence require host observations, not Verify's self-report.
+
+Long-running verification remains active while its boundary and stop conditions hold. Elapsed time, heartbeat, polling and progress messages do not change the result.
 
 ## Stop and return
 
-Stop with the invoking contract's canonical stop reason when evidence is missing, the environment is unavailable, the boundary changes, or a required check cannot be observed. On cancellation, do not begin conflicting work until the command or owned process is observed stopped. Return the result, decisive evidence, omissions, and next action to Core; never turn an unavailable check into success and never retry without new evidence and safe replay inside the declared boundary.
+Stop when evidence is missing, the environment is unavailable, the boundary changes or a required check cannot be observed. Use the caller's canonical stop reason only when supplied. For direct invocation, identify the missing input or changed boundary and the required next action; do not invent a completed verification result before the declared boundary is established.
+
+On cancellation, wait until the command or owned process is observed stopped before beginning conflicting work. Return the result, decisive evidence, omissions and next action to the caller or user. Never turn an unavailable check into success or retry without new evidence and safe replay inside the declared boundary.

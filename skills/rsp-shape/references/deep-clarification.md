@@ -14,7 +14,7 @@ For an RSP-tracked domain or module design question, use Shape's conditional des
 - authoritative project inputs by path;
 - the expected existing artifact or decision output;
 - its permitted mutation boundary;
-  - the same returning WorkOwner reference.
+- the same returning WorkOwner reference.
 
 Design analysis does not grant artifact mutation; existing project documents retain domain and architecture authority. Consume settled evidence in the same Shape request and continue against the same Change only when authorized.
 
