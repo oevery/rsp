@@ -47,6 +47,12 @@ else {
   const controlPath = new URL('./provider-control.json', import.meta.url)
   const control = existsSync(controlPath) ? JSON.parse(readFileSync(controlPath, 'utf8')) : {}
   const event = value => process.stdout.write(`${JSON.stringify(value)}\n`)
+  if (control.largeOutput) {
+    for (let i = 0; i < 160; i++) {
+      event({ type: 'fixture.padding', text: 'x'.repeat(65536) })
+      process.stderr.write(`${'y'.repeat(65535)}\n`)
+    }
+  }
   if (mode === 'capacity') {
     process.stderr.write('Provider unavailable\n')
     process.exit(1)

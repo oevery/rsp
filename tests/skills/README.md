@@ -31,10 +31,15 @@ Select additional cases by the changed risk using the existing `--case` option:
 | --- | --- |
 | Exact Git delivery or method equivalence | commit-native-equivalence,commit-snapshot-refusal,commit-missing-verification,commit-unsafe-staged |
 | Required evidence or investigation-only authority | method-required-check-unavailable,finding-investigation-only |
+| Final archive convergence or failed-check restraint | archive-final-convergence,archive-required-failure |
 | Effective RSP configuration | config-inherited-artifact-language,config-rejected-closeout-policy |
 | Recovery or unavailable independent verification | real-multimodule-recovery,native-resume-staged,native-verification-unavailable |
 
 Use `plan --suite workflows` or `plan --case <selected-ids>` to inspect inputs and the root-session budget before separately authorized execution. No fixed case count is a quality gate. A case's existence does not make it required for every Change; readiness does not validate its eventual live composition. Keep published Skills standalone: the explicit Implement case must not be replaced solely by a Core workflow. Case retirement changes current selection, not retained historical verdicts; reassessment can still read the old recorded task with a missing-current-case warning.
+
+### Archive boundary
+
+Archive cases may declare `hard.archive: <work-ref>` for one ungrouped Change. This permits only newly created CLI-dated archive paths for that WorkRef, including collision suffixes, never edits to existing archives or other Changes. Open Change and Focus mutations still require explicit `allowed_paths`. The task and independent rubric decide whether archive is warranted and whether the final text is converged; path permission alone proves neither.
 
 ### Missing Commit capability
 
@@ -63,7 +68,7 @@ The judge uses native `--sandbox read-only`. Read/search shell tools are allowed
 
 ### Evidence and reports
 
-Each run retains `run.json`, `events.jsonl` (including command output), `stderr.log` and `final.md`. Before cleanup, `baseline/` and `workspace/` retain safe starting/final task text and installed Skill context. This is not a full executable workspace backup: links, binaries, sensitive files and runtime/dependency state are omitted and listed in `retainedEvidence`. Auxiliary retention failures are recorded locally and do not skip execution. Text retention is not limited by the observation summary's 64 KiB/file and 256 KiB total caps; existing snapshot budgets still apply.
+Each run retains `run.json`, `events.jsonl` (including command output), `stderr.log` and `final.md`. Model output is spooled to private files, then sanitized into retained streams. New records reference those streams with content hashes rather than embedding duplicate stdout/stderr; historical inline records remain readable. Native runs also retain sanitized `native-root.jsonl` before event enrichment. Before cleanup, `baseline/` and `workspace/` retain safe starting/final task text and installed Skill context. This is not a full executable workspace backup: links, binaries, sensitive files and runtime/dependency state are omitted and listed in `retainedEvidence`. Auxiliary retention failures are recorded locally and do not skip execution. File counts and aggregate sizes have no artificial quotas. The observation summary's 64 KiB/file and 256 KiB total previews do not limit full text retention or snapshot fingerprints, including ignored files.
 
 The judge starts with a compact index, `summary.json` and `tool-index.jsonl`, not the entire trace pasted into its prompt. The summary exposes execution/check states, trace gaps and Git fingerprints without copying full Git maps or retention omission lists. Missing metadata remains unknown. Each completed tool entry points to a full sanitized event in `tool-events/` and its original trace line; command previews are bounded and explicitly marked when truncated. Previews and summaries are navigation, not proof: authority judgments require full commands, and rubric claims require relevant outputs, diffs or artifacts. All original records remain available for targeted reading. Missing or redacted evidence limits the relevant conclusion. Old records cannot reconstruct text that was never retained.
 
@@ -77,7 +82,9 @@ The index explains hash domains: `observation.files` and `observation.baseline` 
 
 ### Deadlines, cancellation and progress
 
-Execution and review have no total deadline by default. Explicit `--timeout-ms` must be an integer from 1 to 2147483647; reports record `null` when disabled. Local probes and offline preflight keep short bounds.
+Execution and review have no total deadline, token budget or cumulative output termination threshold. `--timeout-ms` is unsupported and rejected before session startup; new reports retain `timeoutMs: null` for historical compatibility. The retained execution controls are provider stream-idle policy, root-session count budgets, local probe deadlines and native worker depth/concurrency limits. Cancellation remains available. Actual process or evidence I/O failures are incomplete evidence, never passing acceptance. Historical timeout/truncation verdicts are not rewritten.
+
+Trace reading, hashing and text retention are incremental. Memory still scales with an individual record, snapshot metadata and native action ordering; this is not a constant-memory guarantee. Disk exhaustion remains a real operational failure. Navigation previews are intentionally compact, not execution budgets or substitutes for full evidence.
 
 SIGINT/SIGTERM cancels the active session, retains collected output/observations and saves an incomplete, inconclusive matrix without another session. Cancellation remains explicit even after child exit zero. POSIX cleanup targets the process group and escalates after 250 ms; escaped processes are not covered. Windows cleanup targets the direct child only. Forced termination cannot guarantee persistence.
 

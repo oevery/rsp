@@ -7,6 +7,7 @@ export function observeProjectChecks(root, workspace, spec) {
   const result = spawnSync(process.execPath, [join(root, 'dist', 'cli.mjs'), 'ready', spec.project_check, '--json'], {
     cwd: workspace,
     timeout: 10000,
+    maxBuffer: Infinity,
     encoding: 'utf8',
     env: { PATH: process.env.PATH, HOME: workspace },
   })

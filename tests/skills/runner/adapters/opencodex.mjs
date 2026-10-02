@@ -6,7 +6,8 @@ import { delimiter, dirname, isAbsolute, join, resolve } from 'node:path'
 import { setImmediate } from 'node:timers/promises'
 import { parse as parseToml, stringify as stringifyToml } from 'smol-toml'
 import { configPath, loadConfig } from '../core/config.mjs'
-import { hash } from '../core/files.mjs'
+import { hash, hashFile } from '../core/files.mjs'
+import { fileLines, writeLines } from '../core/streams.mjs'
 import { collectNativeEvidence } from '../observers/native.mjs'
 import { runProcess } from './process.mjs'
 
@@ -23,9 +24,7 @@ function parse(source, label) {
   }
 }
 
-function snapshot(path, limit = 16 * 1024 * 1024) {
-  if (statSync(path).size > limit)
-    throw new Error('Evaluation input exceeds size limit')
+function snapshot(path) {
   return readFileSync(path)
 }
 
@@ -148,7 +147,7 @@ function createAdapter(options, native) {
     secrets.push(catalogFile)
   function redact(value) {
     let text = String(value ?? '')
-    for (const secret of secrets)
+    for (const secret of secrets.flatMap(value => [value, ...value.split(/\r?\n/u).filter(Boolean)]))
       text = text.split(secret).join('[REDACTED]')
     return text.replace(/Bearer\s+[\w.~+/-]+/giu, 'Bearer [REDACTED]')
       .replace(/https?:\/\/[^\s"'<>]+/giu, '[URL REDACTED]')
@@ -164,7 +163,7 @@ function createAdapter(options, native) {
   }
   const codexBin = options.codexBin ?? 'codex'
   const executable = binaryPath(codexBin)
-  const settings = { provider: 'config', configuredProvider, role, model, effort, binaryHash: hash(snapshot(executable, 256 * 1024 * 1024)), configHash: hash(privateSource), policyHash: hash([baseSource, roleSource]), catalogHash, authHash, isolated: true }
+  const settings = { provider: 'config', configuredProvider, role, model, effort, binaryHash: hashFile(executable), configHash: hash(privateSource), policyHash: hash([baseSource, roleSource]), catalogHash, authHash, isolated: true }
   const effective = { ...policy, model, model_reasoning_effort: effort, model_provider: configuredProvider, ...(overlay.model_providers && { model_providers: overlay.model_providers }) }
   if (native) {
     settings.nativePolicyHash = hash(nativePolicy)
@@ -176,7 +175,7 @@ function createAdapter(options, native) {
   function assertFrozen() {
     if (hash(readFileSync(options.configFile)) !== settings.configHash || hash(readFileSync(configPath)) !== hash(baseSource)
       || binaryPath(codexBin) !== executable || (options.authFile && hash(readFileSync(options.authFile)) !== authHash)
-      || hash(snapshot(binaryPath(codexBin), 256 * 1024 * 1024)) !== settings.binaryHash
+      || hashFile(binaryPath(codexBin)) !== settings.binaryHash
       || (catalogFile && hash(snapshot(catalogFile)) !== settings.catalogHash)) {
       throw new Error('Evaluation provider, catalog, binary or policy identity drift')
     }
@@ -202,9 +201,9 @@ function createAdapter(options, native) {
   {
     const { home, env } = isolatedHome()
     try {
-      settings.version = redact(execFileSync(executable, ['--version'], { cwd: home, env, encoding: 'utf8', timeout: 10000 }).trim()).slice(0, 256)
+      settings.version = redact(execFileSync(executable, ['--version'], { cwd: home, env, encoding: 'utf8', timeout: 10000, maxBuffer: Infinity }).trim()).slice(0, 256)
       if (!catalog) {
-        const bundled = spawnSync(executable, ['debug', 'models', '--bundled'], { cwd: home, env, encoding: 'utf8', timeout: 10000, maxBuffer: 16 * 1024 * 1024 })
+        const bundled = spawnSync(executable, ['debug', 'models', '--bundled'], { cwd: home, env, encoding: 'utf8', timeout: 10000, maxBuffer: Infinity })
         try {
           if (bundled.status === 0) {
             metadata(Buffer.from(bundled.stdout))
@@ -231,7 +230,7 @@ function createAdapter(options, native) {
         return preflightResult
       const { home, env } = isolatedHome()
       try {
-        const probe = args => spawnSync(executable, args, { cwd: home, env, encoding: 'utf8', timeout: 10000, maxBuffer: 16 * 1024 * 1024 })
+        const probe = args => spawnSync(executable, args, { cwd: home, env, encoding: 'utf8', timeout: 10000, maxBuffer: Infinity })
         const help = probe(['exec', '--help'])
         const flags = help.status === 0 && help.stdout.includes('--strict-config')
         const features = probe(['features', 'list'])
@@ -256,7 +255,11 @@ function createAdapter(options, native) {
         rmSync(home, { force: true, recursive: true })
       }
     },
-    async run({ workspace, prompt, timeoutMs, signal, writableGit = false, onActivity }) {
+    async run({ workspace, prompt, outputRoot, signal, writableGit = false, onActivity, timeoutMs }) {
+      if (timeoutMs != null)
+        throw new Error('Model total deadlines are not supported')
+      if (!outputRoot)
+        throw new Error('Model execution requires an evidence directory')
       assertFrozen()
       for (let directory = realpathSync(workspace); ; directory = dirname(directory)) {
         if (existsSync(join(directory, '.codex')))
@@ -279,34 +282,49 @@ function createAdapter(options, native) {
         args.push('--config', 'memories.use_memories=false', '--config', 'memories.generate_memories=false', '--config', 'web_search="disabled"')
         // Deliver signals queued during synchronous preflight before spawning a session.
         await setImmediate()
-        const result = await runProcess(executable, args, { cwd: workspace, env, input: `${prompt}\n`, timeoutMs, signal, onActivity })
-        const nativeResult = native ? collectNativeEvidence(home, result.stdout) : null
+        const rawStdout = join(home, 'stdout.jsonl')
+        const rawStderr = join(home, 'stderr.log')
+        const result = await runProcess(executable, args, { cwd: workspace, env, input: `${prompt}\n`, signal, onActivity, stdoutPath: rawStdout, stderrPath: rawStderr })
+        const nativeResult = native ? collectNativeEvidence(home, fileLines(rawStdout)) : null
         let finalOutput = null
         try {
           finalOutput = redact(readFileSync(finalPath, 'utf8'))
         }
         catch {}
-        let allEvents = result.stdout
+        let allEvents = fileLines(rawStdout)
         if (nativeResult) {
           // Preserve original root IDs, output and start/update boundaries;
           // enrich matched completions with host times for chronological review.
-          const timedRoot = []
-          const rootLines = result.stdout.split('\n').filter((line) => {
-            try {
-              const event = JSON.parse(line)
+          allEvents = (function* () {
+            const timedRoot = []
+            for (const line of fileLines(rawStdout)) {
+              let event
+              try {
+                event = JSON.parse(line)
+              }
+              catch {
+                yield line
+                continue
+              }
               const binding = event.type === 'item.completed' && nativeResult.rootBindings?.find(item => item.id === event.item?.id)
-              if (!binding)
-                return true
-              timedRoot.push({ ...event, timestamp: binding.timestamp, started_at_ms: binding.started_at_ms, completed_at_ms: binding.completed_at_ms })
-              return false
+              if (binding)
+                timedRoot.push({ ...event, timestamp: binding.timestamp, started_at_ms: binding.started_at_ms, completed_at_ms: binding.completed_at_ms })
+              else
+                yield line
             }
-            catch { return true }
+            const actions = [...timedRoot, ...nativeResult.childEvents]
+              .sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp))
+            for (const event of actions)
+              yield `${JSON.stringify(event)}\n`
+          })()
+          writeLines(join(outputRoot, 'native-root.jsonl'), fileLines(rawStdout), (line) => {
+            try {
+              return JSON.stringify(redactValue(JSON.parse(line))) + (line.endsWith('\n') ? '\n' : '')
+            }
+            catch { return redact(line) }
           })
-          const actions = [...timedRoot, ...nativeResult.childEvents]
-            .sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp))
-          allEvents = [...rootLines, ...actions.map(event => JSON.stringify(event))].join('\n')
         }
-        const stdout = allEvents.split('\n').map((line) => {
+        writeLines(join(outputRoot, 'events.jsonl'), allEvents, (line) => {
           try {
             const event = JSON.parse(line)
             const sanitized = redactValue(event)
@@ -316,13 +334,15 @@ function createAdapter(options, native) {
               sanitized.item.command_redacted = true
             if (event?.item?.type === 'tool_program' && sanitized.item.program !== event.item.program)
               sanitized.item.program_redacted = true
-            return JSON.stringify(sanitized)
+            return JSON.stringify(sanitized) + (line.endsWith('\n') ? '\n' : '')
           }
           catch {
             return redact(line)
           }
-        }).join('\n')
-        return { ...result, stdout, stderr: redact(result.stderr), finalOutput, ...(nativeResult && { native: redactValue(nativeResult.evidence), nativeRootTrace: redact(result.stdout) }) }
+        })
+        writeLines(join(outputRoot, 'stderr.log'), fileLines(rawStderr), redact)
+        const { stdout, stderr, ...processResult } = result
+        return { ...processResult, stdoutFile: 'events.jsonl', stderrFile: 'stderr.log', streamHashes: { stdout: hashFile(join(outputRoot, 'events.jsonl')), stderr: hashFile(join(outputRoot, 'stderr.log')) }, finalOutput, ...(nativeResult && { native: redactValue(nativeResult.evidence) }) }
       }
       finally {
         rmSync(home, { force: true, recursive: true })

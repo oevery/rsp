@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { isAbsolute, join, relative } from 'node:path'
 import { setImmediate } from 'node:timers/promises'
-import { cancellationReason, runProcess, validateTimeout } from '../adapters/process.mjs'
+import { cancellationReason, runProcess } from '../adapters/process.mjs'
 import { gradeEvidence } from '../graders/evidence.mjs'
 import { observeProjectChecks } from '../observers/checks.mjs'
 import { observeEvents } from '../observers/events.mjs'
@@ -11,6 +11,7 @@ import { loadConfig } from './config.mjs'
 import { hash, treeFiles, writeJson } from './files.mjs'
 import { executionIdentity, gradingIdentity } from './identity.mjs'
 import { projectIdentity } from './projects.mjs'
+import { streamLines } from './streams.mjs'
 
 export { prepareWorkspace, workspaceObservation } from '../observers/workspace.mjs'
 
@@ -20,8 +21,8 @@ export function createLocalAdapter(command, args = []) {
   return {
     id: 'local-test',
     settings: { provider: 'local-test', model: 'none', effort: 'none' },
-    async run({ workspace, prompt, timeoutMs, signal, onActivity }) {
-      return runProcess(command, args, { cwd: workspace, env: { PATH: process.env.PATH, HOME: workspace }, input: prompt, timeoutMs, signal, onActivity })
+    async run({ workspace, prompt, signal, onActivity }) {
+      return runProcess(command, args, { cwd: workspace, env: { PATH: process.env.PATH, HOME: workspace }, input: prompt, signal, onActivity })
     },
   }
 }
@@ -40,7 +41,9 @@ export function sourceIdentity(root) {
 }
 
 export async function runCase(entry, root, options = {}) {
-  const timeoutMs = validateTimeout(options.timeoutMs)
+  if (options.timeoutMs != null)
+    throw new Error('Model total deadlines are not supported')
+  const timeoutMs = null
   const adapter = options.adapter ?? (options.command ? createLocalAdapter(options.command, options.args) : null)
   if (!adapter)
     throw new Error('An explicit evaluation adapter is required')
@@ -104,7 +107,7 @@ export async function runCase(entry, root, options = {}) {
     await setImmediate()
     const result = options.signal?.aborted
       ? { exitCode: null, stdout: '', stderr: '', finalOutput: null, timedOut: false, timeoutMs, cancelled: true, cancellationReason: cancellationReason(options.signal), durationMs: 0 }
-      : await adapter.run({ workspace, prompt: entry.manifest.prompt, outputRoot, timeoutMs, signal: options.signal, writableGit: entry.manifest.hard.commit !== undefined, onActivity: options.onActivity })
+      : await adapter.run({ workspace, prompt: entry.manifest.prompt, outputRoot, signal: options.signal, writableGit: entry.manifest.hard.commit !== undefined, onActivity: options.onActivity })
     run.result = result
     if (options.signal?.aborted) {
       result.cancelled = true
@@ -114,7 +117,7 @@ export async function runCase(entry, root, options = {}) {
     activity(stage)
     if (sourceIdentity(root) !== identity.sourceHash)
       throw new Error('Source or built CLI changed during execution')
-    const events = observeEvents(result.stdout)
+    const events = observeEvents(streamLines(result, 'stdout', outputRoot))
     if (result.native) {
       events.native = result.native
       events.usage = result.native.usage
@@ -170,8 +173,10 @@ export async function runCase(entry, root, options = {}) {
   run = sanitize(run)
   run.evidenceHash = hash({ caseSpec: run.caseSpec, context: run.context, identity: run.identity, result: run.result, observation: run.observation })
   writeJson(join(outputRoot, 'run.json'), run)
-  writeFileSync(join(outputRoot, 'events.jsonl'), run.result?.stdout ?? '', { mode: 0o600 })
-  writeFileSync(join(outputRoot, 'stderr.log'), run.result?.stderr ?? '', { mode: 0o600 })
+  if (!run.result?.stdoutFile)
+    writeFileSync(join(outputRoot, 'events.jsonl'), run.result?.stdout ?? '', { mode: 0o600 })
+  if (!run.result?.stderrFile)
+    writeFileSync(join(outputRoot, 'stderr.log'), run.result?.stderr ?? '', { mode: 0o600 })
   writeFileSync(join(outputRoot, 'final.md'), run.result?.finalOutput ?? '', { mode: 0o600 })
   activity('execution-retained')
   return run

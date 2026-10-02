@@ -1,17 +1,30 @@
 import { Buffer } from 'node:buffer'
 import { createHash, randomUUID } from 'node:crypto'
-import { lstatSync, readdirSync, readFileSync, readlinkSync, renameSync, rmSync, writeFileSync } from 'node:fs'
+import { closeSync, constants, fstatSync, lstatSync, openSync, readdirSync, readlinkSync, readSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 export function hash(value) {
   return createHash('sha256').update(typeof value === 'string' || Buffer.isBuffer(value) ? value : JSON.stringify(value)).digest('hex')
 }
 
+// Fixed-size I/O buffers are not file-size limits.
+export function hashFile(path, prefix = '') {
+  const digest = createHash('sha256').update(prefix)
+  const fd = openSync(path, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK)
+  try {
+    if (!fstatSync(fd).isFile())
+      throw new Error('Expected a regular file')
+    const buffer = Buffer.alloc(65536)
+    for (let count = readSync(fd, buffer, 0, buffer.length, null); count > 0; count = readSync(fd, buffer, 0, buffer.length, null))
+      digest.update(buffer.subarray(0, count))
+    return digest.digest('hex')
+  }
+  finally { closeSync(fd) }
+}
+
 // Never follow fixture or installed-Skill symlinks into the host filesystem.
 export function treeFiles(directory, { rejectLinks = false, excludeGit = false } = {}) {
   const files = Object.create(null)
-  let totalBytes = 0
-  let entries = 0
   function visit(current, prefix = '') {
     for (const name of readdirSync(current).sort()) {
       if (name === '.git' && excludeGit && !prefix)
@@ -19,10 +32,6 @@ export function treeFiles(directory, { rejectLinks = false, excludeGit = false }
       const path = join(current, name)
       const key = prefix + name
       const stat = lstatSync(path)
-      entries++
-      totalBytes += stat.isFile() ? stat.size : 0
-      if (entries > 10000 || totalBytes > 64 * 1024 * 1024)
-        throw new Error('Evaluation snapshot exceeds the file or byte budget')
       if (stat.isSymbolicLink()) {
         if (rejectLinks)
           throw new Error('Evaluation inputs must not contain symlinks')
@@ -32,7 +41,7 @@ export function treeFiles(directory, { rejectLinks = false, excludeGit = false }
         visit(path, `${key}/`)
       }
       else if (stat.isFile()) {
-        files[key] = hash(Buffer.concat([Buffer.from(`${stat.mode & 0o111}:`), readFileSync(path)]))
+        files[key] = hashFile(path, `${stat.mode & 0o111}:`)
       }
       else {
         throw new Error('Unsupported evaluation input file')

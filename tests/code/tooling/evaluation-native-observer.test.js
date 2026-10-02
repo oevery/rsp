@@ -198,14 +198,23 @@ describe('native v1 host evidence', () => {
     expect(result.childEvents.some(e => e.source_thread_id === 'grandchild')).toBe(true)
   })
 
-  it.each(['malformed', 'truncated', 'oversize', 'symlink'])('bounds real filesystem parsing for %s logs', (mode) => {
+  it('attributes complete native logs larger than the former log quota', () => {
+    const f = fixture()
+    f.save('child', rollout('child', 'root', Array.from({ length: 270 }, () => event('fixture_padding', { text: 'x'.repeat(65536) }))))
+    const result = f.collect()
+    expect(result.evidence.complete).toBe(true)
+    expect(result.evidence.usage).toEqual({ input_tokens: 20, output_tokens: 4 })
+    expect(result.evidence.threads.find(thread => thread.id === 'child').completed).toBe(true)
+  })
+
+  it.each(['malformed', 'truncated', 'binary', 'symlink'])('rejects unsafe or malformed %s logs', (mode) => {
     const f = fixture()
     const path = join(f.sessions, 'bad.jsonl')
     if (mode === 'malformed')
       writeFileSync(path, '{bad}\n')
     if (mode === 'truncated')
       writeFileSync(path, JSON.stringify(event('session_meta', { id: 'unfinished' })))
-    if (mode === 'oversize') {
+    if (mode === 'binary') {
       writeFileSync(path, '')
       truncateSync(path, 16 * 1024 * 1024 + 1)
     }

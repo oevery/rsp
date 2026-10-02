@@ -5,10 +5,12 @@ import { dirname, join } from 'node:path'
 import { copyDependencies } from '../core/dependencies.mjs'
 import { hash, treeFiles } from '../core/files.mjs'
 import { materializeProject } from '../core/projects.mjs'
+import { copyText } from '../core/streams.mjs'
 
 export function git(workspace, args, encoding = 'utf8') {
   return execFileSync('git', ['-c', 'core.hooksPath=/dev/null', '-c', 'core.fsmonitor=false', '-c', 'commit.gpgsign=false', '-c', 'gc.auto=0', '-c', 'maintenance.auto=false', '-C', workspace, ...args], {
     encoding,
+    maxBuffer: Infinity,
     env: { PATH: process.env.PATH, HOME: workspace, GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null' },
   })
 }
@@ -158,8 +160,8 @@ export function workspaceObservation(workspace, baseline, priorityPaths = []) {
 }
 
 // Retain task text and installed guidance before the disposable workspace is
-// removed. Never follow links or copy Git/dependency/provider state. The normal
-// snapshot budget bounds this pass; omissions remain explicit review evidence.
+// removed. Never follow links or copy Git/dependency/provider state.
+// Text is copied incrementally; omissions remain explicit review evidence.
 export function retainWorkspace(workspace, destination, redact, priorityPaths = []) {
   const files = treeFiles(workspace, { excludeGit: true })
   const retained = []
@@ -184,15 +186,12 @@ export function retainWorkspace(workspace, destination, redact, priorityPaths = 
       continue
     }
     try {
-      const bytes = readFileSync(source)
-      if (bytes.includes(0)) {
+      const target = join(destination, path)
+      mkdirSync(dirname(target), { recursive: true, mode: 0o700 })
+      if (!copyText(source, target, redact)) {
         omitted.push({ path, reason: 'binary' })
         continue
       }
-      const content = redact(bytes.toString('utf8'))
-      const target = join(destination, path)
-      mkdirSync(dirname(target), { recursive: true, mode: 0o700 })
-      writeFileSync(target, content, { mode: 0o600 })
       retained.push(path)
     }
     catch { omitted.push({ path, reason: 'unreadable' }) }

@@ -4,7 +4,7 @@ import { mkdirSync, readFileSync, rmSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { setImmediate } from 'node:timers/promises'
 import { createNativeOpenCodexAdapter, createOpenCodexAdapter } from './adapters/opencodex.mjs'
-import { cancellationReason, validateTimeout } from './adapters/process.mjs'
+import { cancellationReason } from './adapters/process.mjs'
 import { discoverCases, resolveCase } from './core/cases.mjs'
 import { loadConfig } from './core/config.mjs'
 import { prepareWorkspace, runCase, sourceIdentity } from './core/execute.mjs'
@@ -18,7 +18,7 @@ import { compositionIdentity } from './observers/workspace.mjs'
 const root = process.cwd()
 function options(args) {
   const result = {}
-  const valued = new Set(['case', 'suite', 'matrix', 'baseline', 'config-file', 'auth-file', 'codex-bin', 'max-sessions', 'timeout-ms', 'output-root', 'composition'])
+  const valued = new Set(['case', 'suite', 'matrix', 'baseline', 'config-file', 'auth-file', 'codex-bin', 'max-sessions', 'output-root', 'composition'])
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--')
       continue
@@ -120,7 +120,7 @@ async function main(args) {
   const maxSessions = positive(opts['max-sessions'])
   if (maxSessions < entries.length * 2)
     throw new Error('Budget must cover tasks and independent reviews')
-  const timeoutMs = validateTimeout(opts['timeout-ms'] === undefined ? null : Number(opts['timeout-ms']))
+  const timeoutMs = null
   const outputRoot = join(resolve(opts['output-root'] ?? 'tests/skills/reports'), randomUUID())
   mkdirSync(outputRoot, { recursive: true, mode: 0o700 })
   const reportPath = join(outputRoot, 'matrix.json')
@@ -156,7 +156,7 @@ async function main(args) {
       report.rootSessions++
       save()
       progress.activity({ caseId: entry.id, role: 'executor', phase: 'execution', state: 'observing' })
-      const run = await runCase(entry, root, { adapter, composition, compositionHash: frozenComposition.hash, outputRoot, timeoutMs, signal, sourceHash, onActivity: progress.activity })
+      const run = await runCase(entry, root, { adapter, composition, compositionHash: frozenComposition.hash, outputRoot, signal, sourceHash, onActivity: progress.activity })
       const item = { case: entry.id, run: join(run.reportDirectory, 'run.json'), runHash: hash(readFileSync(join(run.reportDirectory, 'run.json'))), mechanical: run.verdict, status: run.verdict.status === 'failed' ? 'failed' : 'inconclusive' }
       report.runs.push(item)
       save()
@@ -168,7 +168,7 @@ async function main(args) {
       save()
       progress.activity({ caseId: entry.id, role: 'judge', phase: 'review', state: 'observing' })
       const comparison = comparisons?.get(entry.id)
-      const review = await reviewRun(run, { adapter: judge, outputRoot, timeoutMs, signal, baseline: comparison?.run, warnings: comparison?.warnings ?? [], onActivity: progress.activity })
+      const review = await reviewRun(run, { adapter: judge, outputRoot, signal, baseline: comparison?.run, warnings: comparison?.warnings ?? [], onActivity: progress.activity })
       item.review = review.reportPath
       item.reviewHash = hash(readFileSync(review.reportPath))
       item.reviewReport = review.report

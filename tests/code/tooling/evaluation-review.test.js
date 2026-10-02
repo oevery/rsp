@@ -38,10 +38,15 @@ it('uses native judge read-only mode, reads retained outputs and saves a Markdow
   chmodSync(bin, 0o755)
   const config = join(dir, 'config.toml')
   writeFileSync(config, 'model_provider = "fixture-provider"\n')
+  writeFileSync(join(dir, 'provider-control.json'), JSON.stringify({ largeOutput: true }))
   const adapter = createOpenCodexAdapter({ codexBin: bin, model: 'fixture', effort: 'medium', configFile: config, role: 'judge' })
   const result = await reviewRun(record(), { adapter, outputRoot: dir })
   expect(result).toMatchObject({ status: 'passed', parsed: true, timeoutMs: null, schema: 'agent-review-run-v1' })
   expect(result.attempts).toHaveLength(1)
+  expect(result.attempts[0].result.stdout).toBeUndefined()
+  expect(result.attempts[0].result.stderr).toBeUndefined()
+  expect(readFileSync(join(dirname(result.reportPath), 'events.jsonl')).length).toBeGreaterThan(8 * 1024 * 1024)
+  expect(readFileSync(join(dirname(result.reportPath), 'stderr.log')).length).toBe(160 * 65536)
   expect(result.attempts[0].toolCalls).toBeGreaterThan(0)
   expect(readFileSync(result.report, 'utf8')).toContain('current/events.jsonl')
   expect(JSON.parse(readFileSync(result.reportPath)).settings.role).toBe('judge')
@@ -116,19 +121,22 @@ it('saves cancellation without another session or accepting exit zero', async ()
     }
   }
 })
-it.skipIf(process.platform === 'win32')('does not accept a report as completed when output was truncated', async () => {
+it('does not accept a review when its evidence sink cannot be opened', async () => {
   let calls = 0
   const adapter = {
     settings: { provider: 'local-test', model: 'none' },
-    async run({ workspace }) {
+    async run({ workspace, outputRoot }) {
       calls++
-      const script = 'process.on("SIGTERM", () => process.exit(0)); console.log(JSON.stringify({type:"turn.completed"})); setInterval(() => process.stderr.write("x".repeat(65536)), 1)'
-      return { ...await runProcess(process.execPath, ['-e', script], { cwd: workspace, env: {}, input: '', timeoutMs: 5000 }), finalOutput: answer() }
+      const marker = join(outputRoot, 'started')
+      const script = `require('node:fs').writeFileSync(${JSON.stringify(marker)}, 'started')`
+      const result = await runProcess(process.execPath, ['-e', script], { cwd: workspace, env: {}, input: '', stdoutPath: join(outputRoot, 'missing/events.jsonl') })
+      expect(existsSync(marker)).toBe(false)
+      return { ...result, finalOutput: answer() }
     },
   }
   const result = await reviewRun(record(), { adapter, outputRoot: temp() })
-  expect(result.attempts[0].result).toMatchObject({ outputLimited: true, exitCode: 0 })
-  expect(result).toMatchObject({ status: 'inconclusive', category: 'infrastructure' })
+  expect(result.attempts[0].result).toMatchObject({ error: 'evidence-write-failed', exitCode: null })
+  expect(result.status).toBe('inconclusive')
   expect(calls).toBe(1)
   expect(readFileSync(result.report, 'utf8')).toContain('# Review')
 })

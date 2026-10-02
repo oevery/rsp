@@ -1,3 +1,4 @@
+import { isArchivePath } from './archive-outcome.mjs'
 import { gradeCommitOutcome } from './commit-outcome.mjs'
 
 export function gradeHardBoundary(spec, observation, events, { compositionHash }) {
@@ -6,7 +7,8 @@ export function gradeHardBoundary(spec, observation, events, { compositionHash }
   const changed = observation.changedPaths
   const allowed = new Set(hard.allowed_paths)
   for (const path of new Set([...changed, ...events.writes])) {
-    if (!allowed.has(path))
+    const newArchive = isArchivePath(path, hard.archive) && observation.baseline != null && !Object.hasOwn(observation.baseline, path)
+    if (!allowed.has(path) && !newArchive)
       failures.push({ code: 'unauthorized-path', path })
   }
   if (hard.commit !== undefined) {

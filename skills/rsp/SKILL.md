@@ -4,7 +4,7 @@ description: Continue an authorized RSP request through implementation, checks a
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.02.4"
+  version: "2026.10.02.6"
 ---
 
 # RSP Skill
@@ -105,4 +105,4 @@ When accepted work remains or a continuation resumes, use the same recovery refe
 
 ## Durable decision output
 
-After loading [durable writeback decision](references/durable-review.md), use its canonical localized output and choose current facts and lasting rationale independently. A required unwritten update, incomplete Task, incomplete Required Verify item, or real blocker makes archive readiness `no`; Optional coverage warnings do not. Before lifecycle closeout, consume fresh `rsp ready <work-ref> --json` evidence with `completionGate: pass` and `archiveReady: yes`.
+After loading [durable writeback decision](references/durable-review.md), verify outcome facts, distill Focus and update knowledge as needed, then converge the whole Change before final consistency checks and authorized archive. Its localized decision summary belongs in the response, not as an archive template. A required unwritten update, incomplete Task, incomplete Required Verify item, or real blocker makes archive readiness `no`; Optional coverage warnings do not. Before lifecycle closeout, consume fresh `rsp ready <work-ref> --json` evidence with `completionGate: pass` and `archiveReady: yes`.

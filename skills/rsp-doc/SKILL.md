@@ -4,7 +4,7 @@ description: Create or revise repository documents, Skills and release communica
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.02.6"
+  version: "2026.10.02.8"
 ---
 
 # RSP Doc

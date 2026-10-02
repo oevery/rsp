@@ -1,0 +1,5 @@
+<!-- rsp-focus:v1 -->
+Current: Implementation has the approved 1500-cent price; the catalog Spec still says 1200 and Change contains unreconciled notes.
+Evidence: src/price.mjs and tools/check.mjs; evidence/prior-failure.md records an earlier failed candidate and must remain unchanged.
+Next: Recheck the required evidence and finish the selected work under the current user's authority.
+Resume check: Preserve original failures and unrelated files; browser appearance has not been checked.

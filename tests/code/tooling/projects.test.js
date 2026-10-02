@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process'
 import { lstatSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, relative } from 'node:path'
@@ -6,6 +7,41 @@ import { loadCase } from '../../skills/runner/core/cases.mjs'
 import { prepareWorkspace, runCase } from '../../skills/runner/core/execute.mjs'
 import { hash } from '../../skills/runner/core/files.mjs'
 import { git } from '../../skills/runner/observers/workspace.mjs'
+
+it.each(['allowed', 'history', 'other'])('checks archive permission against real CLI output: %s', async (mode) => {
+  const directory = mkdtempSync(join(tmpdir(), 'rsp-archive-boundary-'))
+  try {
+    const run = await runCase(loadCase(process.cwd(), 'archive-final-convergence'), process.cwd(), {
+      outputRoot: directory,
+      adapter: {
+        id: 'local-test',
+        settings: { provider: 'local-test', model: 'none', effort: 'none' },
+        async run({ workspace }) {
+          const path = join(workspace, '.rsp/changes/price-update.md')
+          writeFileSync(path, readFileSync(path, 'utf8')
+            .replace('- [ ] Complete required', '- [x] Complete required')
+            .replace('- [ ] .tooling/node', '- [x] .tooling/node'))
+          const result = spawnSync(process.execPath, ['.tooling/rsp/bin/rsp.mjs', 'archive', 'price-update'], { cwd: workspace, encoding: 'utf8' })
+          if (mode !== 'allowed')
+            writeFileSync(join(workspace, '.rsp/archives', mode === 'history' ? '2020-01-01_price-update.md' : '2099-01-01_other.md'), 'unauthorized archive edit')
+          return { exitCode: result.status, stdout: JSON.stringify({ type: 'turn.completed' }), stderr: result.stderr + result.stdout, finalOutput: 'Local mechanical control only; final text requires independent judging.' }
+        },
+      },
+    })
+    expect(run.result.exitCode, run.result.stderr).toBe(0)
+    expect(run.hard.status).toBe(mode === 'allowed' ? 'passed' : 'failed')
+    if (mode === 'allowed') {
+      expect(run.task.status).toBe('passed')
+      expect(run.observation.indexHash).toBe(run.observation.baselineIndexHash)
+    }
+    else {
+      expect(run.hard.failures).toContainEqual({ code: 'unauthorized-path', path: mode === 'history' ? '.rsp/archives/2020-01-01_price-update.md' : '.rsp/archives/2099-01-01_other.md' })
+    }
+  }
+  finally {
+    rmSync(directory, { recursive: true, force: true })
+  }
+})
 
 it('keeps injected tooling out of Git while detecting ignored dependency and new-file mutations', async () => {
   const directory = mkdtempSync(join(tmpdir(), 'rsp-ignored-tooling-'))

@@ -1,12 +1,9 @@
-import { Buffer } from 'node:buffer'
-import { closeSync, constants, fstatSync, lstatSync, openSync, readdirSync, readSync } from 'node:fs'
+import { closeSync, constants, fstatSync, lstatSync, openSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { Script } from 'node:vm'
+import { fileLines, textLines } from '../core/streams.mjs'
 import { literalArgv } from './command-argv.mjs'
 
-const MAX_LOG = 16 * 1024 * 1024
-const MAX_TOTAL = 64 * 1024 * 1024
-const MAX_ENTRIES = 1024
 const messageTypes = new Set(['UserMessage', 'AgentMessage', 'Reasoning', 'Plan', 'TodoList'])
 const collabTools = new Set(['spawn_agent', 'send_input', 'resume_agent', 'wait', 'close_agent'])
 const identifier = value => typeof value === 'string' && /^[\w.-]{1,200}$/.test(value)
@@ -29,87 +26,72 @@ function compileFailed(program, output) {
   }
 }
 
-/** Collect host facts only, within bounded isolated-home logs; never infer roles. */
+/** Collect host facts only from isolated-home logs; never infer roles. */
 export function collectNativeEvidence(home, rootStdout) {
   const reasons = new Set()
   const fail = reason => reasons.add(reason)
-  const parse = (raw, label) => {
-    if (typeof raw !== 'string' || Buffer.byteLength(raw) > MAX_LOG) {
-      fail(`${label}:oversize-or-missing-log`)
-      return []
+  function* parse(raw, label) {
+    if (raw == null) {
+      fail(`${label}:missing-log`)
+      return
     }
-    if (!raw.endsWith('\n'))
-      fail(`${label}:truncated-log`)
-    const events = []
-    for (const line of raw.split('\n')) {
+    let last = ''
+    for (const line of textLines(raw)) {
+      last = line
       if (!line.trim())
         continue
       try {
         const event = JSON.parse(line)
         if (!object(event) || typeof event.type !== 'string')
           throw new Error('Invalid event')
-        events.push(event)
+        yield event
       }
       catch {
         fail(`${label}:malformed-log`)
       }
     }
-    return events
+    if (last && !last.endsWith('\n'))
+      fail(`${label}:truncated-log`)
   }
-  const rootEvents = parse(rootStdout, 'root')
+  const rootEvents = []
+  for (const event of parse(rootStdout, 'root'))
+    rootEvents.push(event.item ? { ...event, item: { ...event.item, aggregated_output: undefined, text: undefined } } : event)
   const starts = rootEvents.filter(event => event.type === 'thread.started')
   const rootThreadId = starts.length === 1 && identifier(starts[0].thread_id) ? starts[0].thread_id : null
   if (!rootThreadId)
     fail('root:missing-or-ambiguous-thread')
   const logs = new Map()
-  let total = 0
-  let entries = 0
-  function walk(directory, depth = 0) {
-    if (depth > 8) {
-      fail('sessions:depth-limit')
-      return
-    }
+  function walk(directory) {
     try {
       if (lstatSync(directory).isSymbolicLink()) {
         fail('sessions:symlink')
         return
       }
       for (const entry of readdirSync(directory, { withFileTypes: true })) {
-        if (++entries > MAX_ENTRIES) {
-          fail('sessions:entry-limit')
-          return
-        }
         const path = join(directory, entry.name)
         if (entry.isSymbolicLink()) {
           fail('sessions:symlink')
         }
         else if (entry.isDirectory()) {
-          walk(path, depth + 1)
+          walk(path)
         }
         else if (entry.name.endsWith('.jsonl')) {
           let fd
           try {
             fd = openSync(path, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK)
             const stat = fstatSync(fd)
-            total += stat.size
-            if (!stat.isFile() || stat.size > MAX_LOG || total > MAX_TOTAL) {
-              fail('sessions:oversize-or-nonregular-log')
+            if (!stat.isFile()) {
+              fail('sessions:nonregular-log')
               continue
             }
-            // Read at most the stat size plus one byte, even if a producer is
-            // still appending. A moving snapshot cannot certify completeness.
-            const buffer = Buffer.alloc(stat.size + 1)
-            let bytes = 0
-            while (bytes < buffer.length) {
-              const count = readSync(fd, buffer, bytes, buffer.length - bytes, null)
-              if (!count)
-                break
-              bytes += count
+            const events = () => parse(fileLines(path), 'session')
+            const metas = []
+            for (const event of events()) {
+              if (event.type === 'session_meta')
+                metas.push(event)
             }
-            if (bytes !== stat.size || fstatSync(fd).size !== stat.size)
+            if (fstatSync(fd).size !== stat.size)
               fail('sessions:changing-log')
-            const events = parse(buffer.subarray(0, bytes).toString('utf8'), 'session')
-            const metas = events.filter(event => event.type === 'session_meta')
             const meta = metas[0]?.payload
             const id = meta?.id ?? meta?.session_id
             // Native v1 children retain the root session_id; id is the thread.
@@ -196,7 +178,11 @@ export function collectNativeEvidence(home, rootStdout) {
       || (meta.parent_thread_id && meta.parent_thread_id !== parentId)) {
       fail('thread:foreign-parent')
     }
-    const contexts = events.filter(event => event.type === 'turn_context').map(event => event.payload)
+    const contexts = []
+    for (const event of events()) {
+      if (event.type === 'turn_context')
+        contexts.push(event.payload)
+    }
     const models = new Set(contexts.map(context => context?.model))
     const model = models.size === 1 && typeof contexts[0]?.model === 'string' ? contexts[0].model : null
     const efforts = new Set(contexts.map(context => context?.effort))
@@ -218,7 +204,7 @@ export function collectNativeEvidence(home, rootStdout) {
     const commands = []
     const writes = []
     const pendingItems = new Set()
-    for (const event of events) {
+    for (const event of events()) {
       const p = event.payload
       if (event.type !== 'event_msg' || !object(p))
         continue
@@ -308,7 +294,7 @@ export function collectNativeEvidence(home, rootStdout) {
       fail('item:unobserved-tool-call')
       lowered.push({ type: 'item.completed', source_thread_id: id, timestamp: timestamp ?? null, item: { id: callId, type: 'unobserved_tool' } })
     }
-    for (const event of events) {
+    for (const event of events()) {
       const p = event.payload
       if (event.type === 'response_item' && ['function_call', 'custom_tool_call'].includes(p?.type)) {
         envelopes.set(p.call_id, { known: knownEnvelopes.has(p.name), observed: false, program: p.name === 'exec' ? p.input : null })

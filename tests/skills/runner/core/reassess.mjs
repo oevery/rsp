@@ -3,7 +3,7 @@ import { lstatSync, mkdirSync, readFileSync, realpathSync } from 'node:fs'
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path'
 import { setImmediate } from 'node:timers/promises'
 import { createOpenCodexAdapter } from '../adapters/opencodex.mjs'
-import { cancellationReason, validateTimeout } from '../adapters/process.mjs'
+import { cancellationReason } from '../adapters/process.mjs'
 import { loadCase } from './cases.mjs'
 import { loadConfig } from './config.mjs'
 import { harnessIdentity, sourceIdentity } from './execute.mjs'
@@ -21,7 +21,7 @@ function readReport(path, name, boundary) {
     const full = realpathSync(resolve(path))
     const part = boundary && relative(boundary, full)
     const stat = lstatSync(resolve(path))
-    if (!stat.isFile() || stat.size > 64 * 1024 * 1024 || (boundary && (part === '..' || part.startsWith('../') || isAbsolute(part))))
+    if (!stat.isFile() || (boundary && (part === '..' || part.startsWith('../') || isAbsolute(part))))
       throw new Error('boundary')
     const bytes = readFileSync(full)
     const value = JSON.parse(bytes)
@@ -75,7 +75,9 @@ export async function reassess(root, opts) {
   const maxSessions = Number(opts['max-sessions'])
   if (opts['allow-live'] && (!opts['config-file'] || !Number.isInteger(maxSessions) || maxSessions < 1))
     refuse('PERMISSION', 'Judging requires --allow-live, --config-file and a positive --max-sessions budget.')
-  const timeoutMs = validateTimeout(opts['timeout-ms'] === undefined ? null : Number(opts['timeout-ms']))
+  if (opts['timeout-ms'] !== undefined)
+    refuse('OPTION', 'Model total deadlines are not supported.')
+  const timeoutMs = null
   const original = retainedExecution(opts.matrix, opts.case)
   const { source, retained, run, warnings } = original
   const comparison = opts.baseline ? optionalBaseline(opts.baseline, opts.case) : null
@@ -108,7 +110,7 @@ export async function reassess(root, opts) {
     signal.throwIfAborted()
     const adapter = createOpenCodexAdapter({ configFile: opts['config-file'], authFile: opts['auth-file'], codexBin: opts['codex-bin'], role: 'judge' })
     lineage.reviewerSettings = adapter.settings
-    const review = await reviewRun(run, { adapter, outputRoot, timeoutMs, signal, baseline: comparison?.run, warnings, onActivity: progress.activity, beforeAttempt() {
+    const review = await reviewRun(run, { adapter, outputRoot, signal, baseline: comparison?.run, warnings, onActivity: progress.activity, beforeAttempt() {
       lineage.rootSessions++
       save()
     }, onProgress(report) {

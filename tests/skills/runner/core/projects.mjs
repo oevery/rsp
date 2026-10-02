@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process'
-import { cpSync, existsSync, readFileSync } from 'node:fs'
+import { closeSync, cpSync, existsSync, mkdtempSync, openSync, readFileSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { copyDependencies } from './dependencies.mjs'
 import { hash, treeFiles } from './files.mjs'
@@ -25,7 +26,7 @@ export function projectIdentity(root, id) {
     || spec.paths.some(p => typeof p !== 'string' || !/^[\w.-]+$/u.test(p) || ['.git', '.agents', '.codex', '..', '.'].includes(p))) {
     throw new Error('Invalid fixed project snapshot')
   }
-  const tree = execFileSync('git', ['ls-tree', '-r', spec.commit, '--', ...spec.paths], { cwd: root, encoding: 'utf8', maxBuffer: 8 * 1024 * 1024 })
+  const tree = execFileSync('git', ['ls-tree', '-r', spec.commit, '--', ...spec.paths], { cwd: root, encoding: 'utf8', maxBuffer: Infinity })
   if (!tree.trim() || tree.split('\n').filter(Boolean).some(line => !line.startsWith('100644 ') && !line.startsWith('100755 ')))
     throw new Error('Snapshot contains unsupported links or submodules')
   return { id, kind: spec.kind, commit: spec.commit, paths: spec.paths, treeHash: hash(tree), hash: hash({ files, tree }) }
@@ -40,10 +41,19 @@ export function materializeProject(root, entry, workspace) {
     throw new Error('Project changed after selection')
   const path = directory(root, id)
   if (identity.kind === 'git-snapshot') {
-    const archive = execFileSync('git', ['archive', '--format=tar', identity.commit, '--', ...identity.paths], { cwd: root, maxBuffer: 64 * 1024 * 1024 })
-    execFileSync('tar', ['-xf', '-', '-C', workspace], { input: archive })
+    const temporary = mkdtempSync(join(tmpdir(), 'rsp-project-archive-'))
+    const archive = join(temporary, 'source.tar')
+    try {
+      const fd = openSync(archive, 'w', 0o600)
+      try {
+        execFileSync('git', ['archive', '--format=tar', identity.commit, '--', ...identity.paths], { cwd: root, stdio: ['ignore', fd, 'pipe'], maxBuffer: Infinity })
+      }
+      finally { closeSync(fd) }
+      execFileSync('tar', ['-xf', archive, '-C', workspace], { maxBuffer: Infinity })
+    }
+    finally { rmSync(temporary, { recursive: true, force: true }) }
     copyDependencies(root, join(workspace, 'node_modules'), { build: true, lockSource: readFileSync(join(workspace, 'pnpm-lock.yaml'), 'utf8') })
-    execFileSync(process.execPath, [join(workspace, 'node_modules/tsup/dist/cli-default.js')], { cwd: workspace, timeout: 60000, stdio: 'pipe' })
+    execFileSync(process.execPath, [join(workspace, 'node_modules/tsup/dist/cli-default.js')], { cwd: workspace, timeout: 60000, stdio: 'pipe', maxBuffer: Infinity })
     if (!existsSync(join(workspace, 'dist/cli.mjs')))
       throw new Error('Fixed real project did not build')
   }

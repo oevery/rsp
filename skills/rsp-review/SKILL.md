@@ -4,7 +4,7 @@ description: Review a fixed change or explicit file set read-only against projec
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.02.5"
+  version: "2026.10.02.7"
 ---
 
 # RSP Review

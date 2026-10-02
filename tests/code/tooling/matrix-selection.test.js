@@ -212,7 +212,7 @@ it.skipIf(process.platform === 'win32').each([
   }
 }, 20000)
 
-it('persists an explicit CLI deadline and refuses overflow before starting a session', () => {
+it('rejects model total deadlines before starting a session', () => {
   const directory = temp()
   const readyFile = join(directory, 'ready.json')
   const sessionsFile = join(directory, 'sessions.jsonl')
@@ -221,12 +221,11 @@ it('persists an explicit CLI deadline and refuses overflow before starting a ses
   const overflow = invoke([...args, '--timeout-ms', '2147483648'])
   expect(overflow.status).toBe(2)
   expect(existsSync(sessionsFile)).toBe(false)
-  const result = invoke([...args, '--timeout-ms', '1000'])
-  expect(result.status, result.stderr).toBe(1)
-  const matrix = JSON.parse(readFileSync(JSON.parse(result.stdout).report))
-  expect(matrix).toMatchObject({ timeoutMs: 1000, cancelled: false, cancellationReason: null, rootSessions: 2, complete: true, status: 'inconclusive' })
-  const run = JSON.parse(readFileSync(matrix.runs[0].run))
-  expect(run).toMatchObject({ timeoutMs: 1000, cancelled: false, result: { timeoutMs: 1000, timedOut: true, cancelled: false } })
+  for (const command of [args, ['reassess', '--matrix', directory]]) {
+    const result = invoke([...command, '--timeout-ms', '1000'])
+    expect(result.status, result.stderr).toBe(2)
+    expect(existsSync(sessionsFile)).toBe(false)
+  }
 }, 25000)
 
 it('selects and runs a small case without unrelated history, but explicitly rejects a selected real snapshot', () => {

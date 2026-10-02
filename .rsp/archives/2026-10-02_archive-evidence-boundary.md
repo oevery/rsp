@@ -7,7 +7,7 @@ kind: "fix"
 ## Proposal
 - Outcome: Use Focus for ongoing recovery notes, Change for converged results, and authoritative documents for stable knowledge.
 - Scope: Core Focus/writeback guidance, standalone Shape/Doc/Review projections, maintainer evaluation guidance, current Specs, bilingual navigation and generated fallback; reuse existing Capsule commands. Explicit editorial repair also covers the two 2026-10-02 optimization-stage archives and the five child archives plus Brief under archives/rsp-workflow-alignment.
-- Non-goals: Raw-log storage in Focus, new schemas or runtime state, changing historical acceptance or evidence verdicts, reopening or renaming archives, remote delivery, publication or paid model sessions. One new exact-scope local checkpoint is authorized; no history rewrite.
+- Non-goals: Raw-log storage in Focus, new schemas or runtime state, changing historical acceptance or evidence verdicts, reopening or renaming archives, remote delivery or publication.
 
 ## Spec
 ### MODIFIED
@@ -43,19 +43,13 @@ Use the same selected Change for this coherent correction. Standalone Doc/Review
 - [x] Eight archives retain identities, Spec/acceptance and checklist states; author comparison preserves historical results, failure dispositions and limits. All 4133 inspected historical report/matrix hashes are unchanged. Build, lint, typecheck, 18 code files /115 tests, package checks and docs checks/build passed. Preservation evidence: tests/skills/reports/archive-evidence-boundary/archive-cleanup-verification.md.
 
 ### Optional
-- Independent read-only astra medium review of e063fb7..0c12f4d completed in the current host conversation: Code and Document clean across 30 files. This is static candidate review, not live behavior acceptance.
-- Separately authorized astra low execution / astra medium judging on 2026-10-02 started three root sessions before cancellation: recovery failed because evaluator-authored fixtures blocked the required Focus CLI, writeback execution was cancelled, and required-failure execution was not started. Original verdicts remain unchanged; no candidate behavioral regression or acceptance is established. Evidence: tests/skills/reports/archive-evidence-boundary/live-2026-10-02/summary.md.
-- The separately authorized corrected run passed all three behavioral cases with astra low executors and independent astra medium judges: stale-Focus recovery, outcome/stable-fact writeback and Required-failure handling. Six root sessions completed; all hard boundaries and task checks passed, with historical evidence, source, index and HEAD preserved. The Required-failure checker stayed failed while its correct handling passed. Evidence: tests/skills/reports/archive-evidence-boundary/live-2026-10-02/repaired-run-summary.md.
-- Corrected fixtures passed fresh actual CLI check/ready/Focus preflight. Each case ran once; repeated reliability, candidate comparisons, full live closeout and real supplier acceptance remain unverified. Original failed/cancelled results are not relabelled.
+- Static review of e063fb7..0c12f4d reported Code and Document clean across 30 files; this applies to that candidate, not later writeback or live behavior.
+- Initial behavioral evidence was invalid for candidate acceptance because the fixture blocked the required Focus CLI and execution was incomplete. The failed/cancelled results remain unchanged. Evidence: tests/skills/reports/archive-evidence-boundary/live-2026-10-02/summary.md.
+- Corrected fixtures passed CLI check/ready/Focus preflight. Stale-Focus recovery, outcome/stable-fact writeback and Required-failure handling each passed one astra low execution with astra medium judging. Hard boundaries and task checks passed; historical evidence, source, index and HEAD were preserved. The Required checker remained failed while its handling passed. Evidence: tests/skills/reports/archive-evidence-boundary/live-2026-10-02/repaired-run-summary.md.
+- Repeated reliability, candidate comparisons, final-archive text convergence, full live closeout and real supplier acceptance were not established by those cases.
 
-### Durable Decisions
-- Current facts: Update existing spec or scoped instruction.
-- Current-fact target: .rsp/specs/core-model.md, .rsp/specs/skill.md and .rsp/specs/writing-quality.md.
-- Facts written: ongoing recovery notes belong in Focus; converged results belong in Change; stable knowledge is selectively written before verified authorized closeout.
-- Decision Record: No Decision Record needed.
-- Decision Record target: N/A.
-- Rationale to write: none; this restores existing recovery and artifact ownership without a second workflow store.
-- Archive ready: yes; candidate 0c12f4d has clean independent static review and the corrected three-case behavioral evaluation passed. Required checks and knowledge writeback are complete; current deterministic readiness passes. Optional coverage limits remain explicit. Lifecycle closeout and local delivery were separately authorized; original reports and verdicts remain unchanged.
+### Knowledge updates
+- Core, Skill and writing-quality Specs define Focus as recovery context, Change as converged outcome evidence, and selective stable-knowledge writeback before closeout. No new Decision Record was needed; the correction retained existing artifact ownership.
 
 ## Blockers
 - none

@@ -6,7 +6,7 @@ export async function observeBooleanExport(source, exportName) {
     return { status: 'inconclusive', reason: 'module-source-missing' }
   const probe = fileURLToPath(new URL('./module-probe.mjs', import.meta.url))
   const permission = process.allowedNodeEnvironmentFlags.has('--permission') ? '--permission' : '--experimental-permission'
-  const result = await runProcess(process.execPath, [permission, `--allow-fs-read=${probe}`, '--experimental-vm-modules', '--max-old-space-size=64', probe], {
+  const result = await runProcess(process.execPath, [permission, `--allow-fs-read=${probe}`, '--experimental-vm-modules', probe], {
     cwd: fileURLToPath(new URL('.', import.meta.url)),
     env: {},
     input: JSON.stringify({ source, exportName }),

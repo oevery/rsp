@@ -112,6 +112,8 @@ export function parseCase(manifestPath, directory) {
     throw new Error('External-action review is owned by the harness, not the case rubric')
   if (hard.commit !== undefined)
     validateCommitContract(value)
+  if (hard.archive !== undefined && (typeof hard.archive !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(hard.archive)))
+    throw new Error('Archive permission requires one ungrouped Change WorkRef')
   if (value.native !== undefined && (!value.native || typeof value.native !== 'object' || Array.isArray(value.native)
     || Object.keys(value.native).some(key => !['minCompletedWorkers', 'maxWorkers'].includes(key))
     || !Number.isInteger(value.native.minCompletedWorkers) || value.native.minCompletedWorkers < 0

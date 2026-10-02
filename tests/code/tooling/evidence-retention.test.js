@@ -1,11 +1,11 @@
 import { Buffer } from 'node:buffer'
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readdirSync, readFileSync, rmSync, symlinkSync, truncateSync, writeFileSync, writeSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, expect, it, vi } from 'vitest'
 import { loadCase } from '../../skills/runner/core/cases.mjs'
-import { runCase } from '../../skills/runner/core/execute.mjs'
-import { hash } from '../../skills/runner/core/files.mjs'
+import { prepareWorkspace, runCase, workspaceObservation } from '../../skills/runner/core/execute.mjs'
+import { hash, hashFile } from '../../skills/runner/core/files.mjs'
 import { reviewRun } from '../../skills/runner/core/review.mjs'
 
 const temporary = []
@@ -15,6 +15,44 @@ function temp() {
   return dir
 }
 afterEach(() => temporary.splice(0).forEach(path => rmSync(path, { recursive: true, force: true })))
+
+it('observes ignored mutations beyond former snapshot count and byte quotas', () => {
+  const workspace = prepareWorkspace(loadCase(process.cwd(), 'preserve-user-files'), process.cwd())
+  temporary.push(workspace)
+  writeFileSync(join(workspace, '.git/info/exclude'), 'node_modules/\n')
+  const cache = join(workspace, 'node_modules')
+  mkdirSync(cache)
+  for (let i = 0; i < 10001; i++)
+    writeFileSync(join(cache, `${i}.txt`), 'baseline')
+  const large = join(cache, 'large.bin')
+  writeFileSync(large, '')
+  truncateSync(large, 65 * 1024 * 1024)
+  const baseline = workspaceObservation(workspace)
+  expect(baseline.files['node_modules/0.txt']).toBe(hash('0:baseline'))
+  const fd = openSync(large, 'r+')
+  try {
+    writeSync(fd, Buffer.from('changed'), 0, 7, 65 * 1024 * 1024 - 7)
+  }
+  finally { closeSync(fd) }
+  const after = workspaceObservation(workspace, baseline)
+  expect(after.changedPaths).toEqual(['node_modules/large.bin'])
+  expect(after.status).not.toContain('node_modules')
+})
+
+it.each(['escape', 'symlink', 'tampered'])('refuses unsafe retained stream evidence: %s', async (mode) => {
+  const source = temp()
+  const outside = join(temp(), 'private.jsonl')
+  writeFileSync(outside, '{"type":"turn.completed"}\n')
+  const stream = join(source, 'events.jsonl')
+  if (mode === 'symlink')
+    symlinkSync(outside, stream)
+  else
+    writeFileSync(stream, 'changed')
+  const adapter = { settings: {}, run: vi.fn() }
+  const result = await reviewRun({ reportDirectory: source, result: { stdoutFile: mode === 'escape' ? '../private.jsonl' : 'events.jsonl', streamHashes: { stdout: hashFile(outside) } } }, { adapter, outputRoot: temp() })
+  expect(result.status).toBe('inconclusive')
+  expect(adapter.run).not.toHaveBeenCalled()
+})
 
 it('offers compact review navigation without hiding failures or losing complete sanitized evidence', async () => {
   const outputRoot = temp()

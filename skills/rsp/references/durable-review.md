@@ -22,11 +22,15 @@ When the inspection reports only `RSP project requires an update`, required Task
 
 This exception never converts a failed declared implementation or independent verification check into success. Other inspection failures remain unresolved.
 
-## Converge the Change before writeback
+## Close out in order
 
-Revalidate relevant Focus notes and converge the Change to its current design, completed outcomes, verification conclusions, necessary failure dispositions, remaining limits and evidence pointers. Group integration conclusions belong in the Brief. Keep working chronology out; original records and verdicts remain with their evidence owner. An unresolved Required failure still blocks closeout.
+1. **Verify outcome facts.** Establish the approved delivered result from current implementation, authoritative contracts and decisive evidence. Distinguish passed, failed, unverified and superseded conclusions. This establishes truth, not a preliminary full-document rewrite; plans and recovery notes alone cannot establish current facts.
+2. **Distill Focus as needed.** Revalidate available notes and integrate only useful verified facts missing from Change; no Focus or no useful addition means no edit. Do not transfer recovery instructions, pending permission, session counts or attempt order. A missing note never replaces required evidence.
+3. **Write back knowledge as needed.** Using the verified result and Change delta, decide current facts and lasting rationale independently using the methods below. Update existing owners only when justified. No stable change means no edit; a delivered contract that leaves its authoritative Spec stale requires correction before closeout. Do not copy the whole Change or its verification history into knowledge documents.
+4. **Converge the whole Change.** After necessary writeback, read Proposal, Spec, Design, Tasks, Verify and Blockers as one final document, not just the latest Verify addition. Reconcile stale plans and superseded scope, remove process narration and duplicated handoff/readiness summaries, and retain the delivered contract delta, relevant design, completed work, decisive evidence and unresolved limits. Reflect actual knowledge updates with concise references, not duplicated current specifications. Preserve material failure dispositions and version-bound evidence references without replaying run history. Keep product boundaries distinct from transient operation permissions. Group integration conclusions belong in the Brief.
+5. **Check final consistency, then archive when authorized.** Check the final Change and knowledge owners against the verified result. Earlier review of another revision or a passing readiness command does not establish this text's quality. Complete applicable checks and separately required Review before the archive gate below. Fix prose defects in scope; return material contract or implementation contradictions to the appropriate decision, implementation or verification owner rather than editing away the failure. An unresolved Required failure still blocks closeout.
 
-From these conclusions, select only justified stable facts or rationale for the owners below; no useful knowledge update is a valid result. After writeback, refresh the final Change, applicable checks, separately required fixed-scope Review and readiness. Author checks never establish independent review.
+These are dependency constraints, not persisted phases or mandatory separate tool calls. Needs-based writeback may produce no edit when unnecessary; it never waives a required update. Final whole-Change convergence always applies and may confirm already-converged text without rewriting it. Original records and verdicts remain with their evidence owner. Author checks never establish independent review.
 
 ## Decide current facts and lasting rationale
 
@@ -45,7 +49,7 @@ Return the durable decision in this semantic field order. Localize headings and 
 - <localized Archive ready label>: <yes | no>
 ```
 
-Response-only Continuation and Durable Decision labels are not canonical artifact headings. In Chinese, for example, use `## 持久化决策`, `决策记录（Decision Record）`, and `可归档（Archive ready）`, not English labels alone.
+This is a response-only decision summary, not a block to paste into Change or archive. Persist actual knowledge updates and material decisions in the appropriate existing sections; omit empty targets, transient readiness and authorization receipts. In Chinese, for example, use `## 持久化决策`, `决策记录（Decision Record）`, and `可归档（Archive ready）`, not English labels alone.
 
 ## Write current facts to their owner
 

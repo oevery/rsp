@@ -2,8 +2,11 @@ import type { EvaluationCaseEntry } from './cases.mjs'
 
 export interface ProcessResult {
   exitCode: number | null
-  stdout: string
-  stderr: string
+  stdout?: string
+  stderr?: string
+  stdoutFile?: string
+  stderrFile?: string
+  streamHashes?: { stdout: string, stderr: string }
   error: string | null
   timedOut: boolean
   timeoutMs?: number | null
@@ -17,7 +20,7 @@ export interface Adapter {
   id: string
   settings: Record<string, string | boolean>
   redact?: (value: string) => string
-  run: (input: { workspace: string, prompt: string, outputRoot: string, timeoutMs?: number | null, signal?: AbortSignal, onActivity?: (activity: ActivityMetadata) => void }) => Promise<ProcessResult>
+  run: (input: { workspace: string, prompt: string, outputRoot: string, signal?: AbortSignal, onActivity?: (activity: ActivityMetadata) => void }) => Promise<ProcessResult>
 }
 export interface ActivityMetadata {
   phase?: string
@@ -35,7 +38,6 @@ export interface RunOptions {
   adapter?: Adapter
   command?: string
   args?: string[]
-  timeoutMs?: number | null
   signal?: AbortSignal
   composition?: string | null
   outputRoot?: string

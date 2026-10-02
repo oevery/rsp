@@ -1,5 +1,9 @@
+import { textLines } from '../core/streams.mjs'
+
 export function observeEvents(raw) {
-  const events = []
+  let completed = false
+  let failed = false
+  let toolCalls = 0
   const parseFailures = []
   const commands = []
   const writes = []
@@ -7,12 +11,19 @@ export function observeEvents(raw) {
   let modelInvocations = null
   let usage = null
   let finalOutput = null
-  for (const [index, line] of String(raw ?? '').split('\n').filter(line => line.trim()).entries()) {
+  let index = -1
+  for (const line of textLines(raw)) {
+    if (!line.trim())
+      continue
+    index++
     try {
       const event = JSON.parse(line)
       if (!event || typeof event.type !== 'string')
         throw new Error('Missing event type')
-      events.push(event)
+      completed ||= event.type === 'turn.completed'
+      failed ||= ['turn.failed', 'error'].includes(event.type)
+      if (event.type === 'item.completed' && ['command_execution', 'file_change', 'mcp_tool_call', 'tool_call', 'collab_tool_call', 'web_search'].includes(event.item?.type))
+        toolCalls++
       if (['api.request.started', 'model.request.started', 'model.started'].includes(event.type))
         modelInvocations = (modelInvocations ?? 0) + 1
       if (['item.started', 'item.updated', 'item.completed'].includes(event.type) && !['agent_message', 'reasoning', 'todo_list'].includes(event.item?.type)) {
@@ -49,14 +60,13 @@ export function observeEvents(raw) {
     }
   }
   return {
-    events,
     parseFailures,
     commands,
     writes,
     pendingToolCalls: pendingTools.size,
-    completed: events.some(event => event.type === 'turn.completed'),
-    failed: events.some(event => ['turn.failed', 'error'].includes(event.type)),
-    toolCalls: events.filter(event => event.type === 'item.completed' && ['command_execution', 'file_change', 'mcp_tool_call', 'tool_call', 'collab_tool_call', 'web_search'].includes(event.item?.type)).length,
+    completed,
+    failed,
+    toolCalls,
     modelInvocations,
     usage,
     finalOutput,
