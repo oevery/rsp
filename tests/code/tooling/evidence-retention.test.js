@@ -1,8 +1,9 @@
 import { Buffer } from 'node:buffer'
-import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readdirSync, readFileSync, rmSync, symlinkSync, truncateSync, writeFileSync, writeSync } from 'node:fs'
+import { chmodSync, closeSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, openSync, readdirSync, readFileSync, rmSync, symlinkSync, truncateSync, writeFileSync, writeSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, expect, it, vi } from 'vitest'
+import { createOpenCodexAdapter } from '../../skills/runner/adapters/opencodex.mjs'
 import { loadCase } from '../../skills/runner/core/cases.mjs'
 import { prepareWorkspace, runCase, workspaceObservation } from '../../skills/runner/core/execute.mjs'
 import { hash, hashFile } from '../../skills/runner/core/files.mjs'
@@ -15,6 +16,53 @@ function temp() {
   return dir
 }
 afterEach(() => temporary.splice(0).forEach(path => rmSync(path, { recursive: true, force: true })))
+
+it('preserves public task evidence through execution and review while removing only injected credentials', async () => {
+  const directory = temp()
+  const codexBin = join(directory, 'provider')
+  copyFileSync('tests/code/tooling/fixtures/provider.mjs', codexBin)
+  chmodSync(codexBin, 0o755)
+  const configFile = join(directory, 'provider.toml')
+  writeFileSync(configFile, 'model_provider = "fixture-provider"\n[model_providers.fixture-provider]\nname = "Fixture Provider"\nbase_url = "https://api.example.test/v1"\n')
+  const authFile = join(directory, 'auth.json')
+  writeFileSync(authFile, JSON.stringify({ OPENAI_API_KEY: 'synthetic-api-key-value', tokens: { access_token: 'synthetic-access-token', account_id: 'fixture-account-id' }, last_refresh: '2026-10-03T00:00:00Z' }))
+  const publicText = [
+    '迁移说明：https://docs.example.org/authentication/migrations/legacy-token-query-parameter-to-authorization-bearer-header',
+    'Issue: https://github.com/example/service/issues/123',
+    'Use a Bearer header; Bearer authentication is required.',
+    'Fixture Provider https://api.example.test/v1 fixture-account-id 2026-10-03T00:00:00Z',
+  ].join('\n')
+  const finalOutput = `${publicText}\nsynthetic-api-key-value synthetic-access-token`
+  writeFileSync(join(directory, 'provider-control.json'), JSON.stringify({ finalOutput }))
+  const adapter = createOpenCodexAdapter({ codexBin, configFile, authFile, model: 'fixture', effort: 'low' })
+  const entry = loadCase(process.cwd(), 'preserve-user-files')
+  entry.manifest.prompt += `\n${publicText}`
+  const run = await runCase(entry, process.cwd(), { adapter, outputRoot: temp() })
+  expect(run.verdict.status).toBe('passed')
+  const expected = `${publicText}\n[REDACTED] [REDACTED]`
+  const assertEvidence = (path) => {
+    expect(readFileSync(join(path, 'final.md'), 'utf8')).toBe(expected)
+    const record = readFileSync(join(path, 'run.json'), 'utf8')
+    expect(JSON.parse(record).caseSpec.prompt).toContain(publicText)
+    const events = readFileSync(join(path, 'events.jsonl'), 'utf8')
+    const answer = events.trim().split('\n').map(line => JSON.parse(line)).find(event => event.item?.type === 'agent_message')
+    expect(answer.item.text).toBe(expected)
+    expect(record + events).not.toContain('synthetic-api-key-value')
+    expect(record + events).not.toContain('synthetic-access-token')
+  }
+  assertEvidence(run.reportDirectory)
+  const review = await reviewRun(run, { outputRoot: temp(), adapter: {
+    settings: {},
+    redact: adapter.redact,
+    async run({ workspace, prompt }) {
+      assertEvidence(join(workspace, 'current'))
+      expect(prompt).toContain('https://github.com/example/service/issues/123')
+      const fence = String.fromCharCode(96).repeat(3)
+      return { exitCode: 0, stdout: '', finalOutput: `${fence}json\n{"status":"passed"}\n${fence}` }
+    },
+  } })
+  expect(review.status).toBe('passed')
+})
 
 it('observes ignored mutations beyond former snapshot count and byte quotas', () => {
   const workspace = prepareWorkspace(loadCase(process.cwd(), 'preserve-user-files'), process.cwd())
@@ -104,6 +152,11 @@ it('retains large task text and initial Skill context before cleanup, with expli
     async run({ workspace }) {
       writeFileSync(join(workspace, 'src/requested.mjs'), large)
       writeFileSync(join(workspace, '.env'), 'TOKEN=synthetic-credential')
+      mkdirSync(join(workspace, 'auth'))
+      writeFileSync(join(workspace, 'auth/README.md'), 'Use a Bearer header.')
+      writeFileSync(join(workspace, 'fixture.key'), 'synthetic key fixture')
+      mkdirSync(join(workspace, 'dist'))
+      writeFileSync(join(workspace, 'dist/report.txt'), 'generated task evidence')
       writeFileSync(join(workspace, 'binary.dat'), Buffer.from([0, 1, 2]))
       symlinkSync(privateFile, join(workspace, 'outside-link'))
       return { exitCode: 0, stdout: JSON.stringify({ type: 'item.completed', item: { type: 'command_execution', command: 'echo result', exit_code: 0, aggregated_output: 'synthetic-credential result' } }), stderr: '', finalOutput: 'Task output.', durationMs: 1 }
@@ -114,7 +167,9 @@ it('retains large task text and initial Skill context before cleanup, with expli
   expect(run.observation.omittedArtifacts).toContain('src/requested.mjs')
   expect(readFileSync(join(run.reportDirectory, 'workspace/src/requested.mjs'), 'utf8')).toBe(large)
   expect(readFileSync(join(run.reportDirectory, 'baseline/.agents/skills/rsp/SKILL.md'), 'utf8')).toContain('name: rsp')
-  expect(run.retainedEvidence.workspace.omitted).toEqual(expect.arrayContaining([{ path: '.env', reason: 'sensitive-file' }, { path: 'binary.dat', reason: 'binary' }, { path: 'outside-link', reason: 'link-or-special-file' }]))
+  expect(run.retainedEvidence.workspace.omitted).toEqual(expect.arrayContaining([{ path: 'binary.dat', reason: 'binary' }, { path: 'outside-link', reason: 'link-or-special-file' }]))
+  for (const [path, content] of Object.entries({ '.env': 'TOKEN=[REDACTED]', 'auth/README.md': 'Use a Bearer header.', 'fixture.key': 'synthetic key fixture', 'dist/report.txt': 'generated task evidence' }))
+    expect(readFileSync(join(run.reportDirectory, 'workspace', path), 'utf8')).toBe(content)
   expect(existsSync(join(run.reportDirectory, 'workspace/outside-link'))).toBe(false)
   expect(readFileSync(join(run.reportDirectory, 'events.jsonl'), 'utf8')).toContain('[REDACTED] result')
   const reviewer = {
@@ -124,6 +179,9 @@ it('retains large task text and initial Skill context before cleanup, with expli
       expect(readFileSync(join(workspace, 'current/workspace/src/requested.mjs'), 'utf8')).toBe(large)
       expect(readFileSync(join(workspace, 'current/baseline/.agents/skills/rsp/SKILL.md'), 'utf8')).toContain('name: rsp')
       expect(readFileSync(join(workspace, 'current/events.jsonl'), 'utf8')).toContain('[REDACTED] result')
+      expect(readFileSync(join(workspace, 'current/workspace/auth/README.md'), 'utf8')).toBe('Use a Bearer header.')
+      expect(readFileSync(join(workspace, 'current/workspace/.env'), 'utf8')).toBe('TOKEN=[REDACTED]')
+      expect(readFileSync(join(workspace, 'current/workspace/dist/report.txt'), 'utf8')).toBe('generated task evidence')
       return { exitCode: 0, stdout: '', stderr: '', finalOutput: `Review: current/workspace/src/requested.mjs is available.\n\n${String.fromCharCode(96).repeat(3)}json\n{"status":"failed"}\n${String.fromCharCode(96).repeat(3)}`, durationMs: 1 }
     },
   }

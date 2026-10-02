@@ -122,6 +122,8 @@ else {
     const writableGit = addDirIndex < 0 ? null : process.argv[addDirIndex + 1]
     final = JSON.stringify({ isolated: process.env.HOME === process.env.CODEX_HOME, leakedEnv: process.env.RSP_TEST_SECRET ?? null, configPresent: config.includes('fixture-provider'), selectedProvider, auth, memoryDisabled: parsed.memoryDisabled, integrationsDisabled: ['plugins', 'hooks', 'apps', 'browser_use', 'computer_use', 'in_app_browser'].every(parsed.disabled), ignoredUserConfig: process.argv.includes('--ignore-user-config'), strictConfig: process.argv.includes('--strict-config'), writableGit })
   }
+  if (!isJudge && typeof control.finalOutput === 'string')
+    final = control.finalOutput
   const finalIndex = process.argv.indexOf('--output-last-message')
   if (finalIndex >= 0)
     writeFileSync(process.argv[finalIndex + 1], final)

@@ -162,7 +162,7 @@ export function workspaceObservation(workspace, baseline, priorityPaths = []) {
 // Retain task text and installed guidance before the disposable workspace is
 // removed. Never follow links or copy Git/dependency/provider state.
 // Text is copied incrementally; omissions remain explicit review evidence.
-export function retainWorkspace(workspace, destination, redact, priorityPaths = []) {
+export function retainWorkspace(workspace, destination, redact) {
   const files = treeFiles(workspace, { excludeGit: true })
   const retained = []
   const omitted = []
@@ -171,12 +171,8 @@ export function retainWorkspace(workspace, destination, redact, priorityPaths = 
     const stat = lstatSync(source)
     const parts = path.split('/')
     let reason
-    if (parts.some(part => ['.git', '.codex', '.tooling', 'node_modules'].includes(part))
-      || (parts.includes('dist') && !priorityPaths.includes(path))) {
+    if (parts.some(part => ['.git', '.codex', '.tooling', 'node_modules'].includes(part))) {
       reason = 'runtime-or-dependency'
-    }
-    else if (parts.some(part => /^\.env(?:\.|$)|^(?:auth|credentials|secrets)(?:\.|$)|\.(?:pem|key)$/iu.test(part))) {
-      reason = 'sensitive-file'
     }
     else if (!stat.isFile()) {
       reason = 'link-or-special-file'

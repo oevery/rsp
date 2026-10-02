@@ -128,11 +128,17 @@ function createAdapter(options, native) {
   const auth = options.authFile ? readFileSync(options.authFile, 'utf8') : null
   const authHash = auth && hash(auth)
   const secrets = []
+  // Protect injected credentials, not arbitrary words, URLs or provider metadata.
+  const credentialFields = new Set(['openai_api_key', 'api_key', 'access_token', 'refresh_token', 'id_token', 'token', 'client_secret', 'secret', 'password'])
   const collect = (value) => {
-    if (typeof value === 'string' && value.length >= 8)
-      secrets.push(value)
-    else if (value && typeof value === 'object')
-      Object.values(value).forEach(collect)
+    if (!value || typeof value !== 'object')
+      return
+    for (const [key, item] of Object.entries(value)) {
+      if (credentialFields.has(key.toLowerCase()) && typeof item === 'string' && item)
+        secrets.push(item)
+      else if (item && typeof item === 'object')
+        collect(item)
+    }
   }
   if (auth) {
     try {
@@ -142,15 +148,12 @@ function createAdapter(options, native) {
       throw new Error('Invalid private auth JSON (contents withheld)')
     }
   }
-  collect(overlay.model_providers ?? {})
-  if (catalogFile)
-    secrets.push(catalogFile)
+  const credentials = [...new Set(secrets)].sort((a, b) => b.length - a.length)
   function redact(value) {
     let text = String(value ?? '')
-    for (const secret of secrets.flatMap(value => [value, ...value.split(/\r?\n/u).filter(Boolean)]))
+    for (const secret of credentials)
       text = text.split(secret).join('[REDACTED]')
-    return text.replace(/Bearer\s+[\w.~+/-]+/giu, 'Bearer [REDACTED]')
-      .replace(/https?:\/\/[^\s"'<>]+/giu, '[URL REDACTED]')
+    return text
   }
   function redactValue(value) {
     if (typeof value === 'string')

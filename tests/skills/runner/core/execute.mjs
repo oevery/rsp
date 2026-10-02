@@ -93,7 +93,7 @@ export async function runCase(entry, root, options = {}) {
     run.context.workspace = workspace
     const baseline = workspaceObservation(workspace)
     try {
-      run.retainedEvidence = { baseline: retainWorkspace(workspace, join(outputRoot, 'baseline'), redact, entry.manifest.hard.allowed_paths) }
+      run.retainedEvidence = { baseline: retainWorkspace(workspace, join(outputRoot, 'baseline'), redact) }
     }
     catch { run.retainedEvidence = { baseline: { error: 'baseline-retention-incomplete' } } }
     identity.dependencies = { lockHash: hash(readFileSync(join(root, 'pnpm-lock.yaml'))), contentHash: hash(Object.fromEntries(Object.entries(baseline.files).filter(([path]) => path.includes('node_modules/')))) }
@@ -144,7 +144,7 @@ export async function runCase(entry, root, options = {}) {
     if (workspace) {
       try {
         run.retainedEvidence ??= {}
-        run.retainedEvidence.workspace = retainWorkspace(workspace, join(outputRoot, 'workspace'), redact, entry.manifest.hard.allowed_paths)
+        run.retainedEvidence.workspace = retainWorkspace(workspace, join(outputRoot, 'workspace'), redact)
       }
       catch {
         run.retainedEvidence = { ...run.retainedEvidence, error: 'workspace-retention-incomplete' }
