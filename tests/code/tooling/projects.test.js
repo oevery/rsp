@@ -1,10 +1,47 @@
 import { lstatSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, relative } from 'node:path'
 import { expect, it } from 'vitest'
 import { loadCase } from '../../skills/runner/core/cases.mjs'
 import { prepareWorkspace, runCase } from '../../skills/runner/core/execute.mjs'
 import { hash } from '../../skills/runner/core/files.mjs'
+import { git } from '../../skills/runner/observers/workspace.mjs'
+
+it('keeps injected tooling out of Git while detecting ignored dependency and new-file mutations', async () => {
+  const directory = mkdtempSync(join(tmpdir(), 'rsp-ignored-tooling-'))
+  let tracked
+  let status
+  let dependencyPath
+  try {
+    const run = await runCase(loadCase(process.cwd(), 'method-required-check-unavailable'), process.cwd(), {
+      outputRoot: directory,
+      adapter: {
+        id: 'local-test',
+        settings: { provider: 'local-test', model: 'none', effort: 'none' },
+        async run({ workspace }) {
+          tracked = git(workspace, ['ls-files', '--', '.tooling/'])
+          const dependency = join(workspace, '.tooling/rsp/node_modules/picocolors/package.json')
+          dependencyPath = relative(realpathSync(workspace), realpathSync(dependency))
+          writeFileSync(dependency, `${readFileSync(dependency, 'utf8')}\n`)
+          writeFileSync(join(workspace, '.tooling/unexpected.txt'), 'unauthorized')
+          status = git(workspace, ['status', '--short', '--', '.tooling/'])
+          return { exitCode: 0, stdout: JSON.stringify({ type: 'turn.completed' }), stderr: '', finalOutput: 'Local boundary control.' }
+        },
+      },
+    })
+    expect(tracked?.length).toBe(0)
+    expect(status).toBe('')
+    expect(run.hard.failures).toEqual(expect.arrayContaining([
+      { code: 'unauthorized-path', path: dependencyPath },
+      { code: 'unauthorized-path', path: '.tooling/unexpected.txt' },
+    ]))
+    expect(run.observation.indexHash).toBe(run.observation.baselineIndexHash)
+    expect(run.hard.status).toBe('failed')
+  }
+  finally {
+    rmSync(directory, { recursive: true, force: true })
+  }
+})
 
 it('isolates real project dependencies and restores dirty recovery state in fresh workspaces', async () => {
   const root = process.cwd()
@@ -13,7 +50,11 @@ it('isolates real project dependencies and restores dirty recovery state in fres
   const original = readFileSync('node_modules/picocolors/package.json')
   let workspace
   try {
-    workspace = prepareWorkspace(entry, root)
+    workspace = prepareWorkspace({ ...entry, manifest: { ...entry.manifest, working_tree: { ...entry.manifest.working_tree, 'dist/user-marker.txt': 'explicit staged fixture' }, staged_paths: [...entry.manifest.staged_paths, 'dist/user-marker.txt'] } }, root)
+    expect(git(workspace, ['ls-tree', '-r', '--name-only', 'HEAD', '--', 'node_modules/', 'dist/']).length).toBe(0)
+    expect(readFileSync(join(workspace, '.gitignore'), 'utf8')).toBe(git(root, ['show', `${entry.project.commit}:.gitignore`]))
+    expect(git(workspace, ['diff', '--cached', '--name-only'])).toContain('dist/user-marker.txt')
+    expect(git(workspace, ['check-ignore', 'node_modules/picocolors', 'dist/cli.mjs']).trim().split('\n')).toEqual(['node_modules/picocolors', 'dist/cli.mjs'])
     const physical = realpathSync(workspace)
     const visit = (path) => {
       for (const name of readdirSync(path)) {

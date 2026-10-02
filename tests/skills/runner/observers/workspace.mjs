@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { appendFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { copyDependencies } from '../core/dependencies.mjs'
@@ -51,16 +51,18 @@ export function prepareWorkspace(entry, root, composition = null) {
       cpSync(composition, join(workspace, '.agents', 'skills'), { recursive: true })
     }
     git(workspace, ['init', '--quiet'])
+    if (entry.manifest.tooling === 'rsp-cli')
+      appendFileSync(join(workspace, '.git', 'info', 'exclude'), '\n/.tooling/\n')
     git(workspace, ['config', 'user.name', 'RSP Evaluation'])
     git(workspace, ['config', 'user.email', 'rsp-evaluation@example.invalid'])
-    git(workspace, ['add', '--all', '--force'])
+    git(workspace, ['add', '--all'])
     git(workspace, ['commit', '--quiet', '--allow-empty', '-m', 'evaluation baseline'])
     for (const [path, content] of Object.entries(entry.manifest.working_tree ?? {})) {
       mkdirSync(dirname(join(workspace, path)), { recursive: true })
       writeFileSync(join(workspace, path), content)
     }
     for (const path of entry.manifest.staged_paths ?? [])
-      git(workspace, ['add', '--', path])
+      git(workspace, ['add', '--force', '--', path])
     return workspace
   }
   catch (error) {

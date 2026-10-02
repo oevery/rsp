@@ -16,6 +16,43 @@ function temp() {
 }
 afterEach(() => temporary.splice(0).forEach(path => rmSync(path, { recursive: true, force: true })))
 
+it('offers compact review navigation without hiding failures or losing complete sanitized evidence', async () => {
+  const outputRoot = temp()
+  const event = { type: 'item.completed', source_thread_id: 'actor', item: { id: '../unsafe', type: 'command_execution', command: `echo ${'x'.repeat(1000)}`, exit_code: 2, aggregated_output: `synthetic-credential${'output'.repeat(200000)}` } }
+  const run = { result: { exitCode: 2, stdout: `\n${JSON.stringify(event)}\ninvalid` }, hard: { status: 'failed', failures: ['boundary'] }, retainedEvidence: { workspace: { omitted: Array.from({ length: 6000 }, (_, i) => ({ path: `.tooling/${i}`, reason: 'runtime' })) } } }
+  let reviewWorkspace
+  const review = await reviewRun(run, { outputRoot, baseline: {}, adapter: {
+    settings: { model: 'fixture' },
+    redact: text => text.replaceAll('synthetic-credential', '[REDACTED]'),
+    async run({ workspace }) {
+      reviewWorkspace = workspace
+      expect(readFileSync(join(workspace, 'evidence-index.json'), 'utf8').length).toBeLessThan(10000)
+      const summary = JSON.parse(readFileSync(join(workspace, 'current/summary.json')))
+      expect(JSON.stringify(summary).length).toBeLessThan(5000)
+      expect(summary.execution.exitCode).toBe(2)
+      expect(summary.checks.hard.status).toBe('failed')
+      expect(summary.trace.parseFailures).toBe(1)
+      expect(summary.execution.timedOut).toBeNull()
+      expect(JSON.parse(readFileSync(join(workspace, 'comparison/summary.json'))).git.headUnchanged).toBeNull()
+      const tool = JSON.parse(readFileSync(join(workspace, 'current/tool-index.jsonl'), 'utf8'))
+      expect(tool).toMatchObject({ traceLine: 2, exitCode: 2, commandTruncated: true })
+      const full = JSON.parse(readFileSync(join(workspace, 'current', tool.evidence)))
+      expect(full.source_thread_id).toBe('actor')
+      expect(full.item.command).toBe(event.item.command)
+      expect(full.item.aggregated_output).toBe(event.item.aggregated_output.replace('synthetic-credential', '[REDACTED]'))
+      return { exitCode: 0, stdout: '', finalOutput: '```json\n{"status":"failed"}\n```' }
+    },
+  } })
+  expect(review.status).toBe('failed')
+  expect(existsSync(reviewWorkspace)).toBe(false)
+  expect(run.result.stdout).toContain('synthetic-credential')
+  const index = JSON.parse(readFileSync(join(review.reportPath, '..', 'evidence-index.json')))
+  const retained = join(review.reportPath, '..', index.current.retainedView)
+  expect(JSON.parse(readFileSync(join(retained, 'run.json'))).retainedEvidence.workspace.omitted).toHaveLength(6000)
+  expect(readFileSync(join(retained, 'events.jsonl'), 'utf8')).toContain('invalid')
+  expect(readFileSync(join(retained, 'tool-events/000002.json'), 'utf8')).not.toContain('synthetic-credential')
+})
+
 it('retains large task text and initial Skill context before cleanup, with explicit safe omissions', async () => {
   const outputRoot = temp()
   const privateFile = join(temp(), 'private.txt')

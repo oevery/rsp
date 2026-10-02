@@ -1,5 +1,0 @@
-<!-- rsp-focus:v1 -->
-Current: The selected archive cleanup and Focus writeback instructions passed local checks; the Change remains open.
-Evidence: .rsp/changes/archive-evidence-boundary.md#verify; historical reports and verdicts are unchanged.
-Next: Preserve the checked local checkpoint; independent review is not established for terminal closeout.
-Resume check: Recheck current authority, checkout state and evidence freshness before any further delivery or lifecycle action.

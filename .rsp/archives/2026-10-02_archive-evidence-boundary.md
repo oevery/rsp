@@ -43,7 +43,10 @@ Use the same selected Change for this coherent correction. Standalone Doc/Review
 - [x] Eight archives retain identities, Spec/acceptance and checklist states; author comparison preserves historical results, failure dispositions and limits. All 4133 inspected historical report/matrix hashes are unchanged. Build, lint, typecheck, 18 code files /115 tests, package checks and docs checks/build passed. Preservation evidence: tests/skills/reports/archive-evidence-boundary/archive-cleanup-verification.md.
 
 ### Optional
-Natural selection, independent review and live model execution remain unverified; no new model sessions are authorized.
+- Independent read-only astra medium review of e063fb7..0c12f4d completed in the current host conversation: Code and Document clean across 30 files. This is static candidate review, not live behavior acceptance.
+- Separately authorized astra low execution / astra medium judging on 2026-10-02 started three root sessions before cancellation: recovery failed because evaluator-authored fixtures blocked the required Focus CLI, writeback execution was cancelled, and required-failure execution was not started. Original verdicts remain unchanged; no candidate behavioral regression or acceptance is established. Evidence: tests/skills/reports/archive-evidence-boundary/live-2026-10-02/summary.md.
+- The separately authorized corrected run passed all three behavioral cases with astra low executors and independent astra medium judges: stale-Focus recovery, outcome/stable-fact writeback and Required-failure handling. Six root sessions completed; all hard boundaries and task checks passed, with historical evidence, source, index and HEAD preserved. The Required-failure checker stayed failed while its correct handling passed. Evidence: tests/skills/reports/archive-evidence-boundary/live-2026-10-02/repaired-run-summary.md.
+- Corrected fixtures passed fresh actual CLI check/ready/Focus preflight. Each case ran once; repeated reliability, candidate comparisons, full live closeout and real supplier acceptance remain unverified. Original failed/cancelled results are not relabelled.
 
 ### Durable Decisions
 - Current facts: Update existing spec or scoped instruction.
@@ -52,7 +55,7 @@ Natural selection, independent review and live model execution remain unverified
 - Decision Record: No Decision Record needed.
 - Decision Record target: N/A.
 - Rationale to write: none; this restores existing recovery and artifact ownership without a second workflow store.
-- Archive ready: no; local instruction and archive-repair checks are complete, but fresh independent review of this candidate is not established. This delivery is an authorized local checkpoint without lifecycle closeout; optional live coverage remains unverified. Focus retains the recovery handoff.
+- Archive ready: yes; candidate 0c12f4d has clean independent static review and the corrected three-case behavioral evaluation passed. Required checks and knowledge writeback are complete; current deterministic readiness passes. Optional coverage limits remain explicit. Lifecycle closeout and local delivery were separately authorized; original reports and verdicts remain unchanged.
 
 ## Blockers
 - none

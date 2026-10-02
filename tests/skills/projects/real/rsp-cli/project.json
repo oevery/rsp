@@ -1,5 +1,5 @@
 {
   "kind": "git-snapshot",
   "commit": "0cd01fd14f9fd5735b0f79ec223b101d23bb0bfb",
-  "paths": ["src", "bin", "rules", "skills", "package.json", "pnpm-lock.yaml", "tsconfig.json", "tsup.config.ts", "README.md"]
+  "paths": ["src", "bin", "rules", "skills", "package.json", "pnpm-lock.yaml", "tsconfig.json", "tsup.config.ts", "README.md", ".gitignore"]
 }
