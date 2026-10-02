@@ -11,8 +11,6 @@ kind: "fix"
 - Non-goals: Changing Manage defaults or qualification, automatic archive or commit for this task, remote delivery, history rewrite, installing Skills, a persisted delivery controller, or rewriting pre-existing corpus changes.
 
 
-This Change was explicitly re-homed from `commit-delivery-integrity` to `rsp-workflow-alignment/commit-delivery-integrity` for the authorized grouped local delivery. Original candidate identities, reports and verdicts retain their historical scope.
-
 ## Spec
 
 Affected owners: [Design](../../specs/design.md), [Skill](../../specs/skill.md), [Core](../../specs/core-model.md) and [CLI](../../specs/cli-contracts.md).
@@ -59,15 +57,11 @@ Affected owners: [Design](../../specs/design.md), [Skill](../../specs/skill.md),
 
 ## Design
 
-Core owns eligibility and durable/lifecycle decisions; the default Commit capability owns Git delivery; the deterministic CLI consumes only an existing index and prepared message. Preserve existing kinds and add phase-local purpose rather than another delivery kind or persisted state.
+Core owns eligibility and durable/lifecycle decisions; mandatory standalone Commit owns exact Git delivery. The deterministic CLI consumes an existing index and prepared message. Checkpoint/terminal purpose is transient, not another delivery kind or controller.
 
-Keep capability ownership mandatory and execution mechanisms replaceable. Select or repair a method before commit execution, prove equivalent checks independently, preserve hooks and signing, and stop on substantive rejection or uncertain mutation. Do not extend native-Git equivalence to command-owned RSP artifacts. Remove only the literal-escape message heuristic, not mechanical Git guards.
+Keep execution methods replaceable within freshly proved equivalent safeguards. Preserve hooks/signing, stop on real rejection or uncertain effects, and retain one attempt. RSP lifecycle mutations keep their command owner. Transport legitimate message escapes verbatim while retaining mechanical guards.
 
-Normalize obsolete Change content before deciding writeback, then converge final evidence after writeback and required review. Preserve mandatory review boundaries; neither author self-check nor Commit audit replaces them. No general archive-before-every-commit rule applies to direct work, checkpoints or a terminal boundary without lifecycle authority.
-
-Bind execution to the final reviewed index tree and HEAD, compare committed tree, parents and exact message, and expose decisive observations in the compact result. Preserve the existing command for old callers; any new pre-mutation guard has Commit as its real producer and CLI as its real consumer, not a test-only option. No stronger cross-process locking claim follows from a snapshot check.
-
-Baseline: the pre-existing working tree over 2a9cddc, retained separately for fixed-scope review. Shared paths retain corpus expression changes; the behavior delta belongs here. Review the risky Git boundary through the public CLI, including real hook effects, rather than private-helper or prose-string assertions. Model execution uses isolated projects and the shared gpt-6.1-sol medium executor and high judge.
+Bind execution to reviewed HEAD/index tree and observe committed tree, parents, paths and exact message. A snapshot guard is not cross-process locking. Review against the pre-existing working tree over 2a9cddc; use public CLI regression and isolated task evidence, not private-helper or prose assertions.
 
 ## Tasks
 
@@ -79,13 +73,23 @@ Baseline: the pre-existing working tree over 2a9cddc, retained separately for fi
 
 ## Verify
 
+Historical closeout evidence below applies to the original candidate and reviewed text, not this later editorial repair. Original reports and verdicts remain unchanged.
+
 ### Required
 
-- [x] Fresh public built-CLI lifecycle tests passed 20/20, covering literal escape preservation and unreadable-message refusal, ordinary/root delivery, special filenames, snapshot refusal, real hook content/message/parent changes, failed uncertain effects and corrupt HEAD.
-- [x] Fresh build, typecheck and lint passed; full code tests passed 18 files / 115 tests. Product packages/resources passed; security covered 46 files with zero findings; all 59 Skill cases passed offline readiness. Documentation checks covered seven bilingual pairs /31 Markdown files, and Change/diff checks and authored/generated fallback equality passed. Offline readiness is not model acceptance.
-- [x] Two fresh isolated tasks passed mechanical checks and independent judging with gpt-6.1-sol medium execution and high judging: native Git delivery despite CLI availability, and stale-snapshot restraint without index/history mutation. All four runner root sessions completed; the final matrix passed. Bounded evidence: tests/skills/reports/commit-delivery-integrity/agent-first-verification.md.
-- [x] Independent high-effort fixed-delta source review is clean for Code and Document, including the shipped CLI entry, complete Commit package, Core caller, Specs and new case oracles. This reviewer inspected production reachability but did not rerun the reported checks.
-- [x] Final evidence-only independent Document review is clean; current, historical and untested boundaries remain explicit.
+- [x] Public built-CLI lifecycle tests passed 20/20: literal escapes, unreadable-message refusal, ordinary/root delivery, special filenames, snapshot refusal, real hook content/message/parent changes, uncertain failed effects and corrupt HEAD.
+- [x] Build, typecheck, lint and 18 code files /115 tests passed; product metadata/resources passed. Security covered 46 files with zero findings; 59 cases passed offline readiness. Docs checks covered seven bilingual pairs /31 Markdown files; Change/diff checks and fallback equality passed.
+- [x] Two isolated tasks passed mechanical checks and gpt-6.1-sol medium/high judgment: native Git delivery despite CLI availability and stale-snapshot restraint without index/history mutation. The final matrix passed/complete. Evidence: tests/skills/reports/commit-delivery-integrity/agent-first-verification.md.
+- [x] Fixed-delta Code/Document source review was clean across the CLI entry, complete Commit package, Core caller, Specs and case oracles. It checked production reachability without rerunning the reported checks.
+- [x] Final evidence-only Document review was clean, retaining historical and untested boundaries.
+
+### Optional
+
+Older-CLI compatibility, pre-execution tool-fault recovery and Git failure/unknown-effect restraint were not separately model-executed. Public CLI tests provide narrower guard/observation evidence, not complete Skill acceptance.
+
+The terminal Core→writeback→archive→Commit sequence and integration/Group/release delivery remain untested live. Natural triggering, matched quality/cost gain, all-host acceptance, full release and remote delivery remain outside scope.
+
+Original six delivery/stop outcomes, failed/inconclusive matrices and retained-checkpoint reassessments remain unchanged in their private verification records; the fresh two-case pass neither relabels them nor proves comparative gain.
 
 ### Durable Decisions
 

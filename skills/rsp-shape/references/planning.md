@@ -23,7 +23,7 @@ Keep the six sections; small changes need only proportionate content. Plain-pros
 
 Plan a test only when it protects observable behavior or a real boundary, adds distinct future confidence, avoids duplicate or implementation-detail coverage, and costs proportionately. Otherwise prefer smallest sufficient evidence and keep probes temporary.
 
-A Change is a convergent current-plan and final-evidence snapshot, not an append-only execution log. Replace superseded evidence; keep process in the response. Before archive, retain final decisive verification, gaps, and risks.
+A Change is a convergent plan and final-result snapshot. Ongoing recovery notes belong in Focus; detailed evidence stays with its owner. Before closeout, distill results and remaining limits into Change, then selectively write stable knowledge to its document owner. Do not append execution history.
 
 Use domain language. Mention agents only as real product actors or constraints, not authors or execution narrators.
 

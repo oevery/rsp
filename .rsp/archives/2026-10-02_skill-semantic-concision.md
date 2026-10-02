@@ -25,9 +25,9 @@ Apply existing [writing quality](../specs/writing-quality.md), [Skill compositio
 
 ## Design
 
-Use rsp-doc's Skill and agent-facing methods with author-rsp-skills concise mode. Keep the current package layout; group prerequisites, actions, exceptions and stop conditions at their existing owners. Remove evidenced repetition rather than moving the same prose to new files or adding a shared runtime policy. Preserve canonical values, commands, independent acceptance, protected RSP mutations and Commit's stricter one-attempt boundary.
+Use Doc and Author's concision methods within the existing package layout. Group prerequisites, actions, exceptions and stops at their owners; remove evidenced repetition without changing commands, authority, independent acceptance, protected RSP mutations or Commit's one-attempt boundary.
 
-Use the fixed pre-edit working tree at HEAD 2a9cddc; its retained snapshot and candidate identities are recorded under ignored tests/skills/reports/skill-semantic-concision. Select realistic existing task cases by changed reading paths; do not add wording assertions or transfer earlier matrix verdicts.
+The baseline is the pre-edit working tree over HEAD 2a9cddc, retained under tests/skills/reports/skill-semantic-concision. Review fixed-scope equivalence and existing task cases separately; do not transfer earlier verdicts.
 
 ## Tasks
 
@@ -37,21 +37,22 @@ Use the fixed pre-edit working tree at HEAD 2a9cddc; its retained snapshot and c
 - [x] Converge final Change evidence and decide durable writeback without lifecycle or Git delivery.
 
 ## Verify
+
+Historical closeout evidence below applies to the original candidate and reviewed text, not this later editorial repair. Original reports and verdicts remain unchanged.
+
 ### Required
 
-- [x] Twelve complete canonical packages passed metadata/resource preparation; security scanned all 64 files with zero findings. Static context inspection found no unreachable Markdown or exact cross-file repeated prose. These are diagnostics, not quality acceptance.
-- [x] Fresh build, typecheck and lint passed; code tests passed 18 files /115 tests, docs checks passed seven bilingual pairs /31 Markdown files, and all 61 cases passed offline readiness with no model calls. Source/runtime/scripts/tests, current Specs, earlier Changes, prior focus and user documentation remain byte-identical to this round's baseline; the index remains unchanged.
-- [x] Two independent high-effort source reviewers inspected all 39 files in the seven changed packages against the fixed snapshot; Code clean, Document skipped because those authorities were not reviewed artifacts. Entry reachability, standalone closure and the eight contract dimensions were checked; this is static equivalence review, not task execution. Original reports remain under ignored tests/skills/reports/skill-semantic-concision/.
-- [x] Three isolated tasks used the same final composition with gpt-6.1-sol medium execution/high judging; all six root sessions completed and mechanical checks passed. Required-check restraint and native Git delivery passed independent judgment; the CLI walkthrough is inconclusive because the environment lacked node and no help/version command reached the CLI. The complete matrix remains inconclusive (runner exit 1), not a behavioral-acceptance pass. No retry or verdict rewrite followed. Native delivery occurred only in the disposable case, with a raw-output gap corroborated by separate Git observations. Final evidence and character counts: tests/skills/reports/skill-semantic-concision/verification-summary.md.
-- [x] Final evidence-only independent Document review is clean for this Change and its verification summary. It confirmed current record hashes, counts, review scopes and the inconclusive runtime limit without asserting overall behavior acceptance. The original worker report remains under ignored tests/skills/reports/skill-semantic-concision/final-document-review.md.
+- [x] Twelve complete packages passed metadata/resources; security covered 64 files with zero findings. Static diagnostics found no unreachable Markdown or exact cross-file repeated prose.
+- [x] Build, typecheck and lint passed; code tests passed 18 files /115 tests, docs checks seven bilingual pairs /31 Markdown files, and 61 cases passed offline readiness with no model calls. Unrelated implementation, Specs, prior work and index were preserved.
+- [x] Independent source review covered all 39 files in seven changed packages against the fixed snapshot: Code clean, Document skipped because those authorities were not reviewed artifacts. Entry reachability, standalone closure and eight contract dimensions were checked, not model behavior.
+- [x] Three isolated tasks used the final composition with gpt-6.1-sol medium execution/high judging. Required-check restraint and native Git delivery passed; CLI walkthrough was inconclusive because node was unavailable and no help/version command reached the CLI. The complete matrix remains inconclusive, not an overall behavioral pass. Disposable native delivery had a raw-output gap corroborated by independent Git observations. Evidence: tests/skills/reports/skill-semantic-concision/verification-summary.md.
+- [x] Final evidence-only Document review was clean for this Change and its verification summary, retaining the inconclusive runtime limit: tests/skills/reports/skill-semantic-concision/final-document-review.md.
 
-Eleven existing files across seven packages were reorganized; five packages were retained. Complete package characters decreased from 202019 to 199095, entrypoints from 88809 to 86712 and references from 111069 to 110242. One manual-audit reference grew by five characters for clearer grouping. Counts establish only text/structure changes, not improved model quality or cost.
+Eleven files in seven packages changed; five packages were retained. Complete-package characters decreased from 202019 to 199095; the verification summary owns detailed counts. This establishes text/structure change, not model-quality or cost improvement.
 
 ### Optional
 
-Matched quality/cost comparisons, natural discovery, all-host behavior, full release and terminal lifecycle/Git execution are outside this bounded acceptance. Character and paragraph diagnostics alone establish no behavioral improvement.
-
-The current CLI runtime walkthrough remains unverified. Test admission, formal Code-review gates, maintainer prerequisites and managed lifecycle closeout have independent static equivalence evidence, not fresh task execution from this matrix. Earlier passing matrices are not transferred to the new composition.
+CLI walkthrough remains unverified. Test admission, formal Code-review gates, maintainer prerequisites and managed closeout have static equivalence evidence only in this matrix. Matched quality/cost comparisons, natural discovery, all-host behavior, full release and terminal lifecycle/Git execution remain outside this bounded acceptance.
 
 ### Durable Decisions
 

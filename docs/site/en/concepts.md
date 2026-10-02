@@ -19,7 +19,7 @@ RSP separates open work, durable truth, lasting rationale, scoped instructions, 
 - `.rsp/specs/` stores current capability and collaboration contracts, boundaries, and necessary constraints, not code inventories or future plans. Use `rsp specs` to derive its current tree, inspect one exact document, or run bounded literal search directly from readable Markdown.
 - `.rsp/specs/decisions/` is the default authoritative Decision Record directory. It stores lasting rationale, alternatives, tradeoffs, and consequences.
 - `.rsp/changes/` stores open work. Each executable Change is one Markdown file.
-- `.rsp/focus.d/` contains marker files whose paths select current work. A marker may hold a short optional Markdown Focus Capsule with accepted recovery pointers from qualified coordination. Its path is the only selection truth; its prose is not authority, lifecycle state, acceptance, or worker transport. A valid portable v1 capsule permits only one leading version declaration, blank lines, exactly one non-empty single-line `Current`, `Evidence`, and `Next`, and at most one non-empty single-line `Resume check`; unknown non-empty lines or fields are invalid. It excludes machine/runtime data, may be committed with an open Change, and is removed by unfocus or archive.
+- `.rsp/focus.d/` contains candidate markers. Their paths select work; optional Focus Capsules hold Core-maintained ongoing recovery notes and evidence pointers, not authority, acceptance or a runtime log. Use the existing v1 format in the [CLI reference](./reference/cli.md). Before terminal closeout, distill confirmed results into Change and selectively update stable knowledge; authorized archive clears Focus. Portable Capsules may accompany an authorized open-Change commit.
 - `.rsp/archives/` retains completed Change history.
 
 Stable scoped workflow and validation instructions belong in the nearest project-owned `AGENTS.md`, outside the managed RSP block.
@@ -48,7 +48,7 @@ A Change owns one observable outcome with a shared acceptance, verification, rev
 
 Proposal owns intent and scope; Spec owns the contract delta and acceptance, linked to existing Specs; Design owns the approach and tradeoffs; Tasks owns checkable work; Verify owns verification methods and actual results/gaps; Blockers owns unresolved decisions and dependencies. Keep small changes brief, reference rather than copy the full baseline, and prescribe task order only where correctness, safety, or migration requires it.
 
-Keep it as a convergent snapshot of the current plan and final decisive evidence. Temporary probes, debugging chronology, and routine command transcripts belong in the working conversation, not durable artifacts.
+Keep it as a convergent plan and final-result snapshot. Focus holds ongoing recovery notes; detailed execution records stay with their report/host owner. Closeout distills results into Change and selectively writes stable knowledge, not chronology.
 
 Change names can be flat (`<change>`) or one direct grouped child (`<group>/<change>`). Recursive work directories are invalid.
 

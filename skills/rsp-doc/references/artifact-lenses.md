@@ -39,6 +39,7 @@ For example, “retries are safe” is incomplete when deduplication applies onl
 
 - AGENTS: state applicable rules, commands, authority and checks. Changing rules requires explicit scope.
 - Change: retain the six canonical sections and selected delta. Proposal gives the outcome; Spec gives acceptance; Design gives the approach; Tasks list work; Verify records final evidence; Blockers name unresolved dependencies.
+- Work records: ongoing recovery notes belong in Focus; Change and Group summaries contain converged results, verification, remaining failures/limits and evidence pointers. Write only justified stable knowledge to its document owner; do not promote working chronology or relabel evidence.
 - Decision Record: explain alternatives and consequences without redefining the contract.
 - Audit/run records: retain required observations, actions and evidence. Remove irrelevant session narration, not the record's purpose.
 - Skill packages: use Doc's Skill-authoring branch. Release communication uses Doc's conditional release method.

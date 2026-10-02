@@ -26,11 +26,9 @@ Apply existing [writing quality](../specs/writing-quality.md), [Skill compositio
 
 ## Design
 
-Compare against the immediately preceding working tree at HEAD 2a9cddc, not HEAD's older authored content. Retain its package snapshot and exact file hashes in ignored tests/skills/reports/skill-conditional-context.
+Keep common safety inline and branch conditions beside their decisions. Reuse Core and Release Docs resources; add Distill synthesis/handoff and Shape planning resources where needed. Preserve standalone closure and adequate unchanged packages.
 
-Use Doc's Skill and agent-facing methods. Reuse Core and Release Docs references; add only Distill synthesis/handoff and Shape planning resources. Keep each package standalone, common safety inline and each reading condition next to its decision. Preserve Commit, Verify, Doc, author-rsp-skills and Structural Audit where no evidenced improvement is needed.
-
-Use existing packaging, context/security scans, code checks and case readiness; add no prose assertions or test runner. Independent fixed-scope review checks the changed reading paths against the snapshot. Live execution requires separately settled model-cost authority and realistic existing inputs; missing live evidence limits behavioral claims, not reported static results.
+Compare with the pre-edit working tree over HEAD 2a9cddc, retained under tests/skills/reports/skill-conditional-context. Structural checks, independent source review and model task outcomes use separate evidence boundaries.
 
 ## Tasks
 
@@ -41,34 +39,28 @@ Use existing packaging, context/security scans, code checks and case readiness; 
 
 ## Verify
 
+Historical closeout evidence below applies to the original candidate and reviewed text, not this later editorial repair. Original reports and verdicts remain unchanged.
+
 ### Required
 
-- [x] All twelve authored packages passed metadata/resource checks; prepared-candidate security covered 67 files with zero findings. Static context diagnostics found 63 Markdown files, no unreachable Markdown and no exact cross-file repeated prose. These are structural observations, not behavioral acceptance.
-- [x] Build, typecheck, lint and docs checks passed; docs covered 7 bilingual pairs and 31 Markdown files. Eight selected existing cases passed offline readiness with zero provider invocations. First code attempt passed 114/115 tests and failed one commit-unsafe-staged stop-control assertion because its verdict was inconclusive. A subsequent full serial suite passed 18 files /115 tests; a separate deterministic stop-control diagnostic also passed with unchanged disposable HEAD/index and no changed paths. The original failed assertion remains recorded; its intermittent cause is unconfirmed and no runner repair was made.
-- [x] Independent high-effort source review covered seven complete changed packages and fourteen source-delta files against the exact pre-edit snapshot: Code clean, Document skipped because Specs/Change were authority-only. Trigger, inputs, authority, action, output, stops, verification and failure contracts were retained; conditional reading paths changed intentionally.
-- [x] Hash comparison covered 1340 original regular non-ignored files. Only eleven named existing sources changed; three references, this Change and its marker were added. Unrelated files, earlier Changes, existing focus markers, HEAD and index remain unchanged. Final evidence and source review are under ignored tests/skills/reports/skill-conditional-context/.
+- [x] Twelve authored packages passed metadata/resources; candidate security covered 67 files with zero findings. Static diagnostics found 63 Markdown files, no unreachable Markdown and no exact cross-file repeated prose.
+- [x] Build, typecheck, lint and docs checks passed (seven bilingual pairs /31 Markdown files); eight cases passed offline readiness without provider calls. The final serial code suite passed 18 files /115 tests. An earlier commit-unsafe-staged stop-control assertion failed on an inconclusive verdict; its intermittent cause remains unconfirmed, and no runner repair was made. A separate deterministic restraint diagnostic passed with unchanged disposable Git state.
+- [x] Independent source review covered seven complete changed packages and fourteen source-delta files: Code clean, Document skipped because Specs/Change were authority-only. Behavioral contracts were retained; conditional reading paths changed intentionally.
+- [x] Snapshot comparison preserved unrelated work and Git state; only eleven existing sources changed and three references plus the Change/marker were added. Final structural evidence and review: tests/skills/reports/skill-conditional-context/.
 
-Candidate identity: 2b432c88bcae4c56157507b7e66cbae8f3592dda6ad95c080bdf0ef30bbc88d8, twelve packages /67 files. Entrypoint characters decreased from 89155 to 82916 (6239, about 7%); complete Markdown grew from 202356 to 202454 (98). Branch framing and links preserve local closure; these counts establish neither overall corpus reduction nor measured model-quality/cost improvement. UI metadata is inspected separately from Markdown counts.
-
-Commit, Verify, Doc, author-rsp-skills and Structural Audit were retained byte-identically because their local safety, standalone configuration, writing/evidence or discovery contracts remain useful. Source/runtime/scripts/tests, stable Specs and prior work were not rewritten for corpus completeness.
+Candidate: 2b432c88bcae4c56157507b7e66cbae8f3592dda6ad95c080bdf0ef30bbc88d8, twelve packages /67 files. Entrypoint characters decreased 89155→82916; complete Markdown grew 202356→202454. Commit, Verify, Doc, Author and Structural Audit were retained. These counts establish neither overall corpus reduction nor quality/cost improvement.
 
 ### Optional
 
-Fresh model task execution, natural discovery, matched quality/cost comparisons, all-host acceptance and lifecycle/Git execution are not established by static checks or shorter entrypoints.
+- [x] The six-case comparison on the unchanged candidate physically completed: five independent verdicts passed and skill-author-critique failed; mechanical boundaries passed all six. The matrix remains failed/complete, not overall acceptance. Evidence: tests/skills/reports/skill-conditional-context/live-comparison/bc4777e9-1bc7-405d-9930-45060f879fed/matrix.json and model-comparison.md.
 
-The original structural stage used no shared-runner model execution; its eight readiness cases validate inputs, not behavior. Its retained provenance and historical campaign verdicts remain unchanged.
+The critique failure concerned suggestion ordering and Document loading despite declared Code-only scope; main defect detection and read-only preservation were valid. Input drift and an older sequencing weakness prevent attribution solely to this template change.
 
-The subsequent user request authorizes a bounded model comparison: six existing current cases, at most twelve executor/judge root sessions, shared 6.1-sol medium/high settings and no automatic reruns. Compare four unchanged-input cases against the retained skill-corpus-writing-quality matrix; Skill critique has changed inputs and Shape has no matching member there, so they supply current coverage only. This supplements the completed structural stage without rewriting its original no-live-execution conclusion or historical verdicts.
+Both findings were accepted by rsp-workflow-alignment/skill-corpus-writing-quality. Later suggestion expression passed fresh judgment. The user selected complementary content-based perspectives; the later candidate passed that new contract, not the original Code-only contract. The historical failure and judge miss remain unchanged, with no behavioral pass claimed for 2b432c88.
 
-- [x] Six current tasks and six independent judges completed within twelve root sessions on the unchanged 2b432c88 candidate: mechanical boundaries passed for all six, five independent verdicts passed and skill-author-critique failed. The complete matrix is failed, not an overall acceptance pass; no rerun followed. Evidence: tests/skills/reports/skill-conditional-context/live-comparison/bc4777e9-1bc7-405d-9930-45060f879fed/matrix.json and model-comparison.md.
+Four matched historical tasks support descriptive, not causal comparison: runner/grading and intervening Skills differ. Executor input plus output grew 266539→313537 and tool calls 17→22, so cost reduction is not established. Critique input drift and absent Shape history exclude those cases from paired costs.
 
-The failed critique found that its proposed correction mixes ordered steps and peer conditions, and that Document guidance was loaded despite a declared Code-only review. It still identified the main defects and preserved read-only scope. Earlier critique inputs differ and one sequencing weakness was already present in the older answer; the failure cannot be attributed solely to this round's template change. The older candidate's passed verdict and this candidate's failed verdict remain unchanged.
-
-Finding disposition is owned by rsp-workflow-alignment/skill-corpus-writing-quality. Suggestion expression was accepted: the current Skill critique separates prerequisite order from peer constraints and passed fresh independent judgment. Code-only noncompliance was also accepted under its original contract; the user subsequently selected complementary content-based Code/Document perspectives instead of restoring exclusive file-kind routing. Current candidate task/judge evidence passes that new contract, not the original one. The historical judge miss and failed matrix remain defects of their recorded executions; no repair or overall behavioral pass is claimed for candidate 2b432c88.
-
-Four matched historical tasks retained task/prompt, fixture, model/effort, binary, catalog, policy and effective configuration. Runner/grading and intervening Skill changes differ, so comparison is descriptive, not causal A/B. Executor input grew from 260291 to 304907 (+17.1%), input plus output from 266539 to 313537 (+17.6%), and tool calls from 17 to 22. This does not establish cost reduction. The Distill report itself shortened despite higher interaction tokens. Skill critique input drift and missing Shape history exclude them from paired costs.
-
-Cross-source synthesis, coordinated terminal closeout, natural discovery, UI invocation and all-host behavior remain untested. Original tool failures and unknown rejected-patch targets remain visible in the retained judgments.
+The original structural stage had no live execution; its readiness checks and historical verdicts remain distinct. Cross-source synthesis, coordinated terminal closeout, natural discovery, UI invocation and all-host behavior remain untested. Tool failures and unknown rejected-patch targets remain in original judgments.
 
 ### Durable Decisions
 

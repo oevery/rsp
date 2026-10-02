@@ -13,8 +13,6 @@ kind: "refactor"
 This follow-up intentionally changes responsibility after the earlier writing and conditional-context work. Preserve their work and original verdicts; their acceptance does not transfer to this candidate.
 
 
-This Change was explicitly re-homed from `release-document-ownership` to `rsp-workflow-alignment/release-document-ownership` for the authorized grouped local delivery. Original candidate identities, reports and verdicts retain their historical scope.
-
 ## Spec
 
 Modify [Skill composition](../../specs/skill.md) and [distribution](../../specs/distribution.md) under the existing [writing-quality contract](../../specs/writing-quality.md).
@@ -32,11 +30,9 @@ Modify [Skill composition](../../specs/skill.md) and [distribution](../../specs/
 
 ## Design
 
-Add one package-local release-writing reference to Doc and one release-checking reference to Review. Keep branch triggers in the entry paths; share no runtime references between packages. Existing project release tools provide inventories and deterministic observations; the Agent owns interpretation.
+Doc and Review each own a package-local conditional release method; project tools supply mechanical observations, not acceptance. Explicit direct release checks without a WorkOwner stay with Core; Verify retains declared WorkOwner verification. Unknown-evidence preparation and confirmed writing/review remain separate cases.
 
-Retire the old installation identity through the existing inspected, explicit-force and rollback mechanism when Doc is selected. Preserve the prior dirty package in a local safety snapshot before deletion; remove only its verified self-host discovery projection. Compare this delta with the pre-edit working tree, not the older HEAD.
-
-The fixed-scope review's untracked-release routing finding is accepted: Verify requires an existing WorkOwner, while direct release checks must not invent one. Core interprets existing project checks within explicit authority; Doc links the ownership split without acquiring execution authority. The coverage recommendation is also accepted: unknown identity/evidence preparation and confirmed-version document review protect different risks. Reuse the shared read-only oracle and add no fixture, test engine or universal live matrix.
+Retire the old installation identity only through inspected, explicit-force, rollback-protected migration when Doc is selected. Preserve unrelated Skills and the recoverable source snapshot; remove only the verified self-host projection. Compare against the pre-edit working tree, not older HEAD sources.
 
 ## Tasks
 
@@ -49,21 +45,23 @@ The fixed-scope review's untracked-release routing finding is accepted: Verify r
 
 ## Verify
 
+Historical closeout evidence below applies to the original candidate and reviewed text, not this later editorial repair. Original reports and verdicts remain unchanged.
+
 ### Required
 
-- [x] Fresh `mise exec -- pnpm run build`, `typecheck`, `lint` and `test` passed: 18 code files /115 tests, including offline packed installation, inventory and protected migration coverage. This correction changes no CLI implementation, test runner or permanent code-test count.
-- [x] Fresh `skills:package-check` passed for eight product packages; `skills:security-check` passed for 44 files with zero findings. Core/Doc context diagnostics found no unreachable Markdown or exact cross-file repeated prose. `docs:check` passed for seven bilingual pairs /31 Markdown files and `docs:build` passed. The authored fallback was synced through `rsp update`, matches its projection byte-for-byte, and `git diff --check` passed.
-- [x] The three selected release cases and shared-runner `check --suite full` passed: 63 catalog cases, zero provider invocations and `behavioralAcceptance: not-run`. `release-draft-missing-evidence` reuses the read-only oracle without a new fixture; confirmed writing and fixed-document review retain their earlier inputs. Author inspection covered direct release checks with and without sufficient candidate/check/authority inputs, tracked Verify routing, required independent acceptance and absent publication permission.
+- [x] Build, typecheck, lint and test passed: 18 code files /115 tests, including packed installation, inventory and protected migration. The correction added no CLI implementation, runner or permanent code-test count.
+- [x] Eight product packages passed metadata/resources; security covered 44 files with zero findings. Core/Doc diagnostics found no unreachable Markdown or exact repeated prose. Docs checks passed seven bilingual pairs /31 Markdown files; site build, fallback sync/equality and diff checks passed.
+- [x] Three release cases and the 63-case full corpus passed offline readiness, with zero provider calls and behavioralAcceptance not-run. Missing-evidence preparation reused the read-only oracle; confirmed writing and fixed-document review retained their inputs. Author checks covered direct/tracked routing, required independent acceptance and publication restraint.
 
-Product composition identity: `bdc89289263aa6e3c540cfe697a9eaac13de901c7c14e52af5ae342235a44b31`, eight packages, seven defaults and one optional Structural Audit. This identifies current sources, not an accepted or published release.
+Product composition: bdc89289263aa6e3c540cfe697a9eaac13de901c7c14e52af5ae342235a44b31, eight packages: seven defaults and optional Structural Audit. This is source identity, not release acceptance or publication. Later integrated local evidence: tests/skills/reports/rsp-workflow-alignment/final-local-verification.md.
 
-The correction snapshot comparison covered 35 selected source/document/case paths: 22 stayed identical and 13 changed within the agreed correction scope. Verify's entry contract remains byte-identical to the pre-migration source. Existing release fixtures and cases, earlier Changes, retained historical reports, HEAD and index were not modified by this correction. The original removed package and self-host link remain recoverable from their local safety snapshot.
+Verify's entry contract, historical reports and unrelated work were preserved. Removed sources/projection remain recoverable from the original local safety snapshot.
 
 ### Optional
 
-At this stage fresh model execution, natural discovery and independent review were not run. The Group owns final integrated independent review; no current-candidate release task run is claimed. Offline readiness and author inspection establish neither behavioral acceptance nor quality/cost improvement. Earlier campaign verdicts, including the conditional-context critique failure, remain attached to their original candidates.
+This stage ran no fresh model release-task acceptance, natural discovery or own independent review; the Group supplied later integrated review. Accepted direct-routing and preparation-coverage findings were corrected in source/inputs, but author checks alone did not establish review-clean.
 
-The accepted routing finding and coverage recommendation are corrected in source and current inputs. Author checks do not establish `review-clean`; fresh fixed-scope re-review and model task evidence remain separate.
+Offline readiness and author inspection establish neither behavior nor quality/cost improvement. Earlier campaign verdicts, including the conditional-context critique failure, retain their original candidate scope.
 
 ### Durable Decisions
 

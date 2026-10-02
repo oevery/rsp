@@ -24,9 +24,9 @@ This exception never converts a failed declared implementation or independent ve
 
 ## Converge the Change before writeback
 
-Replace superseded plans and evidence before selecting durable facts. Keep the current design, completed outcomes, decisive verification, gaps, risks and blockers; remove routine attempts, temporary paths and command transcripts. This is artifact preparation, not permission to mark acceptance complete.
+Revalidate relevant Focus notes and converge the Change to its current design, completed outcomes, verification conclusions, necessary failure dispositions, remaining limits and evidence pointers. Group integration conclusions belong in the Brief. Keep working chronology out; original records and verdicts remain with their evidence owner. An unresolved Required failure still blocks closeout.
 
-After required writeback, converge the final Change evidence and rerun applicable document checks and separately required fixed-scope Review for the changed final boundary. Preserve evidence and unresolved limits; author self-checks never establish independent review. Refresh readiness after these changes, before any authorized archive.
+From these conclusions, select only justified stable facts or rationale for the owners below; no useful knowledge update is a valid result. After writeback, refresh the final Change, applicable checks, separately required fixed-scope Review and readiness. Author checks never establish independent review.
 
 ## Decide current facts and lasting rationale
 
@@ -73,7 +73,7 @@ Never use generated indexes, archives, `.rsp/rsp-rules.md`, or the managed RSP b
 
 ## Prepare the Change for archive
 
-Before archive, require final Change convergence, required writeback completed or explicitly unnecessary, and every separately required fixed-scope Review clean. Archive is a separate authorized lifecycle action, not a prerequisite for every local commit.
+Before archive, require converged final Change evidence, completed or unnecessary knowledge writeback, fresh applicable verification/readiness and every separately required Review clean. Then authorized archive preserves Change and clears its Focus marker; never clear the Capsule as a substitute for writeback. Archive is separate from local commit authority.
 
 Ordinary work needs later explicit Git authority for one independently reviewable logical commit. Declined, unavailable or unselected coordination leaves Core advisory: configuration executes neither archive nor commit.
 

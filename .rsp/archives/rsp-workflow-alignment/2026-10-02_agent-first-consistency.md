@@ -12,8 +12,6 @@ kind: "refactor"
 The already authorized commit-delivery-integrity and skill-corpus-writing-quality outcomes are retained baseline, not transferred scope or new acceptance. This Change owns only the additional cross-capability consistency and Doc optimization delta over that working tree.
 
 
-This Change was explicitly re-homed from `agent-first-consistency` to `rsp-workflow-alignment/agent-first-consistency` for the authorized grouped local delivery. Original candidate identities, reports and verdicts retain their historical scope.
-
 ## Spec
 Affected authorities: [Design](../../specs/design.md), [Skill](../../specs/skill.md), [Core](../../specs/core-model.md), [CLI](../../specs/cli-contracts.md) and [writing quality](../../specs/writing-quality.md).
 
@@ -44,13 +42,10 @@ Affected authorities: [Design](../../specs/design.md), [Skill](../../specs/skill
 - THEN local instructions preserve the same ownership and evidence boundary, branch references are usable and current facts do not depend on historical research or this session.
 
 ## Design
-One consistency outcome spans the same source review and verification boundary. Keep independent capability owners rather than splitting by package or introducing a shared runtime policy dependency. Design owns the stable agent/tool boundary; Skill and Core carry their responsibility projections; each standalone package retains its necessary local safety context.
 
-Use rsp-doc's Skill, agent-facing and artifact methods. Inspect each complete package and all current formal Specs and guides; improve evidenced decision and reading difficulties, retaining adequate content. Audit command entrypoints and root scripts for mechanical versus semantic responsibility. Change executable behavior only for an evidenced in-scope defect with focused public regression, not to make every tool optional.
+Keep capability owners independent and tools observational. Design owns the agent/tool boundary; Skill/Core and standalone packages carry necessary local projections and safety context.
 
-Disjoint package/document writers may work concurrently under qualified Core coordination; main owns shared Specs, fallback, Core and verification resources. Independent reviewers receive a fixed pre-change snapshot and complete assigned packages. Reports and per-file dispositions stay under ignored tests/skills/reports/agent-first-consistency; the Change retains only final outcomes and decisive evidence.
-
-Fresh model execution uses the shared gpt-6.1-sol medium executor and high judge in isolated projects. Select evidence-preserving recovery and restraint plus document/provenance tasks by risk; use the existing runner and real side-effect oracles. Historical matrices remain unchanged. No comparative quality/cost gain or complete release acceptance follows without appropriate evidence.
+Use Doc to inspect all twelve packages, current Specs/guides and CLI/script ownership, retaining adequate surfaces. Change executable behavior only for an evidenced defect with focused public regression. Fixed-scope reviews, per-file dispositions and isolated task evidence remain under tests/skills/reports/agent-first-consistency.
 
 ## Tasks
 - [x] Inspect all twelve complete canonical packages, current Specs/guides and CLI/script ownership; retain explicit dispositions.
@@ -61,17 +56,20 @@ Fresh model execution uses the shared gpt-6.1-sol medium executor and high judge
 
 ## Verify
 
+Historical closeout evidence below applies to the original candidate and reviewed text, not this later editorial repair. Original reports and verdicts remain unchanged.
+
 ### Required
-- [x] Twelve complete canonical packages (64 files), all seven current top-level Specs and twenty current effective documents received independent fixed-scope review. Code/Document source review is clean. Whole-document review found three existing navigation/provenance risks; one bounded Doc correction pass and fresh five-file re-review resolved them. Thirteen historical release/migration documents remain unchanged. Detailed dispositions and original reports stay under ignored tests/skills/reports/agent-first-consistency/.
-- [x] Fresh build, typecheck and lint passed; full code suite passed 18 files /115 tests. Nine product and three real maintainer packages passed metadata/resources; complete candidate security covered 64 files with zero findings. All 61 cases passed offline readiness, not model acceptance. Fresh docs checks covered seven bilingual pairs /31 Markdown files and corrected VitePress build passed. Change/diff checks and authored/generated fallback equality passed. A disposable built-CLI experiment verified the corrected multi-focus entry example without source-checkout lifecycle/Git action.
-- [x] Seven fresh isolated tasks passed mechanical checks and independent judging with gpt-6.1-sol medium execution/high judge; both matrices passed and all fourteen root sessions completed against the same twelve-package composition. Coverage: Core/Implement permitted-method continuity, Verify exact-command unavailability, Doc writing, read-only document Review, candidate authoring, retained-source distillation and simulated release-evidence interpretation. Original command failures, runtime gaps and historical verdicts remain unchanged. Bounded evidence: tests/skills/reports/agent-first-consistency/verification-summary.md.
-- [x] Final evidence-only independent Document review is clean; Spec writeback is complete and current/historical/simulated/uncovered evidence remains distinct. Lifecycle and Git delivery were not performed.
+
+- [x] Independent review covered twelve complete packages /64 files, seven top-level Specs and twenty effective documents: source Code/Document clean. Three navigation/provenance findings were corrected and five-file re-review was clean; thirteen historical release/migration documents were preserved.
+- [x] Build, typecheck, lint and 18 code files /115 tests passed. Nine product and three maintainer packages passed metadata/resources; security covered 64 files with zero findings. All 61 cases passed offline readiness. Docs checks covered seven bilingual pairs /31 Markdown files; site build, Change/diff checks and fallback equality passed. A disposable built-CLI experiment verified the multi-focus example.
+- [x] Seven isolated tasks passed mechanical checks and independent gpt-6.1-sol medium/high judgment on the same twelve-package composition: Core/Implement method continuity, Verify required-command unavailability, Doc, document Review, candidate authoring, retained-source distillation and simulated release-evidence interpretation. Evidence: tests/skills/reports/agent-first-consistency/verification-summary.md.
+- [x] Final evidence-only Document review was clean and Spec writeback complete; current, historical, simulated and uncovered evidence remained distinct. This stage performed no lifecycle or Git delivery.
 
 ### Optional
 
-Natural discovery, matched quality/cost improvements, every possible tool failure, all-host behavior, release/publishing and the complete terminal lifecycle/Git sequence are outside this bounded acceptance. Full package inspection is not live execution of every Skill.
+No fresh task exercised Shape, Structural Audit, Release Docs or Commit, managed upstream prepare/accept, unknown Git effects or older-CLI compatibility. Full package inspection does not supply that coverage. Doc's Node probe was unavailable; release interpretation used simulated records, not actual release validation.
 
-No fresh model run exercised Shape, Structural Audit, Release Docs or Commit, managed upstream prepare/accept mutation, unknown Git effects or older-CLI compatibility. Their source or earlier-scope evidence is not relabelled by this matrix. Doc writing used source-grounded export behavior with an unavailable Node probe; the release-evidence task interpreted simulated records, not actual release validation. src/, scripts/ and tests/code/ retain the pre-existing implementation; the ownership audit found no additional executable defect requiring a patch.
+Natural discovery, matched quality/cost gain, all-host behavior, every tool failure, publishing and the complete terminal lifecycle/Git sequence remain outside acceptance. The ownership audit found no additional executable defect; src/, scripts/ and tests/code/ retained their baseline implementation.
 
 ### Durable Decisions
 

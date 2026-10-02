@@ -4,7 +4,7 @@ description: Create or revise repository documents, Skills and release communica
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.02.5"
+  version: "2026.10.02.6"
 ---
 
 # RSP Doc
@@ -68,4 +68,4 @@ Shortness removes no-information prose, not substantive qualifiers such as only,
 - Product decisions stay with their design owner. Release writing grants no version decision, release verification, Git delivery or external publication authority. Missing optional methods do not require installation or block an available bounded method.
 - Preserve unrelated work. Ask when a missing choice materially changes the result or authority; stop when required evidence is unavailable. Writing alone grants no installation, deployment, Git delivery or publication.
 
-Return changed artifacts, decisive checks and material limits. Put verification evidence in its work record, not in the document unless that is its purpose.
+Return changed artifacts, decisive checks and material limits. Write final conclusions to the owning work record, stable knowledge to its document, and keep detailed evidence with its report owner. Focus maintenance remains Core's responsibility.

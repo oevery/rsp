@@ -109,6 +109,8 @@ The qualified coordination branch derives any eligible delivery request; rsp-com
 
 Managed interruption and resume reread accepted state, authority, diff, and evidence. Host owns cancellation, heartbeat, replay safety, and resource release; RSP does not persist controller or paused state.
 
-The selected coordination branch may keep a sparse accepted-state Focus Capsule for recovery. It is a bounded pointer, not authority, and excludes worker or runtime data. Cross-device use requires separately authorized Git transfer and fresh rederivation; unfocus or archive removes it.
+## Working notes and knowledge writeback
+
+For tracked work needing continuity, Core maintains a permitted Focus Capsule at meaningful checkpoints, pauses or handoffs; coordination is not required. Replace progress, evidence pointers and next action rather than append logs. Before closeout, revalidate and distill final conclusions into Change, then selectively update stable knowledge. Fresh checks, required review and readiness precede authorized archive and Focus cleanup. Cross-device recovery still requires authorized Git transfer and fresh rederivation.
 
 See [configuration](../reference/configuration.md) for the exact keys and [daily workflow](./daily-workflow.md) for ordinary operation.

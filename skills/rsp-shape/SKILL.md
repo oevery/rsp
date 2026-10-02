@@ -4,7 +4,7 @@ description: Resolve a bounded design question read-only, or shape authorized un
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.02.1"
+  version: "2026.10.02.2"
 ---
 
 # RSP Shape

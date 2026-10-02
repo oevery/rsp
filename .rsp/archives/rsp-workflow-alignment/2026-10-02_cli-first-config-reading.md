@@ -13,8 +13,6 @@ kind: "fix"
 All previous uncommitted implementation, expression work, Changes and evidence are baseline, not transferred ownership or acceptance.
 
 
-This Change was explicitly re-homed from `cli-first-config-reading` to `rsp-workflow-alignment/cli-first-config-reading` for the authorized grouped local delivery. Original candidate identities, reports and verdicts retain their historical scope.
-
 ## Spec
 
 Apply existing [Skill](../../specs/skill.md), [CLI](../../specs/cli-contracts.md) and [writing quality](../../specs/writing-quality.md) authorities.
@@ -48,11 +46,9 @@ Apply existing [Skill](../../specs/skill.md), [CLI](../../specs/cli-contracts.md
 
 ## Design
 
-Use rsp-doc's Skill/agent-facing methods and author-rsp-skills revise mode. Keep each consumer standalone with concise local guidance; do not create another common runtime policy or impose RSP CLI on non-RSP repositories. Core's default selection and detailed coordination procedure name the CLI consistently. Other configuration systems retain their owning methods.
+Each consumer carries standalone CLI-first effective configuration guidance; other configuration systems retain their own readers. Reuse production CLI fixtures and the shared runner to check artifacts and refusal effects, not read-command fingerprints.
 
-Use the pre-edit source snapshot recorded under ignored tests/skills/reports/cli-first-config-reading for fixed review. Reuse production CLI fixtures and the existing project/case runner; test observable artifacts and refusal effects, not reading fingerprints. Shared execution remains gpt-6.1-sol medium with high judging. Keep private configuration and raw records outside tracked artifacts.
-
-The refusal case supplies initialized RSP prerequisites. A disposable valid-policy control must reach completionGate pass and archiveReady yes, so missing initialization cannot mask the configuration-refusal outcome.
+The refusal case includes initialized RSP prerequisites. A valid-policy disposable control must reach completionGate pass and archiveReady yes so missing initialization cannot mask invalid_config. Fixed snapshots and private evidence remain under tests/skills/reports/cli-first-config-reading.
 
 ## Tasks
 
@@ -64,20 +60,22 @@ The refusal case supplies initialized RSP prerequisites. A disposable valid-poli
 
 ## Verify
 
+Historical closeout evidence below applies to the original candidate and reviewed text, not this later editorial repair. Original reports and verdicts remain unchanged.
+
 ### Required
 
-- [x] Product packages/resources and complete-candidate security pass: nine published packages pass, the 12-package candidate has 64 scanned files and no findings. Docs checks and site build, product build, typecheck, lint and all 18 code files / 115 tests pass.
-- [x] New cases and the 63-case corpus pass offline readiness, separately from model execution. Snapshot comparisons confirm CLI/config implementation, project configuration/defaults, prior Changes and historical evidence remain unchanged; no global configuration was mutated. Initialized refusal probes fail with invalid_config; removing only the unsupported key in a disposable control makes config and ready pass, with completionGate pass and archiveReady yes.
-- [x] Independent fixed-scope review finds consumer guidance, Specs and bilingual documents clean. The refusal case's initialization finding is corrected and independently re-reviewed clean; standalone and configuration-refusal boundaries are preserved.
-- [x] Both final-candidate isolated tasks physically complete, pass mechanical checks and receive high independent judging: config-inherited-artifact-language produces Chinese prose in only guide.md; config-rejected-closeout-policy identifies invalid_config and preserves files, index, HEAD and closeout state. The fixed composition and distinct final-input records are retained under ignored tests/skills/reports/cli-first-config-reading.
+- [x] Nine product packages passed metadata/resources; the twelve-package candidate passed security across 64 files with zero findings. Build, typecheck, lint, 18 code files /115 tests, docs checks and site build passed.
+- [x] The 63-case corpus passed offline readiness. CLI/config parsing, keys/defaults, prior work and historical evidence were preserved. Initialized refusal probes returned invalid_config; removing only the unsupported key in a disposable control made config and ready pass, including completionGate pass and archiveReady yes.
+- [x] Independent consumer/Spec/bilingual-document review was clean. The refusal case's initialization finding was corrected and independently re-reviewed, preserving standalone and refusal boundaries.
+- [x] Two final-input tasks physically completed and passed mechanical checks and independent judging: inherited language produced Chinese prose only in guide.md; rejected policy identified invalid_config and preserved files, index, HEAD and closeout state. Distinct task/input evidence: tests/skills/reports/cli-first-config-reading/.
 
 ### Optional
 
-Actual old/missing CLI behavior, every language consumer, natural discovery, all hosts and full terminal lifecycle/Git execution remain uncovered unless separately exercised. No measured quality/cost gain or release acceptance follows from these bounded checks.
+The original joint matrix remains incomplete/inconclusive after frozen-input drift. Its completed language pass and separate final-input refusal pass do not establish a complete joint-matrix pass.
 
-At this stage the generic Skill quick validator was unavailable because local and bundled Python lacked PyYAML. Repository package/resource validation passed independently. Later isolated uv validation of rsp-review and rsp-doc belongs to the writing-quality evidence; it establishes no host-validator pass for other packages.
+The host quick validator was unavailable for lack of PyYAML. Later isolated uv validation of Review/Doc belongs to writing-quality evidence and supplies no pass for other packages; repository metadata/resources were independently checked.
 
-The original joint matrix remains incomplete/inconclusive after a frozen-input change; its completed language-task pass and the separate final-input refusal-task pass are retained independently. No complete joint-matrix claim or historical verdict rewrite follows from these task results.
+Old/missing CLI behavior, every language consumer, natural discovery, all hosts and complete terminal lifecycle/Git execution remain uncovered. Bounded checks establish neither quality/cost gain nor release acceptance.
 
 ### Durable Decisions
 

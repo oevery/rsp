@@ -236,6 +236,8 @@ Open work：每个 change 是一个 Markdown 文件。
 
 Open work 的 FocusSet source。每个 focus marker 指向一个当前 open work 候选，多个 marker 可以同时存在。
 
+Core 按需在 marker 中维护进行中的工作快照和证据指针；收尾先提炼结果到 Change，再将稳定知识按归属写回文档。Focus 文本不提供权限或验收，授权归档后由 CLI 清理。
+
 ### `.rsp/archives/`
 
 Completed history：保留最终上下文、结果、决定性证据、缺口和风险，不保留执行流水，也不成为 durable truth。

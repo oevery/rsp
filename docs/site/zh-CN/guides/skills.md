@@ -109,6 +109,8 @@ manage:
 
 受管工作的中断与恢复会重新检查已接受状态、权限、diff 与证据。取消、heartbeat、重放安全和资源释放由 Host 负责；RSP 不持久化 controller 或暂停状态。
 
-选中的协调分支可在 marker 中保存稀疏的已接受状态 Focus Capsule 作为恢复指针。它是有界指针，不具备权限，也不包含 worker 或运行时数据；跨设备使用需要单独授权的 Git 传输并重新派生状态，unfocus 或 archive 会删除它。
+## 工作记录与知识回流
+
+有连续恢复需求的 tracked 工作，由 Core 在允许的范围内于检查点、暂停或交接时维护 Focus Capsule，无需因此进入协调分支。替换进展、证据指针和下一步，不追加日志。收尾先重新核验证据并提炼最终结论到 Change，再按需回流稳定知识；最新检查、必需评审与 readiness 满足后，才执行授权归档并清理 Focus。跨设备恢复仍需授权的 Git 传输和重新派生。
 
 精确键见[配置](../reference/configuration.md)，普通操作见[日常工作流](./daily-workflow.md)。

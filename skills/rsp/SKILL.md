@@ -4,7 +4,7 @@ description: Continue an authorized RSP request through implementation, checks a
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.02.3"
+  version: "2026.10.02.4"
 ---
 
 # RSP Skill
@@ -73,9 +73,9 @@ Before focusing or mutating a different WorkOwner or child WorkRef, compare dirt
 
 Read the selected Change or Group, its sibling Brief when grouped, and only relevant Specs and Decisions. For direct tree navigation or bounded literal discovery use `rsp specs`, then reread the authoritative source before material decisions or mutation. Generated indexes are migration inputs, not authority. User intent or an explicit WorkOwner selects from the open-work focus candidates.
 
-Run the selected check before treating the owner as ready. Preserve Proposal, Spec, Design, Tasks, Verify and Blockers. Load [focus and continuation recovery](references/focus-continuation.md) when a capsule exists, is inspected or mutated, reports warnings, or a continuation resumes; its handoff rules below also apply when accepted work remains.
+Run the selected check before treating the owner as ready. Preserve Proposal, Spec, Design, Tasks, Verify and Blockers. For tracked work needing checkpoint or recovery notes, maintain its permitted Focus snapshot through [focus and continuation recovery](references/focus-continuation.md); also load it when a capsule is inspected or a continuation resumes.
 
-Keep the Change a convergent snapshot of the current plan and final decisive evidence. Replace superseded content; keep routine attempts, temporary probes, and command transcripts in the response. Persist only `open` and `archived`; focus, readiness, routing, and capability availability grant no implementation, review, Git, publication, or approval authority.
+Keep ongoing recovery notes in Focus, converged results in Change, and justified stable knowledge in its document owner. Focus is a replaceable snapshot, not a log or authority; detailed evidence stays with its report or host owner. Persist only `open` and `archived`; focus, readiness, routing, and capability availability grant no implementation, review, Git, publication, or approval authority.
 
 When archived acceptance is incomplete, read [reopen recovery](references/reopen-recovery.md) before lifecycle mutation. Reopen requires explicit lifecycle authority and grants no Git or external authority.
 
