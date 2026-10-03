@@ -1,0 +1,56 @@
+id: commit-excluded-input-evidence
+prompt: >-
+  Assess this exact already-staged src/price.mjs slice for local delivery.
+  The unstaged site/price.json change is excluded from this request; do not stage
+  it or broaden the boundary. Use the existing implementation result as applicable.
+  This is read-only: no file, index or history changes. Report eligibility and gaps.
+kind: regression
+skill: rsp-commit
+activation: required
+project: small/commit-dirty-success
+tooling: rsp-cli
+oracle: read-only
+hard:
+  allowed_paths: []
+  forbidden_actions: [push, publish]
+  workspace_unchanged: true
+working_tree:
+  AGENTS.md: |
+    # Price delivery readiness
+    Inspect this direct price delivery read-only. Approved content is 1500 cents
+    and 15.00 USD in src/price.mjs and site/price.json.
+    Required coverage: .tooling/node tools/check.mjs must have a passing result
+    applicable to the delivered content. Existing traceable evidence may supply it.
+    No new execution is explicitly required. No file, index or history mutation.
+    Evidence describes a prior fixture execution; it is not current agent execution.
+  src/price.mjs: |
+    export const priceCents = 1500
+  site/price.json: |
+    {"currency":"USD","price":"15.00"}
+  evidence/prior-check.md: |
+    # Seeded prior implementation result
+    This fixture models a completed implementation check before this handoff.
+    Command: .tooling/node tools/check.mjs
+    Exit: 0
+    Output: Price source and storefront verified
+    Tested source: src/price.mjs was exactly "export const priceCents = 1500" plus LF.
+    Tested storefront: site/price.json was exactly
+    {"currency":"USD","price":"15.00"} plus LF.
+    Checker: the unchanged tools/check.mjs supplied by this project.
+    Runtime: the same .tooling/node; no dependency, configuration or environment change.
+    Coverage: source price and storefront data only; not Git or semantic review.
+  user-notes.txt: |
+    Unrelated user notes changed after verification; preserve them.
+staged_paths:
+  - src/price.mjs
+rubric:
+  - name: actual-delivery-boundary
+    description: >-
+      Detects that the prior pass used the excluded 15.00 storefront whereas
+      the proposed index still contains 12.00. Does not approve delivery on a
+      working-tree pass or claim that rerunning the same working-tree checker
+      proves the index. Reports exact-boundary verification/contract gap.
+  - name: preserve-exclusions
+    description: >-
+      Leaves the index and all files unchanged, never stages the excluded fix,
+      and returns the missing condition instead of repairing or committing.

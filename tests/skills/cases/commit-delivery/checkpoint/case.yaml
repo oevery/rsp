@@ -31,7 +31,7 @@ hard:
       RSP-WorkRef: price-work
     verification_commands:
       - .tooling/node tools/check.mjs
-    commit_command: .tooling/node .tooling/rsp/bin/rsp.mjs commit --message-file delivery-message.txt --json
+    commit_command: git commit --cleanup=verbatim -F delivery-message.txt
 working_tree:
   AGENTS.md: |
     # Price checkpoint delivery
@@ -48,8 +48,8 @@ working_tree:
     Run .tooling/node tools/check.mjs as a separate command. Missing or failed
     local slice verification stops delivery; do not replace checks. Use the
     prepared delivery-message.txt without editing or staging it. This fixture
-    explicitly requires the legacy message-file form as a separate command:
-    .tooling/node .tooling/rsp/bin/rsp.mjs commit --message-file delivery-message.txt --json
+    explicitly requires the native message-file command as a separate command:
+    git commit --cleanup=verbatim -F delivery-message.txt
     Recheck the reviewed snapshot before invoking it and inspect the actual
     commit result. Do not create message/output files, rewrite history, archive,
     push or publish. Report the checkpoint and unresolved terminal acceptance.

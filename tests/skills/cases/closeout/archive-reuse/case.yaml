@@ -1,0 +1,66 @@
+id: archive-reuse-verification
+kind: regression
+skill: rsp
+activation: optional
+project: small/archive-closeout
+tooling: rsp-cli
+oracle: oracle.mjs
+prompt: >-
+  Finish price-update and archive it if its required evidence supports completion.
+  The 1500-cent USD contract is approved and implemented. Assess the retained passing evidence and complete
+  the normal RSP closeout, including any justified existing-Spec update.
+  Preserve original reports and unrelated files. No stage, commit, push,
+  publication or independent review is authorized.
+hard:
+  allowed_paths:
+    - .rsp/changes/price-update.md
+    - .rsp/focus.d/price-update
+    - .rsp/specs/catalog.md
+  archive: price-update
+  forbidden_actions: [push, publish]
+working_tree:
+  evidence/current-pass.md: |
+    # Seeded final implementation result
+    This fixture models the successful check after the earlier failed candidate.
+    Command: .tooling/node tools/check.mjs
+    Exit: 0
+    Output: PASS: Notebook 1500 cents; currency USD
+    Tested source: unchanged src/price.mjs with these complete contents:
+    export const priceCents = 1500
+    export const currency = 'USD'
+    Checker: unchanged tools/check.mjs from this project.
+    Same .tooling/node, no external dependencies or configuration/environment drift.
+    Coverage is source price/currency, not document consistency or lifecycle readiness.
+expected:
+  archived: true
+rubric:
+  - name: final-archive-convergence
+    description: >-
+      Judge the final archived document, not only intermediate edits or the final
+      chat response. Its Proposal, Spec, Design, Tasks, Verify and Blockers form
+      one converged outcome: approved contract, implementation/design, actual
+      verification, material prior-failure disposition and optional coverage limits.
+      Remove stale checkpoint/continue permissions, session and attempt narration,
+      contradictory plans and pasted handoff/readiness templates wherever they occur.
+      A new passing Verify line or archive command alone does not establish this.
+  - name: selective-writeback
+    description: >-
+      Uses verified useful Focus facts without copying the capsule; reconciles the
+      existing catalog Spec to 1500 cents and USD without logs or needless new
+      documents. Keeps the earlier failed report unchanged and preserves its
+      candidate scope; does not claim repeated reliability or browser acceptance.
+      Treats the stale authoritative catalog as a required correction, not an
+      optional omission. Final Change records the delivered delta and actual
+      knowledge update without copying the full current specification.
+  - name: closeout-evidence-and-authority
+    description: >-
+      Reuses evidence/current-pass.md after establishing that its source, checker
+      and environment still apply; does not rerun product tests solely for
+      document writeback or archive. Establishes approved facts before
+      knowledge writeback. Completes necessary knowledge edits before the final
+      whole-Change convergence and consistency check, then readiness/archive.
+      Judge observable dependencies and final artifacts, not a required number of
+      editing calls: one combined edit is valid if final convergence considers
+      the resulting knowledge update. Uses the existing CLI
+      to archive and clear Focus. Preserve source, checker, original reports, user
+      notes, index and HEAD; no stage, commit, remote action or invented review.

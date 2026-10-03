@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Define deterministic command behavior, managed-path safety, inspection, JSON, history, Specs queries, repair, and local commit boundaries.
+Define deterministic command behavior, managed-path safety, inspection, JSON, history, Specs queries, repair, and the Git execution boundary.
 
 ## Current facts
 
@@ -23,20 +23,18 @@ Define deterministic command behavior, managed-path safety, inspection, JSON, hi
 
 ### Managed artifacts and lifecycle
 
-- Change, Group, focus, archive, reopen, and commit commands validate their complete target boundary before mutation and preserve unrelated files.
+- Change, Group, focus, archive, and reopen commands validate their complete target boundary before mutation and preserve unrelated files.
 - Focus commands may create multiple valid markers. Marker content is optional bounded recovery guidance and never grants ownership or authority.
 - `rsp show --focused` succeeds only when exactly one Focus marker exists; no marker returns `no_focused_change`, multiple markers return `multiple_focused_changes`, and `rsp show <work-ref>` remains explicit.
 - A non-empty Focus Capsule v1 starts with `<!-- rsp-focus:v1 -->`, contains `Current`, `Evidence`, `Next`, and optional `Resume check`, and is limited to 4096 bytes. Unknown non-empty lines or fields fail before atomic replacement and preserve the prior marker. Legacy content produces `focus_capsule_legacy`; `recovery: null` and `authoritative: false` remain the bounded read-only projection for empty or legacy content.
 - `rsp create <name> [summary] --issue <url>` validates and stores one normalized issue relationship without remote access. `--issue-relation closes` requires `--issue`; invalid issue metadata fails before Change or focus mutation.
 - Archive and reopen preserve lifecycle and historical boundaries. Archive does not automatically update Specs or Decision Records.
 
-### Exact local commit
+### Git execution boundary
 
-- `rsp commit` creates one exact local commit from an already reviewed staged boundary. It does not stage paths, push, tag, publish, amend, rebase, or clean another checkout.
-- `rsp commit --message-file <path>` operates only on the current reviewed staged boundary. It transports prepared text verbatim, including literal backslash-n, without decoding escapes or guessing message intent. An unreadable message file, empty staged boundary, or active merge, cherry-pick, revert, rebase, mail-apply or sequencer state stops execution. JSON success returns exact before/after heads, commit, stored message, committed paths, and remaining worktree paths.
-- Optional paired `--expected-head <full-oid|unborn>` and `--expected-tree <full-oid>` bind execution to the caller-reviewed snapshot. Invalid or mismatched expectations stop before invoking Git commit without staging or index repair. The legacy message-file form remains supported; snapshot checks are not cross-process locks.
-- Commit inspection distinguishes confirmed unborn HEAD from a failed read and captures the index tree before execution. Successful exact delivery requires the committed tree to match, ordinary parents to equal the prior HEAD (or no parents for unborn), the complete message and path boundary to match, and final HEAD still to identify the observed commit. All committed observations use that immutable OID; path output preserves actual filenames.
-- Additive JSON observations are `stagedTree`, `committedTree`, `parents`, `attempt: not_attempted | succeeded | failed` and `creation: not_attempted | confirmed | unknown`. Git success confirms creation, not ownership of the observed HEAD by that attempt; `commit` identifies an observed immutable commit. Pre-execution refusals, Git failures, created-commit mismatches and incomplete observations remain distinct. A failed or incomplete result never implies rollback, no effects or permission to retry.
+- The CLI does not advertise or dispatch `rsp commit`. Its message-file/snapshot flags and JSON receipt are removed without a compatibility wrapper.
+- Native Git owns commit execution. The default `rsp-commit` Skill owns authorization, reviewed boundaries, message policy, safety observations and delivery judgment; see [Skill](skill.md#capability-ownership).
+- Existing command consumers must migrate to the Skill's native Git procedure and cannot expect the former deterministic guards or JSON receipt. This source change does not alter historical releases.
 
 ### Scaffolds, updates and repair
 - Tracked Changes of every size use the same kind-aware scaffold.

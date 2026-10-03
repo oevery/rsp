@@ -14,7 +14,7 @@ Do not silently reinterpret, accept politely or reject intuitively. Acceptance o
 
 Confirm the intended correction and exact mutation boundary before fixing accepted Findings in one bounded pass. One correction may address several findings while preserving their separate dispositions.
 
-After the last edit, run fresh affected and declared checks. Failure, unavailability, stale evidence or omission cannot close a Finding. Preserve the original report. Request fresh fixed-scope, read-only Review with the original comparison, authority, post-fix paths, dispositions and evidence; the implementer cannot certify review-clean. Correlate its result on return.
+After the last edit, rerun checks invalidated by the correction and fill missing declared coverage; reuse traceable passing evidence for unaffected inputs. Failure, unavailability, stale evidence or omission cannot close a Finding. Preserve the original report. Request fresh fixed-scope, read-only Review with the original comparison, authority, post-fix paths, dispositions and evidence; the implementer cannot certify review-clean. Correlate its result on return.
 
 Continue only while original authority and scope still hold and evidence improves. Stop after at most three finding-resolution passes, or earlier when the same Finding survives two corrections. Repeated evidence cannot justify a self-loop. A material new requirement, changed scope, missing authority or `needs-clarification` stops for the owner.
 

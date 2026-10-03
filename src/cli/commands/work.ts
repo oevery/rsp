@@ -1,15 +1,12 @@
 import type { ArchiveChangeArgs, CreateChangeArgs, ReopenChangeArgs } from '../../types.js'
 import { defineCommand } from 'citty'
 import { archiveChange } from '../../commands/archive.js'
-import { commitFromMessageFile } from '../../commands/commit.js'
 import { createChange } from '../../commands/create.js'
 import { focusChange, unfocusChange } from '../../commands/focus.js'
 import { closeChangeGroup, createChangeGroup, reopenChangeGroup } from '../../commands/group.js'
 import { showReady } from '../../commands/ready.js'
 import { reopenChange } from '../../commands/reopen.js'
 import { executeCliCommand } from '../adapter.js'
-import { jsonArgs } from '../capabilities.js'
-import { presentCommit } from '../presenters/commit.js'
 import { presentArchive, presentArchiveDryRun, presentCreate, presentFocus, presentGroup, presentReopen } from '../presenters/work.js'
 
 function createCreateCommand(deprecatedLite: boolean) {
@@ -210,39 +207,8 @@ const unfocusCommand = defineCommand({
   },
 })
 
-const commitCommand = defineCommand({
-  meta: {
-    name: 'commit',
-    description: 'Create one local commit from a message file on the existing staged boundary',
-  },
-  args: {
-    'message-file': {
-      type: 'string',
-      description: 'Path to the prepared commit message file',
-      required: true,
-    },
-    'expected-head': {
-      type: 'string',
-      description: 'Reviewed full HEAD object ID or unborn; requires --expected-tree',
-    },
-    'expected-tree': {
-      type: 'string',
-      description: 'Reviewed full index tree object ID; requires --expected-head',
-    },
-    ...jsonArgs,
-  },
-  async run({ args }: { args: { 'message-file': string, 'expected-head'?: string, 'expected-tree'?: string, 'json': boolean } }) {
-    await executeCliCommand({
-      execute: () => commitFromMessageFile(args['message-file'], { expectedHead: args['expected-head'], expectedTree: args['expected-tree'] }),
-      present: result => presentCommit(result, Boolean(args.json)),
-      exitCode: result => result.ok ? undefined : 1,
-    }, args)
-  },
-})
-
 export function createWorkCommands(deprecatedLite: boolean) {
   return {
-    commit: commitCommand,
     create: createCreateCommand(deprecatedLite),
     group: groupCommand,
     focus: focusCommand,

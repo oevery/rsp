@@ -4,18 +4,18 @@ description: Inspect or create one authorized exact-scope local commit for direc
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.01.3"
+  version: "2026.10.03.3"
 ---
 
 # RSP Commit
 
-Own precise local Git delivery, whether invoked directly or routed by Core. This is a default core capability, not an optional extension. Availability grants no authority. A readiness-only request remains read-only; create a commit only with current local authority, one exact owned boundary and fresh applicable verification.
+Own precise local Git delivery, whether invoked directly or routed by Core. This is a default core capability, not an optional extension. Availability grants no authority. A readiness-only request remains read-only; create a commit only with current local authority, one exact owned boundary and applicable passing verification.
 
 Use explicit response language, then personal instructions, then conversation language for narration. Existing artifact language stays unchanged. Commit prose follows explicit current commit-language instruction, effective configured commit language, nearest repository authority, then the clear style of recent non-merge commits. In RSP projects, when precedence needs configuration, use the same selected CLI's successful `rsp config --json` summary (optional `--compact`); it resolves defaults and inheritance. Refresh on relevant drift or recovery. Raw YAML is diagnostic only; failed or unavailable projection leaves the dependent language choice unresolved before staging, not replaced by history. Independently authorized read-only inspection needing no unknown setting may continue. Response language does not select commit language. Preserve commands, identifiers, Conventional types, scopes and trailers; return a material unresolved language choice to the owner. These rules work without Core installed.
 
 ## Establish the delivery boundary
 
-Resolve the smallest request: kind, purpose, owner or summary, real included WorkRefs when relevant, exact paths, current local authority, fresh verification pointers and lifecycle evidence only when applicable. Derive these facts from direct user intent or Core's bounded handoff; do not require a transport schema or create a second source of truth.
+Resolve the smallest request: kind, purpose, owner or summary, real included WorkRefs when relevant, exact paths, current local authority, applicable verification pointers and lifecycle evidence only when applicable. Derive these facts from direct user intent or Core's bounded handoff; do not require a transport schema or create a second source of truth.
 
 | Kind | Identity and applicable evidence | RSP trailers |
 | --- | --- | --- |
@@ -36,34 +36,64 @@ Lifecycle authority stays upstream. If terminal delivery includes authorized arc
 
 ## Audit before staging
 
-Read nearest authority and the selected current owner, relevant Brief/children or archive when needed. Inspect status, the complete staged, unstaged and untracked boundary, cached diff and recent non-merge messages. Reread decisive verification and applicable lifecycle facts instead of trusting copied handoff prose. Run an authorized missing local check only when its scope and method are settled; unavailable or failed evidence is a stop.
+Read nearest authority and the selected current owner, relevant Brief/children or archive when needed. Inspect status, the complete staged, unstaged and untracked boundary, cached diff and recent non-merge messages. Reread decisive verification and applicable lifecycle facts instead of trusting copied handoff prose. Reuse traceable passing results when relevant content, dependencies, configuration, tools, inputs and environment remain applicable; entering Commit alone requires no rerun. Run only authorized missing or invalidated checks with settled scope and method, or explicitly required executions. Failed or unavailable required evidence is a stop.
 
 Stop without changing the index on missing or ambiguous authority, stale evidence, an invalid kind/purpose, unrelated staged work, mixed ownership that cannot be separated without guessing, or active merge, cherry-pick, revert, rebase, mail-apply or sequencer state. Preserve pre-existing owned partial staging unless the exact additional content is authorized. Never broaden paths, unstage unrelated work or reset the index to make a boundary fit.
+
+Before reporting eligibility, establish that verification covers the exact proposed delivery content, not merely filenames or a working tree containing excluded changes. For an already-staged slice, compare evidence with the current index. Unstaged code, configuration, fixtures or generated inputs may make a working-tree pass inapplicable; obtain missing exact-boundary evidence within authority or report the gap, without altering unrelated work.
 
 For readiness-only work, report eligibility, gaps and the next owner here; do not stage, prepare files or commit.
 
 ## Review the final index and message
 
 1. Stage only the authorized content with exact path handling. Reread status, complete cached paths and diff, including sensitive material, and prove one reviewable logical boundary. Stop if it does not match; do not repair unrelated staging.
-2. Record the reviewed HEAD (or unborn state) and index tree. These bind content, file modes and deletions, not only names; keep them transient.
-3. Derive the message from that final cached diff, not conversation chronology or a copied Change. Use the established Conventional form when present and a concise repository-consistent subject. A small mechanical outcome may be subject-only. For material behavior, compatibility or risk, add only the body needed by a reader without the session.
+2. Confirm the final index matches the content covered by the audited evidence. If staging changed that boundary, reassess applicability and fill only missing or invalidated coverage before proceeding; unchanged applicable results need no rerun. Record the reviewed HEAD (or unborn state) and index tree. These bind content, file modes and deletions, not only names; keep them transient.
+3. Derive the message from that final cached diff, not conversation chronology or a copied Change. Follow applicable project message rules and checks, using the established Conventional form when present and a concise repository-consistent subject. When the project permits and the subject is sufficient, omit the body; otherwise add only the rationale, behavior differences, compatibility or risk needed by a reader without the session.
 4. Load [message and references](references/message.md) for tracked, integration, Group, release, issue-related or non-trivial messages. Keep real removals, migration constraints and important omissions; omit session-only attempts, file inventories and routine command output. A supplied prepared message must still match the reviewed boundary; do not edit it when nearer authority forbids editing.
 5. Prepare actual multiline text, preferably outside the worktree or at an explicitly allowed path. Never use literal backslash-n as a newline transport or include a temporary message file in delivery. Legitimate escape notation in prose stays literal; do not decode it or reject it merely for containing backslash-n.
 
 ## Execute once and observe
 
-Select the execution method inside this capability. Prefer the packaged rsp commit command with --message-file, --expected-head (full OID or unborn), --expected-tree and --json, passing the reviewed snapshot. Inspect help read-only when the installed surface is unknown; do not probe capability by trying a commit. A snapshot check narrows drift; it is not a cross-process lock.
+Use native Git inside this capability; no RSP commit wrapper or generated delivery
+script is required. Missing Commit capability has no Core substitute. Respect a
+nearer required method or denial; an incompatible requirement needs an owner
+decision, not a trial commit or automatic fallback.
 
-Load [checked Git equivalence](references/git-equivalence.md) for native Git, missing older-CLI protection/observations or a pre-execution tool fault. Before changing methods:
+1. Inspect operation state through `git rev-parse --git-path` for MERGE_HEAD,
+   CHERRY_PICK_HEAD, REVERT_HEAD, rebase-merge, rebase-apply and sequencer. Any
+   active operation or incomplete inspection stops ordinary delivery. Resolve
+   paths through Git, not a presumed .git directory, so worktrees are covered.
+2. Read HEAD with `git --no-replace-objects rev-parse --verify 'HEAD^{commit}'`.
+   A failed read is not automatically unborn: require `git symbolic-ref -q HEAD`
+   to name refs/heads/... and `git show-ref --verify --quiet <that-ref>` to confirm
+   absence (exit 1). Other errors stop. Immediately before execution, recheck this
+   HEAD/unborn state and `git write-tree` against the reviewed snapshot. A caller's
+   fixed snapshot cannot be replaced on its behalf. Drift stops without index repair.
+3. Attempt exactly once: `git commit --cleanup=verbatim -F <message-file>`, replacing
+   the placeholder with the safely prepared, quoted path. Preserve normal hooks
+   and signing policy; do not disable either to obtain success. Snapshot checks
+   are sequential observations, not a cross-process lock.
+4. Read resulting HEAD, then inspect that immutable SHA using
+   `git --no-replace-objects cat-file commit <sha>` for the raw message, tree and
+   parents, and `git --no-replace-objects diff-tree --root --no-commit-id --name-only --no-renames -r -z <sha>`
+   for actual paths. Use NUL-delimited path observations before and after delivery;
+   do not split unusual filenames on whitespace or treat display quoting as identity.
+5. Require the committed tree and paths to match the reviewed index, one parent
+   equal to reviewed HEAD (no parents for unborn), and the complete stored message
+   to match the prepared text with at most one terminal LF difference. Recheck
+   final HEAD still identifies that SHA and inspect remaining staged, unstaged
+   and untracked work against the prior boundary. Obtain committed facts from the
+   immutable object, not several movable HEAD reads.
 
-- Independently prove no attempted commit or uncertain effects, then refresh authority, verification, Git operation state and reviewed HEAD/tree. Absence, version or exit status alone is insufficient.
-- Stop for unsafe facts, failed verification, snapshot drift or a nearer method restriction; these are not tool faults. Report the diagnosed cause and equivalent checks.
+Post-commit verification inspects these Git results and hook effects, not routine repetition of product tests. If hooks changed relevant inputs, report which evidence no longer applies; delivery remains stopped on mismatch or uncertain effects.
 
-Unavailable Commit capability has no Core substitute.
-
-Attempt one local commit. Observe before/after HEAD, immutable commit SHA, complete stored message, committed paths, staged and committed trees, parents and remaining worktree paths. For a normal commit require one parent equal to reviewed HEAD; an unborn commit has none. Require the final HEAD to identify that commit, content tree and paths to match the reviewed index, and message to match exactly except one terminal LF. Collect missing observations by immutable SHA, not several movable HEAD reads.
-
-A command exit alone is not exact delivery. Distinguish refusal before execution, Git failure with observed unchanged HEAD, a created commit with mismatch, and incomplete observation. If a commit exists or its effects are uncertain, stop without retry, amend, rollback or a second commit. Preserve unrelated work and report what actually happened.
+Exit zero alone is not exact delivery. After any failure, observe HEAD and actual
+index/worktree effects before classifying the result. Distinguish refusal before
+execution, Git failure with observed unchanged HEAD, created-commit mismatch and
+incomplete observation. Even unchanged HEAD cannot rule out hook side effects.
+An attempted commit or uncertain effects stops delivery without retry, amend,
+reset, rollback or a repair commit. Preserve the observed state and report gaps;
+never claim successful delivery when required observations fail or disagree.
 
 ## Return the result
 

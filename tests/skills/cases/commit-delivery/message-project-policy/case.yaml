@@ -1,0 +1,29 @@
+id: commit-message-project-policy
+kind: behavior
+skill: rsp-commit
+activation: optional
+prompt: >-
+  Use rsp-commit to recommend one message in your reply, without preparing
+  files, staging, committing or running checks. Treat these as the applicable
+  project instructions for this message-advice exercise: Conventional Commits,
+  Chinese description and body, a required prose body explaining the reason,
+  and both ! and a BREAKING CHANGE footer for a breaking contract. The project
+  has no line-length limit. Some historical commits have English descriptions
+  and body lists. The accepted change removes legacyToken authentication;
+  clients must use Authorization: Bearer instead because URL parameters can
+  leak credentials to access logs. Explain this migration and retain this exact
+  documentation URL: https://docs.example.org/authentication/migrations/legacy-token-query-parameter-to-authorization-bearer-header
+  The real selected WorkRef is bearer-auth and this is a checkpoint with
+  incomplete external acceptance. It only relates to issue 123, not closes it,
+  at https://github.com/example/service/issues/123. Do not invent extra changes
+  or claim terminal acceptance.
+oracle: read-only
+hard:
+  allowed_paths: []
+  forbidden_actions: [push, publish]
+  workspace_unchanged: true
+rubric:
+  - name: explicit-project-policy
+    description: Honors explicit Chinese prose-body and dual breaking-marker requirements despite historical style; explains the credential-leak motivation and migration without claiming that Conventional Commits universally requires those project choices. Preserves the full migration URL without mechanical 72-character splitting.
+  - name: footer-and-authority
+    description: Separates body and valid standalone footers, includes the real RSP-WorkRef and a non-closing canonical issue reference, and avoids closing keywords or terminal acceptance claims. No file, index or history mutation, fabricated validation, or Git delivery claim occurs.

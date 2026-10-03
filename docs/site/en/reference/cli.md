@@ -65,17 +65,31 @@ Existing bounded unversioned UTF-8 content remains readable for compatibility. `
 
 ## Local Git delivery
 
-```text
-rsp commit --message-file <path> [--json]
+The current source candidate removes `rsp commit --message-file`, including
+`--expected-head`, `--expected-tree` and the JSON receipt. There is no compatibility
+wrapper. Existing automation must migrate; earlier release records describe their
+original versions, not this source candidate.
+
+Use the `rsp-commit` Skill for authorized exact-scope local delivery. Its ordinary
+execution command is:
+
+```sh
+git commit --cleanup=verbatim -F <message-file>
 ```
 
-`rsp commit` creates one local commit from the existing staged boundary. It refuses an in-progress merge, cherry-pick, revert, rebase, mail-apply, or sequencer operation. It never stages paths, pushes, tags, publishes, amends, creates a repair commit, or performs cross-branch integration. Prepare actual line breaks for intended multiline prose. Git receives the message through a direct child-process stdin path with `--cleanup=verbatim`; the current source candidate transports literal `\n` verbatim rather than decoding escapes or guessing message intent.
+Replace `<message-file>` with a safely prepared, quoted path outside the delivered
+boundary. Use actual line breaks for multiline prose; literal backslash-n remains
+literal. Preserve normal Git hooks and the project's signing policy.
 
-The current source candidate adds optional paired `--expected-head <full-oid|unborn>` and `--expected-tree <full-oid>` parameters. Supply both to bind execution to the reviewed HEAD and index tree; invalid or mismatched expectations stop before Git commit. The message-file form above remains supported. These snapshot checks are not cross-process locks.
+The Skill owns authority, verification, staging/message review, active-operation
+checks, reviewed HEAD/index rechecks and immutable result observations. Native Git
+does not supply the removed wrapper's guards or JSON receipt. An exit code alone
+is not exact delivery; snapshot drift, failed checks or uncertain effects stop
+without automatic retry, amend, reset or a repair commit. Sequential observations
+are not a cross-process lock, and no equal-reliability or cost claim is made.
 
-After execution, the candidate checks the immutable commit's tree, parents, complete stored message and exact paths against the captured boundary, and checks that final HEAD still identifies that commit. JSON retains before/after HEAD, stored message, committed paths and remaining worktree paths, with additive `stagedTree`, `committedTree`, `parents`, `attempt: not_attempted | succeeded | failed` and `creation: not_attempted | confirmed | unknown` observations. Git success confirms creation, not ownership of the observed HEAD by that attempt. Failures preserve any created commit; an unsuccessful result does not imply rollback, no effects or permission to retry.
-
-`rsp-commit` owns method selection and delivery judgment; CLI diagnostics do not supply them. Checked native Git is permitted only within that capability's unchanged authority, reviewed snapshot and evidence boundary. A real safety refusal, attempted commit or unknown effects stops delivery; a `not_attempted` label alone cannot authorize a switch. Missing Commit capability stops Core delivery without staging or a manual substitute. History repair remains separately authorized.
+Missing Commit capability still stops Core delivery without staging or a manual
+substitute. Local delivery grants no archive, history rewrite, push or publication.
 
 ## Inspection
 

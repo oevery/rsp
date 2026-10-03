@@ -2,7 +2,7 @@
 
 Load only after current coordination qualification when closeout eligibility begins, or for an explicitly authorized recovery checkpoint or push request. Core retains its incomplete-or-drifted fail-safe. Ordinary continuous execution does not activate this preset.
 
-Distinguish checkpoint from terminal delivery before deriving CloseoutEligibility. A checkpoint requires its exact authorized current slice and fresh applicable verification; it does not require completed Change acceptance or archive and never claims them.
+Distinguish checkpoint from terminal delivery before deriving CloseoutEligibility. A checkpoint requires its exact authorized current slice and applicable passing verification; it does not require completed Change acceptance or archive and never claims them.
 
 ## Establish terminal eligibility
 
@@ -23,7 +23,7 @@ Explicit current-turn authority may permit a local action outside the preset's a
 Complete granted terminal lifecycle closeout before the terminal delivery boundary. For a Change run rsp archive <change-work-ref> and inspect the complete lifecycle diff. For a shallow Group:
 
 1. Archive each child independently and inspect each complete lifecycle diff.
-2. Re-derive completion. Every declared Integration: condition needs fresh evidence; a request-only boundary must be written back to the Brief.
+2. Re-derive completion. Every declared Integration: condition needs applicable evidence for the integrated boundary, not just child passes; reuse it only while relevant inputs remain unchanged; a request-only boundary must be written back to the Brief.
 3. Run rsp group close <group> only after every child and Group gate passes, then inspect its diff.
 
 Explicit commit authority alone never grants archive. Direct delivery and checkpoints skip this branch. Command-owned lifecycle operations keep their RSP command; do not copy or delete archives to bypass a tool problem.
@@ -38,13 +38,13 @@ purpose: checkpoint | terminal
 work: WorkRef, Group, release, or direct summary
 refs: real WorkRefs when applicable
 paths: exact allowed paths
-verify: fresh decisive evidence pointer
+verify: applicable decisive evidence pointer and tested boundary
 auth: current local authority
 life: lifecycle evidence only when required
 ```
 
 - Terminal small owners default to no automatic commit. Qualified local terminal non-small Changes/Groups route once to default core rsp-commit after lifecycle closeout.
-- Integration needs at least two real WorkRefs, one evidenced shared boundary, exact paths, fresh verification and local authority; create no Group.
+- Integration needs at least two real WorkRefs, one evidenced shared boundary, exact paths, applicable verification and local authority; create no Group.
 - Ambiguous, mixed, stale or denied boundaries stop without staging. Unavailable Commit returns capability-unavailable; Core does not stage or commit.
 - Archive grants no Git/publication authority. If Commit fails after archive, report archived but undelivered; preserve lifecycle without automatic reopen or history rewrite.
 

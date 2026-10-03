@@ -4,7 +4,7 @@ description: Review a fixed change or explicit file set read-only against projec
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.02.7"
+  version: "2026.10.03.2"
 ---
 
 # RSP Review
@@ -41,7 +41,9 @@ When fixed reviewed artifacts include changelogs, release notes, migration guide
 
 Inspect in order: fixed status and diff, selected authority, then the smallest direct behavior chain and evidence needed for a concrete question. Apply the checks relevant to each selected perspective and match verification to the actual content and changed risk. A comment/implementation or example/contract discrepancy yields one finding with both sides of the evidence; do not presume either side correct. Stop when applicable judgments are supported; do not broaden scope or execute snippets without authority.
 
-Choose read/search tools within that scope. If inspection fails because of a tool-only fault, use another read-only method against the same comparison, authorities and evidence requirement; establish its actual scope and effects before continuing. A tool switch cannot replace a missing comparison or authority, waive a named required check, or supply required independent acceptance. Missing comparison or authority blocks dependent pipelines; other missing evidence follows the applicable pipeline's gate. Do not repair tools through project mutation or run unsafe probes.
+Reuse traceable test evidence whose tested scope and relevant code, dependencies, configuration, tools, inputs and environment remain applicable. Run authorized checks only to fill evidence gaps or cover invalidated results and changed risk, unless execution is explicitly required. Still perform the requested fixed-scope semantic review: passing tests or an implementer summary cannot supply that judgment or required independence. Report reused evidence separately from new observations.
+
+Choose read/search tools within that scope. If inspection fails because of a tool-only fault, use another read-only method against the same comparison, authorities and evidence requirement; establish its actual scope and effects before continuing. A tool switch cannot replace a missing comparison or authority, waive a named required check, or supply required independent acceptance. Missing comparison or authority blocks dependent pipelines; other missing evidence follows the applicable pipeline's gate. Identify affected judgments rather than treating a gap as an observed product defect or a whole-review blocker by default. Supported findings remain valid; an unestablished required judgment is not clean. Do not repair tools through project mutation or run unsafe probes.
 
 ## Report
 

@@ -8,7 +8,7 @@ export { matchesCommand } from '../observers/command-argv.mjs'
 export function validateCommitContract(spec) {
   const contract = spec.hard?.commit
   const safePath = path => typeof path === 'string' && path.length > 0 && !path.startsWith('/') && !path.split('/').some(part => ['', '.', '..', '.git', '.agents', '.codex', '.tooling'].includes(part))
-  if (!contract || contract.kind !== 'single-commit' || contract.command_evidence !== 'single-command-envelope'
+  if (!contract || !['single-commit', 'failed-attempt'].includes(contract.kind) || contract.command_evidence !== 'single-command-envelope'
     || Object.keys(contract).some(key => !['kind', 'files', 'message', 'verification_commands', 'commit_command', 'command_evidence'].includes(key))
     || !contract.files || typeof contract.files !== 'object' || Array.isArray(contract.files) || !Object.keys(contract.files).length
     || Object.entries(contract.files).some(([path, content]) => !safePath(path) || typeof content !== 'string' || !spec.hard.allowed_paths.includes(path))
@@ -36,6 +36,16 @@ export function gradeCommitOutcome(spec, observation, events) {
   const after = observation.git
   if (!before?.tree || !before.index || !before.headLog || !after?.tree || !after.index || !after.headLog || !after.parents || !after.committedContentHashes)
     return { status: 'failed', failures: [{ code: 'commit-evidence-missing' }] }
+  if (contract.kind === 'failed-attempt') {
+    if (observation.head !== observation.baselineHead || !isDeepStrictEqual(after.headLog, before.headLog))
+      fail('commit-history-mismatch')
+    if (!isDeepStrictEqual(after.index, before.index))
+      fail('failed-attempt-index-mutated')
+    if (!observation.baseline || !isDeepStrictEqual(observation.files, observation.baseline))
+      fail('unrelated-worktree-mutated')
+    failures.push(...gradeCommands(contract, observation, events, true))
+    return { status: failures.length ? 'failed' : 'passed', failures }
+  }
   const paths = Object.keys(contract.files).sort()
   const owned = new Set(paths)
   if (observation.head === observation.baselineHead || !isDeepStrictEqual(after.parents, [observation.baselineHead])
@@ -69,6 +79,13 @@ export function gradeCommitOutcome(spec, observation, events) {
   }
   if (after.message?.replace(/\n$/u, '') !== contract.message.replace(/\n$/u, ''))
     fail('commit-message-mismatch')
+  failures.push(...gradeCommands(contract, observation, events, false))
+  return { status: failures.length ? 'failed' : 'passed', failures }
+}
+
+function gradeCommands(contract, observation, events, failedAttempt) {
+  const failures = []
+  const fail = (code, path) => failures.push(path === undefined ? { code } : { code, path })
   // This case explicitly selects single-command evidence. A compound command
   // can be correct Skill behavior but cannot prove this fixture's per-command
   // exits. Do not project this restriction onto general Skill correctness.
@@ -76,14 +93,18 @@ export function gradeCommitOutcome(spec, observation, events) {
   const commitIndices = commands.flatMap((command, index) => matchesCommand(command.command, contract.commit_command, observation.workspaceRoot) ? [index] : [])
   const commitIndex = commitIndices[0]
   const succeeded = command => command?.exitCode === 0 && command.status === 'completed' && command.evidenceRedacted !== true
-  if (commitIndices.length !== 1 || !succeeded(commands[commitIndex]))
+  const attempted = commands[commitIndex]
+  const expectedExit = failedAttempt
+    ? ['completed', 'failed'].includes(attempted?.status) && Number.isInteger(attempted.exitCode) && attempted.exitCode !== 0 && attempted.evidenceRedacted !== true
+    : succeeded(attempted)
+  if (commitIndices.length !== 1 || !expectedExit)
     fail('commit-command-unverified')
   for (const command of contract.verification_commands) {
     const matches = commands.slice(0, commitIndex ?? 0).filter(item => matchesCommand(item.command, command, observation.workspaceRoot))
     if (!matches.length || !succeeded(matches.at(-1)))
       fail('commit-verification-missing-or-failed', command)
   }
-  return { status: failures.length ? 'failed' : 'passed', failures }
+  return failures
 }
 
 export async function check({ case: spec }) {

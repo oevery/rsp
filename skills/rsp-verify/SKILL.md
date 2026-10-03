@@ -4,7 +4,7 @@ description: Verify one selected RSP WorkOwner against its declared evidence bou
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.01.2"
+  version: "2026.10.03.2"
 ---
 
 # RSP Verify
@@ -30,7 +30,7 @@ Reuse a caller's result contract when supplied; otherwise the result below is su
 
 ## Collect the declared evidence
 
-Run the named checks and retain their commands, scope and observed results against the declared comparison baseline. Interpret the observations rather than treating a tool's exit or recommendation as acceptance. A failed required check remains failure evidence; an unavailable check remains a gap.
+First inspect existing evidence against the declared comparison baseline. Reuse traceable passing results when their tested scope and relevant content, dependencies, configuration, tools, inputs and environment remain applicable. Execute only missing, failed or invalidated named checks; a new verification phase alone is not a rerun requirement. Explicit requests to execute, observe the current environment or supply independent execution still require those observations. Match actual targets, inputs, coverage and completion to the declared checks; invocation errors or incomplete observations alone prove no product defect. Retain commands, tested scope, sources and results, distinguishing reuse from new execution. Interpret the observations rather than treating a tool's exit or recommendation as acceptance. A failed required check remains failure evidence; an unavailable check remains a gap.
 
 For a tool-only obstacle, diagnose read-only and inspect actual effects before continuing:
 
@@ -52,7 +52,7 @@ Include these independent fields and their evidence:
 - `evidence_delta: new | none`: whether the result changes the next diagnosis or correction.
 - `boundary: unchanged | changed`: whether observed owner, paths, baseline, behavior, interface, scope and authority still match the declared boundary.
 - WorkOwner and applicable Change WorkRef or Group `Integration:` condition; lane objective and effective authority.
-- Named checks, comparison baseline, observed diff, decisive evidence, omissions and stop boundary.
+- Named checks, comparison baseline, observed diff, decisive evidence with reused versus newly executed results, omissions and stop boundary.
 
 Preserve exact machine values. Human-facing narration follows a supplied response-language contract; otherwise use explicit user instruction, then personal instructions, then conversation language.
 

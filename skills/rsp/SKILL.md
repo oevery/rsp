@@ -4,12 +4,12 @@ description: Continue an authorized RSP request through implementation, checks a
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.02.6"
+  version: "2026.10.03.2"
 ---
 
 # RSP Skill
 
-Carry one authorized request through ownership, implementation and its checks, necessary writeback, and completion. Recheck on changed facts, recovery, independent acceptance, delivery or a real stop. Prefer this Skill; use the generated fallback only when it is unavailable.
+Carry one authorized request through ownership, implementation and its checks, necessary writeback, and completion. Reassess evidence applicability on changed facts, recovery, independent acceptance, delivery or a real stop; a responsibility change alone does not require rerunning checks. Prefer this Skill; use the generated fallback only when it is unavailable.
 
 Nearest project instructions and relevant `CONTEXT.md` remain authoritative. User-visible prose follows explicit response language, then personal instructions, then conversation language; existing artifacts retain their language, and new artifacts follow explicit artifact language, effective configuration, project instructions, then conversation language. Preserve canonical headings, paths, commands, identifiers, and machine values. Load [language details](references/response-language.md) only for a contested or complex language choice. WorkRefs do not change with locale; Shape owns inferred names.
 
@@ -38,15 +38,17 @@ For authorized repository-document, Skill or release writing, use `rsp-doc` and 
 
 For explicitly authorized release checks without a selected RSP WorkOwner, Core collects and interprets the project's declared checks at an exact candidate, with a range only when needed by those checks. Require the check contract, baseline and authority for actual effects; stop dependent checks when these are missing. Do not invent a Change or route an ownerless request to Verify. Preserve required independent acceptance; checks and Doc/Review results grant no Git delivery, publication or approval.
 
-Continue the authorized objective through edits, fresh Required checks and necessary writeback. Diagnose and correct same-scope failures internally; a failed check alone needs no Core return. Stop for a material owner decision, changed scope or authority, unavailable required capability, unsafe replay, or failure without a new discriminating step. Self-checks are not independent review.
+Continue the authorized objective through edits, applicable Required evidence and necessary writeback. Diagnose and correct same-scope failures internally; a failed check alone needs no Core return. Stop for a material owner decision, changed scope or authority, unavailable required capability, unsafe replay, or failure without a new discriminating step. Self-checks are not independent review.
 
-Return outcome, evidence, limits and next action naturally. Load [control outcome](references/control-outcome.md) only for a real consumer needing its technical rendering.
+Return outcome, evidence, limits and next action naturally. Distinguish observed actions and effects, checks, review and acceptance from inference or proposed work. A gap limits only affected claims; missing Required evidence still prevents completion. Describe read-only work by actual effects, including auxiliary writes, without inferring write authority from the label. Load [control outcome](references/control-outcome.md) only for a real consumer needing its technical rendering.
 
 ## Choose methods within the evidence boundary
 
 The owning capability chooses permitted tools and interprets their observations. A method change inside one owner needs no new phase or continuation request when the goal, scope, authoritative baseline, permissions and required evidence stay fixed. Named mandatory checks, immutable provenance, independent acceptance and command-owned RSP mutations cannot be replaced by an easier result.
 
 Diagnose a tool-only obstacle and inspect actual effects before recovery. Read-only or proven repeat-safe work may continue in scope; failed required evidence, unsafe facts, unknown mutation or a changed boundary need the missing condition or owner decision. Observe uncertain effects without replaying mutation. Commit retains its one-attempt delivery rule; do not apply a universal retry policy to every capability. Tool availability, recommendations and exit status grant neither authority nor completion.
+
+Reuse traceable passing evidence when its tested scope and relevant code, dependencies, configuration, tools, inputs and environment still apply. Direct new reading at a concrete decision gap and reuse applicable material already read. Summaries locate, not replace, decisive sources; refresh required current observations and invalidated inputs. Run only missing, failed or invalidated checks needed for the current risk and declared acceptance. Distinguish reused results from newly executed checks; retain command, result, tested boundary and source in existing reports or Change Verify, without a new evidence registry. Elapsed time or a phase transition alone is not invalidation. Explicit rerun requirements, independent acceptance and current lifecycle/Git observations remain required.
 
 ## Conditional coordination
 
@@ -73,7 +75,7 @@ Before focusing or mutating a different WorkOwner or child WorkRef, compare dirt
 
 Read the selected Change or Group, its sibling Brief when grouped, and only relevant Specs and Decisions. For direct tree navigation or bounded literal discovery use `rsp specs`, then reread the authoritative source before material decisions or mutation. Generated indexes are migration inputs, not authority. User intent or an explicit WorkOwner selects from the open-work focus candidates.
 
-Run the selected check before treating the owner as ready. Preserve Proposal, Spec, Design, Tasks, Verify and Blockers. For tracked work needing checkpoint or recovery notes, maintain its permitted Focus snapshot through [focus and continuation recovery](references/focus-continuation.md); also load it when a capsule is inspected or a continuation resumes.
+Establish applicable passing evidence for the selected checks before treating the owner as ready. Preserve Proposal, Spec, Design, Tasks, Verify and Blockers. For tracked work needing checkpoint or recovery notes, maintain its permitted Focus snapshot through [focus and continuation recovery](references/focus-continuation.md); also load it when a capsule is inspected or a continuation resumes.
 
 Keep ongoing recovery notes in Focus, converged results in Change, and justified stable knowledge in its document owner. Focus is a replaceable snapshot, not a log or authority; detailed evidence stays with its report or host owner. Persist only `open` and `archived`; focus, readiness, routing, and capability availability grant no implementation, review, Git, publication, or approval authority.
 

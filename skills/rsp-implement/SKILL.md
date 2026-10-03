@@ -1,15 +1,15 @@
 ---
 name: rsp-implement
-description: Diagnose an unexplained symptom read-only, or implement an authorized bounded direct task or ready RSP Change, including risk-selected test-first work and bounded fixed-report finding disposition. Preserve ownership and fresh verification without inferring mutation from diagnosis.
+description: Diagnose an unexplained symptom read-only, or implement an authorized bounded direct task or ready RSP Change, including risk-selected test-first work and bounded fixed-report finding disposition. Preserve ownership and applicable verification without inferring mutation from diagnosis.
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.01.4"
+  version: "2026.10.03.2"
 ---
 
 # RSP Implement
 
-Carry one bounded authorized task through implementation, fresh own checks and necessary tracked Change evidence. Choose the mode before loading its method; a method change within the same authority needs no artificial handoff. No mode grants Git, review, lifecycle, external action, or approval authority.
+Carry one bounded authorized task through implementation, minimum sufficient own verification and necessary tracked Change evidence. Choose the mode before loading its method; a method change within the same authority needs no artificial handoff. No mode grants Git, review, lifecycle, external action, or approval authority.
 
 Use explicit response language, then personal instruction, then conversation language for narration. Preserve the language of existing artifacts and exact identifiers, commands and machine values. For a new artifact use explicit artifact instruction, then effective configured artifact language, then scoped project instruction, then conversation language. In RSP projects, when precedence needs configuration, use the same selected CLI's successful `rsp config --json` summary (optional `--compact`); it resolves defaults and inheritance. Refresh on relevant drift or recovery. Raw YAML is diagnostic only, not a substitute; failed or unavailable projection leaves the dependent choice unresolved without blocking independently authorized work needing no unknown setting. Resolve a material conflict with the owner; this rule works without Core installed.
 
@@ -37,7 +37,7 @@ These are conditional methods, not separate controllers.
 
 Identify outcome, owner, verification, and pre-existing work. For tracked work, update only authorized Change sections; a direct task creates no Change, WorkRef, or RSP lifecycle state. Preserve unrelated modified, staged, and untracked work. Stop when overlap would discard, guess, or rewrite pre-existing intent.
 
-Git delivery, publication, deployment, approval, and out-of-scope deletion require separate explicit authority. For conflicts, inspect base/ours/theirs, preserve unrelated work, resolve only evidenced scope, rerun checks, and stop before staging, continuing, aborting, or committing. Verify named findings first.
+Git delivery, publication, deployment, approval, and out-of-scope deletion require separate explicit authority. For conflicts, inspect base/ours/theirs, preserve unrelated work, resolve only evidenced scope, rerun affected checks, and stop before staging, continuing, aborting, or committing. Verify named findings first.
 
 ## Admit boundaries and permanent tests
 
@@ -61,22 +61,23 @@ Implement the smallest complete slice. For tracked work update Tasks after outco
 
 Repository-document and Skill writing use `rsp-doc` within the same authority; small inline corrections need no handoff. If unavailable, write concise, grounded guidance for the reader's task and check affected examples and links. Review remains read-only; author self-checks never certify independent review.
 
-After final mutation, run tracked Required checks or direct-task acceptance checks, plus narrower risk checks:
+After final mutation, establish minimum sufficient evidence for tracked Required checks or direct-task acceptance:
 
-- Run each named mandatory check exactly as required; alternatives add evidence, not substitution.
+- Reuse traceable passing results when the tested boundary and relevant code, dependencies, configuration, tools, inputs and environment still apply. Phase changes and unrelated edits do not invalidate evidence.
+- Run only missing, failed or invalidated checks and additional checks justified by changed risk. Named mandatory checks retain their method and coverage; an explicit rerun requirement still requires execution.
 - For an unfixed method, choose the cheapest decisive existing test, static check, build or acceptance evidence; a new test is not required.
-- Record command, scope, result and omissions. Rerun after relevant edits; stale, failed or unavailable evidence cannot establish completion.
+- Match the actual target, inputs, coverage and completion to the declared check. Invocation errors or incomplete observations do not by themselves prove a product defect. Record command, tested scope, result, source and omissions, distinguishing reused evidence from new execution. Failed, unavailable or untraceable evidence cannot establish completion.
 
-Before completion, recheck new or extended tests against the admission criteria above and retain only distinct future confidence at proportionate cost. Otherwise remove the disposable test, fixture and helper, then obtain fresh sufficient evidence. User, Change and project retention requirements remain authoritative.
+Before completion, recheck new or extended tests against the admission criteria above and retain only distinct future confidence at proportionate cost. Otherwise remove the disposable test, fixture and helper, then establish sufficient evidence for the final retained state. User, Change and project retention requirements remain authoritative.
 
 Before returning, reread changed comments, test names, documentation and handoff prose against the accepted result and each surface's authoritative baseline. Report the selected Change or direct task, actual paths, final verification, material omissions or risks, executed external actions and attributed pre-existing user work. Exclude rejected session-only alternatives and temporary attempts, including unrequested `did not add` or `did not use` claims. Retain negative facts needed to explain real removals, safety or compatibility boundaries, migration, audit results, failed external actions, unresolved risks or requested comparisons. Wording cleanup never changes executable behavior, public contracts, tests, snapshots or diagnostics.
 
-Record concise fresh evidence when a tracked Change Verify owns it. Direct work reports evidence in the response only.
+Record concise applicable evidence when a tracked Change Verify owns it. Direct work reports evidence in the response only.
 
 ## Return ownership
 
 Report whether the selected Change or direct task is completed, partial, blocked before implementation, verification-failed, verification-unavailable, or verification-blocked. Use failed for an exercised defect; use unavailable when a missing tool, dependency, service, credential, or environment prevents execution. Use blocked only when scoped checks pass but a required gate fails solely from a confirmed pre-existing or out-of-scope baseline defect; never waive affected gates.
 
-When work remains, report owner (WorkRef for tracked work, direct request otherwise), authority, changed artifacts, fresh checks, blockers and next action as needed for safe continuation. A non-trivial handoff may use Core's fuller continuation; ordinary same-owner corrections need no template or new request. The response is not durable truth.
+When work remains, report owner (WorkRef for tracked work, direct request otherwise), authority, changed artifacts, reused and new checks, blockers and next action as needed for safe continuation. A non-trivial handoff may use Core's fuller continuation; ordinary same-owner corrections need no template or new request. The response is not durable truth.
 
 Claim completion only when tracked required Tasks (if any) and applicable checks pass and no blocker remains. Do not claim review, archive, Git delivery, or release unless separately performed with explicit authority.

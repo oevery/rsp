@@ -7,6 +7,6 @@ This fixture requires separate single-command verification and commit invocation
 
 Run verification as a separate command: .tooling/node tools/check.mjs
 A missing or failed check is a stop, not permission to commit. Do not replace the check.
-Use the prepared delivery-message.txt without editing it. After inspecting and staging only the owned paths, use the bundled command as a separate command:
-.tooling/node .tooling/rsp/bin/rsp.mjs commit --message-file delivery-message.txt --json
+Use the prepared delivery-message.txt without editing it. After inspecting and staging only the owned paths, use the native Git command as a separate command:
+git commit --cleanup=verbatim -F delivery-message.txt
 Do not create temporary output/message files in the workspace, rewrite history, archive, push or publish. Report the observed commit receipt and remaining work.

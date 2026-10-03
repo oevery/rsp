@@ -6,7 +6,7 @@ Load this reference only after required Tasks and implementation verification pa
 
 The durable writeback decision is required before archive. Decide current-fact and Decision Record updates independently. Keep these evidence owners separate:
 
-- Implementation verification supplies fresh evidence after mutation.
+- Implementation verification supplies applicable evidence for the final content, reusing unchanged coverage and rerunning affected checks after mutation.
 - Review owns fixed-scope, report-only comparison. Use it when explicitly requested, required by nearer authority or risk, or needed for managed `review-clean`; tiny direct actions do not automatically need it.
 - Durable writeback decides what belongs in current facts or lasting rationale. It never substitutes for implementation checks or a required Review.
 
@@ -28,7 +28,7 @@ This exception never converts a failed declared implementation or independent ve
 2. **Distill Focus as needed.** Revalidate available notes and integrate only useful verified facts missing from Change; no Focus or no useful addition means no edit. Do not transfer recovery instructions, pending permission, session counts or attempt order. A missing note never replaces required evidence.
 3. **Write back knowledge as needed.** Using the verified result and Change delta, decide current facts and lasting rationale independently using the methods below. Update existing owners only when justified. No stable change means no edit; a delivered contract that leaves its authoritative Spec stale requires correction before closeout. Do not copy the whole Change or its verification history into knowledge documents.
 4. **Converge the whole Change.** After necessary writeback, read Proposal, Spec, Design, Tasks, Verify and Blockers as one final document, not just the latest Verify addition. Reconcile stale plans and superseded scope, remove process narration and duplicated handoff/readiness summaries, and retain the delivered contract delta, relevant design, completed work, decisive evidence and unresolved limits. Reflect actual knowledge updates with concise references, not duplicated current specifications. Preserve material failure dispositions and version-bound evidence references without replaying run history. Keep product boundaries distinct from transient operation permissions. Group integration conclusions belong in the Brief.
-5. **Check final consistency, then archive when authorized.** Check the final Change and knowledge owners against the verified result. Earlier review of another revision or a passing readiness command does not establish this text's quality. Complete applicable checks and separately required Review before the archive gate below. Fix prose defects in scope; return material contract or implementation contradictions to the appropriate decision, implementation or verification owner rather than editing away the failure. An unresolved Required failure still blocks closeout.
+5. **Check final consistency, then archive when authorized.** Check the final Change and knowledge owners against the verified result. Earlier review of another revision or a passing readiness command does not establish this text's quality. Reuse still-applicable implementation/test evidence; check new knowledge/document changes and fill only missing or invalidated coverage. Document-only writeback or archive preparation does not itself invalidate code checks. Complete separately required Review before the archive gate below. Fix prose defects in scope; return material contract or implementation contradictions to the appropriate decision, implementation or verification owner rather than editing away the failure. An unresolved Required failure still blocks closeout.
 
 These are dependency constraints, not persisted phases or mandatory separate tool calls. Needs-based writeback may produce no edit when unnecessary; it never waives a required update. Final whole-Change convergence always applies and may confirm already-converged text without rewriting it. Original records and verdicts remain with their evidence owner. Author checks never establish independent review.
 
@@ -77,7 +77,7 @@ Never use generated indexes, archives, `.rsp/rsp-rules.md`, or the managed RSP b
 
 ## Prepare the Change for archive
 
-Before archive, require converged final Change evidence, completed or unnecessary knowledge writeback, fresh applicable verification/readiness and every separately required Review clean. Then authorized archive preserves Change and clears its Focus marker; never clear the Capsule as a substitute for writeback. Archive is separate from local commit authority.
+Before archive, require converged final Change evidence, completed or unnecessary knowledge writeback, applicable passing verification and current readiness and every separately required Review clean. Then authorized archive preserves Change and clears its Focus marker; never clear the Capsule as a substitute for writeback. Archive is separate from local commit authority.
 
 Ordinary work needs later explicit Git authority for one independently reviewable logical commit. Declined, unavailable or unselected coordination leaves Core advisory: configuration executes neither archive nor commit.
 

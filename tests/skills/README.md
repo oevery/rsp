@@ -29,13 +29,32 @@ Select additional cases by the changed risk using the existing `--case` option:
 
 | Changed boundary | Suggested case selection |
 | --- | --- |
-| Exact Git delivery or method equivalence | commit-native-equivalence,commit-snapshot-refusal,commit-missing-verification,commit-unsafe-staged |
+| Native Git delivery and safety stops | commit-native-equivalence,commit-snapshot-refusal,commit-stale-tree,commit-missing-verification,commit-unsafe-staged,commit-hook-failure,commit-hook-message-mismatch |
 | Required evidence or investigation-only authority | method-required-check-unavailable,finding-investigation-only |
 | Final archive convergence or failed-check restraint | archive-final-convergence,archive-required-failure |
+| Verification reuse, excluded staged inputs and explicit execution | commit-reuse-verification,commit-excluded-input-evidence,archive-reuse-verification,verify-checkout-boundary |
 | Effective RSP configuration | config-inherited-artifact-language,config-rejected-closeout-policy |
 | Recovery or unavailable independent verification | real-multimodule-recovery,native-resume-staged,native-verification-unavailable |
 
 Use `plan --suite workflows` or `plan --case <selected-ids>` to inspect inputs and the root-session budget before separately authorized execution. No fixed case count is a quality gate. A case's existence does not make it required for every Change; readiness does not validate its eventual live composition. Keep published Skills standalone: the explicit Implement case must not be replaced solely by a Core workflow. Case retirement changes current selection, not retained historical verdicts; reassessment can still read the old recorded task with a missing-current-case warning.
+
+### Commit outcome fixtures
+
+Reuse cases seed prior passing observations as scenario inputs, not as evidence
+that the current candidate ran successfully. Independent judging checks whether
+the agent establishes applicability, avoids duplicate checks, detects excluded
+inputs and still inspects current Git/readiness facts. The existing explicit
+Verify execution case retains its real-command requirement. Offline readiness
+does not establish any of these agent behaviors.
+
+The retained `commit-native-equivalence` case ID now exercises ordinary native
+delivery with a multiline message and literal escape notation, not a comparison
+with a removed CLI wrapper. Hook cases permit the declared check to install a
+fixture hook. `hard.commit.kind: failed-attempt` requires one observed nonzero
+attempt after successful verification and unchanged HEAD, reflog, index and
+worktree; it is not a general commit waiver. Message-mismatch coverage expects
+the hook-created object mechanically and relies on independent judging to require
+truthful mismatch reporting and no repair.
 
 ### Archive boundary
 

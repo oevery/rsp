@@ -21,7 +21,7 @@ Define RSP system layering, artifact ownership, dependency direction, and bounda
 - [Core](./core-model.md) owns WorkRef, Change, Group, FocusSet, lifecycle, dependencies, verification, archive, and durable writeback.
 - [Skill](./skill.md) owns capability ownership, composition, routing, delegation, and control boundaries.
 - [Design](./design.md) owns system layering, artifact ownership, and Host/Git/RSP boundaries.
-- [CLI Contracts](./cli-contracts.md) owns deterministic commands, inspection, JSON, history, Specs queries, repair, and local commit boundaries.
+- [CLI Contracts](./cli-contracts.md) owns deterministic commands, inspection, JSON, history, Specs queries, repair, and the Git execution boundary.
 - [TUI](./tui.md) owns interactive scopes, presentation, localization, and terminal lifecycle.
 - [Distribution](./distribution.md) owns package, installation, release, provenance, and the product/research boundary.
 
