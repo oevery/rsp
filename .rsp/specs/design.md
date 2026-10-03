@@ -1,50 +1,89 @@
-# Design
+# Architecture
 
 ## Purpose
 
-Define RSP system layering, artifact ownership, dependency direction, and boundaries with the Host Project and Git.
+Define RSP's architecture, authoritative document owners and boundaries with the
+Host Project, tools and Git.
 
 ## Current facts
 
-- RSP is a repository-native workflow for humans and AI agents. It guides work through durable files, Skills, deterministic CLI operations, verification, review, archive, and delivery.
-- The formal Spec model has six modules: `core`, `skill`, `design`, `cli`, `tui`, and `distribution`. Each module has one authoritative Markdown file.
-- Product runtime lives under `src/` and `bin/`. Published distribution sources live under `rules/` and `skills/`. Maintainer tooling lives under `scripts/`. Research lives under `research/`. Self-hosting workflow state lives under `.rsp/`.
-- Product runtime owns command behavior, artifact interpretation, status, history, Specs inspection, and TUI presentation. It consumes current product artifacts and host evidence.
-- Published Rules and Skills work without a source checkout, research corpus, or upstream cache.
-- Maintainer tooling may inspect product artifacts and research evidence. Product changes enter through a selected normal RSP Change.
-- Root maintainer scripts own executable diagnostics and preparation; code tests verify their results, while maintainer Skills own invocation and interpretation. Context counts, static reachability and repeated prose are diagnostic leads, not quality or behavioral-acceptance gates. Package/resource and security validation retain their existing owners.
-- The Host Project owns code, tests, project instructions, module context, Git, execution environments, and external delivery systems. RSP may read these boundaries but does not replace them.
-- Git owns staging, commit history, branches, remotes, tags, publication, and cross-branch integration. RSP can provide exact reviewed inputs without becoming Git authority.
+RSP is **Reliable Software Practice**, a repository-native engineering workflow
+for humans and AI agents. Practice is the product promise, composable Skills
+supply the workflow, and Rules, Specs, Plans supply the lightweight file protocol.
+The [identity decision](decisions/reliable-software-practice-identity.md) owns
+that naming rationale.
+
+RSP uses the smallest repository model that preserves explicit ownership,
+recoverable work and evidence-based completion. It is not a project-management
+platform, extensible workflow engine or replacement for Git. Cross-project
+consistency takes precedence over speculative customization.
 
 ## Modules
 
-- [Core](./core-model.md) owns WorkRef, Change, Group, FocusSet, lifecycle, dependencies, verification, archive, and durable writeback.
-- [Skill](./skill.md) owns capability ownership, composition, routing, delegation, and control boundaries.
-- [Design](./design.md) owns system layering, artifact ownership, and Host/Git/RSP boundaries.
-- [CLI Contracts](./cli-contracts.md) owns deterministic commands, inspection, JSON, history, Specs queries, repair, and the Git execution boundary.
-- [TUI](./tui.md) owns interactive scopes, presentation, localization, and terminal lifecycle.
-- [Distribution](./distribution.md) owns package, installation, release, provenance, and the product/research boundary.
+Each current contract has one owner. Adjacent documents may summarize and link
+it, but do not maintain another full definition.
+
+| Contract | Authoritative owner |
+| --- | --- |
+| Work identity, artifacts, lifecycle, dependencies and closeout | [Work model](work-model.md) |
+| Core routing, capability collaboration and task evidence | [Workflow](workflow.md) |
+| Architecture, authority relationships and Host/Git boundaries | This Spec |
+| Deterministic commands, configuration and public projections | [CLI](cli.md) |
+| Interactive presentation and terminal lifecycle | [TUI](tui.md) |
+| Packaging, installation and release boundaries | [Distribution](distribution.md) |
+| Cross-cutting writing and content-review requirements | [Writing quality](writing-quality.md) |
+
+Nearest project instructions own scoped operating rules and constrain the
+current request. Specs own stable product contracts; Skills supply executable
+methods with the necessary local safeguards. CONTEXT owns vocabulary,
+relationships and navigation. Decision Records own lasting rationale, and
+research and archives remain evidence rather than current authority. The
+[Work model artifact contract](work-model.md#boundaries) defines their placement.
+
+Specs are authoritative for adopted contracts. Code, tests and execution
+observations provide evidence of implemented behavior, not authority to change
+those contracts. A disagreement requires determining whether implementation is
+defective, the contract needs an authorized update, or a change lacks authority;
+neither the Spec nor observed behavior is silently treated as infallible.
 
 ## Dependency direction
 
 - Configuration and filesystem safety support artifact interpretation and commands.
-- Core domain interpretation supports status, history, Specs inspection, and command operations.
-- Presentation layers consume presentation-neutral projections. Domain and command layers do not depend on TUI presenters.
-- Research and maintainer tooling may depend on product artifacts for evidence, never the reverse.
-- Self-hosting `.rsp/` artifacts guide repository maintenance and are not consumer runtime configuration.
+- Core domain interpretation supports work, status, history and Spec queries.
+- CLI and TUI consume presentation-neutral domain projections; domains do not
+  depend on presenters.
+- Maintainer tools and research may inspect product artifacts; the distributed
+  product never depends on a source checkout, research corpus or upstream cache.
+- Self-hosting applies the same artifact contracts to RSP's own maintenance;
+  repository-specific methods do not become consumer runtime requirements.
 
 ## Agent and tool boundary
 
-Owning Skills retain semantic judgment and workflow responsibility. CLI and scripts supply deterministic operations, diagnostics and observations. Availability, version, exit status, warnings and recommendations grant neither authority nor semantic acceptance.
+The owning capability interprets evidence and retains its workflow responsibility.
+CLI commands and scripts supply deterministic operations and observations, not
+semantic acceptance, authority or human approval. Focus and archive mutations
+use their owning commands; changing tools cannot bypass managed-path safety or
+create a second workflow controller.
 
-An owning Skill may change a permitted method while the goal, scope, authoritative baseline, permissions and required evidence remain fixed. A nearer named mandatory command, immutable provenance operation or required independent capability remains obligatory. Equivalent execution cannot substitute an easier acceptance condition. Published Skills retain the minimum local guidance needed to apply this boundary without a runtime dependency on this Spec.
+A permitted method change preserves goal, scope, authority, baseline and required
+evidence. Named mandatory checks, immutable provenance and required independence
+remain binding. Diagnose tool-only obstacles and observe actual effects before
+continuing read-only or proven repeat-safe work. Missing decisive evidence,
+unsafe facts, unknown mutation or a changed boundary requires a stop or owner
+decision; uncertain effects permit observation, not blind replay. Commit retains
+its one-attempt boundary under the [Workflow contract](workflow.md#capability-ownership).
 
-Recovery follows actual effects and the operation's repeat safety. Diagnose a tool-only obstacle and inspect state before continuing read-only or proven repeat-safe work. Unsafe facts, missing decisive evidence, unknown mutation or a changed authority/evidence boundary require the corresponding stop or owner decision. Unknown effects permit safe observation, not blind mutation replay; one-shot Commit delivery retains its stricter attempt boundary.
-
-Protected RSP artifact mutations use their owning commands and safety checks. Method flexibility does not authorize manual archive/focus repair, waive managed-path validation, or create a second workflow controller.
+The Host owns execution locations, workers, isolation, cancellation and resource
+lifecycle. Git owns staging, history, branches, remotes, signing and integration.
+RSP may prepare exact reviewed inputs but does not infer delivery authority.
 
 ## Constraints
 
-- Prefer the smallest owner and the smallest stable artifact surface.
-- Keep current truth, planned work, rationale, research evidence, and transient execution state separate.
-- Do not introduce a hidden workflow engine, durable controller, runtime protocol, or second authority store.
+- Keep current contracts, planned work, rationale and execution evidence in their
+  own artifacts; resolve a Spec/implementation disagreement instead of promoting
+  observed code automatically.
+- Add a module, persistent artifact or extension only for a demonstrated consumer
+  and material responsibility, not speculative capability.
+- Introduce no hidden runtime, persisted controller or second authority store.
+- Published Skills remain usable without repository Specs or another installed
+  package; source-level ownership does not create a runtime reference dependency.

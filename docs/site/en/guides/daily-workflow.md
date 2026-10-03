@@ -64,6 +64,13 @@ When Tasks and required checks pass with no blocker, decide independently whethe
 - update an existing Spec or scoped instruction, or create a new durable Spec;
 - create or update a Decision Record for lasting rationale.
 
+Verify outcome facts, distill useful Focus results, and write needed stable knowledge
+to its owner. After those updates, converge the entire Change: retain the delivered
+delta, material failures, limits and evidence pointers; remove stale plans, duplicate
+Specs and session chronology. Check the final Change and updated knowledge owners,
+complete any required Review, then obtain current readiness. No useful knowledge
+update means no writeback edit, not permission to skip final Change convergence.
+
 For a tracked Change with separate lifecycle authority, check readiness and archive through the owning CLI when permitted. Ordinary untracked work has no archive step; method choice does not authorize manual focus or archive-file mutations:
 
 ```bash

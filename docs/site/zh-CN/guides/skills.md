@@ -20,13 +20,15 @@
 
 对此尚未发布的源码候选，将 `rsp-design` 交给 `rsp-shape`；将 `rsp-diagnose`、`rsp-tdd`、`rsp-resolve-findings` 作为 `rsp-implement` 的按需方法；将 `rsp-manage` 作为 `rsp` 内部的按需协调。更早的 `rsp-address-review` 别名也归 `rsp-implement`。这是职责映射，不是永久兼容 Skill，更不是要求删除项目自有说明。
 
-移除 `rsp-release-docs`：写作归 Doc，固定范围只读检查归 Review。直接安装 Doc 或安装默认套件时，会在替换前检查旧的已安装目录；安装其他单个 Skill 不移除它。显式旧名称调用应改用对应 owner。先备份定制发布说明，再进行已授权的强制迁移。
+移除 `rsp-release-docs`：写作归 Doc，固定范围只读检查归 Review。直接安装 Doc 或安装默认套件时，会在替换前检查旧的已安装目录；安装其他单个 Skill 不移除它。显式旧名称调用应改用对应 owner。进行已授权的强制迁移前，确认需要保留的定制发布说明可恢复。
 
 待精确候选 CLI 可用后，全程使用同一个已选候选 CLI；`@latest` 不代表此未发布候选。获得安装权限后：
 
 1. 查看 `rsp skills list`，并用 `rsp skills install --dry-run` 预检。已选树内容不一致或存在已识别的过时包自有名称时，普通 dry-run 会停止，不展示完整替换／移除预览。
-2. 先检查并备份用户定制内容，再用 `rsp skills install --dry-run --force` 查看精确替换／移除范围。未知 Skill 保持不动。
-3. 确认范围后，才用同一个 CLI 运行 `rsp skills install --force`，并检查安装后的实际状态。
+2. 检查指定的定制目录，并用 `rsp skills install --dry-run --force` 查看精确替换／移除范围。未知 Skill 保持不动。
+3. 确认范围及需要保留的定制内容可恢复后，用同一个 CLI 运行 `rsp skills install --force`，并检查安装后的实际状态。
+
+已有包含所需定制内容的 Git 提交即可，不必再备份。未提交或未跟踪的内容，仅在需要保留时另行保存。安装器的临时备份用于回滚，不是长期留存。
 
 激活失败会触发已识别替换／移除的回滚。回滚可能不完整，此时命令会报告保留的恢复位置；先检查实际安装树与备份，再决定是否重试或清理。这不意味着静默更新安全。`rsp update` 不刷新 Skills。这里不声称候选已有版本、发布、外部安装或行为验收。
 
@@ -68,7 +70,7 @@ Core 从意图、权限、现有归属和 checkout 证据选择分支，然后�
 
 三个容易混淆的门槛彼此独立：
 
-- 实现验证（implementation verification）在每次修改后提供最新证据。
+- 实现验证（implementation verification）为当前结果提供适用证据；复用仍适用的通过结果，只运行缺失、失败或已失效的检查。显式重跑要求与必需独立执行仍然有效。
 - 固定范围变更审查（fixed-scope change review）是 Review 拥有的只读比较；仅在用户显式请求、项目权限或风险要求，或受管流程需要推导 `review-clean` 时才是必需项，不会自动施加给每个 tiny direct 操作。
 - 持久化写回判断（durable writeback decision）在归档前必做，并独立判断是否要把稳定现状或长期理由更新到 Spec、范围明确的指令或 Decision Record；它不能替代固定范围变更审查。
 
@@ -111,6 +113,6 @@ manage:
 
 ## 工作记录与知识回流
 
-有连续恢复需求的 tracked 工作，由 Core 在允许的范围内于检查点、暂停或交接时维护 Focus Capsule，无需因此进入协调分支。替换进展、证据指针和下一步，不追加日志。收尾先重新核验证据并提炼最终结论到 Change，再按需回流稳定知识；最新检查、必需评审与 readiness 满足后，才执行授权归档并清理 Focus。跨设备恢复仍需授权的 Git 传输和重新派生。
+有连续恢复需求的 tracked 工作，由 Core 在允许的范围内于检查点、暂停或交接时维护 Focus Capsule，无需因此进入协调分支。替换进展、证据指针和下一步，不追加日志。按[持久化判断与归档](./daily-workflow.md#持久化判断与归档)核实事实、按需写回知识、收敛整个 Change 并检查最终一致性，再执行授权归档与 Focus 清理。适用验证可复用，所需 Review 与当前 readiness 仍须满足。跨设备恢复仍需授权的 Git 传输和重新派生。
 
 精确键见[配置](../reference/configuration.md)，普通操作见[日常工作流](./daily-workflow.md)。

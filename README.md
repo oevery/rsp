@@ -69,7 +69,8 @@ A Change is one Markdown file with canonical Proposal, Spec, Design, Tasks, Veri
 - [3.0 migration guide](./docs/migrations/3.0.md) and [3.1 migration guide](./docs/migrations/3.1.md)
 - [Release notes](./docs/releases/3.3.0.md)
 - [Maintainer tests and Skill validation](./tests/README.md)
-- [Design philosophy](./docs/maintainers/design-philosophy.md) and [maintainer upstream research](./docs/maintainers/upstreams.md)
+- [Repository context and contract navigation](./CONTEXT.md)
+- [Authoritative architecture and Specs](./.rsp/specs/design.md) and [maintainer research](./research/README.md)
 
 Run the documentation locally:
 

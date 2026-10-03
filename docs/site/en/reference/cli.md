@@ -15,7 +15,7 @@ rsp skills install [name] [--dry-run] [--force]
                                 Install the default suite or one exact Skill
 ```
 
-`rsp update` does not refresh installed package-owned Skills. `rsp skills list` inspects the package and exact target state; `rsp skills install --dry-run` previews before mutation. Differing selected Skill trees or recognized obsolete package-owned identities require explicit `--force`. Inspect and preserve customized trees before force; unknown Skills are not migration targets.
+`rsp update` does not refresh installed package-owned Skills. `rsp skills list` inspects the package and exact target state; `rsp skills install --dry-run` previews before mutation. Differing selected Skill trees or recognized obsolete package-owned identities require explicit `--force`. Inspect customized trees before force and confirm that any content you need to retain is recoverable; a Git commit containing that content suffices without another backup. Unknown Skills are not migration targets.
 
 Activation failure triggers rollback of recognized replacements/removals. Incomplete rollback retains and reports a recovery location; inspect actual installed trees and backups before retrying or cleanup. Silent upgrade safety is not guaranteed. For the unreleased source candidate's old-name routing, see [Skills and managed work](../guides/skills.md); `@latest` still invokes the published package, not this candidate.
 

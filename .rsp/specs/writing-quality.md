@@ -2,54 +2,123 @@
 
 ## Purpose and ownership
 
-Repository guidance, including documents, Skills, API comments and examples, must help its intended reader act, understand or check a contract without the author conversation. rsp-doc owns authorized writing and self-checks; implementation ownership remains with Implement, and rsp-review owns fixed-scope read-only judgment. Their packages carry standalone guidance, not a runtime dependency on this Spec.
+Repository guidance must help its reader understand, act or judge a contract
+without the author conversation. This Spec owns shared writing and content-review
+requirements. [Workflow](workflow.md#capability-ownership) owns capability roles; Doc
+and Review carry standalone guidance rather than a runtime dependency on this file.
 
 ## Facts and language
 
-- Claims, examples, defaults, limits and failure outcomes agree with their authority. Current behavior, intended requirements and unknowns remain distinguishable.
-- Revisions preserve conditions, quantifiers, defaults, failures, permissions, consistent terms and author voice. Qualifiers such as only, default, optional and asynchronous carry meaning; fluency does not excuse a changed promise or invented experience.
-- Existing artifacts retain language unless a change is requested. New artifacts use explicit artifact language, effective configuration, scoped instructions, then conversation language. Response language is resolved independently.
-- Each contract has one authoritative owner. Useful summaries, local safety conditions and minimum context remain available where needed; links identify when to read the owner and what it supplies. Necessary self-contained guidance is not replaced by a chain of references.
-- Executable guidance distinguishes capability responsibility, permitted methods and mandatory evidence under the [Design boundary](design.md#agent-and-tool-boundary). A preferred tool is not made obligatory by its example, and a required command or safety condition is not made optional by clearer prose.
+- Ground claims, examples, defaults, limits and failures in their authoritative
+  owner. Distinguish current behavior, intended requirements and unknowns.
+- Preserve conditions, quantifiers, permissions, terminology and author voice.
+  Clearer prose must not change a promise or invent human experience.
+- Existing artifacts retain language unless translation is requested. New artifacts
+  follow explicit instruction, effective artifact configuration, scoped instructions,
+  then conversation language. Resolve response and commit language separately.
+- Define each contract once. Keep useful navigation summaries, local safety conditions
+  and minimum context where needed; references state when and why to read the owner.
+  Necessary standalone guidance is not replaced by a chain of links.
+- A tool example is not a mandatory method. A named required check or safety condition
+  does not become optional through wording cleanup; see the
+  [Architecture boundary](design.md#agent-and-tool-boundary).
 
 ## Information and expression
 
-- Each paragraph or item has one useful purpose. Remove empty introductions, repetitive conclusions, non-informative modifiers and session-attempt narration. Preserve navigation summaries and evidence required by an audit or run-record purpose.
-- Result-oriented steps include the necessary action, prerequisites and success signal, not just a result label. Conditions precede use; rules stay with actions and exceptions with their conditions. Prescribe order only when correctness, safety or the contract requires it; leave other method choices to the responsible reader or Agent.
-- Ordered lists express necessary sequence or precedence; bullets express parallel peers. Causal explanation uses short connected paragraphs when it aids action or judgment. No fixed count or template is required.
-- Definitions, rules and caveats for one concept stay together. Common instructions remain visible; substantial branch-only detail is linked with its reading condition.
-- State correct behavior directly. Use examples or positive/negative comparisons only to clarify a real misconception or boundary; do not force paired sentences, slogans or universal examples.
-- Concision removes repetition and unnecessary explanation without merging owners, failure states or permission boundaries. General teaching needs a reader-task reason to remain; model-default no-op claims require behavior evidence for the relevant tasks and model. Neither a newer model nor a shorter document proves equivalence. No hard word or reference-count limit replaces this semantic check.
+Give each paragraph or item one useful purpose. Remove empty introductions,
+repetitive conclusions, non-informative modifiers and session-attempt narration,
+while preserving evidence required by an audit or run-record purpose.
+
+Put prerequisites before use, conditions beside actions and exceptions beside
+conditions. Include actions and recognizable success signals, not only outcome
+labels. Number a sequence only when correctness, safety or a contract requires
+its order; use peer bullets or causal paragraphs otherwise. Keep a concept's
+rules and caveats together, with substantial branch-only detail linked conditionally.
+
+State correct behavior directly. Examples, comparisons and general teaching need
+a reader-task reason, not a fixed template. Concision removes unnecessary prose,
+not permission boundaries, failure states or substantive qualifiers. Neither a
+word/reference count nor a newer model proves quality or behavioral equivalence.
 
 ## Symbols and tables
 
-- Ordinary sentences use words for conjunctions. The pipe symbol denotes closed canonical alternatives; slash denotes established pairs or compact labels; arrow denotes a defined one-meaning transition; colon separates a label from its value.
-- Paths, code, links, canonical values and established technical notation preserve their syntax. No private shorthand or mechanical symbol replacement is introduced.
-- Executable Skills use tables only for short stable closed mappings with real repeated-column savings and unambiguous rows. Branching judgments, exceptions and multi-step actions use lists or short prose.
-- Human documents use tables when comparison or lookup aids the reading task. Narrative explanation is not forced into cells.
+Ordinary conjunctions use words. Reserve `|` for closed alternatives, `/` for
+established pairs, `→` for a defined transition, and `:` for label/value boundaries.
+Preserve syntax inside paths, commands, links and canonical values.
+
+Use a table when repeated columns make a fixed mapping or comparison easier to
+read. Executable Skill branches, exceptions and multi-step judgments use lists
+or prose rather than ambiguous table cells. No mechanical symbol substitution
+or private notation is required.
 
 ## Artifact differences
 
-- Skills supply discriminating descriptions, concise executable guidance and conditional resources. Creation preserves existing packages and does not imply installation.
-- Procedures guide a task with prerequisites, actions and success signals. Conceptual documents explain causes and relationships; references state exact contracts. Reader-required explanation is retained, not used to justify long execution paragraphs.
-- README supplies entry and usage; CONTEXT owns vocabulary and navigation; Specs own current contracts; Changes own a selected delta and final evidence; Decision Records own rationale.
-- Focus holds ongoing recovery notes and evidence pointers; Change/Group holds converged results, verification and remaining failures/limits; knowledge owners hold justified stable facts. Closeout verifies facts before needs-based Focus and knowledge writeback, then converges the entire Change against those results and checks final consistency before authorized archive. No useful writeback means no edit, not permission to leave an authoritative contract stale. Final convergence retains the delivered delta and concise knowledge references, not duplicated current specifications. Remove stale operation permissions, session/attempt narration and response-only readiness blocks; retain material failure dispositions and version-bound evidence references. Substantive inconsistencies need the responsible owner, not prose-only repair. Detailed records and original verdicts stay with their evidence owner; an earlier revision's review does not establish the final artifact's quality.
-- API/TSDoc comments explain actual inputs, returns, failures and usage to their consumers. Ordinary implementation comments explain relevant local reasoning without a forced document scaffold. Behavior-affecting annotations retain their compiler/tool meaning despite comment syntax.
-- Copyable commands and examples state real prerequisites, safe use and expected consequences. Mark illustrative pseudocode or incomplete snippets; neither a code fence nor writing authority permits execution, dependency installation or external effects.
+The [Work model artifact boundaries](work-model.md#boundaries) own placement and its
+[evidence/closeout contract](work-model.md#evidence-and-closeout) owns final Change
+convergence. Writing applies those contracts; it does not redefine the workflow.
+
+- Skills provide discriminating descriptions, executable guidance and conditional
+  resources. Procedures state prerequisites, actions and success signals; conceptual
+  explanations state causes and relationships; references state exact contracts.
+- CONTEXT supplies vocabulary and navigation, Specs current contracts, and work
+  records only their selected delta and evidence summary. A true but misplaced
+  statement still needs the correct owner; copying it into several files is not writeback.
+- For a final Change, retain a fact only when it affects the delivered contract,
+  evidence applicability, an important failure disposition or remaining risk.
+  Consolidate duplicate check summaries without merging different candidates or
+  changing original verdicts. Execution details stay in their report, not the Change.
+- API comments explain actual inputs, returns, failures and usage. Ordinary inline
+  comments need local accuracy and clarity, not an invented document scaffold;
+  behavior-affecting tool/compiler annotations retain implementation ownership.
+- Copyable examples state real prerequisites and consequences. Label pseudocode
+  and incomplete snippets; writing authority or a code fence grants no execution,
+  dependency installation or external effects.
+
+## Instruction and resource design
+
+- Descriptions distinguish the intended task from adjacent capabilities before
+  loading the body; procedures belong in the body, not exhaustive trigger lists.
+- State the outcome, inputs, authority, actions, completion evidence and real
+  stops. Prescribe sequence only for correctness, safety or a contract dependency;
+  leave other method choices with the responsible capability.
+- Link branch-only detail with its reading condition and purpose. Keep common
+  safety and minimum actionable context local; split or merge resources to improve
+  the actual reading path, not a file-count or word-count target.
+- Pruning preserves trigger, inputs, authority, action, output, stop, verification
+  and conditional loading. Generic teaching or model-compensation guidance needs
+  a current task-specific reason. A newer model, shorter text or static diagnostic
+  does not establish equivalent behavior, better quality or reduced cost.
 
 ## Content-based review
 
-- Fix reviewed files/content, comparison and authority before selecting checks. Code and Document are complementary perspectives, not mutually exclusive file categories; extensions, comments and code fences alone do not determine applicability. Explicit narrow scope overrides whole-file defaults.
-- Code checks behavior, contracts, safety, failures and tool semantics when executable instructions/code, runnable recipes, algorithmic logic or tool-interpreted content is itself reviewed. Document checks factual explanation, usability, navigation and maintenance; a prose behavior claim alone can remain Document grounding. Complete Skill instructions normally need both; bounded wording changes and ordinary comments receive proportionate affected checks, not an automatic full second pass.
-- API comments and runnable examples receive applicable behavior and explanation checks. Match evidence to risk: illustrative pseudocode needs logic/contract consistency, not mandatory runtime or production tests; changed real seams and public failure contracts retain their required evidence.
-- Authority/evidence-only content never becomes a reviewed target merely because it is read. Reading implementation to verify a document claim does not select Code review of that implementation; a snippet within the reviewed document may independently need Code checks.
-- Check text/behavior consistency without automatically privileging implementation over the authoritative requirement. Deduplicate one root issue across perspectives and artifacts. Keep the existing Code/Document results and one report; two perspectives imply neither two workers nor a new persisted state.
-- With no applicable reviewed content a perspective is skipped; missing required authority blocks dependent judgment. Coverage names checked content and material gaps. Actual responsibility and outcomes establish correct use; reference-loading fingerprints or successful package checks do not.
+Fix scope, comparison and authority before choosing perspectives. Code judges
+behavior, safety, failure contracts and tool semantics of reviewed executable
+content; Document judges grounding, usability, navigation and maintenance.
+Complete Skill instructions normally need both; narrow wording requests and
+ordinary comments receive only applicable checks. Illustrative pseudocode needs
+logical consistency, not invented production/runtime acceptance.
+
+Authority or evidence read to support a judgment does not become a reviewed target.
+Judge a text/implementation discrepancy without assuming either side correct and
+report one root issue once. Two perspectives do not imply two workers or reports.
+No applicable content means `skipped`; missing required authority blocks dependent
+judgment. Scope and coverage identify material omissions.
+
+For closeout, inspect the final whole work record after necessary writeback, not
+only its changed lines, an earlier revision or a newly added completion assertion.
+CLI readiness and a statement that convergence occurred do not prove text quality.
+Reader-required choices must have authority or be reported as unresolved.
 
 ## Verification and review
 
-- Author checks establish whether readers can find information, understand conditions, act or judge compliance, and recognize unknowns. Check factual meaning and affected commands, examples, metadata and links; distinguish inspection, execution and missing evidence.
-- A whole-surface optimization inspects the declared package/document set, including conditional resources and callers, and records why each changed or adequate surface is retained. Coverage does not require editing every file; static diagnostic counts do not prove comprehension or behavioral improvement.
-- Writing self-checks apply the same content-role and consistency rules within authorized scope; they do not establish independent review or task behavior.
-- Agreed expression requirements from the user, project or Spec are contracts. Findings cite the exact violation and its consequence; personal preference without authority or demonstrated downside is not a defect.
-- Static validity, author self-checks and independent review are separate evidence. No format regex, word count, fixed interview or worker count establishes writing quality.
+Author checks assess whether readers can find facts, understand conditions, act
+and recognize unknowns. Check affected meaning, examples, metadata, links and anchors;
+distinguish inspection, execution, reuse and missing evidence. Whole-surface work
+inspects the selected documents/resources and callers; adequate surfaces need not
+be edited merely to show coverage.
+
+Self-checks do not establish independent review or task behavior. Agreed user,
+project and Spec expression rules are contracts; findings identify their violation
+and consequence, not personal taste. Static validity, author checks and independent
+acceptance remain separate. No regex, length limit, fixed interview or worker count
+establishes writing quality.

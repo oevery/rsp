@@ -2,6 +2,32 @@
 
 Historical reports and verdicts remain unchanged. Their old cache paths and relative links describe past runs, not current runnable interfaces. Some evidence is retained privately, some files require Git history, and disposable runtime material has been permanently discarded. **Complete old workspaces and the original full backup bundles are no longer available.**
 
+## Current document path mapping
+
+Current Spec contracts and maintenance navigation were reorganized on 2026-10-03.
+Old relative links in historical reports and Change snapshots remain unchanged.
+Use this mapping to find the current owner, not to reinterpret an old verdict:
+
+| Historical document or section | Current owner |
+| --- | --- |
+| `.rsp/specs/core-model.md` | [Work model](../.rsp/specs/work-model.md) |
+| `.rsp/specs/skill.md` | [Workflow](../.rsp/specs/workflow.md) |
+| `.rsp/specs/skill.md#instruction-and-resource-design` | [Writing quality](../.rsp/specs/writing-quality.md#instruction-and-resource-design) |
+| `.rsp/specs/cli-contracts.md` | [CLI](../.rsp/specs/cli.md) |
+| `docs/maintainers/design-philosophy.md` | [Architecture](../.rsp/specs/design.md) and its linked contract/Decision Record owners |
+| `docs/maintainers/upstreams.md` | [Managed-source operations](../.agents/skills/distill-upstream/references/managed-sources.md) |
+
+`.rsp/specs/design.md` retains its required integration path under the Architecture
+title. No duplicate compatibility Spec is maintained. For exact pre-reorganization
+bytes, commit `899e90a4114524e2df62b4d57136be5127534f8e` retains these old paths;
+for example, this read-only command inspects the old Skill contract:
+
+```sh
+git show 899e90a4114524e2df62b4d57136be5127534f8e:.rsp/specs/skill.md
+```
+
+Current documents are not substitutes for version-bound historical evidence.
+
 ## What remains
 
 The local, ignored directory `tests/skills/reports/legacy/2026-09-30-research-artifact-hygiene/` contains four files. Directories are 0700 and files 0600. A fresh clone does not include these private artifacts; do not upload them without checking for credentials and private evidence.

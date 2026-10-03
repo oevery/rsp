@@ -20,13 +20,15 @@ The current source candidate defines seven default host-neutral Skills for on-de
 
 For this unreleased source candidate, route `rsp-design` to `rsp-shape`; route `rsp-diagnose`, `rsp-tdd`, and `rsp-resolve-findings` to methods within `rsp-implement`; route `rsp-manage` to conditional coordination within `rsp`. The older `rsp-address-review` alias also resolves to `rsp-implement`. These are responsibility mappings, not permanent compatibility Skills or a request to erase project-owned guidance.
 
-`rsp-release-docs` is removed: writing belongs to Doc and fixed-scope read-only checks to Review. Selecting Doc, directly or through the default suite, checks the obsolete installed directory before replacement; other named installations leave it untouched. Update explicit old-name calls to the appropriate owner. Back up any custom release guidance before an authorized forced migration.
+`rsp-release-docs` is removed: writing belongs to Doc and fixed-scope read-only checks to Review. Selecting Doc, directly or through the default suite, checks the obsolete installed directory before replacement; other named installations leave it untouched. Update explicit old-name calls to the appropriate owner. Before an authorized forced migration, confirm that any custom release guidance you need to retain is recoverable.
 
 When the exact candidate CLI becomes available, use that same selected CLI throughout; `@latest` is not a synonym for this unreleased source. With installation authority:
 
 1. Inspect `rsp skills list` and run `rsp skills install --dry-run`. Differing selected trees or recognized obsolete package-owned names stop ordinary dry-run before a full replacement/removal preview.
-2. Inspect and back up user-customized content before using `rsp skills install --dry-run --force` to preview the exact replacement/removal scope. Unknown Skills must remain untouched.
-3. Only after confirming that scope, run `rsp skills install --force` with the same CLI and inspect the resulting installation state.
+2. Inspect the named customized trees and use `rsp skills install --dry-run --force` to preview the exact replacement/removal scope. Unknown Skills must remain untouched.
+3. After confirming that scope and the recoverability of any custom content you need to retain, run `rsp skills install --force` with the same CLI and inspect the resulting installation state.
+
+A Git commit containing the needed custom content suffices; no additional backup is required. Save uncommitted or untracked content only if you need to retain it. Temporary installation backups support rollback, not permanent retention.
 
 Activation failure triggers rollback of recognized replacements/removals. If rollback is incomplete, the command reports a retained recovery location; inspect actual installed trees and backups before retrying or cleanup. This does not make a silent update safe. `rsp update` is not a Skill refresh. No candidate version, release, external install, or behavior acceptance is claimed here.
 
@@ -68,7 +70,7 @@ Work ownership, decision ownership, transient handoff, execution uncertainty, an
 
 Three review-related gates remain distinct:
 
-- Implementation verification supplies fresh evidence after every mutation.
+- Implementation verification establishes applicable evidence for the current outcome. Reuse still-applicable passing results; run only missing, failed or invalidated checks. Explicit reruns and required independent execution remain binding.
 - Fixed-scope change review is the report-only Review comparison. It is required when explicitly requested, required by project authority or risk, or needed for managed `review-clean`; it is not automatically required for every tiny direct action.
 - The durable writeback decision is required before archive and independently decides whether stable current facts or lasting rationale must update a Spec, scoped instruction, or Decision Record. It never substitutes for fixed-scope change review.
 
@@ -111,6 +113,6 @@ Managed interruption and resume reread accepted state, authority, diff, and evid
 
 ## Working notes and knowledge writeback
 
-For tracked work needing continuity, Core maintains a permitted Focus Capsule at meaningful checkpoints, pauses or handoffs; coordination is not required. Replace progress, evidence pointers and next action rather than append logs. Before closeout, revalidate and distill final conclusions into Change, then selectively update stable knowledge. Fresh checks, required review and readiness precede authorized archive and Focus cleanup. Cross-device recovery still requires authorized Git transfer and fresh rederivation.
+For tracked work needing continuity, Core maintains a permitted Focus Capsule at meaningful checkpoints, pauses or handoffs; coordination is not required. Replace progress, evidence pointers and next action rather than append logs. Follow [durable decision and archive](./daily-workflow.md#durable-decision-and-archive) for verified facts, necessary knowledge writeback, whole-Change convergence and final consistency checks before authorized archive and Focus cleanup. Reuse applicable verification; required Review and current readiness still apply. Cross-device recovery still requires authorized Git transfer and fresh rederivation.
 
 See [configuration](../reference/configuration.md) for the exact keys and [daily workflow](./daily-workflow.md) for ordinary operation.

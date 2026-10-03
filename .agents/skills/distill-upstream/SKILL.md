@@ -15,6 +15,10 @@ Inspect completed reports for the question, recommendation IDs, source identity,
 
 For a registered managed Git source needing preparation or fresh distillation:
 
+Read [managed-source operations](references/managed-sources.md) when registry,
+candidate refs, command options or cache recovery details are needed. This
+reference grants no synchronization, acceptance or cleanup authority.
+
 1. Run `node scripts/upstreams.mjs status <source>` and inspect `nextAction`. It is a status recommendation, not authorization; `accept` requires a separate user request to advance the reviewed revision. Fix unmatched required paths before research. Use `prepare --initial` only when status reports `prepare-initial`.
 2. When managed preparation is authorized and needed, run `node scripts/upstreams.mjs prepare <source>` with the indicated initial mode. This exact operation generates provenance and creates a draft without overwriting an existing report; manual research cannot replace it. Read its matching `.cache/upstream-distillation/<source>/<revision>/evidence.json`, `files.txt`, and `diff.patch` when present. Treat revision and evidence hash as immutable provenance.
 

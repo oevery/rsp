@@ -11,7 +11,12 @@ Use [archive recovery](ARCHIVE-RECOVERY.md) when an immutable report refers to r
 
 Prepared upstream diffs and inventories remain under ignored `.cache/upstream-distillation/`, backed by the pinned checkouts in `.cache/upstreams/`. Keep `.cache/rsp-package-install/` for offline packed-install checks. Selected model evidence and unique experimental files belong under ignored `tests/skills/reports/legacy/`, with private permissions and verified path mappings. This is not a complete backup of retired dirty workspaces: disposable runtime material is removed, and identical Git content relies on the recorded fixed history. Give recommendations stable IDs such as `R1`. A recommendation reaches final product artifacts only through a separately selected RSP Change whose Design cites its source report, recommendation ID and adoption mode.
 
-For managed Git research, run `node scripts/upstreams.mjs prepare <source>` to scaffold a source report, then load the repo-local `distill-upstream` skill. Do not edit an existing source report through regeneration; each report is owned by its exact candidate revision. Managed `status` exposes `nextAction` as guidance, not authority: `accept` always requires a separate user request.
+For managed Git research, use the repo-local
+[distill-upstream Skill](../.agents/skills/distill-upstream/SKILL.md). Its
+[managed-source reference](../.agents/skills/distill-upstream/references/managed-sources.md)
+owns registry/ref semantics, command options and cache recovery. Source reports
+remain bound to exact revisions; regeneration is not permission to overwrite
+them, and accepting a source baseline is separate from adopting a recommendation.
 
 For targeted web research, record the retrieval date, URLs, content hashes, retained source locations, retrieval gaps, and license, attribution and reuse limits. Distinguish source facts from local inference. Use a dated snapshot identity, not a fabricated Git revision; this path needs no registry change or new framework and never advances a managed baseline. See [the writing-guide snapshot](upstreams/writing-guides/2026-09-30.md) for an existing example.
 

@@ -15,7 +15,7 @@ rsp skills install [name] [--dry-run] [--force]
                                 安装默认套件或一个指定的 Skill
 ```
 
-`rsp update` 不刷新已安装的包自有 Skills。先用 `rsp skills list` 检查包与精确目标状态，再用 `rsp skills install --dry-run` 预检。内容不一致的已选 Skill 树或已识别的过时包自有标识需要显式 `--force`；强制替换前检查并保留用户定制树，未知 Skills 不作为迁移目标。
+`rsp update` 不刷新已安装的包自有 Skills。先用 `rsp skills list` 检查包与精确目标状态，再用 `rsp skills install --dry-run` 预检。内容不一致的已选 Skill 树或已识别的过时包自有标识需要显式 `--force`；强制替换前检查定制树，确认需要保留的内容可恢复，已有包含这些内容的 Git 提交即可，不必再备份。未知 Skills 不作为迁移目标。
 
 激活失败会触发已识别替换／移除的回滚。回滚不完整时，命令会报告保留的恢复位置；先检查实际安装树与备份，再决定是否重试或清理。静默升级安全不因此得到保证。尚未发布的源码候选如何映射旧名称，见 [Skills 与受管工作](../guides/skills.md)；`@latest` 仍调用已发布包，不代表这个候选。
 
