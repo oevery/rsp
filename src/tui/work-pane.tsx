@@ -36,9 +36,7 @@ export function projectWorkDetailLines(item: DashboardItem | undefined, snapshot
     add(messages.none)
   if (item.type === 'group')
     add(`${messages.changes}: ${item.group.slices.length ? item.group.slices.map(slice => `${slice.name} (${slice.state})`).join(', ') : messages.none}`)
-  const external = projectExternalBlockers(item, snapshot)
-  const blockers = external.length ? external.join('; ') : (item.type === 'group' && item.group.blockers) || snapshot.plan.blocked.some(blocked => blocked.change === item.workRef && blocked.external) ? messages.yes : messages.none
-  add(`${messages.blockers}: ${blockers}`)
+  add(`${messages.blockers}: ${blockersLabel(item, snapshot, messages)}`)
   const next = projectNextAction(item, snapshot)
   add(`${next.kind === 'command' ? messages.nextCommand : next.kind === 'blocked' ? messages.nextAction : messages.reviewGroupBrief}: ${next.kind === 'blocked' ? messages.awaitingOwnerDecision : next.value}`)
   return lines
@@ -49,6 +47,15 @@ export function workStateLabel(item: DashboardItem, snapshot: ProjectStatusSnaps
     return item.history.kind
   const state = projectItemState(item, snapshot)
   return (state.focused ? [messages.focused, messages[state.execution]] : [messages[state.execution]]).join(' · ')
+}
+
+function blockersLabel(item: DashboardItem, snapshot: ProjectStatusSnapshot, messages: TuiMessages): string {
+  const external = projectExternalBlockers(item)
+  if (external.length)
+    return external.join('; ')
+  const inherited = (item.type === 'group' && item.group.blockers)
+    || snapshot.plan.blocked.some(blocked => blocked.change === item.workRef && blocked.external)
+  return inherited ? messages.yes : messages.none
 }
 
 function dependencySymbol(node: DependencyForestNode, snapshot: ProjectStatusSnapshot): string {
@@ -99,13 +106,8 @@ export function WorkDetail({ expanded, item, messages, snapshot, width }: { expa
   if (!item || item.type === 'history')
     return <Text dimColor>{messages.noWork}</Text>
   const forest = projectItemDependencyForest(item, snapshot)
-  const externalBlockers = projectExternalBlockers(item, snapshot)
   const nextAction = projectNextAction(item, snapshot)
-  const blockers = externalBlockers.length
-    ? externalBlockers.join('; ')
-    : (item.type === 'group' && item.group.blockers) || snapshot.plan.blocked.some(blocked => blocked.change === item.workRef && blocked.external)
-        ? messages.yes
-        : messages.none
+  const blockers = blockersLabel(item, snapshot, messages)
   return (
     <Box flexDirection="column" paddingLeft={1} width={width}>
       <Text bold>

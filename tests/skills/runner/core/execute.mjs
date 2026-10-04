@@ -6,7 +6,7 @@ import { cancellationReason, runProcess } from '../adapters/process.mjs'
 import { gradeEvidence } from '../graders/evidence.mjs'
 import { observeProjectChecks } from '../observers/checks.mjs'
 import { observeEvents } from '../observers/events.mjs'
-import { compositionIdentity, prepareWorkspace, retainWorkspace, workspaceObservation } from '../observers/workspace.mjs'
+import { compositionIdentity, git, prepareWorkspace, retainWorkspace, workspaceObservation } from '../observers/workspace.mjs'
 import { loadConfig } from './config.mjs'
 import { hash, treeFiles, writeJson } from './files.mjs'
 import { executionIdentity, gradingIdentity } from './identity.mjs'
@@ -96,7 +96,12 @@ export async function runCase(entry, root, options = {}) {
       run.retainedEvidence = { baseline: retainWorkspace(workspace, join(outputRoot, 'baseline'), redact) }
     }
     catch { run.retainedEvidence = { baseline: { error: 'baseline-retention-incomplete' } } }
-    identity.dependencies = { lockHash: hash(readFileSync(join(root, 'pnpm-lock.yaml'))), contentHash: hash(Object.fromEntries(Object.entries(baseline.files).filter(([path]) => path.includes('node_modules/')))) }
+    const fixedProject = entry.project?.kind === 'git-snapshot'
+    identity.dependencies = {
+      lockHash: fixedProject ? hash(git(root, ['show', `${entry.project.commit}:pnpm-lock.yaml`])) : hash(readFileSync(join(root, 'pnpm-lock.yaml'))),
+      ...(fixedProject && entry.manifest.tooling === 'rsp-cli' ? { toolingLockHash: hash(readFileSync(join(root, 'pnpm-lock.yaml'))) } : {}),
+      contentHash: hash(Object.fromEntries(Object.entries(baseline.files).filter(([path]) => path.includes('node_modules/')))),
+    }
     identity.fixtureHash = hash(Object.fromEntries(Object.entries(baseline.files).filter(([path]) => !path.startsWith('.agents/skills/'))))
     if (baseline.skillTreeHash !== expectedCompositionHash)
       throw new Error('Installed composition does not match frozen source')

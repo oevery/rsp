@@ -1,6 +1,7 @@
 import type { BigIntStats } from 'node:fs'
 import type { FileHandle } from 'node:fs/promises'
-import type { CommandDiagnostic } from '../types.js'
+import type { MarkdownDocument } from '../core/markdown.mjs'
+import type { CommandDiagnostic, Frontmatter } from '../types.js'
 import type {
   GeneratedSpecsIndexClassification,
   SpecsDetailRecord,
@@ -17,13 +18,14 @@ import { Buffer } from 'node:buffer'
 import { spawnSync } from 'node:child_process'
 import { constants } from 'node:fs'
 import { lstat, open, realpath } from 'node:fs/promises'
-import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { inspectRspConfig, RSP_DIR } from '../core/config.js'
 import { parseFrontmatter } from '../core/content.js'
 import { DEFAULT_DECISION_RECORDS_PATH, resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { normalizeLogicalPath } from '../core/filesystem.js'
 import { inspectManagedFile, inspectManagedFileTree } from '../core/managed-path.js'
+import { markdownText, parseMarkdown } from '../core/markdown.mjs'
 import {
   SPECS_DETAIL_CONTENT_CODE_POINTS,
   SPECS_MAX_CANDIDATES,
@@ -193,7 +195,7 @@ export async function readCurrentSpecsDocument(
     document.path,
     inspection.limits.fileBytes,
   )
-  const currentDocument = parseDocumentRecord(current.content, current.bytes, document.path, document.kind)
+  const currentDocument = parseDocumentRecord(parseMarkdown(current.content), current.bytes, document.path, document.kind)
   return {
     ...currentDocument,
     content: current.content,
@@ -207,7 +209,7 @@ export function parseCurrentSpecsDocument(
   kind: SpecsDocumentKind,
 ): CurrentSpecsDocument {
   return {
-    ...parseDocumentRecord(content, bytes, path, kind),
+    ...parseDocumentRecord(parseMarkdown(content), bytes, path, kind),
     content,
   }
 }
@@ -242,13 +244,12 @@ export async function searchSpecsWithSources(
       document.path,
       inspection.limits.fileBytes,
     )
-    const currentDocument = parseDocumentRecord(current.content, current.bytes, document.path, document.kind)
+    const currentDocument = parseDocumentRecord(parseMarkdown(current.content), current.bytes, document.path, document.kind)
     const lines = current.content.split(/\r?\n/)
+    const headingsByLine = new Map(currentDocument.headings.map(item => [item.line, item.title]))
     let heading: string | null = null
     for (let index = 0; index < lines.length; index++) {
-      const parsedHeading = parseMarkdownHeading(lines[index])
-      if (parsedHeading)
-        heading = parsedHeading.title
+      heading = headingsByLine.get(index + 1) ?? heading
       const position = lines[index].toLowerCase().indexOf(lowered)
       if (position < 0)
         continue
@@ -402,12 +403,13 @@ async function inspectDocument(
 ): Promise<void> {
   try {
     const current = await readCurrentDocument(path, projectRoot, projectPath, maxFileBytes)
-    const metadata = parseFrontmatter(current.content)
+    const document = parseMarkdown(current.content)
+    const metadata = parseFrontmatter(document)
     if (metadata?.kind === 'generated-index')
       return
     accumulator.documents.push({
       sourcePath: path,
-      ...parseDocumentRecord(current.content, current.bytes, projectPath, kind),
+      ...parseDocumentRecord(document, current.bytes, projectPath, kind, metadata),
     })
   }
   catch (error) {
@@ -481,75 +483,21 @@ function buildDirectoryTree(projectRoot: string, root: string, kind: SpecsDocume
   return tree
 }
 
-function extractHeadings(content: string): SpecsHeading[] {
-  const headings: SpecsHeading[] = []
-  const lines = content.split(/\r?\n/)
-  for (let index = 0; index < lines.length; index++) {
-    const heading = parseMarkdownHeading(lines[index])
-    if (!heading)
-      continue
-    headings.push({
-      depth: heading.depth,
-      title: heading.title,
-      line: index + 1,
-    })
-  }
-  return headings
+function extractHeadings(document: MarkdownDocument): SpecsHeading[] {
+  return document.root.children.flatMap(node => node.type === 'heading'
+    ? [{ depth: node.depth, title: markdownText(node), line: node.position!.start.line }]
+    : [])
 }
 
-function parseMarkdownHeading(line: string): Pick<SpecsHeading, 'depth' | 'title'> | null {
-  let depth = 0
-  while (depth < 6 && line[depth] === '#')
-    depth += 1
-  if (depth === 0 || line[depth] === '#' || !isWhitespace(line[depth]))
-    return null
-
-  let contentStart = depth
-  while (contentStart < line.length && isWhitespace(line[contentStart]))
-    contentStart += 1
-  if (contentStart === line.length)
-    return null
-
-  const rawTitle = line.slice(contentStart)
-  let titleEnd = rawTitle.length
-  while (titleEnd > 0 && isSpaceOrTab(rawTitle[titleEnd - 1]))
-    titleEnd -= 1
-
-  let closingStart = titleEnd
-  while (closingStart > 0 && rawTitle[closingStart - 1] === '#')
-    closingStart -= 1
-  const closingPredecessor = closingStart === 0
-    ? line[contentStart - 1]
-    : rawTitle[closingStart - 1]
-  if (closingStart < titleEnd && isSpaceOrTab(closingPredecessor)) {
-    titleEnd = closingStart
-    while (titleEnd > 0 && isSpaceOrTab(rawTitle[titleEnd - 1]))
-      titleEnd -= 1
-  }
-
-  const title = rawTitle.slice(0, titleEnd).trim()
-  return { depth, title }
-}
-
-function isWhitespace(character: string | undefined): boolean {
-  return character !== undefined && character.trim() === ''
-}
-
-function isSpaceOrTab(character: string | undefined): boolean {
-  return character === ' ' || character === '\t'
-}
-
-function extractSummary(content: string, frontmatterSummary: unknown): string | null {
+function extractSummary(document: MarkdownDocument, frontmatterSummary: unknown): string | null {
   if (typeof frontmatterSummary === 'string' && frontmatterSummary.trim() !== '')
     return frontmatterSummary.trim()
-
-  const frontmatter = content.match(/^---\r?\n[\s\S]*?\r?\n(?:---|\.\.\.)\r?\n/)
-  const body = frontmatter ? content.slice(frontmatter[0].length) : content
-  for (const rawLine of body.split(/\r?\n/)) {
-    const line = rawLine.trim()
-    if (line === '' || line.startsWith('#') || line.startsWith('<!--'))
+  for (const node of document.root.children) {
+    if (node.type !== 'paragraph' && node.type !== 'list')
       continue
-    return line.replace(/^[-*]\s*/, '').trim() || null
+    const text = markdownText(node).split('\n', 1)[0].trim()
+    if (text)
+      return text
   }
   return null
 }
@@ -794,16 +742,15 @@ function stripSource(document: InspectedDocument): SpecsDocumentRecord {
   return record
 }
 
-function parseDocumentRecord(content: string, bytes: number, path: string, kind: SpecsDocumentKind): SpecsDocumentRecord {
-  const metadata = parseFrontmatter(content)
-  const headings = extractHeadings(content)
+function parseDocumentRecord(document: MarkdownDocument, bytes: number, path: string, kind: SpecsDocumentKind, metadata: Frontmatter | null = parseFrontmatter(document)): SpecsDocumentRecord {
+  const headings = extractHeadings(document)
   return {
     path,
     kind,
     title: typeof metadata?.title === 'string' && metadata.title.trim() !== ''
       ? metadata.title.trim()
       : headings.find(heading => heading.depth === 1)?.title ?? basename(path, '.md'),
-    summary: extractSummary(content, metadata?.summary),
+    summary: extractSummary(document, metadata?.summary),
     bytes,
     headings,
   }

@@ -1,8 +1,8 @@
 import type { HistoryDetailOutput, HistoryEvidenceListOutput, HistoryRecordOutput } from '../types.js'
-import type { ArchivedGroupBriefRecord, ArchiveHistoryInspection, ArchiveHistoryListResult, ArchiveHistoryQuery, ArchiveHistoryRecord } from './model.js'
 
-import { countCheckboxes, parseScenarios } from '../core/content.js'
-import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionBody, parseRspDocument } from '../core/document-model.js'
+import type { ArchivedGroupBriefRecord, ArchiveHistoryInspection, ArchiveHistoryListResult, ArchiveHistoryQuery, ArchiveHistoryRecord } from './model.js'
+import { countCheckboxes, getVisibleBodyLines, parseScenarios, readBlockerEntries } from '../core/content.js'
+import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionMarkdown, parseRspDocument } from '../core/document-model.js'
 import { normalizeWorkRefSegment } from '../core/work-ref.js'
 import { readCurrentArchiveFile } from './current-file.js'
 import { boundText } from './inspect.js'
@@ -113,20 +113,20 @@ export async function readArchiveHistoryDocument(record: ArchiveHistoryRecord): 
   }
 
   const document = parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA)
-  const tasks = getDocumentSectionBody(document, 'tasks')
-  const verify = getDocumentSectionBody(document, 'verify')
-  const blockers = getDocumentSectionBody(document, 'blockers')
+  const tasks = getDocumentSectionMarkdown(document, 'tasks')
+  const verify = getDocumentSectionMarkdown(document, 'verify')
+  const blockers = getDocumentSectionMarkdown(document, 'blockers')
   const detail = {
     ...toOutputRecord(record),
-    scenarioCount: parseScenarios(content).length,
+    scenarioCount: parseScenarios(document.markdown).length,
     checkboxes: {
       tasks: countCheckboxes(tasks),
       verify: countCheckboxes(verify),
     },
     evidence: {
-      tasks: boundEvidence(tasks),
-      verify: boundEvidence(verify),
-      blockers: boundEvidence(blockers, true),
+      tasks: boundEvidence(getVisibleBodyLines(tasks)),
+      verify: boundEvidence(getVisibleBodyLines(verify)),
+      blockers: boundEvidence(readBlockerEntries(blockers).map(entry => entry.line)),
     },
   }
   return { content, detail }
@@ -148,12 +148,7 @@ function toOutputRecord(record: ArchiveHistoryRecord): HistoryRecordOutput {
   return output
 }
 
-function boundEvidence(section: string, omitNone = false): HistoryEvidenceListOutput {
-  const rawItems = section
-    .split('\n')
-    .map(line => line.trim())
-    .filter(Boolean)
-    .filter(line => !omitNone || (!/^[-*]\s*(?:none)?$/i.test(line) && !/^none$/i.test(line)))
+function boundEvidence(rawItems: string[]): HistoryEvidenceListOutput {
   const boundedItems = rawItems.slice(0, HISTORY_MAX_EVIDENCE_ITEMS).map(item => boundText(item))
   return {
     items: boundedItems.map(item => item.value),

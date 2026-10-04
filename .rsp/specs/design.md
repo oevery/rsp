@@ -49,6 +49,9 @@ neither the Spec nor observed behavior is silently treated as infallible.
 ## Dependency direction
 
 - Configuration and filesystem safety support artifact interpretation and commands.
+- Syntax readers own Markdown/YAML structure and original source spans. Domain
+  interpretation owns RSP grammar and constraints; consumers reuse parsed views
+  instead of maintaining competing document parsers.
 - Core domain interpretation supports work, status, history and Spec queries.
 - CLI and TUI consume presentation-neutral domain projections; domains do not
   depend on presenters.

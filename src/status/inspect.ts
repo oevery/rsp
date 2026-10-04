@@ -1,12 +1,12 @@
 import type { CommandDiagnostic, IssueRelationship, RuntimeDiagnostic } from '../types.js'
 import type { ProjectStatusRecord, ProjectStatusSnapshot } from './model.js'
-import { readFile, stat } from 'node:fs/promises'
 
+import { readFile, stat } from 'node:fs/promises'
 import { inspectChangeGroups } from '../core/change-group.js'
 import { CONFIG_PATH, inspectRspConfig, resolveLanguagePolicy, resolveManagePolicy } from '../core/config.js'
-import { countCheckboxes, hasMeaningfulBlockers, parseFrontmatter } from '../core/content.js'
+import { countCheckboxes, hasMeaningfulBlockers, parseFrontmatter, readBlockerEntries } from '../core/content.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
-import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionBody, getDocumentTitle, parseRspDocument } from '../core/document-model.js'
+import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionMarkdown, getDocumentTitle, parseRspDocument } from '../core/document-model.js'
 import { normalizeLogicalPath } from '../core/filesystem.js'
 import { IssueRelationshipError, parseIssueRelationships } from '../core/issue-relationship.js'
 import { toErrorMessage } from '../core/output.js'
@@ -106,7 +106,7 @@ export async function inspectProjectStatus(options: { nowMs?: number } = {}): Pr
     let kind = '—'
     let summary: string | null = null
     let title = name
-    let blockerEntries: string[] = []
+    let externalBlockers: string[] = []
     let readiness = emptyReadiness(false)
     let ageDays: number | null = null
     const isFocused = focusedSet.has(name)
@@ -119,11 +119,14 @@ export async function inspectProjectStatus(options: { nowMs?: number } = {}): Pr
     if (path) {
       try {
         const content = await readFile(path, 'utf-8')
-        title = extractChangeTitle(content) ?? name
-        summary = extractChangeSummary(content)
-        blockerEntries = extractBlockerEntries(content)
+        const document = parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA)
+        title = getDocumentTitle(document, 'spaced') ?? name
+        summary = extractChangeSummary(content, document)
+        externalBlockers = readBlockerEntries(getDocumentSectionMarkdown(document, 'blockers'))
+          .filter(entry => entry.kind !== 'dependency')
+          .map(entry => entry.text)
         try {
-          const frontmatter = parseFrontmatter(content)
+          const frontmatter = parseFrontmatter(document.markdown)
           kind = frontmatter?.kind ? String(frontmatter.kind) : '—'
           issues = parseIssueRelationships(frontmatter)
         }
@@ -146,10 +149,9 @@ export async function inspectProjectStatus(options: { nowMs?: number } = {}): Pr
             message: toErrorMessage(error),
           })
         }
-        isBlocked = dependencyInspection.activeBlockers.get(name) ?? hasMeaningfulBlockers(content)
-        const details = collectArchiveReadiness(content, { activeBlockers: isBlocked })
-        const document = parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA)
-        const taskCheckboxes = countCheckboxes(getDocumentSectionBody(document, 'tasks'))
+        isBlocked = dependencyInspection.activeBlockers.get(name) ?? hasMeaningfulBlockers(document)
+        const details = collectArchiveReadiness(document, { activeBlockers: isBlocked })
+        const taskCheckboxes = countCheckboxes(getDocumentSectionMarkdown(document, 'tasks'))
         done = taskCheckboxes.done + details.verifyCriticality.required.done
         total = taskCheckboxes.total + details.verifyCriticality.required.total
         progressKnown = true
@@ -225,7 +227,7 @@ export async function inspectProjectStatus(options: { nowMs?: number } = {}): Pr
       },
       progressKnown,
       title,
-      blockerEntries,
+      externalBlockers,
       readiness,
     })
   }
@@ -260,20 +262,6 @@ function emptyReadiness(activeBlockers: boolean): ProjectStatusRecord['readiness
     semantic: 'needs-review',
     archiveReady: activeBlockers ? 'no' : 'judgment',
   }
-}
-
-function extractChangeTitle(content: string): string | null {
-  return getDocumentTitle(parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA), 'spaced')
-}
-
-function extractBlockerEntries(content: string): string[] {
-  const document = parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA)
-  return getDocumentSectionBody(document, 'blockers')
-    .split('\n')
-    .map(line => line.trim())
-    .filter(line => /^[-*]\s+/.test(line))
-    .map(line => line.replace(/^[-*]\s+/, '').trim())
-    .filter(line => line.toLowerCase() !== 'none')
 }
 
 function deriveArchiveTrend(records: Array<{ date: string }>): Array<{ month: string, count: number }> {

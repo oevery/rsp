@@ -57,9 +57,12 @@
   },
   "dependencies": {
     "citty": "^0.2.2",
+    "hast-util-from-html": "2.0.3",
     "ink": "~7.1.1",
     "mdast-util-from-markdown": "2.0.3",
+    "mdast-util-frontmatter": "2.0.1",
     "mdast-util-gfm": "3.1.0",
+    "micromark-extension-frontmatter": "2.0.0",
     "micromark-extension-gfm": "3.0.0",
     "picocolors": "^1.1.1",
     "react": "~19.2.8",
@@ -67,6 +70,7 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^9.2.0",
+    "@types/hast": "3.0.5",
     "@types/mdast": "4.0.4",
     "@types/node": "^22.20.1",
     "@types/react": "19.2.17",

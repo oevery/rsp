@@ -19,7 +19,7 @@ export interface ProjectStatusRecord {
   output: StatusRecordOutput
   progressKnown: boolean
   title: string
-  blockerEntries: string[]
+  externalBlockers: string[]
   readiness: ArchiveReadinessOutput
 }
 

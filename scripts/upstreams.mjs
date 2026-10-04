@@ -9,7 +9,9 @@ import { Transform, Writable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
-import { parse, stringify } from 'yaml'
+import { stringify } from 'yaml'
+import { markdownFrontmatter, parseMarkdown } from '../src/core/markdown.mjs'
+import { parseYamlDocument } from '../src/core/yaml.mjs'
 
 const execFileAsync = promisify(execFile)
 
@@ -696,21 +698,21 @@ function diffUnavailable(id, status, reason) {
 }
 
 function parseYaml(text) {
-  const parsed = parse(text)
+  const parsed = parseYamlDocument(text).toJS()
   if (!isRecord(parsed))
     throw new Error('YAML document must be a mapping/object')
   return parsed
 }
 
 function parseMarkdownFrontmatter(text, path) {
-  if (!text.startsWith('---\n'))
+  if (!text.startsWith('---\n') && !text.startsWith('---\r\n'))
     throw new Error(`Source distillation must start with YAML frontmatter: ${path}`)
-  const end = text.indexOf('\n---\n', 4)
-  if (end < 0)
+  const matter = markdownFrontmatter(parseMarkdown(text))
+  if (!matter)
     throw new Error(`Source distillation frontmatter is not closed: ${path}`)
   return {
-    metadata: parseYaml(text.slice(4, end)),
-    body: text.slice(end + 5),
+    metadata: parseYaml(matter.value),
+    body: text.slice(matter.end),
   }
 }
 

@@ -2,8 +2,8 @@
 import { lstatSync, readdirSync, readFileSync, realpathSync } from 'node:fs'
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { fromMarkdown } from 'mdast-util-from-markdown'
-import { parse as parseYaml } from 'yaml'
+import { markdownFrontmatter, markdownLinks, parseMarkdown, visibleMarkdownSource } from '../src/core/markdown.mjs'
+import { parseYamlDocument, yamlMapping } from '../src/core/yaml.mjs'
 
 function contained(root, path) {
   const local = relative(root, path)
@@ -21,13 +21,13 @@ export function checkSkillPackage(directory) {
     const entrypoint = join(root, 'SKILL.md')
     if (!lstatSync(entrypoint).isFile() || lstatSync(entrypoint).isSymbolicLink())
       throw new Error('unsafe entrypoint')
-    const lines = readFileSync(entrypoint, 'utf8').split(/\r?\n/u)
-    const end = lines.indexOf('---', 1)
+    const document = parseMarkdown(readFileSync(entrypoint, 'utf8'))
+    const matter = markdownFrontmatter(document)
     let metadata
     try {
-      if (lines[0] !== '---' || end < 0)
+      if (!matter)
         throw new Error('missing frontmatter')
-      metadata = parseYaml(lines.slice(1, end).join('\n'))
+      metadata = yamlMapping(parseYamlDocument(matter.value))
       if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata))
         throw new Error('invalid frontmatter')
     }
@@ -44,7 +44,7 @@ export function checkSkillPackage(directory) {
       if (metadata.metadata !== undefined && (!metadata.metadata || typeof metadata.metadata !== 'object' || Array.isArray(metadata.metadata) || Object.values(metadata.metadata).some(value => typeof value !== 'string')))
         fail(entrypoint, 'invalid-metadata')
     }
-    if (end >= 0 && !lines.slice(end + 1).join('\n').trim())
+    if (matter && !visibleMarkdownSource(document, { includeCode: true }).trim())
       fail(entrypoint, 'empty-instructions')
 
     function checkLink(file, url) {
@@ -74,14 +74,9 @@ export function checkSkillPackage(directory) {
           walk(join(path, name))
       }
       else if (stat.isFile() && path.endsWith('.md')) {
-        const source = path === entrypoint && end >= 0 ? lines.slice(end + 1).join('\n') : readFileSync(path, 'utf8')
-        const visit = (node) => {
-          if (['link', 'image', 'definition'].includes(node.type))
-            checkLink(path, node.url)
-          for (const child of node.children ?? [])
-            visit(child)
-        }
-        visit(fromMarkdown(source))
+        const markdown = path === entrypoint ? document : parseMarkdown(readFileSync(path, 'utf8'))
+        for (const url of markdownLinks(markdown, { includeDefinitions: true }))
+          checkLink(path, url)
       }
     }
     walk(root)

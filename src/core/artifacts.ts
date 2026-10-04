@@ -1,5 +1,6 @@
 import type { IssueRelationship } from '../types.js'
 import { CHANGE_DOCUMENT_SCHEMA, renderDocumentSectionHeading, renderDocumentTitle } from './document-model.js'
+import { markdownTopLevelComments } from './markdown.mjs'
 
 const RSP_AGENTS_BEGIN = '<!-- rsp:begin -->'
 const RSP_AGENTS_END = '<!-- rsp:end -->'
@@ -184,18 +185,28 @@ ${RSP_AGENTS_END}`
 /** Update AGENTS.md with the managed RSP block while preserving user content. */
 export function upsertRspAgentsBlock(content: string): { content: string, changed: boolean } {
   const block = renderRspAgentsBlock()
-  const managedRe = /<!-- rsp:begin -->[\s\S]*?<!-- rsp:end -->/
-  if (managedRe.test(content)) {
-    const next = content.replace(managedRe, block)
+  const span = rspAgentsBlockSpan(content)
+  if (span) {
+    const next = content.slice(0, span.start) + block + content.slice(span.end)
     return { content: next, changed: next !== content }
   }
-  const trimmed = content.trimStart()
-  const next = trimmed ? `${block}\n\n${trimmed}` : `${block}\n`
+  const next = content ? `${block}\n\n${content}` : `${block}\n`
   return { content: next, changed: true }
 }
 
 export function hasRspAgentsBlock(content: string): boolean {
-  return content.includes(RSP_AGENTS_BEGIN) && content.includes(RSP_AGENTS_END)
+  return rspAgentsBlockSpan(content) !== null
+}
+
+function rspAgentsBlockSpan(content: string): { start: number, end: number } | null {
+  let start: number | undefined
+  for (const comment of markdownTopLevelComments(content)) {
+    if (comment.source === RSP_AGENTS_BEGIN && start === undefined)
+      start = comment.start
+    if (comment.source === RSP_AGENTS_END && start !== undefined)
+      return { start, end: comment.end }
+  }
+  return null
 }
 
 export function generateDesignContent(projectName: string): string {

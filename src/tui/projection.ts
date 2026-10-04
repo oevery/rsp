@@ -27,16 +27,8 @@ export function projectItemDependencyForest(item: DashboardItem, snapshot: Proje
   return item.type === 'change' ? forest[0]?.children ?? [] : forest
 }
 
-export function projectExternalBlockers(item: DashboardItem, snapshot: ProjectStatusSnapshot): string[] {
-  if (item.type !== 'change')
-    return []
-  const edges = snapshot.plan.edges.filter(edge => edge.change === item.workRef)
-  return item.record.blockerEntries.filter((entry) => {
-    const dependency = entry.match(/^requires\s+`([^`]+)`:\s*(\S.*)$/i)
-    if (!dependency)
-      return true
-    return !edges.some(edge => edge.requires === dependency[1] && edge.reason === dependency[2])
-  })
+export function projectExternalBlockers(item: DashboardItem): string[] {
+  return item.type === 'change' ? item.record.externalBlockers : []
 }
 
 export type DashboardNextAction

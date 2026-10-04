@@ -3,7 +3,9 @@ import { lstatSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync
 import { tmpdir } from 'node:os'
 import { join, relative } from 'node:path'
 import { expect, it } from 'vitest'
+import { parseYamlDocument } from '../../../src/core/yaml.mjs'
 import { loadCase } from '../../skills/runner/core/cases.mjs'
+import { copyDependencies } from '../../skills/runner/core/dependencies.mjs'
 import { prepareWorkspace, runCase } from '../../skills/runner/core/execute.mjs'
 import { hash } from '../../skills/runner/core/files.mjs'
 import { git } from '../../skills/runner/observers/workspace.mjs'
@@ -103,6 +105,13 @@ it('isolates real project dependencies and restores dirty recovery state in fres
       }
     }
     visit(join(workspace, 'node_modules'))
+    const packageSource = readFileSync(join(workspace, 'package.json'), 'utf8')
+    const frozen = parseYamlDocument(readFileSync(join(workspace, 'pnpm-lock.yaml'), 'utf8'))
+    const firstDependency = Object.keys(JSON.parse(packageSource).dependencies)[0]
+    frozen.setIn(['importers', '.', 'dependencies', firstDependency, 'version'], '0.0.0')
+    const refused = join(directory, 'refused-dependencies')
+    expect(() => copyDependencies(root, refused, { build: true, lockSource: String(frozen), packageSource })).toThrow('differs from selected frozen lock')
+    expect(readdirSync(refused)).toEqual([])
     writeFileSync(join(workspace, 'node_modules/picocolors/package.json'), 'isolated edit')
     expect(readFileSync('node_modules/picocolors/package.json')).toEqual(original)
     const adapter = repairAll => ({
@@ -120,7 +129,7 @@ it('isolates real project dependencies and restores dirty recovery state in fres
     expect(partial.verdict.status, JSON.stringify({ verdict: partial.verdict, task: partial.task, hard: partial.hard })).toBe('failed')
     const complete = await runCase(entry, root, { adapter: adapter(true), outputRoot: directory })
     expect(complete.verdict.status).toBe('passed')
-    expect(complete.identity.dependencies.lockHash).toBe(hash(readFileSync('pnpm-lock.yaml')))
+    expect(complete.identity.dependencies.lockHash).toBe(hash(git(root, ['show', `${entry.project.commit}:pnpm-lock.yaml`])))
     expect(complete.observation.indexHash).toBe(complete.observation.baselineIndexHash)
     expect(complete.observation.changedPaths).toEqual(['src/core/issue-relationship.ts', 'src/core/path-identity.ts'])
     expect(complete.context.workspace).not.toBe(partial.context.workspace)

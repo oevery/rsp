@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, extname, join, relative, resolve } from 'node:path'
+import { markdownLinks, parseMarkdown } from '../src/core/markdown.mjs'
 
 const repositoryRoot = resolve(import.meta.dirname, '..')
 const packageManifest = JSON.parse(readFileSync(join(repositoryRoot, 'package.json'), 'utf8'))
@@ -98,7 +99,6 @@ const checkedFiles = [
   join(repositoryRoot, 'README.zh-CN.md'),
   ...markdownFiles(docsRoot),
 ]
-const markdownLink = /!?\[[^\]]*\]\(([^)]+)\)/g
 
 for (const file of checkedFiles) {
   const content = readFileSync(file, 'utf8')
@@ -111,8 +111,7 @@ for (const file of checkedFiles) {
     checkSetupSemantics(file, content)
   }
 
-  for (const match of content.matchAll(markdownLink)) {
-    const target = match[1].trim().replace(/^<|>$/g, '')
+  for (const target of markdownLinks(parseMarkdown(content))) {
     if (/^(?:[a-z][a-z\d+.-]*:|#)/i.test(target))
       continue
     const candidates = candidateTargets(file, target)

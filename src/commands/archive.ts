@@ -6,6 +6,7 @@ import { inspectChangeDocument } from '../core/change-document-inspection.js'
 import { resolveExecutableChange } from '../core/change-group.js'
 import { CHANGES_DIR, FOCUS_DIR, inspectRspConfig, resolveKinds, resolveRequiredSections, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
+import { CHANGE_DOCUMENT_SCHEMA, parseRspDocument } from '../core/document-model.js'
 import { cleanupEmptyParentDirs } from '../core/filesystem.js'
 import { withRspLock } from '../core/lock.js'
 import { inspectManagedFile } from '../core/managed-path.js'
@@ -45,9 +46,10 @@ export async function archiveChange(name: string): Promise<ArchiveChangeResult> 
         }
       }
       const dependencyInspection = await inspectChangeDependencies()
-      const readiness = collectArchiveReadiness(content, {
+      const document = parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA)
+      const readiness = collectArchiveReadiness(document, {
         activeBlockers: dependencyInspection.activeBlockers.get(workRef.name),
-        documentDiagnostics: inspectChangeDocument(content, {
+        documentDiagnostics: inspectChangeDocument(document, {
           name: workRef.name,
           validKinds: resolveKinds(configInspection.config),
           requiredSections: resolveRequiredSections(configInspection.config),

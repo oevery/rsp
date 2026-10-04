@@ -5,6 +5,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "types": ["node"],
+    "allowJs": true,
     "strict": true,
     "declaration": false,
     "outDir": "dist",

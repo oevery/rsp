@@ -1,3 +1,6 @@
+import type { MarkdownDocument, MarkdownInput } from './markdown.mjs'
+import { markdownNodeSource, markdownSection, parseMarkdown } from './markdown.mjs'
+
 export interface DocumentSectionDefinition<SectionId extends string> {
   id: SectionId
   heading: string
@@ -41,15 +44,13 @@ export interface DocumentSection<SectionId extends string> {
   id: SectionId
   heading: string
   canonical: boolean
-  body: string
-  headingStart: number
-  headingEnd: number
-  bodyStart: number
   bodyEnd: number
+  markdown: MarkdownDocument
 }
 
 export interface ParsedRspDocument<SectionId extends string> {
   source: string
+  markdown: MarkdownDocument
   schema: RspDocumentSchema<SectionId>
   title: string | null
   titles: string[]
@@ -85,11 +86,13 @@ export class DocumentSectionCardinalityError extends Error {
 
 /** Parse canonical RSP structure while retaining the original source and exact section spans. */
 export function parseRspDocument<SectionId extends string>(
-  source: string,
+  input: MarkdownInput,
   schema: RspDocumentSchema<SectionId>,
 ): ParsedRspDocument<SectionId> {
+  const markdown = parseMarkdown(input)
+  const source = markdown.source
   const definitionsByHeading = new Map(schema.sections.map(definition => [definition.heading, definition]))
-  const observedHeadings = collectLevelTwoHeadings(source)
+  const observedHeadings = collectLevelTwoHeadings(markdown)
   const sections = new Map<SectionId, DocumentSection<SectionId>[]>()
   const unknownHeadings: string[] = []
 
@@ -106,11 +109,11 @@ export function parseRspDocument<SectionId extends string>(
       id: definition.id,
       heading: definition.heading,
       canonical: observed.canonical,
-      body: source.slice(observed.end, bodyEnd).trim(),
-      headingStart: observed.start,
-      headingEnd: observed.end,
-      bodyStart: observed.end,
       bodyEnd,
+      markdown: markdownSection(markdown, markdown.root.children.filter(node => (
+        (node.position?.start.offset ?? 0) >= observed.end
+        && (node.position?.end.offset ?? source.length) <= bodyEnd
+      )), observed.end, bodyEnd),
     }
     const matches = sections.get(definition.id) ?? []
     matches.push(section)
@@ -124,10 +127,11 @@ export function parseRspDocument<SectionId extends string>(
     .filter(definition => (sections.get(definition.id)?.length ?? 0) > 1)
     .map(definition => definition.id)
 
-  const titleOccurrences = collectDocumentTitles(source, schema.titlePrefix)
+  const titleOccurrences = collectDocumentTitles(markdown, schema.titlePrefix)
   const titles = titleOccurrences.map(title => title.value)
   return {
     source,
+    markdown,
     schema,
     title: titles[0] ?? null,
     titles,
@@ -175,12 +179,12 @@ export function getDocumentSection<SectionId extends string>(
   return getDocumentSections(document, sectionId)[0]
 }
 
-/** Return one semantic section body or an empty string when it is absent. */
-export function getDocumentSectionBody<SectionId extends string>(
+/** Source-positioned semantic view; consumers must not reparse the raw section body. */
+export function getDocumentSectionMarkdown<SectionId extends string>(
   document: ParsedRspDocument<SectionId>,
   sectionId: SectionId,
-): string {
-  return getDocumentSection(document, sectionId)?.body ?? ''
+): MarkdownDocument {
+  return getDocumentSection(document, sectionId)?.markdown ?? markdownSection(document.markdown, [], 0, 0)
 }
 
 /** Return the semantic definition for one canonical persisted heading. */
@@ -228,26 +232,34 @@ export function appendDocumentSectionItem<SectionId extends string>(
   return `${before}${separator}${item}\n${document.source.slice(insertAt)}`
 }
 
-function collectLevelTwoHeadings(source: string): ObservedHeading[] {
+function collectLevelTwoHeadings(document: MarkdownDocument): ObservedHeading[] {
   const headings: ObservedHeading[] = []
-  const pattern = /^## ([^\r\n]+)\r?$/gm
-  let match
-  // eslint-disable-next-line no-cond-assign
-  while ((match = pattern.exec(source)) !== null) {
-    const heading = match[1].trimEnd()
+  for (const node of document.root.children) {
+    if (node.type !== 'heading' || node.depth !== 2 || node.position?.start.column !== 1)
+      continue
+    const raw = markdownNodeSource(document, node)
+    if (!raw.startsWith('## ') || raw.includes('\n'))
+      continue
+    const value = raw.slice(3)
+    const heading = value.trimEnd()
     headings.push({
       heading,
-      canonical: heading === match[1],
-      start: match.index,
-      end: match.index + match[0].length,
+      canonical: heading === value,
+      start: node.position!.start.offset!,
+      end: node.position!.end.offset!,
     })
   }
   return headings
 }
 
-function collectDocumentTitles(source: string, prefix: string): DocumentTitleOccurrence[] {
+function collectDocumentTitles(document: MarkdownDocument, prefix: string): DocumentTitleOccurrence[] {
   const titles: DocumentTitleOccurrence[] = []
-  for (const line of source.split(/\r?\n/)) {
+  for (const node of document.root.children) {
+    if (node.type !== 'heading' || node.depth !== 1)
+      continue
+    const start = node.position!.start.offset!
+    const lineStart = document.source.lastIndexOf('\n', start - 1) + 1
+    const line = document.source.slice(lineStart, node.position!.end.offset!)
     const trimmed = line.trim()
     if (!trimmed.startsWith(prefix))
       continue

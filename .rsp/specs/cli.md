@@ -50,6 +50,16 @@ settings. Agent consumption belongs to [Workflow](workflow.md#methods-and-eviden
 
 ### Managed artifacts and lifecycle
 
+Document inspection recognizes Markdown structure before applying RSP's canonical
+grammar. Comments and code examples provide no identity, sections, completion or
+dependency evidence; inline-code values in valid protocol items retain their exact
+authored spelling. Syntax recognition does not relax canonical headings or task
+states. YAML syntax errors are rejected before value validation or mutation.
+Source-positioned edits preserve unrelated text rather than regenerating the
+whole document from a syntax tree.
+Managed AGENTS entry markers select replacement spans only as actual top-level
+comment nodes, not marker literals inside examples.
+
 Change, Group, focus, archive and reopen mutations validate their target boundary
 and preserve unrelated files. Archive/reopen retain historical boundaries and do
 not automatically write Specs or Decision Records. The

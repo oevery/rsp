@@ -5,10 +5,12 @@ import { join } from 'node:path'
 
 import { generateGroupBriefContent, getGroupReopenEvidence, GROUP_REOPEN_COMPLETION_PREFIX, hasArchivedGroupBrief, inspectChangeGroups } from '../core/change-group.js'
 import { CHANGES_DIR, FOCUS_DIR, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
-import { appendDocumentSectionItem, getDocumentSectionBody, getDocumentSections, getDocumentTitles, GROUP_BRIEF_DOCUMENT_SCHEMA, parseRspDocument } from '../core/document-model.js'
+import { getVisibleBodyLines } from '../core/content.js'
+import { appendDocumentSectionItem, getDocumentSectionMarkdown, getDocumentSections, getDocumentTitles, GROUP_BRIEF_DOCUMENT_SCHEMA, parseRspDocument } from '../core/document-model.js'
 import { cleanupEmptyParentDirs } from '../core/filesystem.js'
 import { withRspLock } from '../core/lock.js'
 import { inspectManagedFile, ManagedPathError, requireManagedDirectory, resolveManagedDirectoryChain } from '../core/managed-path.js'
+import { markdownText, parseMarkdown } from '../core/markdown.mjs'
 import { toErrorMessage } from '../core/output.js'
 import { normalizeWorkRefSegment, resolveArchiveDirectory, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 import { ArchiveHistoryError, historyInspectionComplete, inspectArchiveHistory, selectArchivedGroupBrief } from '../history/query.js'
@@ -120,7 +122,7 @@ export async function reopenChangeGroup(name: string, options: ReopenChangeGroup
     return failure('usage', 'rsp group reopen <name> --reason <text> [--from <archive-path>]')
   }
   const reason = options.reason?.trim()
-  if (!reason || /[\r\n]/.test(reason)) {
+  if (!reason || /[\r\n]/.test(reason) || !markdownText(parseMarkdown(reason).root).trim()) {
     return failure('error', '--reason must be one non-empty line')
   }
   const initialization = inspectInitialization()
@@ -162,8 +164,10 @@ export async function reopenChangeGroup(name: string, options: ReopenChangeGroup
       const evidenceKey = `${GROUP_REOPEN_COMPLETION_PREFIX} \`${record.path}\`: ${reason}`
       const retainedEvidence = new Set<string>()
       for (const retained of inspection.groupBriefs.filter(candidate => candidate.group === groupName)) {
-        const content = retained.sourcePath === record.sourcePath ? archivedContent : await readFile(retained.sourcePath, 'utf-8')
-        for (const item of getGroupReopenEvidence(content))
+        const retainedDocument = retained.sourcePath === record.sourcePath
+          ? document
+          : parseRspDocument(await readFile(retained.sourcePath, 'utf-8'), GROUP_BRIEF_DOCUMENT_SCHEMA)
+        for (const item of getGroupReopenEvidence(retainedDocument))
           retainedEvidence.add(item.key)
       }
       if (retainedEvidence.has(evidenceKey)) {
@@ -259,7 +263,7 @@ function validateArchivedGroupBrief(document: ReturnType<typeof parseRspDocument
     throw new ArchiveHistoryError('archive_heading_invalid', `archived Change Group must contain exactly one canonical identity heading for ${group}`)
   for (const section of GROUP_BRIEF_DOCUMENT_SCHEMA.sections) {
     const matches = getDocumentSections(document, section.id)
-    if (matches.length !== 1 || !matches[0].canonical || !getDocumentSectionBody(document, section.id)) {
+    if (matches.length !== 1 || !matches[0].canonical || getVisibleBodyLines(getDocumentSectionMarkdown(document, section.id)).length === 0) {
       throw new ArchiveHistoryError(
         'archive_section_invalid',
         `archived Change Group must contain exactly one canonical required section: ${section.heading}`,

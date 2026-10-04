@@ -1,6 +1,7 @@
 import type { ArchiveReadinessOutput, CommandDiagnostic, VerifyCriticalitySummary } from '../types.js'
-import { classifyVerifyCheckboxes, collectVerifyCheckboxLines, getOpenCheckboxes, hasMeaningfulBlockers, parseScenarios } from './content.js'
-import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionBody, parseRspDocument } from './document-model.js'
+import type { ChangeSectionId, ParsedRspDocument } from './document-model.js'
+import { collectVerifyCheckboxes, getOpenCheckboxes, hasMeaningfulBlockers, openCheckboxLines, parseScenarios, summarizeVerifyCheckboxes } from './content.js'
+import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionMarkdown, parseRspDocument } from './document-model.js'
 
 export interface ArchiveReadiness {
   taskTodos: string[]
@@ -27,34 +28,34 @@ export interface DurableReviewGuidance {
   note: string
 }
 
-export function collectArchiveReadiness(content: string, options: {
+export function collectArchiveReadiness(content: string | ParsedRspDocument<ChangeSectionId>, options: {
   activeBlockers?: boolean
   documentDiagnostics?: CommandDiagnostic[]
 } = {}): ArchiveReadiness {
   const warnings: string[] = []
   const documentDiagnostics = options.documentDiagnostics ?? []
   warnings.push(...documentDiagnostics.map(diagnostic => diagnostic.message))
-  const document = parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA)
-  const tasksSection = getDocumentSectionBody(document, 'tasks')
-  const verifySection = getDocumentSectionBody(document, 'verify')
+  const document = typeof content === 'string' ? parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA) : content
+  const tasksSection = getDocumentSectionMarkdown(document, 'tasks')
+  const verifySection = getDocumentSectionMarkdown(document, 'verify')
   const taskTodos = getOpenCheckboxes(tasksSection)
   if (taskTodos.length > 0)
     warnings.push(`${taskTodos.length} task item(s) still incomplete`)
 
-  const verifyCriticality = classifyVerifyCheckboxes(verifySection)
-  const verifyLines = collectVerifyCheckboxLines(verifySection)
-  const requiredVerifyTodos = getOpenCheckboxes([...verifyLines.required, ...verifyLines.unclassified].join('\n'))
-  const optionalVerifyTodos = getOpenCheckboxes(verifyLines.optional.join('\n'))
+  const verifyItems = collectVerifyCheckboxes(verifySection)
+  const verifyCriticality = summarizeVerifyCheckboxes(verifyItems)
+  const requiredVerifyTodos = openCheckboxLines([...verifyItems.required, ...verifyItems.unclassified])
+  const optionalVerifyTodos = openCheckboxLines(verifyItems.optional)
   const verifyTodos = [...requiredVerifyTodos, ...optionalVerifyTodos]
   if (requiredVerifyTodos.length > 0)
     warnings.push(`${requiredVerifyTodos.length} required Verify item(s) are still incomplete`)
   if (optionalVerifyTodos.length > 0)
     warnings.push(`${optionalVerifyTodos.length} optional Verify item(s) are still incomplete`)
 
-  const activeBlockers = options.activeBlockers ?? hasMeaningfulBlockers(content)
+  const activeBlockers = options.activeBlockers ?? hasMeaningfulBlockers(document)
   if (activeBlockers)
     warnings.push('active blockers are present in the change file')
-  const scenarios = parseScenarios(content)
+  const scenarios = parseScenarios(document.markdown)
   const missingScenarios = scenarios.length === 0
   if (missingScenarios)
     warnings.push('no Scenario blocks found (some changes do not need them)')

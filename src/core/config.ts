@@ -3,11 +3,12 @@ import { readFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import pc from 'picocolors'
-import { parseDocument, stringify, visit } from 'yaml'
+import { stringify, visit } from 'yaml'
 import { parseYamlText } from './content.js'
 import { getDecisionRecordsConfigIssue, normalizeDecisionRecordsPath, validateDecisionRecordsPath } from './decisions.js'
 import { CHANGE_DOCUMENT_SCHEMA, getCanonicalSectionHeadings } from './document-model.js'
 import { inspectManagedFile } from './managed-path.js'
+import { parseYamlDocument, yamlMapping } from './yaml.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -112,11 +113,8 @@ export interface ConfigDefaultsReconciliation {
  * Generated comments are refreshed; custom comments use conservative append-only repair.
  */
 export function reconcileRspConfigDefaults(raw: string): ConfigDefaultsReconciliation {
-  const document = parseDocument(raw)
-  if (document.errors.length > 0)
-    throw new Error(document.errors.map(error => error.message).join('; '))
-
-  const parsed = parseYamlText(raw)
+  const document = parseYamlDocument(raw)
+  const parsed = yamlMapping(document)
   const issues = validateRspConfig(parsed)
   if (issues.length > 0)
     throw new Error(issues.join('; '))
@@ -156,7 +154,7 @@ function collectMissingConfigDefaults(parsed: Record<string, unknown>): string[]
   return added
 }
 
-function backfillConfigDocument(document: ReturnType<typeof parseDocument>, parsed: Record<string, unknown>): void {
+function backfillConfigDocument(document: ReturnType<typeof parseYamlDocument>, parsed: Record<string, unknown>): void {
   if (!('kinds' in parsed))
     document.set('kinds', [...CONFIG_DEFAULTS.kinds])
   if (!('decisions' in parsed))
@@ -191,14 +189,14 @@ const LEGACY_GENERATED_CONFIG_COMMENTS = new Set([
   ...VALID_KINDS.map(kind => `- ${kind}`),
 ])
 
-function hasCustomConfigComments(document: ReturnType<typeof parseDocument>, parsed: Record<string, unknown>): boolean {
-  const generated = new Set(collectConfigComments(parseDocument(generateConfigTemplate(parsed as RspConfig))))
+function hasCustomConfigComments(document: ReturnType<typeof parseYamlDocument>, parsed: Record<string, unknown>): boolean {
+  const generated = new Set(collectConfigComments(parseYamlDocument(generateConfigTemplate(parsed as RspConfig))))
   for (const comment of LEGACY_GENERATED_CONFIG_COMMENTS)
     generated.add(comment)
   return collectConfigComments(document).some(comment => !generated.has(comment))
 }
 
-function collectConfigComments(document: ReturnType<typeof parseDocument>): string[] {
+function collectConfigComments(document: ReturnType<typeof parseYamlDocument>): string[] {
   const comments: string[] = []
   const append = (value: string | null | undefined) => {
     if (!value)

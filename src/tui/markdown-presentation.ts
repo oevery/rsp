@@ -1,7 +1,5 @@
 import type { List, ListItem, PhrasingContent, RootContent } from 'mdast'
-import { fromMarkdown } from 'mdast-util-from-markdown'
-import { gfmFromMarkdown } from 'mdast-util-gfm'
-import { gfm } from 'micromark-extension-gfm'
+import { isMarkdownComment, markdownText, parseMarkdown } from '../core/markdown.mjs'
 import { displayWidth } from './display.js'
 
 export interface MarkdownSpan {
@@ -37,9 +35,11 @@ export function markdownLineText(line: MarkdownLine): string {
 }
 
 export function projectMarkdownLines(content: string, width: number): MarkdownLine[] {
-  const root = fromMarkdown(sanitizeMarkdown(stripFrontmatter(content)), { extensions: [gfm()], mdastExtensions: [gfmFromMarkdown()] })
+  const root = parseMarkdown(sanitizeMarkdown(content)).root
   const logical: MarkdownLine[] = []
   root.children.forEach((node, index) => {
+    if (node.type === 'yaml' || isMarkdownComment(node))
+      return
     if (index > 0 && logical.length > 0 && markdownLineText(logical.at(-1)!) !== '')
       logical.push(EMPTY_LINE)
     logical.push(...projectBlock(node, 0, Math.max(1, width)))
@@ -74,10 +74,6 @@ export function projectMarkdownLineViewport(
     hasPrevious: start > 0,
     hasNext: end < lines.length,
   }
-}
-
-function stripFrontmatter(content: string): string {
-  return content.replace(/^---\r?\n[\s\S]*?\r?\n(?:---|\.\.\.)\r?\n/u, '')
 }
 
 function sanitizeMarkdown(value: string): string {
@@ -127,7 +123,7 @@ function projectBlock(node: RootContent, depth: number, width: number): Markdown
     case 'table':
       return projectTable(node, width)
     case 'html':
-      return [metavariableLine(node.value) ?? { spans: [{ text: node.value, dim: true }] }]
+      return [metavariableLine(node.value) ?? { spans: [{ text: markdownText(node).trim(), dim: true }] }]
     default:
       return 'children' in node
         ? inlineLines(node.children.filter((child): child is PhrasingContent => isPhrasing(child)))
@@ -177,11 +173,13 @@ function inlineLines(children: PhrasingContent[], style: SpanStyle = {}, prefix 
 }
 
 function projectInline(node: PhrasingContent, inherited: SpanStyle): MarkdownSpan[] {
+  if (isMarkdownComment(node))
+    return []
   switch (node.type) {
     case 'text':
       return [{ text: node.value, ...inherited }]
     case 'html':
-      return metavariableSpan(node.value, inherited) ?? [{ text: node.value, ...inherited, dim: true }]
+      return metavariableSpan(node.value, inherited) ?? [{ text: markdownText(node), ...inherited, dim: true }]
     case 'inlineCode':
       return [{ text: node.value, ...inherited, code: true, color: 'cyan' }]
     case 'break':

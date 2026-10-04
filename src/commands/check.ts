@@ -1,12 +1,15 @@
+import type { MarkdownInput } from '../core/markdown.mjs'
 import type { CommandDiagnostic, RspConfig, RuntimeDiagnostic } from '../types.js'
-import { readFile } from 'node:fs/promises'
 
+import { readFile } from 'node:fs/promises'
 import { inspectChangeDocument } from '../core/change-document-inspection.js'
 import { inspectChangeGroups } from '../core/change-group.js'
 import { loadRspConfig, resolveKinds, resolveRequiredSections } from '../core/config.js'
 import { detectDeltaSections, parseScenarios } from '../core/content.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
+import { CHANGE_DOCUMENT_SCHEMA, parseRspDocument } from '../core/document-model.js'
 import { inspectFocusCapsuleBytes } from '../core/focus-capsule.js'
+import { markdownProse, parseMarkdown } from '../core/markdown.mjs'
 import { toErrorMessage } from '../core/output.js'
 import { inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 
@@ -196,10 +199,11 @@ export async function runCheck(options: CheckOptions = {}): Promise<CheckResult>
       continue
     }
 
-    for (const diagnostic of inspectChangeDocument(content, { name, validKinds, requiredSections }))
+    const document = parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA)
+    for (const diagnostic of inspectChangeDocument(document, { name, validKinds, requiredSections }))
       addDiagnostic({ ...diagnostic, change: name, path: fp })
 
-    const deltas = detectDeltaSections(content)
+    const deltas = detectDeltaSections(document)
     if (deltas.added || deltas.modified || deltas.removed) {
       const parts: string[] = []
       if (deltas.added)
@@ -217,7 +221,7 @@ export async function runCheck(options: CheckOptions = {}): Promise<CheckResult>
       })
     }
 
-    const placeholderLines = findUnfinishedTemplateLines(content)
+    const placeholderLines = findUnfinishedTemplateLines(document.markdown)
     if (placeholderLines.length > 0) {
       addDiagnostic({
         severity: 'warning',
@@ -230,7 +234,7 @@ export async function runCheck(options: CheckOptions = {}): Promise<CheckResult>
       })
     }
 
-    const clarificationLines = findUnresolvedClarificationLines(content)
+    const clarificationLines = findUnresolvedClarificationLines(document.markdown)
     if (clarificationLines.length > 0) {
       addDiagnostic({
         severity: 'warning',
@@ -243,7 +247,7 @@ export async function runCheck(options: CheckOptions = {}): Promise<CheckResult>
       })
     }
 
-    const scenarios = parseScenarios(content)
+    const scenarios = parseScenarios(document.markdown)
     if (scenarios.length > 0) {
       const scenarioIssues: string[] = []
       for (const s of scenarios) {
@@ -289,29 +293,24 @@ export async function runCheck(options: CheckOptions = {}): Promise<CheckResult>
   return result
 }
 
-function findUnfinishedTemplateLines(content: string): string[] {
+function findUnfinishedTemplateLines(content: MarkdownInput): string[] {
   const placeholderRe = /<(?:…|[^>\n]*(?:choose:|one-line|what |why |which |who |how |new |updated |expected |actual |specific |concrete |exact |verifiable |user |capability |behavior |context |action|path|directory|module|subsystem|command|scenario|constraint|requirement|question|uncertainty|implementation)[^>\n]*)>/i
-  return collectMatchingLines(content, (line) => {
-    const trimmed = stripInlineCodeSpans(line).trim()
-    return trimmed.startsWith('<!--') === false && placeholderRe.test(trimmed)
-  })
+  return collectMatchingLines(content, value => placeholderRe.test(value))
 }
 
-function findUnresolvedClarificationLines(content: string): string[] {
-  return collectMatchingLines(content, line => /\[(?:NEEDS|TODO|TBD)\s+CLARIFICATION(?::[^\]]*)?\]/i.test(stripInlineCodeSpans(line)))
+function findUnresolvedClarificationLines(content: MarkdownInput): string[] {
+  return collectMatchingLines(content, value => /\[(?:NEEDS|TODO|TBD)\s+CLARIFICATION(?::[^\]]*)?\]/i.test(value))
 }
 
-function stripInlineCodeSpans(line: string): string {
-  return line.replace(/`[^`]*`/g, '')
-}
-
-function collectMatchingLines(content: string, predicate: (line: string) => boolean): string[] {
-  const matches: string[] = []
-  const lines = content.split('\n')
-  for (let index = 0; index < lines.length; index++) {
-    const line = lines[index]
-    if (predicate(line))
-      matches.push(`line ${index + 1}: ${line.trim()}`)
+function collectMatchingLines(content: MarkdownInput, predicate: (value: string) => boolean): string[] {
+  const document = parseMarkdown(content)
+  const sourceLines = document.source.split(/\r?\n/)
+  const matched = new Set<number>()
+  for (const fragment of markdownProse(document)) {
+    fragment.value.split(/\r?\n/).forEach((value, index) => {
+      if (predicate(value))
+        matched.add(fragment.line + index)
+    })
   }
-  return matches.slice(0, 10)
+  return [...matched].sort((a, b) => a - b).slice(0, 10).map(line => `line ${line}: ${sourceLines[line - 1].trim()}`)
 }

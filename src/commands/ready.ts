@@ -6,6 +6,7 @@ import { resolveExecutableChange } from '../core/change-group.js'
 import { inspectRspConfig, resolveKinds, resolveRequiredSections } from '../core/config.js'
 import { resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
+import { CHANGE_DOCUMENT_SCHEMA, parseRspDocument } from '../core/document-model.js'
 import { guardRspInitialized, normalizeLogicalPath } from '../core/filesystem.js'
 import { toErrorMessage } from '../core/output.js'
 import { buildDurableReviewGuidance, collectArchiveReadiness, getDurableReviewCandidateTargets, toArchiveReadinessOutput } from '../core/readiness.js'
@@ -87,9 +88,10 @@ export async function showReady(name: string): Promise<ReadyResult> {
     return readyError(name, { code: 'invalid_config', message: `.rsp/config.yaml could not be parsed: ${toErrorMessage(error)}` }, 'config')
   }
   const dependencyInspection = await inspectChangeDependencies()
-  const readinessDetails = collectArchiveReadiness(content, {
+  const document = parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA)
+  const readinessDetails = collectArchiveReadiness(document, {
     activeBlockers: dependencyInspection.activeBlockers.get(name),
-    documentDiagnostics: inspectChangeDocument(content, {
+    documentDiagnostics: inspectChangeDocument(document, {
       name,
       validKinds: resolveKinds(configInspection.config),
       requiredSections: resolveRequiredSections(configInspection.config),

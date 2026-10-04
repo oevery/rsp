@@ -8,6 +8,7 @@ import { appendDocumentSectionItem, CHANGE_DOCUMENT_SCHEMA, DocumentSectionCardi
 import { cleanupEmptyParentDirs } from '../core/filesystem.js'
 import { withRspLock } from '../core/lock.js'
 import { inspectManagedFile, writeManagedFile } from '../core/managed-path.js'
+import { markdownText, parseMarkdown } from '../core/markdown.mjs'
 import { normalizeExecutableWorkRef, resolveFocusMarkerPath, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 import { ArchiveHistoryError, historyInspectionComplete, inspectArchiveHistory, selectArchiveHistoryRecord } from '../history/query.js'
 
@@ -25,7 +26,7 @@ export async function reopenChange(name: string, options: ReopenOptions): Promis
     return { ok: false, kind: 'usage', message: 'rsp reopen <name> --reason <text> [--from <archive-path>]', candidates: [], remainingCandidates: 0 }
   }
   const reason = options.reason?.trim()
-  if (!reason || /[\r\n]/.test(reason)) {
+  if (!reason || /[\r\n]/.test(reason) || !markdownText(parseMarkdown(reason).root).trim()) {
     return { ok: false, kind: 'error', message: '--reason must be one non-empty line', candidates: [], remainingCandidates: 0 }
   }
   const initialization = inspectInitialization()

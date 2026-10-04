@@ -1,21 +1,22 @@
 import { cpSync, existsSync, mkdirSync, readFileSync, realpathSync, symlinkSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join, relative } from 'node:path'
-import { parse } from 'yaml'
+import { parseYamlDocument } from '../../../../src/core/yaml.mjs'
 import { hash, treeFiles } from './files.mjs'
 
-// Reconstruct the resolved package graph entirely within the disposable workspace.
-// Links connect copied packages only; no link points into the maintainer checkout.
-export function copyDependencies(root, destination, { build = false, lockSource } = {}) {
-  const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))
-  const lock = readFileSync(join(root, 'pnpm-lock.yaml'), 'utf8')
-  if (lockSource && lockSource !== lock)
-    throw new Error('Fixed project lock differs from installed dependency source')
+// Reconstruct the selected frozen graph entirely within the disposable workspace.
+// The installed source graph must be current; selected package identities and
+// every copied dependency edge must match the snapshot's own lock.
+export function copyDependencies(root, destination, { build = false, lockSource, packageSource } = {}) {
+  const pkg = JSON.parse(packageSource ?? readFileSync(join(root, 'package.json'), 'utf8'))
+  const currentLock = readFileSync(join(root, 'pnpm-lock.yaml'), 'utf8')
   const installedLock = readFileSync(join(root, 'node_modules/.pnpm/lock.yaml'), 'utf8')
-  const wanted = parse(lock)
-  const installed = parse(installedLock)
-  if (hash(wanted.importers) !== hash(installed.importers) || hash(wanted.packages) !== hash(installed.packages))
+  const current = parseYamlDocument(currentLock).toJS()
+  const installed = parseYamlDocument(installedLock).toJS()
+  if (hash(current.importers) !== hash(installed.importers) || hash(current.packages) !== hash(installed.packages))
     throw new Error('Installed dependency lock is stale')
+  const lock = lockSource ?? currentLock
+  const wanted = parseYamlDocument(lock).toJS()
   const copied = new Map()
   const versions = {}
   const locate = (name, from) => {
@@ -27,28 +28,40 @@ export function copyDependencies(root, destination, { build = false, lockSource 
     }
     throw new Error('Installed dependency unavailable')
   }
-  function copy(name, from) {
+  function copy(name, from, lockedVersion) {
     const source = locate(name, from)
-    if (copied.has(source))
-      return copied.get(source)
     const manifest = JSON.parse(readFileSync(join(source, 'package.json'), 'utf8'))
-    if (!wanted.packages[`${manifest.name}@${manifest.version}`])
-      throw new Error('Resolved dependency is absent from the frozen lock')
-    const target = join(destination, '.snapshot', hash(relative(join(root, 'node_modules'), source)).slice(0, 16), 'node_modules', name)
-    copied.set(source, target)
-    versions[`${name}@${manifest.version}`] = true
+    if (manifest.name !== name || manifest.version !== lockedVersion.split('(')[0])
+      throw new Error('Installed dependency differs from selected frozen lock')
+    const identity = `${manifest.name}@${manifest.version}`
+    if (!wanted.packages[identity] || hash(wanted.packages[identity]) !== hash(installed.packages[identity]))
+      throw new Error('Resolved dependency provenance differs from selected frozen lock')
+    const snapshot = wanted.snapshots[`${manifest.name}@${lockedVersion}`]
+    if (!snapshot)
+      throw new Error('Resolved dependency snapshot is absent from selected frozen lock')
+    const key = `${source}:${lockedVersion}`
+    if (copied.has(key))
+      return copied.get(key)
+    const target = join(destination, '.snapshot', hash(`${relative(join(root, 'node_modules'), source)}:${lockedVersion}`).slice(0, 16), 'node_modules', name)
+    copied.set(key, target)
+    versions[identity] = true
     cpSync(source, target, { recursive: true, dereference: true, filter: p => p === source || !relative(source, p).split('/').includes('node_modules') })
     for (const child of new Set([...Object.keys(manifest.dependencies ?? {}), ...Object.keys(manifest.optionalDependencies ?? {}), ...Object.keys(manifest.peerDependencies ?? {})])) {
-      let childSource
+      const lockedChild = snapshot.dependencies?.[child] ?? snapshot.optionalDependencies?.[child]
+      if (!lockedChild) {
+        if (manifest.dependencies?.[child])
+          throw new Error('Required dependency edge is absent from selected frozen lock')
+        continue
+      }
       try {
-        childSource = locate(child, source)
+        locate(child, source)
       }
       catch {
         if (manifest.dependencies?.[child])
           throw new Error('Required dependency missing')
         continue
       }
-      const childTarget = copied.get(childSource) ?? copy(child, source)
+      const childTarget = copy(child, source, lockedChild)
       const link = join(dirname(target), ...(name.startsWith('@') ? ['..'] : []), child)
       mkdirSync(dirname(link), { recursive: true })
       if (!existsSync(link))
@@ -58,12 +71,10 @@ export function copyDependencies(root, destination, { build = false, lockSource 
   }
   mkdirSync(destination, { recursive: true })
   for (const name of new Set([...Object.keys(pkg.dependencies), ...(build ? ['tsup', 'typescript'] : [])])) {
-    const source = locate(name, root)
-    const actual = JSON.parse(readFileSync(join(source, 'package.json'), 'utf8')).version
     const item = wanted.importers['.'].dependencies?.[name] ?? wanted.importers['.'].devDependencies?.[name]
-    if (!item || item.version.split('(')[0] !== actual)
-      throw new Error('Installed direct dependency differs from lock')
-    const target = copy(name, root)
+    if (!item)
+      throw new Error('Direct dependency is absent from selected frozen lock')
+    const target = copy(name, root, item.version)
     const link = join(destination, name)
     mkdirSync(dirname(link), { recursive: true })
     symlinkSync(relative(dirname(link), target), link, 'dir')

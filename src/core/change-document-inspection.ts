@@ -1,4 +1,5 @@
 import type { CommandDiagnostic } from '../types.js'
+import type { ChangeSectionId, ParsedRspDocument } from './document-model.js'
 import { parseFrontmatter } from './content.js'
 import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionDefinitionByHeading, getDocumentSections, parseRspDocument } from './document-model.js'
 import { IssueRelationshipError, parseIssueRelationships } from './issue-relationship.js'
@@ -13,14 +14,15 @@ const choosePlaceholderRe = /^<choose:/i
 
 /** Inspect the persisted structure and metadata required by every ordinary Change consumer. */
 export function inspectChangeDocument(
-  content: string,
+  content: string | ParsedRspDocument<ChangeSectionId>,
   options: ChangeDocumentInspectionOptions,
 ): CommandDiagnostic[] {
   const diagnostics: CommandDiagnostic[] = []
+  const document = typeof content === 'string' ? parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA) : content
   let frontmatter = null
 
   try {
-    frontmatter = parseFrontmatter(content)
+    frontmatter = parseFrontmatter(document.markdown)
   }
   catch (error) {
     const message = error instanceof Error ? error.message : String(error)
@@ -39,7 +41,6 @@ export function inspectChangeDocument(
     })
   }
 
-  const document = parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA)
   for (const heading of options.requiredSections) {
     const definition = getDocumentSectionDefinitionByHeading(CHANGE_DOCUMENT_SCHEMA, heading)
     if (!definition)

@@ -3,8 +3,9 @@
 import { lstatSync, readdirSync, readFileSync, realpathSync } from 'node:fs'
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { fromMarkdown } from 'mdast-util-from-markdown'
-import { isMap, parseDocument } from 'yaml'
+import { isMap } from 'yaml'
+import { markdownFrontmatter, markdownLinks, markdownNodeSource, parseMarkdown, walkMarkdown } from '../src/core/markdown.mjs'
+import { parseYamlDocument } from '../src/core/yaml.mjs'
 
 const distributionNames = new Set(['copying', 'license', 'notice', 'third-party-notices']
   .flatMap(name => [name, `${name}.md`, `${name}.txt`]))
@@ -39,42 +40,29 @@ function readDocument(path) {
   const bytes = readFileSync(path)
   const text = bytes.toString('utf8')
   const lines = text.split(/\r\n|\n|\r/u)
-  let body = text
-  // Recognize a YAML mapping, not Markdown between thematic breaks. Field
-  // validity remains the package checker's responsibility; syntax errors here
-  // retain the source as body rather than failing this diagnostic scan.
-  if (lines[0] === '---') {
-    const end = lines.findIndex((line, index) => index > 0 && (line === '---' || line === '...'))
-    if (end > 0) {
-      const metadata = parseDocument(lines.slice(1, end).join('\n'), { logLevel: 'silent' })
-      if (metadata.errors.length === 0 && isMap(metadata.contents))
-        body = lines.slice(end + 1).join('\n')
+  let document = parseMarkdown(text)
+  const matter = markdownFrontmatter(document)
+  // Diagnostics retain Markdown between thematic breaks; only a valid YAML
+  // mapping is metadata. The package checker owns metadata field validity.
+  if (matter) {
+    try {
+      if (!isMap(parseYamlDocument(matter.value).contents))
+        document = parseMarkdown(text, { frontmatter: false })
+    }
+    catch {
+      document = parseMarkdown(text, { frontmatter: false })
     }
   }
-  const nodes = []
-  function visit(node) {
-    nodes.push(node)
-    for (const child of node.children ?? [])
-      visit(child)
-  }
-  visit(fromMarkdown(body))
-  const definitions = new Map()
-  for (const node of nodes) {
-    if (node.type === 'definition' && !definitions.has(node.identifier))
-      definitions.set(node.identifier, node.url)
-  }
-  const urls = nodes.flatMap((node) => {
-    if (node.type === 'link' || node.type === 'image')
-      return [node.url]
-    if (node.type === 'linkReference' || node.type === 'imageReference')
-      return definitions.has(node.identifier) ? [definitions.get(node.identifier)] : []
-    return []
+  const blocks = []
+  walkMarkdown(document.root, (node) => {
+    if (node.type === 'paragraph') {
+      const value = markdownNodeSource(document, node).replace(/\s+/gu, ' ').trim()
+      if (value.length >= 40)
+        blocks.push(value)
+    }
   })
-  const blocks = nodes.filter(node => node.type === 'paragraph')
-    .map(node => body.slice(node.position.start.offset, node.position.end.offset).replace(/\s+/gu, ' ').trim())
-    .filter(value => value.length >= 40)
   return {
-    urls,
+    urls: markdownLinks(document),
     blocks,
     diagnostics: {
       files: 1,

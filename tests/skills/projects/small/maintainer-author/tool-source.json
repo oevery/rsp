@@ -1,9 +1,31 @@
 {
   "source": "scripts/skill-package-check.mjs",
-  "sourceCommit": "0ab61cb063b3af50460e67abb8a5cfbb809da47e",
-  "sourceGitBlob": "6c154d935de5b81e3f14542a2a56e52e1ee4bbd6",
-  "sha256": "9e9d8f08995063ce988343627afd8e1cc7f587380cfb8cb3da3e8b0458074a28",
+  "sourceCommit": null,
+  "sourceBase": "fac56af946f67429601203dba7d11580dbc77c19",
+  "sourceState": "worktree",
+  "sourceGitBlob": "b87b3e17a68d2dc7f48faf38e2d1dcabd9d1bac2",
+  "sha256": "b9c7154fbd88445fc7b9ee052d5bde367d9bdbde86d7de589f9511d36a5d45b7",
   "fixturePath": ".tooling/rsp/scripts/skill-package-check.mjs",
-  "copiedOn": "2026-09-30",
-  "policy": "Exact source copy; readiness fails if the fixture or current source differs. CLI/dependencies are supplied separately by tooling:rsp-cli."
+  "files": [
+    {
+      "source": "scripts/skill-package-check.mjs",
+      "sha256": "b9c7154fbd88445fc7b9ee052d5bde367d9bdbde86d7de589f9511d36a5d45b7",
+      "sourceGitBlob": "b87b3e17a68d2dc7f48faf38e2d1dcabd9d1bac2",
+      "fixturePath": ".tooling/rsp/scripts/skill-package-check.mjs"
+    },
+    {
+      "source": "src/core/markdown.mjs",
+      "sha256": "34269af23991ea62b623b1887a367aac5b03d5bab366ec363b28cc0c905f9427",
+      "sourceGitBlob": "6a3aa231fd3e8aea8d562fcc35d50d2d410e0c11",
+      "fixturePath": ".tooling/rsp/src/core/markdown.mjs"
+    },
+    {
+      "source": "src/core/yaml.mjs",
+      "sha256": "12fd97a8f1c975235862039f4494555cf018636a183ae87ba8497c9369596b48",
+      "sourceGitBlob": "94172d641e37701945082a2fef10519722ab01de",
+      "fixturePath": ".tooling/rsp/src/core/yaml.mjs"
+    }
+  ],
+  "copiedOn": "2026-10-04",
+  "policy": "Exact current-source copies with complete local parser closure; readiness checks each fixture and source hash. CLI and frozen dependencies are supplied separately by tooling:rsp-cli. No historical run identity is updated."
 }

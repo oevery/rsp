@@ -1,17 +1,20 @@
 import type { ChangeGroupSliceOutput, ChangeGroupStatusOutput, CommandDiagnostic } from '../types.js'
+import type { GroupBriefSectionId, ParsedRspDocument } from './document-model.js'
 import type { ArchiveTreeInspection, ExecutableWorkRef, FocusTreeInspection, GroupedChangeRef, ResolveWorkRefOptions, WorkTreeInspection } from './work-ref.js'
 import { readFile } from 'node:fs/promises'
 import { dirname, join, relative } from 'node:path'
 
 import { ARCHIVES_DIR } from './config.js'
-import { countCheckboxes, hasMeaningfulBlockerBody, parseFrontmatter } from './content.js'
-import { CHANGE_DOCUMENT_SCHEMA, getCanonicalSectionHeadings, getDocumentSectionBody, getDocumentTitle, GROUP_BRIEF_DOCUMENT_SCHEMA, parseRspDocument, renderDocumentSectionHeading, renderDocumentTitle } from './document-model.js'
+import { countCheckboxes, getVisibleBodyLines, hasMeaningfulBlockerBody, parseFrontmatter } from './content.js'
+import { CHANGE_DOCUMENT_SCHEMA, getCanonicalSectionHeadings, getDocumentSectionMarkdown, getDocumentTitle, GROUP_BRIEF_DOCUMENT_SCHEMA, parseRspDocument, renderDocumentSectionHeading, renderDocumentTitle } from './document-model.js'
 import { normalizeLogicalPath } from './filesystem.js'
+import { markdownListItems, markdownText, parseMarkdown } from './markdown.mjs'
 import { GROUP_BRIEF_FILENAME, inspectArchiveTree, inspectFocusTree, inspectWorkTree, isCanonicalExecutableWorkRef, resolveWorkRef, WorkRefError } from './work-ref.js'
 import { extractGroupSummary } from './work-summary.js'
 
 export const GROUP_BRIEF_SECTIONS = getCanonicalSectionHeadings(GROUP_BRIEF_DOCUMENT_SCHEMA)
 export const GROUP_REOPEN_COMPLETION_PREFIX = 'Resolve reopened concern from'
+type GroupBriefDocument = ParsedRspDocument<GroupBriefSectionId>
 
 export interface ChangeGroupInspection {
   groups: ChangeGroupStatusOutput[]
@@ -97,10 +100,11 @@ export async function inspectChangeGroups(options: { workTree?: WorkTreeInspecti
           archivedSlicesByGroup.set(archiveGroup, groupSlices)
         }
       }
-      if (getDocumentTitle(parseRspDocument(content, GROUP_BRIEF_DOCUMENT_SCHEMA), 'identity') === archiveGroup) {
+      const archivedBrief = parseRspDocument(archivedChange.markdown, GROUP_BRIEF_DOCUMENT_SCHEMA)
+      if (getDocumentTitle(archivedBrief, 'identity') === archiveGroup) {
         archivedGroups.add(archiveGroup)
         const evidence = archivedGroupReopenEvidence.get(archiveGroup) ?? new Set<string>()
-        for (const item of getGroupReopenEvidence(content))
+        for (const item of getGroupReopenEvidence(archivedBrief))
           evidence.add(item.key)
         archivedGroupReopenEvidence.set(archiveGroup, evidence)
         const retainedPaths = archivedGroupBriefPaths.get(archiveGroup) ?? new Set<string>()
@@ -135,10 +139,11 @@ export async function inspectChangeGroups(options: { workTree?: WorkTreeInspecti
       continue
     }
 
-    const parsed = parseGroupBrief(brief.group, content)
+    const document = parseRspDocument(content, GROUP_BRIEF_DOCUMENT_SCHEMA)
+    const parsed = parseGroupBrief(brief.group, document)
     diagnostics.push(...parsed.diagnostics.map(diagnostic => ({ ...diagnostic, path: brief.path })))
     if (archivedGroups.has(brief.group) && !hasExplicitGroupReopenEvidence(
-      content,
+      document,
       archivedGroupReopenEvidence.get(brief.group) ?? new Set(),
       archivedGroupBriefPaths.get(brief.group) ?? new Set(),
     )) {
@@ -232,7 +237,7 @@ export async function inspectChangeGroups(options: { workTree?: WorkTreeInspecti
 
     groups.push({
       name: brief.group,
-      summary: extractGroupSummary(content),
+      summary: extractGroupSummary(content, document),
       path: normalizeLogicalPath(brief.path),
       slices,
       completion: parsed.completion,
@@ -253,17 +258,21 @@ export interface GroupReopenEvidence {
 }
 
 /** Read exact archive-bound Group reopen evidence from Completion Conditions. */
-export function getGroupReopenEvidence(content: string): GroupReopenEvidence[] {
-  const completion = getDocumentSectionBody(parseRspDocument(content, GROUP_BRIEF_DOCUMENT_SCHEMA), 'completionConditions')
-  return completion.split('\n').flatMap((line) => {
-    const match = line.trim().match(/^-\s+\[([ /xX-])\]\s+(Resolve reopened concern from `(\.rsp\/archives\/[^`]+)`: \S.*)$/)
-    return match ? [{ active: match[1] !== '-', key: match[2], sourcePath: match[3] }] : []
+export function getGroupReopenEvidence(content: string | GroupBriefDocument): GroupReopenEvidence[] {
+  const document = typeof content === 'string' ? parseRspDocument(content, GROUP_BRIEF_DOCUMENT_SCHEMA) : content
+  const completion = getDocumentSectionMarkdown(document, 'completionConditions')
+  return markdownListItems(completion).flatMap(({ line }) => {
+    const match = line.trim().match(/^-\s+\[([ /xX-])\]\s+(Resolve reopened concern from `(\.rsp\/archives\/[^`]+)`: (\S.*))$/)
+    const reason = match?.[4]
+    return match && reason && markdownText(parseMarkdown(reason).root).trim()
+      ? [{ active: match[1] !== '-', key: match[2], sourcePath: match[3] }]
+      : []
   })
 }
 
 /** Accept only active evidence bound to this Group's retained history and absent from every retained snapshot. */
 export function hasExplicitGroupReopenEvidence(
-  content: string,
+  content: string | GroupBriefDocument,
   retainedEvidence: ReadonlySet<string>,
   retainedGroupBriefPaths: ReadonlySet<string>,
 ): boolean {
@@ -285,7 +294,7 @@ export async function requireDeclaredGroupSlice(ref: GroupedChangeRef): Promise<
     const message = error instanceof Error ? error.message : String(error)
     throw new WorkRefError('work_tree_read_failed', `unable to read Group Brief ${briefPath}: ${message}`, ref.name)
   }
-  const parsed = parseGroupBrief(ref.group, content)
+  const parsed = parseGroupBrief(ref.group, parseRspDocument(content, GROUP_BRIEF_DOCUMENT_SCHEMA))
   const errors = parsed.diagnostics.filter(diagnostic => diagnostic.severity === 'error')
   if (errors.length > 0) {
     throw new WorkRefError(
@@ -328,17 +337,16 @@ export async function hasArchivedGroupBrief(group: string): Promise<boolean> {
   return false
 }
 
-function parseGroupBrief(group: string, content: string): {
+function parseGroupBrief(group: string, document: GroupBriefDocument): {
   slices: Array<{ name: string, boundary: string }>
   completion: { done: number, total: number }
   blockers: boolean
   diagnostics: CommandDiagnostic[]
 } {
   const diagnostics: CommandDiagnostic[] = []
-  const document = parseRspDocument(content, GROUP_BRIEF_DOCUMENT_SCHEMA)
   let frontmatter
   try {
-    frontmatter = parseFrontmatter(content)
+    frontmatter = parseFrontmatter(document.markdown)
   }
   catch (error) {
     diagnostics.push({ severity: 'error', code: 'group_frontmatter_invalid', change: group, message: error instanceof Error ? error.message : String(error) })
@@ -349,13 +357,13 @@ function parseGroupBrief(group: string, content: string): {
     diagnostics.push({ severity: 'error', code: 'group_heading_mismatch', change: group, message: `Group Brief heading must be: # Change Group: ${group}` })
 
   for (const definition of GROUP_BRIEF_DOCUMENT_SCHEMA.sections) {
-    if (!getDocumentSectionBody(document, definition.id))
+    if (getVisibleBodyLines(getDocumentSectionMarkdown(document, definition.id)).length === 0)
       diagnostics.push({ severity: 'error', code: 'group_section_missing', change: group, message: `Group Brief missing required section: ${definition.heading}` })
   }
 
   const slices: Array<{ name: string, boundary: string }> = []
   const seen = new Set<string>()
-  for (const line of getDocumentSectionBody(document, 'slices').split('\n')) {
+  for (const { line } of markdownListItems(getDocumentSectionMarkdown(document, 'slices'))) {
     const trimmed = line.trim()
     const identity = trimmed.match(/^-\s+`(\S+)`/)
     if (!identity || identity[1].includes('<'))
@@ -385,14 +393,14 @@ function parseGroupBrief(group: string, content: string): {
   if (slices.length < 2)
     diagnostics.push({ severity: 'warning', code: 'group_slices_incomplete', change: group, message: 'Change Group must declare at least two direct child slices' })
 
-  const completion = countCheckboxes(getDocumentSectionBody(document, 'completionConditions'))
+  const completion = countCheckboxes(getDocumentSectionMarkdown(document, 'completionConditions'))
   if (completion.total === 0)
     diagnostics.push({ severity: 'warning', code: 'group_completion_missing', change: group, message: 'Change Group must declare at least one completion condition' })
 
   return {
     slices,
     completion: { done: completion.done + completion.dropped, total: completion.total },
-    blockers: hasMeaningfulBlockerBody(getDocumentSectionBody(document, 'blockers')),
+    blockers: hasMeaningfulBlockerBody(getDocumentSectionMarkdown(document, 'blockers')),
     diagnostics,
   }
 }

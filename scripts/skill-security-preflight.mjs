@@ -5,7 +5,8 @@ import { lstatSync, readdirSync, readFileSync, realpathSync } from 'node:fs'
 import { basename, extname, isAbsolute, relative, resolve, sep } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
-import { parse as parseYaml } from 'yaml'
+import { markdownFrontmatter, parseMarkdown } from '../src/core/markdown.mjs'
+import { parseYamlDocument } from '../src/core/yaml.mjs'
 
 export const SKILL_SECURITY_RULESET_VERSION = 1
 export const DEFAULT_MAX_FINDINGS = 50
@@ -276,13 +277,13 @@ function inspectMcp(path, text) {
       metadata = JSON.parse(text)
     }
     else if (['.yaml', '.yml'].includes(extension) && metadataCandidate) {
-      metadata = parseYaml(text)
+      metadata = parseYamlDocument(text).toJS()
     }
-    else if (name === 'SKILL.md' && text.startsWith('---\n')) {
-      const end = text.indexOf('\n---\n', 4)
-      if (end === -1)
+    else if (name === 'SKILL.md') {
+      const matter = markdownFrontmatter(parseMarkdown(text))
+      if (!matter)
         return []
-      metadata = parseYaml(text.slice(4, end))
+      metadata = parseYamlDocument(matter.value).toJS()
     }
     else {
       return []

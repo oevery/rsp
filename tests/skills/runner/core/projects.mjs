@@ -52,7 +52,11 @@ export function materializeProject(root, entry, workspace) {
       execFileSync('tar', ['-xf', archive, '-C', workspace], { maxBuffer: Infinity })
     }
     finally { rmSync(temporary, { recursive: true, force: true }) }
-    copyDependencies(root, join(workspace, 'node_modules'), { build: true, lockSource: readFileSync(join(workspace, 'pnpm-lock.yaml'), 'utf8') })
+    copyDependencies(root, join(workspace, 'node_modules'), {
+      build: true,
+      lockSource: readFileSync(join(workspace, 'pnpm-lock.yaml'), 'utf8'),
+      packageSource: readFileSync(join(workspace, 'package.json'), 'utf8'),
+    })
     execFileSync(process.execPath, [join(workspace, 'node_modules/tsup/dist/cli-default.js')], { cwd: workspace, timeout: 60000, stdio: 'pipe', maxBuffer: Infinity })
     if (!existsSync(join(workspace, 'dist/cli.mjs')))
       throw new Error('Fixed real project did not build')

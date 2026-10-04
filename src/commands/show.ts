@@ -7,7 +7,7 @@ import { inspectRspConfig } from '../core/config.js'
 import { countCheckboxes, hasMeaningfulBlockers, parseFrontmatter, parseScenarios } from '../core/content.js'
 import { resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
-import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionBody, parseRspDocument } from '../core/document-model.js'
+import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionMarkdown, parseRspDocument } from '../core/document-model.js'
 import { guardRspInitialized, normalizeLogicalPath } from '../core/filesystem.js'
 import { inspectFocusCapsuleBytes } from '../core/focus-capsule.js'
 import { IssueRelationshipError, parseIssueRelationships } from '../core/issue-relationship.js'
@@ -120,9 +120,10 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
   }
 
   let kind = '—'
+  const document = parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA)
   let issues: IssueRelationship[] = []
   try {
-    const fm = parseFrontmatter(content)
+    const fm = parseFrontmatter(document.markdown)
     kind = fm?.kind ? String(fm.kind) : '—'
     issues = parseIssueRelationships(fm)
   }
@@ -173,11 +174,10 @@ export async function showChange(nameOrFocused: string | undefined, options: Sho
   }
 
   const dependencyInspection = await inspectChangeDependencies()
-  const blockers = dependencyInspection.activeBlockers.get(name) ?? hasMeaningfulBlockers(content)
-  const scenarios = parseScenarios(content)
-  const readinessDetails = collectArchiveReadiness(content, { activeBlockers: blockers })
-  const document = parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA)
-  const taskCheckboxes = countCheckboxes(getDocumentSectionBody(document, 'tasks'))
+  const blockers = dependencyInspection.activeBlockers.get(name) ?? hasMeaningfulBlockers(document)
+  const scenarios = parseScenarios(document.markdown)
+  const readinessDetails = collectArchiveReadiness(document, { activeBlockers: blockers })
+  const taskCheckboxes = countCheckboxes(getDocumentSectionMarkdown(document, 'tasks'))
   const progress = {
     done: taskCheckboxes.done + readinessDetails.verifyCriticality.required.done,
     total: taskCheckboxes.total + readinessDetails.verifyCriticality.required.total,

@@ -4,7 +4,8 @@ import type { ArchiveTreeInspection, WorkTreeInspection } from './work-ref.js'
 import { readFile } from 'node:fs/promises'
 
 import { historyInspectionComplete, inspectArchiveHistory } from '../history/query.js'
-import { extractBlockerLines, hasMeaningfulBlockers, isEmptyBlockerLine } from './content.js'
+import { hasMeaningfulBlockers, readBlockerEntries } from './content.js'
+import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionMarkdown, parseRspDocument } from './document-model.js'
 import { inspectArchiveTree, inspectWorkTree, isCanonicalExecutableWorkRef } from './work-ref.js'
 
 interface ParsedBlockers {
@@ -23,8 +24,6 @@ export interface ChangeDependencyInspection {
   activeBlockers: Map<string, boolean>
   diagnostics: CommandDiagnostic[]
 }
-
-const REQUIRES_RE = /^[-*]\s+requires\s+`([^`]+)`:[ \t]*(\S.*)$/i
 
 /** Derive the current dependency projection from authoritative open Change files. */
 export async function inspectChangeDependencies(options: { workTree?: WorkTreeInspection, archiveTree?: ArchiveTreeInspection, archiveHistory?: ArchiveHistoryInspection, preferredOrder?: string[] } = {}): Promise<ChangeDependencyInspection> {
@@ -188,20 +187,17 @@ function parseDependencyBlockers(content: string): ParsedBlockers {
   const requires = new Map<string, string>()
   let external = false
   const malformed: string[] = []
-  for (const line of extractBlockerLines(content)) {
-    if (!line || isEmptyBlockerLine(line))
-      continue
-    const dependency = line.match(REQUIRES_RE)
-    if (dependency) {
-      if (!requires.has(dependency[1]))
-        requires.set(dependency[1], dependency[2])
-    }
-    else if (/^[-*]\s+requires\b/i.test(line)) {
-      malformed.push(line)
-      external = true
+  const document = parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA)
+  const blockers = getDocumentSectionMarkdown(document, 'blockers')
+  for (const entry of readBlockerEntries(blockers)) {
+    if (entry.kind === 'dependency') {
+      if (!requires.has(entry.name))
+        requires.set(entry.name, entry.reason)
     }
     else {
       external = true
+      if (entry.kind === 'malformed-dependency')
+        malformed.push(entry.line)
     }
   }
   return {

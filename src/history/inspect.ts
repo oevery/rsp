@@ -109,7 +109,7 @@ function parseArchiveEntry(
     return { diagnostic: errorDiagnostic('archive_identity_mismatch', path, 'archive group path is not a valid one-segment Group identity') }
 
   const changeDocument = parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA)
-  const groupDocument = parseRspDocument(content, GROUP_BRIEF_DOCUMENT_SCHEMA)
+  const groupDocument = parseRspDocument(changeDocument.markdown, GROUP_BRIEF_DOCUMENT_SCHEMA)
   const changeHeadings = getDocumentTitles(changeDocument, 'identity')
   const groupHeadings = getDocumentTitles(groupDocument, 'identity')
   if (changeHeadings.length + groupHeadings.length !== 1) {
@@ -118,7 +118,7 @@ function parseArchiveEntry(
 
   let frontmatter
   try {
-    frontmatter = parseFrontmatter(content)
+    frontmatter = parseFrontmatter(changeDocument.markdown)
   }
   catch (error) {
     return { diagnostic: errorDiagnostic('archive_frontmatter_invalid', path, `archive frontmatter could not be parsed: ${toErrorMessage(error)}`) }
