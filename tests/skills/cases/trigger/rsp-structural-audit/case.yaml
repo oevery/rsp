@@ -1,7 +1,7 @@
 id: trigger-rsp-structural-audit
 kind: trigger
 skill: rsp-structural-audit
-prompt: 'Use rsp-structural-audit for a report-only structural assessment of this empty checkout. Do not infer architecture from absent files, produce security/performance findings, or write artifacts. State the evidence limit and next useful inspection scope.'
+prompt: 'Give a report-only structural assessment of this checkout. Do not infer architecture from absent files, produce security/performance findings, or write artifacts. State the evidence limit and next useful inspection scope.'
 oracle: read-only
 hard:
   allowed_paths: []

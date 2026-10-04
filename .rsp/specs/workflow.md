@@ -22,11 +22,24 @@ selection and completion, not a fixed stage machine.
 
 The first seven form the default suite; installation grants no action authority.
 Core continues ordinary authorized work without making each capability a mandatory
-phase. Shape owns unclear material decisions; Implement owns product edits and
-ordinary checks. Doc's artifact methods support writing, not a second controller.
+phase. Shape clarifies material choices for the authorized DecisionOwner; Implement
+owns product edits and ordinary checks. Doc's artifact methods support writing,
+not a second controller.
 Bounded direct work needs no invented Change; tracked work retains its selected owner.
 Verify is selected for an explicit evidence-only or independently required boundary,
 not every implementation check. Review never repairs or approves its own target.
+
+Select by the current requested result and authority, including responsibility
+transitions inside one objective, not by the previous capability or edit size.
+Load only the selected entrypoint and active method not already applicable in
+context. Shape owns decision clarification and planning artifacts, not approval of
+material choices or new public requirements; Doc writes settled facts and
+converges final work records. Local wording fixes and
+mechanical status/evidence updates need no full writing method when they require
+no whole-record reconciliation. Whole-Change convergence uses Doc's artifact
+method when available even when few lines change, and may confirm unchanged text.
+An unavailable Doc retains the same bounded local writing checks, not permission
+to install it or replace required Review.
 
 Diagnosis and design advice remain read-only unless the request also authorizes
 mutation. Test-first work needs explicit instruction or demonstrated risk, not

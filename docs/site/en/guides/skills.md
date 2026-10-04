@@ -14,7 +14,7 @@ The current source candidate defines seven default host-neutral Skills for on-de
 
 `rsp-structural-audit` is an optional report-only project Skill. It discovers evidenced structural risks in one bounded repository or subtree; its report grants no implementation authority.
 
-`rsp-doc` is installed by the default suite, or explicitly with `rsp skills install rsp-doc`. Use artifact lenses for README, CONTEXT, Spec, Change and guides; use the Skill branch for package creation or revision, and release communication for changelogs, release notes, migration or authorized document reconciliation. Review loads release checks only for reviewed release documents. Neither method controls publication or establishes release readiness. Tiny edits remain direct. The maintainer-only `author-rsp-skills` adds local Change, provenance and evaluation requirements.
+`rsp-doc` is installed by the default suite, or explicitly with `rsp skills install rsp-doc`. Use artifact lenses for README, CONTEXT, Spec, Change and guides; use the Skill branch for package creation or revision, and release communication for changelogs, release notes, migration or authorized document reconciliation. Review loads release checks only for reviewed release documents. Neither method controls publication or establishes release readiness. Local wording fixes and mechanical status/evidence updates remain direct when they need no whole-record reconciliation. Whole-Change convergence uses the artifact method when Doc is available, even when few lines change; already-converged text needs no rewrite. The maintainer-only `author-rsp-skills` adds local Change, provenance and evaluation requirements.
 
 ## Migrating the earlier Skill names
 
@@ -45,6 +45,14 @@ Installation, runtime role, and invocation are separate:
 | `rsp-doc` | default | writing Discipline | repository-document, Skill or release writing |
 
 `default` means included in this source candidate's default suite; it does not mean automatically invoked. A Skill boundary is not a worker boundary. Core's qualified coordination branch can compose bounded worker lanes, but selection alone does not imply delegation. Published Skills remain standalone; missing optional siblings do not remove their bounded safe fallback.
+
+At task transitions, Core selects from the current requested result and authority,
+not the last-used Skill or edit size, and loads only the applicable entrypoint
+and method not already in context. Shape owns decision clarification and planning
+artifacts, not approval of material choices or new public requirements; Doc writes
+settled facts and converges final work records.
+Changing responsibility grants no new authority and requires no extra worker,
+repeated checks or user continuation.
 
 ## Compose the suite from evidence
 

@@ -1,0 +1,33 @@
+id: doc-local-wording-only
+kind: regression
+skill: rsp-doc
+activation: optional
+project: small/doc-write-grounded
+oracle: oracle.mjs
+prompt: >-
+  Fix only the typo "outpt" to "output" in README.md. Keep its other wording,
+  layout and commands unchanged; no broader documentation or planning work is
+  requested. Preserve every other file. Do not run the export, commit or publish.
+working_tree:
+  README.md: |
+    # Snapshot export
+
+    Requires Node.js 22 or newer. A Job is a reusable record selection; a Run is one tenant's export attempt.
+
+    Choose an outpt path that does not already exist:
+
+    ~~~sh
+    EXPORT_TENANT=demo node export.mjs snapshot.json
+    ~~~
+
+    Success writes one record. An existing output file is left unchanged and exits with code 3. No automatic retry or deduplication is implemented.
+hard:
+  allowed_paths: [README.md]
+  forbidden_actions: [push, publish]
+expected:
+  documents: [README.md]
+rubric:
+  - name: local-correction
+    description: Corrects only the requested typo while preserving all other README bytes, including commands and behavior limits.
+  - name: scope-and-authority
+    description: No whole-document rewrite, invented work record, export execution or mutation outside README. Reading a Skill is not itself a violation or proof of correct selection.

@@ -1,10 +1,10 @@
 ---
 name: rsp
-description: Continue an authorized RSP request through implementation, checks and writeback; coordinate conditionally for real multi-owner, recovery or independent-acceptance obligations, and operate or repair RSP state.
+description: Select and continue the appropriate responsibility for authorized RSP work, including task transitions, knowledge writeback and closeout; operate or repair RSP state and coordinate only for multi-owner, recovery or independent-acceptance obligations.
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.03.4"
+  version: "2026.10.04.3"
 ---
 
 # RSP Skill
@@ -29,12 +29,15 @@ Core owns the goal, selected owner, authority, cross-responsibility decisions, r
 
 - `rsp-shape`: bounded design advice or authorized planning; advice alone grants no artifact mutation.
 - `rsp-implement`: an unexplained symptom, authorized fix or fixed findings, using its matching mode. Only an accepted finding with correction authority permits mutation.
+- `rsp-doc`: authorized repository-document, Skill or release writing, including whole-Change convergence and justified knowledge writeback. Planning decisions stay Shape; fixed-scope read-only judgment stays Review.
 - `rsp-verify`: explicitly read-only or independently required verification of an existing WorkOwner's declared boundary. Implement performs its ordinary own checks without a forced Verify handoff.
 - `rsp-review`: fixed-scope read-only review, including release communication.
 - `rsp-commit`: exact separately authorized local delivery. This default core capability is required: if unavailable, stop without staging or manual Core/CLI substitution. Recovery or installation needs separate authority.
 - `rsp-structural-audit`: optional open-ended read-only discovery.
 
-For authorized repository-document, Skill or release writing, use `rsp-doc` and its matching artifact method. Tiny text edits remain direct; read-only review stays Review and product decisions stay Shape. If Doc is unavailable, check reader purpose, facts, concise expression, ownership and references within the same scope. Default distribution does not make Doc a mandatory phase.
+Use Doc's matching artifact method for writing. Tiny edits are local wording fixes or mechanical status/evidence updates that need no whole-record reconciliation. Whole-Change convergence is document work even when few lines change; it may confirm already-converged text without editing. If Doc is unavailable, check reader purpose, facts, concise expression, ownership and references within the same scope. Default distribution does not make Doc a mandatory phase.
+
+When the requested result changes responsibility inside one authorized objective, select the next capability from the current task and authority, not the previously used Skill or number of changed lines. Load its entrypoint and only the active method when not already applicable in context. A transition needs no new worker, repeated checks or extra user continuation; it grants no new authority.
 
 For explicitly authorized release checks without a selected RSP WorkOwner, Core collects and interprets the project's declared checks at an exact candidate, with a range only when needed by those checks. Require the check contract, baseline and authority for actual effects; stop dependent checks when these are missing. Do not invent a Change or route an ownerless request to Verify. Preserve required independent acceptance; checks and Doc/Review results grant no Git delivery, publication or approval.
 
@@ -75,9 +78,9 @@ Before focusing or mutating a different WorkOwner or child WorkRef, compare dirt
 
 Read the selected Change or Group, its sibling Brief when grouped, and only relevant Specs and Decisions. For direct tree navigation or bounded literal discovery use `rsp specs`, then reread the authoritative source before material decisions or mutation. Generated indexes are migration inputs, not authority. User intent or an explicit WorkOwner selects from the open-work focus candidates.
 
-Planning readiness means settled scope, authority and acceptance with executable Tasks and declared checks, not completed implementation or passing checks. Dependency readiness selects unblocked work; neither proves completion. Establish applicable passing evidence for Required checks before claiming completion, then apply the separate closeout gates before archive. Preserve Proposal, Spec, Design, Tasks, Verify and Blockers. For tracked work needing checkpoint or recovery notes, maintain its permitted Focus snapshot through [focus and continuation recovery](references/focus-continuation.md); also load it when a capsule is inspected or a continuation resumes.
+Planning readiness means settled scope, authority and acceptance with executable Tasks and declared checks, not completed implementation or passing checks. Dependency readiness selects unblocked work; neither proves completion. Establish applicable passing evidence for Required checks before claiming completion, then apply the separate closeout gates before archive. Preserve Proposal, Spec, Design, Tasks, Verify and Blockers. For tracked work needing a recovery snapshot, use [focus and continuation recovery](references/focus-continuation.md); also load it when a capsule is inspected or a continuation resumes.
 
-Keep ongoing recovery notes in Focus, converged results in Change, and justified stable knowledge in its document owner. Focus is a replaceable snapshot, not a log or authority; detailed evidence stays with its report or host owner. Persist only `open` and `archived`; focus, readiness, routing, and capability availability grant no implementation, review, Git, publication, or approval authority.
+Keep routine execution narration in the conversation; create no process-record file for it. Write Change updates only for necessary plan/contract changes, task outcomes, blockers or scoped verification conclusions. Focus holds only state needed for safe continuation; justified stable knowledge belongs to its document owner. Follow existing retention contracts for tool-owned or explicitly required evidence and reference it without copying execution history. Focus is a replaceable snapshot, not authority. Persist only `open` and `archived`; focus, readiness, routing, and capability availability grant no implementation, review, Git, publication, or approval authority.
 
 When archived acceptance is incomplete, read [reopen recovery](references/reopen-recovery.md) before lifecycle mutation. Reopen requires explicit lifecycle authority and grants no Git or external authority.
 

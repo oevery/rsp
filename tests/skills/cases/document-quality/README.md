@@ -6,6 +6,7 @@ These cases use the same factual export-tool corpus for Doc and Document Review.
 - `doc-review-grounded`: find consequential defects, leave the adequate README alone, and preserve all files.
 - Its copyable README command receives bounded Code checks alongside Document review; the implementation remains evidence-only and no export execution is authorized. The existing `review-dirty-workflow` case covers API comments inside code, while `review-preserve-staged-work` and `release-review-grounded` retain pure-Code and pure-Document restraint.
 - `doc-review-only`: a near-negative task that requests judgment, not authoring.
+- `doc-local-wording-only`: one local typo correction on the same export corpus, preserving every other byte and avoiding broader writing or planning.
 
 Use the shared `test:skills` runner and fresh independent semantic review. Readiness is not model acceptance: `test:skills -- check` checks schemas and project readiness only. The writing oracle checks artifact presence and permitted paths, deliberately not prose or keyword density. Five semantic dimensions match the author and reviewer methods.
 

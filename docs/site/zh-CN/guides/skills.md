@@ -14,7 +14,7 @@
 
 `rsp-structural-audit` 是可选的纯报告项目 Skill，在边界明确的仓库或子树中发现有证据的结构风险；报告不授予实现权限。
 
-`rsp-doc` 包含在默认套件中，也可用 `rsp skills install rsp-doc` 单独安装。README、CONTEXT、Spec、Change 与指南按产物类型加载方法；Skill 新建或修订使用 Skill 分支；changelog、release notes、迁移指引及已授权的文档对账使用发布说明分支。Review 仅在评审范围包含发布文档时加载发布检查。两者不控制发布，也不据此宣称发布就绪。小修改仍直接完成。维护者专用 `author-rsp-skills` 仅叠加本仓库的 Change、溯源与验证要求。
+`rsp-doc` 包含在默认套件中，也可用 `rsp skills install rsp-doc` 单独安装。README、CONTEXT、Spec、Change 与指南按产物类型加载方法；Skill 新建或修订使用 Skill 分支；changelog、release notes、迁移指引及已授权的文档对账使用发布说明分支。Review 仅在评审范围包含发布文档时加载发布检查。两者不控制发布，也不据此宣称发布就绪。不需要整份记录对账的局部措辞修正和机械状态／证据回填仍直接完成；整份 Change 收敛在 Doc 可用时使用产物方法，即使最终只改几行，已收敛的文本也无需重写。维护者专用 `author-rsp-skills` 仅叠加本仓库的 Change、溯源与验证要求。
 
 ## 旧 Skill 名称迁移
 
@@ -45,6 +45,8 @@
 | `rsp-doc` | 默认 | 写作 Discipline | 仓库文档、Skill 或发布说明写作 |
 
 “默认”表示属于本源码候选的默认套件，不表示自动调用。Skill 边界不等于 worker 边界。Core 通过资格判断后才可按需组合有界 worker；进入协调分支本身不代表委派。发布的 Skill 保持独立可用；缺少可选兄弟 Skill 时保留有界安全 fallback。
+
+任务切换职责时，Core 根据当前所需结果与权限选择能力，而不是沿用上一个 Skill 或按修改行数判断；只加载上下文中尚未适用的入口与方法。Shape 负责决策澄清和规划产物，不自行批准实质选择或新增公共要求；Doc 编写已确定事实并收敛最终工作记录。职责切换不授予新权限，也不要求增加 worker、重复检查或再次请求用户继续。
 
 ## 按证据组合套件
 

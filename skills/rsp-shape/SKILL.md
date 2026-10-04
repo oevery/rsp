@@ -1,15 +1,17 @@
 ---
 name: rsp-shape
-description: Resolve a bounded design question read-only, or shape authorized unclear work into one executable Change or justified shallow Group; never infer artifact mutation from advice.
+description: Resolve bounded design questions read-only or clarify material choices and plan authorized work as one executable Change or justified shallow Group. Not decision approval, implementation or final-record cleanup.
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.02.2"
+  version: "2026.10.04.2"
 ---
 
 # RSP Shape
 
 Choose the branch before loading detail: bounded design advice is read-only and may have no Change; explicit planning-artifact work shapes or refines a Change/Group. Neither branch implements product behavior.
+
+Shape owns decision clarification and planning artifacts even when their output is Markdown; approval of material choices stays with the authorized DecisionOwner. Doc may support wording settled decisions; final work-record convergence belongs to writing, not replanning. A material unresolved decision returns to Shape rather than being resolved by prose cleanup.
 
 Use explicit response language, then personal instruction, then conversation language for narration. Preserve the language of existing artifacts and exact canonical values. For a new artifact use explicit artifact instruction, then effective configured artifact language, then scoped project instruction, then conversation language. In RSP projects, when precedence needs configuration, use the same selected CLI's successful `rsp config --json` summary (optional `--compact`); it resolves defaults and inheritance. Refresh on relevant drift or recovery. Raw YAML is diagnostic only, not a substitute; failed or unavailable projection leaves the dependent choice unresolved without blocking independently authorized work needing no unknown setting. Resolve a material conflict with the owner; this rule works without Core installed.
 
@@ -26,6 +28,8 @@ During a qualified coordinated goal, original planning-artifact authority remain
 ## Resolve material ambiguity
 
 Inspect the repository before asking. Ask only for an owner decision changing behavior, data, interfaces, compatibility, safety, ownership, migration, or acceptance. Write only authorized answers.
+
+Derive requirements and acceptance checks from settled authority, not a preferred implementation. Do not promote an unsettled public behavior, failure contract, default or compatibility choice into an accepted requirement or mandatory check. Keep replaceable internal choices in Design; label material alternatives as proposals and retain any readiness-blocking decision in Blockers. Ordinary implementation details within the accepted contract need no new owner decision.
 
 Choose evidence-gathering methods within the selected branch. A diagnosed read/search fault can use another permitted method against the same goal, scope, authority, baseline and required evidence. Before recovering an attempted planning mutation, inspect its actual artifacts and focus effects; unknown mutation or unsafe replay stops that action. Required RSP commands and checks keep their owners and cannot be replaced by prose or a tool status.
 

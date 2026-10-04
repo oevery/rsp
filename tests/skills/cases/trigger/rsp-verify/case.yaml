@@ -1,7 +1,7 @@
 id: trigger-rsp-verify
 kind: trigger
 skill: rsp-verify
-prompt: 'Use rsp-verify to assess whether the current work is complete. No selected Change, verification commands or run evidence are available. Return a truthful verification limitation; do not initialize a project or mutate files.'
+prompt: 'Perform a separate read-only verification of the current RSP work. No selected Change, verification commands or run evidence are available. Return a truthful verification limitation; do not initialize a project or mutate files.'
 oracle: read-only
 hard:
   allowed_paths: []

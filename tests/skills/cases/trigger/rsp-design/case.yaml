@@ -1,7 +1,7 @@
 id: trigger-rsp-design
 kind: trigger
 skill: rsp-shape
-prompt: 'Use rsp-shape for a report-only pre-Change design: should a small CLI store configuration in a single versioned file or separate per-command files? State one recommendation, its assumptions and tradeoffs. Do not create a Change or implement anything.'
+prompt: 'Should a small CLI store configuration in a single versioned file or separate per-command files? Give report-only design advice with one recommendation, its assumptions and tradeoffs. Do not create a Change or implement anything.'
 oracle: read-only
 hard:
   allowed_paths: []

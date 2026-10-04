@@ -22,7 +22,7 @@ A Change is one Markdown file with six sections:
 | Proposal | Outcome, scope and non-goals |
 | Spec | Contract delta and acceptance, referencing existing authority |
 | Design | Approach, boundaries and necessary tradeoffs |
-| Tasks | Checkable work |
+| Tasks | Checkable work and accomplished results |
 | Verify | Applicable results, evidence pointers and remaining limits |
 | Blockers | Unresolved dependencies or decisions, or none |
 
@@ -44,9 +44,12 @@ additional lifecycle states. Git commit count does not select Change granularity
   Capsules carry bounded recovery snapshots, not ownership or authority. Multiple
   markers are valid; explicit user intent or WorkRef selects first, otherwise
   current status, dependencies and evidence resolve the next owner.
-- Core replaces authorized Capsules at meaningful checkpoints, pauses or
-  handoffs and revalidates them on recovery. Group recovery uses a selected
-  child's Capsule, not a Brief marker; bounded direct work needs no new Capsule.
+- Core writes an authorized Capsule only when safe continuation needs information
+  beyond existing Change/evidence. At a pause, handoff or recovery-relevant
+  checkpoint, replace the minimum snapshot when it is insufficient and revalidate
+  it on recovery. Ordinary same-session progress needs no update. Group recovery
+  uses a selected child's Capsule, not a Brief marker; bounded direct work needs
+  no new Capsule.
 - Exact prerequisites use ``- requires `<work-ref>`: <reason>`` entries in a Change's
   Blockers. Other prose is not guessed into dependency edges. Dependency waves
   are derived, not a persisted schedule.
@@ -60,6 +63,11 @@ Verification establishes the declared outcome's evidence; review supplies its
 own bounded semantic judgment. Reuse and independent-execution obligations are
 owned by [Workflow methods and evidence](workflow.md#methods-and-evidence), not a
 separate evidence registry.
+
+Change updates retain necessary plan/contract changes, task outcomes, blockers
+and scoped verification conclusions. Routine execution narration stays in the
+conversation without a new process-record file. Tool-owned or explicitly required
+evidence keeps its existing owner and retention contract.
 
 Before archive, establish verified outcome facts, distill useful Focus information,
 write necessary stable knowledge to its owner, and converge the entire Change.

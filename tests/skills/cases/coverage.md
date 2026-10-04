@@ -7,7 +7,7 @@ These are public functional cases. Presence and offline readiness do not establi
 | Core | catalog-completion, rsp-resume-existing | catalog-owner-decision, catalog-resume-staged, rsp-near-intent | Durable result, owner continuity, preserved index and user files |
 | Shape | shape-expiry-contract | trigger-rsp-shape, trigger-rsp-design | Pending executable Change preserving approved TTL boundaries, no product mutation |
 | Implement | implement-ready-workflow, preserve-user-files | implement-interrupted-verification, implement-review-only | Production result, actual checks and honest writeback |
-| Doc | doc-write-grounded, release-draft-net-behavior | doc-review-only, release-draft-missing-evidence | Grounded documents and net-release outcomes, actionable migration, no guessed identity or invented capability/publication |
+| Doc | doc-write-grounded, release-draft-net-behavior | doc-local-wording-only, doc-review-only, release-draft-missing-evidence | Grounded documents and net-release outcomes, actionable migration, bounded local edits, no guessed identity or invented capability/publication |
 | Verify | verify-checkout-boundary | trigger-rsp-verify, native-verification-unavailable, verify-mixed-failure-unavailable | Actual declared checks, distinct failed/unavailable evidence and read-only state |
 | Review | doc-review-grounded, release-review-grounded, review-dirty-workflow | review-preserve-staged-work, review-near-intent | Real seeded defects, fixed document scope, restraint on clean prose, no mutation or release approval |
 | Commit | commit-dirty-success | commit-unsafe-staged, commit-missing-verification | Exact bytes, paths, single-parent history, message, verification and unrelated-state preservation |
@@ -16,6 +16,23 @@ These are public functional cases. Presence and offline readiness do not establi
 | Native coordination | native-checkout-completion, native-resume-staged | native-checkout-blocked, native-verification-unavailable | Host-attributed workers, preserved interrupted work, fresh independent acceptance, honest failed gates |
 | Real CLI | real-cli-contract, real-cli-review | real-issue-duplicate-fix | Core-owned ownerless exact-snapshot checks, private locked dependency graph, actual CLI or changed-source outcomes |
 | Real recovery | real-multimodule-recovery | unchanged or partially repaired source fails oracle controls | Two production modules, staged and untracked preservation, interrupted verification context |
+
+## Responsibility selection
+
+Positive trigger cases use natural requests rather than naming the selected Skill.
+Their missing-input and read-only outcomes complement successful natural tasks
+such as doc-write-grounded, shape-expiry-contract and verify-checkout-boundary.
+Standalone implementation remains covered by implement-ready-workflow.
+
+archive-final-convergence exercises the transition from actual product checking
+to knowledge writeback and final-record writing under synthetic complex history.
+Its final archive must retain candidate-bound failures and limits without session
+narration; synthetic history is not product acceptance. doc-local-wording-only
+checks the adjacent bounded edit without requiring a full writing pass.
+
+These cases judge observable results and authority, not reading commands or Skill
+name mentions. Entry/reference reads are diagnostic only. One successful natural
+task does not establish discovery reliability across hosts or repeated executions.
 
 ## Complex environments
 

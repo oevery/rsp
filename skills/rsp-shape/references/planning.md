@@ -13,10 +13,10 @@ Prefer one ordinary Change only for one observable outcome sharing a consistency
 Keep one observable outcome per Change:
 
 - `Proposal`: outcome, scope, non-goals;
-- `Spec`: this change's contract delta and acceptance, referencing affected existing Specs rather than copying the baseline;
+- `Spec`: settled contract delta and acceptance, referencing affected existing Specs rather than copying the baseline or inventing public promises;
 - `Design`: approach, responsibility boundaries, and necessary tradeoffs, not repeated requirements or tasks;
 - `Tasks`: checkable work, with prescribed order only where correctness, safety, or migration requires it;
-- `Verify`: methods linked to acceptance, then actual decisive results, gaps, and limits, not repeated requirements or transcripts;
+- `Verify`: methods proving settled acceptance, not adding new public requirements; then actual decisive results, gaps, and limits, not repeated requirements or transcripts;
 - `Blockers`: dependencies and decisions, or `none`.
 
 Keep the six sections; small changes need only proportionate content. Plain-prose HTML scaffold hints may remain or be removed; they guide writing, never supply requirements, evidence, or completed content. Resolve body placeholders and keep all material decisions visible outside comments.

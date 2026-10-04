@@ -1,7 +1,7 @@
 id: trigger-rsp
 kind: trigger
 skill: rsp
-prompt: Use the rsp skill to determine the next action in this empty checkout. Report missing project or ownership context. This is a read-only assessment; do not initialize RSP or create files.
+prompt: Determine the next action for RSP work in this empty checkout. Report missing project or ownership context. This is a read-only assessment; do not initialize RSP or create files.
 oracle: read-only
 hard:
   allowed_paths: []

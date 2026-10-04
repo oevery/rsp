@@ -1,10 +1,10 @@
 ---
 name: rsp-implement
-description: Diagnose an unexplained symptom read-only, or implement an authorized bounded direct task or ready RSP Change, including risk-selected test-first work and bounded fixed-report finding disposition. Preserve ownership and applicable verification without inferring mutation from diagnosis.
+description: Diagnose unexplained symptoms read-only or implement authorized bounded tasks or ready RSP Changes with ordinary own checks, risk-selected test-first work and fixed-finding correction. Not fixed-scope review or whole-document writing.
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.03.2"
+  version: "2026.10.04.2"
 ---
 
 # RSP Implement
@@ -57,9 +57,9 @@ Stop for a repeated failure without new discriminating evidence, non-convergence
 
 ## Implement and verify
 
-Implement the smallest complete slice. For tracked work update Tasks after outcomes exist and keep unresolved issues in Blockers; direct work reports those facts without RSP artifact mutation.
+Implement the smallest complete slice. For tracked work update authorized Change sections only for necessary plan/contract changes, task outcomes, blockers and scoped verification conclusions. Update Tasks after outcomes exist. Routine execution narration stays in the conversation without a process-record file; retain tool-owned or explicitly required evidence with its existing owner rather than copying its history into Change. Direct work reports outcomes without RSP artifact mutation.
 
-Repository-document and Skill writing use `rsp-doc` within the same authority; small inline corrections need no handoff. If unavailable, write concise, grounded guidance for the reader's task and check affected examples and links. Review remains read-only; author self-checks never certify independent review.
+Repository-document and Skill writing use `rsp-doc` within the same authority, including whole-Change convergence rather than only an evidence update. Local wording fixes and mechanical status/evidence updates needing no whole-record reconciliation remain direct. If Doc is unavailable, write concise, grounded guidance for the reader's task and check affected examples and links. Review remains read-only; author self-checks never certify independent review.
 
 After final mutation, establish minimum sufficient evidence for tracked Required checks or direct-task acceptance:
 
@@ -71,8 +71,6 @@ After final mutation, establish minimum sufficient evidence for tracked Required
 Before completion, recheck new or extended tests against the admission criteria above and retain only distinct future confidence at proportionate cost. Otherwise remove the disposable test, fixture and helper, then establish sufficient evidence for the final retained state. User, Change and project retention requirements remain authoritative.
 
 Before returning, reread changed comments, test names, documentation and handoff prose against the accepted result and each surface's authoritative baseline. Report the selected Change or direct task, actual paths, final verification, material omissions or risks, executed external actions and attributed pre-existing user work. Exclude rejected session-only alternatives and temporary attempts, including unrequested `did not add` or `did not use` claims. Retain negative facts needed to explain real removals, safety or compatibility boundaries, migration, audit results, failed external actions, unresolved risks or requested comparisons. Wording cleanup never changes executable behavior, public contracts, tests, snapshots or diagnostics.
-
-Record concise applicable evidence when a tracked Change Verify owns it. Direct work reports evidence in the response only.
 
 ## Return ownership
 

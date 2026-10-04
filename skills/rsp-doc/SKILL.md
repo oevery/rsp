@@ -1,19 +1,19 @@
 ---
 name: rsp-doc
-description: Create or revise repository documents, Skills and release communication, including changelogs, release notes and migration guides. Use for writing and author self-checks, not formal read-only review or publication.
+description: Write or revise repository documents, Skills and release communication, including final Change convergence and knowledge writeback. Own writing and author self-checks, not product planning, formal read-only review or publication.
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.02.8"
+  version: "2026.10.04.2"
 ---
 
 # RSP Doc
 
-Write a grounded artifact its reader can use without the author conversation. Tiny wording fixes need no full writing pass.
+Write a grounded artifact its reader can use without the author conversation. Whole-record convergence uses the artifact method even when few lines change; already-converged text needs no rewrite. Local wording fixes and mechanical status/evidence updates need no full writing pass when they require no whole-record reconciliation.
 
 ## Produce the artifact
 
-1. **Fix the outcome.** Identify the reader, task, authorized target files and expected result. For a multi-document request, identify which artifact owns each fact and which artifacts summarize or link it.
+1. **Fix the outcome.** Identify the reader, task, authorized target files and expected result. For a multi-document request, identify which artifact owns each fact and which artifacts summarize or link it. Routine execution narration stays in the conversation without a new process-record file; existing tool-owned or explicitly required evidence keeps its retention contract.
 2. **Establish the facts.** Read existing content, relevant callers and the smallest authoritative contract, code or source chain. Use available read/search tools and existing checks to establish commands, defaults, links and behavior. Tool output is an observation to interpret, not permission or proof of semantic correctness. Distinguish current behavior, intended requirements and unknowns; resolve material contradictions before rewriting a promise.
 3. **Draft for the task.** Apply the expression rules below and load only the relevant method:
    - [Artifact lenses](references/artifact-lenses.md): README, CONTEXT, Spec, Change, guides and scoped operating documents.
@@ -68,4 +68,4 @@ Shortness removes no-information prose, not substantive qualifiers such as only,
 - Product decisions stay with their design owner. Release writing grants no version decision, release verification, Git delivery or external publication authority. Missing optional methods do not require installation or block an available bounded method.
 - Preserve unrelated work. Ask when a missing choice materially changes the result or authority; stop when required evidence is unavailable. Writing alone grants no installation, deployment, Git delivery or publication.
 
-Return changed artifacts, decisive checks and material limits. Write final conclusions to the owning work record, stable knowledge to its document, and keep detailed evidence with its report owner. Focus maintenance remains Core's responsibility.
+Return changed artifacts, decisive checks and material limits. Tracked work retains necessary conclusions in its existing record; stable knowledge belongs to its document and retained evidence to its existing owner. Focus maintenance remains Core's responsibility.

@@ -32,6 +32,7 @@ Select additional cases by the changed risk using the existing `--case` option:
 | Native Git delivery and safety stops | commit-native-equivalence,commit-snapshot-refusal,commit-stale-tree,commit-missing-verification,commit-unsafe-staged,commit-hook-failure,commit-hook-message-mismatch |
 | Required evidence or investigation-only authority | method-required-check-unavailable,finding-investigation-only |
 | Final archive convergence or failed-check restraint | archive-final-convergence,archive-required-failure |
+| Natural responsibility selection and bounded writing | doc-write-grounded,doc-local-wording-only,doc-review-only,shape-expiry-contract,implement-review-only,verify-checkout-boundary |
 | Verification reuse, excluded staged inputs and explicit execution | commit-reuse-verification,commit-excluded-input-evidence,archive-reuse-verification,verify-checkout-boundary |
 | Effective RSP configuration | config-inherited-artifact-language,config-rejected-closeout-policy |
 | Recovery or unavailable independent verification | real-multimodule-recovery,native-resume-staged,native-verification-unavailable |
