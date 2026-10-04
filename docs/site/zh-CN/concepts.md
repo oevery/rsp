@@ -64,7 +64,7 @@ RSP 不会从自由文本中猜测依赖边。
 
 ## Groups（分组）
 
-Change Group 是唯一的复合工作形式。不可执行的 `<group>/brief` 实体存储为 `<group>/00-brief.md>`，拥有至少两个直接子 Change 共享的目标、约束、已声明切片、完成条件、持久化结果与分组阻塞项。
+Change Group 是唯一的复合工作形式。不可执行的 `<group>/brief` 实体存储为 `<group>/00-brief.md`，拥有至少两个直接子 Change 共享的目标、约束、已声明切片、完成条件、持久化结果与分组阻塞项。
 
 先创建 Group，再创建子 Change。每个子 Change 独立聚焦、验证、审查和归档。所有已声明的子 Change 完成后才能关闭 Group。重开已关闭的 Group 或已归档的 Change 是显式恢复操作，不会改写 Git 或发布历史。
 

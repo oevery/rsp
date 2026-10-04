@@ -1,7 +1,7 @@
-import { chmodSync, copyFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { chmodSync, copyFileSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { verify as verifyCompletion } from '../../skills/cases/native-coordination/completion/oracle.mjs'
 import { verify as verifyResume } from '../../skills/cases/native-coordination/resume/oracle.mjs'
 import { verify as verifyUnavailable } from '../../skills/cases/native-coordination/verification-failure/oracle.mjs'
@@ -10,6 +10,7 @@ import { gradeNativeCoordination } from '../../skills/runner/graders/native-coor
 
 const temporary = []
 afterEach(() => {
+  vi.unstubAllEnvs()
   for (const path of temporary.splice(0)) rmSync(path, { recursive: true, force: true })
 })
 
@@ -90,5 +91,25 @@ export function checkout(tenant, lines) {
     }
     completed.threads[0].model = 'other-model'
     expect(gradeNativeCoordination(spec, completed, executor).status).toBe('failed')
+  })
+
+  it.skipIf(process.platform === 'win32')('makes the runner Node available in isolated login and non-login shells without workspace tooling', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'rsp-runtime-probe-'))
+    temporary.push(dir)
+    const codexBin = join(dir, 'provider')
+    const fixture = readFileSync('tests/code/tooling/fixtures/provider.mjs', 'utf8')
+    writeFileSync(codexBin, fixture.replace('#!/usr/bin/env node', `#!${process.execPath}`))
+    chmodSync(codexBin, 0o755)
+    const configFile = join(dir, 'provider.toml')
+    writeFileSync(configFile, 'model_provider = "fixture-provider"')
+    vi.stubEnv('PATH', '/usr/bin:/bin')
+    const adapter = createOpenCodexAdapter({ codexBin, configFile })
+    const result = await adapter.run({ workspace: dir, outputRoot: dir, prompt: 'runtime-probe' })
+    const probes = JSON.parse(result.finalOutput)
+    expect(probes.length).toBeGreaterThanOrEqual(2)
+    for (const probe of probes) {
+      expect(probe.status, `${probe.shell} ${probe.flag}: ${probe.error}`).toBe(0)
+      expect(realpathSync(probe.output)).toBe(realpathSync(process.execPath))
+    }
   })
 })

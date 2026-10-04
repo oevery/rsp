@@ -1,9 +1,10 @@
 # Groups and dependencies
 
 Load this reference before creating, focusing, planning, or closing grouped or dependent work.
+Use the same selected CLI throughout; `rsp` below denotes that invocation, not a request to fetch or install a package.
 
 - A Group WorkOwner contains a Brief and direct child Changes. Executable WorkRefs are `<change>` or one direct `<group>/<change>` child. Executable child WorkRefs belong to that Group; deeper paths are unsupported.
-- Use a Change Group only for at least two independently executable Changes sharing a goal or completion contract. Create it with `npx -y @oevery/rsp group create <group> [goal]`, replace placeholders, and declare each direct child under `Slices` before creating it.
+- Use a Change Group only for at least two independently executable Changes sharing a goal or completion contract. Create it with `rsp group create <group> [goal]`, replace placeholders, and declare each direct child under `Slices` before creating it.
 - `<group>/brief`, stored as `<group>/00-brief.md`, is not executable or focusable. Read it before a selected child. Its declaration order guides navigation and its blockers are inherited as external blockers, not graph edges.
 - Group-level integration obligations belong in the Brief's `Completion Conditions`. Use a named `Integration:` condition for the durable boundary and record fresh integration evidence before marking it complete. A boundary supplied only by the current request is transient and cannot complete Group closeout until it is written back.
 - Declare an exact prerequisite only as `- requires \`<change-work-ref>\`: <reason>` under the dependent Change's `Blockers`. Targets must be executable Changes.

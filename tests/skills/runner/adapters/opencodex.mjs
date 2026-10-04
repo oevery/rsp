@@ -198,7 +198,13 @@ function createAdapter(options, native) {
       writeFileSync(join(home, 'auth.json'), auth, { mode: 0o600 })
     }
     const env = Object.fromEntries(['PATH', 'LANG', 'LC_ALL', 'LC_CTYPE', 'TZ', 'TERM'].filter(key => process.env[key]).map(key => [key, process.env[key]]))
-    Object.assign(env, { HOME: home, USERPROFILE: home, CODEX_HOME: home, XDG_CONFIG_HOME: join(home, '.config'), CI: 'true' })
+    env.PATH = [dirname(process.execPath), env.PATH].filter(Boolean).join(delimiter)
+    // Host startup files can replace PATH even in non-login zsh shells. Restore
+    // the isolated runtime path after startup without changing host profiles.
+    const startup = `export PATH='${env.PATH.replaceAll('\'', '\'\\\'\'')}'\n`
+    for (const name of ['.zshenv', '.zprofile', '.bash_profile', '.profile'])
+      writeFileSync(join(home, name), startup, { mode: 0o600 })
+    Object.assign(env, { HOME: home, USERPROFILE: home, CODEX_HOME: home, XDG_CONFIG_HOME: join(home, '.config'), ZDOTDIR: home, CI: 'true' })
     return { home, env }
   }
   {

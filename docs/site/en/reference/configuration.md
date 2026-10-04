@@ -1,6 +1,6 @@
 # Configuration reference
 
-Project configuration lives at `.rsp/config.yaml`. `rsp init` writes the complete defaults, and `rsp update` only backfills missing default fields without overwriting existing custom values. Configuration never expands authority.
+Project configuration lives at `.rsp/config.yaml`. `rsp init` writes the complete defaults; `rsp update` backfills missing default fields and refreshes comments in generated-only configurations. Custom values and comments are preserved. Configuration never expands authority.
 
 ## Change kinds
 

@@ -155,7 +155,7 @@ function changeSectionHeading(sectionId: typeof CHANGE_DOCUMENT_SCHEMA.sections[
     proposal: 'State the intended outcome, why it matters, scope, and non-goals; do not narrate execution.',
     spec: 'Describe the contract delta and acceptance conditions, referencing affected existing Specs; do not copy the full baseline or implementation steps.',
     design: 'Explain the approach, responsibility boundaries, and necessary tradeoffs; keep simple changes brief and avoid repeating requirements or tasks.',
-    tasks: 'List checkable work remaining; prescribe order only where correctness, safety, or migration requires it.',
+    tasks: 'List checkable work and mark completion only after outcomes exist; prescribe order only where correctness, safety, or migration requires it.',
     verify: 'Connect acceptance to verification methods; after execution retain actual results, gaps, and limits, not command transcripts.',
     blockers: 'Name unresolved decisions or dependencies that prevent progress; use none when there are no blockers.',
   }

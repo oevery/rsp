@@ -37,16 +37,16 @@ Use the same kind-aware Change template for tracked work of any size. Do not cre
 
 During the current compatibility cycle, RSP accepts the legacy `rsp create --lite`, `--lite=true`, and `--lite=false` forms. They emit a deprecation warning and use this same standard kind-aware template; there is no separate lite renderer.
 
-When no Change is focused and the user has not supplied a concrete task, ask what to work on or suggest `npx -y @oevery/rsp create <name>` for tracked work. Simple current-session tasks should not create RSP changes unless tracking is intentionally needed.
+When no Change is focused and the user has not supplied a concrete task, ask what to work on or suggest `rsp create <name>` using the same selected CLI for tracked work. Simple current-session tasks should not create RSP changes unless tracking is intentionally needed.
 
 ## Work to acceptance
 
 1. Read the nearest `AGENTS.md`, relevant context, focused Change, and only the Specs or Decision Records that own the affected behavior.
 2. Refine unresolved outcome, scope, non-goals, acceptance, or design before implementation.
-3. Implement within explicit mutation authority and run fresh, proportionate verification.
+3. Implement within explicit mutation authority and establish proportionate verification. Reuse traceable passing evidence while its tested boundary and relevant inputs still apply; run missing, failed or invalidated checks. Explicit reruns and required independent execution remain binding.
 4. Update Tasks, Verify, and Blockers with current outcomes rather than an execution transcript.
-5. Decide whether stable facts, lasting rationale, or scoped instructions need a durable owner.
-6. With lifecycle authority, use `rsp archive` only after acceptance and required checks pass and no blocker remains.
+5. Verify outcome facts and write needed stable knowledge to its owner. Converge the entire Change after writeback, check final consistency and complete any required Review.
+6. With lifecycle authority, inspect `rsp ready <work-ref> --json` and require `completionGate: pass` and `archiveReady: yes` before `rsp archive`. Readiness does not replace acceptance or the preceding semantic checks.
 
 Archive does not grant Git, publication, or deployment authority. Reinspect the worktree and obtain those permissions separately.
 

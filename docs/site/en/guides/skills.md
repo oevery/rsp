@@ -10,9 +10,9 @@ The current source candidate defines seven default host-neutral Skills for on-de
 | `rsp-doc` | Write repository documents, Skills and release communication for a defined reader and result. |
 | `rsp-verify` | Run one bounded read-only verification pass against a selected WorkOwner's declared evidence boundary. |
 | `rsp-review` | Review a fixed code, document, or mixed comparison, including release communication, without mutation. |
-| `rsp-commit` | Create one authorized exact-scope local commit. |
+| `rsp-commit` | Inspect delivery readiness read-only or create one authorized exact-scope local commit. |
 
-`rsp-structural-audit` is an optional report-only project Skill. It audits one bounded repository or subtree before implementation authority is granted.
+`rsp-structural-audit` is an optional report-only project Skill. It discovers evidenced structural risks in one bounded repository or subtree; its report grants no implementation authority.
 
 `rsp-doc` is installed by the default suite, or explicitly with `rsp skills install rsp-doc`. Use artifact lenses for README, CONTEXT, Spec, Change and guides; use the Skill branch for package creation or revision, and release communication for changelogs, release notes, migration or authorized document reconciliation. Review loads release checks only for reviewed release documents. Neither method controls publication or establishes release readiness. Tiny edits remain direct. The maintainer-only `author-rsp-skills` adds local Change, provenance and evaluation requirements.
 
@@ -48,7 +48,7 @@ Installation, runtime role, and invocation are separate:
 
 ## Compose the suite from evidence
 
-- Shape can answer one bounded design question read-only without inventing a WorkRef or plan; planning updates require separate authority and an existing owner.
+- Shape can answer one bounded design question read-only without inventing a WorkRef or plan. Authorized planning may create or refine a Change or justified shallow Group; advice within tracked work retains its existing owner without editing it unless authorized.
 - Implement investigates unexplained failures before correction. Diagnosis-only remains read-only without creating an owner. An authorized fix proceeds within the same scope after confirming cause; use pre-mutation RED only when explicitly required or justified by concrete risk.
 - Implement disposes each fixed finding as accepted, rejected, or needing clarification. Correct accepted findings within authority, rerun affected checks, and obtain separate read-only Review; Implement cannot self-certify review-clean.
 - Verify executes a declared read-only evidence boundary when required; ordinary Implement checks need no Verify handoff. A Change uses its WorkRef and `Verify` boundary; a Group uses a named `Integration:` condition from its Brief. A request-only boundary must be written back before Group closeout. Required independent acceptance needs host-observed distinct workers.

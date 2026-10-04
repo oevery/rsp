@@ -85,11 +85,9 @@ working_tree:
     ### Required
     - [x] .tooling/node tools/check.mjs passes for the accepted correction.
     - [x] Independent product review is clean; see review.md.
-    ### Durable Decisions
-    - Spec update: not-needed — no stable contract changes.
-    - Context update: not-needed — no domain or navigation changes.
-    - Decision Record: not-needed — no lasting architectural choice.
-    - Archive readiness: yes — product work and review are complete; current configuration and lifecycle gates still require fresh inspection.
+    No stable contract, vocabulary or lasting-rationale update is needed.
+    Product checks and review do not establish current effective configuration
+    or lifecycle eligibility.
     ## Blockers
     - none
 rubric:

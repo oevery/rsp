@@ -3,6 +3,7 @@ import { textLines } from '../core/streams.mjs'
 export function observeEvents(raw) {
   let completed = false
   let failed = false
+  let streamError = false
   let toolCalls = 0
   const parseFailures = []
   const commands = []
@@ -20,8 +21,17 @@ export function observeEvents(raw) {
       const event = JSON.parse(line)
       if (!event || typeof event.type !== 'string')
         throw new Error('Missing event type')
-      completed ||= event.type === 'turn.completed'
-      failed ||= ['turn.failed', 'error'].includes(event.type)
+      if (event.type === 'turn.started')
+        completed = false
+      if (event.type === 'error')
+        streamError = true
+      if (event.type === 'turn.failed')
+        failed = true
+      if (event.type === 'turn.completed') {
+        completed = true
+        // Completion confirms recovery; terminal turn failures stay failures.
+        streamError = false
+      }
       if (event.type === 'item.completed' && ['command_execution', 'file_change', 'mcp_tool_call', 'tool_call', 'collab_tool_call', 'web_search'].includes(event.item?.type))
         toolCalls++
       if (['api.request.started', 'model.request.started', 'model.started'].includes(event.type))
@@ -65,7 +75,7 @@ export function observeEvents(raw) {
     writes,
     pendingToolCalls: pendingTools.size,
     completed,
-    failed,
+    failed: failed || streamError,
     toolCalls,
     modelInvocations,
     usage,

@@ -12,7 +12,7 @@ describe('evaluation execution boundary', () => {
       command: process.execPath,
       args: [
         '--eval',
-        'require(\'node:fs\').writeFileSync(\'src/requested.mjs\', \'export const requested = true\\n\'); console.log(JSON.stringify({type:"item.completed",item:{type:"agent_message",text:"Changed requested export; no tests run."}})); console.log(JSON.stringify({type:"turn.completed"}))',
+        'require(\'node:fs\').writeFileSync(\'src/requested.mjs\', \'export const requested = true\\n\'); console.log(JSON.stringify({type:"error",message:"Stream disconnected; retrying"})); console.log(JSON.stringify({type:"item.completed",item:{type:"agent_message",text:"Changed requested export; no tests run."}})); console.log(JSON.stringify({type:"turn.completed"}))',
       ],
     })
 

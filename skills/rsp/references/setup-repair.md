@@ -2,11 +2,11 @@
 
 Load this reference only before initializing, auditing, migrating, or repairing RSP-managed state.
 
-Select the requested operation; an audit or repair does not require initialization.
+Select the requested operation; an audit or repair does not require initialization. Run from the selected project root with the same selected CLI; `rsp` below denotes that invocation. Prefer an available project/local executable. Fetching or installing a package requires its own authority; an unavailable CLI is a gap, not permission to download one.
 
-- **Initialize:** use `npx -y @oevery/rsp init [--agents-mode managed|print] [--with-project-setup]`. `--with-project-setup` creates and focuses `changes/project-setup.md`; without it, create that Change only when explicit bootstrap tracking is needed.
+- **Initialize:** use `rsp init [--agents-mode managed|print] [--with-project-setup]`. `--with-project-setup` creates and focuses `changes/project-setup.md`; without it, create that Change only when explicit bootstrap tracking is needed.
 - **Place project knowledge:** architecture belongs in `.rsp/specs/design.md`, cohesive capabilities in the smallest domain Spec, and vocabulary/relationships/navigation in useful root or local `CONTEXT.md` files. Discover current files with `rsp specs`; keep operating rules in nearest project-owned `AGENTS.md` outside its managed block.
-- **Diagnose or repair:** use `npx -y @oevery/rsp doctor`. Only authorized deterministic repairs use `doctor --fix` or `rsp update`; `fixed` entries are filesystem mutations, an empty list means none. Repair commands decide neither stale focus nor semantic writeback/archive readiness.
+- **Diagnose or repair:** use `rsp doctor`. Only authorized deterministic repairs use `doctor --fix` or `rsp update`; `fixed` entries are filesystem mutations, an empty list means none. Repair commands decide neither stale focus nor semantic writeback/archive readiness.
 
 For a detected legacy context map or a context-migration request, use [context migration](context-migration.md). CLI updates refresh managed entry guidance, not project-owned context files.
 

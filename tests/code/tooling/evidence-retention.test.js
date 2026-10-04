@@ -58,7 +58,7 @@ it('preserves public task evidence through execution and review while removing o
       assertEvidence(join(workspace, 'current'))
       expect(prompt).toContain('https://github.com/example/service/issues/123')
       const fence = String.fromCharCode(96).repeat(3)
-      return { exitCode: 0, stdout: '', finalOutput: `${fence}json\n{"status":"passed"}\n${fence}` }
+      return { exitCode: 0, stdout: JSON.stringify({ type: 'turn.completed' }), finalOutput: `${fence}json\n{"status":"passed"}\n${fence}` }
     },
   } })
   expect(review.status).toBe('passed')
@@ -126,7 +126,7 @@ it('offers compact review navigation without hiding failures or losing complete 
       expect(full.source_thread_id).toBe('actor')
       expect(full.item.command).toBe(event.item.command)
       expect(full.item.aggregated_output).toBe(event.item.aggregated_output.replace('synthetic-credential', '[REDACTED]'))
-      return { exitCode: 0, stdout: '', finalOutput: '```json\n{"status":"failed"}\n```' }
+      return { exitCode: 0, stdout: JSON.stringify({ type: 'turn.completed' }), finalOutput: '```json\n{"status":"failed"}\n```' }
     },
   } })
   expect(review.status).toBe('failed')
@@ -182,7 +182,7 @@ it('retains large task text and initial Skill context before cleanup, with expli
       expect(readFileSync(join(workspace, 'current/workspace/auth/README.md'), 'utf8')).toBe('Use a Bearer header.')
       expect(readFileSync(join(workspace, 'current/workspace/.env'), 'utf8')).toBe('TOKEN=[REDACTED]')
       expect(readFileSync(join(workspace, 'current/workspace/dist/report.txt'), 'utf8')).toBe('generated task evidence')
-      return { exitCode: 0, stdout: '', stderr: '', finalOutput: `Review: current/workspace/src/requested.mjs is available.\n\n${String.fromCharCode(96).repeat(3)}json\n{"status":"failed"}\n${String.fromCharCode(96).repeat(3)}`, durationMs: 1 }
+      return { exitCode: 0, stdout: JSON.stringify({ type: 'turn.completed' }), stderr: '', finalOutput: `Review: current/workspace/src/requested.mjs is available.\n\n${String.fromCharCode(96).repeat(3)}json\n{"status":"failed"}\n${String.fromCharCode(96).repeat(3)}`, durationMs: 1 }
     },
   }
   const review = await reviewRun(run, { adapter: reviewer, outputRoot })

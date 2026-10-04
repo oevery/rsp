@@ -156,7 +156,8 @@ export async function reviewRun(run, { adapter, outputRoot, timeoutMs, signal, b
         if (!result.stderrFile)
           writeFileSync(join(directory, 'stderr.log'), result.stderr ?? '', { mode: 0o600 })
         if (!cancelled(result)) {
-          if (result.exitCode !== 0 || result.timedOut || result.outputLimited || result.error || events.failed) {
+          if (result.exitCode !== 0 || result.timedOut || result.outputLimited || result.error || events.failed
+            || !events.completed || events.parseFailures.length || events.pendingToolCalls) {
             report.category = 'infrastructure'
             report.reason = 'review-execution-incomplete'
           }

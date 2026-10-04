@@ -4,7 +4,7 @@ description: Review a fixed change or explicit file set read-only against projec
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.03.2"
+  version: "2026.10.03.3"
 ---
 
 # RSP Review
@@ -47,7 +47,7 @@ Choose read/search tools within that scope. If inspection fails because of a too
 
 ## Report
 
-Render headings, field labels, explanations, and verdict prose in the language explicitly requested by the user; otherwise follow nearest project instructions, then the conversation language. Treat the shape below as semantic field order rather than fixed English wording: translate its human-facing labels when the output language differs. Preserve paths, commands, identifiers, WorkOwner references, WorkRefs, severity labels `P0`-`P3`, and the values `issues_found`, `clean`, `skipped`, and `blocked` unchanged; when their language differs from the response, retain those values only as secondary exact tokens beside localized narration.
+Render headings, field labels, explanations, and verdict prose in the language explicitly requested by the user; otherwise follow user or host personal instructions, then the conversation language. Project artifact-language settings do not select response language. Treat the shape below as semantic field order rather than fixed English wording: translate its human-facing labels when the output language differs. Preserve paths, commands, identifiers, WorkOwner references, WorkRefs, severity labels `P0`-`P3`, and the values `issues_found`, `clean`, `skipped`, and `blocked` unchanged; when their language differs from the response, retain those values only as secondary exact tokens beside localized narration.
 
 Use this semantic shape with localized headings and labels:
 

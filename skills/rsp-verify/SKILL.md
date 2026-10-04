@@ -4,7 +4,7 @@ description: Verify one selected RSP WorkOwner against its declared evidence bou
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.03.2"
+  version: "2026.10.03.3"
 ---
 
 # RSP Verify
@@ -41,11 +41,13 @@ For a tool-only obstacle, diagnose read-only and inspect actual effects before c
 
 ## Return one bounded result
 
-Return exactly one canonical result:
+Return exactly one canonical result from the collected evidence, with observed failure taking precedence over unavailable coverage:
 
+- `fail`: at least one named required check has observed failure, even when another check is unavailable.
+- `unavailable`: no named required check has observed failure, but a required tool, dependency, service, credential, or environment could not be used.
 - `pass`: every named required check passed within the declared boundary.
-- `fail`: at least one named required check failed.
-- `unavailable`: a required tool, dependency, service, credential, or environment could not be used.
+
+Retain each check's outcome and every missing or unexecuted check separately. A failed result does not imply complete coverage; unavailable evidence never erases an observed failure. Aggregation does not authorize execution beyond a stop boundary.
 
 Include these independent fields and their evidence:
 

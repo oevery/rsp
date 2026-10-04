@@ -99,6 +99,28 @@ it('preserves negative findings and partial reports without automatic retry', as
   expect(unavailable.category).toBe('infrastructure')
   expect(readFileSync(unavailable.report, 'utf8')).toBe('Partial findings retained.')
 })
+it('accepts a completed review after a stream error without accepting terminal or incomplete traces', async () => {
+  const error = { type: 'error', message: 'Stream disconnected; retrying' }
+  const complete = { type: 'turn.completed' }
+  const recovered = await reviewRun(record(), { adapter: fake(answer(), [error]), outputRoot: temp() })
+  expect(recovered).toMatchObject({ status: 'passed', parsed: true })
+  expect(readFileSync(join(dirname(recovered.reportPath), 'events.jsonl'), 'utf8')).toContain(error.message)
+  for (const trace of [
+    [error],
+    [complete, error],
+    [{ type: 'turn.failed' }, complete],
+    [complete, { type: 'turn.started' }],
+    [complete, { type: 'item.started', item: { id: 'pending', type: 'command_execution' } }],
+    [complete, null],
+  ]) {
+    const adapter = fake(answer())
+    const original = adapter.run
+    adapter.run = async input => ({ ...await original.call(adapter, input), stdout: trace.map(event => JSON.stringify(event)).join('\n') })
+    const incomplete = await reviewRun(record(), { adapter, outputRoot: temp() })
+    expect(incomplete).toMatchObject({ status: 'inconclusive', parsed: false, reason: 'review-execution-incomplete' })
+    expect(readFileSync(incomplete.report, 'utf8')).toBe(answer())
+  }
+})
 it('saves cancellation without another session or accepting exit zero', async () => {
   for (const boundary of ['before', 'result']) {
     const controller = new AbortController()

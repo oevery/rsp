@@ -48,12 +48,15 @@ ${groupSectionHeading('sharedConstraints')}
 - ${placeholder}
 
 ${groupSectionHeading('slices')}
+<!-- Declare at least two independently executable direct child WorkRefs before creating them; keep their Tasks and evidence in each Change. -->
 - \`${name}/<change>\`: ${placeholder}
 
 ${groupSectionHeading('completionConditions')}
+<!-- State shared completion conditions. For Group-level verification, name an Integration: condition and retain its acceptance and evidence here; child passes alone do not prove it. -->
 - [ ] ${placeholder}
 
 ${groupSectionHeading('durableOutcomes')}
+<!-- Identify current-fact and lasting-rationale owners only when an update is needed; do not duplicate child results, current Specs or execution history. -->
 - Current facts: ${placeholder}
 - Lasting rationale: ${placeholder}
 

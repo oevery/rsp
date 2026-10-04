@@ -1,8 +1,8 @@
 # Skill behavior
 
-Load only with authorized model cost. Select representative `tests/skills/cases` and preview `pnpm run test:skills -- plan --suite <suite>`.
+Load to plan or interpret behavior evidence; reading this method grants no model-call authority. Select representative `tests/skills/cases`. When local planning is authorized, preview `node tests/skills/runner/cli.mjs plan --suite <suite>` with zero provider calls.
 
-Before execution, confirm the composition, applicable case/project fixtures, provider/auth configuration, session budget and independent read-only judge capability in `tests/skills/README.md`. Missing prerequisites leave behavior unverified; plan/check readiness or adapter success cannot replace them.
+Before model execution, require separate cost and execution authority and confirm the composition, applicable case/project fixtures, provider/auth configuration, session budget and independent read-only judge capability in `tests/skills/README.md`. Missing prerequisites leave behavior unverified; plan/check readiness or adapter success cannot replace them.
 
 Use that README's `run --allow-live --config-file <private-provider-overlay> --max-sessions <root-budget>` command. Shared config supplies executor, task-local worker and judge defaults.
 

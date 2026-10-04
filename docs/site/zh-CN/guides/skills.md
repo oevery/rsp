@@ -10,9 +10,9 @@
 | `rsp-doc` | 面向明确读者和结果，编写仓库文档、Skill 与发布说明。 |
 | `rsp-verify` | 针对已选 WorkOwner 声明的证据边界执行一次有界、只读验证。 |
 | `rsp-review` | 对固定的代码、文档或混合比较范围做只读审查，包括发布文档。 |
-| `rsp-commit` | 创建一个已授权、范围精确的本地提交。 |
+| `rsp-commit` | 只读检查交付就绪情况，或创建一个已授权、范围精确的本地提交。 |
 
-`rsp-structural-audit` 是可选的纯报告项目 Skill，在授予实现权限前审计一个边界明确的仓库或子树。
+`rsp-structural-audit` 是可选的纯报告项目 Skill，在边界明确的仓库或子树中发现有证据的结构风险；报告不授予实现权限。
 
 `rsp-doc` 包含在默认套件中，也可用 `rsp skills install rsp-doc` 单独安装。README、CONTEXT、Spec、Change 与指南按产物类型加载方法；Skill 新建或修订使用 Skill 分支；changelog、release notes、迁移指引及已授权的文档对账使用发布说明分支。Review 仅在评审范围包含发布文档时加载发布检查。两者不控制发布，也不据此宣称发布就绪。小修改仍直接完成。维护者专用 `author-rsp-skills` 仅叠加本仓库的 Change、溯源与验证要求。
 
@@ -48,7 +48,7 @@
 
 ## 按证据组合套件
 
-- Shape 可只读回答一个有界设计问题，无需制造 WorkRef 或计划；规划写回需独立授权及实际归属。
+- Shape 可只读回答一个有界设计问题，无需制造 WorkRef 或计划。获授权的规划可以创建或修订 Change／有依据的浅层 Group；跟踪工作中的建议保留既有归属，未经授权不修改它。
 - Implement 在修正不明失败前先调查原因；纯诊断保持只读，无需制造 owner。已授权的修正从已确认原因出发，在同一权限和范围内继续；仅在显式要求或具体风险支持时先运行 RED。
 - Implement 对固定发现逐条给出接受、拒绝或需澄清的处置，在权限内修正已接受项，重跑受影响检查，并交由独立只读 Review 复审；不得自行宣称 review-clean。
 - Verify 在需要时执行已声明的只读证据边界，普通 Implement 检查不必转 Verify。Change 使用 WorkRef 与 `Verify` 边界；Group 使用 Brief 中命名的 `Integration:` 条件。临时边界必须在 Group closeout 前写回；要求独立验收时需要宿主证明不同 worker。

@@ -10,14 +10,11 @@ RSP turns unclear intent into shaped, implemented, reviewed, and verified softwa
 
 - Shape ambiguous work into an executable Change.
 - Resolve design questions from repository evidence before implementation.
-- Route diagnosis, implementation, TDD, review, and release work to explicit capabilities.
+- Route diagnosis, implementation, risk-selected test-first work, review, and release work to explicit capabilities.
 - Preserve current facts, lasting rationale, scoped instructions, and completed history in the right owners.
 - Keep authority visible: RSP never infers permission to commit, publish, deploy, or approve work.
 
-```text
-intent → shape → design when needed → diagnose | TDD | implement
-       → review → durable review → archive
-```
+RSP selects the next responsibility from the task and evidence, not a fixed stage pipeline. A settled authorized task can proceed directly to implementation and its own checks; design, review, coordination and lifecycle closeout apply only when needed and permitted.
 
 ## Five-minute start
 
@@ -41,7 +38,7 @@ rsp show improve-login
 
 Focus is a set: the setup Change may still be focused alongside improve-login. Use the explicit name to inspect it; show --focused requires exactly one marker.
 
-Confirm that `doctor` reports the intended setup and `status` shows the expected work. These are deterministic observations, not semantic acceptance. Follow the nearest `AGENTS.md`, keep the selected Change current, run fresh required checks, and make the durable-update decision. Use `rsp archive` only after acceptance is satisfied and lifecycle authority permits it.
+Confirm that `doctor` reports the intended setup and `status` shows the expected work. These are deterministic observations, not semantic acceptance. Follow the nearest `AGENTS.md`, keep the selected Change current and establish applicable required verification, reusing traceable passing evidence when its tested boundary and relevant inputs still apply. Before authorized archive, decide necessary knowledge updates, converge the whole Change and check current readiness.
 
 [Read the full getting-started guide](./docs/site/en/getting-started.md).
 

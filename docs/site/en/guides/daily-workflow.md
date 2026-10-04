@@ -1,6 +1,6 @@
 # Daily workflow
 
-RSP derives the current action from user intent, repository authority, available ownership, checkout evidence, verification, and blockers. An ordinary session task need not create a Change. The stage is guidance, not persisted state; sufficient authority allows completion in the same request without an artificial continuation prompt.
+RSP derives the current action from user intent, repository authority, available ownership, checkout evidence, verification and blockers. An ordinary session task need not create a Change. Responsibilities are conditional, not a fixed stage sequence or persisted state; sufficient authority allows completion in the same request without an artificial continuation prompt.
 
 ## Select current work
 
@@ -9,10 +9,10 @@ Use `status` and `show` to inspect work; change focus through the owning CLI onl
 ```bash
 rsp status
 rsp focus <work-ref>
-rsp show --focused
+rsp show <work-ref>
 ```
 
-Markers in `.rsp/focus.d/` form a lightweight FocusSet of open work. If several Changes are focused, the AI resolves the default WorkRef from explicit user mentions, the current request, status, and dependencies; ask only when the requested mutation or delivery boundary remains materially ambiguous. For grouped work, read the sibling Group Brief before the selected child.
+Markers in `.rsp/focus.d/` form a lightweight FocusSet of open work. Inspect the selected WorkRef explicitly; `show --focused` requires exactly one marker. If several Changes are focused, the AI resolves the default WorkRef from explicit user mentions, the current request, status and dependencies; ask only when the requested mutation or delivery boundary remains materially ambiguous. For grouped work, read the sibling Group Brief before the selected child.
 
 Before mutation, inspect the worktree and preserve unrelated modified, staged, or untracked work. Focus, automatic focus, and readiness do not grant product mutation, Git, lifecycle, publication, or approval authority.
 
@@ -25,6 +25,7 @@ unexplained failure → implement's read-only diagnosis; fix only if authorized 
 explicit or concrete-risk test-first need → implement's test-first method
 evidenced ordinary change → implement and its own proportionate checks
 fixed comparison request → review
+authorized repository-document or Skill writing → doc
 accepted fixed findings → implement; independent read-only re-review when required
 release communication writing → doc's release method
 fixed release-document review → review's Document pipeline
@@ -49,7 +50,7 @@ Use an exact dependency blocker only for another executable Change:
 
 ## Verify and review
 
-Run required checks and additional risk-selected checks after the final relevant edit. Prior runs affected by that edit are stale. A missing tool or environment makes verification unavailable; an exercised defect makes it failed. Do not describe either as passed.
+After the final relevant edit, reuse traceable passing evidence whose tested scope and relevant content, dependencies, configuration, tools, inputs and environment still apply. Run only missing, failed or invalidated required checks and additional risk-selected coverage. Explicit reruns, current observations and required independent execution remain binding; a phase change alone does not invalidate evidence. A missing tool or environment makes verification unavailable; an exercised defect makes it failed. Do not describe either as passed.
 
 For a tool-only obstacle, diagnose the cause and inspect actual effects before recovery. Continue read-only or proven repeat-safe work within the same boundary; do not blindly replay a one-shot operation or bypass a safety refusal. A permitted replacement method must preserve required evidence, not replace an exact named check with a weaker result. Unknown mutation, missing required evidence or independent workers, and changed authority remain stops. Report the observed effects, missing condition and safe next action.
 
@@ -74,11 +75,11 @@ update means no writeback edit, not permission to skip final Change convergence.
 For a tracked Change with separate lifecycle authority, check readiness and archive through the owning CLI when permitted. Ordinary untracked work has no archive step; method choice does not authorize manual focus or archive-file mutations:
 
 ```bash
-rsp ready <work-ref>
+rsp ready <work-ref> --json
 rsp archive <work-ref>
 ```
 
-`rsp ready` provides the required completion gate, optional coverage warnings, and semantic-review signals, not semantic approval. Check the actual required evidence and durable decisions before closeout. `rsp archive` fails closed when Tasks, Required Verify, or blockers remain; inspect its lifecycle diff after success. Recheck the whole intended delivery scope before delivery. Commit, push, publication, deployment, approval, and human acceptance remain separate authorities.
+`rsp ready` provides the required completion gate, optional coverage warnings, and semantic-review signals, not semantic approval. Require `completionGate: pass` and `archiveReady: yes`, and check the actual required evidence and durable decisions before closeout. `rsp archive` fails closed when Tasks, Required Verify, or blockers remain; inspect its lifecycle diff after success. Recheck the whole intended delivery scope before delivery. Commit, push, publication, deployment, approval, and human acceptance remain separate authorities.
 
 ## Recovery
 

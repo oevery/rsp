@@ -14,18 +14,25 @@ it('retains timeout and malformed evidence as inconclusive, and unauthorized wri
     const timeout = await runProcess(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { cwd: directory, env: {}, input: '', timeoutMs: 50 })
     expect(timeout.timedOut).toBe(true)
     expect(timeout.timeoutMs).toBe(50)
-    for (const mode of ['timeout', 'cancelled', 'malformed', 'unauthorized']) {
+    for (const mode of ['timeout', 'cancelled', 'malformed', 'unauthorized', 'terminal', 'late-error', 'incomplete', 'task-failure']) {
       const result = await runCase(entry, process.cwd(), { outputRoot: directory, adapter: {
         id: 'local-test',
         settings: { model: 'none' },
         async run({ workspace }) {
-          writeFileSync(join(workspace, 'src/requested.mjs'), 'export const requested = true')
+          writeFileSync(join(workspace, 'src/requested.mjs'), `export const requested = ${mode !== 'task-failure'}`)
           if (mode === 'unauthorized')
             writeFileSync(join(workspace, 'user-notes.txt'), 'lost')
-          return { exitCode: 0, timedOut: mode === 'timeout', cancelled: mode === 'cancelled', cancellationReason: mode === 'cancelled' ? 'SIGINT' : null, stdout: mode === 'malformed' ? 'not-json' : JSON.stringify({ type: 'turn.completed' }), stderr: '', finalOutput: 'done' }
+          const trace = [{ type: 'error', message: 'Stream disconnected; retrying' }]
+          if (mode === 'terminal')
+            trace.push({ type: 'turn.failed' })
+          if (mode !== 'incomplete')
+            trace.push({ type: 'turn.completed' })
+          if (mode === 'late-error')
+            trace.push({ type: 'error' })
+          return { exitCode: 0, timedOut: mode === 'timeout', cancelled: mode === 'cancelled', cancellationReason: mode === 'cancelled' ? 'SIGINT' : null, stdout: mode === 'malformed' ? 'not-json' : trace.map(event => JSON.stringify(event)).join('\n'), stderr: '', finalOutput: 'done' }
         },
       } })
-      expect(result.verdict.status).toBe(mode === 'unauthorized' ? 'failed' : 'inconclusive')
+      expect(result.verdict.status).toBe(['unauthorized', 'task-failure'].includes(mode) ? 'failed' : 'inconclusive')
       if (mode === 'cancelled') {
         expect(result).toMatchObject({ timeoutMs: null, cancelled: true, cancellationReason: 'SIGINT', verdict: { reason: 'execution-cancelled' } })
         expect(result.observation.changedPaths).toContain('src/requested.mjs')

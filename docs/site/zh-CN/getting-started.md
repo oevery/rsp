@@ -37,16 +37,16 @@ Focus 是集合，project-setup 可以与 improve-login 同时聚焦。使用明
 
 在当前兼容周期内，RSP 继续接受旧的 `rsp create --lite`、`--lite=true` 与 `--lite=false` 形式。它们会输出弃用警告并使用同一套标准 kind-aware 模板，不存在单独的 lite renderer。
 
-没有聚焦的 Change 且用户未提供具体任务时，询问要处理什么，或建议使用 `npx -y @oevery/rsp create <name>` 创建需要跟踪的工作。简单的当前会话任务默认不应创建 RSP Change，除非确实需要持久跟踪。
+没有聚焦的 Change 且用户未提供具体任务时，询问要处理什么，或建议用同一个已选 CLI 的 `rsp create <name>` 创建需要跟踪的工作。简单的当前会话任务默认不应创建 RSP Change，除非确实需要持久跟踪。
 
 ## 推进到验收
 
 1. 阅读最近的 `AGENTS.md`、相关上下文、聚焦的 Change，以及实际拥有受影响行为的 Specs 或 Decision Records。
 2. 在实现前解决结果、范围、非目标、验收条件或设计中的实质性不确定项。
-3. 在明确的修改权限内实现，并运行最新且与风险相称的验证。
+3. 在明确的修改权限内实现，并建立与风险相称的验证。被测边界和相关输入仍然适用时，复用可追溯的通过证据；运行缺失、失败或已失效的检查。显式重跑要求和必需独立执行仍然有效。
 4. 用当前结果更新 Tasks、Verify 和 Blockers，不记录执行流水账。
-5. 判断稳定事实、长期理由或作用域指令是否需要持久化的归属位置。
-6. 获得生命周期权限后，仅在满足验收条件、必需检查通过且没有阻塞项时使用 `rsp archive` 归档。
+5. 核实结果事实，把需要更新的稳定知识写回对应归属；写回后收敛整个 Change，检查最终一致性，并完成所需 Review。
+6. 获得生命周期权限后，检查 `rsp ready <work-ref> --json`，要求 `completionGate: pass` 和 `archiveReady: yes`，再用 `rsp archive` 归档。Readiness 不能替代验收及前述语义检查。
 
 归档不授予 Git、发布或部署权限。应重新检查工作树，并分别取得这些权限。
 

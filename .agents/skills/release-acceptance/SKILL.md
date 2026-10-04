@@ -12,7 +12,7 @@ Select the evidence needed for the current release decision. This maintainer cap
 Establish the exact source/version and composition identity, requested claim, available records and execution authority. A read-only interpretation request authorizes no checks or model calls. Keep simulated records labelled as simulations and historical results attached to their original identities.
 
 - Read [local checks](references/deterministic-acceptance.md) when planning or executing deterministic release validation.
-- Read [Skill behavior](references/provider-behavior-acceptance.md) when relevant behavior changed and model cost is authorized.
+- Read [Skill behavior](references/provider-behavior-acceptance.md) when planning or interpreting evidence for relevant behavior changes. Actual model execution requires separate cost and execution authority.
 - Read [comparison](references/provider-routing-comparison.md) only for an explicitly requested comparative experiment.
 - Read [exact candidate](references/exact-candidate.md) when version and release surfaces are final.
 

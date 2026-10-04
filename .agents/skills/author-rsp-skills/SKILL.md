@@ -33,7 +33,7 @@ Select reading scope by mode:
 
 Do not preload unrelated branches; final metadata/resource validation covers every complete changed package.
 
-Load only the selected reference: [authoring](references/authoring.md) for `create | revise | audit | adapt`, [concision](references/concision.md) for `concise`, or [evaluation](references/evaluation.md) for `evaluate`. Load evaluation additionally before completing `create`, `revise`, `concise`, or `adapt` when observable behavior changes.
+Load only the selected reference: [authoring](references/authoring.md) for `create | revise | audit | adapt`, [concision](references/concision.md) for `concise`, or [evaluation](references/evaluation.md) for `evaluate`. For any authorized mutation, including audit repair, additionally load evaluation before completion when observable behavior changes. Report-only audits remain read-only.
 
 ## Preserve the contract
 
@@ -50,7 +50,7 @@ Use rsp-doc's Skill branch for descriptions, instructions, resources and concise
 3. Preserve each standalone package's runtime closure; maintainer research and candidate evidence must not become installed dependencies.
 4. When layout, reachability or repetition matters, use `node scripts/scan-skill-context.mjs --package <canonical-path>` from the repository root. Read [context diagnostics](references/authoring.md#context-diagnostics) for selection and interpretation; scan results are clues, not quality gates.
 5. Reuse repository evaluation, security, packaging, and behavior checks. Choose permitted inspection and writing methods within the same goal, scope, authority, baseline and evidence boundary; tools provide observations, not candidate acceptance. Do not duplicate checks inside the Skill or substitute a diagnostic for a named required operation.
-6. For tracked work, update only the selected Change's Tasks, Verify evidence, Durable Decisions, and Blockers after outcomes exist. A report-only Pre-Change Audit writes no artifact and returns its findings to Core or the user for the planning decision.
+6. For tracked work, keep the authorized candidate delta and approach in Proposal, Spec and Design; record actual outcomes, evidence, knowledge-update references and unresolved limits in Tasks, Verify and Blockers. The durable-decision summary stays in the response, not a new Change section. A report-only Pre-Change Audit writes no artifact and returns its findings to Core or the user for the planning decision.
 
 ## Stop and return
 

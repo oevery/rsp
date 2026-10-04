@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { spawn } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -121,6 +121,12 @@ else {
     const addDirIndex = process.argv.indexOf('--add-dir')
     const writableGit = addDirIndex < 0 ? null : process.argv[addDirIndex + 1]
     final = JSON.stringify({ isolated: process.env.HOME === process.env.CODEX_HOME, leakedEnv: process.env.RSP_TEST_SECRET ?? null, configPresent: config.includes('fixture-provider'), selectedProvider, auth, memoryDisabled: parsed.memoryDisabled, integrationsDisabled: ['plugins', 'hooks', 'apps', 'browser_use', 'computer_use', 'in_app_browser'].every(parsed.disabled), ignoredUserConfig: process.argv.includes('--ignore-user-config'), strictConfig: process.argv.includes('--strict-config'), writableGit })
+  }
+  if (prompt.includes('runtime-probe')) {
+    final = JSON.stringify(['/bin/sh', '/bin/bash', '/bin/zsh'].filter(existsSync).flatMap(shell => ['-c', '-lc'].map((flag) => {
+      const result = spawnSync(shell, [flag, 'node -p \'process.execPath\''], { encoding: 'utf8' })
+      return { shell, flag, status: result.status, output: result.stdout.trim(), error: result.stderr }
+    })))
   }
   if (!isJudge && typeof control.finalOutput === 'string')
     final = control.finalOutput
