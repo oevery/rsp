@@ -333,6 +333,38 @@ describe('public CLI lifecycle', () => {
     expect(JSON.parse(run(directory, 'ready', 'completed', '--json')).readiness.archiveReady).toBe('no')
   })
 
+  it('refuses an unreadable archive before moving the Change or clearing its focus', () => {
+    const directory = project()
+    const file = completeChange(directory, 'missing-summary')
+    const source = readFileSync(file, 'utf8')
+    run(directory, 'focus', 'missing-summary')
+    const focus = join(directory, '.rsp/focus.d/missing-summary')
+    const focusContent = readFileSync(focus, 'utf8')
+    const archives = readdirSync(join(directory, '.rsp/archives'))
+    for (const proposal of ['Completed the requested work.', '- Outcome: <!-- hidden only -->\n- Summary:']) {
+      const content = source.replace('- Outcome: Preserve the user-owned note during a local update.', proposal)
+      writeFileSync(file, content)
+      const ready = JSON.parse(run(directory, 'ready', 'missing-summary', '--json'))
+      expect(ready.readiness).toMatchObject({ completionGate: 'blocked', archiveReady: 'no', incompleteTasks: 0, incompleteRequiredVerify: 0 })
+      expect(ready.warnings).toContain('archived Change must contain frontmatter summary, Proposal Outcome, or Proposal Summary')
+      const rejected = spawnSync(process.execPath, [cli, 'archive', 'missing-summary'], { cwd: directory, encoding: 'utf8' })
+      expect(rejected.status).not.toBe(0)
+      expect(readFileSync(file, 'utf8')).toBe(content)
+      expect(readFileSync(focus, 'utf8')).toBe(focusContent)
+      expect(readdirSync(join(directory, '.rsp/archives'))).toEqual(archives)
+    }
+    const repaired = readFileSync(file, 'utf8').replace('kind: fix', 'kind: fix\nsummary: Preserved the note.')
+    writeFileSync(file, repaired)
+    expect(JSON.parse(run(directory, 'ready', 'missing-summary', '--json')).readiness.archiveReady).toBe('yes')
+    run(directory, 'archive', 'missing-summary')
+    expect(JSON.parse(run(directory, 'history', 'missing-summary', '--json')).record.summary).toBe('Preserved the note.')
+    expect(JSON.parse(run(directory, 'status', '--json')).diagnostics).toEqual([])
+    expect(existsSync(file)).toBe(false)
+    expect(existsSync(focus)).toBe(false)
+    const archived = readdirSync(join(directory, '.rsp/archives')).find(name => name.endsWith('_missing-summary.md'))!
+    expect(readFileSync(join(directory, '.rsp/archives', archived), 'utf8')).toBe(repaired)
+  })
+
   it('projects visible Change and Group summaries while retaining literals and archive bytes', () => {
     const { directory, brief } = groupProject()
     completeChange(directory, 'delivery/flag')
@@ -352,6 +384,7 @@ describe('public CLI lifecycle', () => {
       writeFileSync(file, source.replace('- Outcome: Preserve the user-owned note during a local update.', proposal))
       const status = JSON.parse(run(directory, 'status', '--json'))
       expect(status.records.find((record: { name: string }) => record.name === 'summary-view').summary).toBe(expected)
+      expect(JSON.parse(run(directory, 'ready', 'summary-view', '--json')).readiness.archiveReady).toBe('yes')
     }
     expect(JSON.parse(run(directory, 'status', '--json')).groups[0].summary).toBe('Deliver `<!-- literal -->` export.')
     const retained = readFileSync(file, 'utf8')

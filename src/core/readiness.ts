@@ -2,6 +2,7 @@ import type { ArchiveReadinessOutput, CommandDiagnostic, VerifyCriticalitySummar
 import type { ChangeSectionId, ParsedRspDocument } from './document-model.js'
 import { collectVerifyCheckboxes, getOpenCheckboxes, hasMeaningfulBlockers, openCheckboxLines, parseScenarios, summarizeVerifyCheckboxes } from './content.js'
 import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionMarkdown, parseRspDocument } from './document-model.js'
+import { extractChangeSummary } from './work-summary.js'
 
 export interface ArchiveReadiness {
   taskTodos: string[]
@@ -36,6 +37,9 @@ export function collectArchiveReadiness(content: string | ParsedRspDocument<Chan
   const documentDiagnostics = options.documentDiagnostics ?? []
   warnings.push(...documentDiagnostics.map(diagnostic => diagnostic.message))
   const document = typeof content === 'string' ? parseRspDocument(content, CHANGE_DOCUMENT_SCHEMA) : content
+  const missingSummary = !extractChangeSummary(document.source, document, { preservePlaceholder: true })
+  if (missingSummary)
+    warnings.push('archived Change must contain frontmatter summary, Proposal Outcome, or Proposal Summary')
   const tasksSection = getDocumentSectionMarkdown(document, 'tasks')
   const verifySection = getDocumentSectionMarkdown(document, 'verify')
   const taskTodos = getOpenCheckboxes(tasksSection)
@@ -61,6 +65,7 @@ export function collectArchiveReadiness(content: string | ParsedRspDocument<Chan
     warnings.push('no Scenario blocks found (some changes do not need them)')
 
   const archiveReady = documentDiagnostics.some(diagnostic => diagnostic.severity === 'error')
+    || missingSummary
     || activeBlockers
     || taskTodos.length > 0
     || requiredVerifyTodos.length > 0
