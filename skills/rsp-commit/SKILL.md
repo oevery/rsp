@@ -4,14 +4,14 @@ description: Inspect or create one authorized exact-scope local commit for direc
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.03.3"
+  version: "2026.10.05.1"
 ---
 
 # RSP Commit
 
 Own precise local Git delivery, whether invoked directly or routed by Core. This is a default core capability, not an optional extension. Availability grants no authority. A readiness-only request remains read-only; create a commit only with current local authority, one exact owned boundary and applicable passing verification.
 
-Use explicit response language, then personal instructions, then conversation language for narration. Existing artifact language stays unchanged. Commit prose follows explicit current commit-language instruction, effective configured commit language, nearest repository authority, then the clear style of recent non-merge commits. In RSP projects, when precedence needs configuration, use the same selected CLI's successful `rsp config --json` summary (optional `--compact`); it resolves defaults and inheritance. Refresh on relevant drift or recovery. Raw YAML is diagnostic only; failed or unavailable projection leaves the dependent language choice unresolved before staging, not replaced by history. Independently authorized read-only inspection needing no unknown setting may continue. Response language does not select commit language. Preserve commands, identifiers, Conventional types, scopes and trailers; return a material unresolved language choice to the owner. These rules work without Core installed.
+Responses follow explicit instruction, personal instructions, then conversation language; existing artifacts retain theirs. Commit prose follows explicit commit-language instruction, effective configuration, nearest repository authority, then clear recent non-merge style, not response language. Resolve needed RSP defaults/inheritance through the selected CLI's successful `rsp config --json`; refresh on drift or recovery. Raw YAML is diagnostic only. Failed projection leaves dependent language unresolved before staging, not replaced by history; independent authorized inspection may continue. Preserve commands, identifiers, Conventional types/scopes and trailers. Resolve material conflicts with the owner; Core is not required.
 
 ## Establish the delivery boundary
 
@@ -97,4 +97,4 @@ never claim successful delivery when required observations fail or disagree.
 
 ## Return the result
 
-Report kind and purpose, owner or refs when relevant, commit SHA when observed, delivered paths, message, remaining work and material omissions. Retain the complete message and content/history observations as evidence without repeating the owner narrative. For a stop, name the missing condition, observed Git effects and safe next action. No stage grants push, tag, publication, deployment, approval, cross-branch integration or history rewrite.
+Concisely report kind and purpose, owner or refs when relevant, commit SHA when observed, delivered paths and message subject; include remaining work and material omissions when present. Retain the complete message and content/history observations as evidence; expand them when requested or needed to explain a mismatch, not as routine output. For a stop, name the missing condition, observed Git effects and safe next action. No stage grants push, tag, publication, deployment, approval, cross-branch integration or history rewrite.

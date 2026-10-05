@@ -1,6 +1,8 @@
 # Complex shaping
 
-Read this reference only when material clarification needs more than one round, several direct slices share one completion contract, or independently closable owners converge on terminal delivery.
+Read only for qualified coordinated planning, multi-round material clarification, slices sharing one completion contract or independently closable owners converging on terminal delivery.
+
+In qualified coordination, existing planning authority covers clear in-scope discovery: retain cohesive corrections in the Change; use a separate Change for an independently closable result or a shallow Group for at least two. Return the ready owner without another authorization round. Configuration grants no planning/product authority; changed behavior, acceptance, interfaces, scope, mutation authority or external action needs an owner decision.
 
 ## Close material decisions
 

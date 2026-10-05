@@ -4,7 +4,7 @@ description: Review a fixed change or explicit file set read-only against projec
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.03.3"
+  version: "2026.10.05.1"
 ---
 
 # RSP Review
@@ -43,41 +43,23 @@ Inspect in order: fixed status and diff, selected authority, then the smallest d
 
 Reuse traceable test evidence whose tested scope and relevant code, dependencies, configuration, tools, inputs and environment remain applicable. Run authorized checks only to fill evidence gaps or cover invalidated results and changed risk, unless execution is explicitly required. Still perform the requested fixed-scope semantic review: passing tests or an implementer summary cannot supply that judgment or required independence. Report reused evidence separately from new observations.
 
-Choose read/search tools within that scope. If inspection fails because of a tool-only fault, use another read-only method against the same comparison, authorities and evidence requirement; establish its actual scope and effects before continuing. A tool switch cannot replace a missing comparison or authority, waive a named required check, or supply required independent acceptance. Missing comparison or authority blocks dependent pipelines; other missing evidence follows the applicable pipeline's gate. Identify affected judgments rather than treating a gap as an observed product defect or a whole-review blocker by default. Supported findings remain valid; an unestablished required judgment is not clean. Do not repair tools through project mutation or run unsafe probes.
+Choose read/search tools within the fixed scope. Recover a tool-only fault with another read-only method against the same comparison, authority and required evidence, after checking its scope and effects. Missing comparison or authority blocks dependent pipelines; other gaps follow their pipeline's gate. Report affected judgments, not an invented product defect or whole-review blocker. Supported findings remain valid, but an unestablished required judgment is not clean. Preserve named checks and required independence; do not repair through project mutation or unsafe probes.
 
 ## Report
 
-Render headings, field labels, explanations, and verdict prose in the language explicitly requested by the user; otherwise follow user or host personal instructions, then the conversation language. Project artifact-language settings do not select response language. Treat the shape below as semantic field order rather than fixed English wording: translate its human-facing labels when the output language differs. Preserve paths, commands, identifiers, WorkOwner references, WorkRefs, severity labels `P0`-`P3`, and the values `issues_found`, `clean`, `skipped`, and `blocked` unchanged; when their language differs from the response, retain those values only as secondary exact tokens beside localized narration.
+Responses follow explicit language instruction, personal instructions, then conversation language, never project artifact-language settings. Preserve paths, commands, identifiers, WorkOwner/WorkRefs, `P0`-`P3` and `issues_found | clean | skipped | blocked`; use localized narration with differing machine values as secondary exact tokens.
 
-Use this semantic shape with localized headings and labels:
+Preserve this information, not mandatory headings or one line per field. Use a compact report for a clean bounded review; honor an explicitly required format:
 
-```md
-## Review Scope
-- WorkOwner: <Change WorkRef, Group reference, or direct document request>
-- Comparison: <fixed ref, range, or file set>
-- Intent: <authorities, missing, or ambiguous>
-- Code: <issues_found | clean | skipped | blocked>
-- Document: <issues_found | clean | skipped | blocked>
-- Excluded: <paths and reasons, or none>
+- Scope: WorkOwner or direct request, fixed comparison, authoritative intent and exclusions with reasons; separate Code and Document results (`issues_found | clean | skipped | blocked`).
+- Findings when present: severity/title, kind (`code | document | cross-artifact`), review axis, location, authority, evidence, impact, smallest correction and confidence (`high | medium | low`). Combine related information in sentences; report one root issue once even when both perspectives are affected.
+- Coverage: each perspective's checked content, material omissions and unverified scope, including non-actionable gaps; distinguish reused evidence from new observations.
+- Verdict: `blocked | findings | clean`; give the next action only when an issue, blocker or requested follow-up remains. Do not repeat the findings or evidence.
 
-## Findings
-### [P0-P3] <title>
-- Artifact kind: <code | document | cross-artifact>
-- Axis: <applicable review axis>
-- Location: <path:line or precise section>
-- Authority: <authority or observed invariant>
-- Evidence: <conflicting behavior or text>
-- Impact: <real consequence>
-- Suggested action: <smallest correction; no edit>
-- Confidence: <high | medium | low>
+Use `clean` only after applicable checks find no actionable issue, `skipped` for no applicable content and `blocked` for missing required scope or authority. Omit empty Findings and unrelated no-op fields. Artifact kind follows affected content, not extension; two perspectives require neither two reports nor two reviewers. Order findings by severity and path: P0 critical security/data/breakage risk; P1 normal-path contract failure; P2 meaningful edge/maintenance risk; P3 narrow actionable improvement.
 
-## Coverage
-- <checked and unverified scope, including non-actionable missing coverage>
+Illustrative compact finding, not an observed defect:
 
-## Verdict
-<blocked | findings | clean, with the smallest next action>
-```
-
-Omit Finding entries when none exist. `clean` means applicable checks were completed with no actionable issue; `skipped` means no applicable reviewed content; `blocked` means required scope or authority was unavailable. State each perspective's checked content and material limits in Coverage; two perspective results require neither two reports nor two reviewers. Artifact kind describes affected content, not its extension or the number of perspectives. A root issue affecting both perspectives is reflected in both results but reported once. Order findings by severity and path. Use P0 for critical security, data, or breakage risk, P1 for normal-path contract failure, P2 for a meaningful edge or maintenance risk, and P3 only for narrow actionable improvement.
+> [P1] Failure is reported as success — `src/save.ts:42` (`code`, failure contract, high confidence). The selected Spec requires rejection, but this catch returns success after a failed write, so callers acknowledge unsaved data. Preserve rejection and verify the failure path.
 
 Return a report only. Do not edit files, apply fixes, change focus, create RSP artifacts, switch branches, stage, commit, push, open a PR, publish, delete, trigger external review, or approve. Later actions require separate explicit authority.

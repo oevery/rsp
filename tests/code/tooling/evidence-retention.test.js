@@ -8,6 +8,7 @@ import { loadCase } from '../../skills/runner/core/cases.mjs'
 import { prepareWorkspace, runCase, workspaceObservation } from '../../skills/runner/core/execute.mjs'
 import { hash, hashFile } from '../../skills/runner/core/files.mjs'
 import { reviewRun } from '../../skills/runner/core/review.mjs'
+import { retainSessionTools } from '../../skills/runner/observers/session-tools.mjs'
 
 const temporary = []
 function temp() {
@@ -33,7 +34,16 @@ it('preserves public task evidence through execution and review while removing o
     'Fixture Provider https://api.example.test/v1 fixture-account-id 2026-10-03T00:00:00Z',
   ].join('\n')
   const finalOutput = `${publicText}\nsynthetic-api-key-value synthetic-access-token`
-  writeFileSync(join(directory, 'provider-control.json'), JSON.stringify({ finalOutput }))
+  const argv = ['/bin/zsh', '-lc', `node -e 'console.log("quoted")'\nprintf done`]
+  const sessionRecords = [
+    { type: 'session_meta', payload: { id: 'fixture-root', base_instructions: 'PRIVATE-INSTRUCTIONS' } },
+    { type: 'response_item', payload: { type: 'message', content: 'PRIVATE-CONTEXT' } },
+    { type: 'response_item', payload: { type: 'custom_tool_call', call_id: 'outer', name: 'exec', input: 'console.log("synthetic-api-key-value")' } },
+    { type: 'event_msg', payload: { type: 'item_completed', item: { type: 'CommandExecution', id: 'cmd', command: argv, aggregated_output: 'PASS: missing tenant\nsynthetic-access-token', exit_code: 0 } } },
+    { type: 'response_item', payload: { type: 'custom_tool_call_output', call_id: 'outer', output: 'PASS: missing tenant\nPASS: final check' } },
+    'malformed session record',
+  ]
+  writeFileSync(join(directory, 'provider-control.json'), JSON.stringify({ finalOutput, sessionRecords }))
   const adapter = createOpenCodexAdapter({ codexBin, configFile, authFile, model: 'fixture', effort: 'low' })
   const entry = loadCase(process.cwd(), 'preserve-user-files')
   entry.manifest.prompt += `\n${publicText}`
@@ -49,6 +59,13 @@ it('preserves public task evidence through execution and review while removing o
     expect(answer.item.text).toBe(expected)
     expect(record + events).not.toContain('synthetic-api-key-value')
     expect(record + events).not.toContain('synthetic-access-token')
+    const tools = readFileSync(join(path, 'session-tools.jsonl'), 'utf8')
+    const retained = tools.trim().split('\n').map(line => JSON.parse(line))
+    expect(retained).toHaveLength(3)
+    expect(retained[1]).toMatchObject({ sessionId: 'fixture-root', line: 4, event: { payload: { item: { command: argv, aggregated_output: 'PASS: missing tenant\n[REDACTED]' } } } })
+    expect(tools).toContain('PASS: final check')
+    expect(tools).not.toMatch(/PRIVATE-INSTRUCTIONS|PRIVATE-CONTEXT|synthetic-api-key-value|synthetic-access-token/u)
+    expect(JSON.parse(record).result.toolEvidence).toMatchObject({ records: 3, gaps: [{ reason: 'malformed-record', line: 6 }] })
   }
   assertEvidence(run.reportDirectory)
   const review = await reviewRun(run, { outputRoot: temp(), adapter: {
@@ -62,6 +79,7 @@ it('preserves public task evidence through execution and review while removing o
     },
   } })
   expect(review.status).toBe('passed')
+  assertEvidence(join(review.reportPath, '..', 'evidence/current'))
 })
 
 it('observes ignored mutations beyond former snapshot count and byte quotas', () => {
@@ -102,9 +120,37 @@ it.each(['escape', 'symlink', 'tampered'])('refuses unsafe retained stream evide
   expect(adapter.run).not.toHaveBeenCalled()
 })
 
+it.each(['escape', 'symlink', 'tampered'])('refuses unsafe session tool evidence before independent review: %s', async (mode) => {
+  const source = temp()
+  const outside = join(temp(), 'private.jsonl')
+  writeFileSync(outside, 'private tool data')
+  const path = join(source, 'session-tools.jsonl')
+  if (mode === 'symlink')
+    symlinkSync(outside, path)
+  else
+    writeFileSync(path, 'changed')
+  const adapter = { settings: {}, run: vi.fn() }
+  const review = await reviewRun({ reportDirectory: source, result: { toolEvidence: { file: mode === 'escape' ? '../private.jsonl' : 'session-tools.jsonl', hash: hashFile(outside) } } }, { adapter, outputRoot: temp() })
+  expect(review.status).toBe('inconclusive')
+  expect(adapter.run).not.toHaveBeenCalled()
+})
+
+it('reports unavailable session tools and excludes linked session directories', () => {
+  const home = temp()
+  const output = temp()
+  expect(retainSessionTools(home, output, value => value).gaps).toContainEqual({ reason: 'no-tool-records' })
+  const privateDirectory = temp()
+  writeFileSync(join(privateDirectory, 'private.jsonl'), 'private session')
+  symlinkSync(privateDirectory, join(home, 'sessions'))
+  expect(retainSessionTools(home, output, value => value).gaps).toContainEqual({ source: 'sessions', reason: 'link-or-special-file' })
+  expect(readFileSync(join(output, 'session-tools.jsonl'), 'utf8')).toBe('')
+})
+
 it('offers compact review navigation without hiding failures or losing complete sanitized evidence', async () => {
   const outputRoot = temp()
-  const event = { type: 'item.completed', source_thread_id: 'actor', item: { id: '../unsafe', type: 'command_execution', command: `echo ${'x'.repeat(1000)}`, exit_code: 2, aggregated_output: `synthetic-credential${'output'.repeat(200000)}` } }
+  const script = `node <<'NODE'\nconst pattern = /\\[[^\\]]+\\]\\(([^)]+)\\)/g\n// ${'x'.repeat(1000)}\nNODE`
+  const command = `/bin/zsh -lc ${JSON.stringify(script).replaceAll('\\n', '\n')}`
+  const event = { type: 'item.completed', source_thread_id: 'actor', item: { id: '../unsafe', type: 'command_execution', command, exit_code: 2, aggregated_output: `synthetic-credential${'output'.repeat(200000)}` } }
   const run = { result: { exitCode: 2, stdout: `\n${JSON.stringify(event)}\ninvalid` }, hard: { status: 'failed', failures: ['boundary'] }, retainedEvidence: { workspace: { omitted: Array.from({ length: 6000 }, (_, i) => ({ path: `.tooling/${i}`, reason: 'runtime' })) } } }
   let reviewWorkspace
   const review = await reviewRun(run, { outputRoot, baseline: {}, adapter: {
@@ -119,12 +165,14 @@ it('offers compact review navigation without hiding failures or losing complete 
       expect(summary.checks.hard.status).toBe('failed')
       expect(summary.trace.parseFailures).toBe(1)
       expect(summary.execution.timedOut).toBeNull()
+      expect(summary.sessionTools.gaps).toEqual([{ reason: 'not-retained' }])
       expect(JSON.parse(readFileSync(join(workspace, 'comparison/summary.json'))).git.headUnchanged).toBeNull()
       const tool = JSON.parse(readFileSync(join(workspace, 'current/tool-index.jsonl'), 'utf8'))
       expect(tool).toMatchObject({ traceLine: 2, exitCode: 2, commandTruncated: true })
       const full = JSON.parse(readFileSync(join(workspace, 'current', tool.evidence)))
       expect(full.source_thread_id).toBe('actor')
       expect(full.item.command).toBe(event.item.command)
+      expect(full.derivedCommand).toEqual({ source: 'literal-shell-decoding', argv: ['/bin/zsh', '-lc', script] })
       expect(full.item.aggregated_output).toBe(event.item.aggregated_output.replace('synthetic-credential', '[REDACTED]'))
       return { exitCode: 0, stdout: JSON.stringify({ type: 'turn.completed' }), finalOutput: '```json\n{"status":"failed"}\n```' }
     },

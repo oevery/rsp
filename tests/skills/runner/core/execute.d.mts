@@ -7,6 +7,7 @@ export interface ProcessResult {
   stdoutFile?: string
   stderrFile?: string
   streamHashes?: { stdout: string, stderr: string }
+  toolEvidence?: { file: string, hash: string, records: number, gaps: Array<{ source?: string, line?: number, reason: string }> }
   error: string | null
   timedOut: boolean
   timeoutMs?: number | null

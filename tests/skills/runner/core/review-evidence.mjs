@@ -1,6 +1,7 @@
 import { Buffer } from 'node:buffer'
 import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { literalArgv } from '../observers/command-argv.mjs'
 import { observeEvents } from '../observers/events.mjs'
 import { writeJson } from './files.mjs'
 import { streamLines } from './streams.mjs'
@@ -20,6 +21,7 @@ export function writeReviewViews(record, target) {
     observedChecks: Object.fromEntries(Object.entries(observation.checks ?? {}).map(([key, value]) => [key, { ...pick(value, ['exitCode', 'status']), details: `run.json:observation.checks.${key}` }])),
     git: { ...pick(observation, ['head', 'baselineHead', 'indexHash', 'baselineIndexHash', 'changedPaths', 'committedFilesMatchWorktree']), headUnchanged: equal(observation.head, observation.baselineHead), indexUnchanged: equal(observation.indexHash, observation.baselineIndexHash), details: 'run.json:observation' },
     trace: { available: typeof result.stdout === 'string' || Boolean(result.stdoutFile), completed: trace.completed, failed: trace.failed, parseFailures: trace.parseFailures.length, pendingToolCalls: trace.pendingToolCalls, toolCalls: trace.toolCalls, details: 'events.jsonl' },
+    sessionTools: result.toolEvidence ?? { file: null, gaps: [{ reason: 'not-retained' }] },
   }
   writeJson(join(target, 'summary.json'), summary)
   mkdirSync(join(target, 'tool-events'), { recursive: true, mode: 0o700 })
@@ -37,7 +39,7 @@ export function writeReviewViews(record, target) {
       continue
     const item = event.item
     const evidence = `tool-events/${String(offset + 1).padStart(6, '0')}.json`
-    writeJson(join(target, evidence), event)
+    writeJson(join(target, evidence), { ...event, derivedCommand: { source: 'literal-shell-decoding', argv: literalArgv(item.command) } })
     appendFileSync(indexPath, `${JSON.stringify({ traceLine: offset + 1, type: item.type, status: item.status ?? null, exitCode: item.exit_code ?? null, commandPreview: typeof item.command === 'string' ? item.command.slice(0, 240) : null, commandTruncated: typeof item.command === 'string' && item.command.length > 240, eventBytes: Buffer.byteLength(line.replace(/\n$/u, '')), evidence })}\n`)
   }
   const retention = record.retainedEvidence == null ? null : Object.fromEntries(Object.entries(record.retainedEvidence).map(([name, value]) => [name, { retained: Array.isArray(value?.retained) ? value.retained.length : null, omitted: Array.isArray(value?.omitted) ? value.omitted.length : null, details: `run.json:retainedEvidence.${name}` }]))

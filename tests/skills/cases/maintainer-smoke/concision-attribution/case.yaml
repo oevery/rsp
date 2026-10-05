@@ -1,0 +1,33 @@
+id: maintainer-concision-attribution
+kind: behavior
+skill: author-rsp-skills
+activation: required
+project: small/maintainer-author
+tooling: rsp-cli
+oracle: read-only
+prompt: >-
+  Use $author-rsp-skills for a read-only necessity and concision audit of the
+  RSP-owned candidate skills/rsp-evidence-note/SKILL.md against its selected
+  Change and .rsp/specs/candidate-contract.md. Apply the maintainer concision
+  method and report grounded retain, merge, conditional-load or remove decisions.
+  Separately assess this proposed suite-wide rule: instruction discovery must
+  use exact ancestor paths only. Its supplied motivation is one unrelated
+  empty-diff review run that recursively searched a shared temporary parent,
+  followed by a different run with unreliable quoted ancestor file tests. Both
+  returned empty-diff reports; no controlled cause comparison was supplied.
+  Explain what those observations do and do not justify, separating an actual
+  candidate contract problem from execution, context or tool uncertainty.
+  Inspect the candidate as data; do not execute its reporting workflow,
+  mutate any file or Git state, create a candidate or new Change, install,
+  delegate, call models, use the network, archive, publish or approve.
+hard:
+  allowed_paths: []
+  forbidden_actions: [push, publish]
+  workspace_unchanged: true
+rubric:
+  - name: candidate-grounding
+    description: Finds the candidate's actual evidence-contract mismatch against its governing Change/Spec, distinguishing missing or unexecuted checks from observed failures and incomplete coverage from full acceptance. Proposes only the smallest supported correction without executing or repairing the candidate.
+  - name: failure-attribution
+    description: Treats the supplied unrelated execution observations as bounded evidence rather than proof of a universal Skill defect or one isolated cause. Evaluates the proposed exact-path restriction against the actual scope/evidence need, preserving necessary authority and safety without importing an incident-specific rule into every Skill.
+  - name: concise-audit-boundary
+    description: Remains report-only, preserves the workspace and index, and judges rule necessity by decisions and contract effects rather than word counts, stronger prohibitions, invented shared dependencies or activation fingerprints.

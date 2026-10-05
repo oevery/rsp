@@ -9,6 +9,7 @@ import { configPath, loadConfig } from '../core/config.mjs'
 import { hash, hashFile } from '../core/files.mjs'
 import { fileLines, writeLines } from '../core/streams.mjs'
 import { collectNativeEvidence } from '../observers/native.mjs'
+import { retainSessionTools } from '../observers/session-tools.mjs'
 import { runProcess } from './process.mjs'
 
 const roles = new Set(['executor', 'judge'])
@@ -350,8 +351,9 @@ function createAdapter(options, native) {
           }
         })
         writeLines(join(outputRoot, 'stderr.log'), fileLines(rawStderr), redact)
+        const toolEvidence = retainSessionTools(home, outputRoot, redactValue)
         const { stdout, stderr, ...processResult } = result
-        return { ...processResult, stdoutFile: 'events.jsonl', stderrFile: 'stderr.log', streamHashes: { stdout: hashFile(join(outputRoot, 'events.jsonl')), stderr: hashFile(join(outputRoot, 'stderr.log')) }, finalOutput, ...(nativeResult && { native: redactValue(nativeResult.evidence) }) }
+        return { ...processResult, stdoutFile: 'events.jsonl', stderrFile: 'stderr.log', streamHashes: { stdout: hashFile(join(outputRoot, 'events.jsonl')), stderr: hashFile(join(outputRoot, 'stderr.log')) }, toolEvidence, finalOutput, ...(nativeResult && { native: redactValue(nativeResult.evidence) }) }
       }
       finally {
         rmSync(home, { force: true, recursive: true })

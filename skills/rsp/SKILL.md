@@ -4,12 +4,12 @@ description: Select and continue the appropriate responsibility for authorized R
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.04.3"
+  version: "2026.10.05.1"
 ---
 
 # RSP Skill
 
-Carry one authorized request through ownership, implementation and its checks, necessary writeback, and completion. Reassess evidence applicability on changed facts, recovery, independent acceptance, delivery or a real stop; a responsibility change alone does not require rerunning checks. Prefer this Skill; use the generated fallback only when it is unavailable.
+Carry one authorized request through responsibility selection, implementation/checks, necessary writeback and completion. Reassess evidence on changed facts, recovery, independent acceptance, delivery or a real stop, not a responsibility change alone. Use Core or, only when unavailable, the generated fallback; never load both as entry protocols.
 
 Nearest project instructions and relevant `CONTEXT.md` remain authoritative. User-visible prose follows explicit response language, then personal instructions, then conversation language; existing artifacts retain their language, and new artifacts follow explicit artifact language, effective configuration, project instructions, then conversation language. Preserve canonical headings, paths, commands, identifiers, and machine values. Load [language details](references/response-language.md) only for a contested or complex language choice. WorkRefs do not change with locale; Shape owns inferred names.
 
@@ -21,7 +21,7 @@ Use this Skill for RSP setup or repair, focused `.rsp/` work, coordination when 
 
 Read intent and authority, nearest context, focus candidates and relevant owner, tracked status/readiness, checkout state and decisive evidence. An explicit WorkRef wins; multiple focus markers alone are not a stop.
 
-Use plain `rsp status` for ordinary state, JSON for exact dependencies, and verbose JSON for auxiliary details. When a decision needs effective RSP settings, use the same selected CLI's successful `rsp config --json` summary (`--compact` is optional). The CLI resolves validation, defaults and language inheritance; raw YAML and status are not substitutes. Reuse values until configuration drift, recovery or dependent closeout requires refresh, not every method transition. If projection fails or is unavailable, inspect raw configuration only to diagnose; do not invent effective values or automatically close out. Independently authorized work needing no unresolved setting may continue. Derive stages; do not persist them.
+Use plain `rsp status` for ordinary state, JSON for exact dependencies and verbose JSON for auxiliary details. Resolve needed effective settings through the same selected CLI's successful `rsp config --json` summary (optional `--compact`), including validation, defaults and language inheritance. Reuse it until configuration drift, recovery or dependent closeout. Raw YAML is diagnostic; neither it nor status replaces this summary. Failed projection leaves dependent choices and automatic closeout unresolved, while independently authorized work needing no unknown setting may continue. Derive stages; do not persist them.
 
 Check for a root legacy `CONTEXT-MAP.md` during entry. When it or a relevant local legacy map is found, or context migration is requested, load [context migration](references/context-migration.md). Until migration is resolved, retain relevant legacy context; discovery does not authorize edits or interrupt unrelated work.
 
@@ -35,42 +35,27 @@ Core owns the goal, selected owner, authority, cross-responsibility decisions, r
 - `rsp-commit`: exact separately authorized local delivery. This default core capability is required: if unavailable, stop without staging or manual Core/CLI substitution. Recovery or installation needs separate authority.
 - `rsp-structural-audit`: optional open-ended read-only discovery.
 
-Use Doc's matching artifact method for writing. Tiny edits are local wording fixes or mechanical status/evidence updates that need no whole-record reconciliation. Whole-Change convergence is document work even when few lines change; it may confirm already-converged text without editing. If Doc is unavailable, check reader purpose, facts, concise expression, ownership and references within the same scope. Default distribution does not make Doc a mandatory phase.
+Use Doc's matching method for writing, including whole-Change convergence even when few lines change or no rewrite is needed. Local wording fixes and mechanical status/evidence updates needing no whole-record reconciliation remain direct. If Doc is unavailable, check reader purpose, facts, expression, ownership and references locally. Doc is not a mandatory phase.
 
-When the requested result changes responsibility inside one authorized objective, select the next capability from the current task and authority, not the previously used Skill or number of changed lines. Load its entrypoint and only the active method when not already applicable in context. A transition needs no new worker, repeated checks or extra user continuation; it grants no new authority.
+Select each successor from the current requested result and authority, not the previous Skill or changed-line count. Load its entrypoint and active method only when not already applicable. A responsibility transition requires no new worker, repeated checks or user continuation and grants no new authority.
 
-For explicitly authorized release checks without a selected RSP WorkOwner, Core collects and interprets the project's declared checks at an exact candidate, with a range only when needed by those checks. Require the check contract, baseline and authority for actual effects; stop dependent checks when these are missing. Do not invent a Change or route an ownerless request to Verify. Preserve required independent acceptance; checks and Doc/Review results grant no Git delivery, publication or approval.
+For authorized ownerless release checks, collect the project's declared evidence at an exact candidate, with a range only when needed. Require the check contract, baseline and effect authority; missing inputs stop dependent checks. Create no Change and do not route to Verify. Preserve required independence; check and Doc/Review results grant no Git delivery, publication or approval.
 
 Continue the authorized objective through edits, applicable Required evidence and necessary writeback. Diagnose and correct same-scope failures internally; a failed check alone needs no Core return. Stop for a material owner decision, changed scope or authority, unavailable required capability, unsafe replay, or failure without a new discriminating step. Self-checks are not independent review.
 
-Return outcome, evidence, limits and next action naturally. Distinguish observed actions and effects, checks, review and acceptance from inference or proposed work. A gap limits only affected claims; missing Required evidence still prevents completion. Describe read-only work by actual effects, including auxiliary writes, without inferring write authority from the label. Load [control outcome](references/control-outcome.md) only for a real consumer needing its technical rendering.
-
 ## Choose methods within the evidence boundary
 
-The owning capability chooses permitted tools and interprets their observations. A method change inside one owner needs no new phase or continuation request when the goal, scope, authoritative baseline, permissions and required evidence stay fixed. Named mandatory checks, immutable provenance, independent acceptance and command-owned RSP mutations cannot be replaced by an easier result.
+The owning capability selects permitted tools and interprets observations. A method change needs no new phase or continuation request while goal, scope, authoritative baseline, permissions and required evidence stay fixed. Named checks, immutable provenance, required independence and command-owned RSP mutations retain their obligations.
 
-Diagnose a tool-only obstacle and inspect actual effects before recovery. Read-only or proven repeat-safe work may continue in scope; failed required evidence, unsafe facts, unknown mutation or a changed boundary need the missing condition or owner decision. Observe uncertain effects without replaying mutation. Commit retains its one-attempt delivery rule; do not apply a universal retry policy to every capability. Tool availability, recommendations and exit status grant neither authority nor completion.
+For a tool-only obstacle, inspect cause and actual effects before recovery. Continue read-only or proven repeat-safe work in scope; missing Required evidence, unsafe replay, unknown mutation or changed boundaries stop affected actions. Observe uncertain effects without replaying mutation. Commit keeps its one-attempt rule; other capabilities retain their own retry boundaries. Tools grant neither authority nor completion.
 
-Reuse traceable passing evidence when its tested scope and relevant code, dependencies, configuration, tools, inputs and environment still apply. Direct new reading at a concrete decision gap and reuse applicable material already read. Summaries locate, not replace, decisive sources; refresh required current observations and invalidated inputs. Run only missing, failed or invalidated checks needed for the current risk and declared acceptance. Distinguish reused results from newly executed checks; retain command, result, tested boundary and source in existing reports or Change Verify, without a new evidence registry. Elapsed time or a phase transition alone is not invalidation. Explicit rerun requirements, independent acceptance and current lifecycle/Git observations remain required.
+Reuse traceable passing evidence while tested scope and relevant code, dependencies, configuration, tools, inputs and environment apply. Read further for concrete decision gaps; summaries locate but do not replace decisive sources. Refresh required current observations and invalidated inputs; run missing, failed or invalidated checks needed by risk and acceptance. Retain command, result, boundary and source in existing reports or Verify, distinguishing reuse from new execution. Time or phase changes alone do not invalidate evidence; explicit reruns, independence and current lifecycle/Git observations still apply.
 
 ## Conditional coordination
 
 Load [coordination qualification](references/managed-routing.md) only for a genuine obligation: independent slices or acceptance, recovery, incompatible resources, real-host/provider/hardware verification, bounded review convergence, or managed lifecycle delivery. File count, effort, sequential edits and ordinary continuation alone do not qualify.
 
-On the selected branch:
-
-- Read effective `manage.activation` and `manage.closeout` through `rsp config --json`. Activation grants no authority; qualified closeout is a limited ceiling narrowed by nearer denial. Ordinary execution never activates it.
-- Retain goal ownership, pass bounded work and current authority to its capability, validate the result and continue while the boundary holds.
-- Selection is not delegation; workers and concurrency need host evidence. A missing optional sibling permits an equivalent bounded action under the same authority, never a simulated required independent worker or reviewer.
-
-Load only the active procedure:
-
-- [Worker and resource coordination](references/coordination.md): actual workers or resource conflicts.
-- [Interruption recovery](references/coordination-recovery.md): pause/resume or an environment stop.
-- [Review convergence](references/coordination-review.md): repeated accepted findings.
-- [Closeout](references/closeout.md): qualified lifecycle/delivery or an authorized checkpoint; exact Git execution remains `rsp-commit`.
-
-Report the selected route and decisive signal; keep dispatch, worker count, acceptance and closeout nested as technical evidence, never a persisted controller. Do not preload unrelated methods or reread the complete owner without invalidation.
+Qualification selects the needed worker, recovery, review or closeout procedure. Effective activation and closeout apply only on the qualified selected branch, subject to nearer denial and fresh gates; ordinary execution gains no authority. Selection is not delegation: required workers and independence need host evidence, not a simulated capability. Report the selected route and decisive signal when relevant, not a routine phase receipt.
 
 ## Operate the selected Change
 
@@ -78,7 +63,7 @@ Before focusing or mutating a different WorkOwner or child WorkRef, compare dirt
 
 Read the selected Change or Group, its sibling Brief when grouped, and only relevant Specs and Decisions. For direct tree navigation or bounded literal discovery use `rsp specs`, then reread the authoritative source before material decisions or mutation. Generated indexes are migration inputs, not authority. User intent or an explicit WorkOwner selects from the open-work focus candidates.
 
-Planning readiness means settled scope, authority and acceptance with executable Tasks and declared checks, not completed implementation or passing checks. Dependency readiness selects unblocked work; neither proves completion. Establish applicable passing evidence for Required checks before claiming completion, then apply the separate closeout gates before archive. Preserve Proposal, Spec, Design, Tasks, Verify and Blockers. For tracked work needing a recovery snapshot, use [focus and continuation recovery](references/focus-continuation.md); also load it when a capsule is inspected or a continuation resumes.
+Planning readiness means settled scope, authority and acceptance with executable Tasks and declared checks. Dependency readiness selects unblocked work; neither proves completion. Require completed Tasks and applicable passing Required checks, then separate archive gates. Preserve Proposal, Spec, Design, Tasks, Verify and Blockers. Load [focus and continuation recovery](references/focus-continuation.md) for a needed snapshot, Capsule inspection or resumed continuation.
 
 Keep routine execution narration in the conversation; create no process-record file for it. Write Change updates only for necessary plan/contract changes, task outcomes, blockers or scoped verification conclusions. Focus holds only state needed for safe continuation; justified stable knowledge belongs to its document owner. Follow existing retention contracts for tool-owned or explicitly required evidence and reference it without copying execution history. Focus is a replaceable snapshot, not authority. Persist only `open` and `archived`; focus, readiness, routing, and capability availability grant no implementation, review, Git, publication, or approval authority.
 
@@ -91,23 +76,12 @@ Load detailed procedures only when active:
 - [conflict handling](references/conflict-handling.md) for an intersecting Git operation.
 - [durable writeback decision](references/durable-review.md) after required Tasks and implementation verification pass, when writeback or archive readiness matters.
 
-## Ownership and safety
-
-Route each durable item by its responsibility, not its presentation:
-
-- `README`: introduction, usage, and starting points, not a duplicate specification.
-- `AGENTS.md`: scoped operating rules, authority, and checks, not product behavior definitions.
-- `CONTEXT.md`: canonical vocabulary, domain relationships, and navigation, not implementation notes or session history. Root and local files share this model; define a term once in its domain and link it elsewhere.
-- Specs: current capability and collaboration contracts, boundaries, and necessary constraints, not code inventories or future plans. Design references belong here when they define normative evidence.
-- Change: this outcome's contract delta, design, work, and evidence, not a full baseline copy or execution log.
-- Decision Record: significant choices, alternatives, and consequences, not another definition of current behavior. Archives retain historical evidence, not current authority.
-
-Use short summaries and links instead of maintaining the same rule twice. Keep temporary continuation in the response. Never promote planned state to current truth. A Spec/code disagreement needs a decision about the discrepancy, not automatic documentation of whatever the code does.
+## Completion and response
 
 Use RSP commands for command-owned files and preserve unrelated work. Ordinary Core never automatically archives or commits. Qualified coordination closeout still requires its effective ceiling, fresh readiness and actual authority. Core never infers push, publication, deletion, deployment, approval or human acceptance. Commit, conflict and recovery retain their owners; execution location and cross-branch integration remain host, user or Git concerns.
 
-When accepted work remains or a continuation resumes, use the same recovery reference for an actual capsule, recovery or non-trivial handoff. Report owner, authority, changed artifacts, fresh evidence, blocker and next action as needed, not a complete template at each same-owner method change. On cross-session resume refresh authority, owner, index/status, dirty paths and replay safety before mutation. Derive state from repository artifacts and checkout evidence; continuation is no hidden runtime or second state store.
+For accepted remaining work or a non-trivial handoff, load [focus and continuation recovery](references/focus-continuation.md) and report only needed owner, authority, artifacts, evidence, blocker and next action. Cross-session resume refreshes authority, owner, index/status, dirty paths and replay safety before mutation. Derive state from artifacts and checkout evidence, never a second continuation store.
 
-## Durable decision output
+For durable writeback or archive readiness, use [durable writeback decision](references/durable-review.md) for knowledge placement, final whole-Change convergence and closeout checks. Planned state is not current truth; a Spec/code disagreement needs a decision, not automatic adoption of code behavior. A required unwritten update, incomplete Task, incomplete Required Verify item or real blocker makes archive readiness `no`; Optional coverage warnings do not. Before lifecycle closeout, consume fresh `rsp ready <work-ref> --json` evidence with `completionGate: pass` and `archiveReady: yes`.
 
-After loading [durable writeback decision](references/durable-review.md), verify outcome facts, distill Focus and update knowledge as needed, then converge the whole Change before final consistency checks and authorized archive. Its localized decision summary belongs in the response, not as an archive template. A required unwritten update, incomplete Task, incomplete Required Verify item, or real blocker makes archive readiness `no`; Optional coverage warnings do not. Before lifecycle closeout, consume fresh `rsp ready <work-ref> --json` evidence with `completionGate: pass` and `archiveReady: yes`.
+Follow applicable response instructions and present the current request's outcome, necessary evidence and material limits without mandatory headings or repeated evidence. Include a next action only when work or a user decision remains. Distinguish observed actions and effects, checks, review and acceptance from inference or proposed work; brevity never hides failure, authority or unverified scope. A gap limits only affected claims; missing Required evidence still prevents completion. Describe read-only work by actual effects, including auxiliary writes, without inferring write authority from the label. Load [control outcome](references/control-outcome.md) only for a real consumer needing its technical rendering.

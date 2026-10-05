@@ -78,16 +78,22 @@ convergence. Writing applies those contracts; it does not redefine the workflow.
 
 - Descriptions distinguish the intended task from adjacent capabilities before
   loading the body; procedures belong in the body, not exhaustive trigger lists.
-- State the outcome, inputs, authority, actions, completion evidence and real
-  stops. Prescribe sequence only for correctness, safety or a contract dependency;
-  leave other method choices with the responsible capability.
+- Make the ordinary task executable from its goal, necessary inputs, authorized
+  actions, completion evidence and real stops. Organize these around the reader's
+  decisions, not a mandatory section template. Prefer one coherent decision rule
+  over repeated qualifications in entry, steps and return. Use a short example
+  when it resolves a boundary more directly than another explanation.
 - Link branch-only detail with its reading condition and purpose. Keep common
-  safety and minimum actionable context local; split or merge resources to improve
-  the actual reading path, not a file-count or word-count target.
-- Pruning preserves trigger, inputs, authority, action, output, stop, verification
-  and conditional loading. Generic teaching or model-compensation guidance needs
-  a current task-specific reason. A newer model, shorter text or static diagnostic
-  does not establish equivalent behavior, better quality or reduced cost.
+  safety and minimum actionable context local; an ordinary task must not load
+  unrelated recovery, coordination or delivery procedures. Split or merge resources
+  to improve the actual reading path, not merely relocate the same mandatory text.
+  [Distribution](distribution.md#skill-package-boundaries) owns standalone closure.
+- Revise an existing rule before adding a parallel one for the same decision.
+  Preserve trigger, inputs, authority, actions, outputs, stops, verification and
+  conditional loading unless their owning contract intentionally changes. Generic
+  teaching or model-compensation guidance needs a current task-specific reason.
+  Failure attribution and candidate comparisons belong to maintainer methods and
+  research evidence, not additional instructions every installed user must load.
 
 ## Content-based review
 
@@ -116,6 +122,12 @@ and recognize unknowns. Check affected meaning, examples, metadata, links and an
 distinguish inspection, execution, reuse and missing evidence. Whole-surface work
 inspects the selected documents/resources and callers; adequate surfaces need not
 be edited merely to show coverage.
+
+Inspect both the ordinary path and changed conditional paths, including standalone
+use. Check unnecessary reads and handoffs, correct restraint, erroneous stops and
+the final answer as well as successful action. Actual task evidence is required
+for behavioral claims; comparable outcomes and costs are required for efficiency
+claims. Shorter sources and static diagnostics alone establish neither.
 
 Self-checks do not establish independent review or task behavior. Agreed user,
 project and Spec expression rules are contracts; findings identify their violation

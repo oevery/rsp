@@ -14,7 +14,14 @@ Activation grants no planning, product, Git, remote or external authority. Close
 
 ## Select only the needed procedure
 
-Core retains goal and authority without a persisted controller. Pass bounded work, owner, authority, decisive signal and return boundary to the capability. Load coordination.md for actual workers, resources or independent acceptance; coordination-recovery.md for interruption or recovery; coordination-review.md for repeated accepted findings; closeout.md after current qualified eligibility.
+Core retains goal and authority without a persisted controller. Pass bounded work, owner, authority, decisive signal and return boundary to the capability. Load only the active procedure:
+
+- [Worker and resource coordination](coordination.md) for actual workers, resource conflicts or independent acceptance.
+- [Interruption recovery](coordination-recovery.md) for pause/resume or an environment stop.
+- [Review convergence](coordination-review.md) for repeated accepted findings.
+- [Closeout](closeout.md) after current qualified eligibility or for an explicitly authorized checkpoint; exact Git execution remains Commit.
+
+Keep route, dispatch, worker count, acceptance and closeout as derived technical evidence, not persisted controller state. A missing optional sibling permits an equivalent bounded action under the same authority, never a simulated required independent worker or reviewer.
 
 A required Fix worker may own ordinary checks. Explicitly independent Verify or Review needs a distinct worker from the accepted implementer, proved by host observations rather than self-report. If unavailable, acceptance remains incomplete; replacing an execution tool does not replace that evidence.
 

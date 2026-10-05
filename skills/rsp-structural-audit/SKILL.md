@@ -4,7 +4,7 @@ description: Audit an explicitly bounded codebase for structural risks in owners
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.03.1"
+  version: "2026.10.05.1"
 ---
 
 # RSP Structural Audit
@@ -23,7 +23,7 @@ Module dependency direction is in scope. Third-party package selection, version 
 
 The user owns the audit boundary and requested outcome. Project instructions, Specs, and decisions own established constraints. A focused Change may provide intent or scope but grants no additional mutation authority.
 
-This Skill owns only its response report. It never modifies project code, tests, configuration, documentation, RSP artifacts, focus, lifecycle state, Git state, or external systems. It does not create a Change, choose product intent, design a solution, apply a fix, or invoke another Skill.
+Own only the response report: no project/RSP/Git/external mutation, Change creation, product decision, solution design, fix or invocation of another Skill.
 
 ## Action and verification
 
@@ -37,32 +37,13 @@ Do not infer a finding from directory names, pattern matching, code size, framew
 
 ## Output
 
-Render headings, field labels, explanations, and conclusions in the language explicitly requested by the user; otherwise follow user or host personal instructions, then the conversation language. Project artifact-language settings do not select response language. Treat the shape below as semantic field order rather than fixed English wording, while preserving paths, severity labels, confidence values, and the result values `findings`, `clean`, and `scoped uncertainty`; when their language differs from the response, retain those values only as secondary exact tokens beside localized narration.
+Responses follow explicit language instruction, personal instructions, then conversation language, never project artifact-language settings. Preserve paths, severity/confidence and `findings | clean | scoped uncertainty`; use localized narration with differing machine values as secondary exact tokens.
 
-Return findings ranked by material impact, then confidence. Emit at most five and use this shape:
+Report scope first: repository/subtree, governing authority and material gaps, inspected entry points/chains and exclusions. Then give at most five findings ranked by impact and confidence, coverage limits and `findings | clean | scoped uncertainty` with the smallest needed next action. Headings and empty Findings sections are unnecessary.
 
-```md
-## Audit scope
-- Boundary: <repository or subtree>
-- Authority: <instructions, constraints, and material gaps>
-- Inspected: <entry points and smallest behavior chains>
-- Excluded: <explicit exclusions and unsupported specialist audits>
+Each finding identifies P1–P3 severity, risk, relevant lens, exact paths and chain, reachable trigger, consequence, confidence (`high | medium | low`) and the smallest question for its next owner. Coverage states checked paths, remaining uncertainty and unobserved runtime behavior. For example, an illustrative finding might read:
 
-## Findings
-### [P1-P3] <structural risk>
-- Lens: <ownership | dependency | production path | change amplification | verification>
-- Evidence: <exact paths and concrete chain>
-- Trigger: <reachable condition>
-- Impact: <real consequence>
-- Confidence: <high | medium | low>
-- Next owner: <smallest shaping or design question, or user decision>
-
-## Coverage
-- <checked paths, unresolved uncertainty, and unobserved runtime behavior>
-
-## Result
-<findings | clean | scoped uncertainty, with the smallest next action>
-```
+> [P2] Competing status writers (ownership; high confidence). `api/save.ts` writes a status that `jobs/retry.ts` later replaces from an older snapshot; concurrent retry can erase completion. Next owner: Shape should resolve which writer owns the transition. Runtime concurrency has not been observed.
 
 Use `clean` when the inspected boundary contains no evidenced structural risk. Use `scoped uncertainty` when missing authority, inaccessible evidence, or an unsafe runtime requirement prevents judgment; name exactly what is missing and its owner. Do not manufacture advice to fill the report.
 

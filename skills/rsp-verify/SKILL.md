@@ -4,7 +4,7 @@ description: Verify one selected RSP WorkOwner against its declared evidence bou
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.03.3"
+  version: "2026.10.05.1"
 ---
 
 # RSP Verify
@@ -26,11 +26,11 @@ Read nearest project instructions and the available project protocol, selected C
 
 Do not edit product files, Changes, Specs, Decisions, focus markers, archives, configuration, or Git state. Do not start publication, deployment, approval, or human-acceptance actions. Running a declared local test, build, typecheck, lint, browser check, or other environment check is evidence collection only and retains the authority required by that command.
 
-Reuse a caller's result contract when supplied; otherwise the result below is sufficient for direct invocation. When Core invokes Verify, Core owns response coordination, dispatch, result validation, acceptance and closeout; Verify supplies the bounded evidence. Verify never selects worker identity or isolation, derives `review-clean`, or claims `archiveReady`. Identity and independence come from the host.
+Use the caller's result contract when supplied, otherwise the direct result below. Core owns response coordination, dispatch, result validation, acceptance and closeout; Verify supplies evidence, never worker identity/isolation, `review-clean` or `archiveReady`. Identity and independence require host observations.
 
 ## Collect the declared evidence
 
-First inspect existing evidence against the declared comparison baseline. Reuse traceable passing results when their tested scope and relevant content, dependencies, configuration, tools, inputs and environment remain applicable. Execute only missing, failed or invalidated named checks; a new verification phase alone is not a rerun requirement. Explicit requests to execute, observe the current environment or supply independent execution still require those observations. Match actual targets, inputs, coverage and completion to the declared checks; invocation errors or incomplete observations alone prove no product defect. Retain commands, tested scope, sources and results, distinguishing reuse from new execution. Interpret the observations rather than treating a tool's exit or recommendation as acceptance. A failed required check remains failure evidence; an unavailable check remains a gap.
+Inspect existing evidence against the declared baseline. Reuse traceable passes while tested scope and relevant content, dependencies, configuration, tools, inputs and environment apply. Run missing, failed or invalidated named checks, plus explicitly required execution, current-environment observations or independent execution. A phase change alone requires no rerun. Match actual targets, inputs, coverage and completion to the declared check; invocation errors or incomplete observations alone prove no product defect. Retain commands, scope, sources and results, distinguishing reuse from new execution. Interpret tool observations: Required failures remain failures, unavailable checks remain gaps, and exit status alone is not acceptance.
 
 For a tool-only obstacle, diagnose read-only and inspect actual effects before continuing:
 
@@ -56,9 +56,9 @@ Include these independent fields and their evidence:
 - WorkOwner and applicable Change WorkRef or Group `Integration:` condition; lane objective and effective authority.
 - Named checks, comparison baseline, observed diff, decisive evidence with reused versus newly executed results, omissions and stop boundary.
 
-Preserve exact machine values. Human-facing narration follows a supplied response-language contract; otherwise use explicit user instruction, then personal instructions, then conversation language.
+Preserve exact machine values and all required result information. Present them concisely without repeated logs or evidence; a requested machine schema remains exact. Human-facing narration follows a supplied response-language contract; otherwise use explicit user instruction, then personal instructions, then conversation language.
 
-`pass` proves only the declared checks, not semantic review, durable writeback, archive readiness, commit eligibility, publication, deployment, approval or human acceptance. It grants no lifecycle, Git, publication or acceptance authority. Identity and independence require host observations, not Verify's self-report.
+`pass` proves only declared checks, not semantic review, writeback, archive/commit eligibility, publication, deployment, approval or human acceptance. It grants no lifecycle, Git, external or acceptance authority.
 
 Long-running verification remains active while its boundary and stop conditions hold. Elapsed time, heartbeat, polling and progress messages do not change the result.
 

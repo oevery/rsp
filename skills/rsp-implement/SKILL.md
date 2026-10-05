@@ -4,14 +4,14 @@ description: Diagnose unexplained symptoms read-only or implement authorized bou
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.04.2"
+  version: "2026.10.05.1"
 ---
 
 # RSP Implement
 
 Carry one bounded authorized task through implementation, minimum sufficient own verification and necessary tracked Change evidence. Choose the mode before loading its method; a method change within the same authority needs no artificial handoff. No mode grants Git, review, lifecycle, external action, or approval authority.
 
-Use explicit response language, then personal instruction, then conversation language for narration. Preserve the language of existing artifacts and exact identifiers, commands and machine values. For a new artifact use explicit artifact instruction, then effective configured artifact language, then scoped project instruction, then conversation language. In RSP projects, when precedence needs configuration, use the same selected CLI's successful `rsp config --json` summary (optional `--compact`); it resolves defaults and inheritance. Refresh on relevant drift or recovery. Raw YAML is diagnostic only, not a substitute; failed or unavailable projection leaves the dependent choice unresolved without blocking independently authorized work needing no unknown setting. Resolve a material conflict with the owner; this rule works without Core installed.
+Responses follow explicit instruction, personal instructions, then conversation language. Preserve existing artifact language and canonical identifiers, commands and values. New artifacts follow explicit instruction, effective configuration, scoped project instructions, then conversation language. Resolve needed RSP settings through the selected CLI's successful `rsp config --json` summary, including defaults and inheritance; refresh on relevant drift or recovery. Raw YAML is diagnostic only. Failed projection leaves dependent choices unresolved while independent authorized work continues; resolve material conflicts with the owner. Core is not required.
 
 ## Select and inspect
 
@@ -41,17 +41,17 @@ Git delivery, publication, deployment, approval, and out-of-scope deletion requi
 
 ## Admit boundaries and permanent tests
 
-Before adding a validator, fallback, defensive copy, capability, state machine, compatibility path or public option, identify its current producer, production consumer, real trust/lifecycle transition and material consequence. Typed same-process values, imagined callers and test/document-only consumers establish no production boundary. Without that evidence, add no seam unless explicitly required.
+Prefer existing behavior and seams that satisfy the accepted outcome. Add a validator, fallback, defensive copy, capability, state machine, compatibility path or public option only for an explicit requirement or an evidenced producer, production consumer, trust/lifecycle transition and material consequence. Typed same-process values, imagined callers and test/document-only consumers establish no production boundary.
 
 Before creating or extending a permanent test:
 
-- Name its observable consequence, distinct plausible regression at the owning production seam, gap in existing evidence and maintenance cost. Prefer an existing test, type/static check, build or acceptance check that already covers the risk.
+- Reuse sufficient existing test, type/static, build or acceptance evidence first. Otherwise name the observable consequence, distinct plausible regression at the owning production seam, evidence gap and proportionate maintenance cost.
 - For consumer-owned behavior with covered downstream adapters or forwarding hops, exercise the consumer through those seams to the consequence. Merely re-proving a hop with a nearest-spy, emitted-message, shared-constant or forwarding assertion is insufficient, even in an existing test file.
 - Do not allocate tests per touched file, wrapper, forwarding hop, branch or constant. Keep multiple nearby tests when each protects an independent consequence.
 
 ## Continue within the evidence boundary
 
-Investigate new failure evidence and correct in scope. For a tool-only obstacle, diagnose cause and actual effects before selecting a permitted repair or replacement. Continue only with safe replay and unchanged goal, owner, scope, authoritative baseline, authority and required evidence. Named mandatory checks and command-owned RSP operations retain their methods.
+Investigate new failures and correct in scope. For a tool-only obstacle, inspect cause/effects before a permitted repair or replacement. Continue only with safe replay and unchanged goal, owner, scope, baseline, authority and required evidence. Named checks and command-owned RSP operations retain their methods.
 
 Stop for a repeated failure without new discriminating evidence, non-convergence, changed owner/scope/acceptance/authority, unknown mutation effects, unsafe or one-shot replay, or unavailable mandatory evidence or environment. An independent reviewer or verifier required by acceptance remains a separate read-only owner and cannot be replaced by the implementer's checks.
 
@@ -59,7 +59,7 @@ Stop for a repeated failure without new discriminating evidence, non-convergence
 
 Implement the smallest complete slice. For tracked work update authorized Change sections only for necessary plan/contract changes, task outcomes, blockers and scoped verification conclusions. Update Tasks after outcomes exist. Routine execution narration stays in the conversation without a process-record file; retain tool-owned or explicitly required evidence with its existing owner rather than copying its history into Change. Direct work reports outcomes without RSP artifact mutation.
 
-Repository-document and Skill writing use `rsp-doc` within the same authority, including whole-Change convergence rather than only an evidence update. Local wording fixes and mechanical status/evidence updates needing no whole-record reconciliation remain direct. If Doc is unavailable, write concise, grounded guidance for the reader's task and check affected examples and links. Review remains read-only; author self-checks never certify independent review.
+Use `rsp-doc` for document/Skill writing and whole-Change convergence within existing authority. Local wording fixes and mechanical status/evidence updates needing no whole-record reconciliation remain direct. Without Doc, write grounded guidance and check affected examples/links locally. Author self-checks never certify independent Review.
 
 After final mutation, establish minimum sufficient evidence for tracked Required checks or direct-task acceptance:
 
@@ -68,9 +68,9 @@ After final mutation, establish minimum sufficient evidence for tracked Required
 - For an unfixed method, choose the cheapest decisive existing test, static check, build or acceptance evidence; a new test is not required.
 - Match the actual target, inputs, coverage and completion to the declared check. Invocation errors or incomplete observations do not by themselves prove a product defect. Record command, tested scope, result, source and omissions, distinguishing reused evidence from new execution. Failed, unavailable or untraceable evidence cannot establish completion.
 
-Before completion, recheck new or extended tests against the admission criteria above and retain only distinct future confidence at proportionate cost. Otherwise remove the disposable test, fixture and helper, then establish sufficient evidence for the final retained state. User, Change and project retention requirements remain authoritative.
+Before completion, apply the same admission criteria to retained tests. Remove disposable probes, fixtures and helpers that add no distinct future confidence unless retention is required by user, Change or project authority; establish sufficient evidence for the final retained state.
 
-Before returning, reread changed comments, test names, documentation and handoff prose against the accepted result and each surface's authoritative baseline. Report the selected Change or direct task, actual paths, final verification, material omissions or risks, executed external actions and attributed pre-existing user work. Exclude rejected session-only alternatives and temporary attempts, including unrequested `did not add` or `did not use` claims. Retain negative facts needed to explain real removals, safety or compatibility boundaries, migration, audit results, failed external actions, unresolved risks or requested comparisons. Wording cleanup never changes executable behavior, public contracts, tests, snapshots or diagnostics.
+Before returning, check changed comments, test names, documents and handoff prose against the accepted result and authoritative baseline. Report the outcome, actual paths, verification and material limits, external effects or pre-existing user work. Omit Tasks/log repetition and discarded session attempts. Keep negative facts needed for removals, safety, compatibility, migration, audit, failures, unresolved risks or requested comparisons. This prose check changes no behavior, public contract, test, snapshot or diagnostic.
 
 ## Return ownership
 

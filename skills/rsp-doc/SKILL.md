@@ -4,7 +4,7 @@ description: Write or revise repository documents, Skills and release communicat
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.04.2"
+  version: "2026.10.05.1"
 ---
 
 # RSP Doc
@@ -34,13 +34,13 @@ Use the checks relevant to the change:
 
 For agent-facing instructions, trace the relevant branch and its targets. Distinguish local reading-path reasoning from actual agent execution and required independent evidence; retain background human co-readers need.
 
-After a failed command, inspect actual effects before recovery. A diagnosed tool-only obstacle permits another read/search or repeat-safe checking method under the same goal, scope, authority, baseline and evidence requirement. Named required checks and protected RSP operations retain their declared method and owner. Unavailable required evidence, unknown mutation or unsafe replay remains a stop.
+For a failed command, inspect cause and actual effects before recovery. Change a permitted read/search or repeat-safe check method only within unchanged goal, scope, authority, baseline and required evidence. Named checks and protected RSP operations retain their methods/owners; unavailable Required evidence, unknown mutation or unsafe replay stops affected work.
 
 ## Resolve language
 
 - Response: explicit request → personal instructions → conversation language.
 - Existing files: preserve language unless the user asks to change it.
-- New files: explicit artifact language → effective artifact configuration → scoped instructions → conversation language. In RSP projects, when precedence needs configuration, use the same selected CLI's successful `rsp config --json` summary (optional `--compact`); it resolves defaults and inheritance. Refresh on relevant drift or recovery. Raw YAML is diagnostic only; failed or unavailable projection leaves the dependent choice unresolved, not silently replaced by a lower priority. Independently authorized work needing no unknown setting may continue. Other projects retain their own configuration readers.
+- New files: explicit artifact language → effective configuration → scoped instructions → conversation language. Resolve needed RSP defaults/inheritance through the selected CLI's successful `rsp config --json`; refresh on relevant drift or recovery. Raw YAML is diagnostic only. Failed projection leaves dependent choices unresolved, not replaced by lower precedence; independent authorized work may continue. Other projects retain their configuration readers.
 - Keep canonical identifiers, machine values and required headings exact.
 
 ## Write precisely
@@ -63,8 +63,7 @@ Shortness removes no-information prose, not substantive qualifiers such as only,
 ## Preserve ownership
 
 - Follow nearest project instructions and the authorized file boundary. Keep a selected WorkRef when tracked; bounded direct work needs no automatic Change.
-- Doc owns writing and self-checks. Formal fixed-scope review belongs to Review and remains read-only; self-checks do not establish independent acceptance.
-- A writing-plus-review request combines those responsibilities. Review grants no repair permission; corrections already authorized by the original request may continue.
+- Doc owns writing and self-checks; formal fixed-scope Review remains read-only and independent when required. A combined request retains both responsibilities: Review grants no repair authority, but originally authorized corrections may continue.
 - Product decisions stay with their design owner. Release writing grants no version decision, release verification, Git delivery or external publication authority. Missing optional methods do not require installation or block an available bounded method.
 - Preserve unrelated work. Ask when a missing choice materially changes the result or authority; stop when required evidence is unavailable. Writing alone grants no installation, deployment, Git delivery or publication.
 

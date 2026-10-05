@@ -38,7 +38,7 @@ For acceptance-critical commands, prefer separate observed invocations. A batch 
 
 Use no update when there is no stable fact or lasting rationale worth rereading.
 
-Return the durable decision in this semantic field order. Localize headings and labels while preserving the canonical values:
+Report actual knowledge updates, unresolved decisions and requested readiness conclusions concisely. Current-fact and Decision Record decisions remain independently required before archive, but routine no-op fields need not appear in the response. Include exact targets and decisive rationale when needed; a readiness report retains `yes | no`, gate evidence and blockers. Use the complete rendering below only for an explicit request or real technical consumer. Localize headings and labels while preserving the canonical values:
 
 ```md
 ## <localized Durable Decision heading>
@@ -51,15 +51,17 @@ Return the durable decision in this semantic field order. Localize headings and 
 - <localized Archive ready label>: <yes | no>
 ```
 
-This is a response-only decision summary, not a block to paste into Change or archive. Persist actual knowledge updates and material decisions in the appropriate existing sections; omit empty targets, transient readiness and authorization receipts. In Chinese, for example, use `## 持久化决策`, `决策记录（Decision Record）`, and `可归档（Archive ready）`, not English labels alone.
+This is a response-only decision summary, not a block to paste into Change or archive. Persist actual knowledge updates and material decisions in the appropriate existing sections; omit empty targets, transient readiness and authorization receipts unless a declared consumer requires them. In Chinese, for example, use `## 持久化决策`, `决策记录（Decision Record）`, and `可归档（Archive ready）`, not English labels alone. Compact presentation changes no decision or closeout gate.
 
 ## Write current facts to their owner
 
-Write only a changed stable behavior, boundary, default or constraint that future maintainers need. Select the smallest existing owner:
+Write only a changed stable fact that future maintainers need. Select the smallest existing owner; summarize and link rather than maintain the same rule twice:
 
-- Domain contracts belong in the relevant Spec; project-wide architectural contracts belong in `.rsp/specs/design.md`.
-- Vocabulary, domain relationships and navigation belong in an explicitly authorized scoped `CONTEXT.md`.
-- Operating instructions belong in `AGENTS.md`.
+- `README` owns introduction, usage and starting points, not duplicate specifications.
+- `AGENTS.md` owns scoped operating rules, authority and checks, not product behavior.
+- Authorized root or local `CONTEXT.md` owns canonical vocabulary, domain relationships and navigation, not implementation notes or session history. Define a term once in its domain and link it elsewhere.
+- Specs own current capabilities, collaboration contracts, boundaries and necessary constraints, not code inventories or future plans. Domain contracts use their relevant Spec; project-wide architecture uses `.rsp/specs/design.md`. Keep design references when they define normative evidence.
+- Change owns this outcome's delta, design, work and evidence, not a full baseline copy. Decision Records own significant choices, alternatives and consequences, not another current-contract definition. Archives retain historical evidence, not current authority.
 
 Create a Spec only for reusable truth with no suitable existing owner.
 

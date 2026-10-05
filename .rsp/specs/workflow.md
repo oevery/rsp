@@ -21,25 +21,15 @@ selection and completion, not a fixed stage machine.
 | `rsp-structural-audit` | Optional report-only structural discovery |
 
 The first seven form the default suite; installation grants no action authority.
-Core continues ordinary authorized work without making each capability a mandatory
-phase. Shape clarifies material choices for the authorized DecisionOwner; Implement
-owns product edits and ordinary checks. Doc's artifact methods support writing,
-not a second controller.
-Bounded direct work needs no invented Change; tracked work retains its selected owner.
-Verify is selected for an explicit evidence-only or independently required boundary,
-not every implementation check. Review never repairs or approves its own target.
+Shape clarifies material choices for the authorized DecisionOwner, not approval
+or new public requirements. Doc writes settled facts and converges work records;
+it is not a second controller. Review never repairs or approves its own target.
 
-Select by the current requested result and authority, including responsibility
-transitions inside one objective, not by the previous capability or edit size.
-Load only the selected entrypoint and active method not already applicable in
-context. Shape owns decision clarification and planning artifacts, not approval of
-material choices or new public requirements; Doc writes settled facts and
-converges final work records. Local wording fixes and
-mechanical status/evidence updates need no full writing method when they require
-no whole-record reconciliation. Whole-Change convergence uses Doc's artifact
-method when available even when few lines change, and may confirm unchanged text.
-An unavailable Doc retains the same bounded local writing checks, not permission
-to install it or replace required Review.
+Local wording fixes and mechanical status/evidence updates need no full writing
+method when they require no whole-record reconciliation. Whole-Change convergence
+uses Doc's artifact method when available even when few lines change, and may
+confirm unchanged text. An unavailable Doc retains the same bounded local writing
+checks, not permission to install it or replace required Review.
 
 Diagnosis and design advice remain read-only unless the request also authorizes
 mutation. Test-first work needs explicit instruction or demonstrated risk, not
@@ -61,14 +51,12 @@ cross-process lock or proof of wrapper-equivalent reliability. The CLI's
 
 ## Composition
 
-- One capability owns one bounded responsibility. Installation does not make it
-  a mandatory phase or require reading every resource. The
+- One capability owns one bounded responsibility. The
   [Distribution package contract](distribution.md#skill-package-boundaries) owns
   standalone closure; [Writing quality](writing-quality.md#instruction-and-resource-design)
   owns instruction/resource design.
 - Handoffs carry only the needed goal, owner, exact scope, authority, results and
-  evidence. A capability transition neither changes worker identity nor requires
-  another user continuation request inside unchanged authority.
+  evidence. Capability selection is not worker delegation.
 - Context migration is a conditional Core method for detected legacy context or
   an explicit request. Discovery alone grants no edits; Doc supplies authorized
   writing and unrelated work need not wait.
@@ -79,8 +67,11 @@ cross-process lock or proof of wrapper-equivalent reliability. The CLI's
 
 ## Core flow
 
-Core retains the authorized objective rather than handing control to a second
-controller. It selects the next action from the current request, work and evidence:
+Core retains the authorized objective. Ordinary work selects the next responsibility
+from the current requested result and authority, not the previous capability or
+edit size. Bounded direct work needs no invented Change; tracked work retains its
+selected owner. Load only the selected entrypoint and active method not already
+applicable in context:
 
 1. Resolve the goal, direct task or WorkOwner, scope, authority and decisive
    evidence. Unsettled intent, acceptance or material owner decisions select Shape;
@@ -99,13 +90,11 @@ controller. It selects the next action from the current request, work and eviden
    tracked terminal work proceeds to the completion/closeout contract below.
    Ordinary work gains no archive or Git authority from being complete.
 
-These are routing dependencies, not mandatory separate calls. Evidence is reused
-where applicable; a responsibility transition alone requires no repeated reading,
-test execution or user continuation request.
-
-For a settled, authorized bounded fix, Implement performs applicable own checks.
-Shape, a tracked Change or separate Verify is needed only for a material decision,
-project tracking rule or declared evidence obligation.
+These are routing dependencies, not mandatory separate calls, workers or phases.
+A responsibility transition alone requires no repeated reading, test execution or
+user continuation request. Recovery, coordination and lifecycle procedures load
+only for their actual obligations under the contracts below; ordinary continuation
+does not activate them.
 
 For declared removal/rename, Review and Verify distinguish expected absence from
 still-reachable removed behavior and genuinely missing requirements, including
@@ -202,6 +191,23 @@ A Skill handoff or worker self-report proves no independent execution.
   resume condition. Completion, transport validity or lack of an error is not acceptance.
 - Local capability availability grants no remote delivery, deployment, publication,
   approval, human acceptance or cross-branch integration authority.
+
+## Response presentation
+
+User, host and project instructions set communication style. Capabilities require
+result information, not fixed headings or a universal delivery template. Answer
+the current request with the outcome, necessary evidence and material limits;
+include a next action only when work or a user decision remains.
+
+Compact presentation preserves failure, authority, required fields and unverified
+scope. Keep complete evidence with its existing owner rather than repeating it
+in the response. Review retains scope, comparison, separate Code/Document results,
+actionable findings and coverage; Verify retains canonical outcomes and required
+result information; Commit retains exact delivery observations and the complete
+message as evidence. Durable writeback decisions and archive gates remain required
+without a routine no-op field list. Explicitly required formats and machine
+schemas remain exact.
+Standalone Skills keep this boundary without depending on personal configuration.
 
 ## Constraints
 
