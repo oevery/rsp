@@ -37,7 +37,7 @@
   },
   "scripts": {
     "prepare": "pnpm run build",
-    "skills:security-check": "node scripts/skill-security-preflight.mjs --suppressions skill-security-suppressions.json",
+    "skills:security-check": "node scripts/skill-security-preflight.mjs",
     "skills:package-check": "node scripts/skill-package-check.mjs",
     "prepublishOnly": "pnpm run release:check",
     "build": "tsup",

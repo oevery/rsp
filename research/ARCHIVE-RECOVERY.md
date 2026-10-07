@@ -6,10 +6,13 @@ Historical reports and verdicts remain unchanged. Their old cache paths and rela
 
 Current Spec contracts and maintenance navigation were reorganized on 2026-10-03.
 Old relative links in historical reports and Change snapshots remain unchanged.
-Use this mapping to find the current owner, not to reinterpret an old verdict:
+Research registry and lock paths were separated on 2026-10-07.
+Use this mapping to find the current owner or exact historical bytes, not to reinterpret an old verdict:
 
 | Historical document or section | Current owner |
 | --- | --- |
+| Root `upstreams.yaml` | Exact historical bytes: [legacy registry](legacy/upstreams/upstreams.yaml). Active acquisition configuration: [sources.yaml](sources.yaml). |
+| Root `upstreams.lock` | Exact historical bytes: [legacy lock](legacy/upstreams/upstreams.lock). This is no longer an active acceptance or dependency lock. |
 | `.rsp/specs/core-model.md` | [Work model](../.rsp/specs/work-model.md) |
 | `.rsp/specs/skill.md` | [Workflow](../.rsp/specs/workflow.md) |
 | `.rsp/specs/skill.md#instruction-and-resource-design` | [Writing quality](../.rsp/specs/writing-quality.md#instruction-and-resource-design) |
@@ -108,7 +111,7 @@ Replace an old absolute repository root with the restoration root when inspectin
 
 ## Retention and measured storage
 
-The active consumers still own `.cache/upstreams/`, `.cache/upstream-distillation/` and `.cache/rsp-package-install/`, including backups within those roots. They and current reports outside `legacy/` remain unchanged. Readable research conclusions, upstream distillations and model synthesis remain tracked; obsolete tracked raw files are recoverable through the fixed Git revision.
+The current research tool uses `.cache/research/sources/`. The former `.cache/upstreams/` and `.cache/upstream-distillation/` roots, including their backups, belong to the retired workflow and are not read or migrated by the new engine. They have not been deleted by the research redesign. The separate package-install cache and current reports outside `legacy/` also remain unchanged. Readable research conclusions, upstream distillations and model synthesis remain tracked; obsolete tracked raw files are recoverable through the fixed Git revision.
 
 On 2026-09-30 the complete final four-file set, including its disposition manifest, provenance and receipt, occupies **57,961,822 logical bytes** and **58,052 KiB allocated** (`du -sk`). Before selective retention the full legacy set occupied 383,645,989 logical bytes and 375,452 KiB allocated. The reductions are **325,684,167 logical bytes** and **325,017,600 allocated bytes**, respectively—not filesystem-wide free-space measurements.
 

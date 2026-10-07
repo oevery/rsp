@@ -1,23 +1,22 @@
 # Research-to-candidate handoff
 
-Load when returning a concrete RSP candidate option or preparing its research handoff. Research completion does not authorize candidate creation, evaluation, managed acceptance or adoption.
+Use when returning a concrete RSP candidate option. Research, evidence integrity and sealing grant no authority to create a Change, implement, execute models or adopt a result.
 
-The separately selected normal RSP Change may be an appropriate existing owner; create a new one only when the outcome needs separate tracking. It must name:
+A separately authorized existing or new RSP Change should identify:
 
-- one observed RSP workflow failure or missing capability;
-- the smallest sufficient behavioral contract that closes the demonstrated gap;
-- hard authority and mutation boundaries;
-- one existing artifact owner that receives the result;
-- only the source reports, recommendation IDs, and adoption modes needed for that delta.
+- the observed local failure or missing capability;
+- the smallest behavioral change that addresses it;
+- mutation and authority boundaries and the owning artifact;
+- the exact sealed study revision and recommendation label supporting the change;
+- eligible source material and reuse mode: adapted, independent-reimplementation or model-only;
+- verification appropriate to the changed behavior and claimed benefit.
 
-Prefer one owning RSP target per recommendation. Preserve license and attribution requirements for direct adaptation, and cite the report path, recommendation ID and adoption mode (`adapted`, `independent-reimplementation`, or `model-only`). No promotion command or research lock is needed.
+For an explicitly supplied standalone or historical report, cite its retained identity and limits honestly; do not invent a sealed study reference. Current managed studies should be checked with their evidence before reliance. Neither a hash nor an intact report certifies its reasoning.
 
-Do not require a complete capability catalog, another cross-source model, or acceptance of unrelated revisions. Retain those artifacts only when the user asks for audit coverage or the candidate genuinely depends on multiple conflicting sources.
+Preserve unchanged recommendations under their original revision and label. A changed source or a new study does not require renumbering old advice. Adoption outcomes belong to the Change and relevant product owner, not another research acceptance ledger.
 
-Select candidate evidence by changed risk and the claim being made:
+Use the existing code and Skill evaluation tools. Static checks prove structure; model task acceptance needs actual execution and independent judgment. Comparisons, repeated runs, holdouts and additional-host checks are selected for risk and the question, not imposed universally. Model execution and costs require their own authorization.
 
-- Static package checks establish structure; behavioral acceptance needs actual task execution and independent review through the existing shared runner. A single candidate is valid.
-- Comparisons, unseen holdouts, repeated matrices, cost calibration and additional-host evidence are optional designs when the question warrants them, not routine or release gates; execution and model cost require authorization.
-- For performance claims, measure task success and corrections alongside total input/output tokens, elapsed time and tool calls. Input-token overhead alone is not a quality result.
+For performance or stability claims, retain comparable task inputs, configurations, outcomes, failures, judgments and relevant costs. Input-token reduction alone is not quality improvement. Selected experiment artifacts may be imported as evidence for a follow-up study; preserve original run identities and judgments.
 
-Stop research-to-candidate translation once the selected capability delta is supported; do not restate the same contract through successive coverage, capability, and system models. Return candidate options to the user or owning capability without executing them.
+Return the supported candidate option and its limits once the decision is clear. Do not restate it through successive capability catalogs or research layers.

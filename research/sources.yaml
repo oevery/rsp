@@ -1,0 +1,281 @@
+version: 1
+sources:
+  agent-skills-spec:
+    repository: https://github.com/agentskills/agentskills.git
+    ref: main
+    paths:
+      - README.md
+      - LICENSE*
+      - skills-ref/**
+      - docs/**/*.md
+      - docs/**/*.mdx
+  antfu-skills:
+    repository: https://github.com/antfu/skills.git
+    ref: main
+    paths:
+      - README.md
+      - LICENSE*
+      - meta.ts
+      - instructions/**
+      - skills/**/*.md
+      - scripts/**
+  matt-skills:
+    repository: https://github.com/mattpocock/skills.git
+    ref: main
+    paths:
+      - README.md
+      - LICENSE*
+      - AGENTS.md
+      - CONTEXT.md
+      - package.json
+      - .agents/**
+      - .claude-plugin/**
+      - .changeset/**
+      - .out-of-scope/**
+      - docs/engineering/**
+      - docs/productivity/**
+      - scripts/**
+      - skills/engineering/**
+      - skills/productivity/**
+  openspec:
+    repository: https://github.com/Fission-AI/OpenSpec.git
+    ref: main
+    paths:
+      - README.md
+      - LICENSE*
+      - src/**
+      - docs/**/*.md
+      - docs-lab/**/*.md
+      - schemas/**
+      - openspec/**
+  ponytail:
+    repository: https://github.com/DietrichGebert/ponytail.git
+    ref: main
+    paths:
+      - README.md
+      - LICENSE*
+      - skills/**
+      - benchmarks/**
+      - hooks/**
+  spec-kit:
+    repository: https://github.com/github/spec-kit.git
+    ref: main
+    paths:
+      - README.md
+      - LICENSE*
+      - src/**
+      - templates/**
+      - extensions/**
+      - docs/**/*.md
+      - .specify/**
+      - presets/**
+      - workflows/**
+  compound-engineering:
+    repository: https://github.com/EveryInc/compound-engineering-plugin.git
+    ref: main
+    paths:
+      - README.md
+      - LICENSE*
+      - skills/**
+      - docs/guides/**
+      - docs/solutions/skill-design/**
+      - tests/**
+  gsd-core:
+    repository: https://github.com/open-gsd/gsd-core.git
+    ref: main
+    paths:
+      - README.md
+      - LICENSE*
+      - src/**
+      - agents/**
+      - commands/**
+      - docs/**/*.md
+  openai-plugins:
+    repository: https://github.com/openai/plugins.git
+    ref: main
+    paths:
+      - README.md
+      - .agents/plugins/**
+      - plugins/**/*.md
+      - plugins/**/*.json
+      - plugins/**/*.yaml
+  openai-agents-python:
+    repository: https://github.com/openai/openai-agents-python.git
+    ref: main
+    paths:
+      - README.md
+      - LICENSE
+      - docs/handoffs.md
+      - docs/tools.md
+      - docs/results.md
+      - src/agents/run_state.py
+      - src/agents/extensions/experimental/hosted_multi_agent/model.py
+  langgraph:
+    repository: https://github.com/langchain-ai/langgraph.git
+    ref: main
+    paths:
+      - README.md
+      - LICENSE
+      - libs/langgraph/langgraph/_internal/_replay.py
+      - libs/langgraph/langgraph/types.py
+      - libs/langgraph/tests/test_interruption.py
+      - libs/langgraph/tests/test_subgraph_persistence.py
+      - libs/langgraph/tests/test_pregel.py
+  anthropic-managed-agents:
+    repository: https://github.com/anthropics/skills.git
+    ref: main
+    paths:
+      - README.md
+      - THIRD_PARTY_NOTICES.md
+      - skills/claude-api/shared/managed-agents-*.md
+      - skills/claude-api/*/managed-agents/**
+  temporal-workflow-observability:
+    repository: https://github.com/temporalio/sdk-typescript.git
+    ref: main
+    paths:
+      - README.md
+      - LICENSE*
+      - packages/workflow/src/workflow.ts
+      - packages/workflow/src/cancellation-scope.ts
+      - packages/workflow/src/interfaces.ts
+      - packages/test/src/workflows/signals-are-always-processed.ts
+      - packages/test/src/workflows/signal-update-ordering.ts
+      - packages/test/src/workflows/unblock-or-cancel.ts
+      - packages/test/src/workflows/handle-external-workflow-cancellation-while-activity-running.ts
+  planning-with-files:
+    repository: https://github.com/OthmanAdi/planning-with-files.git
+    ref: master
+    paths:
+      - README.md
+      - LICENSE
+      - .agents/skills/planning-with-files/**
+      - docs/workflow.md
+      - docs/evals.md
+      - docs/codex.md
+      - docs/attestation-locking.md
+      - templates/**
+      - scripts/**
+      - tests/**
+  andrej-karpathy-skills:
+    repository: https://github.com/multica-ai/andrej-karpathy-skills.git
+    ref: main
+    paths:
+      - README.md
+      - CLAUDE.md
+      - EXAMPLES.md
+      - skills/karpathy-guidelines/SKILL.md
+      - .claude-plugin/**
+      - .cursor/rules/**
+  skills-cli:
+    repository: https://github.com/vercel-labs/skills.git
+    ref: main
+    paths:
+      - README.md
+      - package.json
+      - src/**
+  superpowers:
+    repository: https://github.com/obra/superpowers.git
+    ref: main
+    paths:
+      - README.md
+      - LICENSE*
+      - skills/**
+      - tests/**
+  addy-agent-skills:
+    repository: https://github.com/addyosmani/agent-skills.git
+    ref: main
+    paths:
+      - README.md
+      - LICENSE*
+      - AGENTS.md
+      - skills/**
+      - evals/**
+      - scripts/**
+  anthropic-skill-creator:
+    repository: https://github.com/anthropics/skills.git
+    ref: main
+    paths:
+      - README.md
+      - THIRD_PARTY_NOTICES.md
+      - skills/skill-creator/**
+  anthropic-doc-coauthoring:
+    repository: https://github.com/anthropics/skills.git
+    ref: main
+    paths:
+      - README.md
+      - THIRD_PARTY_NOTICES.md
+      - skills/doc-coauthoring/**
+  prisma-docs:
+    repository: https://github.com/prisma/web.git
+    ref: main
+    paths:
+      - README.md
+      - .claude/skills/docs-writer/**
+      - .claude/skills/docs-reader-review/**
+      - .claude/skills/docs-agent-ready/**
+  gemini-docs:
+    repository: https://github.com/google-gemini/gemini-cli.git
+    ref: main
+    paths:
+      - LICENSE
+      - .gemini/skills/docs-writer/**
+  deepseek-harness:
+    repository: https://github.com/deepseek-ai/deepseek-harness.git
+    ref: master
+    paths:
+      - README.md
+      - README.zh.md
+      - LICENSE
+      - AGENTS.md
+      - .agents/**
+      - docs/architecture.md
+      - docs/defensive-patterns.md
+      - docs/testing.md
+      - scripts/**
+  no-negative-echo:
+    repository: https://github.com/LB623/no-negative-echo.git
+    ref: main
+    paths:
+      - README.md
+      - README_EN.md
+      - BACKGROUND.md
+      - LICENSE
+      - no-negative-echo/**
+      - evals/**
+      - tests/**
+  everything-claude-code:
+    repository: https://github.com/affaan-m/ECC.git
+    ref: main
+    paths:
+      - README.md
+      - LICENSE*
+      - skills/**
+  skillopt:
+    repository: https://github.com/microsoft/SkillOpt.git
+    ref: main
+    paths:
+      - README.md
+      - LICENSE
+      - docs/**
+      - plugins/**
+      - skillopt/**
+      - skillopt_sleep/**
+      - tests/**
+  skillspector:
+    repository: https://github.com/NVIDIA/SkillSpector.git
+    ref: main
+    paths:
+      - README.md
+      - LICENSE
+      - SECURITY.md
+      - docs/**
+      - skills/**
+      - src/**
+      - tests/**
+  skill-use-bench:
+    repository: https://github.com/JinyiHan99/Skill-Use-Bench.git
+    ref: main
+    paths:
+      - README.md
+      - benchmark/**
+      - evaluation/**

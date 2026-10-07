@@ -12,7 +12,7 @@ Use for source synchronization, generation, installation, packaging, or distribu
 ## Report
 
 - Distinguish interface compatibility from code reuse.
-- Complete `License and Reuse`, including target-path licensing rather than assuming the repository root applies.
+- Record license and reuse terms, including target-path licensing rather than assuming the repository root applies.
 - Prefer behavior tests and small adapters over copying a complete toolchain.
 - Record security, network, timeout, cache, and update semantics.
 - Recommend direct reuse only when the license and maintenance burden are explicit; otherwise recommend independent implementation from observed behavior.

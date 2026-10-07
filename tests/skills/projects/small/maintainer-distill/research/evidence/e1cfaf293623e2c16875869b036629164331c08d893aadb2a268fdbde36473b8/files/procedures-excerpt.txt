@@ -1,0 +1,44 @@
+Introductory sentences
+In most cases, introduce a procedure with an introductory sentence. This
+introductory sentence should provide context to the reader that isn't part of
+the section heading. Don't simply repeat the heading: if the heading explains
+what the procedure is, and no additional context is needed, then don't
+include an introductory statement.
+The sentence can end with a colon or a period. Use a colon if it immediately
+precedes the procedure. Use a period if there's more material (such as a
+note paragraph) between the introduction and the procedure.
+You can introduce a procedure with an imperative statement. Don't introduce a procedure with
+a partial sentence that's completed by the numbered steps.
+Recommended: To customize the buttons,
+follow these steps:
+Also recommended: Customize the buttons:
+Also recommended: To customize the buttons, do the following:
+Not recommended: To customize the
+buttons:
+For more information about introducing lists, see Lists.
+
+Optional steps
+For an optional step, at the beginning of the step, type Optional
+followed by a colon.
+Recommended:
+Optional: Type an arbitrary string ...
+Not recommended:
+(Optional) Type an arbitrary string ...
+For information about optional sections, see Heading and title text.
+
+Steps that say where to complete a task
+Tell the reader where to complete an action—for example, in a
+particular tool or UI field—before you state the action.
+Recommended:
+In Google Docs, click
+File > New > Document.
+In the Google Cloud console, go to the Monitoring page.
+Not recommended:
+Click File >
+New > Document in Google
+Docs.
+Go to the Monitoring page in the Google Cloud console.
+If a set of procedures is split across multiple headings, then in each
+procedure, restate where the reader completes the action. For example, if two
+procedures in a document take place in the console, then start both
+procedures with "In the console ..."

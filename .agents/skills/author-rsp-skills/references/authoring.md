@@ -17,7 +17,7 @@ Require a report selected for adoption, recommendation ID, exact source identity
 
 Record preserved behavior, local changes, and rejected upstream behavior. Do not copy a whole upstream methodology to obtain one mechanism.
 
-Use a three-way update model for later revisions: prior upstream base, local candidate, and new upstream evidence. Never overwrite local intent automatically.
+For an `adapted` asset that retains an upstream derivation relationship and needs ongoing upstream integration, use a three-way update model: prior upstream base, local candidate, and new upstream evidence. For `independent-reimplementation` or `model-only`, decide whether to revise from the local contract, relevant research conclusions and behavioral verification; no upstream merge baseline is required. Preserve provenance in every mode and never overwrite local intent automatically.
 
 ## Check package boundaries
 
