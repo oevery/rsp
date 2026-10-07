@@ -2,7 +2,7 @@ version: 1
 sources:
   i-have-adhd:
     repository: https://github.com/ayghri/i-have-adhd.git
-    ref: main
+    ref: main # Maintained Skill and hook corpus; branch baseline.
     paths:
       - README.md
       - LICENSE
@@ -19,7 +19,7 @@ sources:
       - .github/workflows/**
   agent-skills-spec:
     repository: https://github.com/agentskills/agentskills.git
-    ref: main
+    ref: main # Living format specification; branch baseline.
     paths:
       - README.md
       - LICENSE*
@@ -28,7 +28,7 @@ sources:
       - docs/**/*.mdx
   antfu-skills:
     repository: https://github.com/antfu/skills.git
-    ref: main
+    ref: main # Maintained Skill corpus; branch baseline.
     paths:
       - README.md
       - LICENSE*
@@ -38,7 +38,7 @@ sources:
       - scripts/**
   matt-skills:
     repository: https://github.com/mattpocock/skills.git
-    ref: main
+    ref: v1.3.1 # Published Skill collection; release baseline.
     paths:
       - README.md
       - LICENSE*
@@ -56,7 +56,7 @@ sources:
       - skills/productivity/**
   openspec:
     repository: https://github.com/Fission-AI/OpenSpec.git
-    ref: main
+    ref: v1.14.1 # Workflow CLI and templates; release baseline.
     paths:
       - README.md
       - LICENSE*
@@ -67,7 +67,7 @@ sources:
       - openspec/**
   ponytail:
     repository: https://github.com/DietrichGebert/ponytail.git
-    ref: main
+    ref: v4.13.0 # Published host integration and Skills; release baseline.
     paths:
       - README.md
       - LICENSE*
@@ -76,7 +76,7 @@ sources:
       - hooks/**
   spec-kit:
     repository: https://github.com/github/spec-kit.git
-    ref: main
+    ref: v1.1.1 # Workflow CLI and templates; release baseline.
     paths:
       - README.md
       - LICENSE*
@@ -89,7 +89,7 @@ sources:
       - workflows/**
   compound-engineering:
     repository: https://github.com/EveryInc/compound-engineering-plugin.git
-    ref: main
+    ref: compound-engineering-v3.30.4 # Published workflow plugin; release baseline.
     paths:
       - README.md
       - LICENSE*
@@ -99,7 +99,7 @@ sources:
       - tests/**
   gsd-core:
     repository: https://github.com/open-gsd/gsd-core.git
-    ref: main
+    ref: v1.16.0 # Workflow runtime and commands; release baseline.
     paths:
       - README.md
       - LICENSE*
@@ -109,7 +109,7 @@ sources:
       - docs/**/*.md
   openai-plugins:
     repository: https://github.com/openai/plugins.git
-    ref: main
+    ref: main # Maintained plugin catalog; branch baseline.
     paths:
       - README.md
       - .agents/plugins/**
@@ -118,7 +118,7 @@ sources:
       - plugins/**/*.yaml
   openai-agents-python:
     repository: https://github.com/openai/openai-agents-python.git
-    ref: main
+    ref: v0.23.1 # Agent SDK; release baseline.
     paths:
       - README.md
       - LICENSE
@@ -129,7 +129,7 @@ sources:
       - src/agents/extensions/experimental/hosted_multi_agent/model.py
   langgraph:
     repository: https://github.com/langchain-ai/langgraph.git
-    ref: main
+    ref: 1.2.14 # Core graph runtime; release baseline.
     paths:
       - README.md
       - LICENSE
@@ -140,7 +140,7 @@ sources:
       - libs/langgraph/tests/test_pregel.py
   anthropic-managed-agents:
     repository: https://github.com/anthropics/skills.git
-    ref: main
+    ref: main # Maintained API guidance; branch baseline.
     paths:
       - README.md
       - THIRD_PARTY_NOTICES.md
@@ -148,7 +148,7 @@ sources:
       - skills/claude-api/*/managed-agents/**
   temporal-workflow-observability:
     repository: https://github.com/temporalio/sdk-typescript.git
-    ref: main
+    ref: v1.24.0 # Workflow SDK; release baseline.
     paths:
       - README.md
       - LICENSE*
@@ -161,7 +161,7 @@ sources:
       - packages/test/src/workflows/handle-external-workflow-cancellation-while-activity-running.ts
   planning-with-files:
     repository: https://github.com/OthmanAdi/planning-with-files.git
-    ref: master
+    ref: v3.23.0 # Published workflow Skill; release baseline.
     paths:
       - README.md
       - LICENSE
@@ -175,7 +175,7 @@ sources:
       - tests/**
   andrej-karpathy-skills:
     repository: https://github.com/multica-ai/andrej-karpathy-skills.git
-    ref: main
+    ref: main # Maintained engineering guidance; branch baseline.
     paths:
       - README.md
       - CLAUDE.md
@@ -185,14 +185,14 @@ sources:
       - .cursor/rules/**
   skills-cli:
     repository: https://github.com/vercel-labs/skills.git
-    ref: main
+    ref: v1.7.1 # Skill distribution CLI; release baseline.
     paths:
       - README.md
       - package.json
       - src/**
   superpowers:
     repository: https://github.com/obra/superpowers.git
-    ref: main
+    ref: v6.4.2 # Published workflow Skills; release baseline.
     paths:
       - README.md
       - LICENSE*
@@ -200,7 +200,7 @@ sources:
       - tests/**
   addy-agent-skills:
     repository: https://github.com/addyosmani/agent-skills.git
-    ref: main
+    ref: 0.6.12 # Published Skill collection; release baseline.
     paths:
       - README.md
       - LICENSE*
@@ -210,21 +210,21 @@ sources:
       - scripts/**
   anthropic-skill-creator:
     repository: https://github.com/anthropics/skills.git
-    ref: main
+    ref: main # Maintained Skill authoring guidance; branch baseline.
     paths:
       - README.md
       - THIRD_PARTY_NOTICES.md
       - skills/skill-creator/**
   anthropic-doc-coauthoring:
     repository: https://github.com/anthropics/skills.git
-    ref: main
+    ref: main # Maintained writing guidance; branch baseline.
     paths:
       - README.md
       - THIRD_PARTY_NOTICES.md
       - skills/doc-coauthoring/**
   prisma-docs:
     repository: https://github.com/prisma/web.git
-    ref: main
+    ref: main # Internal documentation authoring Skills; branch baseline.
     paths:
       - README.md
       - .claude/skills/docs-writer/**
@@ -232,13 +232,13 @@ sources:
       - .claude/skills/docs-agent-ready/**
   gemini-docs:
     repository: https://github.com/google-gemini/gemini-cli.git
-    ref: main
+    ref: main # Internal documentation authoring Skill; branch baseline.
     paths:
       - LICENSE
       - .gemini/skills/docs-writer/**
   deepseek-harness:
     repository: https://github.com/deepseek-ai/deepseek-harness.git
-    ref: master
+    ref: master # Evolving harness practices; branch baseline.
     paths:
       - README.md
       - README.zh.md
@@ -257,7 +257,7 @@ sources:
       - scripts/**
   no-negative-echo:
     repository: https://github.com/LB623/no-negative-echo.git
-    ref: main
+    ref: main # Research method and evaluation corpus; branch baseline.
     paths:
       - README.md
       - README_EN.md
@@ -268,14 +268,14 @@ sources:
       - tests/**
   everything-claude-code:
     repository: https://github.com/affaan-m/ECC.git
-    ref: main
+    ref: v2.2.3 # Published Skill collection; release baseline.
     paths:
       - README.md
       - LICENSE*
       - skills/**
   skillopt:
     repository: https://github.com/microsoft/SkillOpt.git
-    ref: main
+    ref: v0.2.0 # Evaluation and optimization tooling; release baseline.
     paths:
       - README.md
       - LICENSE
@@ -286,7 +286,7 @@ sources:
       - tests/**
   skillspector:
     repository: https://github.com/NVIDIA/SkillSpector.git
-    ref: main
+    ref: v2.12.0 # Skill analysis tooling; release baseline.
     paths:
       - README.md
       - LICENSE
@@ -297,7 +297,7 @@ sources:
       - tests/**
   skill-use-bench:
     repository: https://github.com/JinyiHan99/Skill-Use-Bench.git
-    ref: main
+    ref: main # Benchmark corpus and evaluation code; branch baseline.
     paths:
       - README.md
       - benchmark/**

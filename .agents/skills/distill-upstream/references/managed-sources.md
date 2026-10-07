@@ -1,6 +1,6 @@
 # Research operations
 
-Run scripts/research.mjs from the maintainer root with existing dependencies. These maintenance commands do not execute source instructions. Use --help for signatures and --json for machine output.
+Run scripts/research.mjs from the maintainer root with existing dependencies. These maintenance commands do not execute source instructions. Use --help for signatures and --json for machine output. On completion, return outcomes, a task identity when available, failures and actionable gaps in conversation. Existing configuration, index and task records carry operational state; no report-writing step is required. Follow the [Skill entrypoint](../SKILL.md#establish-the-research-boundary) when deciding whether the request also calls for analysis or an artifact.
 
 ## Acquire and retry
 
@@ -44,7 +44,7 @@ Comparison is offline, independent of materialized captures. A missing cache or 
 
 ## Reports
 
-Write ordinary Markdown directly under research/reports/<UTC-time>.md, for example 2026-10-07T14-30-00Z.md. Use enough time precision for unique filenames. A report has no required metadata, state, parser, seal or revision chain. Keep editing it during the same investigation; Git records edits. Start another time-named file for a new investigation and cite earlier reports when useful.
+When the entrypoint selects an authorized research report, write ordinary Markdown under research/reports/<UTC-time>.md, for example 2026-10-07T14-30-00Z.md. Use enough time precision for unique filenames. A report has no required metadata, state, parser, seal or revision chain. Keep editing it during the same investigation; Git records edits. Start another time-named file for a new investigation and cite earlier reports when useful.
 
 Use a descriptive title and source references in prose: repository, full commit and relevant path, or a URL with retrieval date and retained location. State reading limits and missing sources honestly. Read current local RSP directly; note its base commit and relevant dirty scope when local conclusions depend on them. Preserve a patch only when needed for reproduction. Report meaning is not certified by a format checker.
 

@@ -11,6 +11,17 @@
       ],
       "repository": "https://github.com/addyosmani/agent-skills.git"
     },
+    "addy-agent-skills@a06bc63b3f8b829c14b0bbf53d99fefc39d58092": {
+      "paths": [
+        "AGENTS.md",
+        "LICENSE*",
+        "README.md",
+        "evals/**",
+        "scripts/**",
+        "skills/**"
+      ],
+      "repository": "https://github.com/addyosmani/agent-skills.git"
+    },
     "agent-skills-spec@69ef37e9424c0a7ea9dd2293b559e43ec8176379": {
       "paths": [
         "LICENSE*",
@@ -79,6 +90,17 @@
       ],
       "repository": "https://github.com/EveryInc/compound-engineering-plugin.git"
     },
+    "compound-engineering@efcb657d9a5733ccc154c36cc7d3d78b4136eb23": {
+      "paths": [
+        "LICENSE*",
+        "README.md",
+        "docs/guides/**",
+        "docs/solutions/skill-design/**",
+        "skills/**",
+        "tests/**"
+      ],
+      "repository": "https://github.com/EveryInc/compound-engineering-plugin.git"
+    },
     "deepseek-harness@5badb15009ae1756c3afe0ae0cef1faafc290ccc": {
       "paths": [
         ".agents/notes/*.md",
@@ -99,6 +121,14 @@
       ],
       "repository": "https://github.com/deepseek-ai/deepseek-harness.git"
     },
+    "everything-claude-code@c05b2d6614f62f6db0047669aa4eefb223d478f9": {
+      "paths": [
+        "LICENSE*",
+        "README.md",
+        "skills/**"
+      ],
+      "repository": "https://github.com/affaan-m/ECC.git"
+    },
     "everything-claude-code@ef648e01899ba3e8dc6371642deaaf64b4477775": {
       "paths": [
         "LICENSE*",
@@ -115,6 +145,17 @@
       "repository": "https://github.com/google-gemini/gemini-cli.git"
     },
     "gsd-core@1b362a1f688ce35d88594b535c50db36536d9e68": {
+      "paths": [
+        "LICENSE*",
+        "README.md",
+        "agents/**",
+        "commands/**",
+        "docs/**/*.md",
+        "src/**"
+      ],
+      "repository": "https://github.com/open-gsd/gsd-core.git"
+    },
+    "gsd-core@87e87d34b2d8519e30d1af7d910fc98f2af4bc8d": {
       "paths": [
         "LICENSE*",
         "README.md",
@@ -154,6 +195,37 @@
         "libs/langgraph/tests/test_subgraph_persistence.py"
       ],
       "repository": "https://github.com/langchain-ai/langgraph.git"
+    },
+    "langgraph@70dd64065bffaa3b6ab61a33f1f020fb54db8efa": {
+      "paths": [
+        "LICENSE",
+        "README.md",
+        "libs/langgraph/langgraph/_internal/_replay.py",
+        "libs/langgraph/langgraph/types.py",
+        "libs/langgraph/tests/test_interruption.py",
+        "libs/langgraph/tests/test_pregel.py",
+        "libs/langgraph/tests/test_subgraph_persistence.py"
+      ],
+      "repository": "https://github.com/langchain-ai/langgraph.git"
+    },
+    "matt-skills@24fe0ef7737efae15c87225755e9f6f5965e4888": {
+      "paths": [
+        ".agents/**",
+        ".changeset/**",
+        ".claude-plugin/**",
+        ".out-of-scope/**",
+        "CLAUDE.md",
+        "CONTEXT.md",
+        "LICENSE*",
+        "README.md",
+        "docs/engineering/**",
+        "docs/productivity/**",
+        "package.json",
+        "scripts/**",
+        "skills/engineering/**",
+        "skills/productivity/**"
+      ],
+      "repository": "https://github.com/mattpocock/skills.git"
     },
     "matt-skills@f3fc5632f401156837ee3872f14fe33ccf1024ea": {
       "paths": [
@@ -198,6 +270,18 @@
       ],
       "repository": "https://github.com/openai/openai-agents-python.git"
     },
+    "openai-agents-python@c4a1d047b22488234b2ba81056e1b9b8db2127a5": {
+      "paths": [
+        "LICENSE",
+        "README.md",
+        "docs/handoffs.md",
+        "docs/results.md",
+        "docs/tools.md",
+        "src/agents/extensions/experimental/hosted_multi_agent/model.py",
+        "src/agents/run_state.py"
+      ],
+      "repository": "https://github.com/openai/openai-agents-python.git"
+    },
     "openai-plugins@5fd93af4cd0c623e020d0cc7e9ce178b4ac1f70f": {
       "paths": [
         ".agents/plugins/**",
@@ -207,6 +291,18 @@
         "plugins/**/*.yaml"
       ],
       "repository": "https://github.com/openai/plugins.git"
+    },
+    "openspec@87c3595ace6a2e22957f39ebe5b74c2f2316e0cb": {
+      "paths": [
+        "LICENSE*",
+        "README.md",
+        "docs-lab/**/*.md",
+        "docs/**/*.md",
+        "openspec/**",
+        "schemas/**",
+        "src/**"
+      ],
+      "repository": "https://github.com/Fission-AI/OpenSpec.git"
     },
     "openspec@9111a7654d7800391459431fff4eaf66e33a3d2e": {
       "paths": [
@@ -235,6 +331,16 @@
       ],
       "repository": "https://github.com/OthmanAdi/planning-with-files.git"
     },
+    "ponytail@08e952d7a8057a57ce561ff1330d093fd92eec67": {
+      "paths": [
+        "LICENSE*",
+        "README.md",
+        "benchmarks/**",
+        "hooks/**",
+        "skills/**"
+      ],
+      "repository": "https://github.com/DietrichGebert/ponytail.git"
+    },
     "ponytail@552acd5efd0aeae2583a12efe39373d2f076f25e": {
       "paths": [
         "LICENSE*",
@@ -244,6 +350,15 @@
         "skills/**"
       ],
       "repository": "https://github.com/DietrichGebert/ponytail.git"
+    },
+    "prisma-docs@2b2619ee73141cd107d4ce0c2e10c58bf50334b6": {
+      "paths": [
+        ".claude/skills/docs-agent-ready/**",
+        ".claude/skills/docs-reader-review/**",
+        ".claude/skills/docs-writer/**",
+        "README.md"
+      ],
+      "repository": "https://github.com/prisma/web.git"
     },
     "prisma-docs@6d9ef8b3e806929d8e6169ddd98b2f6d0664d39b": {
       "paths": [
@@ -274,6 +389,18 @@
       ],
       "repository": "https://github.com/microsoft/SkillOpt.git"
     },
+    "skillopt@e4ea6a6771e797ef820cdd8bfea64c57e0481065": {
+      "paths": [
+        "LICENSE",
+        "README.md",
+        "docs/**",
+        "plugins/**",
+        "skillopt/**",
+        "skillopt_sleep/**",
+        "tests/**"
+      ],
+      "repository": "https://github.com/microsoft/SkillOpt.git"
+    },
     "skills-cli@48dc9e8eb8aa19040e91cb90ba0b642c9cbad57e": {
       "paths": [
         "README.md",
@@ -282,7 +409,27 @@
       ],
       "repository": "https://github.com/vercel-labs/skills.git"
     },
+    "skills-cli@958f4b7389ba698b0a6a26a1e505ae2af82364d2": {
+      "paths": [
+        "README.md",
+        "package.json",
+        "src/**"
+      ],
+      "repository": "https://github.com/vercel-labs/skills.git"
+    },
     "skillspector@3c8e4b958fda9602e0044885f766be0e49f03585": {
+      "paths": [
+        "LICENSE",
+        "README.md",
+        "SECURITY.md",
+        "docs/**",
+        "skills/**",
+        "src/**",
+        "tests/**"
+      ],
+      "repository": "https://github.com/NVIDIA/SkillSpector.git"
+    },
+    "skillspector@c7958a3268d9498644b22edb75d0f051bbc8cbfc": {
       "paths": [
         "LICENSE",
         "README.md",
@@ -308,6 +455,20 @@
       ],
       "repository": "https://github.com/github/spec-kit.git"
     },
+    "spec-kit@663b9cd0c2343c9fb0a20ec56dbc439b06a42fc3": {
+      "paths": [
+        ".specify/**",
+        "LICENSE*",
+        "README.md",
+        "docs/**/*.md",
+        "extensions/**",
+        "presets/**",
+        "src/**",
+        "templates/**",
+        "workflows/**"
+      ],
+      "repository": "https://github.com/github/spec-kit.git"
+    },
     "superpowers@8ca22dba9a94f28898bbce59f2537ff4d87c747d": {
       "paths": [
         "LICENSE*",
@@ -316,6 +477,20 @@
         "tests/**"
       ],
       "repository": "https://github.com/obra/superpowers.git"
+    },
+    "temporal-workflow-observability@1fd1c81a0383f5f5c7923dd735472c7d1ffdc867": {
+      "paths": [
+        "LICENSE*",
+        "README.md",
+        "packages/test/src/workflows/handle-external-workflow-cancellation-while-activity-running.ts",
+        "packages/test/src/workflows/signal-update-ordering.ts",
+        "packages/test/src/workflows/signals-are-always-processed.ts",
+        "packages/test/src/workflows/unblock-or-cancel.ts",
+        "packages/workflow/src/cancellation-scope.ts",
+        "packages/workflow/src/interfaces.ts",
+        "packages/workflow/src/workflow.ts"
+      ],
+      "repository": "https://github.com/temporalio/sdk-typescript.git"
     },
     "temporal-workflow-observability@5a02cb820d1f77aa991fe8ad746077ac56884797": {
       "paths": [

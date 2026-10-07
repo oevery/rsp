@@ -17,6 +17,14 @@ The maintainer-only [distill-upstream Skill](../.agents/skills/distill-upstream/
 
 Git capture keys contain the source name and full commit. Their index records contain repository and selection; ordinary directories are derived from the identity. A path override is stored only for a shortened-commit collision. Imported records contain origin and any supplied attribution or limitations; their identity includes acquisition time. There are no file inventories, content checksums, latest pointers or per-capture metadata sidecars. Repeated Git capture at the same commit reuses matching files and can expand the selection. Each import is a separate observation; it is not deduplicated by content.
 
+## Select a baseline
+
+Choose refs by the research object. Published tools, SDKs and versioned Skill distributions normally use a specific formal release tag. Living specifications, maintained corpora and internal authoring guidance use the relevant branch when a product release does not govern that material. Keep source-specific reasons in brief configuration comments.
+
+For an update, check the relevant component's release notes, draft/prerelease status and version label, resolve the tag to a commit, and check the research paths. Do not substitute another monorepo package's latest release or treat a release's experimental features as stable. Update the concrete ref deliberately; branch research remains available for a specific unreleased question. No second permanent source is required by default.
+
+Changing sources.yaml selects future acquisition. The index continues to describe material actually retained; it is not rewritten to claim that a newly selected version was captured. Start a new refresh after a baseline change. Use --from with an explicit prior task when comparing across that change is useful, and distinguish a branch-to-release reset from an ordinary forward update.
+
 ## Refresh and explore
 
 Run node scripts/research.mjs refresh --all for a new observation, or select sources with --source. Each source's configuration is fixed for that task. Before fetching, the task saves the previous locally synchronized commit; after retention it saves the resulting commit. A missing baseline is explicit. Git produces repository-wide differences, including changes outside the capture selection, without storing a copy of its tree. Selection is not a statement of what a researcher actually read.
@@ -27,7 +35,9 @@ Compare two selected captures with diff, or two tasks with compare-refreshes. Co
 
 ## Write reports
 
-Write directly to reports/<UTC-time>.md, for example reports/2026-10-07T14-30-00Z.md. Use finer timestamp precision if needed to avoid a filename collision. The filename locates the observation in time; the title states the topic. There is no required frontmatter, parser, sealing operation, numbered revision or automatic coverage ledger.
+Preparation operations return conversational results and use existing acquisition records; they do not generate research reports by default. Substantive research with authorized report writing, and explicitly requested operation reports, follow the [Skill output boundary](../.agents/skills/distill-upstream/SKILL.md#establish-the-research-boundary).
+
+For a research report, write directly to reports/<UTC-time>.md, for example reports/2026-10-07T14-30-00Z.md. Use finer timestamp precision if needed to avoid a filename collision. The filename locates the observation in time; the title states the topic. There is no required frontmatter, parser, sealing operation, numbered revision or automatic coverage ledger.
 
 Continue editing the same report for the same investigation; Git records edits. Start a new time-named report for another investigation and link earlier reports when useful. Explain findings, local applicability, alternatives and limitations in the form the question needs. Cite the repository and commit/path actually examined, or a locatable URL and retrieval date. Current upstream state cannot stand in for a historical citation.
 
