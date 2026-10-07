@@ -1,6 +1,5 @@
 import { Buffer } from 'node:buffer'
 import { execFile, execFileSync, spawnSync } from 'node:child_process'
-import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
@@ -31,225 +30,19 @@ function fixture() {
     return git('rev-parse', 'HEAD')
   }
   const registry = { version: 1, sources: { sample: { repository, ref: 'main', paths: ['core/**'] } } }
-  mkdirSync(join(root, 'research/legacy/upstreams'), { recursive: true })
+  mkdirSync(join(root, 'research'), { recursive: true })
   writeFileSync(join(root, 'research/sources.yaml'), stringify(registry))
-  writeFileSync(join(root, 'upstreams.yaml'), 'Invalid retired registry; never read\n')
-  // Invalid old records prove that the new engine never ingests them.
-  writeFileSync(join(root, 'research/legacy/upstreams/upstreams.lock'), 'Frozen invalid legacy lock\n')
-  mkdirSync(join(root, 'research/upstreams/sample'), { recursive: true })
-  writeFileSync(join(root, 'research/upstreams/sample/legacy.md'), 'Frozen unrelated report\n')
   const invoke = (args, expected = 0, env = {}) => {
     const result = spawnSync(process.execPath, [cli, ...args, '--json'], { cwd: root, encoding: 'utf8', timeout: 20000, env: { ...process.env, ...env } })
     expect(result.status, result.stderr || result.stdout).toBe(expected)
     return JSON.parse(result.stdout)
   }
-  const draft = study => join(root, 'research/studies', study, 'draft.md')
-  const edit = (study, body, changeMetadata = value => value) => {
-    const matched = /^---\n([\s\S]*?)\n---\n/.exec(readFileSync(draft(study), 'utf8'))
-    const metadata = changeMetadata(parse(matched[1]))
-    writeFileSync(draft(study), `---\n${stringify(metadata)}---\n${body}\n`)
-  }
   const importText = (name, text) => {
     writeFileSync(join(root, name), text)
     return invoke(['import', '--file', name, '--origin', 'fixture execution', '--limitations', 'local simulation']).id
   }
-  const sealedPath = ref => join(root, 'research/studies', ref.split('@')[0], 'revisions', `${ref.split('@')[1]}.md`)
-  return { root, repository, git, commit, invoke, draft, edit, importText, sealedPath }
+  return { root, repository, git, commit, invoke, importText }
 }
-
-it('keeps research coverage at A through refreshes B and C, with an independent local baseline', () => {
-  const { root, commit, invoke, edit, importText } = fixture()
-  commit('core/a.md', 'original')
-  const a = invoke(['refresh', '--all'])
-  const sourceA = a.record.sources[0].evidence
-  const localA = importText('local-a.md', 'RSP working copy observation, original behavior')
-  invoke(['new', 'exploration', '--brief', 'Explore upstream practices for RSP', '--evidence', sourceA, '--refresh', a.ref, '--baseline', localA])
-  edit('exploration', 'Inspected the selected material; no change is recommended.', metadata => ({ ...metadata, coverage: [sourceA] }))
-  const studyA = invoke(['seal', 'exploration']).ref
-  commit('core/a.md', 'changed during B')
-  const b = invoke(['refresh', '--all', '--from', a.ref])
-  commit('core/c.md', 'added during C')
-  commit('new-design/guide.md', 'outside the previously selected scope')
-  const c = invoke(['refresh', '--all', '--from', b.ref])
-  expect(c.comparison[0].changes.map(item => item.path)).toEqual(['core/c.md'])
-  expect(c.comparison[0].repositoryChanges).toEqual(['core/c.md', 'new-design/guide.md'])
-  const coverage = invoke(['coverage', studyA, c.ref])
-  expect(coverage.sources[0]).toMatchObject({ before: sourceA, status: 'changed' })
-  expect(coverage.sources[0].changes.map(item => item.path)).toEqual(['core/a.md', 'core/c.md'])
-  expect(coverage.baseline[0].evidence).toBe(localA)
-  expect(coverage.localFreshness).toBe('not-checked')
-  invoke(['revise', 'exploration', '--from', studyA])
-  const localB = importText('local-b.md', 'RSP changed; reassess applicability without source changes')
-  const sourceC = c.record.sources[0].evidence
-  edit('exploration', 'Local behavior changed. Reconsider F1; no model outcome was measured.', metadata => ({ ...metadata, evidence: [sourceC, localB], baseline: [localB], coverage: [sourceC], refreshes: [c.ref] }))
-  const studyC = invoke(['seal', 'exploration']).ref
-  expect(invoke(['compare', studyA, studyC])).toMatchObject({ baselineChanged: true, coverageChanged: true })
-  expect(invoke(['coverage', studyC, c.ref]).sources[0].status).toBe('unchanged-in-scope')
-  rmSync(join(root, '.cache'), { recursive: true })
-  rmSync(join(root, 'origin'), { recursive: true })
-  expect(invoke(['check', c.ref]).integrity).toBe('valid')
-  expect(invoke(['coverage', studyA, c.ref]).sources[0].changes).toHaveLength(2)
-  expect(invoke(['list']).refreshes).toEqual(expect.arrayContaining([a.ref, b.ref, c.ref]))
-}, 30000)
-
-it('discovers changes outside reviewed scope across skipped refreshes without acquisition', () => {
-  const { root, commit, invoke, edit } = fixture()
-  commit('core/task.md', 'stable selected content')
-  const a = invoke(['refresh', '--all'])
-  const evidenceA = a.record.sources[0].evidence
-  commit('new-mechanism/guide.md', 'important new upstream practice')
-  const b = invoke(['refresh', '--all', '--from', a.ref])
-  const c = invoke(['refresh', '--all', '--from', b.ref])
-  expect(c.comparison[0].repositoryChanges).toEqual([])
-  // Merely citing B does not move coverage from the actual reviewed revision A.
-  invoke(['new', 'discovery', '--brief', 'Explore upstream mechanisms', '--evidence', evidenceA, '--refresh', b.ref, '--refresh', a.ref])
-  edit('discovery', 'The original selected material was inspected.', metadata => ({ ...metadata, coverage: [evidenceA] }))
-  const study = invoke(['seal', 'discovery']).ref
-  rmSync(join(root, '.cache'), { recursive: true })
-  rmSync(join(root, 'origin'), { recursive: true })
-  const coverage = invoke(['coverage', study, c.ref]).sources[0]
-  expect(coverage.status).toBe('unchanged-in-scope')
-  expect(coverage.repository).toMatchObject({
-    status: 'compared',
-    before: a.ref,
-    after: c.ref,
-    reviewedScopeChanges: [],
-    outsideReviewedScopeChanges: [{ path: 'new-mechanism/guide.md', kind: 'added' }],
-  })
-  const compared = invoke(['compare-refreshes', a.ref, c.ref])
-  expect(compared.comparison[0].repositoryChanges).toEqual(['new-mechanism/guide.md'])
-  // Inventory discovery remains possible without uncited scoped payloads.
-  rmSync(join(root, 'research/evidence', evidenceA), { recursive: true })
-  const missing = invoke(['compare-refreshes', a.ref, c.ref]).comparison[0]
-  expect(missing.status).toBe('comparison-unavailable')
-  expect(missing.repositoryChanges).toEqual(['new-mechanism/guide.md'])
-}, 30000)
-
-it('derives historical reviewed subsets with exact file scope and no cache or parent dependency', () => {
-  const { root, commit, invoke, edit } = fixture()
-  commit('core/literal*.md', 'original literal file')
-  commit('core/literal-other.md', 'excluded material')
-  const a = invoke(['refresh', '--all'])
-  const parent = a.record.sources[0].evidence
-  commit('core/literal*.md', 'newer content must not leak into old research')
-  const b = invoke(['refresh', '--all'])
-  rmSync(join(root, '.cache'), { recursive: true })
-  rmSync(join(root, 'origin'), { recursive: true })
-  const subset = invoke(['subset', parent, '--path', 'core/literal?.md'])
-  expect(subset.manifest.origin).toMatchObject({ revision: a.record.sources[0].revision, ref: 'main', selectedFiles: ['core/literal*.md'] })
-  expect(subset.manifest.derivedFrom).toBe(parent)
-  expect(subset.manifest.files.map(file => file.path)).toEqual(['core/literal*.md'])
-  expect(readFileSync(join(root, subset.path, 'files/core/literal*.md'), 'utf8')).toBe('original literal file')
-  expect(invoke(['subset', parent, '--path', 'core/literal?.md']).id).toBe(subset.id)
-  expect(invoke(['subset', subset.id, '--path', 'core/literal-other.md'], 1).error.kind).toBe('invalid')
-  invoke(['new', 'narrow', '--brief', 'Study the old selected file', '--evidence', subset.id, '--refresh', a.ref])
-  edit('narrow', 'Only the original literal file was assessed.', metadata => ({ ...metadata, coverage: [subset.id] }))
-  const study = invoke(['seal', 'narrow']).ref
-  const diff = invoke(['diff', subset.id, b.record.sources[0].evidence])
-  expect(diff.changes.find(change => change.path === 'core/literal-other.md').kind).toBe('entered-scope')
-  rmSync(join(root, 'research/evidence', parent), { recursive: true })
-  expect(invoke(['check', study]).integrity).toBe('valid')
-  expect(invoke(['coverage', study, b.ref]).sources[0].repository).toMatchObject({
-    before: a.ref,
-    reviewedScopeChanges: [{ path: 'core/literal*.md', kind: 'modified' }],
-    outsideReviewedScopeChanges: [],
-  })
-}, 30000)
-
-it('retains partial refresh results without relabeling failures or losing the prior research baseline', () => {
-  const { root, commit, invoke, edit } = fixture()
-  commit('core/task.md', 'material')
-  const registryPath = join(root, 'research/sources.yaml')
-  const registry = parse(readFileSync(registryPath, 'utf8'))
-  registry.sources.broken = { ...registry.sources.sample, repository: join(root, 'missing-repository') }
-  writeFileSync(registryPath, stringify(registry))
-  const batch = invoke(['refresh', '--all'], 1)
-  expect(batch.acquisition).toBe('partial')
-  expect(batch.record.sources.map(entry => entry.status)).toEqual(['failed', 'captured'])
-  const evidence = batch.record.sources[1].evidence
-  expect(invoke(['check', batch.ref]).integrity).toBe('valid')
-  invoke(['new', 'partial', '--brief', 'Explore available sources, disclose gaps', '--evidence', evidence, '--refresh', batch.ref])
-  edit('partial', 'The broken source was unavailable; inspected sample only.', metadata => ({ ...metadata, coverage: [evidence] }))
-  const study = invoke(['seal', 'partial']).ref
-  expect(invoke(['coverage', study, batch.ref]).sources.map(entry => entry.status)).toEqual(['acquisition-failed', 'unchanged-in-scope'])
-  const unrelated = invoke(['refresh', '--source', 'broken'], 1)
-  expect(invoke(['coverage', study, unrelated.ref]).notSelected).toEqual(['sample'])
-  expect(invoke(['refresh', '--all', '--source', 'sample'], 1).error.kind).toBe('invalid')
-  expect(invoke(['new', 'old-option', '--question', 'Legacy'], 1).error.kind).toBe('invalid')
-  rmSync(join(root, 'research/evidence', evidence), { recursive: true })
-  const retry = invoke(['refresh', '--source', 'broken', '--from', batch.ref], 1)
-  expect(invoke(['show', retry.ref]).record.sources[0].status).toBe('failed')
-  expect(invoke(['check', batch.ref], 1).integrity).toBe('unavailable')
-}, 30000)
-
-it('distinguishes changed selection, actual deletions and empty Git scopes offline', () => {
-  const { root, commit, git, invoke } = fixture()
-  commit('core/a.md', 'a')
-  commit('core/b.md', 'b')
-  commit('docs/c.md', 'c')
-  invoke(['sync', 'sample'])
-  const full = invoke(['capture', 'sample'])
-  const narrow = invoke(['capture', 'sample', '--path', 'core/a.md', '--path', 'docs/**'])
-  const scope = invoke(['diff', full.id, narrow.id])
-  expect(scope).toMatchObject({ scopeChanged: true, revisionChanged: false })
-  expect(scope.changes.map(({ path, kind }) => ({ path, kind }))).toEqual([
-    { path: 'core/b.md', kind: 'left-scope' },
-    { path: 'docs/c.md', kind: 'entered-scope' },
-  ])
-  git('rm', '-r', 'core')
-  git('commit', '-m', 'remove selected content')
-  invoke(['sync', 'sample'])
-  const empty = invoke(['capture', 'sample'])
-  expect(empty.manifest.files).toEqual([])
-  expect(invoke(['check', empty.id]).integrity).toBe('valid')
-  expect(invoke(['diff', full.id, empty.id]).changes.map(item => item.kind)).toEqual(['deleted', 'deleted'])
-  const registryPath = join(root, 'research/sources.yaml')
-  const registry = parse(readFileSync(registryPath, 'utf8'))
-  git('branch', 'next')
-  registry.sources.sample.ref = 'next'
-  writeFileSync(registryPath, stringify(registry))
-  invoke(['sync', 'sample'])
-  const otherRef = invoke(['capture', 'sample'])
-  expect(invoke(['diff', empty.id, otherRef.id])).toMatchObject({ comparable: false, changes: [] })
-}, 30000)
-
-it('supports independent questions and scopes on one snapshot, retaining bytes after deleting Git', () => {
-  const { root, commit, invoke, edit } = fixture()
-  commit('core/task.md', 'source procedure\n')
-  const revision = commit('docs/guide.md', 'source guide\n')
-  expect(invoke(['capture', 'sample'], 1).error.kind).toBe('unavailable')
-  expect(invoke(['sync', 'sample'])).toMatchObject({ revision, acquisition: 'explicit-sync' })
-  const first = invoke(['capture', 'sample'])
-  const second = invoke(['capture', 'sample', '--revision', revision, '--path', 'docs/**'])
-  expect(first.id).not.toBe(second.id)
-  expect(first.manifest.origin.revision).toBe(second.manifest.origin.revision)
-  expect(first.manifest.files.map(file => file.path)).toEqual(['core/task.md'])
-  expect(invoke(['capture', 'sample']).created).toBe(false)
-  for (const study of ['procedures', 'navigation']) {
-    invoke(['new', study, '--brief', `How does ${study} work?`, '--evidence', first.id, '--evidence', second.id])
-    expect(invoke(['show', study])).toMatchObject({ integrity: 'not-checked', body: '\n' })
-    expect(invoke(['seal', study], 1).error.kind).toBe('invalid')
-    edit(study, `Observed ${study}; a simulation remains unrun.`)
-    const sealed = invoke(['seal', study])
-    expect(sealed).toMatchObject({ created: true, semanticApproval: false, integrity: 'valid' })
-    expect(invoke(['seal', study])).toMatchObject({ ref: sealed.ref, created: false })
-    expect(invoke(['check', sealed.ref])).toMatchObject({ checkedEvidence: [first.id, second.id], integrity: 'valid' })
-  }
-  const listing = invoke(['list'])
-  expect(listing.studies).toHaveLength(2)
-  expect(listing.integrity).toBe('not-checked')
-  expect(listing.evidence.find(item => item.id === first.id)).toEqual({ id: first.id, origin: first.manifest.origin, fileCount: 1, integrity: 'not-checked' })
-  expect(invoke(['show', first.id]).manifest).toEqual(first.manifest)
-  rmSync(join(root, '.cache'), { recursive: true })
-  rmSync(join(root, 'origin'), { recursive: true })
-  for (const study of listing.studies) {
-    expect(invoke(['check', study.revisions[0]]).integrity).toBe('valid')
-    expect(invoke(['show', study.revisions[0]]).integrity).toBe('not-checked')
-  }
-  expect(invoke(['check', first.id]).integrity).toBe('valid')
-  expect(readFileSync(join(root, 'research/legacy/upstreams/upstreams.lock'), 'utf8')).toBe('Frozen invalid legacy lock\n')
-  expect(readFileSync(join(root, 'research/upstreams/sample/legacy.md'), 'utf8')).toBe('Frozen unrelated report\n')
-}, 20000)
 
 it('retains exact empty, binary and oversized Git blobs across transfer batches', () => {
   const { root, commit, invoke } = fixture()
@@ -264,10 +57,9 @@ it('retains exact empty, binary and oversized Git blobs across transfer batches'
     commit(path, bytes)
   invoke(['sync', 'sample'])
   const captured = invoke(['capture', 'sample'])
-  expect(captured.manifest.files.map(file => file.path)).toEqual(contents.map(([path]) => path))
   for (const [path, bytes] of contents)
-    expect(readFileSync(join(root, 'research/evidence', captured.id, 'files', path)).equals(bytes), path).toBe(true)
-  expect(invoke(['check', captured.id]).integrity).toBe('valid')
+    expect(readFileSync(join(root, captured.path, path)).equals(bytes), path).toBe(true)
+  expect(invoke(['show', captured.id]).local).toBe('present')
   expect(invoke(['capture', 'sample'])).toMatchObject({ id: captured.id, created: false })
 }, 20000)
 
@@ -287,7 +79,7 @@ it('reports a blob lost between inventory and reading as unavailable without pub
     RESEARCH_MISSING_OBJECT: missingObject,
   })
   expect(result.error.kind).toBe('unavailable')
-  expect(existsSync(join(root, 'research/evidence'))).toBe(false)
+  expect(existsSync(join(root, 'research/captures'))).toBe(false)
 }, 20000)
 
 it('binds cached candidates to synchronized refs and does not label explicit commits with configured refs', () => {
@@ -302,13 +94,13 @@ it('binds cached candidates to synchronized refs and does not label explicit com
   writeFileSync(registryPath, stringify(registry))
   expect(invoke(['capture', 'sample'], 1).error.kind).toBe('unavailable')
   const explicit = invoke(['capture', 'sample', '--revision', main])
-  expect(explicit.manifest.origin).toMatchObject({ revision: main, selection: 'explicit-revision' })
-  expect(explicit.manifest.origin).not.toHaveProperty('ref')
+  expect(explicit.id).toBe(`sample@${main}`)
+  expect(explicit.capture).not.toHaveProperty('ref')
   invoke(['sync', 'sample'])
-  expect(invoke(['capture', 'sample']).manifest.origin).toMatchObject({ revision: next, ref: 'next' })
+  expect(invoke(['capture', 'sample']).id).toBe(`sample@${next}`)
   registry.sources.sample.ref = 'main'
   writeFileSync(registryPath, stringify(registry))
-  expect(invoke(['capture', 'sample']).manifest.origin).toMatchObject({ revision: main, ref: 'main' })
+  expect(invoke(['capture', 'sample']).id).toBe(`sample@${main}`)
 }, 20000)
 
 it('keeps overlapping CLI syncs bound to their own refs after another fetch completes', async () => {
@@ -369,9 +161,9 @@ exit "$status"
     registry.sources.sample.ref = ref
     writeFileSync(registryPath, stringify(registry))
     const captured = invoke(['capture', 'sample'])
-    expect(captured.manifest.origin).toMatchObject({ ref, revision })
-    expect(readFileSync(join(root, 'research/evidence', captured.id, 'files/core/task.md'), 'utf8')).toBe(content)
-    expect(invoke(['check', captured.id]).integrity).toBe('valid')
+    expect(captured.id).toBe(`sample@${revision}`)
+    expect(readFileSync(join(root, captured.path, 'core/task.md'), 'utf8')).toBe(content)
+    expect(invoke(['show', captured.id]).local).toBe('present')
   }
 }, 25000)
 
@@ -382,110 +174,18 @@ it('syncs new commits and forced ref rewinds in a normal cache and peels annotat
   const next = commit('core/task.md', 'new material')
   git('tag', '-a', 'v1', '-m', 'annotated fixture tag')
   expect(invoke(['sync', 'sample']).revision).toBe(next)
-  expect(invoke(['capture', 'sample']).manifest.origin.revision).toBe(next)
+  expect(invoke(['capture', 'sample']).id).toBe(`sample@${next}`)
   git('reset', '--hard', first)
   expect(invoke(['sync', 'sample']).revision).toBe(first)
-  expect(invoke(['capture', 'sample']).manifest.origin.revision).toBe(first)
+  expect(invoke(['capture', 'sample']).id).toBe(`sample@${first}`)
   const registryPath = join(root, 'research/sources.yaml')
   const registry = parse(readFileSync(registryPath, 'utf8'))
   registry.sources.sample.ref = 'v1'
   writeFileSync(registryPath, stringify(registry))
   expect(invoke(['sync', 'sample']).revision).toBe(next)
   const captured = invoke(['capture', 'sample'])
-  expect(captured.manifest.origin).toMatchObject({ ref: 'v1', revision: next })
-  expect(readFileSync(join(root, 'research/evidence', captured.id, 'files/core/task.md'), 'utf8')).toBe('new material')
-}, 20000)
-
-it('compares traceable successors and refuses unsealed edits or unlinked corrections', () => {
-  const { root, invoke, edit, importText, sealedPath } = fixture()
-  const first = importText('baseline.txt', 'baseline observation')
-  const second = importText('experiment.txt', 'experiment observation')
-  invoke(['new', 'approach', '--brief', 'Which approach?', '--evidence', first])
-  edit('approach', 'First conclusion')
-  const baseline = invoke(['seal', 'approach']).ref
-  edit('approach', 'Unsealed observation')
-  expect(invoke(['revise', 'approach', '--from', baseline], 1).error.message).toMatch(/unsealed edits/)
-  expect(invoke(['seal', 'approach'], 1).error.message).toMatch(/supersede/)
-  expect(invoke(['show', 'approach']).body).toContain('Unsealed observation')
-  edit('approach', 'First conclusion')
-  invoke(['revise', 'approach', '--from', baseline])
-  edit('approach', 'Follow-up conclusion', metadata => ({ ...metadata, brief: 'Which approach after experiment?', evidence: [second] }))
-  const followup = invoke(['seal', 'approach']).ref
-  const compared = invoke(['compare', baseline, followup])
-  expect(compared).toMatchObject({ recordIntegrity: 'valid', evidenceIntegrity: 'not-checked', history: { integrity: 'not-checked' } })
-  expect(compared).not.toHaveProperty('integrity')
-  expect(compared).toMatchObject({ before: baseline, after: followup, briefChanged: true, bodyChanged: true, addedEvidence: [second], removedEvidence: [first], semanticApproval: false })
-  expect(compared.beforeText).toContain('First conclusion')
-  expect(compared.afterText).toContain('Follow-up conclusion')
-  expect(invoke(['check', followup]).checkedRevisions).toEqual([followup, baseline])
-  // Branching from an older sealed version is explicit and preserves every version.
-  invoke(['revise', 'approach', '--from', baseline])
-  edit('approach', 'Alternative conclusion')
-  const branch = invoke(['seal', 'approach']).ref
-  expect(invoke(['show', branch]).metadata.supersedes).toEqual([baseline])
-  edit('approach', 'Third conclusion', metadata => ({ ...metadata, supersedes: [] }))
-  expect(invoke(['seal', 'approach'], 1).error.message).toMatch(/supersede/)
-  edit('approach', 'Third conclusion', metadata => ({ ...metadata, supersedes: [baseline] }))
-  writeFileSync(sealedPath(baseline), 'Altered prior conclusion')
-  expect(invoke(['check', followup], 1).integrity).toBe('corrupt')
-  expect(invoke(['compare', baseline, followup], 1).error.kind).toBe('corrupt')
-  expect(invoke(['revise', 'approach', '--from', baseline], 1).error.kind).toBe('corrupt')
-  const revisionsBefore = readdirSync(dirname(sealedPath(baseline)))
-  expect(invoke(['seal', 'approach'], 1).error.kind).toBe('corrupt')
-  expect(readdirSync(dirname(sealedPath(baseline)))).toEqual(revisionsBefore)
-  rmSync(sealedPath(baseline))
-  expect(invoke(['check', followup], 1).integrity).toBe('unavailable')
-  expect(existsSync(join(root, 'research/legacy/upstreams/upstreams.lock'))).toBe(true)
-}, 20000)
-
-it('rejects missing/corrupt payloads and occupied identities without publishing revisions', () => {
-  const { root, invoke, edit, importText } = fixture()
-  const id = importText('data.bin', Buffer.from([0, 255, 128, 1]))
-  invoke(['new', 'integrity', '--brief', 'Is evidence intact?', '--evidence', id])
-  edit('integrity', 'Material observed')
-  const payload = join(root, 'research/evidence', id, 'files/data.bin')
-  const original = readFileSync(payload)
-  writeFileSync(payload, 'tampered')
-  expect(invoke(['check', id], 1).integrity).toBe('corrupt')
-  expect(invoke(['seal', 'integrity'], 1).error.kind).toBe('corrupt')
-  expect(existsSync(join(root, 'research/studies/integrity/revisions'))).toBe(false)
-  expect(invoke(['import', '--file', 'data.bin', '--origin', 'fixture execution', '--limitations', 'local simulation'], 1).error.kind).toBe('corrupt')
-  expect(readFileSync(payload, 'utf8')).toBe('tampered')
-  writeFileSync(payload, original)
-  const ref = invoke(['seal', 'integrity']).ref
-  rmSync(payload)
-  expect(invoke(['check', ref], 1).integrity).toBe('unavailable')
-  expect(invoke(['show', ref]).integrity).toBe('not-checked')
-  expect(invoke(['list']).integrity).toBe('not-checked')
-  writeFileSync(payload, original)
-  const manifestPath = join(root, 'research/evidence', id, 'manifest.json')
-  const manifest = readFileSync(manifestPath)
-  writeFileSync(manifestPath, manifest.toString().replace('fixture execution', 'altered provenance'))
-  expect(invoke(['check', id], 1).integrity).toBe('corrupt')
-  writeFileSync(manifestPath, manifest)
-  writeFileSync(join(root, 'research/evidence', id, 'files/unrecorded.txt'), 'extra material')
-  expect(invoke(['check', id], 1).integrity).toBe('corrupt')
-}, 20000)
-
-it('imports directory bytes with provenance and refuses symlinks and unsafe names', () => {
-  const { root, invoke } = fixture()
-  mkdirSync(join(root, 'bundle/nested'), { recursive: true })
-  writeFileSync(join(root, 'bundle/nested/results.json'), '{"result":"local"}')
-  writeFileSync(join(root, 'bundle/notes.md'), 'limitations')
-  const imported = invoke(['import', '--file', 'bundle', '--origin', 'local experiment run 7', '--license', 'private', '--limitations', 'not a model acceptance'])
-  expect(imported.manifest).toMatchObject({ origin: { kind: 'import', origin: 'local experiment run 7' }, license: 'private', limitations: 'not a model acceptance' })
-  expect(imported.manifest.files.map(file => file.path)).toEqual(['nested/results.json', 'notes.md'])
-  expect(invoke(['show', imported.id]).integrity).toBe('not-checked')
-  symlinkSync(join(root, 'bundle'), join(root, 'link'))
-  expect(invoke(['import', '--file', 'link/notes.md', '--origin', 'bad'], 1).error.kind).toBe('invalid')
-  symlinkSync(join(root, 'research/legacy/upstreams/upstreams.lock'), join(root, 'bundle/alias'))
-  expect(invoke(['import', '--file', 'bundle', '--origin', 'bad'], 1).error.kind).toBe('invalid')
-  expect(invoke(['new', '../escape', '--brief', 'bad', '--evidence', imported.id], 1).error.kind).toBe('invalid')
-  const evidence = join(root, 'research/evidence', imported.id, 'files/notes.md')
-  rmSync(evidence)
-  symlinkSync(join(root, 'research/legacy/upstreams/upstreams.lock'), evidence)
-  expect(invoke(['check', imported.id], 1).integrity).toBe('corrupt')
-  expect(readFileSync(join(root, 'research/legacy/upstreams/upstreams.lock'), 'utf8')).toBe('Frozen invalid legacy lock\n')
+  expect(captured.id).toBe(`sample@${next}`)
+  expect(readFileSync(join(root, captured.path, 'core/task.md'), 'utf8')).toBe('new material')
 }, 20000)
 
 it('refuses symlinked storage and source symlinks without partial evidence publication', () => {
@@ -496,15 +196,15 @@ it('refuses symlinked storage and source symlinks without partial evidence publi
   git('commit', '-m', 'source symlink')
   invoke(['sync', 'sample'])
   expect(invoke(['capture', 'sample'], 1).error.kind).toBe('invalid')
-  expect(existsSync(join(root, 'research/evidence'))).toBe(false)
+  expect(existsSync(join(root, 'research/captures'))).toBe(false)
   mkdirSync(join(root, 'outside'))
-  symlinkSync(join(root, 'outside'), join(root, 'research/evidence'))
+  symlinkSync(join(root, 'outside'), join(root, 'research/captures'))
   expect(invoke(['capture', 'sample', '--path', 'core/task.md'], 1).error.kind).toBe('corrupt')
   expect(readdirSync(join(root, 'outside'))).toEqual([])
 }, 20000)
 
 it('never lazy-fetches promised objects for capture or reads', () => {
-  const { root, repository, git, commit, invoke, importText, edit } = fixture()
+  const { root, repository, git, commit, invoke, importText } = fixture()
   const revision = commit('core/task.md', 'promised contents\n')
   const blob = git('rev-parse', `${revision}:core/task.md`)
   git('config', 'uploadpack.allowFilter', 'true')
@@ -516,9 +216,6 @@ it('never lazy-fetches promised objects for capture or reads', () => {
   const missing = () => spawnSync('git', ['cat-file', '-e', blob], { cwd: cache, env: { ...process.env, GIT_NO_LAZY_FETCH: '1' } }).status !== 0
   expect(missing()).toBe(true)
   const id = importText('offline.txt', 'retained observation')
-  invoke(['new', 'offline', '--brief', 'Offline?', '--evidence', id])
-  edit('offline', 'Observed retained evidence')
-  const ref = invoke(['seal', 'offline']).ref
   const objects = join(cache, 'objects')
   const snapshot = () => readdirSync(objects, { recursive: true }).sort().filter(path => statSync(join(objects, path)).isFile()).map(path => [path, readFileSync(join(objects, path)).toString('hex')])
   const before = snapshot()
@@ -526,7 +223,7 @@ it('never lazy-fetches promised objects for capture or reads', () => {
   const env = { GIT_TRACE2_EVENT: trace, GIT_NO_LAZY_FETCH: '0' }
   const missingCapture = invoke(['capture', 'sample', '--revision', revision], 1, env).error
   expect(missingCapture.kind, missingCapture.message).toBe('unavailable')
-  for (const args of [['list'], ['show', ref], ['check', ref], ['check', id]])
+  for (const args of [['list'], ['show', id]])
     invoke(args, 0, env)
   expect(snapshot()).toEqual(before)
   expect(missing()).toBe(true)
@@ -564,7 +261,7 @@ it('accepts a workspace root alias while rejecting symlinks in the selected impo
   const invokeAlias = args => spawnSync(process.execPath, ['--input-type=module', '-e', program, pathToFileURL(cli).href, alias, JSON.stringify(args)], { encoding: 'utf8' })
   const success = invokeAlias(['import', '--file', 'material', '--origin', 'aliased workspace'])
   expect(success.status, success.stderr).toBe(0)
-  expect(JSON.parse(success.stdout).manifest.files[0].path).toBe('excerpt.md')
+  expect(readFileSync(join(root, JSON.parse(success.stdout).path, 'excerpt.md'), 'utf8')).toBe('retained bytes')
   const absolute = invokeAlias(['import', '--file', join(alias, 'material/excerpt.md'), '--origin', 'aliased absolute path'])
   expect(absolute.status, absolute.stderr).toBe(0)
   const canonicalAbsolute = invokeAlias(['import', '--file', join(root, 'material/excerpt.md'), '--origin', 'canonical absolute path'])
@@ -578,19 +275,19 @@ it('accepts a workspace root alias while rejecting symlinks in the selected impo
 })
 
 it('imports normal external temporary inputs through parent aliases but rejects selected and subtree links', () => {
-  const { invoke } = fixture()
+  const { root, invoke } = fixture()
   // A sibling mkdtemp(tmpdir()) input is outside the canonical workspace. On
   // macOS its spelling contains the /var alias that originally caused rejection.
   const external = mkdtempSync(join(tmpdir(), 'rsp-research-external-'))
   temporary.push(external)
   writeFileSync(join(external, 'normal.txt'), 'external bytes')
   const imported = invoke(['import', '--file', join(external, 'normal.txt'), '--origin', 'external local input'])
-  expect(imported.manifest.files.map(file => file.path)).toEqual(['normal.txt'])
-  expect(invoke(['check', imported.id]).integrity).toBe('valid')
+  expect(readFileSync(join(root, imported.path, 'normal.txt'), 'utf8')).toBe('external bytes')
+  expect(invoke(['show', imported.id]).local).toBe('present')
   const aliasParent = mkdtempSync(join(tmpdir(), 'rsp-research-parent-'))
   temporary.push(aliasParent)
   symlinkSync(external, join(aliasParent, 'location'))
-  expect(invoke(['import', '--file', join(aliasParent, 'location/normal.txt'), '--origin', 'parent alias']).integrity).toBe('valid')
+  expect(invoke(['import', '--file', join(aliasParent, 'location/normal.txt'), '--origin', 'parent alias']).local).toBe('present')
   symlinkSync(join(external, 'normal.txt'), join(external, 'selected.txt'))
   expect(invoke(['import', '--file', join(external, 'selected.txt'), '--origin', 'selected link'], 1).error.kind).toBe('invalid')
   symlinkSync(external, join(external, 'selected-directory'))
@@ -598,114 +295,216 @@ it('imports normal external temporary inputs through parent aliases but rejects 
   expect(invoke(['import', '--file', external, '--origin', 'linked subtree'], 1).error.kind).toBe('invalid')
 })
 
-it('starts from a question and permits incomplete drafts to be viewed until ready to seal', () => {
-  const { invoke, edit, importText } = fixture()
-  expect(invoke(['new', 'question-first', '--brief', 'What should be investigated?'])).toMatchObject({ sealed: false, integrity: 'not-checked' })
-  expect(invoke(['show', 'question-first'])).toMatchObject({ metadata: { evidence: [], supersedes: [] }, body: '\n', integrity: 'not-checked' })
-  expect(invoke(['list']).studies).toEqual([expect.objectContaining({ study: 'question-first', brief: 'What should be investigated?', draft: true })])
-  expect(invoke(['seal', 'question-first'], 1).error.kind).toBe('invalid')
-  expect(invoke(['check', 'question-first'], 1)).toMatchObject({ integrity: 'invalid', history: { integrity: 'not-checked' } })
-  edit('question-first', 'Conclusion without material')
-  expect(invoke(['seal', 'question-first'], 1).error.message).toMatch(/nonempty unique array/)
-  const id = importText('material.txt', 'retained material')
-  edit('question-first', '', metadata => ({ ...metadata, evidence: [id] }))
-  expect(invoke(['show', 'question-first']).body.trim()).toBe('')
-  expect(invoke(['seal', 'question-first'], 1).error.message).toMatch(/nonempty research body/)
-  edit('question-first', 'Evidence-supported conclusion')
-  expect(invoke(['seal', 'question-first'])).toMatchObject({ integrity: 'valid', history: { integrity: 'not-checked' } })
+it('resumes only failures and records explicit configuration changes without refreshing successes', () => {
+  const { root, commit, invoke } = fixture()
+  const a = commit('core/a.md', 'a')
+  const path = join(root, 'research/sources.yaml')
+  const registry = parse(readFileSync(path, 'utf8'))
+  registry.sources.broken = { ...registry.sources.sample, repository: join(root, 'missing') }
+  writeFileSync(path, stringify(registry))
+  const partial = invoke(['refresh', '--all'], 1)
+  expect(partial.record.sources.map(s => s.status)).toEqual(['failed', 'captured'])
+  commit('core/a.md', 'newer')
+  registry.sources.broken.repository = registry.sources.sample.repository
+  writeFileSync(path, stringify(registry))
+  // Frozen task config is reused unless update is explicit.
+  expect(invoke(['refresh', '--resume', partial.ref], 1).record.sources[0].status).toBe('failed')
+  const recovered = invoke(['refresh', '--resume', partial.ref, '--update-config'])
+  expect(recovered.ref).toBe(partial.ref)
+  expect(recovered.acquisition).toBe('complete')
+  expect(recovered.record.sources[1].revision).toBe(a)
+  expect(recovered.record.sources[1].attempts).toHaveLength(1)
+  expect(recovered.record.sources[0].attempts.map(a => a.status)).toEqual(['failed', 'failed', 'captured'])
+  const index = readFileSync(join(root, 'research/index.json'))
+  invoke(['refresh', '--resume', partial.ref])
+  expect(readFileSync(join(root, 'research/index.json'))).toEqual(index)
 })
 
-it('keeps replaced historical evidence independent from current integrity and audits the full graph only on request', () => {
-  const { root, invoke, edit, importText, sealedPath, draft } = fixture()
-  const old = importText('old.txt', 'old material')
-  const oldOther = importText('old-other.txt', 'other old material')
-  const replacement = importText('replacement.txt', 'replacement material')
-  invoke(['new', 'replacement', '--brief', 'Which evidence?', '--evidence', old, '--evidence', oldOther])
-  edit('replacement', 'Baseline conclusion')
-  const baseline = invoke(['seal', 'replacement']).ref
-  const oldPayload = join(root, 'research/evidence', old, 'files/old.txt')
-  const otherPayload = join(root, 'research/evidence', oldOther, 'files/old-other.txt')
-  rmSync(oldPayload)
-  writeFileSync(otherPayload, 'corruption')
-  // revise checks sealed record bytes, permitting unavailable evidence replacement.
-  invoke(['revise', 'replacement', '--from', baseline])
-  edit('replacement', 'Replaced conclusion', metadata => ({ ...metadata, evidence: [replacement] }))
-  const followup = invoke(['seal', 'replacement']).ref
-  const current = invoke(['check', followup])
-  expect(current).toMatchObject({ integrity: 'valid', checkedEvidence: [replacement], history: { integrity: 'not-checked', diagnostics: [] } })
-  expect(invoke(['seal', 'replacement']).created).toBe(false)
-  invoke(['revise', 'replacement', '--from', followup])
-  edit('replacement', 'Further conclusion')
-  const latest = invoke(['seal', 'replacement']).ref
-  expect(invoke(['compare', followup, latest])).toMatchObject({ recordIntegrity: 'valid', evidenceIntegrity: 'not-checked', history: { integrity: 'not-checked' } })
-  // Even the report whose own evidence is unavailable/corrupt remains comparable.
-  expect(invoke(['compare', baseline, latest])).toMatchObject({ recordIntegrity: 'valid', evidenceIntegrity: 'not-checked', removedEvidence: [old, oldOther] })
-  const draftBefore = readFileSync(draft('replacement'))
-  const revisionNames = readdirSync(dirname(sealedPath(latest)))
-  const audited = invoke(['check', latest, '--history'], 1)
-  expect(audited.integrity).toBe('valid')
-  expect(audited.history).toMatchObject({ integrity: 'corrupt', diagnostics: expect.arrayContaining([
-    expect.objectContaining({ target: old, kind: 'unavailable' }),
-    expect.objectContaining({ target: oldOther, kind: 'corrupt' }),
-  ]) })
-  expect(audited.history.checkedRevisions).toEqual([latest, followup, baseline])
-  expect(audited.history.checkedEvidence).toEqual([replacement, old, oldOther])
-  expect(readFileSync(draft('replacement'))).toEqual(draftBefore)
-  expect(readdirSync(dirname(sealedPath(latest)))).toEqual(revisionNames)
-  writeFileSync(otherPayload, 'other old material')
-  expect(invoke(['check', latest, '--history'], 1)).toMatchObject({ integrity: 'valid', history: { integrity: 'unavailable' } })
-  writeFileSync(oldPayload, 'old material')
-  expect(invoke(['check', 'replacement', '--history'])).toMatchObject({ integrity: 'valid', history: { integrity: 'valid', diagnostics: [] } })
-  // Older record corruption is observable in history without becoming a hidden
-  // transitive dependency of the latest version. Immediate corruption still fails.
-  writeFileSync(sealedPath(baseline), 'changed historical record')
-  expect(invoke(['check', latest]).integrity).toBe('valid')
-  expect(invoke(['check', latest, '--history'], 1).history.diagnostics).toContainEqual(expect.objectContaining({ target: baseline, kind: 'corrupt' }))
-  expect(invoke(['check', followup], 1).integrity).toBe('corrupt')
-  expect(invoke(['compare', followup, latest]).recordIntegrity).toBe('valid')
-  rmSync(sealedPath(baseline))
-  expect(invoke(['compare', followup, latest]).recordIntegrity).toBe('valid')
-  expect(invoke(['check', followup], 1).integrity).toBe('unavailable')
-  const payload = join(root, 'research/evidence', replacement, 'files/replacement.txt')
-  rmSync(payload)
-  expect(invoke(['check', latest], 1)).toMatchObject({ integrity: 'unavailable', history: { integrity: 'not-checked' } })
-  expect(invoke(['compare', followup, latest]).evidenceIntegrity).toBe('not-checked')
-  expect(invoke(['seal', 'replacement'], 1).error.kind).toBe('unavailable')
-  // Even missing current evidence does not prevent revising intact sealed bytes.
-  invoke(['revise', 'replacement', '--from', latest])
-  expect(invoke(['show', 'replacement']).metadata.supersedes).toEqual([latest])
-}, 20000)
-
-it('rejects malformed immediate predecessor records even when their content hash matches', () => {
-  const { invoke, edit, importText, sealedPath, draft } = fixture()
-  const id = importText('record.txt', 'record material')
-  invoke(['new', 'record-schema', '--brief', 'Which conclusion?', '--evidence', id])
-  edit('record-schema', 'Initial conclusion')
-  const valid = invoke(['seal', 'record-schema']).ref
-  const malformed = '---\nbrief: Broken record\nevidence: []\nsupersedes: []\n---\nRecorded body\n'
-  const malformedRef = `record-schema@${createHash('sha256').update(malformed).digest('hex')}`
-  writeFileSync(sealedPath(malformedRef), malformed)
-  const before = readFileSync(draft('record-schema'))
-  expect(invoke(['revise', 'record-schema', '--from', malformedRef], 1).error).toMatchObject({ kind: 'corrupt', message: expect.stringContaining('Invalid sealed revision') })
-  expect(readFileSync(draft('record-schema'))).toEqual(before)
-  invoke(['revise', 'record-schema', '--from', valid])
-  edit('record-schema', 'Follow-up conclusion', metadata => ({ ...metadata, supersedes: [malformedRef] }))
-  expect(invoke(['check', 'record-schema'], 1).integrity).toBe('corrupt')
-  expect(invoke(['seal', 'record-schema'], 1).error.kind).toBe('corrupt')
-  expect(invoke(['compare', valid, malformedRef], 1).error.kind).toBe('corrupt')
+it('persists progress through process death and refuses a concurrent resume', async () => {
+  const { root, commit } = fixture()
+  commit('core/a.md', 'a')
+  const module = pathToFileURL(cli).href
+  const program = 'const {runResearch}=await import(process.argv[1]); await runResearch(["refresh","--all"],process.argv[2],e=>{if(e.status==="captured")process.kill(process.pid,"SIGKILL")})'
+  const stopped = spawnSync(process.execPath, ['--input-type=module', '-e', program, module, root], { encoding: 'utf8' })
+  expect(stopped.signal).toBe('SIGKILL')
+  const file = readdirSync(join(root, 'research/refreshes'))[0]
+  const record = JSON.parse(readFileSync(join(root, 'research/refreshes', file)))
+  expect(record.sources[0].status).toBe('captured')
+  const { runResearch } = await import(module)
+  const resumed = await runResearch(['refresh', '--resume', record.id], root)
+  expect(resumed.record.sources[0].attempts).toHaveLength(1)
+  expect(resumed.acquisition).toBe('complete')
+  const { withLock } = await import('../../../scripts/research/locking.mjs')
+  await withLock(root, `refresh-${record.id.slice(8).toLowerCase()}`, async () => {
+    await expect(runResearch(['refresh', '--resume', record.id], root)).rejects.toThrow('active')
+  })
 })
 
-it('distinguishes command errors, missing bytes and operational Git errors', () => {
-  const { root, invoke } = fixture()
-  expect(invoke(['--help']).help).toMatch(/seal.*freeze/)
-  expect(invoke(['accept', 'sample'], 1).error.kind).toBe('invalid')
-  expect(invoke(['new', 'empty'], 1).error.kind).toBe('invalid')
-  expect(invoke(['check', 'missing'], 1).integrity).toBe('unavailable')
-  expect(invoke(['check', 'missing', '--history', '--history'], 1).error.kind).toBe('invalid')
-  expect(invoke(['check', '0'.repeat(64), '--history'], 1).error.message).toMatch(/not an evidence hash/)
-  mkdirSync(join(root, '.cache/research/sources/sample'), { recursive: true })
-  expect(invoke(['capture', 'sample'], 1).error.kind).toBe('operational-error')
+it('retains nonempty failure history when resuming an interrupted source attempt', () => {
+  const { root, commit, invoke } = fixture()
+  commit('core/a.md', 'a')
+  const run = invoke(['refresh', '--all'])
+  const record = run.record
+  record.sources[0].status = 'running'
+  record.sources[0].attempts[0].status = 'running'
+  delete record.sources[0].evidence
+  writeFileSync(join(root, run.path), JSON.stringify(record))
+  const resumed = invoke(['refresh', '--resume', run.ref])
+  expect(resumed.record.sources[0].attempts.map(item => item.status)).toEqual(['interrupted', 'captured'])
+  expect(resumed.acquisition).toBe('complete')
+})
+
+it('retries transient Git boundaries and cleans a failed clone before retrying', () => {
+  const { root, commit, invoke } = fixture()
+  commit('core/a.md', 'a')
+  const shim = join(root, 'git-shim')
+  mkdirSync(shim)
+  writeFileSync(join(shim, 'git'), '#!/bin/sh\noperation=""\nfor argument do\n  case "$argument" in clone|fetch) operation="$argument" ;; esac\n  last="$argument"\ndone\nif [ -n "$operation" ] && [ ! -f "$RESEARCH_RETRY_MARKER-$operation" ]; then\n  touch "$RESEARCH_RETRY_MARKER-$operation"\n  if [ "$operation" = clone ]; then mkdir -p "$last"; touch "$last/incomplete"; fi\n  echo "TLS connection reset" >&2\n  exit 128\nfi\nexec "$RESEARCH_TEST_GIT" "$@"\n', { mode: 0o755 })
+  const marker = join(root, 'retry')
+  const result = invoke(['refresh', '--all'], 0, {
+    PATH: `${shim}:${process.env.PATH}`,
+    RESEARCH_TEST_GIT: execFileSync('which', ['git'], { encoding: 'utf8' }).trim(),
+    RESEARCH_RETRY_MARKER: marker,
+  })
+  expect(result.acquisition).toBe('complete')
+  expect(existsSync(`${marker}-clone`)).toBe(true)
+  expect(existsSync(`${marker}-fetch`)).toBe(true)
+  expect(existsSync(join(root, '.cache/research/sources/sample/incomplete'))).toBe(false)
+  expect(readdirSync(join(root, '.cache/research/sources')).filter(name => name.startsWith('.sync-'))).toEqual([])
+})
+
+it('keeps only recovery metadata, reuses Git captures and discovers changes without payloads', () => {
+  const { root, repository, commit, invoke } = fixture()
+  const first = commit('core/a.md', 'a')
+  const a = invoke(['refresh', '--all'])
+  const id = a.record.sources[0].evidence
+  const indexPath = join(root, 'research/index.json')
+  expect(JSON.parse(readFileSync(indexPath)).captures[id]).toEqual({ repository, paths: ['core/**'] })
+  const original = readFileSync(indexPath)
+  invoke(['capture', 'sample'])
+  expect(readFileSync(indexPath)).toEqual(original)
+  commit('docs/new.md', 'outside selection')
+  const next = commit('core/a.md', 'changed')
+  const b = invoke(['refresh', '--all'])
+  expect(b.record.sources[0]).toMatchObject({ before: first, revision: next })
+  expect(b.comparison[0].outsideSelectionChanges).toEqual([{ path: 'docs/new.md', kind: 'added' }])
+  invoke(['capture', 'sample', '--path', 'docs/**'])
+  expect(invoke(['show', b.record.sources[0].evidence]).capture.paths).toEqual(['core/**', 'docs/**'])
+  rmSync(join(root, 'research/captures'), { recursive: true })
+  expect(invoke(['diff', id, b.record.sources[0].evidence]).changes).toEqual([
+    { path: 'core/a.md', kind: 'modified' },
+    { path: 'docs/new.md', kind: 'added' },
+  ])
+  const compared = invoke(['compare-refreshes', a.ref, b.ref]).comparison[0]
+  expect(compared.before).toBe(first)
+  expect(compared.after).toBe(next)
+  rmSync(join(root, '.cache/research/sources'), { recursive: true })
+  expect(invoke(['compare-refreshes', a.ref, b.ref]).comparison[0].status).toBe('unavailable')
+})
+
+it('preserves the pre-fetch baseline after capture failure and retries at the same task', () => {
+  const { repository, commit, git, invoke } = fixture()
+  const first = commit('core/a.md', 'a')
+  invoke(['refresh', '--all'])
+  symlinkSync('a.md', join(repository, 'core/link.md'))
+  git('add', '.')
+  git('commit', '-m', 'unretainable selection')
+  const failed = invoke(['refresh', '--all'], 1)
+  expect(failed.record.sources[0].before).toBe(first)
+  git('rm', 'core/link.md')
+  git('commit', '-m', 'remove link')
+  const current = commit('core/a.md', 'new content')
+  const resumed = invoke(['refresh', '--resume', failed.ref])
+  expect(resumed.record.sources[0]).toMatchObject({ before: first, revision: current })
+  expect(resumed.record.sources[0].attempts.map(item => item.status)).toEqual(['failed', 'captured'])
+  expect(resumed.record.sources[0].attempts.every(item => !item.config)).toBe(true)
+  expect(resumed.comparison[0].changes).toEqual([{ path: 'core/a.md', kind: 'modified' }])
+})
+
+it('keeps the original comparison after path repair and resets it when switching refs', () => {
+  const { root, repository, commit, git, invoke } = fixture()
+  const first = commit('core/a.md', 'before')
+  invoke(['refresh', '--all'])
+  symlinkSync('a.md', join(repository, 'core/link.md'))
+  git('add', 'core/link.md')
+  const updated = commit('core/a.md', 'after')
+  const failed = invoke(['refresh', '--all'], 1)
+  expect(failed.record.sources[0].before).toBe(first)
+
+  const registryPath = join(root, 'research/sources.yaml')
+  const registry = parse(readFileSync(registryPath, 'utf8'))
+  registry.sources.sample.paths = ['core/a.md']
+  writeFileSync(registryPath, stringify(registry))
+  const repaired = invoke(['refresh', '--resume', failed.ref, '--update-config'])
+  expect(repaired.ref).toBe(failed.ref)
+  expect(repaired.record.sources[0]).toMatchObject({ before: first, revision: updated })
+  expect(repaired.comparison[0]).toMatchObject({
+    before: first,
+    after: updated,
+    selectedChanges: [{ path: 'core/a.md', kind: 'modified' }],
+    outsideSelectionChanges: [{ path: 'core/link.md', kind: 'added' }],
+  })
+
+  git('branch', 'next')
+  registry.sources.sample.ref = 'next'
+  writeFileSync(registryPath, stringify(registry))
+  const switched = invoke(['refresh', '--resume', failed.ref, '--update-config'])
+  expect(switched.record.sources[0]).toMatchObject({ before: null, revision: updated })
+  expect(switched.comparison[0].status).toBe('no-baseline')
+})
+
+it('recovers the recorded commit and scope without the current source registry', () => {
+  const { root, commit, invoke } = fixture()
+  commit('docs/keep-out.md', 'unselected')
+  const original = commit('core/a.md', 'original')
+  const run = invoke(['refresh', '--all'])
+  const id = run.record.sources[0].evidence
+  const path = invoke(['show', id]).path
+  rmSync(join(root, path), { recursive: true })
+  rmSync(join(root, '.cache/research/sources'), { recursive: true })
   rmSync(join(root, 'research/sources.yaml'))
-  // A missing active registry never falls back to the retired root file.
-  expect(invoke(['capture', 'sample'], 1).error.kind).toBe('unavailable')
+  commit('core/a.md', 'newer')
+  const recovered = invoke(['recover', id])
+  expect(recovered.id).toBe(`sample@${original}`)
+  expect(readFileSync(join(root, path, 'core/a.md'), 'utf8')).toBe('original')
+  expect(existsSync(join(root, path, 'docs/keep-out.md'))).toBe(false)
+  writeFileSync(join(root, path, 'core/a.md'), 'local edits')
+  expect(invoke(['recover', id], 1).error.kind).toBe('corrupt')
+  expect(readFileSync(join(root, path, 'core/a.md'), 'utf8')).toBe('local edits')
+})
+
+it('previews explicit cleanup, leaves other material and reports alone, and retains the index', () => {
+  const { root, invoke, importText } = fixture()
+  const keep = importText('keep.txt', 'keep')
+  const selected = importText('selected.txt', 'selected')
+  const index = readFileSync(join(root, 'research/index.json'))
+  mkdirSync(join(root, 'research/reports'))
+  const report = join(root, 'research/reports/2026-10-07T14-00-00Z.md')
+  writeFileSync(report, `# Ordinary report\n\nSource: ${keep}\n`)
+  expect(invoke(['clean'], 1).error.kind).toBe('invalid')
+  const preview = invoke(['clean', selected])
+  expect(preview.applied).toBe(false)
+  expect(preview.candidates).toMatchObject([{ id: selected, bytes: 8 }])
+  expect(invoke(['show', selected]).local).toBe('present')
+  invoke(['clean', selected, '--apply'])
+  expect(invoke(['show', selected]).local).toBe('missing')
+  expect(invoke(['show', keep]).local).toBe('present')
+  expect(readFileSync(join(root, 'research/index.json'))).toEqual(index)
+  expect(readFileSync(report, 'utf8')).toContain(keep)
+  expect(invoke(['recover', selected], 1).error.kind).toBe('unavailable')
+})
+
+it('records independent imported observations without content-addressed deduplication', () => {
+  const { root, invoke, importText } = fixture()
+  const first = importText('source.txt', 'same bytes')
+  const second = importText('source.txt', 'same bytes')
+  expect(first).not.toBe(second)
+  expect(invoke(['show', second]).capture).toEqual({ origin: 'fixture execution', limitations: 'local simulation' })
+  expect(Object.keys(JSON.parse(readFileSync(join(root, 'research/index.json'))).captures)).toHaveLength(2)
+  const path = invoke(['show', second]).path
+  const index = JSON.parse(readFileSync(join(root, 'research/index.json')))
+  index.captures[second].path = 'research/captures/unrelated'
+  writeFileSync(join(root, 'research/index.json'), JSON.stringify(index))
+  expect(invoke(['clean', second, '--apply'], 1).error.kind).toBe('invalid')
+  expect(existsSync(join(root, path))).toBe(true)
 })

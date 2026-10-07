@@ -31,8 +31,7 @@ Writing quality is cross-cutting; it does not own lifecycle or delivery authorit
   `.agents/skills/` also hosts local projections and maintainer-only capabilities.
 - `scripts/`: deterministic maintenance tools;
   [tests/README.md](tests/README.md) selects code, package and Skill evidence.
-- [research/README.md](research/README.md): source research and evidence navigation;
-  [archive recovery](research/ARCHIVE-RECOVERY.md) locates retired evidence.
+- [research/README.md](research/README.md): source acquisition, recovery and dated research reports.
 - `.rsp/focus.d/` and `.rsp/changes/`: selected/open maintenance work;
   `.rsp/archives/`: historical outcomes, not current Spec authority.
 

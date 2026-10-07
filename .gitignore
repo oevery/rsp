@@ -6,3 +6,7 @@ tests/skills/reports/*
 !tests/skills/reports/.gitkeep
 docs/.vitepress/cache/
 docs/.vitepress/dist/
+
+# Retained payloads and local acquisition attempts; index/reports remain tracked.
+/research/captures/
+/research/refreshes/

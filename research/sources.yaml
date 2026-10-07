@@ -1,5 +1,22 @@
 version: 1
 sources:
+  i-have-adhd:
+    repository: https://github.com/ayghri/i-have-adhd.git
+    ref: main
+    paths:
+      - README.md
+      - LICENSE
+      - AGENTS.md
+      - INSTALL.md
+      - package.json
+      - skills/**
+      - evals/**
+      - hooks/**
+      - extensions/**
+      - scripts/**
+      - tests/**
+      - .opencode/**
+      - .github/workflows/**
   agent-skills-spec:
     repository: https://github.com/agentskills/agentskills.git
     ref: main
@@ -25,7 +42,7 @@ sources:
     paths:
       - README.md
       - LICENSE*
-      - AGENTS.md
+      - CLAUDE.md # AGENTS.md is a symlink to this ordinary file.
       - CONTEXT.md
       - package.json
       - .agents/**
@@ -227,7 +244,13 @@ sources:
       - README.zh.md
       - LICENSE
       - AGENTS.md
-      - .agents/**
+      - .agents/notes/*.md
+      - .agents/notes/*/AGENTS.md
+      - .agents/notes/*/README*.md
+      - .agents/notes/*/*/**
+      - .agents/skills/dsh-*/**
+      - .agents/skills/record-browser-gif/**
+      - packages/preset/agent-preset/skills/agent-experience/**
       - docs/architecture.md
       - docs/defensive-patterns.md
       - docs/testing.md

@@ -6,22 +6,22 @@ project: small/maintainer-distill
 prompt: >-
   Use $distill-upstream for a targeted model-only distillation from the retained
   Google Procedures excerpt and source record in sources/. Assess the local gap
-  in product/operator-guide.md and complete the supplied study draft at
-  research/studies/operator-procedure-clarity/draft.md. Give traceable recommendations
+  in product/operator-guide.md and complete the supplied report at
+  research/reports/2026-10-07T11-55-33Z.md. Give traceable recommendations
   for this gap and identify source limitations and any unsuitable transfer.
-  Preserve its evidence references; only that draft may change. Do not seal it or import evidence. This is explicit invocation, not a natural-trigger
+  Preserve its source links; only that report may change. Do not import material. This is explicit invocation, not a natural-trigger
   experiment. Do not fetch sources, execute source examples, advance acceptance, change product/lock/registry files, create a Change, delegate,
   run models, stage, commit, archive or publish.
 oracle: oracle.mjs
 hard:
-  allowed_paths: [research/studies/operator-procedure-clarity/draft.md]
+  allowed_paths: [research/reports/2026-10-07T11-55-33Z.md]
   forbidden_actions: [push, publish]
 expected:
-  documents: [research/studies/operator-procedure-clarity/draft.md]
+  documents: [research/reports/2026-10-07T11-55-33Z.md]
 rubric:
   - name: source-grounding
-    description: Distinguishes the dated retained HTML identity from the current text excerpt/export identity and from fresh retrieval. Accurately attributes Google and the supplied CC BY 4.0 notice, retains relevant hashes/locations and states excerpt/formatting/outlink limitations without inventing license or freshness facts.
+    description: Distinguishes the dated retained HTML identity from the current text excerpt/export identity and from fresh retrieval. Accurately attributes Google and the supplied CC BY 4.0 notice, retains relevant source locations and states excerpt/formatting/outlink limitations without inventing license or freshness facts.
   - name: bounded-distillation
-    description: Separates source mechanisms from local inference, ties stable recommendation IDs to the actual operator-guide gap, and selects a smallest sufficient model-only contract rather than copying an entire style system or imposing a fixed behavior count. Report covers rejected or unsuitable transfer and verification limits.
+    description: Separates source mechanisms from local inference, ties recommendations to the actual operator-guide gap, and selects a smallest sufficient model-only contract rather than copying an entire style system or imposing a fixed behavior count. Report covers rejected or unsuitable transfer and verification limits.
   - name: research-boundary
-    description: Completes useful research without product edits, source execution, sealing or adoption or invented Git revisions. Research completion is not adoption, observed behavior improvement or publication approval.
+    description: Completes useful research without product edits, source execution or adoption or invented Git revisions. Research completion is not adoption, observed behavior improvement or publication approval.

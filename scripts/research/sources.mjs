@@ -1,16 +1,18 @@
 import { Buffer } from 'node:buffer'
 import { execFile } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import { mkdtemp, rename, rm } from 'node:fs/promises'
 import { isAbsolute, join } from 'node:path'
 import { promisify } from 'node:util'
 import { parse } from 'yaml'
-import { ensureDirectory, exists, fail, hash, portablePath, readBytes, safePath, slug } from './storage.mjs'
+import { ensureDirectory, exists, fail, portablePath, readBytes, safePath, slug } from './storage.mjs'
 
 const execute = promisify(execFile)
 const OBJECT = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/
 // Bind each synchronized candidate atomically to its repository/ref selection.
 function candidateRef(source) {
-  return `refs/rsp/research/candidates/${hash(JSON.stringify([source.repository, source.ref]))}`
+  const key = createHash('sha256').update(JSON.stringify([source.repository, source.ref])).digest('hex')
+  return `refs/rsp/research/candidates/${key}`
 }
 
 export async function sourceRegistry(root) {
@@ -45,13 +47,13 @@ export async function sourceConfig(root, id, registry) {
   return { repository: source.repository, ref: source.ref, paths: [...new Set(paths)].sort() }
 }
 
-export async function git(cache, args, { fetch = false, binary = false, input, maxBuffer = 512 * 1024 * 1024 } = {}) {
+async function gitOnce(cache, args, { fetch = false, binary = false, input, maxBuffer = 512 * 1024 * 1024 } = {}) {
   const env = { ...process.env }
   for (const key of ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_OBJECT_DIRECTORY', 'GIT_ALTERNATE_OBJECT_DIRECTORIES', 'GIT_NAMESPACE'])
     delete env[key]
   Object.assign(env, { GIT_NO_LAZY_FETCH: fetch ? '0' : '1', GIT_NO_REPLACE_OBJECTS: '1', GIT_ALLOW_PROTOCOL: fetch ? 'https:file' : '', GIT_TERMINAL_PROMPT: '0', GIT_OPTIONAL_LOCKS: '0', GIT_LFS_SKIP_SMUDGE: '1' })
   try {
-    const pending = execute('git', ['-c', 'core.hooksPath=/dev/null', ...args], { cwd: cache, env, encoding: binary ? 'buffer' : 'utf8', maxBuffer, timeout: 60000 })
+    const pending = execute('git', ['-c', 'core.hooksPath=/dev/null', ...args], { cwd: cache, env, encoding: binary ? 'buffer' : 'utf8', maxBuffer, timeout: args[0] === 'clone' ? 300000 : fetch ? 120000 : 60000 })
     let inputError
     if (input !== undefined) {
       pending.child.stdin.on('error', (error) => {
@@ -65,14 +67,28 @@ export async function git(cache, args, { fetch = false, binary = false, input, m
     return binary ? stdout : stdout.trim()
   }
   catch (error) {
-    const message = error.stderr?.toString().trim() || error.message
+    const message = error.killed ? `Timed out during ${args[0]}` : error.stderr?.toString().trim() || error.message
     if (!fetch && /not a valid object|bad object|could not (?:read|get object)|unable to read|invalid object name|missing blob|not a valid commit|needed a single revision|could not fetch.*promisor|git cat-file .*: bad file/i.test(message))
       fail('unavailable', `Git objects are unavailable locally; explicit sync may recover them: ${message}`)
-    fail('operational-error', `git ${args[0]} failed: ${message}`)
+    fail(error.killed ? 'timeout' : fetch && /TLS|timed out|reset|resolve host|HTTP (?:429|5\d\d)|remote end hung/i.test(message) ? 'network' : 'operational-error', `git ${args[0]} failed: ${message}`)
   }
 }
 
-async function localCache(root, id, source) {
+// Fetch is repeat-safe; failed clone destinations require cleanup before retry.
+export async function git(cache, args, options = {}) {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await gitOnce(cache, args, options)
+    }
+    catch (error) {
+      if (args[0] !== 'fetch' || error.kind !== 'network' || attempt >= 2)
+        throw error
+      await new Promise(resolve => setTimeout(resolve, 250 * 2 ** attempt))
+    }
+  }
+}
+
+export async function localCache(root, id, source) {
   const cache = await safePath(root, `.cache/research/sources/${id}`)
   if (!await exists(cache))
     fail('unavailable', `No local cache for ${id}; run sync ${id} explicitly`)
@@ -91,8 +107,20 @@ export async function syncSource(root, id, source) {
     const cache = await exists(destination)
       ? await localCache(root, id, source)
       : (temporary = await mkdtemp(join(store, `.sync-${id}-`)))
-    if (temporary)
-      await git(root, ['clone', '--bare', '--no-tags', '--', source.repository, cache], { fetch: true })
+    if (temporary) {
+      for (let attempt = 0; ; attempt++) {
+        try {
+          await git(root, ['clone', '--bare', '--no-tags', '--', source.repository, cache], { fetch: true })
+          break
+        }
+        catch (error) {
+          if (error.kind !== 'network' || attempt >= 2)
+            throw error
+          await rm(cache, { recursive: true, force: true })
+          await new Promise(resolve => setTimeout(resolve, 250 * 2 ** attempt))
+        }
+      }
+    }
     const candidate = candidateRef(source)
     await git(cache, ['fetch', '--no-tags', '--no-write-fetch-head', 'origin', `+${source.ref}:${candidate}`], { fetch: true })
     const revision = await git(cache, ['rev-parse', '--verify', `${candidate}^{commit}`])
@@ -104,6 +132,15 @@ export async function syncSource(root, id, source) {
     if (temporary)
       await rm(temporary, { recursive: true, force: true })
   }
+}
+
+export async function currentRevision(root, id, source) {
+  if (!await exists(await safePath(root, `.cache/research/sources/${id}`)))
+    return null
+  const cache = await localCache(root, id, source)
+  const candidate = candidateRef(source)
+  const found = await git(cache, ['for-each-ref', '--format=%(refname)', candidate])
+  return found.split('\n').includes(candidate) ? git(cache, ['rev-parse', '--verify', `${candidate}^{commit}`]) : null
 }
 
 export function patternExpression(pattern) {
@@ -174,7 +211,7 @@ async function readBlobs(cache, selected) {
       const next = offset + file.size
       if (bytes[next] !== 10)
         fail('operational-error', 'Incomplete Git blob response')
-      files.push({ path: file.path, mode: file.mode, bytes: bytes.subarray(offset, next) })
+      files.push({ path: file.path, mode: file.mode, object: file.object, bytes: bytes.subarray(offset, next) })
       offset = next + 1
     }
     if (offset !== bytes.length)
@@ -200,13 +237,11 @@ export async function captureSource(root, id, options = {}) {
     fail('invalid', 'Capture requires UTF-8 source filenames; select a repository with portable names')
   const tree = treeText.split('\0').filter(Boolean)
   const selected = []
-  const inventory = []
   for (const entry of tree) {
     const match = /^(\d+) (\w+) ([a-f0-9]+)\t([\s\S]+)$/.exec(entry)
     if (!match)
       fail('operational-error', 'Unexpected Git tree inventory')
     const [, mode, type, object, path] = match
-    inventory.push({ path, mode, type, object })
     if (!patterns.some(pattern => pattern.test(path)))
       continue
     portablePath(path)
@@ -215,6 +250,7 @@ export async function captureSource(root, id, options = {}) {
     selected.push({ path, mode, object })
   }
   const files = await readBlobs(cache, selected)
+  await git(cache, ['update-ref', `refs/rsp/research/retained/${revision}`, revision])
   const selection = options.revision === undefined ? { ref: source.ref } : { selection: 'explicit-revision' }
-  return { origin: { kind: 'git', source: id, repository: source.repository, ...selection, revision, paths }, files, inventory }
+  return { origin: { kind: 'git', source: id, repository: source.repository, ...selection, revision, paths }, files }
 }

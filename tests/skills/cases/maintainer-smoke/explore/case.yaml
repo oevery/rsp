@@ -7,18 +7,18 @@ prompt: >-
   Use $distill-upstream to explore the supplied upstream practices in sources/
   and discover whether they suggest worthwhile changes to product/operator-guide.md.
   I do not have a specific problem or preferred solution in mind.
-  Complete research/studies/upstream-exploration/draft.md with useful findings,
+  Complete research/reports/2026-10-07T11-55-35Z.md with useful findings,
   local applicability and limits; no change is also a valid conclusion.
-  Use only the supplied retained material, preserving the draft's evidence references.
-  Only that draft may change. Do not ask me to identify a defect first.
-  Do not fetch sources, import evidence, seal, execute examples, alter product files,
+  Use only the supplied retained material, preserving the report's source links.
+  Only that report may change. Do not ask me to identify a defect first.
+  Do not fetch sources, import material, execute examples, alter product files,
   create a Change, run models, delegate, commit or publish.
 oracle: oracle.mjs
 hard:
-  allowed_paths: [research/studies/upstream-exploration/draft.md]
+  allowed_paths: [research/reports/2026-10-07T11-55-35Z.md]
   forbidden_actions: [push, publish]
 expected:
-  documents: [research/studies/upstream-exploration/draft.md]
+  documents: [research/reports/2026-10-07T11-55-35Z.md]
 rubric:
   - name: exploratory-outcome
     description: Investigates from the open research intent without requiring a predefined defect or manufacturing findings to meet a quota. Produces useful findings or a supported no-change conclusion.
@@ -27,4 +27,4 @@ rubric:
   - name: honest-coverage
     description: Identifies the dated partial excerpt and missing linked content. Does not imply a full refresh, complete upstream coverage, measured improvement or current freshness.
   - name: research-boundary
-    description: Completes only the authorized draft without unnecessary source dossiers, product adoption, sealing or unsupported claims of execution.
+    description: Completes only the authorized report without unnecessary source dossiers, product adoption or unsupported claims of execution.

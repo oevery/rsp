@@ -1,163 +1,140 @@
 #!/usr/bin/env node
-
 import { pathToFileURL } from 'node:url'
+import { capturePath, readIndex } from './research/catalog.mjs'
 import { compareEvidence } from './research/comparison.mjs'
-import { researchCoverage } from './research/coverage.mjs'
-import { checkEvidence, evidenceMetadata, importEvidence, retain, subsetEvidence } from './research/evidence.mjs'
-import { checkRefresh, compareRefreshes, readRefresh, refreshSources } from './research/refresh.mjs'
+import { evidenceMetadata, importEvidence, retain } from './research/evidence.mjs'
+import { compareRefreshes, listRefreshes, readRefresh, refreshSources } from './research/refresh.mjs'
 import { captureSource, syncSource } from './research/sources.mjs'
-import { errorDetails, fail, ID } from './research/storage.mjs'
-import { checkStudy, compareStudies, listResearch, newStudy, reviseStudy, sealStudy, showStudy } from './research/studies.mjs'
+import { errorDetails, exists, fail, safePath } from './research/storage.mjs'
+import { cleanCaptures, recoverCapture } from './research/transfer.mjs'
 
-const HELP = `Repository research: upstream discovery and focused studies with retained evidence.
-
-Usage: node scripts/research.mjs <command> [arguments] [--json]
-
-  sync <source>                       Explicitly clone/fetch research/sources.yaml repo/ref
-  refresh --all | --source <name> ... [--from refresh@SHA-256]
-                                      Acquire and retain a batch; partial results exit 1
-  capture <source> [--revision <id>]    Retain local scoped Git bytes; never fetch
-          [--path <pattern> ...]        Override registry scope (*, ** and ? supported)
-  subset <SHA-256> --path <pattern> ...
-                                      Copy matching retained files with original Git identity
-  import --file <file-or-directory> --origin <declared-origin>
-          [--license <text>] [--limitations <text>]
-                                      Retain local bytes; does not assert web freshness
-  new <study> --brief <text> [--evidence <SHA-256> ...]
-          [--refresh <refresh@SHA-256> ...] [--baseline <SHA-256> ...]
-                                      Create an editable draft; write its body before seal
-  seal <study>                        Check direct evidence/predecessors and freeze bytes
-  revise <study> --from <study@SHA-256> Create a successor draft; refuse unsealed edits
-  list                                Study metadata and evidence summaries; not-checked
-  show <study|study@SHA-256|SHA-256|refresh@SHA-256>
-                                      View draft, sealed text, evidence or refresh
-  check <study|study@SHA-256|SHA-256|refresh@SHA-256> [--history]
-                                      Verify current bytes, direct evidence/predecessors
-                                      --history audits the full study graph; no evidence-only hash
-  compare <study@SHA-256> <study@SHA-256>
-                                      Verify report identities and compare text/references
-                                      Evidence and history remain not-checked
-  diff <SHA-256> <SHA-256>             Verify and compare scoped Git evidence inventories
-  compare-refreshes <refresh@SHA-256> <refresh@SHA-256>
-                                      Offline repository discovery and scoped evidence comparison
-  coverage <study@SHA-256> <refresh@SHA-256>
-                                      Derive changes since declared research coverage
-
-Storage: research/evidence/<SHA-256>/{manifest.json,files/};
-         research/studies/<study>/{draft.md,revisions/<SHA-256>.md}
-         research/refreshes/<SHA-256>.json
-Run from the project root. Names use lowercase kebab-case. Repeat --evidence/--path.
-seal/check verify retained artifacts, not semantic approval or effectiveness.
-Default history integrity is not-checked; only check --history audits prior evidence.
-Historical reports and research/legacy/upstreams/ are not read or written. No upload occurs.
-JSON errors: {error:{kind,message}}. Kinds: invalid, unavailable, corrupt, operational-error.
-Exit 0: success; exit 1: error or failed check. --help shows this contract.
-`
+const HELP = 'Research acquisition and recovery. Reports are ordinary timestamped Markdown files.\n\n'
+  + 'sync <source>\ncapture <source> [--revision <full-commit>] [--path <glob> ...]\n'
+  + 'refresh --all | --source <name> ... [--from refresh@timestamp]\n'
+  + 'refresh --resume refresh@timestamp [--update-config]\n'
+  + 'import --file <path> --origin <provenance> [--name <slug>] [--license <text>] [--limitations <text>]\n'
+  + 'list\nshow <capture|refresh@timestamp>\ndiff <capture> <capture>\n'
+  + 'compare-refreshes <refresh> <refresh>\nrecover <capture>\n'
+  + 'clean <capture> [<capture> ...] [--apply]\n\n'
+  + 'All commands support --json. Git differences use local objects; sync/recover explicitly acquire them.\n'
+  + 'list/show report directory availability, not content verification. clean previews explicit selections.\n'
+  + 'Copy/archive material with ordinary tools. Write reports directly under research/reports/<UTC-time>.md.\n'
 
 const CONFIG = {
-  'sync': { positionals: 1, flags: [] },
-  'refresh': { positionals: 0, flags: ['all', 'source', 'from'] },
-  'capture': { positionals: 1, flags: ['revision', 'path'] },
-  'subset': { positionals: 1, flags: ['path'] },
-  'import': { positionals: 0, flags: ['file', 'origin', 'license', 'limitations'] },
-  'new': { positionals: 1, flags: ['brief', 'evidence', 'refresh', 'baseline'] },
-  'seal': { positionals: 1, flags: [] },
-  'revise': { positionals: 1, flags: ['from'] },
-  'list': { positionals: 0, flags: [] },
-  'show': { positionals: 1, flags: [] },
-  'check': { positionals: 1, flags: ['history'] },
-  'compare': { positionals: 2, flags: [] },
-  'diff': { positionals: 2, flags: [] },
-  'compare-refreshes': { positionals: 2, flags: [] },
-  'coverage': { positionals: 2, flags: [] },
+  'sync': [1, []],
+  'capture': [1, ['revision', 'path']],
+  'refresh': [0, ['all', 'source', 'from', 'resume', 'update-config']],
+  'import': [0, ['file', 'origin', 'name', 'license', 'limitations']],
+  'list': [0, []],
+  'show': [1, []],
+  'diff': [2, []],
+  'compare-refreshes': [2, []],
+  'recover': [1, []],
+  'clean': [null, ['apply']],
 }
-
 function parseArguments(args) {
   const command = args[0]
   const config = CONFIG[command]
   if (!config)
-    fail('invalid', `Unknown command: ${command ?? '(missing)'}; use --help`)
-  const options = { evidence: [], path: [], source: [], refresh: [], baseline: [] }
+    fail('invalid', 'Unknown command; use --help')
+  const options = { path: [], source: [] }
   const positionals = []
   for (let i = 1; i < args.length; i++) {
-    const argument = args[i]
-    if (argument === '--json')
+    if (args[i] === '--json')
       continue
-    if (!argument.startsWith('--')) {
-      positionals.push(argument)
+    if (!args[i].startsWith('--')) {
+      positionals.push(args[i])
       continue
     }
-    const key = argument.slice(2)
-    if (!config.flags.includes(key))
-      fail('invalid', `Unsupported option ${argument} for ${command}; use --help`)
-    if (['history', 'all'].includes(key)) {
-      if (options[key] !== undefined)
-        fail('invalid', `Option ${argument} cannot be repeated`)
+    const key = args[i].slice(2)
+    if (!config[1].includes(key))
+      fail('invalid', `Unsupported option --${key}`)
+    if (['all', 'apply', 'update-config'].includes(key)) {
+      if (options[key])
+        fail('invalid', `Repeated option --${key}`)
       options[key] = true
       continue
     }
     const value = args[++i]
     if (!value || value.startsWith('--'))
-      fail('invalid', `${argument} requires a value`)
-    if (['path', 'evidence', 'source', 'refresh', 'baseline'].includes(key))
+      fail('invalid', `Missing value for --${key}`)
+    if (Array.isArray(options[key]))
       options[key].push(value)
     else if (options[key] !== undefined)
-      fail('invalid', `Option ${argument} cannot be repeated`)
-    else
-      options[key] = value
+      fail('invalid', `Repeated option --${key}`)
+    else options[key] = value
   }
-  if (positionals.length !== config.positionals)
-    fail('invalid', `${command} expects ${config.positionals} positional argument(s); use --help`)
+  if (config[0] !== null && positionals.length !== config[0])
+    fail('invalid', 'Wrong arguments; use --help')
   return { command, options, positionals }
 }
-
-export async function runResearch(args, root = process.cwd()) {
-  const { command, options, positionals: [first, second] } = parseArguments(args)
+export async function runResearch(args, root = process.cwd(), progress) {
+  const { command, options: o, positionals } = parseArguments(args)
+  const [a, b] = positionals
   switch (command) {
-    case 'sync': return syncSource(root, first)
-    case 'refresh': return refreshSources(root, options)
-    case 'capture': return retain(root, await captureSource(root, first, { revision: options.revision, paths: options.path }))
-    case 'subset': return subsetEvidence(root, first, options.path)
-    case 'import': return importEvidence(root, options)
-    case 'new': return newStudy(root, first, options.brief, options.evidence, { refreshes: options.refresh, baseline: options.baseline })
-    case 'seal': return sealStudy(root, first)
-    case 'revise': return reviseStudy(root, first, options.from)
-    case 'list': return listResearch(root)
-    case 'show': return first.startsWith('refresh@') ? readRefresh(root, first) : ID.test(first) ? evidenceMetadata(root, first) : showStudy(root, first)
-    case 'check':
-      if ((ID.test(first) || first.startsWith('refresh@')) && options.history)
-        fail('invalid', '--history requires a study or exact study revision, not an evidence hash')
-      return first.startsWith('refresh@') ? checkRefresh(root, first) : ID.test(first) ? checkEvidence(root, first) : checkStudy(root, first, { history: options.history })
-    case 'compare': return compareStudies(root, first, second)
-    case 'diff': return compareEvidence(root, first, second)
-    case 'compare-refreshes': return compareRefreshes(root, first, second)
-    case 'coverage': return researchCoverage(root, first, second)
+    case 'sync': return syncSource(root, a)
+    case 'capture': return retain(root, await captureSource(root, a, { revision: o.revision, paths: o.path }))
+    case 'refresh': return refreshSources(root, { ...o, updateConfig: o['update-config'], progress })
+    case 'import': return importEvidence(root, o)
+    case 'list': {
+      const index = await readIndex(root)
+      const captures = []
+      for (const [id, record] of Object.entries(index.captures)) {
+        const path = capturePath(id, record)
+        captures.push({ id, path, local: await exists(await safePath(root, path)) ? 'present' : 'missing' })
+      }
+      return { captures, refreshes: await listRefreshes(root) }
+    }
+    case 'show': return a.startsWith('refresh@') ? readRefresh(root, a) : evidenceMetadata(root, a)
+    case 'diff': return compareEvidence(root, a, b)
+    case 'compare-refreshes': return compareRefreshes(root, a, b)
+    case 'recover': return recoverCapture(root, a)
+    case 'clean': return cleanCaptures(root, positionals, o.apply)
   }
 }
-
+function display(result) {
+  if (result.record) {
+    console.log(result.ref)
+    for (const item of result.record.sources)
+      console.log(`  ${item.source}: ${item.status}${item.revision ? ` ${item.revision.slice(0, 12)}` : ''}${item.error ? ` — ${item.error.message}` : ''}`)
+    for (const item of result.comparison ?? [])
+      console.log(`  ${item.source}: ${item.status === 'compared' ? `${item.changes.length} changed paths (${item.outsideSelectionChanges.length} outside selection)` : item.status}`)
+    if (result.acquisition === 'partial')
+      console.log(`Resume: node scripts/research.mjs refresh --resume ${result.ref}`)
+  }
+  else if (result.captures) {
+    for (const item of result.captures)
+      console.log(`${item.id}  ${item.local}`)
+    for (const ref of result.refreshes)
+      console.log(ref)
+  }
+  else {
+    console.log(JSON.stringify(result, null, 2))
+  }
+}
 async function main() {
   const args = process.argv.slice(2)
-  if (args.includes('--help') || args.includes('-h')) {
-    console.log(args.includes('--json') ? JSON.stringify({ help: HELP }) : HELP)
+  if (args.includes('--help')) {
+    console.log(HELP)
     return
   }
+  const json = args.includes('--json')
   try {
-    const result = await runResearch(args)
-    console.log(JSON.stringify(result, null, args.includes('--json') ? undefined : 2))
-    if (args[0] === 'check' && (result.integrity !== 'valid' || (result.history && !['valid', 'not-checked'].includes(result.history.integrity))))
-      process.exitCode = 1
-    if (args[0] === 'refresh' && result.acquisition !== 'complete')
+    const progress = json ? undefined : item => console.error(item.source ? `${item.source}: ${item.status}` : `${item.ref} (${item.total} sources)`)
+    const result = await runResearch(args, process.cwd(), progress)
+    if (json)
+      console.log(JSON.stringify(result))
+    else display(result)
+    if (result.acquisition === 'partial')
       process.exitCode = 1
   }
   catch (error) {
-    const detail = errorDetails(error)
-    if (args.includes('--json'))
-      console.log(JSON.stringify({ error: detail }))
-    else
-      console.error(`${detail.kind}: ${detail.message}`)
+    const result = { error: errorDetails(error) }
+    if (json)
+      console.log(JSON.stringify(result))
+    else console.error(`${result.error.kind}: ${result.error.message}`)
     process.exitCode = 1
   }
 }
-
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href)
   await main()

@@ -18,35 +18,29 @@ async function distill(id, update) {
         async run({ workspace }) {
           const path = join(workspace, entry.manifest.expected.documents[0])
           writeFileSync(path, update(readFileSync(path, 'utf8')))
-          return { exitCode: 0, stdout: JSON.stringify({ type: 'turn.completed' }), stderr: '', finalOutput: 'Local oracle control; research meaning requires independent review.' }
+          return { exitCode: 0, stdout: JSON.stringify({ type: 'turn.completed' }), stderr: '', finalOutput: 'Local oracle control; meaning requires independent review.' }
         },
       },
     })
   }
-  finally {
-    rmSync(directory, { recursive: true, force: true })
-  }
+  finally { rmSync(directory, { recursive: true, force: true }) }
 }
 
-it.each(['maintainer-distill-retained', 'maintainer-topic-retained'])('accepts a completed %s draft while leaving meaning to semantic review', async (id) => {
-  const run = await distill(id, draft => `${draft}Prefer a separate export procedure.\n`)
+it.each(['maintainer-distill-retained', 'maintainer-topic-retained', 'maintainer-explore-retained'])('accepts an ordinary %s report without managed metadata', async (id) => {
+  const run = await distill(id, report => `${report}\nPrefer a separate export procedure.\n`)
   expect(run.verdict.status, JSON.stringify(run.verdict)).toBe('passed')
-  expect(run.task.evidence.studies).toEqual([{ path: run.caseSpec.expected.documents[0], status: 'passed', missingEvidence: [], addedEvidence: [] }])
+  expect(run.task.evidence.reports).toEqual([{ path: run.caseSpec.expected.documents[0], status: 'passed', missingSources: [] }])
   expect(run.task.evidence.semanticQuality).toBe('requires-independent-review')
   expect(run.semantic.status).toBe('inconclusive')
 })
 
 it.each([
-  ['missing frontmatter', () => 'Prefer a separate export procedure.\n'],
-  ['empty body', draft => `${draft} \n`],
-  ['empty evidence', draft => `${draft.replace(/evidence:\n {2}- [a-f0-9]{64}/u, 'evidence: []')}Prefer a separate export procedure.\n`],
-  ['replaced evidence', draft => `${draft.replace(/[a-f0-9]{64}/u, 'a'.repeat(64))}Prefer a separate export procedure.\n`],
-  ['added nonexistent evidence', draft => `${draft.replace(/evidence:\n/u, `evidence:\n  - ${'a'.repeat(64)}\n`)}Prefer a separate export procedure.\n`],
-])('rejects completed execution with %s in the research draft', async (label, update) => {
+  ['unchanged report', report => report],
+  ['empty report', () => ''],
+  ['removed source citation', report => `${report.replace(/\]\([^)]+\)/, '](missing.md)')}\nPrefer a separate procedure.\n`],
+])('rejects completed execution with %s', async (label, update) => {
   const run = await distill('maintainer-distill-retained', update)
   expect(run.result.exitCode).toBe(0)
-  expect(run.hard.status).toBe('passed')
   expect(run.task.status).toBe('failed')
-  expect(run.task.evidence.studies[0].status).toBe('failed')
-  expect(run.verdict).toMatchObject({ status: 'failed', category: 'task' })
+  expect(run.verdict.status).toBe('failed')
 })

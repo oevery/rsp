@@ -1,13 +1,7 @@
-# Cross-source research
+# Cross-source comparison
 
-Use for an authorized comparison or synthesis. Start from the research brief and settled constraints. For exploration, group related mechanisms and discover relevant questions; for a decision, establish comparison criteria. Compare alternatives against the same criteria; record changed constraints instead of silently changing the ranking.
+Compare alternatives against the research question and current local needs. Use primary material directly, earlier dated reports or experiment observations as useful; no intermediate source dossier is required.
 
-A study may cite primary material directly, reuse sealed studies as explicitly retained evidence, or combine sources and experiment observations. A separate source dossier is not a prerequisite. Use exact evidence identities and inspected locations; a registry label or source revision alone does not supply a conclusion.
+Keep evaluation criteria consistent across alternatives. Distinguish observed behavior, source claims and inference. Explain important tradeoffs, counterexamples, gaps and conditions for transfer. Popularity is context, not proof of fit.
 
-Lead with the answer and conditions, then decisive evidence, alternatives or disagreement, inference and uncertainty. Distinguish source advice from inspected implementation and measured outcomes. Use the report depth needed by the brief; there is no mandatory second synthesis or recommendation count.
-
-When evidence or interpretation changes, create a successor study revision and explain the changed conclusion. The previous revision and its evidence remain recoverable. Comparison exposes differences; whether the new conclusion is better requires reasoning or an experiment, not a text-diff score.
-
-Historical models and source reports retain their original paths and verdicts outside the active engine. Deliberately import selected historical material when needed; describe its date, original limits and present applicability. Do not reinterpret a historical complete/accepted label as current validation or silently rewrite its prose.
-
-Keep current product behavior with its owning Specs and implementation. Research can recommend a change, but only a separately authorized RSP Change adopts it.
+Record a new investigation in a time-named report, citing the commits or other source locations actually examined. Link earlier reports when conclusions change and explain why. Ordinary Git history records edits; no successor identity or evidence-copy chain is needed. Whether a new conclusion is better requires reasoning or measured results, not a text-diff score.

@@ -10,10 +10,10 @@ For `audit`, do not mutate the target unless the user also authorizes a repair. 
 
 ## Adapt accepted research
 
-Require a report selected for adoption, recommendation ID, exact source identity, license conclusion, and reuse mode: `adapted`, `independent-reimplementation`, or `model-only`.
+Require a report selected for adoption, recommendation location, exact source identity, license conclusion, and reuse mode: `adapted`, `independent-reimplementation`, or `model-only`.
 
 - For managed Git sources, retain the revision and source path.
-- For targeted web snapshots, retain the retrieval date, URL, content hash, retained source location and retrieval gaps; a snapshot identity is not a Git revision or managed baseline acceptance.
+- For targeted web snapshots, retain the retrieval date, URL, retained source location and retrieval gaps; a snapshot identity is not a Git revision or managed baseline acceptance.
 
 Record preserved behavior, local changes, and rejected upstream behavior. Do not copy a whole upstream methodology to obtain one mechanism.
 

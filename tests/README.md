@@ -9,7 +9,7 @@ For targeted CLI verification, explicitly build first: `mise exec -- pnpm run bu
 
 `release:check` and `prepublishOnly` only aggregate existing checks. They do not create a third test system, certify Skill quality or grant semantic approval, release or publication authority. Passing code checks proves only their exercised contracts; offline Skill readiness is not model execution or independent acceptance. The package test installs a tarball into a temporary consumer with an offline cache; missing cached dependencies are unavailable verification, not a pass. Explicit `RSP_INSTALL_ALLOW_NETWORK=1` permits cache population when authorized.
 
-Raw results belong under ignored `tests/skills/reports/`; selected historical evidence is cold-stored in its private `legacy/` subtree. See [archive recovery](../research/ARCHIVE-RECOVERY.md) for blob-to-original-path mapping, fixed-history Git recovery and permanent disposal limits. Full old cache backups are not retained. Restoring files does not make old absolute paths or execution environments portable, and migration never upgrades historical verdicts.
+Raw results belong under ignored `tests/skills/reports/`. Keep useful sanitized conclusions in time-named reports under `research/reports/`. Retain execution evidence needed for active investigations; a checkout or summary alone cannot reproduce private runs. Historical verdicts do not establish current acceptance.
 
 ## Maintainer tools
 

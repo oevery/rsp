@@ -1,10 +1,9 @@
 import { Buffer } from 'node:buffer'
-import { createHash, randomUUID } from 'node:crypto'
+import { randomUUID } from 'node:crypto'
 import { constants } from 'node:fs'
-import { link, lstat, mkdir, mkdtemp, readdir, readFile, realpath, rename, rm, writeFile } from 'node:fs/promises'
-import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
+import { link, lstat, mkdir, readdir, readFile, realpath, rename, rm, writeFile } from 'node:fs/promises'
+import { dirname, isAbsolute, join, relative } from 'node:path'
 
-export const ID = /^[a-f0-9]{64}$/
 export const SLUG = /^[a-z0-9][a-z0-9-]*$/
 
 export class ResearchError extends Error {
@@ -21,10 +20,6 @@ export function fail(kind, message) {
 export function errorDetails(error) {
   const kind = error instanceof ResearchError ? error.kind : error.code === 'ENOENT' ? 'unavailable' : 'operational-error'
   return { kind, message: error.message }
-}
-
-export function hash(bytes) {
-  return createHash('sha256').update(bytes).digest('hex')
 }
 
 export function canonical(value) {
@@ -46,8 +41,8 @@ export function portablePath(value) {
 }
 
 export function slug(value) {
-  if (typeof value !== 'string' || !SLUG.test(value) || ID.test(value))
-    fail('invalid', 'Study/source names must be lowercase kebab-case, not an evidence hash')
+  if (typeof value !== 'string' || !SLUG.test(value))
+    fail('invalid', 'Names must be lowercase kebab-case')
   return value
 }
 
@@ -139,7 +134,7 @@ export async function ensureDirectory(root, path) {
   return target
 }
 
-// Hard-link publication is atomic and cannot replace an existing sealed file.
+// Atomic publication reuses matching bytes and refuses conflicting destination files.
 export async function publishFile(root, path, bytes) {
   const target = await safePath(root, path)
   await ensureDirectory(root, path.slice(0, path.lastIndexOf('/')))
@@ -154,7 +149,7 @@ export async function publishFile(root, path, bytes) {
       if (error.code !== 'EEXIST')
         throw error
       if (!(await readBytes(root, path)).equals(Buffer.from(bytes)))
-        fail('corrupt', `Occupied sealed path has different bytes: ${path}`)
+        fail('corrupt', `Destination has different bytes: ${path}`)
       return false
     }
   }
@@ -163,64 +158,20 @@ export async function publishFile(root, path, bytes) {
   }
 }
 
-export async function writeDraft(root, path, bytes, expected) {
-  if (expected === undefined)
-    return publishNewDraft(root, path, bytes)
+// Mutable local records and the tracked index use atomic replacement.
+export async function replaceJson(root, path, value) {
   const target = await safePath(root, path)
-  if (!(await readBytes(root, path)).equals(expected))
-    fail('invalid', 'Draft has unsealed edits; preserve or seal them before revising')
+  await ensureDirectory(root, path.slice(0, path.lastIndexOf('/')))
+  const bytes = jsonBytes(value)
+  if (await exists(target) && (await readBytes(root, path)).equals(bytes))
+    return false
   const temporary = join(dirname(target), `.tmp-${randomUUID()}`)
   try {
     await writeFile(temporary, bytes, { flag: 'wx' })
-    if (!(await readBytes(root, path)).equals(expected))
-      fail('invalid', 'Draft changed while revising; retry after preserving those edits')
     await rename(temporary, target)
-  }
-  finally {
-    await rm(temporary, { force: true })
-  }
-}
-
-async function publishNewDraft(root, path, bytes) {
-  if (await exists(await safePath(root, path)))
-    fail('invalid', `Draft already exists: ${path}`)
-  return publishFile(root, path, bytes)
-}
-
-// Evidence is assembled privately, then published in one directory rename.
-// A lock serializes publishers for the same content id; readers never see staging.
-export async function publishBundle(root, id, manifest, files, verifyExisting) {
-  const store = await ensureDirectory(root, 'research/evidence')
-  const destination = await safePath(root, `research/evidence/${id}`)
-  const lock = join(store, `.publish-${id}`)
-  try {
-    await mkdir(lock)
-  }
-  catch (error) {
-    if (error.code === 'EEXIST')
-      fail('operational-error', `Evidence publisher is active or interrupted: ${relative(resolve(root), lock)}; inspect before removing its lock`)
-    throw error
-  }
-  let temporary
-  try {
-    if (await exists(destination)) {
-      await verifyExisting()
-      return false
-    }
-    temporary = await mkdtemp(join(store, '.capture-'))
-    await mkdir(join(temporary, 'files'))
-    for (const file of files) {
-      const target = join(temporary, 'files', portablePath(file.path))
-      await mkdir(dirname(target), { recursive: true })
-      await writeFile(target, file.bytes, { flag: 'wx' })
-    }
-    await writeFile(join(temporary, 'manifest.json'), manifest, { flag: 'wx' })
-    await rename(temporary, destination)
     return true
   }
   finally {
-    if (temporary)
-      await rm(temporary, { force: true, recursive: true })
-    await rm(lock, { recursive: true })
+    await rm(temporary, { force: true })
   }
 }
