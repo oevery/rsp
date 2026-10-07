@@ -1,4 +1,4 @@
 interface:
   display_name: "Distill Upstream"
-  short_description: "Distill reviewed upstream evidence into research"
-  default_prompt: "Use $distill-upstream to complete the prepared upstream research report without modifying final RSP artifacts."
+  short_description: "Explore upstreams and investigate research briefs"
+  default_prompt: "Use $distill-upstream to explore upstream practices or investigate the research brief, with traceable evidence and explicit local applicability limits."

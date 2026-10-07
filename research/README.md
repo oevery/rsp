@@ -1,48 +1,62 @@
 # Research workspace
 
-Research answers a question using retained evidence. It does not authorize product changes or certify that an adopted recommendation works. This workspace is maintenance-only and excluded from the published RSP package.
+Research discovers improvement opportunities and investigates focused questions using retained evidence. Start from a brief: an intent and a scope, not necessarily a known problem. For example, explore updates across the registered upstreams and assess what could improve RSP. A useful outcome can be a new question, a supported recommendation, or a reason to keep the current design. Research does not authorize product changes or certify effectiveness.
 
-Start with the decision, relevant constraints and what evidence would be sufficient to answer it. Reuse adequate evidence; collect more only for a concrete gap or freshness question. A source release alone does not require another report.
+This workspace is maintenance-only and excluded from the published RSP package.
 
 ## Responsibilities
 
 | Owner | Responsibility | Durable record |
 | --- | --- | --- |
-| Sources | Explicitly acquire a repository revision or identify supplied material | Repository/ref or declared origin |
-| Evidence | Retain actual selected bytes, provenance, scope and hashes | Content-addressed bundle under evidence/ |
-| Studies | Answer a question, compare alternatives and revise conclusions | Draft and sealed revisions under studies/ |
-| Adoption and experiments | Decide what to implement and measure the result | Existing RSP Change and evaluation evidence |
+| Sources | Explicit acquisition and selected source inventory | sources.yaml; immutable refresh batch |
+| Evidence | Retain scoped bytes, provenance and hashes; compare snapshots | Content-addressed evidence bundle |
+| Studies | Explore, investigate, compare with RSP and revise findings | Brief, direct references and sealed report revisions |
+| Adoption and experiments | Select changes, implement and measure outcomes | Existing RSP Change and evaluation evidence |
 
-A snapshot can support several questions; a study can cite several bundles, including source text, local observations and experiment results. References carry information between owners; none silently advances another owner's state.
+The maintainer [distill-upstream Skill](../.agents/skills/distill-upstream/SKILL.md) owns research method. Its [operations reference](../.agents/skills/distill-upstream/references/managed-sources.md) owns CLI contracts and examples. scripts/research.mjs is the maintenance entrypoint.
 
-The maintainer [distill-upstream Skill](../.agents/skills/distill-upstream/SKILL.md) owns research method. Its [operations reference](../.agents/skills/distill-upstream/references/managed-sources.md) documents the executable CLI. The current tool is scripts/research.mjs; the old upstreams tool and revision-named source-report workflow are retired.
+## Refresh, then decide what to study
 
-## Evidence survives its acquisition cache
+An explicitly requested full refresh acquires all registered sources and retains their scoped content. Each immutable batch records source configuration, exact resolved revisions, full repository file inventories, retained evidence and per-source failures. Successful sources remain usable when others fail; a partial batch is not full coverage. The registry is captured at the start of acquisition. A batch records an observation window, not an atomic point in time across repositories.
 
-Each new bundle retains the scoped material it claims to contain, with origin, inventory and byte hashes. Keep the whole bundle when relocating it. Retain and verify needed material before retiring the acquisition checkout. A Git revision identifies history; it is not a backup of its bytes.
+Full refresh does not require a report per source or equal analysis depth. Examine repository-wide changes as well as selected paths so newly introduced mechanisms remain discoverable. Inventories identify files and Git objects; bytes outside the captured scope are not retained. Expand capture deliberately when needed. Initial snapshots support initial assessment without claiming a prior delta. Existing practices can be revisited even when upstream commits have not changed.
 
-Capture reads Git objects without executing the repository. Imported excerpts or experiment artifacts retain their declared origin and limitations; import does not verify the publisher, original retrieval, licensing or experiment. Retain retrieval time, URL, attribution, reuse terms and omissions when relevant. For experiments retain input/configuration identities, raw outcomes, scorer identity and original judgments. Private material belongs in an appropriate private workspace; do not commit credentials or confidential raw evidence here.
+Use three distinct reference points:
 
-Evidence checking works independently of the original checkout. Missing files, changed bytes and tool failures are different findings. Integrity establishes neither freshness, relevance, source truth nor coverage outside the declared scope.
+- An exact earlier refresh for changes since the last selected observation.
+- An exact study revision's declared coverage for changes not yet researched. Refreshing B and C must not advance a study that still covers A.
+- Retained local RSP material for applicability. Upstream freshness does not establish that the local comparison is still current.
 
-## Studies evolve independently of sources
+There is no mutable global reviewed/accepted cursor or automatic latest-is-best selection. Batch comparison, research coverage and report comparison answer different questions.
 
-Use one study identity for a continuing question. Start an editable draft from the question alone when evidence has not yet been collected; add evidence and the answer before sealing. Sealing creates an immutable content-addressed revision after mechanical evidence checks; it does not approve the conclusion. A follow-up draft identifies the exact earlier revision it supersedes. That link records lineage, not an implicit dependency on every old evidence file. Material that still supports the current conclusion belongs in its direct evidence references. Preserve cited revisions and bundles rather than editing old findings to match a new result.
+Use compare-refreshes for offline comparison of exact observation batches. Research coverage additionally matches cited batch inventories to each reviewed commit, separating changes inside the reviewed scope from changes outside it. A skipped intermediate refresh cannot hide a new mechanism outside selected paths. Missing matching inventory is reported as a gap, not no change.
 
-Lead with the answer and applicable conditions. Include decisive evidence, alternatives, reasoning, recommendations and unresolved limits as needed. Distinguish source assertions, inspected implementation, observed execution and inference. Sections, source counts and recommendation counts are not quality gates. Give recommendations stable labels when they will be cited; reuse a label's original revision when its meaning is unchanged.
+## Evidence survives acquisition
 
-Compare exact revisions to see changed text and evidence references. compare verifies only the two report records and returns recordIntegrity: valid, evidenceIntegrity: not-checked and history.integrity: not-checked. Missing evidence or predecessor records do not block comparison; invalid selected report bytes still fail. Run check separately when evidence integrity matters. Comparison is traceability, not a quality score. Reliability or speed claims require comparable task outcomes, failures and relevant cost measurements. New evidence may revise a conclusion without changing the underlying source snapshot.
+Each bundle retains selected bytes, origin, inventory and hashes. A Git revision is not a backup. Keep the whole bundle when moving it, and retain needed material before removing caches. Capture uses local Git objects without executing source code or fetching missing data. Imports retain declared provenance without authenticating the publisher or experiment.
 
-Fast navigation reports stored metadata with integrity unchecked. list returns study metadata and evidence summaries (identity, origin and file count); show returns the selected study or complete evidence manifest. Default study checks verify current direct evidence and immediate predecessor record identities. A missing historical payload does not by itself invalidate replacement evidence or prevent a new research revision. Run check --history when a complete historical record/evidence audit is needed; it reports history separately from current integrity and exits nonzero for an incomplete requested audit. Neither navigation nor checks implicitly fetch objects, scan legacy dossiers or adopt a result.
+For community discussions and web material, retain selected text, URL, retrieval time and limitations. For experiments, retain relevant inputs, raw outcomes, scorer identity and original judgments. For a local RSP comparison, retain selected source files or a base-linked patch with affected paths and dirty-state limits; an arbitrary label alone is not a reproducible local baseline. Keep private material in an appropriate private workspace.
 
-## Adoption remains with its existing owner
+Scope differences are not automatically source additions/deletions. Offline evidence comparison distinguishes added, deleted, modified, entered-scope and left-scope files. Repository or tracked-ref changes require a matching baseline. An empty Git capture is valid when the selected scope contains no files; confirm whether content disappeared or selection needs updating.
 
-A separately authorized RSP Change cites an exact study revision, recommendation label, concrete local gap and reuse mode. It owns implementation and required validation. Record experiment outcomes through existing test/evaluation owners; retain selected results as evidence for follow-up research. No research acceptance ledger or automatic promotion step is needed.
+## Studies and coverage
 
-## Historical research
+One Study supports exploration and focused investigation. Start with a brief-only draft; evidence and body may be added later. Seal only after adding a substantive report and direct evidence. No finding count, prescribed headings or mandatory recommendation is required.
 
-Existing upstreams/, models/, evaluations/ and local-skills/ records remain dated archives. Their paths and verdicts are preserved. They are not ingested by the new engine, and old complete/accepted labels establish no current acceptance. The [historical model index](models/INDEX.md) is a reading aid, not the active study registry. To reuse an old report, deliberately retain it as evidence, state its date and limits, and verify the claims needed by the new question.
+Metadata separates direct evidence, reviewed source coverage, local baseline evidence, refresh records and predecessor revisions. Merely citing evidence does not declare all of it reviewed. Coverage means the study has assessed the retained scope for its brief, not every possible question about that source. For partial reading, capture a narrower reviewed scope or leave the bundle pending and explain the limit in prose. Multiple scopes may have separate coverage entries; comparison reports each without merging them into a global verdict.
 
-[sources.yaml](sources.yaml) is the active repository/ref/path registry. Research methods and priorities are selected for each question rather than stored as source tiers or strategies. The original root registry and acceptance lock are retained byte-for-byte under [legacy/upstreams/](legacy/upstreams/); the engine never reads them and has no old-path fallback. Historical paths are mapped in the recovery guide. Old caches are retained without automatic migration or deletion.
+For a smaller scope at an already retained version, use subset on its evidence identity. It copies selected retained files with their original Git provenance and exact file scope, independent of the current cache revision. The smaller bundle survives removal of parent payloads; keep the original batch record when repository-wide discovery is needed.
 
-Use [archive recovery](ARCHIVE-RECOVERY.md) for old evidence references and private run bundles. A hash without its bytes is not recoverability; restoring files does not recreate the original execution environment or upgrade its verdict.
+Local applicability claims should cite baseline evidence as well as upstream material. Preserve stable finding labels when conclusions continue across revisions. Distinguish source claims, local observations, inference, recommendations and measured effects; popularity or byte integrity supplies none of the latter. A fresh local baseline may justify revising a study even when upstream evidence stays unchanged.
+
+Sealed revisions are immutable and content-addressed. Successors name exact predecessors; directly cite old evidence only when it still supports the current conclusion. A study's default check verifies direct evidence, cited refresh records and immediate predecessor identities. It does not require every unexamined source payload in a cited batch. Explicit historical auditing checks prior studies and their direct evidence; check a refresh separately to verify all successful captures in that batch.
+
+Fast navigation leaves integrity unchecked unless stated otherwise. Report comparison checks the selected report records, not their evidence or history, and exposes brief/body/reference changes without scoring quality. Coverage compares declared source evidence with a selected refresh and reports gaps. It never fetches, alters reports or certifies semantic coverage.
+
+## Adoption and history
+
+A separately authorized RSP Change cites the exact report, selected finding, concrete local gap and reuse mode. Implementation and existing evaluations establish effects. Selected results can become evidence for follow-up research; no duplicate adoption ledger is needed.
+
+The brief schema replaces the former question field and --question option. Old sealed bytes are not rewritten or implicitly migrated. Existing upstreams/, models/, evaluations/ and local-skills/ records remain dated archives; deliberately import selected historical material to reuse it. Old complete/accepted labels establish no current acceptance.
+
+[sources.yaml](sources.yaml) contains repository/ref/path defaults, not research priorities or acceptance. Retired registry/lock files under [legacy/upstreams/](legacy/upstreams/) are frozen and never read by the engine. See [archive recovery](ARCHIVE-RECOVERY.md) for historical paths and private evidence limits.

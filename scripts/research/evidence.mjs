@@ -1,10 +1,11 @@
 import { lstat, readdir, readFile, realpath } from 'node:fs/promises'
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
+import { patternExpression } from './sources.mjs'
 import { errorDetails, fail, hash, ID, inventory, jsonBytes, portablePath, publishBundle, readBytes, readJson } from './storage.mjs'
 
 function validateManifest(manifest) {
-  if (!manifest || manifest.version !== 1 || !manifest.origin || !['git', 'import'].includes(manifest.origin.kind) || !Array.isArray(manifest.files) || !manifest.files.length)
-    fail('corrupt', 'Evidence manifest must contain version, origin and a nonempty inventory')
+  if (!manifest || manifest.version !== 1 || !manifest.origin || !['git', 'import'].includes(manifest.origin.kind) || !Array.isArray(manifest.files) || (manifest.origin.kind === 'import' && !manifest.files.length))
+    fail('corrupt', 'Evidence manifest must contain version, origin and an inventory (nonempty for imports)')
   const seen = new Set()
   for (const file of manifest.files) {
     if (!file || typeof file !== 'object')
@@ -18,6 +19,11 @@ function validateManifest(manifest) {
     if (!/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(manifest.origin.revision) || typeof manifest.origin.repository !== 'string' || !manifest.origin.repository || !Array.isArray(manifest.origin.paths))
       fail('corrupt', 'Git evidence origin lacks repository, commit or scope')
     manifest.origin.paths.forEach(portablePath)
+    if (manifest.origin.selectedFiles !== undefined) {
+      const selected = manifest.origin.selectedFiles
+      if (!Array.isArray(selected) || selected.length !== seen.size || new Set(selected).size !== selected.length || selected.some(path => !seen.has(path)))
+        fail('corrupt', 'Derived Git scope must list exactly its retained files')
+    }
   }
   else if (typeof manifest.origin.origin !== 'string' || !manifest.origin.origin.trim()) {
     fail('corrupt', 'Imported evidence requires its declared origin')
@@ -126,6 +132,32 @@ export async function importEvidence(root, options) {
       declarations[key] = options[key]
   }
   return retain(root, { origin: { kind: 'import', origin: options.origin }, files }, declarations)
+}
+
+// A derived bundle is self-contained. Its parent is provenance, not a runtime dependency.
+export async function subsetEvidence(root, id, paths) {
+  if (!paths?.length)
+    fail('invalid', 'subset requires at least one --path pattern')
+  const patterns = paths.map(patternExpression)
+  const { manifest } = await verifyEvidence(root, id)
+  if (manifest.origin.kind !== 'git')
+    fail('invalid', 'subset requires retained Git evidence')
+  const selected = manifest.files.filter(file => patterns.some(pattern => pattern.test(file.path)))
+  if (!selected.length)
+    fail('invalid', 'No retained files match the subset; scope cannot expand beyond its parent')
+  const files = []
+  for (const file of selected) {
+    const bytes = await readBytes(root, `research/evidence/${id}/files/${file.path}`)
+    if (bytes.length !== file.size || hash(bytes) !== file.sha256)
+      fail('corrupt', `Parent evidence changed while deriving: ${id}/${file.path}`)
+    files.push({ path: file.path, mode: file.mode, bytes })
+  }
+  const declarations = { ...manifest, derivedFrom: id }
+  delete declarations.version
+  delete declarations.origin
+  delete declarations.files
+  const origin = { ...manifest.origin, selectedFiles: selected.map(file => file.path).sort() }
+  return retain(root, { origin, files }, declarations)
 }
 
 export async function checkEvidence(root, id) {

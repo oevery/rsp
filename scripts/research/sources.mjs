@@ -13,8 +13,7 @@ function candidateRef(source) {
   return `refs/rsp/research/candidates/${hash(JSON.stringify([source.repository, source.ref]))}`
 }
 
-export async function sourceConfig(root, id) {
-  slug(id)
+export async function sourceRegistry(root) {
   let registry
   try {
     registry = parse((await readBytes(root, 'research/sources.yaml')).toString('utf8'))
@@ -26,7 +25,13 @@ export async function sourceConfig(root, id) {
   }
   if (registry?.version !== 1 || !registry.sources || typeof registry.sources !== 'object')
     fail('invalid', 'research/sources.yaml must contain version: 1 and a sources mapping')
-  const source = registry.sources[id]
+  return registry.sources
+}
+
+export async function sourceConfig(root, id, registry) {
+  registry ??= await sourceRegistry(root)
+  slug(id)
+  const source = registry[id]
   if (!source)
     fail('invalid', `Unknown source ${id}; register repository, ref and paths in research/sources.yaml`)
   if (typeof source.repository !== 'string' || (!source.repository.startsWith('https://') && !isAbsolute(source.repository)))
@@ -77,8 +82,8 @@ async function localCache(root, id, source) {
   return cache
 }
 
-export async function syncSource(root, id) {
-  const source = await sourceConfig(root, id)
+export async function syncSource(root, id, source) {
+  source ??= await sourceConfig(root, id)
   const store = await ensureDirectory(root, '.cache/research/sources')
   const destination = await safePath(root, `.cache/research/sources/${id}`)
   let temporary
@@ -130,6 +135,8 @@ export function patternExpression(pattern) {
 }
 
 async function readBlobs(cache, selected) {
+  if (!selected.length)
+    return []
   const request = files => `${files.map(file => file.object).join('\n')}\n`
   const headers = (await git(cache, ['cat-file', '--batch-check'], { input: request(selected) })).split('\n')
   if (headers.length !== selected.length)
@@ -178,7 +185,7 @@ async function readBlobs(cache, selected) {
 }
 
 export async function captureSource(root, id, options = {}) {
-  const source = await sourceConfig(root, id)
+  const source = options.source ?? await sourceConfig(root, id)
   const cache = await localCache(root, id, source)
   const revision = options.revision ?? await git(cache, ['rev-parse', '--verify', `${candidateRef(source)}^{commit}`])
   if (!OBJECT.test(revision))
@@ -193,11 +200,13 @@ export async function captureSource(root, id, options = {}) {
     fail('invalid', 'Capture requires UTF-8 source filenames; select a repository with portable names')
   const tree = treeText.split('\0').filter(Boolean)
   const selected = []
+  const inventory = []
   for (const entry of tree) {
     const match = /^(\d+) (\w+) ([a-f0-9]+)\t([\s\S]+)$/.exec(entry)
     if (!match)
       fail('operational-error', 'Unexpected Git tree inventory')
     const [, mode, type, object, path] = match
+    inventory.push({ path, mode, type, object })
     if (!patterns.some(pattern => pattern.test(path)))
       continue
     portablePath(path)
@@ -205,9 +214,7 @@ export async function captureSource(root, id, options = {}) {
       fail('invalid', `Capture scope includes a symlink or submodule: ${path}; select ordinary files explicitly`)
     selected.push({ path, mode, object })
   }
-  if (selected.length === 0)
-    fail('invalid', 'Capture scope contains no files; adjust registry paths or repeat --path')
   const files = await readBlobs(cache, selected)
   const selection = options.revision === undefined ? { ref: source.ref } : { selection: 'explicit-revision' }
-  return { origin: { kind: 'git', source: id, repository: source.repository, ...selection, revision, paths }, files }
+  return { origin: { kind: 'git', source: id, repository: source.repository, ...selection, revision, paths }, files, inventory }
 }

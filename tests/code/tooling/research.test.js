@@ -57,6 +57,162 @@ function fixture() {
   return { root, repository, git, commit, invoke, draft, edit, importText, sealedPath }
 }
 
+it('keeps research coverage at A through refreshes B and C, with an independent local baseline', () => {
+  const { root, commit, invoke, edit, importText } = fixture()
+  commit('core/a.md', 'original')
+  const a = invoke(['refresh', '--all'])
+  const sourceA = a.record.sources[0].evidence
+  const localA = importText('local-a.md', 'RSP working copy observation, original behavior')
+  invoke(['new', 'exploration', '--brief', 'Explore upstream practices for RSP', '--evidence', sourceA, '--refresh', a.ref, '--baseline', localA])
+  edit('exploration', 'Inspected the selected material; no change is recommended.', metadata => ({ ...metadata, coverage: [sourceA] }))
+  const studyA = invoke(['seal', 'exploration']).ref
+  commit('core/a.md', 'changed during B')
+  const b = invoke(['refresh', '--all', '--from', a.ref])
+  commit('core/c.md', 'added during C')
+  commit('new-design/guide.md', 'outside the previously selected scope')
+  const c = invoke(['refresh', '--all', '--from', b.ref])
+  expect(c.comparison[0].changes.map(item => item.path)).toEqual(['core/c.md'])
+  expect(c.comparison[0].repositoryChanges).toEqual(['core/c.md', 'new-design/guide.md'])
+  const coverage = invoke(['coverage', studyA, c.ref])
+  expect(coverage.sources[0]).toMatchObject({ before: sourceA, status: 'changed' })
+  expect(coverage.sources[0].changes.map(item => item.path)).toEqual(['core/a.md', 'core/c.md'])
+  expect(coverage.baseline[0].evidence).toBe(localA)
+  expect(coverage.localFreshness).toBe('not-checked')
+  invoke(['revise', 'exploration', '--from', studyA])
+  const localB = importText('local-b.md', 'RSP changed; reassess applicability without source changes')
+  const sourceC = c.record.sources[0].evidence
+  edit('exploration', 'Local behavior changed. Reconsider F1; no model outcome was measured.', metadata => ({ ...metadata, evidence: [sourceC, localB], baseline: [localB], coverage: [sourceC], refreshes: [c.ref] }))
+  const studyC = invoke(['seal', 'exploration']).ref
+  expect(invoke(['compare', studyA, studyC])).toMatchObject({ baselineChanged: true, coverageChanged: true })
+  expect(invoke(['coverage', studyC, c.ref]).sources[0].status).toBe('unchanged-in-scope')
+  rmSync(join(root, '.cache'), { recursive: true })
+  rmSync(join(root, 'origin'), { recursive: true })
+  expect(invoke(['check', c.ref]).integrity).toBe('valid')
+  expect(invoke(['coverage', studyA, c.ref]).sources[0].changes).toHaveLength(2)
+  expect(invoke(['list']).refreshes).toEqual(expect.arrayContaining([a.ref, b.ref, c.ref]))
+}, 30000)
+
+it('discovers changes outside reviewed scope across skipped refreshes without acquisition', () => {
+  const { root, commit, invoke, edit } = fixture()
+  commit('core/task.md', 'stable selected content')
+  const a = invoke(['refresh', '--all'])
+  const evidenceA = a.record.sources[0].evidence
+  commit('new-mechanism/guide.md', 'important new upstream practice')
+  const b = invoke(['refresh', '--all', '--from', a.ref])
+  const c = invoke(['refresh', '--all', '--from', b.ref])
+  expect(c.comparison[0].repositoryChanges).toEqual([])
+  // Merely citing B does not move coverage from the actual reviewed revision A.
+  invoke(['new', 'discovery', '--brief', 'Explore upstream mechanisms', '--evidence', evidenceA, '--refresh', b.ref, '--refresh', a.ref])
+  edit('discovery', 'The original selected material was inspected.', metadata => ({ ...metadata, coverage: [evidenceA] }))
+  const study = invoke(['seal', 'discovery']).ref
+  rmSync(join(root, '.cache'), { recursive: true })
+  rmSync(join(root, 'origin'), { recursive: true })
+  const coverage = invoke(['coverage', study, c.ref]).sources[0]
+  expect(coverage.status).toBe('unchanged-in-scope')
+  expect(coverage.repository).toMatchObject({
+    status: 'compared',
+    before: a.ref,
+    after: c.ref,
+    reviewedScopeChanges: [],
+    outsideReviewedScopeChanges: [{ path: 'new-mechanism/guide.md', kind: 'added' }],
+  })
+  const compared = invoke(['compare-refreshes', a.ref, c.ref])
+  expect(compared.comparison[0].repositoryChanges).toEqual(['new-mechanism/guide.md'])
+  // Inventory discovery remains possible without uncited scoped payloads.
+  rmSync(join(root, 'research/evidence', evidenceA), { recursive: true })
+  const missing = invoke(['compare-refreshes', a.ref, c.ref]).comparison[0]
+  expect(missing.status).toBe('comparison-unavailable')
+  expect(missing.repositoryChanges).toEqual(['new-mechanism/guide.md'])
+}, 30000)
+
+it('derives historical reviewed subsets with exact file scope and no cache or parent dependency', () => {
+  const { root, commit, invoke, edit } = fixture()
+  commit('core/literal*.md', 'original literal file')
+  commit('core/literal-other.md', 'excluded material')
+  const a = invoke(['refresh', '--all'])
+  const parent = a.record.sources[0].evidence
+  commit('core/literal*.md', 'newer content must not leak into old research')
+  const b = invoke(['refresh', '--all'])
+  rmSync(join(root, '.cache'), { recursive: true })
+  rmSync(join(root, 'origin'), { recursive: true })
+  const subset = invoke(['subset', parent, '--path', 'core/literal?.md'])
+  expect(subset.manifest.origin).toMatchObject({ revision: a.record.sources[0].revision, ref: 'main', selectedFiles: ['core/literal*.md'] })
+  expect(subset.manifest.derivedFrom).toBe(parent)
+  expect(subset.manifest.files.map(file => file.path)).toEqual(['core/literal*.md'])
+  expect(readFileSync(join(root, subset.path, 'files/core/literal*.md'), 'utf8')).toBe('original literal file')
+  expect(invoke(['subset', parent, '--path', 'core/literal?.md']).id).toBe(subset.id)
+  expect(invoke(['subset', subset.id, '--path', 'core/literal-other.md'], 1).error.kind).toBe('invalid')
+  invoke(['new', 'narrow', '--brief', 'Study the old selected file', '--evidence', subset.id, '--refresh', a.ref])
+  edit('narrow', 'Only the original literal file was assessed.', metadata => ({ ...metadata, coverage: [subset.id] }))
+  const study = invoke(['seal', 'narrow']).ref
+  const diff = invoke(['diff', subset.id, b.record.sources[0].evidence])
+  expect(diff.changes.find(change => change.path === 'core/literal-other.md').kind).toBe('entered-scope')
+  rmSync(join(root, 'research/evidence', parent), { recursive: true })
+  expect(invoke(['check', study]).integrity).toBe('valid')
+  expect(invoke(['coverage', study, b.ref]).sources[0].repository).toMatchObject({
+    before: a.ref,
+    reviewedScopeChanges: [{ path: 'core/literal*.md', kind: 'modified' }],
+    outsideReviewedScopeChanges: [],
+  })
+}, 30000)
+
+it('retains partial refresh results without relabeling failures or losing the prior research baseline', () => {
+  const { root, commit, invoke, edit } = fixture()
+  commit('core/task.md', 'material')
+  const registryPath = join(root, 'research/sources.yaml')
+  const registry = parse(readFileSync(registryPath, 'utf8'))
+  registry.sources.broken = { ...registry.sources.sample, repository: join(root, 'missing-repository') }
+  writeFileSync(registryPath, stringify(registry))
+  const batch = invoke(['refresh', '--all'], 1)
+  expect(batch.acquisition).toBe('partial')
+  expect(batch.record.sources.map(entry => entry.status)).toEqual(['failed', 'captured'])
+  const evidence = batch.record.sources[1].evidence
+  expect(invoke(['check', batch.ref]).integrity).toBe('valid')
+  invoke(['new', 'partial', '--brief', 'Explore available sources, disclose gaps', '--evidence', evidence, '--refresh', batch.ref])
+  edit('partial', 'The broken source was unavailable; inspected sample only.', metadata => ({ ...metadata, coverage: [evidence] }))
+  const study = invoke(['seal', 'partial']).ref
+  expect(invoke(['coverage', study, batch.ref]).sources.map(entry => entry.status)).toEqual(['acquisition-failed', 'unchanged-in-scope'])
+  const unrelated = invoke(['refresh', '--source', 'broken'], 1)
+  expect(invoke(['coverage', study, unrelated.ref]).notSelected).toEqual(['sample'])
+  expect(invoke(['refresh', '--all', '--source', 'sample'], 1).error.kind).toBe('invalid')
+  expect(invoke(['new', 'old-option', '--question', 'Legacy'], 1).error.kind).toBe('invalid')
+  rmSync(join(root, 'research/evidence', evidence), { recursive: true })
+  const retry = invoke(['refresh', '--source', 'broken', '--from', batch.ref], 1)
+  expect(invoke(['show', retry.ref]).record.sources[0].status).toBe('failed')
+  expect(invoke(['check', batch.ref], 1).integrity).toBe('unavailable')
+}, 30000)
+
+it('distinguishes changed selection, actual deletions and empty Git scopes offline', () => {
+  const { root, commit, git, invoke } = fixture()
+  commit('core/a.md', 'a')
+  commit('core/b.md', 'b')
+  commit('docs/c.md', 'c')
+  invoke(['sync', 'sample'])
+  const full = invoke(['capture', 'sample'])
+  const narrow = invoke(['capture', 'sample', '--path', 'core/a.md', '--path', 'docs/**'])
+  const scope = invoke(['diff', full.id, narrow.id])
+  expect(scope).toMatchObject({ scopeChanged: true, revisionChanged: false })
+  expect(scope.changes.map(({ path, kind }) => ({ path, kind }))).toEqual([
+    { path: 'core/b.md', kind: 'left-scope' },
+    { path: 'docs/c.md', kind: 'entered-scope' },
+  ])
+  git('rm', '-r', 'core')
+  git('commit', '-m', 'remove selected content')
+  invoke(['sync', 'sample'])
+  const empty = invoke(['capture', 'sample'])
+  expect(empty.manifest.files).toEqual([])
+  expect(invoke(['check', empty.id]).integrity).toBe('valid')
+  expect(invoke(['diff', full.id, empty.id]).changes.map(item => item.kind)).toEqual(['deleted', 'deleted'])
+  const registryPath = join(root, 'research/sources.yaml')
+  const registry = parse(readFileSync(registryPath, 'utf8'))
+  git('branch', 'next')
+  registry.sources.sample.ref = 'next'
+  writeFileSync(registryPath, stringify(registry))
+  invoke(['sync', 'sample'])
+  const otherRef = invoke(['capture', 'sample'])
+  expect(invoke(['diff', empty.id, otherRef.id])).toMatchObject({ comparable: false, changes: [] })
+}, 30000)
+
 it('supports independent questions and scopes on one snapshot, retaining bytes after deleting Git', () => {
   const { root, commit, invoke, edit } = fixture()
   commit('core/task.md', 'source procedure\n')
@@ -70,7 +226,7 @@ it('supports independent questions and scopes on one snapshot, retaining bytes a
   expect(first.manifest.files.map(file => file.path)).toEqual(['core/task.md'])
   expect(invoke(['capture', 'sample']).created).toBe(false)
   for (const study of ['procedures', 'navigation']) {
-    invoke(['new', study, '--question', `How does ${study} work?`, '--evidence', first.id, '--evidence', second.id])
+    invoke(['new', study, '--brief', `How does ${study} work?`, '--evidence', first.id, '--evidence', second.id])
     expect(invoke(['show', study])).toMatchObject({ integrity: 'not-checked', body: '\n' })
     expect(invoke(['seal', study], 1).error.kind).toBe('invalid')
     edit(study, `Observed ${study}; a simulation remains unrun.`)
@@ -244,7 +400,7 @@ it('compares traceable successors and refuses unsealed edits or unlinked correct
   const { root, invoke, edit, importText, sealedPath } = fixture()
   const first = importText('baseline.txt', 'baseline observation')
   const second = importText('experiment.txt', 'experiment observation')
-  invoke(['new', 'approach', '--question', 'Which approach?', '--evidence', first])
+  invoke(['new', 'approach', '--brief', 'Which approach?', '--evidence', first])
   edit('approach', 'First conclusion')
   const baseline = invoke(['seal', 'approach']).ref
   edit('approach', 'Unsealed observation')
@@ -253,12 +409,12 @@ it('compares traceable successors and refuses unsealed edits or unlinked correct
   expect(invoke(['show', 'approach']).body).toContain('Unsealed observation')
   edit('approach', 'First conclusion')
   invoke(['revise', 'approach', '--from', baseline])
-  edit('approach', 'Follow-up conclusion', metadata => ({ ...metadata, question: 'Which approach after experiment?', evidence: [second] }))
+  edit('approach', 'Follow-up conclusion', metadata => ({ ...metadata, brief: 'Which approach after experiment?', evidence: [second] }))
   const followup = invoke(['seal', 'approach']).ref
   const compared = invoke(['compare', baseline, followup])
   expect(compared).toMatchObject({ recordIntegrity: 'valid', evidenceIntegrity: 'not-checked', history: { integrity: 'not-checked' } })
   expect(compared).not.toHaveProperty('integrity')
-  expect(compared).toMatchObject({ before: baseline, after: followup, questionChanged: true, bodyChanged: true, addedEvidence: [second], removedEvidence: [first], semanticApproval: false })
+  expect(compared).toMatchObject({ before: baseline, after: followup, briefChanged: true, bodyChanged: true, addedEvidence: [second], removedEvidence: [first], semanticApproval: false })
   expect(compared.beforeText).toContain('First conclusion')
   expect(compared.afterText).toContain('Follow-up conclusion')
   expect(invoke(['check', followup]).checkedRevisions).toEqual([followup, baseline])
@@ -285,7 +441,7 @@ it('compares traceable successors and refuses unsealed edits or unlinked correct
 it('rejects missing/corrupt payloads and occupied identities without publishing revisions', () => {
   const { root, invoke, edit, importText } = fixture()
   const id = importText('data.bin', Buffer.from([0, 255, 128, 1]))
-  invoke(['new', 'integrity', '--question', 'Is evidence intact?', '--evidence', id])
+  invoke(['new', 'integrity', '--brief', 'Is evidence intact?', '--evidence', id])
   edit('integrity', 'Material observed')
   const payload = join(root, 'research/evidence', id, 'files/data.bin')
   const original = readFileSync(payload)
@@ -324,7 +480,7 @@ it('imports directory bytes with provenance and refuses symlinks and unsafe name
   expect(invoke(['import', '--file', 'link/notes.md', '--origin', 'bad'], 1).error.kind).toBe('invalid')
   symlinkSync(join(root, 'research/legacy/upstreams/upstreams.lock'), join(root, 'bundle/alias'))
   expect(invoke(['import', '--file', 'bundle', '--origin', 'bad'], 1).error.kind).toBe('invalid')
-  expect(invoke(['new', '../escape', '--question', 'bad', '--evidence', imported.id], 1).error.kind).toBe('invalid')
+  expect(invoke(['new', '../escape', '--brief', 'bad', '--evidence', imported.id], 1).error.kind).toBe('invalid')
   const evidence = join(root, 'research/evidence', imported.id, 'files/notes.md')
   rmSync(evidence)
   symlinkSync(join(root, 'research/legacy/upstreams/upstreams.lock'), evidence)
@@ -360,7 +516,7 @@ it('never lazy-fetches promised objects for capture or reads', () => {
   const missing = () => spawnSync('git', ['cat-file', '-e', blob], { cwd: cache, env: { ...process.env, GIT_NO_LAZY_FETCH: '1' } }).status !== 0
   expect(missing()).toBe(true)
   const id = importText('offline.txt', 'retained observation')
-  invoke(['new', 'offline', '--question', 'Offline?', '--evidence', id])
+  invoke(['new', 'offline', '--brief', 'Offline?', '--evidence', id])
   edit('offline', 'Observed retained evidence')
   const ref = invoke(['seal', 'offline']).ref
   const objects = join(cache, 'objects')
@@ -444,9 +600,9 @@ it('imports normal external temporary inputs through parent aliases but rejects 
 
 it('starts from a question and permits incomplete drafts to be viewed until ready to seal', () => {
   const { invoke, edit, importText } = fixture()
-  expect(invoke(['new', 'question-first', '--question', 'What should be investigated?'])).toMatchObject({ sealed: false, integrity: 'not-checked' })
+  expect(invoke(['new', 'question-first', '--brief', 'What should be investigated?'])).toMatchObject({ sealed: false, integrity: 'not-checked' })
   expect(invoke(['show', 'question-first'])).toMatchObject({ metadata: { evidence: [], supersedes: [] }, body: '\n', integrity: 'not-checked' })
-  expect(invoke(['list']).studies).toEqual([expect.objectContaining({ study: 'question-first', question: 'What should be investigated?', draft: true })])
+  expect(invoke(['list']).studies).toEqual([expect.objectContaining({ study: 'question-first', brief: 'What should be investigated?', draft: true })])
   expect(invoke(['seal', 'question-first'], 1).error.kind).toBe('invalid')
   expect(invoke(['check', 'question-first'], 1)).toMatchObject({ integrity: 'invalid', history: { integrity: 'not-checked' } })
   edit('question-first', 'Conclusion without material')
@@ -464,7 +620,7 @@ it('keeps replaced historical evidence independent from current integrity and au
   const old = importText('old.txt', 'old material')
   const oldOther = importText('old-other.txt', 'other old material')
   const replacement = importText('replacement.txt', 'replacement material')
-  invoke(['new', 'replacement', '--question', 'Which evidence?', '--evidence', old, '--evidence', oldOther])
+  invoke(['new', 'replacement', '--brief', 'Which evidence?', '--evidence', old, '--evidence', oldOther])
   edit('replacement', 'Baseline conclusion')
   const baseline = invoke(['seal', 'replacement']).ref
   const oldPayload = join(root, 'research/evidence', old, 'files/old.txt')
@@ -523,10 +679,10 @@ it('keeps replaced historical evidence independent from current integrity and au
 it('rejects malformed immediate predecessor records even when their content hash matches', () => {
   const { invoke, edit, importText, sealedPath, draft } = fixture()
   const id = importText('record.txt', 'record material')
-  invoke(['new', 'record-schema', '--question', 'Which conclusion?', '--evidence', id])
+  invoke(['new', 'record-schema', '--brief', 'Which conclusion?', '--evidence', id])
   edit('record-schema', 'Initial conclusion')
   const valid = invoke(['seal', 'record-schema']).ref
-  const malformed = '---\nquestion: Broken record\nevidence: []\nsupersedes: []\n---\nRecorded body\n'
+  const malformed = '---\nbrief: Broken record\nevidence: []\nsupersedes: []\n---\nRecorded body\n'
   const malformedRef = `record-schema@${createHash('sha256').update(malformed).digest('hex')}`
   writeFileSync(sealedPath(malformedRef), malformed)
   const before = readFileSync(draft('record-schema'))

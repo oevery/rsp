@@ -1,10 +1,10 @@
-# Question-led comparison
+# Cross-source research
 
-Use for an authorized comparison or synthesis. Fix the question, settled constraints, decision criteria and evidence gap before collecting sources. Compare alternatives against the same criteria; record changed constraints instead of silently changing the ranking.
+Use for an authorized comparison or synthesis. Start from the research brief and settled constraints. For exploration, group related mechanisms and discover relevant questions; for a decision, establish comparison criteria. Compare alternatives against the same criteria; record changed constraints instead of silently changing the ranking.
 
 A study may cite primary material directly, reuse sealed studies as explicitly retained evidence, or combine sources and experiment observations. A separate source dossier is not a prerequisite. Use exact evidence identities and inspected locations; a registry label or source revision alone does not supply a conclusion.
 
-Lead with the answer and conditions, then decisive evidence, alternatives or disagreement, inference and uncertainty. Distinguish source advice from inspected implementation and measured outcomes. Prefer the smallest report that answers the question; there is no mandatory second synthesis or recommendation count.
+Lead with the answer and conditions, then decisive evidence, alternatives or disagreement, inference and uncertainty. Distinguish source advice from inspected implementation and measured outcomes. Use the report depth needed by the brief; there is no mandatory second synthesis or recommendation count.
 
 When evidence or interpretation changes, create a successor study revision and explain the changed conclusion. The previous revision and its evidence remain recoverable. Comparison exposes differences; whether the new conclusion is better requires reasoning or an experiment, not a text-diff score.
 

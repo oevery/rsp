@@ -1,6 +1,7 @@
 import { Buffer } from 'node:buffer'
 import { parse, stringify } from 'yaml'
 import { evidenceMetadata, verifyEvidence } from './evidence.mjs'
+import { listRefreshes, readRefresh } from './refresh.mjs'
 import { entries, errorDetails, exists, fail, hash, ID, publishFile, readBytes, safePath, slug, writeDraft } from './storage.mjs'
 
 export function parseRef(value) {
@@ -27,7 +28,7 @@ export function parseStudy(bytes, { requireBody = true, requireEvidence = true }
     fail('corrupt', 'Study must contain valid UTF-8')
   const matched = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)([\s\S]*)$/.exec(text)
   if (!matched)
-    fail('invalid', 'Study needs YAML frontmatter containing question and evidence')
+    fail('invalid', 'Study needs YAML frontmatter containing brief and evidence')
   let metadata
   try {
     metadata = parse(matched[1])
@@ -35,11 +36,24 @@ export function parseStudy(bytes, { requireBody = true, requireEvidence = true }
   catch (error) {
     fail('invalid', `Invalid study frontmatter: ${error.message}`)
   }
-  if (!metadata || typeof metadata.question !== 'string' || !metadata.question.trim())
-    fail('invalid', 'Study question must be nonempty')
+  if (!metadata || typeof metadata.brief !== 'string' || !metadata.brief.trim())
+    fail('invalid', 'Study brief must be nonempty')
   if (!Array.isArray(metadata.evidence) || (requireEvidence && !metadata.evidence.length) || metadata.evidence.some(id => typeof id !== 'string' || !ID.test(id)) || new Set(metadata.evidence).size !== metadata.evidence.length)
     fail('invalid', `Study evidence must be a ${requireEvidence ? 'nonempty ' : ''}unique array of SHA-256 identities`)
   const supersedes = metadata.supersedes ?? []
+  for (const field of ['coverage', 'baseline', 'refreshes']) {
+    const values = metadata[field] ?? []
+    if (!Array.isArray(values) || values.some(value => typeof value !== 'string') || new Set(values).size !== values.length)
+      fail('invalid', `Study ${field} must be a unique array of references`)
+    if (field === 'refreshes') {
+      if (values.some(value => !value.startsWith('refresh@') || !ID.test(value.slice(8))))
+        fail('invalid', 'Study refreshes must contain refresh@SHA-256 references')
+    }
+    else if (values.some(value => !metadata.evidence.includes(value))) {
+      fail('invalid', `Study ${field} references must also be direct evidence`)
+    }
+    metadata[field] = values
+  }
   if (!Array.isArray(supersedes) || new Set(supersedes).size !== supersedes.length)
     fail('invalid', 'Study supersedes must be an array of unique exact references')
   supersedes.forEach(parseRef)
@@ -52,16 +66,17 @@ function renderStudy(metadata, body) {
   return Buffer.from(`---\n${stringify(metadata)}---\n${body}`)
 }
 
-export async function newStudy(root, study, question, evidence = []) {
+export async function newStudy(root, study, brief, evidence = [], { refreshes = [], baseline = [] } = {}) {
   slug(study)
-  if (typeof question !== 'string' || !question.trim())
-    fail('invalid', 'new requires --question')
-  const metadata = { question, evidence: [...new Set(evidence)], supersedes: [] }
+  if (study === 'refresh')
+    fail('invalid', 'The study name refresh is reserved for refresh references')
+  if (typeof brief !== 'string' || !brief.trim())
+    fail('invalid', 'new requires --brief')
+  const metadata = { brief, evidence: [...new Set([...evidence, ...baseline])], coverage: [], baseline: [...new Set(baseline)], refreshes: [...new Set(refreshes)], supersedes: [] }
   const bytes = renderStudy(metadata, '\n')
   // Validate metadata without pretending that the empty body is completed research.
   parseStudy(bytes, { requireBody: false, requireEvidence: false })
-  for (const id of metadata.evidence)
-    await verifyEvidence(root, id)
+  await validateDirect(root, { metadata }, verificationContext())
   if ((await entries(root, `research/studies/${study}/revisions`)).length)
     fail('invalid', 'Study already has revisions; use revise --from an exact reference')
   await writeDraft(root, draftPath(study), bytes)
@@ -100,6 +115,13 @@ async function validateDirect(root, parsed, context) {
       context.evidence.add(id)
     }
   }
+  for (const id of parsed.metadata.coverage) {
+    const { manifest } = await evidenceMetadata(root, id)
+    if (manifest.origin.kind !== 'git' || !manifest.origin.source || !manifest.origin.ref)
+      fail('invalid', 'Coverage requires tracked Git snapshots with source identities')
+  }
+  for (const ref of parsed.metadata.refreshes)
+    await readRefresh(root, ref)
   for (const ref of parsed.metadata.supersedes)
     await validatedRecord(root, ref, context)
   return parsed
@@ -150,6 +172,14 @@ async function auditHistory(root, target) {
         }
         catch (error) {
           diagnose(id, error)
+        }
+      }
+      for (const refresh of record.metadata.refreshes) {
+        try {
+          await readRefresh(root, refresh)
+        }
+        catch (error) {
+          diagnose(refresh, error)
         }
       }
       for (const prior of record.metadata.supersedes)
@@ -213,16 +243,16 @@ export async function listResearch(root) {
       continue
     const revisions = (await entries(root, `research/studies/${study}/revisions`)).filter(name => ID.test(name.replace(/\.md$/, '')) && name.endsWith('.md')).map(name => `${study}@${name.slice(0, -3)}`)
     const draft = await exists(await safePath(root, draftPath(study)))
-    let question = null
+    let brief = null
     let diagnostic
     try {
       if (draft)
-        question = (await showStudy(root, study)).metadata.question
+        brief = (await showStudy(root, study)).metadata.brief
     }
     catch (error) {
       diagnostic = errorDetails(error)
     }
-    studies.push({ study, question, draft, revisions, integrity: 'not-checked', ...(diagnostic ? { diagnostic } : {}) })
+    studies.push({ study, brief, draft, revisions, integrity: 'not-checked', ...(diagnostic ? { diagnostic } : {}) })
   }
   const evidence = []
   for (const id of await entries(root, 'research/evidence')) {
@@ -236,7 +266,7 @@ export async function listResearch(root) {
       evidence.push({ id, integrity: 'not-checked', diagnostic: errorDetails(error) })
     }
   }
-  return { studies, evidence, integrity: 'not-checked' }
+  return { studies, evidence, refreshes: await listRefreshes(root), integrity: 'not-checked' }
 }
 
 export async function checkStudy(root, target, { history = false } = {}) {
@@ -268,11 +298,18 @@ export async function compareStudies(root, before, after) {
     evidenceIntegrity: 'not-checked',
     history: uncheckedHistory(),
     semanticApproval: false,
-    questionChanged: left.metadata.question !== right.metadata.question,
+    briefChanged: left.metadata.brief !== right.metadata.brief,
     bodyChanged: left.body !== right.body,
+    coverageChanged: JSON.stringify(left.metadata.coverage) !== JSON.stringify(right.metadata.coverage),
+    baselineChanged: JSON.stringify(left.metadata.baseline) !== JSON.stringify(right.metadata.baseline),
+    refreshesChanged: JSON.stringify(left.metadata.refreshes) !== JSON.stringify(right.metadata.refreshes),
     addedEvidence: right.metadata.evidence.filter(id => !left.metadata.evidence.includes(id)),
     removedEvidence: left.metadata.evidence.filter(id => !right.metadata.evidence.includes(id)),
     beforeText: left.text,
     afterText: right.text,
   }
+}
+
+export async function studyRecord(root, ref) {
+  return validatedRecord(root, ref, verificationContext())
 }

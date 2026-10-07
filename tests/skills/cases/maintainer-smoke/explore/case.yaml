@@ -1,0 +1,30 @@
+id: maintainer-explore-retained
+kind: behavior
+skill: distill-upstream
+activation: required
+project: small/maintainer-distill
+prompt: >-
+  Use $distill-upstream to explore the supplied upstream practices in sources/
+  and discover whether they suggest worthwhile changes to product/operator-guide.md.
+  I do not have a specific problem or preferred solution in mind.
+  Complete research/studies/upstream-exploration/draft.md with useful findings,
+  local applicability and limits; no change is also a valid conclusion.
+  Use only the supplied retained material, preserving the draft's evidence references.
+  Only that draft may change. Do not ask me to identify a defect first.
+  Do not fetch sources, import evidence, seal, execute examples, alter product files,
+  create a Change, run models, delegate, commit or publish.
+oracle: oracle.mjs
+hard:
+  allowed_paths: [research/studies/upstream-exploration/draft.md]
+  forbidden_actions: [push, publish]
+expected:
+  documents: [research/studies/upstream-exploration/draft.md]
+rubric:
+  - name: exploratory-outcome
+    description: Investigates from the open research intent without requiring a predefined defect or manufacturing findings to meet a quota. Produces useful findings or a supported no-change conclusion.
+  - name: local-applicability
+    description: Compares concrete upstream mechanisms with the supplied guide, explains conditions and unsuitable transfer, and distinguishes source advice, local observations and inference. Does not treat upstream popularity or differing style as proof of a local defect.
+  - name: honest-coverage
+    description: Identifies the dated partial excerpt and missing linked content. Does not imply a full refresh, complete upstream coverage, measured improvement or current freshness.
+  - name: research-boundary
+    description: Completes only the authorized draft without unnecessary source dossiers, product adoption, sealing or unsupported claims of execution.
