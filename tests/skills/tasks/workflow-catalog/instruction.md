@@ -1,0 +1,3 @@
+The catalog-refresh work was interrupted before the storefront was ready. Resume the existing Change and finish the approved update. Determine what is already complete from the repository and working state, complete the remaining work, and leave a truthful record of verification and any remaining acceptance limits.
+
+Work in /app using the available RSP Skills. The existing Change owns scope, business requirements and required checks. Preserve the prepared source bytes, Git index and staged/unstaged/untracked user notes. Only site/catalog.json and the existing Change's Tasks/Verify sections may change; temporary probes may use tmp/ or .cache/. No new Change, commit, archive or publication is authorized.

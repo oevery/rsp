@@ -52,8 +52,8 @@
     "typecheck": "tsc --noEmit",
     "test": "pnpm run build && pnpm run test:code",
     "test:code": "vitest run --no-file-parallelism",
-    "test:skills": "node tests/skills/runner/cli.mjs",
-    "release:check": "pnpm run build && pnpm run typecheck && pnpm run lint && pnpm run test:code && pnpm run test:skills -- check --suite full && pnpm run skills:security-check && pnpm run docs:check"
+    "test:skills": "uv run --frozen --project tests/skills python tests/skills/evaluate.py",
+    "release:check": "pnpm run build && pnpm run typecheck && pnpm run lint && pnpm run test:code && pnpm run test:skills check && pnpm run skills:security-check && pnpm run docs:check"
   },
   "dependencies": {
     "citty": "^0.2.2",

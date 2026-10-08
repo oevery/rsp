@@ -1,0 +1,5 @@
+{
+  "head": "e25a1d730283f25f04d3cb46dc441655cb91b8fc",
+  "index": "100644 20e7d9d88db5a1ac0be41b72d6a99f8a13526da5 0\t.rsp/config.yaml\n100644 cc80cd50113fc57510f6deb5874ba26292b9e0ce 0\t.rsp/specs/design.md\n100644 b63182c781e241006387effcb3b4e0fc4b2554a0 0\tAGENTS.md\n100644 0bd111a8e8883f66da65b394b62353e695853e51 0\tsrc/cache.mjs\n100644 c64b0dc23abd007f78998bb6a478ecc23cef9fee 0\tstaged-note.txt\n100644 41df567f0d556a077a7b771a865f52bb54aafb29 0\tunstaged-note.txt\n100644 51d916c23bd3194635970a12868e583d5b6a3402 0\tuser-notes.txt",
+  "diff": "diff --git a/staged-note.txt b/staged-note.txt\nindex de5e6af..c64b0dc 100644\n--- a/staged-note.txt\n+++ b/staged-note.txt\n@@ -1 +1 @@\n-Original staged note.\n+User staged note: preserve these bytes.\ndiff --git a/unstaged-note.txt b/unstaged-note.txt\nindex 41df567..d8145bd 100644\n--- a/unstaged-note.txt\n+++ b/unstaged-note.txt\n@@ -1 +1 @@\n-Original unstaged note.\n+User unstaged note: preserve these bytes."
+}

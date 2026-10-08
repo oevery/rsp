@@ -1,0 +1,5 @@
+{
+  "head": "dd62d0940b9937bc1f8bdaa6f47776aafcea7e0a",
+  "index": "100644 b63182c781e241006387effcb3b4e0fc4b2554a0 0\tAGENTS.md\n100644 612b850421b0f56a1ff971d925e91c88837bc3c0 0\tsrc/discount.mjs\n100644 c64b0dc23abd007f78998bb6a478ecc23cef9fee 0\tstaged-note.txt\n100644 41df567f0d556a077a7b771a865f52bb54aafb29 0\tunstaged-note.txt\n100644 98935890a1bca9b4fa56abd3c245e54d93a93988 0\tuser-notes.txt",
+  "diff": "diff --git a/src/discount.mjs b/src/discount.mjs\nindex 72f9e07..ed565b2 100644\n--- a/src/discount.mjs\n+++ b/src/discount.mjs\n@@ -1 +1,2 @@\n+/** Returns the final payable price. */\n export function discount(price, rate) { return price * (1 - rate) }\ndiff --git a/staged-note.txt b/staged-note.txt\nindex de5e6af..c64b0dc 100644\n--- a/staged-note.txt\n+++ b/staged-note.txt\n@@ -1 +1 @@\n-Original staged note.\n+User staged note: preserve these bytes.\ndiff --git a/unstaged-note.txt b/unstaged-note.txt\nindex 41df567..d8145bd 100644\n--- a/unstaged-note.txt\n+++ b/unstaged-note.txt\n@@ -1 +1 @@\n-Original unstaged note.\n+User unstaged note: preserve these bytes."
+}

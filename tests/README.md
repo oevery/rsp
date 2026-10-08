@@ -1,21 +1,32 @@
 # Tests
 
-Choose the evidence needed for the changed boundary from these two verification lanes. Run commands from the repository root after installing the locked dependencies; shared build and provider resources must be coordinated before execution.
+Choose evidence for the changed boundary. Run commands from the repository root with locked dependencies installed; coordinate shared build and Docker resources before execution.
 
-- `mise exec -- pnpm test`: builds first, then runs the complete code suite for observable CLI/domain/TUI behavior, package installation and small runner reliability regressions under `tests/code/`.
-- `mise exec -- node tests/skills/runner/cli.mjs check --suite full`: offline case and project readiness. This does not call models. See [Skill validation](skills/README.md) for separately authorized execution and review.
+Install mise first, inspect the project configuration, then prepare the selected maintainer tools and dependencies:
 
-For targeted CLI verification, explicitly build first: `mise exec -- pnpm run build && mise exec -- pnpm run test:code -- tests/code/integration/cli-lifecycle.test.ts`. The `test:code` entry does not build or automatically refresh CLI artifacts. `dev` remains a development build watcher, not a test runner. Skill prose and fixed reading patterns are not code-test assertions. Parsed metadata and resource closure remain package contracts.
+```sh
+mise trust
+mise install
+mise exec -- pnpm install --frozen-lockfile
+mise exec -- uv sync --project tests/skills --frozen
+```
 
-`release:check` and `prepublishOnly` only aggregate existing checks. They do not create a third test system, certify Skill quality or grant semantic approval, release or publication authority. Passing code checks proves only their exercised contracts; offline Skill readiness is not model execution or independent acceptance. The package test installs a tarball into a temporary consumer with an offline cache; missing cached dependencies are unavailable verification, not a pass. Explicit `RSP_INSTALL_ALLOW_NETWORK=1` permits cache population when authorized.
+Root mise.toml selects Node and pnpm major lines and Python and uv minor lines. Patch updates stay within these ranges; use mise upgrade deliberately when updating installed tools. uv uses the selected mise Python rather than downloading another interpreter. Package locks own library dependencies; package.json engines remains the consumer compatibility range. Docker and Compose are host prerequisites for container evaluation, not prerequisites for code tests. Change runtime ranges in mise.toml and rebuild the evaluation image through its helper; agent/judge versions remain with their evaluation configuration.
 
-Raw results belong under ignored `tests/skills/reports/`. Keep useful sanitized conclusions in time-named reports under `research/reports/`. Retain execution evidence needed for active investigations; a checkout or summary alone cannot reproduce private runs. Historical verdicts do not establish current acceptance.
+- `mise exec -- pnpm test` builds and runs observable CLI/domain/TUI, package installation and maintenance-tool checks under `tests/code/`.
+- `mise exec -- uv sync --project tests/skills --frozen` installs Harbor 0.24.0 and harbor-rewardkit 0.2.2. Then `mise exec -- uv run --project tests/skills python tests/skills/evaluate.py check` validates native task schemas offline, without containers or models. See [Skill evaluation](skills/README.md) for task selection, calibration and separately authorized execution.
+
+For targeted CLI checks, build first: `mise exec -- pnpm run build && mise exec -- pnpm run test:code -- tests/code/integration/cli-lifecycle.test.ts`. The `test:code` entry does not refresh CLI artifacts. Skill prose and reading patterns are not code-test assertions; parsed metadata and resource closure remain package contracts.
+
+`release:check` and `prepublishOnly` aggregate local checks. Their `pnpm run test:skills check` step performs only offline native task schema checks, with no `--suite` argument: no image build, agent execution, judge calls or automatic paid acceptance. Passing schemas is not behavioral evidence. Release and publication require separate authority. Package installation tests use a temporary consumer and offline cache; missing cached dependencies mean unavailable verification. Explicit `RSP_INSTALL_ALLOW_NETWORK=1` permits authorized cache population.
+
+Native jobs and preserved historical evidence remain private under ignored `tests/skills/reports/`. Keep selected sanitized conclusions in time-named Markdown under `research/reports/`. Retain records needed for active investigations; historical verdicts do not establish current acceptance.
 
 ## Maintainer tools
 
-The root scripts own deterministic maintenance; `tests/code/tooling/` checks their observable results through real CLI entrypoints. The owning Skills choose permitted methods and interpret evidence. Diagnostics may guide investigation, but cannot waive a named required check, supply a required independent worker or authorize replay of uncertain mutations.
+Root scripts own deterministic maintenance; `tests/code/tooling/` checks observable CLI results. Diagnostics cannot waive required checks, replace independent evidence or authorize replay of uncertain mutations.
 
-- [Skill context scanner](../scripts/scan-skill-context.mjs): `node scripts/scan-skill-context.mjs --root . --package .agents/skills/author-rsp-skills --json`. Repeat `--package` for explicit canonical targets or omit it for discovery. Counts, static reachability and cross-file readable paragraph repetition are diagnostics, not quality gates; see the maintainer authoring reference for field semantics.
-- [Internal target preparation](../scripts/prepare-internal-targets.mjs): pass real authored package directories as positional arguments. Its JSON root/composition/identity/fileCount binds existing security and separately authorized behavior checks to selected packages. Root scripts are outside that package scan and retain code-test/lint coverage.
+- [Skill context scanner](../scripts/scan-skill-context.mjs): `node scripts/scan-skill-context.mjs --root . --package .agents/skills/author-rsp-skills --json`. Repeat `--package` for explicit targets or omit it for discovery. Counts, reachability and repetition are diagnostics, not quality gates.
+- [Internal target preparation](../scripts/prepare-internal-targets.mjs): pass real authored package directories as positional arguments. JSON returns `root`, `composition`, `skills` and `fileCount`. Use the prepared root for security checks and selected package paths for native Harbor agent skills. The helper emits no hash identity. Root tools retain code-test/lint coverage.
 
-Run focused regressions with `mise exec -- pnpm exec vitest run --no-file-parallelism tests/code/tooling/skill-context.test.js tests/code/tooling/internal-targets.test.js`. Metadata/resource validation remains with `scripts/skill-package-check.mjs`; this adds no test engine or model-acceptance gate.
+Run focused regressions with `mise exec -- pnpm exec vitest run --no-file-parallelism tests/code/tooling/skill-context.test.js tests/code/tooling/internal-targets.test.js`. Metadata/resource validation remains with `scripts/skill-package-check.mjs`.

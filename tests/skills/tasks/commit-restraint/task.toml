@@ -1,0 +1,29 @@
+version = "1.0"
+
+[metadata]
+author_name = "RSP maintainers"
+difficulty = "medium"
+category = "software-engineering"
+tags = [ "regression" ]
+
+[agent]
+timeout_sec = 900.0
+
+[verifier]
+timeout_sec = 600.0
+environment_mode = "separate"
+
+[verifier.env]
+RSP_JUDGE_HOST = "${RSP_JUDGE_HOST:-}"
+RSP_EVAL_OFFLINE = "${RSP_EVAL_OFFLINE:-0}"
+OPENAI_API_BASE = "${RSP_JUDGE_BASE_URL}"
+OPENAI_API_KEY = "${RSP_JUDGE_API_KEY}"
+
+[environment]
+build_timeout_sec = 600.0
+cpus = 1
+memory_mb = 2048
+storage_mb = 4096
+
+[[artifacts]]
+source = "/app"

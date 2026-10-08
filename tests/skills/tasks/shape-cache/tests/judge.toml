@@ -1,0 +1,16 @@
+[judge]
+judge = "openai/AI-HUB/gpt-6.1-sol"
+reasoning_effort = "high"
+files = [
+  "/app/plan.md",
+  "/app/src/cache.mjs"
+]
+
+[scoring]
+aggregation = "threshold"
+threshold = 1.0
+
+[[criterion]]
+name = "executable-ttl-design"
+type = "binary"
+description = "Plan provides one coherent owner, injected clock, integer nonnegative TTL validation before mutation, zero expiry, now >= expiresAt and deterministic tests. It preserves existing process-local strings and does not claim implementation or execution."

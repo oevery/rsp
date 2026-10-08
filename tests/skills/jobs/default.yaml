@@ -1,0 +1,38 @@
+jobs_dir: tests/skills/reports
+n_concurrent_trials: 1
+n_attempts: 1
+retry:
+  max_retries: 0
+environment:
+  type: docker
+  delete: true
+agents:
+  - import_path: tests.skills.support.agent:RoutedCodex
+    model_name: AI-HUB/gpt-6.1-sol
+    skills:
+      - skills/rsp
+      - skills/rsp-shape
+      - skills/rsp-implement
+      - skills/rsp-doc
+      - skills/rsp-review
+      - skills/rsp-verify
+      - skills/rsp-commit
+      - skills/rsp-structural-audit
+    kwargs:
+      version: 0.150.1
+      reasoning_effort: medium
+      web_search: disabled
+      config:
+        model_provider: opencodex
+        model_providers:
+          opencodex:
+            name: OpenCodex
+            base_url: http://host.docker.internal:10100/v1
+            wire_api: responses
+            env_key: OPENAI_API_KEY
+            http_headers:
+              Host: 127.0.0.1:10100
+        features:
+          memories: false
+          plugins: false
+        model_reasoning_effort: medium

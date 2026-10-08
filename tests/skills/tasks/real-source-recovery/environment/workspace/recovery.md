@@ -1,0 +1,1 @@
+Interrupted repair: normalized duplicate issue URLs and direct-parent path containment both regress. Validate current source using Node 24 --experimental-transform-types; no prebuilt dist is authoritative. Only the two src/core modules may change. Preserve all staged, unstaged and untracked user work. No prior verification was completed.

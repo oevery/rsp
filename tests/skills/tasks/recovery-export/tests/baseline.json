@@ -1,0 +1,5 @@
+{
+  "head": "7dc716631700678051590cf5903099f69b31aa7a",
+  "index": "100644 2c2f072b8c3b41898ae3c5f32492bd427693d2a9 0\t.rsp/changes/requested-export.md\n100644 b739e213dc82f8110b0e899377afc970de70484d 0\t.rsp/config.yaml\n100644 8b137891791fe96927ad78e64b0aad7bded08bdc 0\t.rsp/focus.d/requested-export\n100644 692d29f5fe5a337bf825d2151beeb4fce7e5d171 0\t.rsp/specs/design.md\n100644 b63182c781e241006387effcb3b4e0fc4b2554a0 0\tAGENTS.md\n100644 4bf05677b3dc8397afd9ea1f0fd3cd6626ea2cd4 0\tsrc/requested.mjs\n100644 c64b0dc23abd007f78998bb6a478ecc23cef9fee 0\tstaged-note.txt\n100644 41df567f0d556a077a7b771a865f52bb54aafb29 0\tunstaged-note.txt\n100644 5a7bde34b833c6cde4d5acfc1fcb911a6b782e81 0\tuser-notes.txt",
+  "diff": "diff --git a/staged-note.txt b/staged-note.txt\nindex de5e6af..c64b0dc 100644\n--- a/staged-note.txt\n+++ b/staged-note.txt\n@@ -1 +1 @@\n-Original staged note.\n+User staged note: preserve these bytes.\ndiff --git a/unstaged-note.txt b/unstaged-note.txt\nindex 41df567..d8145bd 100644\n--- a/unstaged-note.txt\n+++ b/unstaged-note.txt\n@@ -1 +1 @@\n-Original unstaged note.\n+User unstaged note: preserve these bytes."
+}

@@ -1,0 +1,17 @@
+{
+  "repository": "rsp",
+  "baseCommit": "5c085c45a287df89b139f45545394fd5d0d30079",
+  "files": [
+    {
+      "path": "src/core/issue-relationship.ts"
+    },
+    {
+      "path": "src/core/path-identity.ts"
+    }
+  ],
+  "scope": "Exact production source copies before the two intentional fixture mutations; dependency-free runtime boundary, not full CLI acceptance.",
+  "intentionalMutations": [
+    "Disable normalized duplicate guard",
+    "Disable direct-parent containment guard"
+  ]
+}

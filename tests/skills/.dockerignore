@@ -1,0 +1,14 @@
+*
+!.build/
+!.build/requirements.txt
+!.build/package/
+!.build/package/**
+!support/
+!support/grade.py
+!support/checks.py
+!support/verifier.py
+!support/workspace.py
+!support/outputs.py
+!images/
+!images/agent/
+!images/agent/Dockerfile

@@ -1,0 +1,17 @@
+[judge]
+judge = "openai/AI-HUB/gpt-6.1-sol"
+reasoning_effort = "high"
+files = [
+  "/app/CONTEXT.md",
+  "/app/README.md",
+  "/app/src/export.mjs"
+]
+
+[scoring]
+aggregation = "threshold"
+threshold = 1.0
+
+[[criterion]]
+name = "domain-navigation-preserved"
+type = "binary"
+description = "The merged context retains UTC, reusable Job versus per-tenant execution Run, one-to-many relationship and correct source owner. README points to the new owner, and no conflicting terminology or unnecessary new policy is introduced."

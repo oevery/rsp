@@ -1,0 +1,17 @@
+{
+  "synthetic": true,
+  "kind": "retained-local-code-checks",
+  "identity": {
+    "version": "0.0.0-maintainer-smoke",
+    "sourceCommit": "fixture-source",
+    "skillCommit": "fixture-current-skills"
+  },
+  "status": "passed",
+  "checks": [
+    "build",
+    "typecheck",
+    "lint",
+    "code tests"
+  ],
+  "scope": "These named checks only; no complete release aggregation, model execution or human approval is recorded."
+}

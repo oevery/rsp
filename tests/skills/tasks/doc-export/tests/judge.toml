@@ -1,0 +1,24 @@
+[judge]
+judge = "openai/AI-HUB/gpt-6.1-sol"
+reasoning_effort = "high"
+files = [
+  "/app/README.md",
+  "/app/CONTEXT.md",
+  "/app/spec.md",
+  "/app/export.mjs",
+  "/app/project-brief.md"
+]
+
+[scoring]
+aggregation = "threshold"
+threshold = 1.0
+
+[[criterion]]
+name = "safe-export-onboarding"
+type = "binary"
+description = "README enables an explicit-tenant export to a new path with Node >=22, actual success signal and exit 3 safe recovery, without promising overwrite or retry."
+
+[[criterion]]
+name = "consistent-domain-and-exit-contract"
+type = "binary"
+description = "CONTEXT correctly distinguishes reusable Job from Run and points to its source owner. spec accurately describes exit 2 input failure, exit 3 existing-output behavior, exclusive creation and preservation; documents agree and avoid unsupported platform claims."

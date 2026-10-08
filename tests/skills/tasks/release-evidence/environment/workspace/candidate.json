@@ -1,0 +1,10 @@
+{
+  "synthetic": true,
+  "identity": {
+    "version": "0.0.0-maintainer-smoke",
+    "sourceCommit": "fixture-source",
+    "skillCommit": "fixture-current-skills"
+  },
+  "changedScope": "Maintainer Skill instructions changed; no runtime code change is asserted by this simulated record.",
+  "decision": "Assess the evidence for this exact candidate; this is not release authorization."
+}

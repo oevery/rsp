@@ -1,1 +1,0 @@
-fix(price): synchronize approved price

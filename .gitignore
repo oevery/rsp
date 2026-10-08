@@ -1,7 +1,11 @@
 node_modules/
+/.env.eval.local
 dist/
 .vitest/
 .cache/
+tests/skills/.venv/
+tests/skills/.build/
+__pycache__/
 tests/skills/reports/*
 !tests/skills/reports/.gitkeep
 docs/.vitepress/cache/

@@ -1,0 +1,8 @@
+{
+  "label_status": "candidate",
+  "expected": {
+    "checks": 1,
+    "judge": 0
+  },
+  "rationale": "Well-formed finding points at staged lines but invents a defect contradicted by the source."
+}

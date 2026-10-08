@@ -1,11 +1,17 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict'
-import { cpSync, lstatSync, mkdirSync, mkdtempSync } from 'node:fs'
+import { cpSync, lstatSync, mkdirSync, mkdtempSync, readdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, join, resolve } from 'node:path'
-import { treeFiles } from '../tests/skills/runner/core/files.mjs'
-import { compositionIdentity } from '../tests/skills/runner/observers/workspace.mjs'
 import { checkSkillPackage } from './skill-package-check.mjs'
+
+function countFiles(path) {
+  const stat = lstatSync(path)
+  assert(!stat.isSymbolicLink() && (stat.isFile() || stat.isDirectory()), 'Only real files and directories may be copied')
+  if (stat.isFile())
+    return 1
+  return readdirSync(path).reduce((count, name) => count + countFiles(join(path, name)), 0)
+}
 
 const args = process.argv.slice(2)
 let root
@@ -14,7 +20,7 @@ try {
     console.log(`Usage: node prepare-internal-targets.mjs <authored-package-directory>...
 Run this helper from its original repository with installed dependencies.
 Paths resolve from the working directory. Select real, link-free packages with unique names.
-Success prints JSON: root, composition, identity, fileCount.
+Success prints JSON: root, composition, skills, fileCount.
 Failure exits nonzero; stderr identifies any retained temporary root. No source is changed.
 Prepared packages do not replace the repository tools used to evaluate them.`)
   }
@@ -27,7 +33,7 @@ Prepared packages do not replace the repository tools used to evaluate them.`)
       throw new Error('Package names must be unique')
     // Validate every source before allocating a destination; never traverse links.
     for (const source of sources) {
-      source.files = treeFiles(source.path, { rejectLinks: true })
+      source.fileCount = countFiles(source.path)
       assert.deepEqual(checkSkillPackage(source.path), { status: 'passed', errors: [] })
     }
     root = mkdtempSync(join(tmpdir(), 'rsp-internal-targets-'))
@@ -45,15 +51,12 @@ Prepared packages do not replace the repository tools used to evaluate them.`)
           return true
         },
       })
-      assert.deepEqual(treeFiles(target, { rejectLinks: true }), source.files)
+      assert.equal(countFiles(target), source.fileCount)
       assert.deepEqual(checkSkillPackage(target), { status: 'passed', errors: [] })
     }
-    for (const source of sources)
-      assert.deepEqual(treeFiles(source.path, { rejectLinks: true }), source.files)
-    const identity = compositionIdentity(composition)
-    assert.deepEqual(identity.skills, sources.map(source => source.name))
-    const fileCount = sources.reduce((count, source) => count + Object.keys(source.files).length, 0)
-    console.log(JSON.stringify({ root, composition, identity, fileCount }, null, 2))
+    const skills = sources.map(source => source.name)
+    const fileCount = sources.reduce((count, source) => count + source.fileCount, 0)
+    console.log(JSON.stringify({ root, composition, skills, fileCount }, null, 2))
   }
 }
 catch (error) {

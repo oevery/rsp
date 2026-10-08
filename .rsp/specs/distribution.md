@@ -51,18 +51,24 @@ instruction and resource contract.
 
 ### Verification and retained evidence
 
-There are two verification lanes: observable code/package/runner checks under
-`tests/code/` and task-based Skill evaluation under `tests/skills/`. Release checks
-aggregate them; publication remains separately authorized. Shared projects,
-cases, suites and executor/judge configuration support both individual capabilities
-and natural workflows. Comparison and holdout experiments are optional research
-methods, not universal release gates.
+There are two verification lanes: observable code/package/tooling checks under
+`tests/code/` and native Harbor 0.24.0 task/job evaluation with harbor-rewardkit
+0.2.2 under `tests/skills/`. Package release aggregates local checks and offline
+native task schema validation only; it never automatically starts agents or paid
+judges. Native job configuration selects agent skills and execution settings.
+Task environments and verifiers cover individual capabilities and natural
+workflows. Comparison and holdout experiments are optional research methods,
+not universal release gates; publication remains separately authorized.
 
 Skill acceptance evaluates task outcomes, authority boundaries and independent
 semantic judgment, not Skill wording or reading fingerprints. Offline readiness,
 local adapters and package validity do not establish model acceptance. Retained
-execution evidence identifies its source, dependencies, composition, cases and
-effective settings; historical verdicts cannot be upgraded by new harness checks.
+native job evidence identifies its source, dependencies, selected skills, tasks
+and effective settings. Provider, judge and verifier errors remain ungraded gaps;
+full-score acceptance uses threshold aggregation at 1 rather than treating partial
+positive scores as passing. Oracle/nop offline calibration does not establish
+semantic acceptance. Preserve historical evidence; resumed or regraded results do
+not rewrite original verdicts or by themselves establish fresh candidate execution.
 Task-level reuse and execution obligations belong to [Workflow](workflow.md#methods-and-evidence).
 Repository commands and evidence-recovery procedures are documented in
 [Tests](../../tests/README.md) and [Research](../../research/README.md), not duplicated here.

@@ -1,0 +1,13 @@
+{
+  "synthetic": true,
+  "kind": "offline-readiness",
+  "identity": {
+    "version": "0.0.0-maintainer-smoke",
+    "sourceCommit": "fixture-source",
+    "skillCommit": "fixture-current-skills"
+  },
+  "status": "passed",
+  "providerInvocations": 0,
+  "behavioralAcceptance": "not-run",
+  "scope": "Case schema and project preparation only."
+}

@@ -1,0 +1,8 @@
+{
+  "label_status": "candidate",
+  "expected": {
+    "checks": 1,
+    "judge": 0
+  },
+  "rationale": "Correct usage plus fabricated platform validation must not pass semantic grading."
+}

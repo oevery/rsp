@@ -1,0 +1,5 @@
+{
+  "head": "851863b62a261a978f631dd8ec2ae734e7dd07ef",
+  "index": "100644 b63182c781e241006387effcb3b4e0fc4b2554a0 0\tAGENTS.md\n100644 0292da7e7e1be8183a094c043a3df90505a3265a 0\tCONTEXT.md\n100644 3506c703ce14d90db86a72806d1700edf127e826 0\tsrc/checkout.mjs\n100644 30243a54b5206a4b91038ef3f2d963b382d655f8 0\tsrc/pricing.mjs\n100644 c64b0dc23abd007f78998bb6a478ecc23cef9fee 0\tstaged-note.txt\n100644 89e541c15451f0f6b2471965617deeb3eb6091f6 0\ttools/check.mjs\n100644 18e623ef43491e922d8fb990edb9b2b9b6bc0e9f 0\tunrelated.mjs\n100644 41df567f0d556a077a7b771a865f52bb54aafb29 0\tunstaged-note.txt\n100644 b2794cfe7d6e873e3e6ea89eb0b153e2bff8d629 0\tuser-notes.txt",
+  "diff": "diff --git a/staged-note.txt b/staged-note.txt\nindex de5e6af..c64b0dc 100644\n--- a/staged-note.txt\n+++ b/staged-note.txt\n@@ -1 +1 @@\n-Original staged note.\n+User staged note: preserve these bytes.\ndiff --git a/unstaged-note.txt b/unstaged-note.txt\nindex 41df567..d8145bd 100644\n--- a/unstaged-note.txt\n+++ b/unstaged-note.txt\n@@ -1 +1 @@\n-Original unstaged note.\n+User unstaged note: preserve these bytes."
+}

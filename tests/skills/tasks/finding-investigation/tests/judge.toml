@@ -1,0 +1,19 @@
+[judge]
+judge = "openai/AI-HUB/gpt-6.1-sol"
+reasoning_effort = "high"
+files = [
+  "/app/report.json",
+  "/app/findings.md",
+  "/app/export.mjs",
+  "/app/README.md",
+  "/app/project-brief.md"
+]
+
+[scoring]
+aggregation = "threshold"
+threshold = 1.0
+
+[[criterion]]
+name = "evidence-backed-dispositions"
+type = "binary"
+description = "F1 is accepted on exclusive creation/exit-3 preservation evidence; F2 is rejected because explicit EXPORT_TENANT already exists and fallback would violate the contract. Report separates finding validity from repair permission and makes no unsupported correction claim."

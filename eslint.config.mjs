@@ -5,7 +5,8 @@ export default antfu({
     'node_modules/',
     '.git/',
     'tests/skills/reports/',
-    'tests/skills/projects/**',
+    'tests/skills/tasks/**/environment/**',
+    'tests/skills/.venv/**',
   ],
   rules: {
     'no-console': 'off',

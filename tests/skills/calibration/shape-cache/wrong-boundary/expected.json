@@ -1,0 +1,8 @@
+{
+  "label_status": "candidate",
+  "expected": {
+    "checks": 1,
+    "judge": 0
+  },
+  "rationale": "A plausible design uses the wrong expiry boundary and mutates before validating TTL."
+}

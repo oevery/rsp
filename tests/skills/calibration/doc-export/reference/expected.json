@@ -1,0 +1,8 @@
+{
+  "label_status": "candidate",
+  "expected": {
+    "checks": 1,
+    "judge": 1
+  },
+  "rationale": "Reference documents grounded in export.mjs and the project brief."
+}

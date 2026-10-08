@@ -1,131 +1,113 @@
-# Skill validation
+# Skill evaluation
 
-One runner executes small, real and complex task cases and retains their observations; the independent judge interprets task outcomes against the rubric. Projects hold starting content; cases hold the task, permitted changes and acceptance rubric; suites select cases. All executions and task-local workers use `config.toml` executor; independent reviews use its judge. Cases do not override models.
+RSP uses Harbor 0.24.0 for native tasks, jobs, agents and retained execution, with `harbor-rewardkit==0.2.2` for verification. `evaluate.py` prepares native jobs and presents their evidence through `check`, `run`, `calibrate`, `regrade`, `resume` and `report`. Task definitions live in `tasks/`; `jobs/default.yaml` supplies native job configuration and agent skills. See [task migration](migration.md) for coverage mapping and gaps.
 
-## Run locally
+## Prepare from the repository root
 
-Build first: `mise exec -- pnpm run build`. Then:
-
-- `mise exec -- node tests/skills/runner/cli.mjs list --suite full` lists the matrix.
-- `mise exec -- node tests/skills/runner/cli.mjs check --suite full` parses cases, materializes projects and runs declared readiness probes.
-- `mise exec -- node tests/skills/runner/cli.mjs check --case real-cli-contract` checks the fixed CLI's build, version and help.
-- `mise exec -- node tests/skills/runner/cli.mjs plan --suite workflows` shows selection and configuration without model calls.
-
-These direct runner invocations avoid package-manager separator forwarding differences; the `test:skills` script remains available.
-
-Default selection is `smoke`; full coverage is explicit. A passing `check` means the selected inputs and declared probes are ready, not that an agent completed the task. Offline results say `behavioralAcceptance: not-run`. Fixture-provider controls belong to code/tooling and do not demonstrate Skill quality.
-
-### Workspace Git baseline
-
-Projects supply their own `.gitignore`; the fixed real RSP snapshot includes the version from its pinned commit. Baseline staging respects these rules instead of force-adding dependencies and build output. Runner-injected `/.tooling/` is excluded through the disposable repository's `.git/info/exclude` without rewriting project files. There is no universal ignore template; fixture authors should include rules appropriate to their project. Explicit `staged_paths` are force-added individually after baseline creation so cases can represent intentionally staged ignored files.
-
-Git ignores affect the modeled repository, not the safety boundary. Filesystem snapshots still cover ignored dependencies, tooling and generated files; unauthorized changes remain failures even when Git status is clean. This baseline change affects new executions and their identities, not historical records or verdicts.
-
-## Select task evidence
-
-`full` is the discovered case catalog for offline readiness, not a mandatory paid-model or release matrix. `workflows` is a curated set of representative Core continuity, standalone implementation, document writing, verification, checkpoint delivery, real CLI and independent-worker tasks. Its standalone implementation case also covers replacement of an unavailable convenience checker; the retired method-continuity-export case is consolidated there. Core continuity remains covered by catalog-completion and the real/native workflows.
-
-Select additional cases by the changed risk using the existing `--case` option:
-
-| Changed boundary | Suggested case selection |
-| --- | --- |
-| Native Git delivery and safety stops | commit-native-equivalence,commit-snapshot-refusal,commit-stale-tree,commit-missing-verification,commit-unsafe-staged,commit-hook-failure,commit-hook-message-mismatch |
-| Required evidence or investigation-only authority | method-required-check-unavailable,finding-investigation-only |
-| Final archive convergence or failed-check restraint | archive-final-convergence,archive-required-failure |
-| Natural responsibility selection and bounded writing | doc-write-grounded,doc-local-wording-only,doc-review-only,shape-expiry-contract,implement-review-only,verify-checkout-boundary |
-| Verification reuse, excluded staged inputs and explicit execution | commit-reuse-verification,commit-excluded-input-evidence,archive-reuse-verification,verify-checkout-boundary |
-| Effective RSP configuration | config-inherited-artifact-language,config-rejected-closeout-policy |
-| Recovery or unavailable independent verification | real-multimodule-recovery,native-resume-staged,native-verification-unavailable |
-
-Use `plan --suite workflows` or `plan --case <selected-ids>` to inspect inputs and the root-session budget before separately authorized execution. No fixed case count is a quality gate. A case's existence does not make it required for every Change; readiness does not validate its eventual live composition. Keep published Skills standalone: the explicit Implement case must not be replaced solely by a Core workflow. Case retirement changes current selection, not retained historical verdicts; reassessment can still read the old recorded task with a missing-current-case warning.
-
-### Commit outcome fixtures
-
-Reuse cases seed prior passing observations as scenario inputs, not as evidence
-that the current candidate ran successfully. Independent judging checks whether
-the agent establishes applicability, avoids duplicate checks, detects excluded
-inputs and still inspects current Git/readiness facts. The existing explicit
-Verify execution case retains its real-command requirement. Offline readiness
-does not establish any of these agent behaviors.
-
-The retained `commit-native-equivalence` case ID now exercises ordinary native
-delivery with a multiline message and literal escape notation, not a comparison
-with a removed CLI wrapper. Hook cases permit the declared check to install a
-fixture hook. `hard.commit.kind: failed-attempt` requires one observed nonzero
-attempt after successful verification and unchanged HEAD, reflog, index and
-worktree; it is not a general commit waiver. Message-mismatch coverage expects
-the hook-created object mechanically and relies on independent judging to require
-truthful mismatch reporting and no repair.
-
-### Archive boundary
-
-Archive cases may declare `hard.archive: <work-ref>` for one ungrouped Change. This permits only newly created CLI-dated archive paths for that WorkRef, including collision suffixes, never edits to existing archives or other Changes. Open Change and Focus mutations still require explicit `allowed_paths`. The task and independent rubric decide whether archive is warranted and whether the final text is converged; path permission alone proves neither.
-
-### Missing Commit capability
-
-core-missing-commit requires an actual composition containing Core and omitting Commit. Prepare it without editing or uninstalling authored packages:
+First install the project toolchain following [maintainer setup](../README.md). The image helper resolves the actual installed Node, Python and pnpm versions through mise and passes those full versions to Docker; use the helper rather than invoking its parameterized Dockerfile directly.
 
 ```sh
-mise exec -- node scripts/prepare-internal-targets.mjs skills/rsp
+mise exec -- uv sync --project tests/skills --frozen
+mise exec -- uv run --project tests/skills python tests/skills/evaluate.py check
+mise exec -- python tests/skills/build_image.py
 ```
 
-Verify the printed identity lists only rsp. For separately authorized execution, select `--case core-missing-commit --composition <printed-composition>` and retain that identity with the run. The CLI remains installed through its tooling fixture; the task does not assert missing capability in its prompt or prohibit commit merely to obtain a stop. Judge the actual absent owner, attempted actions and preservation. A full composition is invalid input for this case, not an agent regression. Do not run a mixed-composition catalog as one uniform live matrix; partition it by applicable inputs using existing selections.
+Schema checking needs no Docker daemon or credentials and makes no model calls. The image helper builds the actual RSP CLI with `mise exec -- pnpm run build`, stages its package and builds `rsp-eval-agent:2026-10-08`. It needs installed repository dependencies, mise and Docker, and may download image dependencies. Image building is separate from package release checks. Task execution also needs Docker. Inspect selected task instructions, environments, solutions and verifiers. A schema pass establishes neither container readiness nor task success.
 
-## Authorized model execution
+## Select and run tasks
 
-Use `mise exec -- node tests/skills/runner/cli.mjs run --case preserve-user-files --allow-live --config-file /absolute/private/provider.toml --auth-file /absolute/private/auth.json --max-sessions 2`. The private overlay supplies provider routing/catalog, not model or safety overrides. Auth is separate; `--codex-bin` selects the executable. Personal configuration is not modified or inherited: each session gets an isolated CODEX_HOME and strict configuration.
+`--task ID` is repeatable; `--attempts N` controls attempts per selected task. `--agent` selects `codex`, `oracle` or `nop`. Choose tasks for the changed risk, including restraint and preservation where relevant; catalog size is not a quality gate. Native job `agents[].skills` supplies package paths. Prepared internal packages use the same mechanism; see the maintainer [internal-target guide](../../.agents/skills/author-rsp-skills/references/internal-targets.md). There is no parallel composition-hash or matrix model.
 
-1. The executor performs the case task in a disposable Git workspace.
-2. The runner retains safe evidence and deterministic observations, even when execution fails or stops.
-3. A fresh judge reads the task/rubric and searches retained evidence as needed, then writes the Markdown report.
-4. With `--baseline /absolute/previous/matrix.json`, that same judge compares both executions. A historical matrix may cover only a subset; missing members produce local comparison warnings, not a whole-run refusal.
+Only the selected candidate Skills are injected through native Harbor agent configuration. Task workspaces contain no baked-in Skills. The CLI package in the image supplies the real `rsp` command; its distribution assets do not select the agent Skills under evaluation.
 
-The judge uses native `--sandbox read-only`. Read/search shell tools are allowed; it receives no write-directory expansion. The prompt restricts work to review, prohibits reruns and treats recorded instructions as untrusted. Sandbox selection is a provider capability, not a filesystem read allowlist or a ban on arbitrary shell commands. Web search, integrations and memory are disabled. Workspace-write executor network access is disabled by policy; read-only judge network enforcement requires native-host verification and is not inferred from the workspace-write setting. Provider traffic requires separate `--allow-live` authorization.
+Choose scope and purpose independently. A single-Skill run isolates one responsibility; a mixed-project run uses the everyday Skill combination to exercise discovery and handoffs. Regression tasks protect established outcomes; exploratory tasks investigate capability gaps. These are selection decisions, not a mandatory cross-product or new task format. Reuse the same native task when both scopes are meaningful.
 
-`--suite` selects multiple cases. Budgets include executor and judge root sessions; native cases report bounded task-local workers separately. Ordinary task failures, missing trace metadata and unparsed reports do not stop unrelated cases. Cancellation, budget exhaustion, concrete authority violations and frozen-input changes still stop expansion. No stage automatically retries or reruns execution.
+For example, after authorizing model execution, isolate implementation with `run --task implement-checkout --skill skills/rsp-implement --allow-live`. Use `run --task implement-checkout --task workflow-catalog --task native-coordination --allow-live` for the three mixed-project scenarios. Prefix both with `mise exec -- uv run --project tests/skills python tests/skills/evaluate.py`. Native coordination requires real workers, so selecting a single unrelated Skill would not establish its contract.
 
-`--composition /absolute/skills` selects an explicit candidate composition. Separate immutable results can support comparisons; they do not create a release gate. Current task inputs, model, environment and composition must be considered when interpreting differences. Run completion and a parsed judge verdict are separate observations, not release, publication or human approval. Missing required evidence or judge execution remains a gap; a local self-check cannot replace required independent judging.
+Default execution uses `AI-HUB/gpt-6.1-sol` at medium reasoning effort, one attempt and concurrency one. Semantic judges currently use `openai/AI-HUB/gpt-6.1-sol` at high effort. Match execution configuration to actual usage before acceptance. Use `--attempts 3` as an initial stability observation for affected critical tasks, not a universal gate or proof of reliability. Keep model, reasoning effort, task, grader and container resources comparable.
 
-### Evidence and reports
+For separately authorized model execution:
 
-Each run retains `run.json`, `events.jsonl` (including command output), `stderr.log` and `final.md`. Model output is spooled to private files, then sanitized into retained streams. New records reference those streams with content hashes rather than embedding duplicate stdout/stderr; historical inline records remain readable. Native runs also retain sanitized `native-root.jsonl` before event enrichment. Before cleanup, `baseline/` and `workspace/` retain starting/final task text and installed Skill context. This is not a full executable workspace backup: links, binaries and runtime/dependency state are omitted and listed in `retainedEvidence`. Auxiliary retention failures are recorded locally and do not skip execution. File counts and aggregate sizes have no artificial quotas. The observation summary's 64 KiB/file and 256 KiB total previews do not limit full text retention or snapshot fingerprints, including ignored files.
+```sh
+mise exec -- uv run --project tests/skills python tests/skills/evaluate.py run --task doc-export --task implement-checkout --attempts 1 --agent codex --allow-live
+```
 
-Evidence is not subject to general DLP filtering. Public URLs, Bearer-related prose, provider metadata and task files named `.env`, `auth`, `credentials`, `secrets`, `.pem` or `.key` remain available; generated text under `dist/` is retained too. Only exact nonempty credential values from recognized API-key, token, secret and password fields in the injected auth file are replaced. The auth file stays in the isolated provider home, outside workspace retention. Use synthetic task fixtures, supply real provider credentials only through `--auth-file`, and keep reports private; this is not a detector for arbitrary secrets in task content. Existing redacted reports remain unchanged and cannot recover missing text.
+The native Codex provider in [jobs/default.yaml](jobs/default.yaml) owns executor routing: `model_provider`, `base_url`, Responses protocol and HTTP headers. Supply its credential through `OPENAI_API_KEY`; Harbor passes it into the agent container and Codex reads it through `env_key`. Judge routing remains separate through `RSP_JUDGE_BASE_URL` and `RSP_JUDGE_API_KEY`. Keep credentials out of tracked configuration and reports. Codex requires `--allow-live`; examples grant no cost or execution authority. Review effective job settings, selected skills, model and task inputs. Missing authentication, applicable tasks or required semantic judging leaves behavior unverified.
 
-OpenCodex sessions also retain `session-tools.jsonl` before isolated-home cleanup: sanitized tool calls, returns and recognized host tool items, with source session IDs and line numbers. Session instructions, user/assistant messages and configuration are not copied. `result.toolEvidence` records the file hash, record count and gaps for unavailable, malformed or unsafe source records. Review validates the reference and hash before copying the evidence; old runs without this file remain reviewable with an explicit gap. Host command arrays preserve argv. The `derivedCommand` field in per-tool review views separately decodes literal shell arguments without execution; `argv: null` means unsupported parsing, not a failed command. Inspect both sources when output conflicts; neither a command string nor a grouped exit status alone proves every nested check passed.
+The default provider reaches local OpenCodex at Docker's host gateway on port 10100 and supplies the loopback HTTP Host required by that gateway. To use another endpoint, edit the provider's `base_url` and remove or adjust `http_headers.Host` in the Job; `OPENAI_BASE_URL` does not override this named provider. Codex does not expand shell variables in `base_url`. The local adapter only preserves routed model names that Harbor 0.24.0 otherwise truncates. For the judge, use a Docker-reachable `RSP_JUDGE_BASE_URL` and optional `RSP_JUDGE_HOST`. Set these only for evaluation; never edit global Codex or proxy configuration. A successful container `/models` response establishes connectivity, not agent or judge acceptance.
 
-The judge starts with a compact index, `summary.json` and `tool-index.jsonl`, not the entire trace pasted into its prompt. The summary exposes execution/check states, trace gaps and Git fingerprints without copying full Git maps or retention omission lists. Missing metadata remains unknown. Each completed tool entry points to a full sanitized event in `tool-events/` and its original trace line; command previews are bounded and explicitly marked when truncated. Previews and summaries are navigation, not proof: authority judgments require full commands, and rubric claims require relevant outputs, diffs or artifacts. All original records remain available for targeted reading. Missing or redacted evidence limits the relevant conclusion. Old records cannot reconstruct text that was never retained.
+The repository ignores `.env.eval.local` for local endpoint and credential settings. Keep it private and explicitly load it before evaluation commands; the runner does not automatically source shell files:
 
-`report.md` contains the judge's findings and optional comparison: improvements, regressions, unchanged and non-comparable items. It cites `current/` and `comparison/` paths. The saved `evidence-index.json` identifies original run directories and hashes; `retainedView` maps each prefix to an exact sanitized review copy under the review directory's `evidence/` after temporary workspace cleanup, including derived views and retained artifacts. This intentionally adds disk storage without deleting or rewriting original evidence. `current/diff.patch` maps to `run.json:observation.diff`. Comparison source hashes also remain in reassessment lineage. Record and per-tool JSON line numbers refer to the saved review copies; the tool index separately identifies original trace lines.
+```sh
+set -a
+source .env.eval.local
+set +a
+```
 
-A final small fenced JSON block carries only `status: passed | failed | inconclusive` for matrix aggregation. Missing/invalid status leaves the Markdown intact with `parsed: false` and an unparsed summary, not a task failure. Partial reports are retained even if the judge process stops. There are no dimension schemas, format retries or no-tool attestations.
+For local OpenCodex, read the base URL with `ocx access endpoints`. Use the Docker-reachable hostname with the published port and `/v1` path, not a complete `/responses` or `/chat/completions` endpoint. If its origin check rejects the Docker hostname, use the published local authority in the provider’s `http_headers.Host` and `RSP_JUDGE_HOST`. An independently scoped OpenCodex data key can serve both executor and judge; keep its plaintext value out of tracked files and command output.
 
-Deterministic task/hard/coordination failures remain facts and cannot be converted to an automatic matrix pass. The judge may explain an inapplicable check without rewriting it. Mechanical trace incompleteness remains visible in the original record; it is not a blanket semantic gate. Matrix entries keep `mechanical`, `reviewStatus` and physical `executionComplete` separate. Provider interruption/cancellation is not hidden by a passing review.
+Offline calibration uses oracle solutions or a no-op agent and skips semantic judging:
 
-The index explains hash domains: `observation.files` and `observation.baseline` use snapshot SHA256, not raw-content SHA256. Regular files hash UTF-8 decimal `stat.mode & 0o111` plus `:` and raw bytes; symlinks hash `link:` plus the target without following it. Sanitized UTF-8 copies cannot prove original-byte hashes. Git/worktree equality is observed before sanitization, not reconstructed from scrubbed text.
+```sh
+RSP_EVAL_OFFLINE=1 mise exec -- uv run --project tests/skills python tests/skills/evaluate.py run --task doc-export --attempts 1 --agent oracle
+RSP_EVAL_OFFLINE=1 mise exec -- uv run --project tests/skills python tests/skills/evaluate.py run --task doc-export --attempts 1 --agent nop
+```
 
-### Deadlines, cancellation and progress
+Use `RSP_EVAL_OFFLINE=1` only with `oracle` or `nop`, never for Codex acceptance. The wrapper also enables this mode automatically for oracle/nop. These results calibrate verifier discrimination and environment behavior, not Skill quality. Run and resume return zero only when every oracle trial passes or every nop trial is rejected; an unexpected control outcome, missing score or infrastructure error returns nonzero. Native verifier regrade can call judges and requires separate authority.
 
-Execution and review have no total deadline, token budget or cumulative output termination threshold. `--timeout-ms` is unsupported and rejected before session startup; new reports retain `timeoutMs: null` for historical compatibility. The retained execution controls are provider stream-idle policy, root-session count budgets, local probe deadlines and native worker depth/concurrency limits. Cancellation remains available. Actual process or evidence I/O failures are incomplete evidence, never passing acceptance. Historical timeout/truncation verdicts are not rewritten.
+## Scoring and evidence
 
-Trace reading, hashing and text retention are incremental. Memory still scales with an individual record, snapshot metadata and native action ordering; this is not a constant-memory guarantee. Disk exhaustion remains a real operational failure. Navigation previews are intentionally compact, not execution budgets or substitutes for full evidence.
+Reward Kit owns deterministic and task-defined semantic criteria. The shared Python verifier runs task-local assertions in an isolated process and retains check.log. Report readers validate JSON objects and required nested structures before task interpretation. Invalid reports, business assertion failures and missing workspace outputs are task failures; missing verifier inputs and unexpected verifier exceptions leave the trial unscored. Verifier-owned Node contracts are checked for presence and syntax before execution; their assertions still judge the task outcome. Task-local checks own business outcomes; shared workspace checks enforce each task’s declared write scope and preserve pre-existing dirty state. For full-score acceptance, configure `aggregation = "threshold"` and `threshold = 1` with positive criterion weights. The pinned upstream `all-pass` accepts any positive score per criterion, including partial scores, so it cannot enforce full-score acceptance.
 
-SIGINT/SIGTERM cancels the active session, retains collected output/observations and saves an incomplete, inconclusive matrix without another session. Cancellation remains explicit even after child exit zero. POSIX cleanup targets the process group and escalates after 250 ms; escaped processes are not covered. Windows cleanup targets the direct child only. Forced termination cannot guarantee persistence.
+Judge, provider and verifier errors are unavailable evidence, not graded task failures or passes. Preserve error details and leave affected trials ungraded. Read native trial results, agent logs/artifacts and verifier details together; reward alone cannot resolve authority, missing evidence or semantic coverage. Judge behavior and artifacts, not exact Skill wording, reading commands or activation fingerprints. Read-only tasks reject new undeclared files, including source and .rsp records; declared report/plan outputs and temporary files under tmp/ or .cache/ remain allowed. The native-coordination verifier projects retained child session identities, tool calls and outputs into the Reward Kit judge input. Missing child tool evidence leaves the trial unscored; worker completion prose alone is insufficient. Author self-checks cannot supply required independent acceptance.
 
-`progress.json` retains only case/role/phase, timestamps, byte/chunk counts and process activity. It contains no raw output, tool arguments or credentials; stdout remains one final JSON result. Silence is not a timeout. Writes are throttled to 250 ms; transitions flush immediately. `PROGRESS_WRITE_FAILED` warns and records `progressError` without bypassing cancellation or normal cleanup.
+Jobs and raw evidence live under ignored `tests/skills/reports/`. Preserve historical records without translating their verdicts into current acceptance. Private retention is not a secret-scrubbing guarantee. Keep selected sanitized conclusions in time-named Markdown under `research/reports/`.
 
-## Reassess retained execution
+The retired custom runner's raw records, workspaces, preparation probes and temporary archives were removed on 2026-10-08. Selected historical summaries and verdicts remain at their original paths; they cannot supply replay or regrade evidence after raw inputs are removed. Historical retention statements predate this cleanup. The framework comparison experiment remains intact for its research report. Retain native Harbor jobs with their sibling inputs and recovery backups; the local reports/README.md describes the cleanup boundary.
 
-Preview: `mise exec -- node tests/skills/runner/cli.mjs reassess --matrix /absolute/reports/run/matrix.json --case preserve-user-files`. This selects one readable matrix member and performs no provider call, task execution or retained-oracle replay.
+## Calibrate semantic judging
 
-Separately authorized judging adds `--allow-live --config-file /absolute/private/provider.toml --max-sessions 1`, with optional auth/executable paths. A positive budget is required; this command uses at most one judge and zero executors, regardless of a larger budget. `--baseline /absolute/previous/matrix.json` selects optional comparison evidence for the same case. Both commands use the same review path and timeout/cancellation behavior.
+The small [calibration corpus](calibration/README.md) supplies reference outputs, equivalent correct wording and plausible failures for document, design and staged-review judgments. It runs through native Harbor oracle tasks and the unchanged task verifier, including Reward Kit judges. This differs from oracle/nop controls above: semantic calls remain enabled and require authorization and judge credentials. No executor model is invoked.
 
-Failed, partial, cancelled, legacy and differently configured records remain reviewable. Missing compatibility metadata, record-hash mismatches and current-source/input differences become explicit warnings. They limit trust or current-candidate claims; they do not force fresh task execution. An unreadable required matrix/run or unsafe path fails with `REASSESS_REPORT`; absent/non-unique current case selection fails with `REASSESS_SELECTION`. A missing optional baseline member is only a warning.
+```sh
+mise exec -- uv run --project tests/skills python tests/skills/evaluate.py calibrate --task doc-export --task shape-cache --task review-staged --allow-live
+```
 
-Every invocation writes a new UUID directory under `--output-root` (default `tests/skills/reports/reassessments`). `lineage.json` binds original matrix/run hashes, current harness/configuration, baseline pointers and fresh review/report. Source records and verdicts are never rewritten. Historical review is not new execution or current-candidate acceptance.
+The wrapper snapshots the task, original oracle solution, sample script and expectations. Harbor installs the reference solution followed by the selected sample and runs the original tests. The report compares programmatic and semantic components independently: a rejected negative sample is a match, not an Agent success. Missing scores and verifier/provider errors are unscored, never matches. Any mismatch or unavailable result makes the command fail. Use `--attempts` to repeat judgment of the same samples; keep this distinct from repeated Agent executions.
 
-## Projects and history
+Labels currently remain `candidate`: the author derived them from the task contract, but no human has confirmed them. Inspect false acceptance/rejection with a human before changing a label to `human-reviewed`. A matching candidate label is implementation evidence, not human calibration. Add samples for observed judgment failures; do not duplicate every task mechanically. Run a fresh calibration after changing sample artifacts or expected labels. For rubric-only corrections, `regrade JOB --allow-live` reuses the retained sample artifacts and original expectations with the current task verifier; its results are labeled `judge-calibration-regrade-*`. Resume of a calibration job needs `--allow-live` because its oracle still calls judges.
 
-`real/rsp-cli` uses production paths from an exact local Git commit. Source defect overlays match fixed content exactly. The source oracle checks repaired behavior and untouched controls; readiness is not agent acceptance. The snapshot lock must match installed dependencies. Dependencies are copied into a private graph with internal links, never used as writable links to the maintainer cache. Complex projects cover multiple owners, staged/unstaged/untracked preservation, interruption and failed checks. No task runs in the source checkout.
+Harbor owns the child directories inside each job. Native resume deletes child directories lacking `result.json`, including auxiliary input or archive directories placed there. For a job at `tests/skills/reports/<time>`, the wrapper snapshots inputs in sibling `tests/skills/reports/<time>.inputs` and recovery evidence in sibling `tests/skills/reports/<time>.attempts/<retrytime>`. Keep these outside the managed job directory and retain them with the job.
 
-Reports are private/ignored under `tests/skills/reports/`. `matrix.json` references untouched execution and review records. Keep selected sanitized conclusions in time-named Markdown under `research/reports/`, with locatable run evidence and limits. A new review or changed harness produces new evidence, not a rewritten historical verdict. Retain raw records needed for active comparisons; consolidation does not preserve discarded private bytes.
+## Report, resume and regrade
+
+Use a recorded job directory as `JOB`. Reporting reads existing results and writes `JOB/summary.md` without executing agents or judges; an optional baseline compares task outcome counts from native job evidence:
+
+```sh
+mise exec -- uv run --project tests/skills python tests/skills/evaluate.py report JOB
+mise exec -- uv run --project tests/skills python tests/skills/evaluate.py report JOB --baseline BASELINE_JOB
+```
+
+Keep source, dependencies, tasks, skills, model settings and attempts comparable before attributing differences to a candidate. The report flags mismatched native task checksums or agent model/settings; Skill paths are intentionally excluded. Calibration stays calibration after regrade, and reassessment is labeled separately from fresh execution. Missing or incompatible evidence limits the affected comparison. Baselines and holdouts are optional research design, not mandatory release gates.
+
+The summary gives per-task outcome counts, recorded executor and Skill selection, judge configuration, unmet criterion names, trial duration and links to original grading reasons. Ratios use returned records, including failed, unscored, error and cancelled attempts. An incomplete job is explicitly marked; missing results cannot establish a full-run success rate or always be attributed to a task. Unknown usage or timing stays unknown. Oracle/nop controls, judge calibration, regrade and fresh execution retain distinct labels; do not pool them into a Skill success rate. Native results describe retained attempts, while earlier failed attempts remain in recovery backups.
+
+Resume can execute agents and verifiers again and requires execution authority. Codex and regrade jobs require live authorization. Saved support code, dependency lock and local image identity must match before recovery; missing or changed inputs require a new run or regrade. Use the wrapper to preserve existing evidence before native resume removes matching error trials:
+
+```sh
+mise exec -- uv run --project tests/skills python tests/skills/evaluate.py resume JOB --error-type RuntimeError
+```
+
+For a Codex or regrade job, add `--allow-live` after separately authorizing model execution. Before native resume, the wrapper snapshots recovery evidence and job metadata in the sibling `<time>.attempts/<retrytime>` directory described above. Inspect the snapshot and original error before retrying, and confirm retained evidence after resume. The former in-job `inputs/` and `attempts/` locations were deleted in a real resume test; they are not successful preservation evidence. The corrected sibling layout passed fault-injection recovery: the failed attempt was retained and the successful trial remained byte-identical. A fresh-process resume also preserved the complete 16-task oracle job and its sibling inputs. Do not label resumed attempts as untouched original execution or let failure itself authorize paid retries.
+
+For authorized verifier reassessment, the wrapper snapshots the current matching tasks, support code, dependency lock and image identity, then starts a native Harbor regrade job from retained agent artifacts:
+
+```sh
+mise exec -- uv run --project tests/skills python tests/skills/evaluate.py regrade JOB --allow-live --concurrency 1
+```
+
+The source job supplies execution artifacts; the new sibling inputs directory supplies the replacement verifier. Resume checks the regrade job's own snapshot, so a corrected grader need not match the original execution's grader. Later working-tree task edits do not change that snapshot. Missing required source artifacts leave reassessment unavailable. Regrade can call task-defined judges and requires runtime judge routing; it is not fresh agent execution or current-candidate Skill acceptance.
+
+Advanced direct use of native Harbor regrade remains possible. Task templates default RSP_EVAL_OFFLINE to 0 and the optional RSP_JUDGE_HOST to an empty value, so this path does not depend on a prior wrapper invocation. Semantic tasks still require RSP_JUDGE_BASE_URL and RSP_JUDGE_API_KEY. Direct native jobs have no wrapper input snapshot and cannot use wrapper resume; use the documented entry above when retained inputs and recovery are required.
+
+Package release invokes only `evaluate.py check`; it never automatically runs, resumes or regrades jobs. Model results, schema checks and local code success grant no release, publication or human approval.

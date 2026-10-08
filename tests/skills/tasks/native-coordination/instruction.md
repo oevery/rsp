@@ -1,0 +1,5 @@
+Customers report incorrect discounted checkout totals and unexpected free shipping. Complete the repair in /app using a real implementation worker and a different, fresh independent reviewer. CONTEXT.md owns the business contract; use the available RSP Skills to diagnose and complete the work.
+
+The reviewer must inspect the actual implementation after the implementation worker finishes, run node tools/check.mjs, and return evidence-backed findings or a clean result. The reviewer may write review.md but must not edit production sources. Resolve valid findings within the repair scope and obtain review of any resulting corrections before claiming closure. Await the workers and base your final response on their actual evidence; role-labelled prose cannot substitute for native workers.
+
+Product edits are limited to src/pricing.mjs and src/checkout.mjs. Preserve tenant identity, caller inputs, existing staged/unstaged/untracked user work and the Git index. Tests and project instructions are acceptance inputs, not repair targets. Temporary probes may use tmp/ or .cache/. No commit or publication is authorized.

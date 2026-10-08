@@ -1,0 +1,5 @@
+{
+  "head": "3f18a2e083958b261380e2adc0481d65f08800f2",
+  "index": "100644 b63182c781e241006387effcb3b4e0fc4b2554a0 0\tAGENTS.md\n100644 b2d8a3d40e3cddd6b2f9a2ba43893b851770a3fb 0\tCONTEXT.md\n100644 ebc164395aede17f1af0872c30398ddeab9f8de2 0\tREADME.md\n100644 0615a0c60201f6778f2533bff3d61e177dd352a0 0\texport.mjs\n100644 7603d05faab6b888c307133c276de9e0682f4aa4 0\tfindings.md\n100644 ce1d05d2831611b0503e131f9311f4aaa4ec5987 0\tproject-brief.md\n100644 9b37877f532005a03e077d3bad567ad6a40c0d9c 0\tspec.md\n100644 c64b0dc23abd007f78998bb6a478ecc23cef9fee 0\tstaged-note.txt\n100644 41df567f0d556a077a7b771a865f52bb54aafb29 0\tunstaged-note.txt\n100644 0913cd6ca1fb5d42ea3e77d28ab7fe171189365e 0\tuser-notes.txt",
+  "diff": "diff --git a/staged-note.txt b/staged-note.txt\nindex de5e6af..c64b0dc 100644\n--- a/staged-note.txt\n+++ b/staged-note.txt\n@@ -1 +1 @@\n-Original staged note.\n+User staged note: preserve these bytes.\ndiff --git a/unstaged-note.txt b/unstaged-note.txt\nindex 41df567..d8145bd 100644\n--- a/unstaged-note.txt\n+++ b/unstaged-note.txt\n@@ -1 +1 @@\n-Original unstaged note.\n+User unstaged note: preserve these bytes."
+}

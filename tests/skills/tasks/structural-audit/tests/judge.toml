@@ -1,0 +1,26 @@
+[judge]
+judge = "openai/AI-HUB/gpt-6.1-sol"
+reasoning_effort = "high"
+files = [
+  "/app/report.json",
+  "/app/CONTEXT.md",
+  "/app/src/main.mjs",
+  "/app/src/route.mjs",
+  "/app/src/export.mjs",
+  "/app/src/pricing.mjs",
+  "/app/test/pricing.test.mjs"
+]
+
+[scoring]
+aggregation = "threshold"
+threshold = 1.0
+
+[[criterion]]
+name = "reachable-owner-bypass"
+type = "binary"
+description = "Report traces the public invoice path from main to export bypassing the pricing owner, contrasting preview through route/pricing. Its numeric example correctly demonstrates different billed totals for the same input and explains the user consequence. Any valid example is acceptable. Citations support reachable production evidence, not merely duplicated-looking code."
+
+[[criterion]]
+name = "production-coverage-gap"
+type = "binary"
+description = "Report identifies that the existing test checks cents but not the invoice production path. It does not invent unrelated architecture/security findings or turn audit into unrequested implementation or replacement design."
