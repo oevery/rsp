@@ -14,17 +14,33 @@ mise exec -- python tests/skills/build_image.py
 
 Schema checking needs no Docker daemon or credentials and makes no model calls. The image helper builds the actual RSP CLI with `mise exec -- pnpm run build`, stages its package and builds `rsp-eval-agent:2026-10-08`. It needs installed repository dependencies, mise and Docker, and may download image dependencies. Image building is separate from package release checks. Task execution also needs Docker. Inspect selected task instructions, environments, solutions and verifiers. A schema pass establishes neither container readiness nor task success.
 
+Before creating a new run, calibration or regrade job, the wrapper compares the actual image bytes with the local CLI package, baked verifier support, dependency lock and Dockerfile. Missing or changed files stop preparation with a rebuild instruction. Rebuild after changing those inputs. This check uses a disposable network-disabled container and makes no model calls; it checks candidate agreement, not task behavior. Resume retains its saved-input and image-identity checks.
+
+For the native Codex environment boundary, an explicit offline probe invokes bare `apply_patch` through `bash -lc` and exercises Skill registration, configuration, session copying on resume and cleanup. It also checks that the command remains executable after the transient home is removed. It replaces model execution with a local probe and does not establish model behavior or real conversation continuation:
+
+```sh
+RSP_EVAL_CONTAINER_TESTS=1 mise exec -- uv run --frozen --project tests/skills python tests/code/tooling/evaluation_contract.py EvaluationContract.test_native_codex_home_supports_helpers_retention_and_cleanup
+```
+
 ## Select and run tasks
 
 `--task ID` is repeatable; `--attempts N` controls attempts per selected task. `--agent` selects `codex`, `oracle` or `nop`. Choose tasks for the changed risk, including restraint and preservation where relevant; catalog size is not a quality gate. Native job `agents[].skills` supplies package paths. Prepared internal packages use the same mechanism; see the maintainer [internal-target guide](../../.agents/skills/author-rsp-skills/references/internal-targets.md). There is no parallel composition-hash or matrix model.
 
-Only the selected candidate Skills are injected through native Harbor agent configuration. Task workspaces contain no baked-in Skills. The CLI package in the image supplies the real `rsp` command; its distribution assets do not select the agent Skills under evaluation.
+Only the selected candidate Skills are registered through native Harbor agent configuration. Harbor copies their files into the native discovery directory; Codex supplies the catalog and decides how to load selected resources. Registration does not promise full-body prompt injection or bypass tool-result limits. Task workspaces contain no baked-in Skills. The CLI package in the image supplies the real `rsp` command; its distribution assets do not select the agent Skills under evaluation.
 
-Choose scope and purpose independently. A single-Skill run isolates one responsibility; a mixed-project run uses the everyday Skill combination to exercise discovery and handoffs. Regression tasks protect established outcomes; exploratory tasks investigate capability gaps. These are selection decisions, not a mandatory cross-product or new task format. Reuse the same native task when both scopes are meaningful.
+Use repeated `--skill PATH` to replace the default selection for one run, or `--no-skills` to inject none; these options are mutually exclusive. Selected packages are copied into the job's immutable inputs, including an explicit empty selection in its native configuration. Neither option edits `jobs/default.yaml`. A zero-injection comparison still retains task policy and the RSP CLI; it is not a test without all RSP influence. Use the same neutral prompt in both arms when investigating discovery or contribution, and retain separate authorization for live execution.
 
-For example, after authorizing model execution, isolate implementation with `run --task implement-checkout --skill skills/rsp-implement --allow-live`. Use `run --task implement-checkout --task workflow-catalog --task native-coordination --allow-live` for the three mixed-project scenarios. Prefix both with `mise exec -- uv run --project tests/skills python tests/skills/evaluate.py`. Native coordination requires real workers, so selecting a single unrelated Skill would not establish its contract.
+Choose scope and purpose independently. A partial catalog is an explicit research intervention, not a supported product installation. Current suite acceptance registers all seven core Skills even when the task directly invokes only one responsibility. A mixed-project run exercises discovery and handoffs. Regression tasks protect established outcomes; exploratory tasks investigate capability gaps. These are selection decisions, not a mandatory cross-product or new task format. Reuse the same native task when both scopes are meaningful.
+
+For example, after authorizing model execution, exercise direct implementation with `run --task implement-checkout --allow-live` and the complete suite. Use `run --task implement-checkout --task workflow-catalog --task native-coordination --allow-live` for the three mixed-project scenarios. Prefix both with `mise exec -- uv run --project tests/skills python tests/skills/evaluate.py`. Native coordination requires real workers, so selecting a single unrelated Skill would not establish its contract.
+
+The exploratory pair `completion-boundary` and `completion-boundary-control` assesses completion against a settled cache contract when every Task and Required check is already marked passed. Their instructions, contract and smoke check are identical; only the implementation's expiry comparison differs. Both smoke checks pass. The first requires rejecting whole-outcome completion for the omitted expiry boundary, while the control requires accepting the correct implementation without inventing a defect or treating missing dedicated tests as an automatic blocker. The task declares the native Codex log as a verifier artifact; the judge receives an attributed projection of its commands and results, excluding internal reasoning; unavailable native evidence leaves grading unavailable. Select both tasks together; offline oracle/nop controls calibrate report disposition and preservation, while actual Skill behavior and explanation quality require separately authorized agent and semantic-judge execution. See the [research question](../../research/reports/2026-10-08T08-07-58Z.md#candidate-1-test-omitted-acceptance-despite-passing-declared-checks).
 
 Default execution uses `AI-HUB/gpt-6.1-sol` at medium reasoning effort, one attempt and concurrency one. Semantic judges currently use `openai/AI-HUB/gpt-6.1-sol` at high effort. Match execution configuration to actual usage before acceptance. Use `--attempts 3` as an initial stability observation for affected critical tasks, not a universal gate or proof of reliability. Keep model, reasoning effort, task, grader and container resources comparable.
+
+The image and Job pin Codex 0.162.1, the npm `latest` resolution checked on 2026-10-11. Resolve updates deliberately and change both pins; a floating tag would make otherwise identical jobs use different hosts. This is the standalone CLI environment, not a claim of desktop-host equivalence.
+
+The Job's `kwargs.config.model_catalog_json` identifies a local source catalog (default: `~/.codex/opencodex-catalog.json`). Before execution, the runner requires an exact entry for the selected model and retains only that entry in the job's private sibling inputs. The native adapter uploads this snapshot into the container and rewrites the config path; Harbor does not upload referenced files itself. This retains model instructions, tool mode, context and truncation budgets rather than letting a routed name silently use fallback metadata. Catalogs must contain model descriptions only, never credentials. Change the configured source path for another installation; `--model` must have a matching entry. Resume uses the retained snapshot, not the current local catalog.
 
 For separately authorized model execution:
 
@@ -34,7 +50,9 @@ mise exec -- uv run --project tests/skills python tests/skills/evaluate.py run -
 
 The native Codex provider in [jobs/default.yaml](jobs/default.yaml) owns executor routing: `model_provider`, `base_url`, Responses protocol and HTTP headers. Supply its credential through `OPENAI_API_KEY`; Harbor passes it into the agent container and Codex reads it through `env_key`. Judge routing remains separate through `RSP_JUDGE_BASE_URL` and `RSP_JUDGE_API_KEY`. Keep credentials out of tracked configuration and reports. Codex requires `--allow-live`; examples grant no cost or execution authority. Review effective job settings, selected skills, model and task inputs. Missing authentication, applicable tasks or required semantic judging leaves behavior unverified.
 
-The default provider reaches local OpenCodex at Docker's host gateway on port 10100 and supplies the loopback HTTP Host required by that gateway. To use another endpoint, edit the provider's `base_url` and remove or adjust `http_headers.Host` in the Job; `OPENAI_BASE_URL` does not override this named provider. Codex does not expand shell variables in `base_url`. The local adapter only preserves routed model names that Harbor 0.24.0 otherwise truncates. For the judge, use a Docker-reachable `RSP_JUDGE_BASE_URL` and optional `RSP_JUDGE_HOST`. Set these only for evaluation; never edit global Codex or proxy configuration. A successful container `/models` response establishes connectivity, not agent or judge acceptance.
+The default provider reaches local OpenCodex at Docker's host gateway on port 10100 and supplies the loopback HTTP Host required by that gateway. To use another endpoint, edit the provider's `base_url` and remove or adjust `http_headers.Host` in the Job; `OPENAI_BASE_URL` does not override this named provider. Codex does not expand shell variables in `base_url`. The local adapter preserves routed model names that Harbor 0.24.0 otherwise truncates and uses `/opt/rsp-codex-home` inside the evaluation container: Codex 0.150.1 rejects helper creation under Harbor's temporary home. Native Harbor still owns setup, session retention and cleanup. For the judge, use a Docker-reachable `RSP_JUDGE_BASE_URL` and optional `RSP_JUDGE_HOST`. Set these only for evaluation; never edit global Codex or proxy configuration. A successful container `/models` response establishes connectivity, not agent or judge acceptance.
+
+The image exposes Codex's native helper at `/usr/local/bin/apply_patch`, because login shells reset PATH and discard Codex's temporary helper directory. Image preparation resolves the installed helper target without hardcoding a platform-specific vendor path. The stable link survives native session cleanup; no replacement patch implementation or Skill workaround is involved.
 
 The repository ignores `.env.eval.local` for local endpoint and credential settings. Keep it private and explicitly load it before evaluation commands; the runner does not automatically source shell files:
 
@@ -56,6 +74,28 @@ RSP_EVAL_OFFLINE=1 mise exec -- uv run --project tests/skills python tests/skill
 Use `RSP_EVAL_OFFLINE=1` only with `oracle` or `nop`, never for Codex acceptance. The wrapper also enables this mode automatically for oracle/nop. These results calibrate verifier discrimination and environment behavior, not Skill quality. Run and resume return zero only when every oracle trial passes or every nop trial is rejected; an unexpected control outcome, missing score or infrastructure error returns nonzero. Native verifier regrade can call judges and requires separate authority.
 
 ## Scoring and evidence
+
+Executor usage is derived from the root identity in codex.txt and session_meta
+parent links, including retained descendants once each. The adapter converts the
+identified root trajectory and writes executor-usage.json with per-session usage,
+aggregate totals and unattributed sessions. Missing totals remain unknown; no
+partial root/child price is labeled aggregate cost. Judges are excluded. Reporting
+also re-aggregates retained historical sessions without rewriting original native
+verdicts; old agent_result totals may describe only the lexically latest child.
+Cumulative input tokens are not simultaneous context-window occupancy.
+
+The suite comparison selects completion-boundary and its control, direct grouped
+Review in completion-group-control, verify-boundary, commit-restraint,
+native-coordination, and structural-audit with structural-audit-control. The
+structural pair uses capability-neutral instructions: baseline may select the old
+Audit entry; the suite candidate should select Review. Task success and restraint,
+not reading commands or exact Skill selection, determine scores. Source reads,
+repeated loads and per-session usage remain diagnostics. The additional
+commit-tracked-restraint probe directly invokes Commit for a grouped child without
+permission to stage or commit. Grouped review explicitly requires file-valued
+evidence paths; directory-wide observations belong in limits.
+
+Task checks using `evidence_report` accept workspace file paths and optional one-based `:line` or `:line:column` locations, including `/app/` paths. References must resolve to existing files inside the workspace, including after symlink resolution; supplied positions must exist (a column may identify the end-of-line insertion point). Invalid locations remain task failures. The shared report validator owns this interpretation.
 
 Reward Kit owns deterministic and task-defined semantic criteria. The shared Python verifier runs task-local assertions in an isolated process and retains check.log. Report readers validate JSON objects and required nested structures before task interpretation. Invalid reports, business assertion failures and missing workspace outputs are task failures; missing verifier inputs and unexpected verifier exceptions leave the trial unscored. Verifier-owned Node contracts are checked for presence and syntax before execution; their assertions still judge the task outcome. Task-local checks own business outcomes; shared workspace checks enforce each task’s declared write scope and preserve pre-existing dirty state. For full-score acceptance, configure `aggregation = "threshold"` and `threshold = 1` with positive criterion weights. The pinned upstream `all-pass` accepts any positive score per criterion, including partial scores, so it cannot enforce full-score acceptance.
 

@@ -11,8 +11,11 @@ function contained(root, path) {
 }
 
 // Maintainer/package gate only: never asserts Skill prose or executes resources.
-export function checkSkillPackage(directory) {
+export function checkSkillPackage(directory, { suiteRoot } = {}) {
   const root = resolve(directory)
+  const shared = suiteRoot && dirname(root) === resolve(suiteRoot) && ['rsp', 'rsp-shape', 'rsp-implement', 'rsp-doc', 'rsp-review', 'rsp-verify', 'rsp-commit'].includes(basename(root))
+    ? join(resolve(suiteRoot), 'rsp', 'references')
+    : null
   const errors = []
   const fail = (file, code) => errors.push({ path: relative(root, file) || '.', code })
   try {
@@ -53,7 +56,9 @@ export function checkSkillPackage(directory) {
       try {
         const local = decodeURIComponent(url.split(/[?#]/u, 1)[0])
         const target = resolve(dirname(file), local)
-        if (isAbsolute(local) || !contained(root, target) || !contained(realpathSync(root), realpathSync(target))) {
+        const resourceRoot = contained(root, target) ? root : shared && contained(shared, target) ? shared : null
+        if (isAbsolute(local) || !resourceRoot || !contained(realpathSync(resourceRoot), realpathSync(target))
+          || (resourceRoot === shared && (!contained(realpathSync(suiteRoot), realpathSync(shared)) || lstatSync(shared).isSymbolicLink()))) {
           fail(file, 'resource-outside-package')
           return
         }
@@ -90,7 +95,7 @@ export function checkSkillPackage(directory) {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const directory = resolve(process.argv[2] ?? 'skills')
   try {
-    const packages = readdirSync(directory).sort().map(name => ({ name, ...checkSkillPackage(join(directory, name)) }))
+    const packages = readdirSync(directory).sort().map(name => ({ name, ...checkSkillPackage(join(directory, name), { suiteRoot: directory }) }))
     const status = packages.length && packages.every(item => item.status === 'passed') ? 'passed' : 'failed'
     process.stdout.write(`${JSON.stringify({ status, packages }, null, 2)}\n`)
     process.exitCode = status === 'passed' ? 0 : 1

@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -20,16 +20,38 @@ describe('published Skill package boundary', () => {
       .filter(entry => entry.isDirectory())
       .map(entry => entry.name)
       .sort()
-    const expected = ['rsp', 'rsp-shape', 'rsp-implement', 'rsp-verify', 'rsp-review', 'rsp-commit', 'rsp-structural-audit', 'rsp-doc'].sort()
+    const expected = ['rsp', 'rsp-shape', 'rsp-implement', 'rsp-verify', 'rsp-review', 'rsp-commit', 'rsp-doc'].sort()
 
     expect(discovered).toEqual(expected)
-    expect([...DEFAULT_PACKAGED_SKILL_NAMES].sort()).toEqual(expected.filter(name => name !== 'rsp-structural-audit'))
+    expect([...DEFAULT_PACKAGED_SKILL_NAMES].sort()).toEqual(expected)
   })
 
   it('validates published Skill metadata and local resource closure without prose assertions', () => {
-    for (const name of [...DEFAULT_PACKAGED_SKILL_NAMES, 'rsp-structural-audit']) {
-      expect(checkSkillPackage(join(root, 'skills', name))).toEqual({ status: 'passed', errors: [] })
+    for (const name of [...DEFAULT_PACKAGED_SKILL_NAMES]) {
+      expect(checkSkillPackage(join(root, 'skills', name), { suiteRoot: join(root, 'skills') })).toEqual({ status: 'passed', errors: [] })
     }
+  })
+
+  it('allows declared Core references but rejects missing, sibling and escaped resources', () => {
+    const suiteRoot = mkdtempSync(join(tmpdir(), 'rsp-suite-resources-'))
+    temporary.push(suiteRoot)
+    const directory = join(suiteRoot, 'rsp-review')
+    mkdirSync(directory)
+    mkdirSync(join(suiteRoot, 'rsp', 'references'), { recursive: true })
+    const shared = join(suiteRoot, 'rsp', 'references', 'work-model.md')
+    writeFileSync(shared, '# Work model')
+    const prefix = '---\nname: rsp-review\ndescription: Review.\n---\n'
+    const check = (link: string) => {
+      writeFileSync(join(directory, 'SKILL.md'), `${prefix}[work model](${link})\n`)
+      return checkSkillPackage(directory, { suiteRoot })
+    }
+    expect(check('../rsp/references/work-model.md').status).toBe('passed')
+    expect(checkSkillPackage(directory).status).toBe('failed')
+    expect(check('../rsp/references/missing.md').status).toBe('failed')
+    writeFileSync(join(suiteRoot, 'rsp', 'SKILL.md'), 'Not a shared definition')
+    expect(check('../rsp/SKILL.md').status).toBe('failed')
+    symlinkSync(join(suiteRoot, 'rsp', 'SKILL.md'), join(suiteRoot, 'rsp', 'references', 'escape.md'))
+    expect(check('../rsp/references/escape.md').status).toBe('failed')
   })
 
   it('rejects malformed host metadata but accepts equivalent YAML and rewritten instructions', () => {

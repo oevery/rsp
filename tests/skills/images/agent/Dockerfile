@@ -9,7 +9,8 @@ COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
 RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm
 RUN apt-get update && apt-get install -y --no-install-recommends bash git ca-certificates && rm -rf /var/lib/apt/lists/*
 RUN git config --system --add safe.directory /app
-RUN npm install -g @openai/codex@0.150.1 --fetch-timeout=60000 --fetch-retries=1 --loglevel=http
+# npm latest resolved on 2026-10-11; pin the resolution for reproducible jobs.
+RUN npm install -g @openai/codex@0.162.1 --fetch-timeout=60000 --fetch-retries=1 --loglevel=http
 ARG PNPM_VERSION
 RUN npm install -g pnpm@${PNPM_VERSION} --fetch-timeout=60000 --fetch-retries=1
 COPY .build/requirements.txt /tmp/requirements.txt
@@ -19,5 +20,15 @@ RUN cd /opt/rsp-package && pnpm install --prod --frozen-lockfile --ignore-script
 COPY .build/package /opt/rsp-package
 RUN ln -s /opt/rsp-package/bin/rsp.mjs /usr/local/bin/rsp && chmod +x /opt/rsp-package/bin/rsp.mjs
 COPY support/grade.py support/checks.py support/verifier.py support/workspace.py support/outputs.py /opt/rsp-eval/
+# Login shells reset PATH; expose Codex's own helper outside its transient home.
+RUN set -eu; \
+    probe_home=$(mktemp -d /opt/rsp-codex-helper.XXXXXX); \
+    CODEX_HOME="$probe_home" codex --version; \
+    helper=$(find "$probe_home" -name apply_patch -type l -print -quit); \
+    test -n "$helper"; \
+    ln -s "$(readlink -f "$helper")" /usr/local/bin/apply_patch; \
+    rm -rf "$probe_home"; \
+    test -x /usr/local/bin/apply_patch
+COPY uv.lock images/agent/Dockerfile /opt/rsp-build/
 ENV PYTHONUNBUFFERED=1
 WORKDIR /app

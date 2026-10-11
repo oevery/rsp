@@ -59,11 +59,6 @@ npx -y @oevery/rsp@latest skills install --dry-run
 npx -y @oevery/rsp@latest skills install
 ```
 
-可选的纯报告结构审计按精确名称安装：
-
-```bash
-rsp skills install rsp-structural-audit --dry-run
-rsp skills install rsp-structural-audit
-```
+当前源码候选整套安装七个核心 Skills，拒绝单个按名安装。结构审查已包含在 Review 中，无需额外安装 Skill。请使用迁移指南所指的精确候选 CLI，不要假定稳定包已经具备此行为。
 
 接下来阅读[核心概念](./concepts.md)，或直接遵循[日常工作流](./guides/daily-workflow.md)。

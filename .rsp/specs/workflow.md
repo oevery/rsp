@@ -9,6 +9,13 @@ selection and completion, not a fixed stage machine.
 
 ## Capability ownership
 
+Core owns the shared runtime work-model reference. Direct capability invocation
+reads it when tracked identities are needed and not already in context; it does
+not first execute Core. Review's structural method needs an explicit repository
+or subtree boundary and observed checkout state, not a diff. Ordinary review does
+not widen into a repository audit; structural findings grant no design or repair
+authority. Review uses one severity and report contract across its methods.
+
 | Capability | Responsibility |
 | --- | --- |
 | `rsp` | Goal, owner and authority selection; conditional routing and overall completion |
@@ -16,11 +23,10 @@ selection and completion, not a fixed stage machine.
 | `rsp-implement` | Read-only diagnosis, authorized implementation and ordinary own verification |
 | `rsp-doc` | Authorized document/Skill writing and author self-checks |
 | `rsp-verify` | One declared read-only evidence boundary |
-| `rsp-review` | Fixed-scope read-only semantic judgment |
+| `rsp-review` | Fixed-scope read-only judgment or explicitly bounded structural discovery |
 | `rsp-commit` | Read-only delivery inspection or separately authorized exact local Git delivery |
-| `rsp-structural-audit` | Optional report-only structural discovery |
 
-The first seven form the default suite; installation grants no action authority.
+These seven form one installable core suite; installation grants no action authority.
 Shape clarifies material choices for the authorized DecisionOwner, not approval
 or new public requirements. Doc writes settled facts and converges work records;
 it is not a second controller. Review never repairs or approves its own target.
@@ -44,7 +50,7 @@ checks and message policy, preserves hooks/signing, and stops on unsafe Git stat
 content drift or missing decisive evidence. It binds one native Git attempt to the
 reviewed delivery boundary and verifies the resulting message, content, ancestry
 and remaining work. Failure or uncertainty grants no retry, amend, reset or repair.
-The self-contained [Commit procedure](../../skills/rsp-commit/SKILL.md) owns the
+The [Commit procedure](../../skills/rsp-commit/SKILL.md) owns the
 specific checks and execution steps. These agent-enforced guards are not a
 cross-process lock or proof of wrapper-equivalent reliability. The CLI's
 [Git boundary](cli.md#git-execution-boundary) defines its separate surface.
@@ -53,7 +59,7 @@ cross-process lock or proof of wrapper-equivalent reliability. The CLI's
 
 - One capability owns one bounded responsibility. The
   [Distribution package contract](distribution.md#skill-package-boundaries) owns
-  standalone closure; [Writing quality](writing-quality.md#instruction-and-resource-design)
+  suite resource closure; [Writing quality](writing-quality.md#instruction-and-resource-design)
   owns instruction/resource design.
 - Handoffs carry only the needed goal, owner, exact scope, authority, results and
   evidence. Capability selection is not worker delegation.
@@ -78,8 +84,13 @@ applicable in context:
    an unexplained execution symptom selects Implement's diagnosis. A settled task
    needs no planning phase.
 2. Select the capability needed now. Implement includes ordinary own checks;
-   Doc supports authorized writing. Verify is for a declared read-only or independent
-   evidence obligation, and Review for requested or required semantic judgment.
+   Doc supports authorized writing. Verify collects and reports a selected owner's
+   declared evidence when that is the requested result or a separate verification
+   obligation. Review supplies fixed-scope semantic judgment, including whether
+   implementation supports a completion claim, and runs authorized supporting
+   checks without a forced Verify handoff. Read-only status or named checks alone
+   do not select both. Explicit combined requests retain both responsibilities;
+   overall completion and lifecycle decisions remain Core's responsibility.
    Required independence must come from real Host observations, not a role change.
 3. Inspect the returned artifacts, actual effects, evidence applicability and
    unresolved limits. Continue a bounded correction or permitted method switch
@@ -92,7 +103,10 @@ applicable in context:
 
 These are routing dependencies, not mandatory separate calls, workers or phases.
 A responsibility transition alone requires no repeated reading, test execution or
-user continuation request. Recovery, coordination and lifecycle procedures load
+user continuation request. Reuse applicable entrypoint and method text available
+in context; obtain missing or changed instructions before relying on them. New
+task observations alone do not invalidate instructions. Recovery, coordination
+and lifecycle procedures load
 only for their actual obligations under the contracts below; ordinary continuation
 does not activate them.
 

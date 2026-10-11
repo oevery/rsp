@@ -1,0 +1,5 @@
+manage:
+  activation: explicit
+  closeout: manual
+language:
+  default: en

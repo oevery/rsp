@@ -5,7 +5,7 @@ import type { SkillsTuiSelection } from './app.js'
 import process from 'node:process'
 import { render } from 'ink'
 import ReactRuntime from 'react'
-import { inspectPackagedSkillInventory } from '../commands/skills.js'
+import { inspectPackagedSkillInventory, installPackagedSkills } from '../commands/skills.js'
 import { openTerminalSession } from '../tui/terminal.js'
 import { SkillsApp } from './app.js'
 import { skillsCatalogs } from './messages.js'
@@ -23,6 +23,7 @@ interface SkillsTuiHost {
 
 export interface SkillsTuiRuntime {
   inspect: typeof inspectPackagedSkillInventory
+  preview: typeof installPackagedSkills
   render: (element: React.ReactElement, options: { exitOnCtrlC: boolean, patchConsole: boolean }) => SkillsTuiInstance
   openSession: typeof openTerminalSession
   host: SkillsTuiHost
@@ -31,6 +32,7 @@ export interface SkillsTuiRuntime {
 
 const defaultRuntime: SkillsTuiRuntime = {
   inspect: inspectPackagedSkillInventory,
+  preview: installPackagedSkills,
   render,
   openSession: openTerminalSession,
   host: process,
@@ -56,8 +58,10 @@ export async function runSkillsTui(locale: UiLocale, runtime: SkillsTuiRuntime =
   }
   try {
     const inventory = await runtime.inspect()
+    const plan = await runtime.preview({ names: inventory.skills.map(skill => skill.name), dryRun: true, force: true })
     instance = runtime.render(ReactRuntime.createElement(SkillsApp, {
       inventory,
+      plan,
       messages: skillsCatalogs[locale],
       onComplete: (value) => { selection = value },
     }), { exitOnCtrlC: false, patchConsole: false })

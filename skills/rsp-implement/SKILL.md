@@ -4,14 +4,16 @@ description: Diagnose unexplained symptoms read-only or implement authorized bou
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.05.1"
+  version: "2026.10.11.3"
 ---
 
 # RSP Implement
 
+For tracked work, read the [shared work model](../rsp/references/work-model.md) when its identity and ownership definitions are missing from the current context. Use logical WorkRefs in commands and reports; cite file locations separately. Direct invocation needs no prior Core execution.
+
 Carry one bounded authorized task through implementation, minimum sufficient own verification and necessary tracked Change evidence. Choose the mode before loading its method; a method change within the same authority needs no artificial handoff. No mode grants Git, review, lifecycle, external action, or approval authority.
 
-Responses follow explicit instruction, personal instructions, then conversation language. Preserve existing artifact language and canonical identifiers, commands and values. New artifacts follow explicit instruction, effective configuration, scoped project instructions, then conversation language. Resolve needed RSP settings through the selected CLI's successful `rsp config --json` summary, including defaults and inheritance; refresh on relevant drift or recovery. Raw YAML is diagnostic only. Failed projection leaves dependent choices unresolved while independent authorized work continues; resolve material conflicts with the owner. Core is not required.
+Responses follow explicit instruction, personal instructions, then conversation language. Preserve existing artifact language and canonical identifiers, commands and values. New artifacts follow explicit instruction, effective configuration, scoped project instructions, then conversation language. Resolve needed RSP settings through the selected CLI's successful `rsp config --json` summary, including defaults and inheritance; refresh on relevant drift or recovery. Raw YAML is diagnostic only. Failed projection leaves dependent choices unresolved while independent authorized work continues; resolve material conflicts with the owner. Core execution is not required.
 
 ## Select and inspect
 

@@ -4,44 +4,44 @@ export interface SkillsTuiMessages {
   title: string
   target: string
   defaultHeading: string
-  optionalHeading: string
   missing: string
   unchanged: string
   divergent: string
   locked: string
-  none: string
   selectHelp: string
   replaceTitle: string
   replaceHelp: string
+  replaceDirectory: string
+  removeDirectory: string
 }
 
 export const skillsCatalogs: Record<UiLocale, SkillsTuiMessages> = {
   'en': {
     title: 'RSP Skill manager',
     target: 'Target',
-    defaultHeading: 'Default suite Skills',
-    optionalHeading: 'Optional project Skills',
+    defaultHeading: 'Core suite (installed together)',
     missing: 'missing',
     unchanged: 'unchanged',
     divergent: 'divergent',
     locked: 'locked',
-    none: 'none',
-    selectHelp: '↑/↓ move · Space select · Enter confirm · Esc cancel',
-    replaceTitle: 'Replace divergent selected Skills?',
-    replaceHelp: 'y replace · n cancel',
+    selectHelp: 'Enter install suite · Esc cancel',
+    replaceTitle: 'Apply the listed replacements and deletions? Local customizations in these directories will be lost.',
+    replaceHelp: 'y confirm · n cancel',
+    replaceDirectory: 'Replace directory',
+    removeDirectory: 'Delete directory',
   },
   'zh-CN': {
     title: 'RSP Skill 管理器',
     target: '目标',
-    defaultHeading: '默认套件 Skills',
-    optionalHeading: '可选项目 Skills',
+    defaultHeading: '核心套件（整套安装）',
     missing: '未安装',
     unchanged: '一致',
     divergent: '有差异',
     locked: '锁定',
-    none: '无',
-    selectHelp: '↑/↓ 移动 · 空格选择 · 回车确认 · Esc 取消',
-    replaceTitle: '替换所选的差异 Skill？',
-    replaceHelp: 'y 替换 · n 取消',
+    selectHelp: '回车安装整套 · Esc 取消',
+    replaceTitle: '确认执行列出的替换和删除？这些目录内的本地定制内容将丢失。',
+    replaceHelp: 'y 确认 · n 取消',
+    replaceDirectory: '替换目录',
+    removeDirectory: '删除目录',
   },
 }

@@ -13,7 +13,8 @@ A WorkOwner is the selected Change or shallow Group. A WorkRef identifies one
 executable Change by its logical name, `<change>` or `<group>/<change>`, resolving
 to `.rsp/changes/<change>.md` or `.rsp/changes/<group>/<change>.md`. A Group
 reference identifies its Brief and direct children, not an executable WorkRef.
-Deeper identities are invalid.
+Deeper identities are invalid. Installed Skills share these runtime definitions through
+Core references/work-model.md; the maintainer Spec is not a runtime dependency.
 
 A Change is one Markdown file with six sections:
 

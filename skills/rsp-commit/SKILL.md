@@ -4,14 +4,16 @@ description: Inspect or create one authorized exact-scope local commit for direc
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.05.1"
+  version: "2026.10.11.3"
 ---
 
 # RSP Commit
 
+For tracked work, read the [shared work model](../rsp/references/work-model.md) when its identity and ownership definitions are missing from the current context. Use logical WorkRefs in commands and reports; cite file locations separately. Direct invocation needs no prior Core execution.
+
 Own precise local Git delivery, whether invoked directly or routed by Core. This is a default core capability, not an optional extension. Availability grants no authority. A readiness-only request remains read-only; create a commit only with current local authority, one exact owned boundary and applicable passing verification.
 
-Responses follow explicit instruction, personal instructions, then conversation language; existing artifacts retain theirs. Commit prose follows explicit commit-language instruction, effective configuration, nearest repository authority, then clear recent non-merge style, not response language. Resolve needed RSP defaults/inheritance through the selected CLI's successful `rsp config --json`; refresh on drift or recovery. Raw YAML is diagnostic only. Failed projection leaves dependent language unresolved before staging, not replaced by history; independent authorized inspection may continue. Preserve commands, identifiers, Conventional types/scopes and trailers. Resolve material conflicts with the owner; Core is not required.
+Responses follow explicit instruction, personal instructions, then conversation language; existing artifacts retain theirs. Commit prose follows explicit commit-language instruction, effective configuration, nearest repository authority, then clear recent non-merge style, not response language. Resolve needed RSP defaults/inheritance through the selected CLI's successful `rsp config --json`; refresh on drift or recovery. Raw YAML is diagnostic only. Failed projection leaves dependent language unresolved before staging, not replaced by history; independent authorized inspection may continue. Preserve commands, identifiers, Conventional types/scopes and trailers. Resolve material conflicts with the owner; Core execution is not required.
 
 ## Establish the delivery boundary
 

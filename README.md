@@ -83,4 +83,6 @@ The site is only a presentation layer over the Markdown in this repository. It a
 
 RSP is a tool-agnostic file convention and works with any assistant or editor that can read project files. Humans start here; agents follow the nearest `AGENTS.md`, load the project Core through host Skill discovery or `.agents/skills/rsp/SKILL.md` when available, and use `.rsp/rsp-rules.md` only when the Skill is unavailable. Root `skills/` contains authored sources in the RSP repository, not the consumer installation entry.
 
+The current source candidate installs the seven core Skills together with `rsp skills install`. Individual named installs are unsupported; each capability may still be invoked directly and reads shared Core definitions on demand. Structural discovery is now a conditional method of Review. See the [Skill migration guide](docs/site/en/guides/skills.md) for protected upgrades from older installations.
+
 RSP is licensed under the [MIT License](./LICENSE).

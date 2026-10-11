@@ -1,6 +1,6 @@
-# Structural audit lenses
+# Structural review
 
-Load this reference only after the audit boundary and authority are fixed. Select the smallest relevant set of lenses; do not turn them into a completion checklist.
+Load for requested structural discovery or a concrete structural risk within an already fixed review boundary. Select the smallest relevant set of lenses; do not turn them into a completion checklist.
 
 ## Candidate selection in a broad boundary
 
@@ -36,6 +36,6 @@ Before retaining a finding, answer all of these from repository evidence:
 2. What reachable condition triggers the problem?
 3. What realistic user, operator, data, or change-cost impact follows?
 4. Which evidence confirms the full chain, and what remains unobserved?
-5. What is the smallest next owner: a user decision, shaping question, or one bounded design question?
+5. What is the smallest correction or unresolved owner/design question?
 
-Discard the finding when any of the first three answers is speculative. Rank retained findings by impact and confidence, not ease of cleanup. Use P1 for a normal-path structural failure with significant correctness or data consequences, P2 for a meaningful edge or recurring change risk, and P3 only for a narrow actionable maintenance risk. Do not emit P0 from this general structural audit; route suspected critical security, safety, or data-loss work to the appropriate specialist or incident owner.
+Discard the finding when any of the first three answers is speculative. Rank retained findings by impact and confidence, not ease of cleanup. Use Review's severity and verdict semantics. Select only material supported findings; missing coverage stays explicit and does not justify an unqualified clean claim. Do not turn the report into an implementation, replacement design or automatic handoff.

@@ -12,3 +12,4 @@
 !images/
 !images/agent/
 !images/agent/Dockerfile
+!uv.lock

@@ -4,10 +4,12 @@ description: Select and continue the appropriate responsibility for authorized R
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.05.1"
+  version: "2026.10.11.3"
 ---
 
 # RSP Skill
+
+For tracked work, read the [shared work model](references/work-model.md) when its identity and ownership definitions are missing from the current context. Use logical WorkRefs in commands and reports; cite file locations separately. Direct invocation needs no prior Core execution.
 
 Carry one authorized request through responsibility selection, implementation/checks, necessary writeback and completion. Reassess evidence on changed facts, recovery, independent acceptance, delivery or a real stop, not a responsibility change alone. Use Core or, only when unavailable, the generated fallback; never load both as entry protocols.
 
@@ -30,14 +32,13 @@ Core owns the goal, selected owner, authority, cross-responsibility decisions, r
 - `rsp-shape`: bounded design advice or authorized planning; advice alone grants no artifact mutation.
 - `rsp-implement`: an unexplained symptom, authorized fix or fixed findings, using its matching mode. Only an accepted finding with correction authority permits mutation.
 - `rsp-doc`: authorized repository-document, Skill or release writing, including whole-Change convergence and justified knowledge writeback. Planning decisions stay Shape; fixed-scope read-only judgment stays Review.
-- `rsp-verify`: explicitly read-only or independently required verification of an existing WorkOwner's declared boundary. Implement performs its ordinary own checks without a forced Verify handoff.
-- `rsp-review`: fixed-scope read-only review, including release communication.
+- `rsp-verify`: collection and reporting of an existing WorkOwner's declared evidence when that is the requested result or a separate verification obligation. Implement performs its ordinary own checks without a forced Verify handoff.
+- `rsp-review`: fixed-scope read-only semantic judgment or explicitly bounded structural discovery, including release communication and whether implementation supports a completion claim. Authorized checks supporting that judgment stay within Review; their presence alone does not select Verify. Overall completion and lifecycle decisions remain Core's responsibility.
 - `rsp-commit`: exact separately authorized local delivery. This default core capability is required: if unavailable, stop without staging or manual Core/CLI substitution. Recovery or installation needs separate authority.
-- `rsp-structural-audit`: optional open-ended read-only discovery.
 
 Use Doc's matching method for writing, including whole-Change convergence even when few lines change or no rewrite is needed. Local wording fixes and mechanical status/evidence updates needing no whole-record reconciliation remain direct. If Doc is unavailable, check reader purpose, facts, expression, ownership and references locally. Doc is not a mandatory phase.
 
-Select each successor from the current requested result and authority, not the previous Skill or changed-line count. Load its entrypoint and active method only when not already applicable. A responsibility transition requires no new worker, repeated checks or user continuation and grants no new authority.
+Select each successor from the current requested result and authority, not the previous Skill, read-only status or changed-line count. Preserve explicitly requested combined responsibilities and required independent verification; independence needs host evidence, not another Skill load. Reuse applicable entrypoint and method text; obtain missing or changed instructions before relying on them. New task observations alone do not require reloading instructions. A responsibility transition requires no new worker, repeated checks or user continuation and grants no new authority.
 
 For authorized ownerless release checks, collect the project's declared evidence at an exact candidate, with a range only when needed. Require the check contract, baseline and effect authority; missing inputs stop dependent checks. Create no Change and do not route to Verify. Preserve required independence; check and Doc/Review results grant no Git delivery, publication or approval.
 

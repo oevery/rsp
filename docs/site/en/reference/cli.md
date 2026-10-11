@@ -11,8 +11,8 @@ rsp update                      Refresh managed project files, not packaged Skil
 rsp doctor [--fix]              Inspect integration health; fix only safe deterministic issues
 rsp skills                      Open the project Skill manager in a dual TTY
 rsp skills list [--json]        List bundled Skills and exact installation state
-rsp skills install [name] [--dry-run] [--force]
-                                Install the default suite or one exact Skill
+rsp skills install [--dry-run] [--force]
+                                Install the complete seven-Skill core suite
 ```
 
 `rsp update` does not refresh installed package-owned Skills. `rsp skills list` inspects the package and exact target state; `rsp skills install --dry-run` previews before mutation. Differing selected Skill trees or recognized obsolete package-owned identities require explicit `--force`. Inspect customized trees before force and confirm that any content you need to retain is recoverable; a Git commit containing that content suffices without another backup. Unknown Skills are not migration targets.

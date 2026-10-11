@@ -1,4 +1,4 @@
-from outputs import read_object, object_value, object_list, nonempty_text
+from outputs import read_object, object_value, object_list, nonempty_text, evidence_file
 from workspace import readonly_changes
 """Task-local deterministic verifier; parent grade.py owns reward rendering."""
 from pathlib import Path
@@ -33,4 +33,4 @@ def evidence_report(report,expected):
  require(isinstance(report.get('evidence'),list) and bool(report['evidence']),'Need concrete evidence references')
  for e in report['evidence']:
   require(isinstance(e,dict) and isinstance(e.get('path'),str) and isinstance(e.get('detail'),str) and bool(e['detail'].strip()),'Evidence needs path and detail')
-  require((ROOT/e['path']).is_file(),'Evidence path does not exist: '+e['path'])
+  evidence_file(ROOT,e['path'])

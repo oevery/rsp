@@ -47,7 +47,7 @@ Use rsp-doc's Skill branch for descriptions, instructions, resources and concise
 
 1. Establish current evidence and, when mutation is authorized, the smallest candidate delta. Use the selected comparison baseline; pre-existing work is not part of that delta.
 2. Apply the general authoring method to canonical package sources, not generated projections.
-3. Preserve each standalone package's runtime closure; maintainer research and candidate evidence must not become installed dependencies.
+3. Preserve the declared suite's runtime resource closure; maintainer research and candidate evidence must not become installed dependencies.
 4. When layout, reachability or repetition matters, use `node scripts/scan-skill-context.mjs --package <canonical-path>` from the repository root. Read [context diagnostics](references/authoring.md#context-diagnostics) for selection and interpretation; scan results are clues, not quality gates.
 5. Reuse repository evaluation, security, packaging, and behavior checks. Choose permitted inspection and writing methods within the same goal, scope, authority, baseline and evidence boundary; tools provide observations, not candidate acceptance. Do not duplicate checks inside the Skill or substitute a diagnostic for a named required operation.
 6. For tracked work, keep the authorized candidate delta and approach in Proposal, Spec and Design; record actual outcomes, evidence, knowledge-update references and unresolved limits in Tasks, Verify and Blockers. The durable-decision summary stays in the response, not a new Change section. A report-only Pre-Change Audit writes no artifact and returns its findings to Core or the user for the planning decision.

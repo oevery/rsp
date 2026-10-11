@@ -12,15 +12,15 @@
 | `rsp-review` | 对固定的代码、文档或混合比较范围做只读审查，包括发布文档。 |
 | `rsp-commit` | 只读检查交付就绪情况，或创建一个已授权、范围精确的本地提交。 |
 
-`rsp-structural-audit` 是可选的纯报告项目 Skill，在边界明确的仓库或子树中发现有证据的结构风险；报告不授予实现权限。
+结构审查已并入 `rsp-review` 的条件方法：在明确的仓库或子目录范围内发现有证据的结构风险，无需 diff；普通评审不自动扩大为结构审计，报告不授予设计或实现权限。
 
-`rsp-doc` 包含在默认套件中，也可用 `rsp skills install rsp-doc` 单独安装。README、CONTEXT、Spec、Change 与指南按产物类型加载方法；Skill 新建或修订使用 Skill 分支；changelog、release notes、迁移指引及已授权的文档对账使用发布说明分支。Review 仅在评审范围包含发布文档时加载发布检查。两者不控制发布，也不据此宣称发布就绪。不需要整份记录对账的局部措辞修正和机械状态／证据回填仍直接完成；整份 Change 收敛在 Doc 可用时使用产物方法，即使最终只改几行，已收敛的文本也无需重写。维护者专用 `author-rsp-skills` 仅叠加本仓库的 Change、溯源与验证要求。
+`rsp-doc` 随核心套件整套安装，可以直接调用。README、CONTEXT、Spec、Change 与指南按产物类型加载方法；Skill 新建或修订使用 Skill 分支；changelog、release notes、迁移指引及已授权的文档对账使用发布说明分支。Review 仅在评审范围包含发布文档时加载发布检查。两者不控制发布，也不据此宣称发布就绪。不需要整份记录对账的局部措辞修正和机械状态／证据回填仍直接完成；整份 Change 收敛在 Doc 可用时使用产物方法，即使最终只改几行，已收敛的文本也无需重写。维护者专用 `author-rsp-skills` 仅叠加本仓库的 Change、溯源与验证要求。
 
 ## 旧 Skill 名称迁移
 
 对此尚未发布的源码候选，将 `rsp-design` 交给 `rsp-shape`；将 `rsp-diagnose`、`rsp-tdd`、`rsp-resolve-findings` 作为 `rsp-implement` 的按需方法；将 `rsp-manage` 作为 `rsp` 内部的按需协调。更早的 `rsp-address-review` 别名也归 `rsp-implement`。这是职责映射，不是永久兼容 Skill，更不是要求删除项目自有说明。
 
-移除 `rsp-release-docs`：写作归 Doc，固定范围只读检查归 Review。直接安装 Doc 或安装默认套件时，会在替换前检查旧的已安装目录；安装其他单个 Skill 不移除它。显式旧名称调用应改用对应 owner。进行已授权的强制迁移前，确认需要保留的定制发布说明可恢复。
+`rsp-release-docs` 已移除，写作由 Doc 负责，审查由 Review 负责。`rsp-structural-audit` 与 `rsp-codebase-audit` 的结构审查能力归入 Review。整套安装会检查这些旧目录，显式强制迁移前应确认需要保留的定制内容可恢复。单个核心 Skill 的安装请求会在写入前被拒绝。
 
 待精确候选 CLI 可用后，全程使用同一个已选候选 CLI；`@latest` 不代表此未发布候选。获得安装权限后：
 
@@ -41,10 +41,9 @@
 | Implement、Verify 与 Review | 默认 | Discipline | 由 Core 路由为专门能力，或接受边界明确的显式请求 |
 | `rsp-commit` | 默认 | 本地交付 Discipline | 精确边界显式授权；合格协调收尾还须通过自身门禁 |
 | `rsp` 的按需协调 | Core 内部 | 协调分支 | 仅在有效项目策略下存在真实协调义务时选择 |
-| `rsp-structural-audit` | 可选 | Discovery | 显式纯报告请求 |
 | `rsp-doc` | 默认 | 写作 Discipline | 仓库文档、Skill 或发布说明写作 |
 
-“默认”表示属于本源码候选的默认套件，不表示自动调用。Skill 边界不等于 worker 边界。Core 通过资格判断后才可按需组合有界 worker；进入协调分支本身不代表委派。发布的 Skill 保持独立可用；缺少可选兄弟 Skill 时保留有界安全 fallback。
+“默认”表示属于本源码候选的默认套件，不表示自动调用。Skill 边界不等于 worker 边界。Core 通过资格判断后才可按需组合有界 worker；进入协调分支本身不代表委派。核心 Skills 整套安装、按需调用；工作身份定义从 Core 的共享资源读取，缺失时报告安装不完整。
 
 任务切换职责时，Core 根据当前所需结果与权限选择能力，而不是沿用上一个 Skill 或按修改行数判断；只加载上下文中尚未适用的入口与方法。Shape 负责决策澄清和规划产物，不自行批准实质选择或新增公共要求；Doc 编写已确定事实并收敛最终工作记录。职责切换不授予新权限，也不要求增加 worker、重复检查或再次请求用户继续。
 
@@ -118,3 +117,5 @@ manage:
 有连续恢复需求的 tracked 工作，由 Core 在允许的范围内于检查点、暂停或交接时维护 Focus Capsule，无需因此进入协调分支。替换进展、证据指针和下一步，不追加日志。按[持久化判断与归档](./daily-workflow.md#持久化判断与归档)核实事实、按需写回知识、收敛整个 Change 并检查最终一致性，再执行授权归档与 Focus 清理。适用验证可复用，所需 Review 与当前 readiness 仍须满足。跨设备恢复仍需授权的 Git 传输和重新派生。
 
 精确键见[配置](../reference/configuration.md)，普通操作见[日常工作流](./daily-workflow.md)。
+
+核心套件必须整套安装和更新；不支持按名称只安装一个 Skill。各 Skill 可直接调用，共享工作身份定义按需从 Core references/work-model.md 读取，无需先执行 Core。

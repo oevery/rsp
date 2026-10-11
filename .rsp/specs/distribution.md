@@ -28,26 +28,37 @@ suffices, without another backup. Activation failure rolls back; incomplete
 rollback retains and reports a recovery location. Temporary installation backups
 support rollback, not permanent retention. Inspect actual trees and backups before
 retry or cleanup. Installation grants no workflow or action authority.
+Interactive installation uses the installer's read-only preflight to list exact
+replacement and deletion directories. Either action requires a separate confirmation
+that warns about lost local customizations; cancellation leaves files unchanged.
 
-The retired `rsp-release-docs` identity is not a packaged selection. Installing
-Doc, directly or through the default suite, includes that identity in the protected
-migration; other named selections do not remove it. `rsp update` neither refreshes
-nor removes installed Skills. The
-[ownership decision](decisions/release-document-ownership.md) owns the rationale.
+The retired rsp-release-docs identity maps to Doc; rsp-structural-audit and
+rsp-codebase-audit map to Review. Full-suite installation includes all recognized
+obsolete identities in protected migration. Partial named installation is rejected
+before mutation. Preserve customized obsolete content until explicit forced
+migration; rsp update does not refresh or remove installed Skills.
 
 ### Skill package boundaries
 
-Published Skills are standalone runtime closures. Ordinary execution requires no
-other installed Skill, repository Spec, shared glossary, research corpus, generated
-index or hidden state. Each entrypoint carries the necessary authority, preservation,
-action and stop guidance locally; conditional resources remain in its own package.
-An unavailable required capability or independent worker remains a real gap,
-not permission to emulate it or install a replacement implicitly.
+The seven core Skills form one runtime distribution closure and install/update
+together from one package version. A capability can be invoked directly without
+executing Core. Shared work identity definitions belong to Core's
+references/work-model.md; consumers load that file only when the definitions are
+needed and missing from their current context. Separate workers have separate
+contexts. Missing shared resources stop dependent operations as an incomplete
+installation, not permission to invent definitions or install implicitly.
+
+Each entrypoint retains its action, authority and stop conditions. Conditional
+methods remain with their capability. Cross-Skill resource links may target Core's
+references inside the suite; arbitrary sibling dependencies and package-external
+paths are rejected. Validate both authored sources and installed package resources.
+Product execution requires no maintainer Spec, research corpus or generated index.
+An unavailable required capability or independent worker remains a real gap.
 
 Source-level Spec ownership guides maintenance without creating runtime references
-to the RSP checkout. [Workflow](workflow.md) owns capability collaboration;
-[Writing quality](writing-quality.md#instruction-and-resource-design) owns the
-instruction and resource contract.
+to this checkout. Workflow owns collaboration and Writing quality owns instruction
+design. Maintainer Skills are not part of the published suite. No optional extension
+or independent Skill dependency manager is introduced.
 
 ### Verification and retained evidence
 

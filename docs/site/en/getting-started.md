@@ -59,11 +59,6 @@ npx -y @oevery/rsp@latest skills install --dry-run
 npx -y @oevery/rsp@latest skills install
 ```
 
-The optional report-only structural audit is installed by exact name:
-
-```bash
-rsp skills install rsp-structural-audit --dry-run
-rsp skills install rsp-structural-audit
-```
+The current source candidate installs all seven core Skills together and rejects individual named installs. Structural discovery is included in Review; it needs no separate Skill installation. Use the exact candidate CLI described in the migration guide rather than assuming the stable package has this behavior.
 
 Next, read [core concepts](./concepts.md) or follow the [daily workflow](./guides/daily-workflow.md).

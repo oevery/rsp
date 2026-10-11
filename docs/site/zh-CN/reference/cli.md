@@ -11,8 +11,8 @@ rsp update                      刷新受管项目文件，不更新随包 Skill
 rsp doctor [--fix]              检查接入健康；只修复安全且结果确定的问题
 rsp skills                      在双 TTY 中打开项目 Skill 管理器
 rsp skills list [--json]        列出随包 Skills 与精确安装状态
-rsp skills install [name] [--dry-run] [--force]
-                                安装默认套件或一个指定的 Skill
+rsp skills install [--dry-run] [--force]
+                                安装完整的七个核心 Skills
 ```
 
 `rsp update` 不刷新已安装的包自有 Skills。先用 `rsp skills list` 检查包与精确目标状态，再用 `rsp skills install --dry-run` 预检。内容不一致的已选 Skill 树或已识别的过时包自有标识需要显式 `--force`；强制替换前检查定制树，确认需要保留的内容可恢复，已有包含这些内容的 Git 提交即可，不必再备份。未知 Skills 不作为迁移目标。

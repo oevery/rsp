@@ -83,4 +83,6 @@ pnpm docs:build
 
 RSP 是与工具无关的文件约定，适用于任何能读取项目文件的助手或编辑器。人类从这里开始；AI 智能体遵循最近的 `AGENTS.md`，通过宿主 Skill discovery 或 `.agents/skills/rsp/SKILL.md` 加载可用的项目 Core，仅在 Skill 不可用时使用 `.rsp/rsp-rules.md` 后备协议。根目录 `skills/` 是 RSP 仓库中的分发源码，不是消费者的安装入口。
 
+当前源码候选使用 `rsp skills install` 整套安装七个核心 Skills，不支持单个安装。各能力可以直接调用，并按需读取 Core 的共享定义；结构审查已并入 Review。旧安装的保护性迁移见 [Skills 指南](docs/site/zh-CN/guides/skills.md)。
+
 RSP 使用 [MIT 许可证](./LICENSE)。

@@ -1,6 +1,6 @@
 # Native Harbor task migration
 
-The native catalog contains 16 tasks. All 80 former case IDs and 168 project files were inspected before legacy removal on 2026-10-08. The disposition table records 15 migrated, 19 merged and 46 retired cases. Migrated means the main behavior has a native successor; merged means the stated portion is represented by a broader task; retired means no replacement acceptance is claimed.
+The native catalog contains 18 tasks: the 16 migration tasks and a subsequent paired completion-assessment experiment. All 80 former case IDs and 168 project files were inspected before legacy removal on 2026-10-08. The disposition table records 15 migrated, 19 merged and 46 retired cases. Migrated means the main behavior has a native successor; merged means the stated portion is represented by a broader task; retired means no replacement acceptance is claimed.
 
 ## Native contract
 
@@ -19,9 +19,14 @@ Task tests/test.sh invokes /opt/rsp-eval/grade.py. It stages one shared Reward K
 | review-staged | Index-specific code/comment review while working source differs |
 | verify-boundary | Exercised product failure versus unavailable external Required evidence |
 | shape-cache | Executable bounded TTL design without product or lifecycle mutation |
+| completion-boundary | Detect omitted settled expiry behavior despite completed Tasks and passing declared checks; read-only assessment |
+| completion-boundary-control | Matched correct implementation accepted within its scope, without false findings or inferred delivery authority |
 | commit-restraint | Passing checks do not override unrelated staging or read-only authority |
 | commit-delivery | One real exact-scope commit preserving unrelated unstaged notes and an untracked draft |
-| structural-audit | Reachable invoice bypass of the pricing owner and its production-test blind spot |
+| structural-audit | Reachable invoice bypass of the pricing owner and its production-test blind spot; capability-neutral selection supports Audit-to-Review comparison |
+| structural-audit-control | Both public paths share pricing; reject invented structural defects and preserve coverage limits |
+| commit-tracked-restraint | Direct Commit preserves unrelated staging and reports its selected grouped child identity |
+| completion-group-control | Direct Review reports a grouped child logical WorkRef without confusing its Brief or file location |
 | owner-decision | Unresolved price choice blocks implementation despite a passing old-snapshot check |
 | workflow-catalog | Resume staged source, regenerate consumer output and converge one existing Change |
 | recovery-export | Complete actual-module verification despite an absent optional helper |
@@ -33,7 +38,7 @@ Task tests/test.sh invokes /opt/rsp-eval/grade.py. It stages one shared Reward K
 
 ## Goal-driven task design
 
-The catalog remains 16 tasks. Three mixed-project scenarios reuse existing native fixtures rather than duplicate them:
+The migration revision retained its 16-task catalog. Three mixed-project scenarios reuse those native fixtures rather than duplicate them:
 
 | Scenario | Native task | Concrete starting state and acceptance |
 | --- | --- | --- |
@@ -79,7 +84,7 @@ The following UTC run IDs locate private records under tests/skills/reports/. Li
 | Recovery preservation | 2026-10-08T02-00-39.336452Z | Corrected sibling recovery backup survived native resume; backup retained at the sibling .attempts/2026-10-08T02-01-24.115301Z path. This is recovery-infrastructure evidence. |
 | Cancellation | 2026-10-08T02-02-23.946156Z | The cancellation probe retained CancelledError rather than a task pass. This establishes cancellation handling, not Skill acceptance. |
 
-Oracle and nop calibration are complete for all 16 tasks. The catalog does not yet have live acceptance for all 16 tasks; the additional three passing reassessments apply only to their retained executions under the corrected grader. The actual-source fixture covers two production-module boundaries, not full CLI/release acceptance. A correct final report alone cannot prove command execution; use retained host traces where execution attribution matters.
+The migration's oracle and nop calibration are complete for its 16 tasks. Those runs predate the two completion-assessment tasks and do not establish their calibration or behavior; their evidence belongs to the [follow-up research](../../research/reports/2026-10-08T08-07-58Z.md). The migrated set does not yet have live acceptance for all 16 tasks; the additional three passing reassessments apply only to their retained executions under the corrected grader. The actual-source fixture covers two production-module boundaries, not full CLI/release acceptance. A correct final report alone cannot prove command execution; use retained host traces where execution attribution matters.
 
 Hook-attempt and checkpoint-specific behavior, archive lifecycle, interrupted multi-worker recovery, unavailable worker acceptance, full CLI packaging, upstream research, Skill authoring and detailed language/trigger cases remain uncovered where the table marks them retired. Historical results are not promoted to current acceptance, and no calibration or live result grants release/publication approval.
 

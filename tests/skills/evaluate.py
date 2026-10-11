@@ -1,7 +1,9 @@
 """Prepare immutable inputs and present native Harbor results; no trial scheduler."""
 import argparse
 from collections import Counter
+from copy import deepcopy
 from datetime import datetime, timezone
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -11,12 +13,15 @@ import sys
 import tomllib
 
 import yaml
+
 from harbor.models.job.config import JobConfig
 from harbor.models.task.task import Task
 from rewardkit.models import JudgeTomlConfig, RewardTomlConfig, normalize_aggregation
 
 ROOT = Path(__file__).resolve().parents[2]
 HOME = ROOT / "tests/skills"
+sys.path.insert(0, str(ROOT))
+from tests.skills.support.usage import session_usage
 
 
 def stamp():
@@ -72,6 +77,20 @@ def native_results(job):
 def reward_details(directory):
     path = directory / "verifier/reward-details.json"
     return json.loads(path.read_text()) if path.is_file() else {}
+
+
+def agent_comparison_settings(result):
+    config = deepcopy(result.get("config", {}).get("agent"))
+    if not config:
+        return None
+    config.pop("skills", None)
+    native = config.get("kwargs", {}).get("config", {})
+    if catalog := native.get("model_catalog_json"):
+        try:
+            native["model_catalog_json"] = {"sha256": hashlib.sha256(Path(catalog).read_bytes()).hexdigest()}
+        except OSError:
+            return None
+    return {"config": config, "info": result.get("agent_info")}
 
 
 def reward_nodes(detail, name="reward"):
@@ -154,11 +173,15 @@ def report(job, baseline=None):
         expected = json.loads((job / "result.json").read_text()).get("n_total_trials", len(rows))
         if expected > len(rows):
             counts["incomplete"] = expected - len(rows)
-    lines = [f"# Evaluation {job.name}", "", "Native Harbor records are authoritative.", "",
+    lines = [f"# Evaluation {job.name}", "", "Native Harbor verdicts are authoritative. Executor usage is attributed from root/descendant session identities, excludes judges, and is not context-window occupancy.", "",
              ", ".join(f"{key}: {value}" for key, value in sorted(counts.items())) or "No completed trial records.", "",
              "| Task | Result | Input tokens | Output tokens | Seconds | Evidence |", "| --- | --- | ---: | ---: | ---: | --- |"]
     for directory, result, status in rows:
         usage = result.get("agent_result") or {}
+        if (directory / "agent/codex.txt").is_file():
+            attributed = session_usage(directory / "agent")
+            total = attributed["total"] or {}
+            usage = {"n_input_tokens": total.get("input_tokens"), "n_output_tokens": total.get("output_tokens")}
         tokens = [usage.get(key) if usage.get(key) is not None else "unknown"
                   for key in ("n_input_tokens", "n_output_tokens")]
         elapsed = "unknown"
@@ -208,10 +231,7 @@ def report(job, baseline=None):
             limits = []
             for label, values in (
                 ("task_checksum", lambda r: r.get("task_checksum")),
-                ("agent model/settings", lambda r: {
-                    "config": {k: v for k, v in r.get("config", {}).get("agent", {}).items() if k != "skills"},
-                    "info": r.get("agent_info"),
-                } if r.get("config", {}).get("agent") else None),
+                ("agent model/settings", agent_comparison_settings),
             ):
                 before_values, after_values = ([values(r) for r in group] for group in (old, new))
                 if not before_values or not after_values or None in before_values + after_values:
@@ -244,6 +264,43 @@ def image_identity():
     return subprocess.check_output(["docker", "image", "inspect", "rsp-eval-agent:2026-10-08", "--format", "{{.Id}} {{.Os}}/{{.Architecture}}"], text=True).strip()
 
 
+def check_image_inputs():
+    # Compare actual baked bytes, including additions/deletions, before claiming
+    # that a fresh job's source snapshot describes its execution environment.
+    roots = {f"/opt/rsp-package/{name}": ROOT / name
+             for name in ("bin", "dist", "rules", "skills", "package.json", "pnpm-lock.yaml")}
+    roots.update({f"/opt/rsp-eval/{name}.py": HOME / f"support/{name}.py"
+                  for name in ("grade", "checks", "verifier", "workspace", "outputs")})
+    roots.update({"/opt/rsp-build/uv.lock": HOME / "uv.lock",
+                  "/opt/rsp-build/Dockerfile": HOME / "images/agent/Dockerfile"})
+    expected = {}
+    for remote, local in roots.items():
+        if not local.exists():
+            raise ValueError(f"Missing image input: {local}; build the evaluation image first")
+        files = local.rglob("*") if local.is_dir() else [local]
+        for path in files:
+            if path.is_file():
+                key = remote + ("/" + path.relative_to(local).as_posix() if path != local else "")
+                expected[key] = hashlib.sha256(path.read_bytes()).hexdigest()
+    script = """import hashlib, json, sys
+from pathlib import Path
+actual = {}
+for root in map(Path, json.loads(sys.argv[1])):
+    for path in root.rglob('*') if root.is_dir() else [root]:
+        if path.is_file():
+            actual[str(path)] = hashlib.sha256(path.read_bytes()).hexdigest()
+print(json.dumps(actual))
+"""
+    actual = json.loads(subprocess.check_output([
+        "docker", "run", "--rm", "--network", "none", "--entrypoint", "python",
+        "rsp-eval-agent:2026-10-08", "-c", script, json.dumps(list(roots)),
+    ], text=True))
+    changed = sorted(key for key in expected.keys() | actual.keys() if expected.get(key) != actual.get(key))
+    if changed:
+        raise ValueError("Evaluation image input drift: " + ", ".join(changed)
+                         + "; rebuild with mise exec -- python tests/skills/build_image.py")
+
+
 def check_resume_inputs(job):
     inputs = job.with_name(job.name + ".inputs")
     current_support = {p.name: p.read_bytes() for p in (HOME / "support").glob("*.py")}
@@ -260,6 +317,7 @@ def check_resume_inputs(job):
 
 
 def snapshot(selected, agent):
+    check_image_inputs()
     job = HOME / "reports" / stamp()
     # Harbor owns Job child directories, so inputs and retry backups are siblings.
     inputs = job.with_name(job.name + ".inputs")
@@ -310,8 +368,9 @@ def run(args):
                   n_concurrent_trials=args.concurrency,
                   tasks=[{"path": str(inputs / "tasks" / p.name)} for p in selected])
     if args.agent == "codex":
-        for agent in config["agents"]:
-            sources = [Path(p) for p in args.skill] if args.skill else [ROOT / p for p in agent["skills"]]
+        for index, agent in enumerate(config["agents"]):
+            sources = ([] if args.no_skills else [Path(p) for p in args.skill]
+                       if args.skill else [ROOT / p for p in agent["skills"]])
             destinations = []
             for source in sources:
                 destination = inputs / "skills" / source.name
@@ -322,6 +381,15 @@ def run(args):
             agent["skills"] = destinations
             if args.model:
                 agent["model_name"] = args.model
+            native_config = agent.get("kwargs", {}).get("config", {})
+            if catalog := native_config.get("model_catalog_json"):
+                models = json.loads(Path(catalog).expanduser().read_text())["models"]
+                selected_models = [model for model in models if model["slug"] == agent["model_name"]]
+                if len(selected_models) != 1:
+                    raise ValueError(f"Expected one catalog entry for {agent['model_name']}; refusing fallback metadata")
+                destination = inputs / f"model-catalog-{index}.json"
+                write_json(destination, {"models": selected_models})
+                native_config["model_catalog_json"] = str(destination)
     else:
         config["agents"] = [{"name": args.agent}]
     return execute(job, inputs, config)
@@ -443,7 +511,9 @@ def main():
     execute.add_argument("--agent", choices=["codex", "oracle", "nop"], default="codex")
     execute.add_argument("--allow-live", action="store_true")
     execute.add_argument("--model")
-    execute.add_argument("--skill", action="append", default=[])
+    selection = execute.add_mutually_exclusive_group()
+    selection.add_argument("--skill", action="append", default=[])
+    selection.add_argument("--no-skills", action="store_true", help="Inject no Skills; retain the task and project policy")
     execute.add_argument("--attempts", type=int, default=1)
     execute.add_argument("--concurrency", type=int, default=1)
     calibration = commands.add_parser("calibrate")

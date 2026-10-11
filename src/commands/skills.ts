@@ -23,7 +23,8 @@ export const DEFAULT_PACKAGED_SKILL_NAMES = [
 
 const OBSOLETE_PACKAGED_SKILL_RENAMES = {
   'rsp-address-review': 'rsp-implement',
-  'rsp-codebase-audit': 'rsp-structural-audit',
+  'rsp-codebase-audit': 'rsp-review',
+  'rsp-structural-audit': 'rsp-review',
   'rsp-design': 'rsp-shape',
   'rsp-diagnose': 'rsp-implement',
   'rsp-manage': 'rsp',
@@ -277,6 +278,8 @@ export async function installPackagedSkills(
     if (!packagedSkillsByName.has(name))
       throw new Error(`unknown packaged Skill: ${name}`)
   }
+  if (requestedNames.length !== DEFAULT_PACKAGED_SKILL_NAMES.length || DEFAULT_PACKAGED_SKILL_NAMES.some(name => !requestedNames.includes(name)))
+    throw new Error('RSP core Skills must be installed together; use rsp skills install without a Skill name')
   const skills = requestedNames
     .map(name => packagedSkillsByName.get(name)!)
     .sort((a, b) => a.name.localeCompare(b.name))

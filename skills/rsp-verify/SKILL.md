@@ -1,21 +1,23 @@
 ---
 name: rsp-verify
-description: Verify one selected RSP WorkOwner against its declared evidence boundary without mutating product or workflow state.
+description: Collect and report one selected RSP WorkOwner's declared check evidence, including separately required independent verification. Read-only; fixed-scope semantic judgment belongs to Review even when it includes checks.
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.05.1"
+  version: "2026.10.11.3"
 ---
 
 # RSP Verify
 
-Collect evidence and return one bounded read-only result for an existing RSP WorkOwner. Verify is a Discipline, not a router, controller, lifecycle owner, reviewer or Git delivery capability.
+For tracked work, read the [shared work model](../rsp/references/work-model.md) when its identity and ownership definitions are missing from the current context. Use logical WorkRefs in commands and reports; cite file locations separately. Direct invocation needs no prior Core execution.
+
+Collect evidence and return one bounded read-only result for an existing RSP WorkOwner when declared-check evidence is the requested result or a separate verification obligation. A semantic review may run supporting checks without selecting this capability. Preserve explicit combined requests and required independent evidence; this Skill alone supplies no host independence. Verify is a Discipline, not a router, controller, lifecycle owner, reviewer or Git delivery capability.
 
 ## Require a declared boundary
 
 Require one selected WorkOwner, declared boundary, comparison baseline and authority for the named checks. An explicit reference wins; otherwise resolve one FocusSet candidate from user intent and status. Multiple markers are valid.
 
-- **Change:** use its WorkRef and `Verify` section.
+- **Change:** use its WorkRef and its `Verify` section for the declared boundary.
 - **Group:** use its Group reference and named `Integration:` condition in the Brief's `Completion Conditions`; child evidence stays with each child WorkRef. An explicit request may supply an in-progress temporary boundary, which must be written back before Group closeout.
 
 Stop for ambiguous owner, scope, baseline, required evidence or environment, or a Group without a named boundary for the requested verification.

@@ -18,7 +18,7 @@ and Review carry standalone guidance rather than a runtime dependency on this fi
   then conversation language. Resolve response and commit language separately.
 - Define each contract once. Keep useful navigation summaries, local safety conditions
   and minimum context where needed; references state when and why to read the owner.
-  Necessary standalone guidance is not replaced by a chain of links.
+  Necessary action and safety guidance remains local; shared definitions use a direct conditional reference.
 - A tool example is not a mandatory method. A named required check or safety condition
   does not become optional through wording cleanup; see the
   [Architecture boundary](design.md#agent-and-tool-boundary).
@@ -87,7 +87,7 @@ convergence. Writing applies those contracts; it does not redefine the workflow.
   safety and minimum actionable context local; an ordinary task must not load
   unrelated recovery, coordination or delivery procedures. Split or merge resources
   to improve the actual reading path, not merely relocate the same mandatory text.
-  [Distribution](distribution.md#skill-package-boundaries) owns standalone closure.
+  [Distribution](distribution.md#skill-package-boundaries) owns suite resource closure.
 - Revise an existing rule before adding a parallel one for the same decision.
   Preserve trigger, inputs, authority, actions, outputs, stops, verification and
   conditional loading unless their owning contract intentionally changes. Generic

@@ -4,10 +4,12 @@ description: Write or revise repository documents, Skills and release communicat
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.05.1"
+  version: "2026.10.11.3"
 ---
 
 # RSP Doc
+
+For tracked work, read the [shared work model](../rsp/references/work-model.md) when its identity and ownership definitions are missing from the current context. Use logical WorkRefs in commands and reports; cite file locations separately. Direct invocation needs no prior Core execution.
 
 Write a grounded artifact its reader can use without the author conversation. Whole-record convergence uses the artifact method even when few lines change; already-converged text needs no rewrite. Local wording fixes and mechanical status/evidence updates need no full writing pass when they require no whole-record reconciliation.
 

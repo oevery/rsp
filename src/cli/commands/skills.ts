@@ -12,12 +12,12 @@ const skillsInstallCommand = defineCommand({
   args: {
     'name': {
       type: 'positional',
-      description: 'Exact packaged Skill name (default: the core suite)',
+      description: 'Individual installation is unsupported; omit to install the complete core suite',
       required: false,
     },
     'dry-run': {
       type: 'boolean',
-      description: 'Preflight selected packaged Skills without changing files',
+      description: 'Preflight the complete core suite without changing files',
       default: false,
     },
     'force': {

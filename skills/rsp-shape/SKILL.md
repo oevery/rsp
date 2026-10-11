@@ -4,16 +4,18 @@ description: Resolve bounded design questions read-only or clarify material choi
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.05.1"
+  version: "2026.10.11.3"
 ---
 
 # RSP Shape
+
+For tracked work, read the [shared work model](../rsp/references/work-model.md) when its identity and ownership definitions are missing from the current context. Use logical WorkRefs in commands and reports; cite file locations separately. Direct invocation needs no prior Core execution.
 
 Choose the branch before loading detail: bounded design advice is read-only and may have no Change; explicit planning-artifact work shapes or refines a Change/Group. Neither branch implements product behavior.
 
 Shape owns decision clarification and planning artifacts even when their output is Markdown; approval of material choices stays with the authorized DecisionOwner. Doc may support wording settled decisions; final work-record convergence belongs to writing, not replanning. A material unresolved decision returns to Shape rather than being resolved by prose cleanup.
 
-Responses follow explicit instruction, personal instructions, then conversation language. Preserve existing artifact language and canonical identifiers, commands and values. New artifacts follow explicit instruction, effective configuration, scoped project instructions, then conversation language. Resolve needed RSP settings through the selected CLI's successful `rsp config --json` summary, including defaults and inheritance; refresh on relevant drift or recovery. Raw YAML is diagnostic only. Failed projection leaves dependent choices unresolved while independent authorized work continues; resolve material conflicts with the owner. Core is not required.
+Responses follow explicit instruction, personal instructions, then conversation language. Preserve existing artifact language and canonical identifiers, commands and values. New artifacts follow explicit instruction, effective configuration, scoped project instructions, then conversation language. Resolve needed RSP settings through the selected CLI's successful `rsp config --json` summary, including defaults and inheritance; refresh on relevant drift or recovery. Raw YAML is diagnostic only. Failed projection leaves dependent choices unresolved while independent authorized work continues; resolve material conflicts with the owner. Core execution is not required.
 
 ## Establish the boundary
 

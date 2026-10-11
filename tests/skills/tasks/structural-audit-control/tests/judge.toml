@@ -1,0 +1,21 @@
+[judge]
+judge = "openai/AI-HUB/gpt-6.1-sol"
+reasoning_effort = "high"
+files = [
+  "/app/report.json",
+  "/app/CONTEXT.md",
+  "/app/src/main.mjs",
+  "/app/src/route.mjs",
+  "/app/src/export.mjs",
+  "/app/src/pricing.mjs",
+  "/app/test/pricing.test.mjs"
+]
+
+[scoring]
+aggregation = "threshold"
+threshold = 1.0
+
+[[criterion]]
+name = "shared-production-owner"
+type = "binary"
+description = "Report correctly traces preview and invoice from main through route/export to the same pricing owner. It does not invent a production bypass or treat the isolated cents test, thin wrappers, or limited test coverage alone as a structural defect. Coverage states what was inspected and any remaining runtime or test limits."

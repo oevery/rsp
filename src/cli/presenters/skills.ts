@@ -8,18 +8,9 @@ export function presentPackagedSkillInventory(inventory: PackagedSkillInventory,
   }
   console.log(`  ${inventory.package.name}@${inventory.package.version}`)
   console.log(`  target: ${inventory.target}`)
-  for (const group of [
-    { heading: 'Default suite Skills', kind: 'default' },
-    { heading: 'Optional project Skills', kind: 'optional' },
-  ] as const) {
-    console.log('')
-    console.log(`  ${group.heading}`)
-    const skills = inventory.skills.filter(skill => skill.kind === group.kind)
-    if (skills.length === 0)
-      console.log('    none')
-    for (const skill of skills)
-      console.log(`    ${skill.name}  ${skill.status}`)
-  }
+  console.log('  Core suite (installed together)')
+  for (const skill of inventory.skills)
+    console.log(`    ${skill.name}  ${skill.status}`)
 }
 
 export function presentSkillInstallResult(result: SkillInstallResult, dryRun = false): void {

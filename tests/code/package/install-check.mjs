@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { checkSkillPackage } from '../../../scripts/skill-package-check.mjs'
 
 export function checkInstalledPackage(root, tarball, temporaryRoot) {
   const consumer = join(temporaryRoot, 'consumer')
@@ -34,17 +35,22 @@ export function checkInstalledPackage(root, tarball, temporaryRoot) {
   const status = JSON.parse(run(['status', '--json']))
   if (status.command !== 'status' || status.ok !== true)
     throw new Error('Installed package cannot report initialized project state')
-  run(['skills', 'install', 'rsp'])
+  run(['skills', 'install', 'rsp-review'], false)
+  run(['skills', 'install'])
+  for (const name of ['rsp', 'rsp-shape', 'rsp-implement', 'rsp-doc', 'rsp-review', 'rsp-verify', 'rsp-commit']) {
+    if (checkSkillPackage(join(project, '.agents', 'skills', name), { suiteRoot: join(project, '.agents', 'skills') }).status !== 'passed')
+      throw new Error(`Installed suite has invalid or missing resources: ${name}`)
+  }
   const skill = join(project, '.agents', 'skills', 'rsp', 'SKILL.md')
   const shippedSkill = readFileSync(join(packageRoot, 'skills', 'rsp', 'SKILL.md'), 'utf8')
   if (readFileSync(skill, 'utf8') !== shippedSkill)
     throw new Error('Installed Skill does not match the tarball')
   const custom = `${shippedSkill}\nUser-owned customization.\n`
   writeFileSync(skill, custom)
-  run(['skills', 'install', 'rsp'], false)
+  run(['skills', 'install'], false)
   if (readFileSync(skill, 'utf8') !== custom)
     throw new Error('Non-forced Skill refresh overwrote user customization')
-  run(['skills', 'install', 'rsp', '--force'])
+  run(['skills', 'install', '--force'])
   if (readFileSync(skill, 'utf8') !== shippedSkill)
     throw new Error('Explicit Skill refresh did not install the packaged version')
   const agents = join(project, 'AGENTS.md')

@@ -1,6 +1,6 @@
 # Skills and managed work
 
-The current source candidate defines seven default host-neutral Skills for on-demand loading. It is not yet a released or behavior-accepted package; the published stable package retains its own inventory. Each Skill has a narrow authority boundary; routine session work does not require inventing a Change.
+The current source candidate defines seven host-neutral core Skills installed together and loaded on demand. It is not yet a released or behavior-accepted package; the published stable package retains its own inventory. Each Skill has a narrow authority boundary; routine session work does not require inventing a Change.
 
 | Skill | Responsibility |
 |---|---|
@@ -12,15 +12,17 @@ The current source candidate defines seven default host-neutral Skills for on-de
 | `rsp-review` | Review a fixed code, document, or mixed comparison, including release communication, without mutation. |
 | `rsp-commit` | Inspect delivery readiness read-only or create one authorized exact-scope local commit. |
 
-`rsp-structural-audit` is an optional report-only project Skill. It discovers evidenced structural risks in one bounded repository or subtree; its report grants no implementation authority.
+Structural discovery is a conditional method of `rsp-review`. It examines an explicit repository/subtree boundary without requiring a diff; ordinary review does not expand into an audit. Findings grant no implementation or design authority.
 
-`rsp-doc` is installed by the default suite, or explicitly with `rsp skills install rsp-doc`. Use artifact lenses for README, CONTEXT, Spec, Change and guides; use the Skill branch for package creation or revision, and release communication for changelogs, release notes, migration or authorized document reconciliation. Review loads release checks only for reviewed release documents. Neither method controls publication or establishes release readiness. Local wording fixes and mechanical status/evidence updates remain direct when they need no whole-record reconciliation. Whole-Change convergence uses the artifact method when Doc is available, even when few lines change; already-converged text needs no rewrite. The maintainer-only `author-rsp-skills` adds local Change, provenance and evaluation requirements.
+`rsp-doc` is installed with the complete suite and may be invoked directly. Use artifact lenses for README, CONTEXT, Spec, Change and guides; use the Skill branch for package creation or revision, and release communication for changelogs, release notes, migration or authorized document reconciliation. Review loads release checks only for reviewed release documents. Neither method controls publication or establishes release readiness. Local wording fixes and mechanical status/evidence updates remain direct when they need no whole-record reconciliation. Whole-Change convergence uses the artifact method when Doc is available, even when few lines change; already-converged text needs no rewrite. The maintainer-only `author-rsp-skills` adds local Change, provenance and evaluation requirements.
 
 ## Migrating the earlier Skill names
 
+Retired `rsp-structural-audit` and `rsp-codebase-audit` requests now belong to Review. Suite installation protects both old directories before forced removal; preserve needed custom guidance.
+
 For this unreleased source candidate, route `rsp-design` to `rsp-shape`; route `rsp-diagnose`, `rsp-tdd`, and `rsp-resolve-findings` to methods within `rsp-implement`; route `rsp-manage` to conditional coordination within `rsp`. The older `rsp-address-review` alias also resolves to `rsp-implement`. These are responsibility mappings, not permanent compatibility Skills or a request to erase project-owned guidance.
 
-`rsp-release-docs` is removed: writing belongs to Doc and fixed-scope read-only checks to Review. Selecting Doc, directly or through the default suite, checks the obsolete installed directory before replacement; other named installations leave it untouched. Update explicit old-name calls to the appropriate owner. Before an authorized forced migration, confirm that any custom release guidance you need to retain is recoverable.
+`rsp-release-docs` is removed: writing belongs to Doc and fixed-scope read-only checks to Review. Full-suite installation checks the obsolete installed directory before replacement. Individual named installs are rejected before mutation. Update explicit old-name calls to the appropriate owner. Before an authorized forced migration, confirm that any custom release guidance you need to retain is recoverable.
 
 When the exact candidate CLI becomes available, use that same selected CLI throughout; `@latest` is not a synonym for this unreleased source. With installation authority:
 
@@ -41,10 +43,9 @@ Installation, runtime role, and invocation are separate:
 | Implementation, verification, and review | default | Discipline | Core-routed specialist or explicit bounded request |
 | `rsp-commit` | default | local-delivery Discipline | explicitly authorized exact boundary; eligible coordination closeout only after its gates |
 | Conditional coordination in `rsp` | within Core | coordination branch | selected under effective project policy only for an actual obligation |
-| `rsp-structural-audit` | optional | Discovery | explicit report-only request |
 | `rsp-doc` | default | writing Discipline | repository-document, Skill or release writing |
 
-`default` means included in this source candidate's default suite; it does not mean automatically invoked. A Skill boundary is not a worker boundary. Core's qualified coordination branch can compose bounded worker lanes, but selection alone does not imply delegation. Published Skills remain standalone; missing optional siblings do not remove their bounded safe fallback.
+`default` means included in this source candidate's default suite; it does not mean automatically invoked. A Skill boundary is not a worker boundary. Core's qualified coordination branch can compose bounded worker lanes, but selection alone does not imply delegation. Install/update the seven core Skills together from one package version. Direct invocation does not require executing Core: when tracked work identities are needed, each consumer reads Core references/work-model.md unless already in its context. Independent workers supply their own context. Missing shared resources indicate an incomplete installation; do not invent definitions.
 
 At task transitions, Core selects from the current requested result and authority,
 not the last-used Skill or edit size, and loads only the applicable entrypoint

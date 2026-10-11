@@ -1,7 +1,7 @@
-import type { PackagedSkillInventory } from '../commands/skills.js'
+import type { PackagedSkillInventory, SkillInstallResult } from '../commands/skills.js'
 import type { SkillsTuiMessages } from './messages.js'
 import { Box, Text, useApp, useInput, useStdout } from 'ink'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { truncateDisplay } from '../tui/display.js'
 
 export type SkillsTuiSelection
@@ -11,26 +11,23 @@ export type SkillsTuiSelection
 
 interface SkillsAppProps {
   inventory: PackagedSkillInventory
+  plan: SkillInstallResult
   messages: SkillsTuiMessages
   initialWidth?: number
   onComplete: (selection: SkillsTuiSelection) => void
 }
 
-export function SkillsApp({ initialWidth, inventory, messages, onComplete }: SkillsAppProps) {
+export function SkillsApp({ initialWidth, inventory, plan, messages, onComplete }: SkillsAppProps) {
   const { exit } = useApp()
   const { stdout } = useStdout()
   const width = Math.max(40, initialWidth ?? stdout.columns ?? 80)
-  const optional = useMemo(() => inventory.skills.filter(skill => skill.kind === 'optional'), [inventory])
-  const defaults = useMemo(() => inventory.skills.filter(skill => skill.kind === 'default'), [inventory])
-  const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [cursor, setCursor] = useState(0)
   const [phase, setPhase] = useState<'select' | 'replace'>('select')
 
   const finish = (selection: SkillsTuiSelection) => {
     onComplete(selection)
     exit()
   }
-  const selectedNames = () => [...defaults.map(skill => skill.name), ...optional.filter(skill => selected.has(skill.name)).map(skill => skill.name)].sort()
+  const selectedNames = () => inventory.skills.map(skill => skill.name).sort()
 
   useInput((input, key) => {
     if (phase === 'replace') {
@@ -46,27 +43,9 @@ export function SkillsApp({ initialWidth, inventory, messages, onComplete }: Ski
       finish({ kind: 'cancelled' })
       return
     }
-    if ((key.upArrow || input === 'k') && optional.length > 0) {
-      setCursor(value => (value - 1 + optional.length) % optional.length)
-    }
-    else if ((key.downArrow || input === 'j') && optional.length > 0) {
-      setCursor(value => (value + 1) % optional.length)
-    }
-    else if (input === ' ' && optional[cursor]) {
-      const name = optional[cursor].name
-      setSelected((current) => {
-        const next = new Set(current)
-        if (next.has(name))
-          next.delete(name)
-        else
-          next.add(name)
-        return next
-      })
-    }
-    else if (key.return) {
+    if (key.return) {
       const names = selectedNames()
-      const divergent = inventory.skills.some(skill => names.includes(skill.name) && skill.status === 'divergent')
-      if (divergent)
+      if (plan.replaced.length > 0 || plan.removed.length > 0)
         setPhase('replace')
       else
         finish({ kind: 'confirmed', names, force: false })
@@ -81,16 +60,16 @@ export function SkillsApp({ initialWidth, inventory, messages, onComplete }: Ski
       <Text>{truncateDisplay(`${messages.target}: ${inventory.target}`, width)}</Text>
       <Text> </Text>
       <Text bold>{messages.defaultHeading}</Text>
-      {defaults.map(skill => (
+      {inventory.skills.map(skill => (
         <Text key={skill.name}>{truncateDisplay(`  [x] ${skill.name}  ${messages.locked} · ${status(skill.status)}`, width)}</Text>
       ))}
       <Text> </Text>
-      <Text bold>{messages.optionalHeading}</Text>
-      {optional.length === 0 && <Text dimColor>{`  ${messages.none}`}</Text>}
-      {optional.map((skill, index) => (
-        <Text key={skill.name}>{truncateDisplay(`${index === cursor ? '›' : ' '} ${selected.has(skill.name) ? '[x]' : '[ ]'} ${skill.name}  ${status(skill.status)}`, width)}</Text>
+      {plan.replaced.map(name => (
+        <Text key={`replace-${name}`}>{`${messages.replaceDirectory}: ${inventory.target}/${name}`}</Text>
       ))}
-      <Text> </Text>
+      {plan.removed.map(name => (
+        <Text key={`remove-${name}`}>{`${messages.removeDirectory}: ${inventory.target}/${name}`}</Text>
+      ))}
       <Text color={phase === 'replace' ? 'yellow' : undefined}>{phase === 'replace' ? messages.replaceTitle : messages.selectHelp}</Text>
       {phase === 'replace' && <Text>{messages.replaceHelp}</Text>}
     </Box>

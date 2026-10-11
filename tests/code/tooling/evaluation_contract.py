@@ -1,5 +1,6 @@
 """Regression coverage for the small RSP/Harbor integration boundary."""
 import asyncio
+import hashlib
 import importlib.util
 import json
 import os
@@ -12,6 +13,8 @@ import unittest
 from unittest.mock import AsyncMock, patch
 
 from harbor.agents.installed.codex import Codex
+from harbor.environments.base import ExecResult
+from harbor.models.agent.context import AgentContext
 from harbor.utils.env import resolve_env_vars
 
 HERE = Path(__file__).resolve().parents[2] / "skills/support"
@@ -30,6 +33,40 @@ agent = load("agent", HERE / "agent.py")
 
 
 class EvaluationContract(unittest.TestCase):
+    def test_executor_usage_attributes_root_descendants_and_keeps_missing_unknown(self):
+        from tests.skills.support.usage import session_usage
+        with tempfile.TemporaryDirectory() as directory:
+            logs = Path(directory)
+            sessions = logs / "sessions"
+            sessions.mkdir()
+            (logs / "codex.txt").write_text(json.dumps({"type": "thread.started", "thread_id": "root"}))
+            def save(filename, identity, parent, tokens):
+                data = [{"type": "session_meta", "payload": {"id": identity, "source": {"subagent": {"thread_spawn": {"parent_thread_id": parent}}} if parent else "exec"}}]
+                data.append({"type": "response_item", "timestamp": "2026-10-11T00:00:00Z", "payload": {"type": "message", "role": "user", "content": [{"type": "input_text", "text": "Review the selected scope."}]}})
+                if tokens is not None:
+                    for total in (1, tokens):
+                        data.append({"type": "event_msg", "payload": {"type": "token_count", "info": {"total_token_usage": {"input_tokens": total, "cached_input_tokens": 0, "output_tokens": 1}}}})
+                (sessions / filename).write_text("\n".join(json.dumps(e) for e in data))
+            save("a.jsonl", "root", None, 10)
+            save("z.jsonl", "child", "root", 20)
+            save("nested.jsonl", "grandchild", "child", 30)
+            save("duplicate.jsonl", "child", "root", 20)
+            save("unrelated.jsonl", "other", None, 100)
+            observed = session_usage(logs)
+            self.assertEqual(observed["total"]["input_tokens"], 60)
+            self.assertEqual(observed["unattributed_sessions"], ["other"])
+            instance = agent.RoutedCodex(logs_dir=logs, model_name="AI-HUB/gpt-6.1-sol")
+            trajectory = instance.convert_trajectory(logs)
+            self.assertEqual(trajectory.session_id, "root")
+            context = AgentContext()
+            instance.populate_context_post_run(context)
+            self.assertEqual(context.n_input_tokens, 60)
+            self.assertIsNone(context.cost_usd)
+            save("nested.jsonl", "grandchild", "child", None)
+            instance.populate_context_post_run(context)
+            self.assertIsNone(context.n_input_tokens)
+            self.assertIsNone(session_usage(logs)["total"])
+
     def test_partial_score_is_not_full_score_acceptance(self):
         with tempfile.TemporaryDirectory() as directory:
             job = Path(directory)
@@ -116,12 +153,22 @@ class EvaluationContract(unittest.TestCase):
                           "agent_result": {"n_input_tokens": None, "n_output_tokens": 0},
                           "config": {"agent": {"name": "codex", "model_name": "model-a", "skills": [str(job / "skills")]}},
                           "verifier_result": {"rewards": {"reward": 1}}}
+                catalog = job / "models.json"
+                catalog.write_text('{"models": [{"slug": "model-a"}]}')
+                result["config"]["agent"]["kwargs"] = {"config": {"model_catalog_json": str(catalog)}}
                 (job / "trial/result.json").write_text(json.dumps(result))
             evaluate.report(jobs[1], jobs[0])
             summary = (jobs[1] / "summary.md").read_text()
             self.assertIn("| unknown | 0 |", summary)
             self.assertNotIn("mismatch", summary)
             self.assertIn("skill paths are intentionally excluded", summary)
+            catalog.write_text('{"models": [{"slug": "model-a", "context_window": 512000}]}')
+            evaluate.report(jobs[1], jobs[0])
+            self.assertIn("agent model/settings mismatch", (jobs[1] / "summary.md").read_text())
+            catalog.unlink()
+            evaluate.report(jobs[1], jobs[0])
+            self.assertIn("agent model/settings unavailable", (jobs[1] / "summary.md").read_text())
+            catalog.write_text('{"models": [{"slug": "model-a"}]}')
             result["task_checksum"] = "corrected-grader"
             result["config"]["agent"]["model_name"] = "model-b"
             (jobs[1] / "trial/result.json").write_text(json.dumps(result))
@@ -137,6 +184,80 @@ class EvaluationContract(unittest.TestCase):
         with patch.object(Codex, "exec_as_agent", new_callable=AsyncMock) as execute:
             asyncio.run(instance.exec_as_agent(None, "codex exec --model gpt-6.1-sol --json -- task"))
             self.assertIn("--model AI-HUB/gpt-6.1-sol ", execute.call_args.args[1])
+
+    @unittest.skipUnless(os.environ.get("RSP_EVAL_CONTAINER_TESTS") == "1", "explicit offline Docker probe")
+    def test_native_codex_home_supports_helpers_retention_and_cleanup(self):
+        container = subprocess.check_output(["docker", "run", "-d", "--rm", "--network", "none",
+                                             "rsp-eval-agent:2026-10-08", "sleep", "120"], text=True).strip()
+        owner = self
+        class Environment:
+            default_user = None
+            async def upload_file(self, source, target):
+                subprocess.run(["docker", "cp", str(source), f"{container}:{target}"], check=True, capture_output=True)
+
+            async def exec(self, command, env=None, **kwargs):
+                if "codex exec " in command:
+                    owner.assertIn("--model AI-HUB/gpt-6.1-sol ", command)
+                    # Replace only model execution. Native setup, config upload,
+                    # Skill registration, session copying and cleanup still run.
+                    resumed = "resume --last" in command
+                    command = """set -eu
+test -s "$CODEX_HOME/config.toml"
+test -s "$HOME/.agents/skills/probe/SKILL.md"
+python - <<'PY'
+import json, os, tomllib
+from pathlib import Path
+home = Path(os.environ['CODEX_HOME'])
+config = tomllib.loads((home / 'config.toml').read_text())
+catalog = Path(config['model_catalog_json'])
+assert catalog.is_relative_to(home)
+assert json.loads(catalog.read_text()) == {'models': [{'slug': 'AI-HUB/gpt-6.1-sol'}]}
+PY
+codex --version > /tmp/codex-version.log 2>&1
+if grep -q 'Refusing to create helper' /tmp/codex-version.log; then exit 1; fi
+command -v apply_patch
+"""
+                    if resumed:
+                        command += 'test "$(cat "$CODEX_HOME/sessions/probe.jsonl")" = retained\n'
+                        command += 'test "$(cat /app/helper-proof)" = working\n'
+                    else:
+                        command += """apply_patch '*** Begin Patch
+*** Add File: /app/helper-proof
++working
+*** End Patch'
+mkdir -p "$CODEX_HOME/sessions"
+echo retained > "$CODEX_HOME/sessions/probe.jsonl"
+"""
+                arguments = ["docker", "exec"]
+                for key, value in (env or {}).items():
+                    arguments.extend(["-e", f"{key}={value}"])
+                result = subprocess.run([*arguments, container, "bash", "-lc", command], capture_output=True, text=True)
+                return ExecResult(stdout=result.stdout, stderr=result.stderr, return_code=result.returncode)
+        try:
+            environment = Environment()
+            async def exercise():
+                result = await environment.exec("mkdir -p /opt/probe-skills/probe; echo probe > /opt/probe-skills/probe/SKILL.md")
+                self.assertEqual(result.return_code, 0)
+                host_env = {key: os.environ[key] for key in ("PATH", "HOME", "DOCKER_HOST", "DOCKER_CONTEXT") if key in os.environ}
+                with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, host_env, clear=True):
+                    catalog = Path(directory) / "models.json"
+                    catalog.write_text(json.dumps({"models": [{"slug": "AI-HUB/gpt-6.1-sol"}]}))
+                    for resumed in (False, True):
+                        instance = agent.RoutedCodex(logs_dir=Path(directory), model_name="AI-HUB/gpt-6.1-sol",
+                                                    skills_dir="/opt/probe-skills",
+                                                    config={"model_reasoning_effort": "medium",
+                                                            "model_catalog_json": str(catalog)})
+                        execute = instance.resume if resumed else instance.run
+                        await execute("offline environment probe", environment, AgentContext())
+                        result = await environment.exec(
+                            f"set -eu; test ! -e {instance._REMOTE_CODEX_HOME}; "
+                            f"test ! -e {instance._REMOTE_CODEX_SECRETS_DIR}; "
+                            'test -x "$(command -v apply_patch)"; '
+                            f"test \"$(cat {instance.environment_logs_dir}/sessions/probe.jsonl)\" = retained")
+                        self.assertEqual(result.return_code, 0, result.stderr)
+            asyncio.run(exercise())
+        finally:
+            subprocess.run(["docker", "rm", "-f", container], check=False, capture_output=True)
 
     def test_resume_preserves_failed_evidence_and_leaves_success_untouched(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -239,6 +360,7 @@ class EvaluationContract(unittest.TestCase):
                 return 0
 
             with patch.object(evaluate, "HOME", home), patch.dict(os.environ, {}, clear=True), \
+                    patch.object(evaluate, "check_image_inputs"), \
                     patch.object(evaluate, "image_identity", return_value="image-v2"), \
                     patch.object(evaluate.subprocess, "check_output", side_effect=["commit", b"patch"]), \
                     patch.object(evaluate.subprocess, "call", side_effect=native):
@@ -269,6 +391,7 @@ class EvaluationContract(unittest.TestCase):
                     return 0
 
                 with patch.object(evaluate, "HOME", home), patch.dict(os.environ, {}, clear=True), \
+                        patch.object(evaluate, "check_image_inputs"), \
                         patch.object(evaluate, "image_identity", return_value="image-v1"), \
                         patch.object(evaluate.subprocess, "check_output", side_effect=["commit", b"patch"]), \
                         patch.object(evaluate.subprocess, "call", side_effect=native):
@@ -306,7 +429,8 @@ class EvaluationContract(unittest.TestCase):
     def test_bounded_tasks_reject_undeclared_changes_but_allow_outputs_and_temporary_files(self):
         names = ("shape-cache", "commit-restraint", "finding-investigation", "verify-boundary",
                  "structural-audit", "review-staged", "owner-decision", "release-evidence",
-                 "doc-export", "context-merge", "recovery-export", "workflow-catalog")
+                 "doc-export", "context-merge", "recovery-export", "workflow-catalog",
+                 "completion-boundary", "completion-boundary-control", "completion-group-control", "structural-audit-control", "commit-tracked-restraint")
         for name in names:
             task = HERE.parent / "tasks" / name
             with self.subTest(task=name), tempfile.TemporaryDirectory() as directory:
@@ -345,6 +469,132 @@ class EvaluationContract(unittest.TestCase):
                             self.assertNotEqual(result.returncode, 0)
                             self.assertIn("undeclared tracked files", result.stderr)
                             source.write_bytes(original)
+
+    def test_verification_evidence_accepts_locations_without_waiving_reference_validity(self):
+        task = HERE.parent / "tasks/verify-boundary"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            work = root / "app"
+            shutil.copytree(task / "environment/workspace", work)
+            baseline = root / "baseline.json"
+            subprocess.run(["python3", str(task / "environment/setup.py"), str(work), str(baseline)], check=True, capture_output=True)
+            env = {**os.environ, "RSP_WORKSPACE": str(work), "RSP_BASELINE": str(baseline), "PYTHONDONTWRITEBYTECODE": "1"}
+            subprocess.run(["bash", str(task / "solution/solve.sh")], env=env, check=True, capture_output=True)
+            report_path = work / "report.json"
+            report = json.loads(report_path.read_text())
+            outside = root / "outside.mjs"
+            outside.write_text("outside workspace\n")
+            (work / "tmp").mkdir()
+            (work / "tmp/escape.mjs").symlink_to(outside)
+            command = ["python3", "-B", str(HERE / "verifier.py"), str(task / "tests/.support/check.py")]
+            cases = [(path, True) for path in ("src/pricing.mjs", "src/pricing.mjs:2", "src/pricing.mjs:2:3", "/app/src/pricing.mjs:2")]
+            cases += [(path, False) for path in ("missing.mjs:1", "src:1", "src/pricing.mjs:0", "src/pricing.mjs:-1", "src/pricing.mjs:999", "src/pricing.mjs:2:0", "src/pricing.mjs:2:999", "src/pricing.mjs:two", "../outside.mjs", "../outside.mjs:1", str(outside), str(outside) + ":1", "tmp/escape.mjs", "tmp/escape.mjs:1")]
+            for reference, valid in cases:
+                with self.subTest(reference=reference):
+                    report["evidence"][0]["path"] = reference
+                    report_path.write_text(json.dumps(report))
+                    result = subprocess.run(command, env=env, capture_output=True, text=True)
+                    self.assertEqual(result.returncode, 0 if valid else 1, result.stdout + result.stderr)
+                    if not valid:
+                        self.assertIn("Evidence", result.stderr)
+
+    def test_completion_assessment_accepts_both_reference_verdicts_and_rejects_their_inversion(self):
+        for name in ("completion-boundary", "completion-boundary-control"):
+            task = HERE.parent / "tasks" / name
+            with self.subTest(task=name), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                work = root / "app"
+                shutil.copytree(task / "environment/workspace", work)
+                baseline = root / "baseline.json"
+                subprocess.run(["python3", str(task / "environment/setup.py"), str(work), str(baseline)], check=True, capture_output=True)
+                env = {"RSP_WORKSPACE": str(work), "RSP_BASELINE": str(baseline),
+                       "RSP_LOG_DIR": str(root / "logs"), "RSP_EVAL_OFFLINE": "1"}
+                output = root / "logs/reward.json"
+                with patch.dict(os.environ, env):
+                    self.assertEqual(grade.grade(task / "tests", work, output), {"reward": 0.0})
+                    subprocess.run(["bash", str(task / "solution/solve.sh")], env=os.environ, check=True, capture_output=True)
+                    self.assertEqual(grade.grade(task / "tests", work, output), {"reward": 1.0})
+                    report_path = work / "report.json"
+                    report = json.loads(report_path.read_text())
+                    report["declaredCheck"]["status"] = "pass"
+                    for item in report["findings"] + report["evidence"]:
+                        item["path"] += ":1"
+                    report_path.write_text(json.dumps(report))
+                    self.assertEqual(grade.grade(task / "tests", work, output), {"reward": 1.0})
+                    report["completionSupported"] = not report["completionSupported"]
+                    report["findings"] = ([] if report["completionSupported"] else
+                                          [{"path": "src/cache.mjs", "reason": "Claimed defect without a matching contract violation."}])
+                    report_path.write_text(json.dumps(report))
+                    self.assertEqual(grade.grade(task / "tests", work, output), {"reward": 0.0})
+
+    def test_completion_judge_receives_native_commands_without_private_reasoning(self):
+        from types import SimpleNamespace
+        import litellm
+        from rewardkit.runner import run
+        from harbor.models.trial.config import ArtifactConfig
+        from harbor.trial.artifact_handler import ArtifactHandler
+        import logging
+        for name in ("completion-boundary", "completion-boundary-control"):
+            task = HERE.parent / "tasks" / name
+            projection = load("execution_evidence", task / "tests/.support/execution_evidence.py")
+            with self.subTest(task=name), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                transcript = root / "codex.txt"
+                events = [
+                    {"type": "thread.started", "thread_id": "completion-session"},
+                    {"type": "item.completed", "item": {"type": "reasoning", "text": "PRIVATE_REASONING"}},
+                    {"type": "item.completed", "item": {"type": "command_execution", "id": "check-1",
+                     "command": "node tools/check.mjs", "aggregated_output": "Cache smoke check passed",
+                     "exit_code": 0, "status": "completed"}},
+                ]
+                transcript.write_text("Startup warning\n" + "\n".join(json.dumps(e) for e in events))
+                output = root / "execution-evidence.json"
+                # Exercise native artifact transport into a separate verifier.
+                artifacts = root / "artifacts"
+                retained = artifacts / "logs/agent/codex.txt"
+                retained.parent.mkdir(parents=True)
+                shutil.copy2(transcript, retained)
+                verifier = root / "verifier"
+
+                class LocalTransport:
+                    async def ensure_dirs(self, paths, **kwargs):
+                        for path in paths:
+                            (verifier / str(path).lstrip("/")).mkdir(parents=True, exist_ok=True)
+
+                    async def upload_file(self, source_path, target_path):
+                        shutil.copy2(source_path, verifier / str(target_path).lstrip("/"))
+
+                config = tomllib.loads((task / "task.toml").read_text())
+                handler = ArtifactHandler(artifacts=[ArtifactConfig(**entry) for entry in config["artifacts"]],
+                                          logger=logging.getLogger("completion-test"))
+                asyncio.run(handler.upload_artifacts(LocalTransport(), artifacts,
+                            source_artifacts_dir="/logs/artifacts", target_artifacts_dir="/logs/artifacts"))
+                transcript = verifier / "logs/agent/codex.txt"
+                projection.collect(transcript, output)
+                tests = root / "tests"
+                tests.mkdir()
+                rubric = (task / "tests/judge.toml").read_text()
+                for path in tomllib.loads(rubric)["judge"]["files"]:
+                    replacement = output if path.startswith("/logs/") else root / path.removeprefix("/")
+                    if replacement != output:
+                        replacement.parent.mkdir(parents=True, exist_ok=True)
+                        replacement.write_text("Task evidence")
+                    rubric = rubric.replace(path, str(replacement))
+                (tests / "judge.toml").write_text(rubric)
+                response = SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(
+                    content=json.dumps({criterion["name"]: {"score": True, "reasoning": "test response"}
+                                        for criterion in tomllib.loads(rubric)["criterion"]})))])
+                with patch.object(litellm, "acompletion", new_callable=AsyncMock, return_value=response) as api:
+                    run(tests, workspace=root, output=root / "reward.json")
+                    prompt = json.dumps(api.call_args.kwargs["messages"])
+                    for value in ("completion-session", "check-1", "node tools/check.mjs", "Cache smoke check passed", "exit_code"):
+                        self.assertIn(value, prompt)
+                    self.assertNotIn("PRIVATE_REASONING", prompt)
+                # Missing native evidence must invalidate the projection, not reuse it.
+                transcript.unlink()
+                with self.assertRaises(FileNotFoundError):
+                    projection.collect(transcript, output)
+                self.assertFalse(output.exists())
 
     def test_task_verifier_errors_are_unscored_and_task_failures_remain_scored(self):
         task = HERE.parent / "tasks/implement-checkout"
@@ -582,6 +832,7 @@ class EvaluationContract(unittest.TestCase):
                 return 0
             args = argparse_namespace(task=["doc-export"], allow_live=True, attempts=1, concurrency=1)
             with (patch.object(evaluate, "HOME", home), patch.dict(os.environ, {"RSP_EVAL_OFFLINE": "0"}),
+                  patch.object(evaluate, "check_image_inputs"),
                   patch.object(subprocess, "check_output", side_effect=output),
                   patch.object(subprocess, "call", side_effect=native)):
                 self.assertEqual(evaluate.calibrate(args), 0)
@@ -633,6 +884,81 @@ class EvaluationContract(unittest.TestCase):
             self.assertIn("1 returned records", summary)
             self.assertIn("cannot establish the full-run success rate", summary)
             self.assertEqual(evaluate.exit_status(job, counts), 1)
+
+    def test_initial_image_drift_stops_before_job_creation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            home = root / "tests/skills"
+            files = {}
+            for name in ("bin/rsp.mjs", "dist/cli.mjs", "rules/rsp-rules.md", "skills/rsp/SKILL.md",
+                         "package.json", "pnpm-lock.yaml"):
+                files[f"/opt/rsp-package/{name}"] = root / name
+            for name in ("grade", "checks", "verifier", "workspace", "outputs"):
+                files[f"/opt/rsp-eval/{name}.py"] = home / f"support/{name}.py"
+            files["/opt/rsp-build/uv.lock"] = home / "uv.lock"
+            files["/opt/rsp-build/Dockerfile"] = home / "images/agent/Dockerfile"
+            for path in files.values():
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(path.name)
+            baked = {key: hashlib.sha256(path.read_bytes()).hexdigest() for key, path in files.items()}
+            with patch.object(evaluate, "ROOT", root), patch.object(evaluate, "HOME", home):
+                with patch.object(subprocess, "check_output", return_value=json.dumps(baked)):
+                    evaluate.check_image_inputs()
+                for kind in ("changed", "missing", "extra"):
+                    actual = dict(baked)
+                    key = "/opt/rsp-eval/grade.py"
+                    if kind == "changed":
+                        actual[key] = "older-bytes"
+                    elif kind == "missing":
+                        del actual[key]
+                    else:
+                        actual["/opt/rsp-package/skills/retired/SKILL.md"] = "retired"
+                    with self.subTest(kind=kind), patch.object(subprocess, "check_output", return_value=json.dumps(actual)):
+                        with self.assertRaisesRegex(ValueError, "image input drift.*rebuild"):
+                            evaluate.snapshot([], "oracle")
+                        self.assertFalse((home / "reports").exists())
+
+    def test_skill_selection_is_snapshotted_without_editing_default_job(self):
+        for selection in ("default", "selected", "none"):
+            with self.subTest(selection=selection), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                home, _ = resume_fixture(root)
+                shutil.copytree(HERE.parent / "tasks/implement-checkout", home / "tasks/implement-checkout")
+                (home / "jobs").mkdir()
+                skill = root / "skills/example"
+                skill.mkdir(parents=True)
+                (skill / "SKILL.md").write_text("candidate bytes")
+                config = {"agents": [{"name": "codex", "model_name": "test-model", "skills": ["skills/example"]}]}
+                catalog = root / "models.json"
+                selected_model = {"slug": "test-model", "truncation_policy": {"mode": "tokens", "limit": 10000}}
+                catalog.write_text(json.dumps({"models": [selected_model, {"slug": "unrelated-model"}]}))
+                config["agents"][0]["kwargs"] = {"config": {"model_catalog_json": str(catalog)}}
+                default = home / "jobs/default.yaml"
+                default.write_text(json.dumps(config))
+                original = default.read_bytes()
+                def consume(job, inputs, config):
+                    evaluate.JobConfig.model_validate(config)
+                    paths = config["agents"][0]["skills"]
+                    captured = Path(config["agents"][0]["kwargs"]["config"]["model_catalog_json"])
+                    self.assertTrue(captured.is_relative_to(inputs))
+                    self.assertEqual(json.loads(captured.read_text()), {"models": [selected_model]})
+                    catalog.unlink()
+                    self.assertEqual(json.loads(captured.read_text()), {"models": [selected_model]})
+                    self.assertEqual(len(paths), 0 if selection == "none" else 1)
+                    for path in paths:
+                        self.assertTrue(Path(path).is_relative_to(inputs))
+                        self.assertEqual((Path(path) / "SKILL.md").read_text(), "candidate bytes")
+                    return 0
+                with patch.object(evaluate, "ROOT", root), patch.object(evaluate, "HOME", home), \
+                        patch.dict(os.environ, {}, clear=True), patch.object(evaluate, "check_image_inputs"), \
+                        patch.object(evaluate, "image_identity", return_value="image-v1"), \
+                        patch.object(subprocess, "check_output", side_effect=["commit", b"patch"]), \
+                        patch.object(evaluate, "execute", side_effect=consume):
+                    args = argparse_namespace(task=[], agent="codex", allow_live=True, attempts=1, concurrency=1,
+                                              skill=[str(skill)] if selection == "selected" else [],
+                                              no_skills=selection == "none", model=None)
+                    self.assertEqual(evaluate.run(args), 0)
+                self.assertEqual(default.read_bytes(), original)
 
     def test_image_build_uses_installed_versions_not_version_ranges(self):
         builder = load("build_image", HERE.parent / "build_image.py")
