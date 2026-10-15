@@ -22,6 +22,17 @@
       ],
       "repository": "https://github.com/addyosmani/agent-skills.git"
     },
+    "addy-agent-skills@aeac41d4d005999432bb7312f7ff06383a91d59d": {
+      "paths": [
+        "AGENTS.md",
+        "LICENSE*",
+        "README.md",
+        "evals/**",
+        "scripts/**",
+        "skills/**"
+      ],
+      "repository": "https://github.com/addyosmani/agent-skills.git"
+    },
     "agent-skills-spec@69ef37e9424c0a7ea9dd2293b559e43ec8176379": {
       "paths": [
         "LICENSE*",
@@ -54,7 +65,26 @@
       ],
       "repository": "https://github.com/antfu/skills.git"
     },
+    "antfu-skills@feb0f3aba6566426f12230e7fc7a10d97c1293bb": {
+      "paths": [
+        "LICENSE*",
+        "README.md",
+        "instructions/**",
+        "meta.ts",
+        "scripts/**",
+        "skills/**/*.md"
+      ],
+      "repository": "https://github.com/antfu/skills.git"
+    },
     "anthropic-doc-coauthoring@683bc88e56f3e09ba94f7055977f3d3aa499f202": {
+      "paths": [
+        "README.md",
+        "THIRD_PARTY_NOTICES.md",
+        "skills/doc-coauthoring/**"
+      ],
+      "repository": "https://github.com/anthropics/skills.git"
+    },
+    "anthropic-doc-coauthoring@dbd4588f9e1033efb41dad4bef2f7947c8993d44": {
       "paths": [
         "README.md",
         "THIRD_PARTY_NOTICES.md",
@@ -71,6 +101,15 @@
       ],
       "repository": "https://github.com/anthropics/skills.git"
     },
+    "anthropic-managed-agents@dbd4588f9e1033efb41dad4bef2f7947c8993d44": {
+      "paths": [
+        "README.md",
+        "THIRD_PARTY_NOTICES.md",
+        "skills/claude-api/*/managed-agents/**",
+        "skills/claude-api/shared/managed-agents-*.md"
+      ],
+      "repository": "https://github.com/anthropics/skills.git"
+    },
     "anthropic-skill-creator@683bc88e56f3e09ba94f7055977f3d3aa499f202": {
       "paths": [
         "README.md",
@@ -78,6 +117,25 @@
         "skills/skill-creator/**"
       ],
       "repository": "https://github.com/anthropics/skills.git"
+    },
+    "anthropic-skill-creator@dbd4588f9e1033efb41dad4bef2f7947c8993d44": {
+      "paths": [
+        "README.md",
+        "THIRD_PARTY_NOTICES.md",
+        "skills/skill-creator/**"
+      ],
+      "repository": "https://github.com/anthropics/skills.git"
+    },
+    "compound-engineering@50532b00de523980010d97fe950965b35382a3b7": {
+      "paths": [
+        "LICENSE*",
+        "README.md",
+        "docs/guides/**",
+        "docs/solutions/skill-design/**",
+        "skills/**",
+        "tests/**"
+      ],
+      "repository": "https://github.com/EveryInc/compound-engineering-plugin.git"
     },
     "compound-engineering@cef001f7b1c2e4a21516e3abd60252798d4b67c5": {
       "paths": [
@@ -100,6 +158,26 @@
         "tests/**"
       ],
       "repository": "https://github.com/EveryInc/compound-engineering-plugin.git"
+    },
+    "deepseek-harness@571902028a75c64c1d767f4ae5fd099485f0ddf0": {
+      "paths": [
+        ".agents/notes/*.md",
+        ".agents/notes/*/*/**",
+        ".agents/notes/*/AGENTS.md",
+        ".agents/notes/*/README*.md",
+        ".agents/skills/dsh-*/**",
+        ".agents/skills/record-browser-gif/**",
+        "AGENTS.md",
+        "LICENSE",
+        "README.md",
+        "README.zh.md",
+        "docs/architecture.md",
+        "docs/defensive-patterns.md",
+        "docs/testing.md",
+        "packages/preset/agent-preset/skills/agent-experience/**",
+        "scripts/**"
+      ],
+      "repository": "https://github.com/deepseek-ai/deepseek-harness.git"
     },
     "deepseek-harness@5badb15009ae1756c3afe0ae0cef1faafc290ccc": {
       "paths": [
@@ -137,6 +215,13 @@
       ],
       "repository": "https://github.com/affaan-m/ECC.git"
     },
+    "gemini-docs@06d329873703ddabe8a842d962342ac4ad779e83": {
+      "paths": [
+        ".gemini/skills/docs-writer/**",
+        "LICENSE"
+      ],
+      "repository": "https://github.com/google-gemini/gemini-cli.git"
+    },
     "gemini-docs@ef59c532f07fbb3a58dd68bac024ae217e9c73ce": {
       "paths": [
         ".gemini/skills/docs-writer/**",
@@ -166,6 +251,35 @@
       ],
       "repository": "https://github.com/open-gsd/gsd-core.git"
     },
+    "gsd-core@962c1192e062b5278281cd3a7bfd671a67a4db44": {
+      "paths": [
+        "LICENSE*",
+        "README.md",
+        "agents/**",
+        "commands/**",
+        "docs/**/*.md",
+        "src/**"
+      ],
+      "repository": "https://github.com/open-gsd/gsd-core.git"
+    },
+    "i-have-adhd@1ecea1993b7fce257ffbd686c070948b5e07eda6": {
+      "paths": [
+        ".github/workflows/**",
+        ".opencode/**",
+        "AGENTS.md",
+        "INSTALL.md",
+        "LICENSE",
+        "README.md",
+        "evals/**",
+        "extensions/**",
+        "hooks/**",
+        "package.json",
+        "scripts/**",
+        "skills/**",
+        "tests/**"
+      ],
+      "repository": "https://github.com/ayghri/i-have-adhd.git"
+    },
     "i-have-adhd@723af7d9afaf43eb871dbcce6129e2bf80de90d5": {
       "paths": [
         ".github/workflows/**",
@@ -183,6 +297,18 @@
         "tests/**"
       ],
       "repository": "https://github.com/ayghri/i-have-adhd.git"
+    },
+    "langgraph@08a345637fb2bd499f69c90056a22c478a468817": {
+      "paths": [
+        "LICENSE",
+        "README.md",
+        "libs/langgraph/langgraph/_internal/_replay.py",
+        "libs/langgraph/langgraph/types.py",
+        "libs/langgraph/tests/test_interruption.py",
+        "libs/langgraph/tests/test_pregel.py",
+        "libs/langgraph/tests/test_subgraph_persistence.py"
+      ],
+      "repository": "https://github.com/langchain-ai/langgraph.git"
     },
     "langgraph@708aaa4ebc1cba2621aa6113050eb519a5a1bfdb": {
       "paths": [
@@ -258,6 +384,18 @@
       ],
       "repository": "https://github.com/LB623/no-negative-echo.git"
     },
+    "openai-agents-python@17d994bd3045dae71acda676a4ef4762ed8ecd94": {
+      "paths": [
+        "LICENSE",
+        "README.md",
+        "docs/handoffs.md",
+        "docs/results.md",
+        "docs/tools.md",
+        "src/agents/extensions/experimental/hosted_multi_agent/model.py",
+        "src/agents/run_state.py"
+      ],
+      "repository": "https://github.com/openai/openai-agents-python.git"
+    },
     "openai-agents-python@71c2da4de47159ccc37905b8fe781be805dbfa66": {
       "paths": [
         "LICENSE",
@@ -281,6 +419,16 @@
         "src/agents/run_state.py"
       ],
       "repository": "https://github.com/openai/openai-agents-python.git"
+    },
+    "openai-plugins@0722921d5542fc593105c27bd52630babd8b8c2a": {
+      "paths": [
+        ".agents/plugins/**",
+        "README.md",
+        "plugins/**/*.json",
+        "plugins/**/*.md",
+        "plugins/**/*.yaml"
+      ],
+      "repository": "https://github.com/openai/plugins.git"
     },
     "openai-plugins@5fd93af4cd0c623e020d0cc7e9ce178b4ac1f70f": {
       "paths": [
@@ -316,6 +464,18 @@
       ],
       "repository": "https://github.com/Fission-AI/OpenSpec.git"
     },
+    "openspec@f80d860fc510ba4f51180c8ddde35b91b32de657": {
+      "paths": [
+        "LICENSE*",
+        "README.md",
+        "docs-lab/**/*.md",
+        "docs/**/*.md",
+        "openspec/**",
+        "schemas/**",
+        "src/**"
+      ],
+      "repository": "https://github.com/Fission-AI/OpenSpec.git"
+    },
     "planning-with-files@41f60aeca8bae0b145ec0e9421a7abd747ae2b69": {
       "paths": [
         ".agents/skills/planning-with-files/**",
@@ -331,7 +491,32 @@
       ],
       "repository": "https://github.com/OthmanAdi/planning-with-files.git"
     },
+    "planning-with-files@7056ed2f2b86a8a9e18840f625ac66a48fa07693": {
+      "paths": [
+        ".agents/skills/planning-with-files/**",
+        "LICENSE",
+        "README.md",
+        "docs/attestation-locking.md",
+        "docs/codex.md",
+        "docs/evals.md",
+        "docs/workflow.md",
+        "scripts/**",
+        "templates/**",
+        "tests/**"
+      ],
+      "repository": "https://github.com/OthmanAdi/planning-with-files.git"
+    },
     "ponytail@08e952d7a8057a57ce561ff1330d093fd92eec67": {
+      "paths": [
+        "LICENSE*",
+        "README.md",
+        "benchmarks/**",
+        "hooks/**",
+        "skills/**"
+      ],
+      "repository": "https://github.com/DietrichGebert/ponytail.git"
+    },
+    "ponytail@2961b52fc1fe6a5a87c7a959a79512e5c2f3ffe5": {
       "paths": [
         "LICENSE*",
         "README.md",
@@ -368,6 +553,23 @@
         "README.md"
       ],
       "repository": "https://github.com/prisma/web.git"
+    },
+    "prisma-docs@a0eacc4b7b7ea22bec0e121e75c97e2a06b21d6a": {
+      "paths": [
+        ".claude/skills/docs-agent-ready/**",
+        ".claude/skills/docs-reader-review/**",
+        ".claude/skills/docs-writer/**",
+        "README.md"
+      ],
+      "repository": "https://github.com/prisma/web.git"
+    },
+    "skill-use-bench@1a80e93479e1a9f5ce4be2e27550edaf7f9d6ffc": {
+      "paths": [
+        "README.md",
+        "benchmark/**",
+        "evaluation/**"
+      ],
+      "repository": "https://github.com/JinyiHan99/Skill-Use-Bench.git"
     },
     "skill-use-bench@b1f74886957e13b8013fa554649b210955b69980": {
       "paths": [
@@ -409,6 +611,14 @@
       ],
       "repository": "https://github.com/vercel-labs/skills.git"
     },
+    "skills-cli@671e8c320810d36fed80fac5f1a2c1bf7e82d812": {
+      "paths": [
+        "README.md",
+        "package.json",
+        "src/**"
+      ],
+      "repository": "https://github.com/vercel-labs/skills.git"
+    },
     "skills-cli@958f4b7389ba698b0a6a26a1e505ae2af82364d2": {
       "paths": [
         "README.md",
@@ -441,6 +651,20 @@
       ],
       "repository": "https://github.com/NVIDIA/SkillSpector.git"
     },
+    "spec-kit@4ca46a0706a662b1edc07086ef16f021820c2db0": {
+      "paths": [
+        ".specify/**",
+        "LICENSE*",
+        "README.md",
+        "docs/**/*.md",
+        "extensions/**",
+        "presets/**",
+        "src/**",
+        "templates/**",
+        "workflows/**"
+      ],
+      "repository": "https://github.com/github/spec-kit.git"
+    },
     "spec-kit@62b6fcf49933525162981c5b1ddf075a2b781ded": {
       "paths": [
         ".specify/**",
@@ -470,6 +694,15 @@
       "repository": "https://github.com/github/spec-kit.git"
     },
     "superpowers@8ca22dba9a94f28898bbce59f2537ff4d87c747d": {
+      "paths": [
+        "LICENSE*",
+        "README.md",
+        "skills/**",
+        "tests/**"
+      ],
+      "repository": "https://github.com/obra/superpowers.git"
+    },
+    "superpowers@bb92a77741419a4ab5f06e711a283343f1ada0c3": {
       "paths": [
         "LICENSE*",
         "README.md",

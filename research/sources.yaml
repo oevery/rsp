@@ -56,7 +56,7 @@ sources:
       - skills/productivity/**
   openspec:
     repository: https://github.com/Fission-AI/OpenSpec.git
-    ref: v1.14.1 # Workflow CLI and templates; release baseline.
+    ref: v1.14.2 # Workflow CLI and templates; release baseline.
     paths:
       - README.md
       - LICENSE*
@@ -67,7 +67,7 @@ sources:
       - openspec/**
   ponytail:
     repository: https://github.com/DietrichGebert/ponytail.git
-    ref: v4.13.0 # Published host integration and Skills; release baseline.
+    ref: v5.2.0 # Published host integration and Skills; release baseline.
     paths:
       - README.md
       - LICENSE*
@@ -76,7 +76,7 @@ sources:
       - hooks/**
   spec-kit:
     repository: https://github.com/github/spec-kit.git
-    ref: v1.1.1 # Workflow CLI and templates; release baseline.
+    ref: v1.2.0 # Workflow CLI and templates; release baseline.
     paths:
       - README.md
       - LICENSE*
@@ -89,7 +89,7 @@ sources:
       - workflows/**
   compound-engineering:
     repository: https://github.com/EveryInc/compound-engineering-plugin.git
-    ref: compound-engineering-v3.30.4 # Published workflow plugin; release baseline.
+    ref: compound-engineering-v3.30.5 # Published workflow plugin; release baseline.
     paths:
       - README.md
       - LICENSE*
@@ -99,7 +99,7 @@ sources:
       - tests/**
   gsd-core:
     repository: https://github.com/open-gsd/gsd-core.git
-    ref: v1.16.0 # Workflow runtime and commands; release baseline.
+    ref: v1.17.0 # Workflow runtime and commands; release baseline.
     paths:
       - README.md
       - LICENSE*
@@ -118,7 +118,7 @@ sources:
       - plugins/**/*.yaml
   openai-agents-python:
     repository: https://github.com/openai/openai-agents-python.git
-    ref: v0.23.1 # Agent SDK; release baseline.
+    ref: v0.24.0 # Agent SDK; release baseline.
     paths:
       - README.md
       - LICENSE
@@ -129,7 +129,7 @@ sources:
       - src/agents/extensions/experimental/hosted_multi_agent/model.py
   langgraph:
     repository: https://github.com/langchain-ai/langgraph.git
-    ref: 1.2.14 # Core graph runtime; release baseline.
+    ref: 1.2.15 # Core graph runtime; release baseline.
     paths:
       - README.md
       - LICENSE
@@ -161,7 +161,7 @@ sources:
       - packages/test/src/workflows/handle-external-workflow-cancellation-while-activity-running.ts
   planning-with-files:
     repository: https://github.com/OthmanAdi/planning-with-files.git
-    ref: v3.23.0 # Published workflow Skill; release baseline.
+    ref: v3.24.0 # Published workflow Skill; release baseline.
     paths:
       - README.md
       - LICENSE
@@ -185,14 +185,14 @@ sources:
       - .cursor/rules/**
   skills-cli:
     repository: https://github.com/vercel-labs/skills.git
-    ref: v1.7.1 # Skill distribution CLI; release baseline.
+    ref: v1.7.2 # Skill distribution CLI; release baseline.
     paths:
       - README.md
       - package.json
       - src/**
   superpowers:
     repository: https://github.com/obra/superpowers.git
-    ref: v6.4.2 # Published workflow Skills; release baseline.
+    ref: v7.0.0 # Published workflow Skills; release baseline.
     paths:
       - README.md
       - LICENSE*
@@ -200,7 +200,7 @@ sources:
       - tests/**
   addy-agent-skills:
     repository: https://github.com/addyosmani/agent-skills.git
-    ref: 0.6.12 # Published Skill collection; release baseline.
+    ref: 0.6.13 # Published Skill collection; release baseline.
     paths:
       - README.md
       - LICENSE*
