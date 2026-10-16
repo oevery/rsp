@@ -81,8 +81,13 @@ When stable knowledge needs updating or lifecycle/terminal delivery is being pre
 - update an existing Spec or scoped instruction, or create a new durable Spec;
 - create or update a Decision Record for lasting rationale.
 
-Verify outcome facts, distill useful Focus results, and write needed stable knowledge
-to its owner. After those updates, converge the entire Change: retain the delivered
+For a routine knowledge update, verify the relevant facts, update their owners and
+reconcile affected work records. Preserve unfinished work; this does not require
+final whole-Change convergence, readiness or a closure decision.
+
+At final delivery or preparation for closure, verify outcome facts, distill useful
+Focus results, and write needed stable knowledge to its owner. Then converge the
+entire Change: retain the delivered
 delta, material failures, limits and evidence pointers; remove stale plans, duplicate
 Specs and session chronology. Check the final Change and updated knowledge owners,
 complete any required Review, then obtain current readiness. Necessary writeback
