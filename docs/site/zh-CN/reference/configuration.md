@@ -34,7 +34,7 @@ RSP 不提供 WorkRef 语言或风格配置字段。`language.default: zh-CN` �
 
 使用 `rsp config` 查看简洁的有效项目配置，使用 `rsp config --json` 获取自动化读取的有效配置摘要；需要单行结果时可追加 `--compact`。命令形式仍只有 `config` 和 `config --json` 两个入口，`--compact` 只是后者的输出格式选项。该命令只读取并校验 `.rsp/config.yaml`，不会扫描 Changes、focus、依赖图、归档或 Git 状态。
 
-JSON 返回 Change 类型、Decision Records 路径、Manage 策略和持久化语言的单层有效摘要。例如仅配置 `language.default: zh-CN` 时，输出中的 `language.artifacts` 和 `language.commit` 都是 `zh-CN`。
+JSON 返回 Change 类型、Decision Records 路径、Workflow 策略和持久化语言的单层有效摘要。例如仅配置 `language.default: zh-CN` 时，输出中的 `language.artifacts` 和 `language.commit` 都是 `zh-CN`。
 
 Agent 仅在当前决定依赖有效 RSP 配置时，使用同一选定 CLI 成功返回的 `rsp config --json` 摘要。CLI 负责校验、默认值与继承解析，Agent 负责解释结果。相关事实未变时可复用；配置漂移、恢复或依赖配置的收尾前重新读取，不必每个阶段都读取。原始 YAML 只用于诊断，status 也不是配置摘要。
 
@@ -51,22 +51,26 @@ decisions:
 
 该路径不能是绝对路径、不能逃逸宿主项目，也不能指向其他 `.rsp/` 核心位置。切换路径不会迁移已有记录。在项目迁移或明确删除旧记录前，`rsp doctor` 会报告遗留在默认目录的非活动记录。
 
-## Manage 策略
+## Workflow 策略
 
 ```yaml
-manage:
-  activation: auto
-  closeout: local
+workflow:
+  delegation: off
+  closeout: ask
 ```
 
-`activation` 接受 `explicit` 或 `auto`。Core 仅在有可观察的耦合切片、恢复、独立验收、共享资源、审查收敛或交付／生命周期协调义务时，才为其内部按需协调分支判断资格；文件数量与普通连续工作本身不构成资格。需要持久归属的协调先解析 ready Change 或 Group；纯只读设计／诊断不制造 owner。选择 Skill 不等于委派 worker。激活不授予规划、产品修改、生命周期或外部权限。
+省略配置时也使用以上默认值。`delegation` 接受 `off` 或 `auto`。off 关闭自动派发；明确的代理请求或必需的独立代理义务仍然有效。启用后，由用户或主代理决定使用零个、一个或多个执行代理，受宿主限制。RSP 不提供数量档位或最大数量配置。Direct／Change／Group 与代理拓扑相互独立。
 
-`closeout` 接受：
+`closeout` 仅在确定最终交付或明确要求关闭时生效：
 
-- `manual`：不自动归档或提交。
-- `lifecycle`：所需固定范围审查干净且持久化写回判断完成后可以归档；提交仍然独立。
-- `local`：自动归档符合条件、已验证、非小型且归属边界干净、路径精确、无混杂或越界改动的受管终态边界，并把这些精确路径一次性路由到本地 Commit，无需用户再次请求。
+- `ask`：准备好交付范围与证据，再询问是否关闭；已有明确授权不重复询问。
+- `auto`：最终交付且满足条件时关闭，仍服从更近层级的禁止规则。
+- `manual`：只有明确要求关闭时才关闭；否则已获授权的提交可以保持 Change 打开。
 
-省略 `manage` 时，兼容默认值仍为 `activation: explicit` 与 `closeout: local`。只有真实合格且已选择的协调分支，通过最新门禁后才可考虑既有的有限生命周期／本地 Git 收尾上限；普通工作不因此获得归档或提交权限。更近的禁止与宿主限制优先。RSP 不提供 `full` 预设；推送、标签、发布、部署、批准与人工验收保持显式。
+普通完成和检查点提交保持 Change 打开。普通提交请求不自动表示最终交付。关闭需要准确记录、必要知识回流、适用的 Required 证据、另行要求的审查和当前 readiness。配置不授予 Git、push 或发布权限。
 
-选择行为见 [Skills 与受管工作](../guides/skills.md)。
+### 迁移旧 Manage 配置
+
+本未发布候选将 `manage.activation/closeout` 及 JSON 的 `manage` 投影替换为 `workflow.delegation/closeout`。旧值不是别名：原 `local` 混合了生命周期与 Git 权限，新策略不授予 Git 权限。
+
+获授权后，删除整个 `manage` 映射，明确选择两个新设置，建议从 off/ask 开始。同时检查项目自有 AGENTS 说明与 JSON 消费者。`rsp config` 和 `rsp update` 遇到旧配置或新旧混用会拒绝，不自动转换。编辑后用 `rsp config --json` 验证，再用 `rsp update` 刷新受管资产；历史证据保持不变。

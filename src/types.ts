@@ -71,12 +71,12 @@ export interface InitArgs {
   agentsMode?: 'managed' | 'print'
 }
 
-export type ManageActivation = 'explicit' | 'auto'
-export type ManageCloseout = 'manual' | 'lifecycle' | 'local'
+export type DelegationPolicy = 'off' | 'auto'
+export type CloseoutPolicy = 'ask' | 'auto' | 'manual'
 
-export interface ManagePolicy {
-  activation: ManageActivation
-  closeout: ManageCloseout
+export interface WorkflowPolicy {
+  delegation: DelegationPolicy
+  closeout: CloseoutPolicy
 }
 
 export interface ProjectLanguageConfig {
@@ -93,7 +93,7 @@ export interface EffectiveLanguagePolicy {
 export interface ConfigSummary {
   kinds: string[]
   decisions: { path: string }
-  manage: ManagePolicy
+  workflow: WorkflowPolicy
   language: EffectiveLanguagePolicy
 }
 
@@ -125,10 +125,10 @@ export interface RspConfig {
   decisions?: {
     path?: string
   }
-  /** Project policy for Manage routing and bounded local closeout. */
-  manage?: {
-    activation?: ManageActivation
-    closeout?: ManageCloseout
+  /** Independent delegation and final-delivery lifecycle policy. Never grants Git authority. */
+  workflow?: {
+    delegation?: DelegationPolicy
+    closeout?: CloseoutPolicy
   }
   /** Project language policy for durable artifact and commit prose. */
   language?: ProjectLanguageConfig

@@ -170,7 +170,7 @@ export function renderRspAgentsBlock(): string {
 
 RSP tracks current work, stable specs, and archives under \`.rsp/\`.
 
-Read in order:
+Read in order using supplied or confirmed paths; discover only missing paths or applicable ancestor instructions, without overlapping whole-tree scans:
 1. Nearest \`AGENTS.md\` for project or module instructions.
 2. Root \`CONTEXT.md\` if present, then the relevant nearest \`CONTEXT.md\` for domain language, relationships, and navigation. If a legacy \`CONTEXT-MAP.md\` remains, retain its relevant context and use Core's context-migration branch (or the fallback); discovery alone does not authorize migration.
 3. Use the project \`rsp\` Skill at \`.agents/skills/rsp/SKILL.md\`; hosts may load it through Skill discovery or read it directly. Only when it is absent or cannot be used, read \`.rsp/rsp-rules.md\` as the fallback protocol.

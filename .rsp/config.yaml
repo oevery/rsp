@@ -12,12 +12,12 @@ kinds: []
 decisions:
   path: .rsp/specs/decisions
 
-# New projects default to automatic Manage routing with local closeout.
-# Use activation: explicit to require a named managed request.
-# closeout accepts manual, lifecycle, or local; local routes a qualified clean terminal non-small boundary to one local commit but never push or publication.
-manage:
-  activation: auto
-  closeout: local
+# Automatic delegation is off; explicit worker requests remain allowed.
+# Closeout applies only to established final delivery: ask, auto, or manual.
+# Ordinary completion and checkpoint commits keep work open. No setting grants Git authority.
+workflow:
+  delegation: off
+  closeout: ask
 
 # Set one shared project default for durable artifact and commit prose.
 # Response language remains user/session-owned and is never read from this project mapping.

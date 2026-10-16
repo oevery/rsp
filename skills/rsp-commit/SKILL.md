@@ -4,7 +4,7 @@ description: Inspect or create one authorized exact-scope local commit for direc
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.11.3"
+  version: "2026.10.15.2"
 ---
 
 # RSP Commit
@@ -31,10 +31,10 @@ A durable owner is a Change WorkRef or Group reference; included children never 
 
 Purpose is separate from kind:
 
-- A checkpoint delivers a verified current slice without claiming completed acceptance, closing an issue or requiring archive.
+- A checkpoint keeps the Change open and delivers a verified current slice without claiming completed acceptance, closing an issue or requiring archive.
 - A terminal delivery claims completion only for its selected boundary. Tracked terminal inputs require complete Tasks, decisive Required Verify and no active blocker; legacy unclassified Verify is Required. Optional omissions remain explicit but do not block. Direct work uses its own acceptance, not an invented lifecycle gate.
 
-Lifecycle authority stays upstream. If terminal delivery includes authorized archive or Group closeout, require that action and its inspected diff before staging. Do not archive, update Specs or clean up a Change inside Commit. A valid explicitly authorized local commit without lifecycle authority does not gain it or require an invented archive.
+A generic commit request is a checkpoint unless final delivery is already established. For tracked final delivery, resolve the closure decision through [Core closeout](../rsp/references/closeout.md) before staging, including direct invocation; do not repeat an already settled decision. Commit pauses for its owning capability to perform necessary writing or authorized lifecycle work. Lifecycle authority stays upstream. If terminal delivery includes authorized archive or Group closeout, require that action and its inspected diff before staging. Do not archive, update Specs or clean up a Change inside Commit. A valid explicitly authorized local commit without lifecycle authority does not gain it or require an invented archive.
 
 ## Audit before staging
 

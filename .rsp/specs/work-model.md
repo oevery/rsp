@@ -132,3 +132,15 @@ rollback, retry or history rewrite.
 - Keep host sessions, workers, worktrees, execution environments and integration
   outside RSP durable state.
 - Persist no controller, session, run, receipt, event ledger or automatic promotion.
+
+## Completion and delivery
+
+Direct work needs no durable owner. Change retains one recoverable acceptance and
+delivery boundary. Group needs independently acceptable/deliverable child Changes
+with dependencies or integration; effort and agent count alone do not justify it.
+
+Ordinary completion and checkpoint commits leave Change open. Established final
+delivery or an explicit close request selects the workflow closure policy. Required
+checks and reviews must remain applicable; necessary knowledge is written before
+final Change reconciliation. These are dependencies, not mandatory separate calls
+or repeated full tests. Closure never authorizes Git. Reopen is exceptional recovery.

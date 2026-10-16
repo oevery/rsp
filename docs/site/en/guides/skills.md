@@ -41,7 +41,7 @@ Installation, runtime role, and invocation are separate:
 | `rsp` | default | Core | direct project entry |
 | `rsp-shape` | default | Shape | Core-routed or explicit shaping |
 | Implementation, verification, and review | default | Discipline | Core-routed specialist or explicit bounded request |
-| `rsp-commit` | default | local-delivery Discipline | explicitly authorized exact boundary; eligible coordination closeout only after its gates |
+| `rsp-commit` | default | local-delivery Discipline | explicitly authorized exact boundary; closure policy never grants Git authority |
 | Conditional coordination in `rsp` | within Core | coordination branch | selected under effective project policy only for an actual obligation |
 | `rsp-doc` | default | writing Discipline | repository-document, Skill or release writing |
 
@@ -59,7 +59,7 @@ repeated checks or user continuation.
 
 - Shape can answer one bounded design question read-only without inventing a WorkRef or plan. Authorized planning may create or refine a Change or justified shallow Group; advice within tracked work retains its existing owner without editing it unless authorized.
 - Implement investigates unexplained failures before correction. Diagnosis-only remains read-only without creating an owner. An authorized fix proceeds within the same scope after confirming cause; use pre-mutation RED only when explicitly required or justified by concrete risk.
-- Implement disposes each fixed finding as accepted, rejected, or needing clarification. Correct accepted findings within authority, rerun affected checks, and obtain separate read-only Review; Implement cannot self-certify review-clean.
+- Implement disposes each fixed finding as accepted, rejected, or needing clarification, corrects accepted findings within authority and runs affected checks. When review is requested or required, Core coordinates the separate read-only judgment; a repair-only request returns the correction without inventing review or self-certifying review-clean.
 - Verify executes a declared read-only evidence boundary when required; ordinary Implement checks need no Verify handoff. A Change uses its WorkRef and `Verify` boundary; a Group uses a named `Integration:` condition from its Brief. A request-only boundary must be written back before Group closeout. Required independent acceptance needs host-observed distinct workers.
 - Release writing uses Doc; release-document review uses Review. Both load only their applicable method, preserve evidence and migration boundaries, and confer no publication authority.
 - Release checks without a selected WorkOwner stay with Core and the project's declared checks, not an invented Change or ownerless Verify request. Require an exact candidate, any range the checks need, and authority for their actual effects; missing prerequisites stop dependent checks. Preserve required independent acceptance and separate Git/publication authority.
@@ -80,48 +80,17 @@ Work ownership, decision ownership, transient handoff, execution uncertainty, an
 Three review-related gates remain distinct:
 
 - Implementation verification establishes applicable evidence for the current outcome. Reuse still-applicable passing results; run only missing, failed or invalidated checks. Explicit reruns and required independent execution remain binding.
-- Fixed-scope change review is the report-only Review comparison. It is required when explicitly requested, required by project authority or risk, or needed for managed `review-clean`; it is not automatically required for every tiny direct action.
+- Fixed-scope change review is the report-only Review comparison. It is required when explicitly requested, required by project authority or risk, or needed by selected acceptance; it is not automatically required for every tiny direct action.
 - The durable writeback decision is required before archive and independently decides whether stable current facts or lasting rationale must update a Spec, scoped instruction, or Decision Record. It never substitutes for fixed-scope change review.
 
 These outcomes exist only in the current response and host execution context. Changes and Groups remain the durable owners, and their lifecycle remains `open` or `archived`.
 
 ## Managed automation
 
-Core's conditional coordination branch handles actual coupled slices, recovery, distinct execution and acceptance owners, shared verification resources, bounded review convergence, managed lifecycle or delivery coordination. File count, public documentation, and ordinary sequential method changes do not qualify by themselves. This branch is not a second controller or automatically a worker boundary.
+Core selects capabilities directly. Direct is bounded work without durable tracking; Change retains one recoverable acceptance/delivery boundary; Group coordinates independently acceptable children with dependencies or integration. Complexity or worker count alone does not justify Group.
 
-```yaml
-manage:
-  activation: auto
-  closeout: local
-```
+Automatic delegation is off by default. Explicit worker requirements remain binding; when auto is enabled, the user or main agent decides worker count within host resources. Main owns dependency/resource decisions and result acceptance; workers do not recursively delegate by default. Separate Review/Verify is selected for an actual obligation, not for each task or worker.
 
-`activation` controls selection:
+Ordinary completion and checkpoint commits leave work open. Established final delivery selects ask/auto/manual closure independently of Git authority. Necessary stable knowledge is updated before final Change reconciliation, which may be one operation. Reuse applicable tests and reviews; supplement only missing or invalidated evidence. Independent review does not itself require independently executing every test.
 
-- `explicit`: conditional coordination requires an explicit request.
-- `auto`: Core selects coordination only when current evidence shows a qualifying obligation; otherwise ordinary work continues in the same request.
-
-Core first resolves the selected Change or shallow Group when coordination requires durable ownership, checks effective activation and authority, and selects or declines the branch. Missing ownership cannot be invented from read-only design or diagnosis; planning requires independent authority. Within the selected branch Core checks owner/diff drift and keeps same-scope methods and recoverable failures local. Changed goal, owner, scope, authority, independent acceptance, or unresolved blockers cause rederivation; a phase boundary alone does not ask the user to continue.
-
-Read effective Manage policy through the same selected CLI's successful `rsp config --json` summary, refreshing on configuration drift, recovery or dependent closeout. Raw YAML and status cannot replace it. Failed or unavailable projection prevents configuration-dependent selection and automatic closeout, not independently authorized work needing no unresolved setting. See [configuration consumption](../reference/configuration.md#inspecting-effective-configuration) for defaults, inheritance and failure handling.
-
-During coordination, Core chooses a transient sequential or parallel strategy from dependencies, mutation boundaries, verification resources, and host capability. Worker participation is observed at the host boundary, not inferred from Skill routing. Shared resources stay sequential unless the host proves safe isolation; independent Verify needs distinct-worker evidence.
-
-Diagnosis-only and inspection remain read-only; authorized correction owns its mutation boundary. Missing required host attribution or accepted evidence is a stop, not simulated independence.
-
-`closeout` retains its existing compatibility values and sets a ceiling only after coordination has actually been qualified and selected. Ordinary work gains no archive or commit from this setting:
-
-- `manual`: archive and commit remain manual.
-- `lifecycle`: after required fixed-scope change review is clean and the durable writeback decision is complete, archive may follow; commit remains separate.
-- `local`: automatically archives an eligible, verified, non-small terminal managed boundary with a clean exact owned boundary and routes its exact paths once to local Commit without another user request.
-
-The qualified coordination branch derives any eligible delivery request; rsp-commit exclusively owns owner revalidation, exact staging, message construction, one local commit, and post-commit observation.
-
-`activation` never grants planning or product-mutation authority. For a currently selected and qualified coordination branch, `closeout` remains only the existing limited lifecycle/local-Git ceiling after fresh gates; nearer denials prevail. Push, tags, releases, publication, deployment, approval, human acceptance, and other external actions always remain explicit.
-
-Managed interruption and resume reread accepted state, authority, diff, and evidence. Host owns cancellation, heartbeat, replay safety, and resource release; RSP does not persist controller or paused state.
-
-## Working notes and knowledge writeback
-
-For tracked work needing continuity, Core maintains a permitted Focus Capsule at meaningful checkpoints, pauses or handoffs; coordination is not required. Replace progress, evidence pointers and next action rather than append logs. Follow [durable decision and archive](./daily-workflow.md#durable-decision-and-archive) for verified facts, necessary knowledge writeback, whole-Change convergence and final consistency checks before authorized archive and Focus cleanup. Reuse applicable verification; required Review and current readiness still apply. Cross-device recovery still requires authorized Git transfer and fresh rederivation.
-
-See [configuration](../reference/configuration.md) for the exact keys and [daily workflow](./daily-workflow.md) for ordinary operation.
+See [workflow configuration and explicit legacy migration](../reference/configuration.md#workflow-policy). No configuration grants commit, push or publication authority. Core prepares the exact boundary; Commit owns authorized staging and one local commit. Archive/commit failure is reported from actual effects, without automatic reopen or history rewrite.

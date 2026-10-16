@@ -129,6 +129,7 @@ describe('public CLI lifecycle', () => {
     expect(JSON.parse(run(directory, 'history', 'delivery/flag', '--json')).record.workRef).toBe('delivery/flag')
   })
 
+  // This preservation matrix launches many real CLI subprocesses sequentially.
   it('rejects hidden Group declarations and missing visible completion content without mutation', () => {
     const { directory, brief } = groupProject()
     const declaredBrief = readFileSync(brief, 'utf8')
@@ -183,7 +184,7 @@ describe('public CLI lifecycle', () => {
       .replace('## Completion Conditions', '## Completion Conditions\n<!--\n- [ ] Historical note, not a completion requirement.\n-->'))
     run(directory, 'group', 'close', 'delivery')
     expect(existsSync(brief)).toBe(false)
-  })
+  }, 15000)
 
   it('requires fresh visible Group recovery evidence and refuses archive replay', () => {
     const { directory, brief } = groupProject()
@@ -304,12 +305,51 @@ describe('public CLI lifecycle', () => {
     expect(escaped.status).not.toBe(0)
     expect(JSON.parse(escaped.stdout).ok).toBe(false)
     const config = join(directory, '.rsp/config.yaml')
-    const invalid = 'manage:\n  activation: unsupported-value\n'
+    const invalid = 'workflow:\n  delegation: unsupported-value\n'
     writeFileSync(config, invalid)
     const rejected = spawnSync(process.execPath, [cli, 'config', '--json'], { cwd: directory, encoding: 'utf8' })
     expect(rejected.status).not.toBe(0)
     expect(JSON.parse(rejected.stdout).ok).toBe(false)
     expect(readFileSync(config, 'utf8')).toBe(invalid)
+  })
+
+  it('exposes independent workflow defaults and refuses legacy policy without mutation', () => {
+    const directory = project()
+    const config = join(directory, '.rsp/config.yaml')
+    expect(JSON.parse(run(directory, 'config', '--json')).workflow).toEqual({ delegation: 'off', closeout: 'ask' })
+    writeFileSync(config, 'kinds: []\n')
+    expect(JSON.parse(run(directory, 'config', '--json')).workflow).toEqual({ delegation: 'off', closeout: 'ask' })
+    run(directory, 'update')
+    expect(readFileSync(config, 'utf8')).toContain('delegation: off')
+    writeFileSync(config, 'workflow:\n  delegation: auto\n  closeout: manual\n')
+    run(directory, 'update')
+    expect(JSON.parse(run(directory, 'config', '--json')).workflow).toEqual({ delegation: 'auto', closeout: 'manual' })
+    for (const invalid of [
+      'manage:\n  activation: auto\n  closeout: local\n',
+      'workflow:\n  delegation: auto\n  closeout: local\n',
+      'workflow:\n  delegation: false\n',
+      'workflow:\n  maxWorkers: 3\n',
+      'manage: {}\nworkflow:\n  delegation: auto\n',
+    ]) {
+      writeFileSync(config, invalid)
+      const beforeRules = readFileSync(join(directory, '.rsp/rsp-rules.md'), 'utf8')
+      const rejected = spawnSync(process.execPath, [cli, 'config', '--json'], { cwd: directory, encoding: 'utf8' })
+      expect(rejected.status).not.toBe(0)
+      expect(JSON.parse(rejected.stdout).ok).toBe(false)
+      if (invalid.startsWith('manage:'))
+        expect(rejected.stdout).toContain('explicit migration')
+      const update = spawnSync(process.execPath, [cli, 'update'], { cwd: directory, encoding: 'utf8' })
+      expect(update.status).not.toBe(0)
+      expect(readFileSync(config, 'utf8')).toBe(invalid)
+      expect(readFileSync(join(directory, '.rsp/rsp-rules.md'), 'utf8')).toBe(beforeRules)
+    }
+    writeFileSync(config, 'workflow:\n  closeout: auto\n')
+    completeChange(directory, 'keep-open')
+    const before = readFileSync(join(directory, '.rsp/changes/keep-open.md'), 'utf8')
+    run(directory, 'ready', 'keep-open', '--json')
+    run(directory, 'status', '--json')
+    expect(readFileSync(join(directory, '.rsp/changes/keep-open.md'), 'utf8')).toBe(before)
+    expect(JSON.parse(run(directory, 'config', '--json')).workflow).toEqual({ delegation: 'off', closeout: 'auto' })
   })
 
   it('blocks unfinished archive, permits completed work with optional coverage, and preserves history on reopen', () => {
@@ -467,7 +507,7 @@ describe('public CLI lifecycle', () => {
     const agents = join(directory, 'AGENTS.md')
     const markerExample = '~~~md\n<!-- rsp:begin -->\nUser-owned example; preserve exactly.\n<!-- rsp:end -->\n~~~\n\n'
     const config = join(directory, '.rsp/config.yaml')
-    writeFileSync(config, '# User-owned configuration.\nkinds: [] # Keep this comment.\nmanage:\n  activation: explicit\n  closeout: manual\n')
+    writeFileSync(config, '# User-owned configuration.\nkinds: [] # Keep this comment.\nworkflow:\n  delegation: off\n  closeout: manual\n')
     const oldEntry = readFileSync(agents, 'utf8')
       .replace('<!-- rsp:begin -->', '<!-- User-owned prefix --> <!-- rsp:begin -->')
       .replace('## RSP Entry', '## Outdated RSP Entry')
@@ -485,7 +525,7 @@ describe('public CLI lifecycle', () => {
     const updatedConfig = readFileSync(config, 'utf8')
     expect(updatedConfig).toContain('# User-owned configuration.')
     expect(updatedConfig).toContain('# Keep this comment.')
-    expect(JSON.parse(run(directory, 'config', '--json')).manage).toEqual({ activation: 'explicit', closeout: 'manual' })
+    expect(JSON.parse(run(directory, 'config', '--json')).workflow).toEqual({ delegation: 'off', closeout: 'manual' })
     run(directory, 'update')
     expect(readFileSync(config, 'utf8')).toBe(updatedConfig)
     expect(readFileSync(agents, 'utf8')).toContain('Keep this exact paragraph.')

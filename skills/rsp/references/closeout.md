@@ -1,51 +1,38 @@
-# Coordinated lifecycle and delivery closeout
+# Final delivery and lifecycle closeout
 
-Load only after current coordination qualification when closeout eligibility begins, or for an explicitly authorized recovery checkpoint or push request. Core retains its incomplete-or-drifted fail-safe. Ordinary continuous execution does not activate this preset.
+Load for an established final-delivery boundary, an explicit close request, or a delivery question requiring checkpoint classification. Ordinary completion never activates closeout. A generic commit request defaults to a checkpoint unless final delivery is already established; checkpoints keep Change open and require only the authorized slice and applicable evidence.
 
-Distinguish checkpoint from terminal delivery before deriving CloseoutEligibility. A checkpoint requires its exact authorized current slice and applicable passing verification; it does not require completed Change acceptance or archive and never claims them.
+## Decide closure independently of Git
 
-## Establish terminal eligibility
+Use the validated workflow.closeout setting from rsp config --json:
 
-Derive CloseoutEligibility as not-eligible, lifecycle-ready or local-commit-ready. After final Change convergence, required durable writeback and fixed-scope review, run rsp ready <change-work-ref> --json for every terminal Change and require completionGate: pass plus archiveReady: yes.
+- ask (default): prepare a concrete final boundary, applicable evidence and required knowledge/Change updates, then ask whether to close before terminal staging. Reuse explicit closure authority already granted; do not ask twice.
+- auto: close eligible work at established final delivery without another closure request, subject to nearer denial.
+- manual: close only on an explicit close request. Authorized final commits may leave work open and must report that fact.
 
-That machine gate is necessary, not semantic acceptance. Also require review-clean acceptance, fresh owner and authority, exact diff and decisive Required verification. Optional coverage warnings remain visible but do not block. Otherwise eligibility is not-eligible and neither automatic archive nor terminal commit runs. Human acceptance remains separate.
+Explicit refusal keeps work open. A decision to leave it open does not block an otherwise authorized commit. Neither policy, readiness nor archive grants Git authority. An explicit standalone close request can close eligible work without a commit. Do not interpret finishing implementation, a pass, a successor task or elapsed time as final delivery.
 
-Effective manage.closeout is an automatic ceiling narrowed by nearer restrictions and host enforcement:
+## Reconcile the final boundary
 
-- manual: no automatic archive or commit.
-- lifecycle: lifecycle closeout after clean fixed-scope review and complete durable writeback; no Git action.
-- local: lifecycle closeout and exactly one Commit route for an eligible terminal non-small clean exact boundary, without another user request.
+1. Confirm exact delivery scope and inspect existing evidence for that boundary.
+2. Apply [durable writeback](durable-review.md): necessary stable knowledge first, final Change reconciliation second. These can be one operation with no edits when already current.
+3. Fill missing or invalidated checks and separately required review. Reuse applicable results; ordinary record cleanup does not invalidate code tests. Changed normative contracts and executable Skills need affected checks/judgment. Fresh independent review is not a universal closeout prerequisite.
+4. For each Change to close, obtain current rsp ready <work-ref> --json with completionGate: pass and archiveReady: yes. Also require accurate final records, completed or unnecessary knowledge updates, applicable Required evidence and every separately required review. Readiness alone does not establish semantic acceptance.
 
-Explicit current-turn authority may permit a local action outside the preset's automation; denial wins.
+Missing Required evidence, active blockers or contradictory contracts prevent closure. Optional omissions remain visible. Fresh authority, owner and exact Git/lifecycle observations remain necessary even when tests are reused.
 
-## Complete authorized lifecycle actions
+## Close only when authorized
 
-Complete granted terminal lifecycle closeout before the terminal delivery boundary. For a Change run rsp archive <change-work-ref> and inspect the complete lifecycle diff. For a shallow Group:
+Use rsp archive <work-ref>, then inspect the exact resulting archive and entire lifecycle diff, including Focus removal and any cleanup warning. Use the returned archive filename with the selected WorkRef's archive directory (.rsp/archives/ for an ungrouped Change, .rsp/archives/<group>/ for a child); do not guess a date, suffix or directory. Expand read-only discovery only if output or effects are incomplete or contradictory, without replaying the mutation.
 
-1. Archive each child independently and inspect each complete lifecycle diff.
-2. Re-derive completion. Every declared Integration: condition needs applicable evidence for the integrated boundary, not just child passes; reuse it only while relevant inputs remain unchanged; a request-only boundary must be written back to the Brief.
-3. Run rsp group close <group> only after every child and Group gate passes, then inspect its diff.
+For a Group, archive eligible authorized children independently, reconcile the Brief and integrated evidence, then run rsp group close <group> after every child and Group gate passes. Request-only integration conditions must first be recorded in the Brief; child passes alone do not prove integration.
 
-Explicit commit authority alone never grants archive. Direct delivery and checkpoints skip this branch. Command-owned lifecycle operations keep their RSP command; do not copy or delete archives to bypass a tool problem.
+Never delete or copy lifecycle files to bypass commands. If archive succeeds but commit fails, report the archived, uncommitted state. Do not automatically reopen, rewrite history or repeat uncertain mutations.
 
 ## Route exact delivery separately
 
-Under local or explicit commit authority, downstream work may justify one recovery checkpoint. Send rsp-commit a compact delivery request:
+With explicit local commit authority, route to rsp-commit with the delivery kind (direct, change, integration, group or release), purpose (checkpoint or terminal), real owner/WorkRefs, exact paths, applicable verification and lifecycle evidence only when applicable. No transport schema or duplicate receipt is required.
 
-```text
-kind: direct | change | integration | group | release
-purpose: checkpoint | terminal
-work: WorkRef, Group, release, or direct summary
-refs: real WorkRefs when applicable
-paths: exact allowed paths
-verify: applicable decisive evidence pointer and tested boundary
-auth: current local authority
-life: lifecycle evidence only when required
-```
+Integration requires at least two real WorkRefs and one shared delivery boundary but creates no Group. Ambiguous, mixed, stale or denied boundaries stop before staging. Missing Commit capability has no Core fallback. Commit audits the exact index and owns Git execution.
 
-- Terminal small owners default to no automatic commit. Qualified local terminal non-small Changes/Groups route once to default core rsp-commit after lifecycle closeout.
-- Integration needs at least two real WorkRefs, one evidenced shared boundary, exact paths, applicable verification and local authority; create no Group.
-- Ambiguous, mixed, stale or denied boundaries stop without staging. Unavailable Commit returns capability-unavailable; Core does not stage or commit.
-- Archive grants no Git/publication authority. If Commit fails after archive, report archived but undelivered; preserve lifecycle without automatic reopen or history rewrite.
-
-Push is opt-in only when the user explicitly mentions push and the remote, branch, and milestone are unambiguous or accepted. Never force-push, infer push from commit authority, or push a protected or ambiguous branch. Failure preserves local commits and stops at the remote boundary. Return to Core before a separate release operation and dedicated release commit.
+Push requires explicit authority and an unambiguous remote, branch and milestone. Never infer it from commit or closure; no force push or automatic publication. Remote failure preserves local commits and stops at that boundary.

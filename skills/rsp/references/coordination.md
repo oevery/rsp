@@ -1,18 +1,20 @@
 # Worker delegation and resource evidence
 
-Load only after qualified Core coordination needs an actual worker, independent acceptance, or resource arbitration. Derive `DispatchDisposition: none | preferred | required` from the current obligation: none runs locally; preferred can fall back locally; required stops if worker attribution is unavailable. Distinct-worker evidence is additionally required only for explicit independent Verify or Review. Qualification is not delegation. Do not infer parallel safety from delegation.
+Load for actual workers, dependencies/shared-resource arbitration or required independent acceptance. Work shape and worker count are independent. Explicit worker requests or binding worker requirements permit bounded dispatch; otherwise use the validated workflow.delegation setting (off by default, auto when enabled). Recovery and ordinary continuation do not enable delegation.
+
+Core decides none, preferred or required from the actual obligation. Keep tightly coupled work local; prefer independently executable slices only when delegation is allowed. Required dispatch needs attributable host execution; required independence needs a distinct worker. The main agent or user chooses worker count without RSP tiers or limits; host resource limits still apply. No setting grants product, Git or lifecycle authority. Missing optional delegation falls back locally; missing required workers leave acceptance incomplete.
 
 ## Delegate one bounded task
 
-For grouped or dependent work, load [groups and dependencies](groups-dependencies.md) and inspect the current `rsp status --json` plan. Dispatch only ready child WorkRefs in the first non-empty `plan.waves` wave; never execute a child whose prerequisite remains in `plan.blocked`. Recheck the derived plan before another wave. Parallelize only when actual writer and resource isolation is established.
+For grouped or dependent work, use [groups and dependencies](groups-dependencies.md) and the current `rsp status --json` plan. Only children in the first non-empty `plan.waves` wave are eligible; a prerequisite in `plan.blocked` prevents dispatch. Core may run eligible slices in parallel only after checking both write boundaries and shared resources. Different filenames alone prove neither interface compatibility nor isolation: generated outputs, manifests/lockfiles, Git index, test services, databases, browsers and hardware can still conflict. Use host-proven isolation or run those slices serially; unknown required isolation blocks concurrency, not otherwise safe serial work. Recheck dependencies and integrated evidence before the next wave. Child passes alone do not satisfy a Group integration condition.
 
 Send one independently executable vertical slice. Tell the recipient it is already dispatched and must not rerun parent routing or delegate further. Include only what it needs to act safely:
 
 ```text
 Work: <exact WorkRef>
-Objective: <one bounded objective>
+Objective: <bounded outcome or review target and comparison>
 Authority: <exact owner sections or paths>
-Read: <allowed read boundary>
+Read: <needed sources and supporting references within the allowed boundary>
 Write: <allowed write boundary>
 Verify: <required verification boundary>
 Known facts: <only decisive current facts>
@@ -21,9 +23,11 @@ Stop conditions: <when to return without continuing>
 Replay caution: <only when repeating effects may be unsafe>
 ```
 
+For direct work, identify the bounded request instead of inventing a WorkRef. Supply source locations and decisive facts, not copied method bodies. Distinguish the review target from supporting references. Workers load their methods and inspect actual sources and applicable instructions; Core retains result validation.
+
 Omit empty optional fields. Do not attach host lifecycle schemas, correlation identifiers, JSON transport contracts, evaluator instructions, token targets, or acceptance fields. Workers receive no implied focus, lifecycle, Git, publication, deployment, approval, or nested-delegation authority. Nested delegation is prohibited unless the task explicitly grants a bounded descendant role and the parent remains responsible for its work and result.
 
-Resume the same compatible worker only when the host makes that possible and the goal, role, authority, writer boundary, strategy, and evidence remain valid. Otherwise send a complete fresh task. A concise continuation may state changed facts, but never relies on hidden inheritance for authority or safety.
+Reuse a host-resumable worker only while goal, role, authority, writer boundary and evidence remain compatible; otherwise send a complete fresh task. Pass changed facts explicitly, never hidden inheritance as authority. After interruption use [recovery](coordination-recovery.md) to inspect effects and re-establish host facts before dispatch.
 
 Each delegated Discipline owns its own result:
 
@@ -48,6 +52,6 @@ Host facts are capabilities and observations, not RSP domain objects. Missing ob
 
 For required delegation, Core must have an attributable worker-authored result covering the assigned boundary. For required independent Verify or Review, host observations must establish distinct workers from the accepted implementation. If not, acceptance remains `incomplete`. Core cannot author or substitute the missing result.
 
-When the same worker owns Fix and ordinary checks, Core may derive `evidence-complete` only after validating result, paths, checks, omissions, and scope. `review-clean` requires an actual required Review result; archive and commit remain separate gates. Shared writers, generated artifacts, test runners, browsers, providers and hardware run sequentially unless host and checkout evidence establish isolation.
+When one worker owns Fix and ordinary checks, Core validates the result before deriving `evidence-complete`. Reuse applicable observations and checks; required Review still independently judges the actual target. Integration or changed inputs require affected checks. Archive and commit keep separate gates. Corrections return through [Core review convergence](coordination-review.md), not a worker-local loop.
 
-Inspect actual paths, diff, commands, outcomes, and omissions before accepting a result. A host-reported completion, a valid transport shape, successful integration tests, or absence of an error never substitutes for this validation.
+Host completion, transport shape or passing tests alone cannot establish acceptance; use the actual result and host facts above.

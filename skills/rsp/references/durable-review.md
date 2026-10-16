@@ -1,28 +1,24 @@
 # Durable writeback decision
 
-Load this reference only after required Tasks and implementation verification pass, or when auditing archive readiness.
+Load for a necessary stable-knowledge update or preparation/audit of lifecycle or terminal delivery. Passing Tasks/checks or resuming work alone does not activate it. An evidence-only Tasks/Verify refresh with accurate scope, contract, design and stable knowledge stays in Core's direct path; it neither establishes closeout eligibility nor skips separately required Review.
 
 ## Establish the evidence boundary
 
-The durable writeback decision is required before archive. Decide current-fact and Decision Record updates independently. Keep these evidence owners separate:
+For routine writeback, establish the relevant facts, update justified knowledge using the methods below, reconcile only affected Change sections when tracked, and check those edits. Preserve ongoing plans and unfinished work; this does not trigger final whole-Change convergence, readiness or closure. Before archive, current-fact and Decision Record decisions are both required. Keep these evidence owners separate:
 
 - Implementation verification supplies applicable evidence for the final content, reusing unchanged coverage and rerunning affected checks after mutation.
-- Review owns fixed-scope, report-only comparison. Use it when explicitly requested, required by nearer authority or risk, or needed for managed `review-clean`; tiny direct actions do not automatically need it.
+- Review owns fixed-scope, report-only comparison. Use it when explicitly requested, required by nearer authority or risk, or needed by the selected acceptance; tiny direct actions do not automatically need it.
 - Durable writeback decides what belongs in current facts or lasting rationale. It never substitutes for implementation checks or a required Review.
 
-Run `rsp check --focused` and `rsp show --focused --json`, or `rsp ready <name> --json` for an explicit Change. Treat `durableReview.factCandidateTargets` and `decisionRecordsPath` as routing advice, not permission. Spec delta markers are planning aids and are never promoted automatically.
+Inspect existing evidence and the selected Change when tracked. Use `rsp ready <name> --json` when current readiness or durable target advice is needed; obtain fresh readiness immediately before an authorized archive. Do not query readiness twice merely for separate writing and delivery roles. Treat `durableReview.factCandidateTargets` and `decisionRecordsPath` as routing advice, not permission. Spec delta markers are planning aids and are never promoted automatically.
 
 Use equivalent permitted read/search methods to inspect the same authoritative artifacts when a diagnostic tool fails. Do not replace a named required check, infer a successful ready result from manual reading, or mutate protected RSP files to obtain a gate. Diagnose the actual cause and effects; if decisive migration, structural or verification evidence remains unavailable, keep the dependent closeout incomplete.
 
-When the inspection reports only `RSP project requires an update`, required Tasks and implementation verification have already passed, and update mutation is not authorized:
-
-- Do not run `rsp update`.
-- Preserve the completed implementation outcome and its passed verification evidence.
-- Report durable writeback and readiness as incomplete because migration evidence is unavailable; keep archive and commit blocked.
-
-This exception never converts a failed declared implementation or independent verification check into success. Other inspection failures remain unresolved.
+If inspection reports only `RSP project requires an update` and update mutation is not authorized, do not run `rsp update`. Preserve supported implementation and verification outcomes; identify which knowledge, readiness or delivery judgments depend on the unavailable migration evidence. Archive remains blocked without current readiness. This does not independently block a separately authorized checkpoint: Commit assesses its exact boundary and required evidence, and stops if that evidence is affected or unavailable. Other inspection failures and required checks remain unresolved, never converted into success.
 
 ## Close out in order
+
+Apply this sequence only for established final delivery or preparation/audit of closure. Routine knowledge updates use the bounded writeback above.
 
 1. **Verify outcome facts.** Establish the approved delivered result from current implementation, authoritative contracts and decisive evidence. Distinguish passed, failed, unverified and superseded conclusions. This establishes truth, not a preliminary full-document rewrite; plans and recovery notes alone cannot establish current facts.
 2. **Distill Focus as needed.** Integrate only verified outcomes, evidence applicability or material limits missing from Change; no useful addition means no edit. Recovery state alone supplies no required acceptance evidence.
@@ -30,7 +26,7 @@ This exception never converts a failed declared implementation or independent ve
 4. **Converge the whole Change.** Use `rsp-doc` and its artifact-lenses method when available; this is whole-record writing, not a tiny edit. After necessary writeback, read all six sections as one final document. Retain the delivered contract delta, relevant design, task outcomes, candidate-bound verification, material failures/limits and knowledge-update references. Reconcile superseded plans and misplaced or duplicated content; process history stays in its retained report or conversation, not this outcome snapshot. Keep product boundaries distinct from transient operation permissions. Group integration conclusions belong in the Brief. When Doc is unavailable, perform this same bounded convergence locally without installing it or replacing required Review.
 5. **Check final consistency, then archive when authorized.** Check the final Change and knowledge owners against the verified result. Earlier review of another revision or a passing readiness command does not establish this text's quality. Reuse still-applicable implementation/test evidence; check new knowledge/document changes and fill only missing or invalidated coverage. Document-only writeback or archive preparation does not itself invalidate code checks. Complete separately required Review before the archive gate below. Fix prose defects in scope; return material contract or implementation contradictions to the appropriate decision, implementation or verification owner rather than editing away the failure. An unresolved Required failure still blocks closeout.
 
-These are dependency constraints, not persisted phases or mandatory separate tool calls. Needs-based writeback may produce no edit when unnecessary; it never waives a required update. Final whole-Change convergence always applies and may confirm already-converged text without rewriting it. Original records and verdicts remain with their evidence owner. Author checks never establish independent review.
+These are dependency constraints, not persisted phases or mandatory separate tool calls. Needs-based writeback may produce no edit when unnecessary; it never waives a required update. At this final-delivery/closure boundary, whole-Change convergence applies and may confirm already-converged text without rewriting it. Use the verified outcome to resolve stale statements; do not reopen settled planning, restyle unrelated sections or add a no-op report merely to demonstrate this check. Original records and verdicts remain with their evidence owner. Author checks never establish independent review.
 
 For acceptance-critical commands, prefer separate observed invocations. A batch must stop on failure and expose each command's result and exit status; trailing success cannot establish preceding checks. If a result is missing, re-observe only that read-only or proven repeat-safe check using its declared method; inspect actual effects before repeating any mutation. Keep dependent lifecycle actions incomplete until required passing evidence is established. Prefer existing document/link checks or known-path inspection to improvised general Markdown regex parsing. Ordinary reads may still be batched.
 
@@ -83,12 +79,8 @@ Never use generated indexes, archives, `.rsp/rsp-rules.md`, or the managed RSP b
 
 Before archive, require converged final Change evidence, completed or unnecessary knowledge writeback, applicable passing verification and current readiness and every separately required Review clean. Then authorized archive preserves Change and clears its Focus marker; never clear the Capsule as a substitute for writeback. Archive is separate from local commit authority.
 
-Ordinary work needs later explicit Git authority for one independently reviewable logical commit. Declined, unavailable or unselected coordination leaves Core advisory: configuration executes neither archive nor commit.
+Git delivery needs explicit authority for one independently reviewable logical commit. Closure is independent of delegation or coordination: use the selected closeout policy and current gates, even when all work is local. No closure setting authorizes Git.
 
-## Apply qualified lifecycle closeout
+## Deliver with explicit boundaries
 
-Only when Core selects qualified lifecycle closeout, read [closeout](closeout.md) for the effective ceiling, fresh eligibility gates, child archive and Group-close sequence, and complete lifecycle-diff inspection. Decide durable writeback for each child independently before its terminal closeout. This decision alone grants no lifecycle or Git action.
-
-## Hand off exact Git delivery
-
-For eligible coordinated delivery or an explicitly authorized checkpoint, use [closeout's delivery handoff](closeout.md#route-exact-delivery-separately); it owns the exact request and delivery conditions. Commit retains Git audit, staging, final-diff messaging, execution and effect observations. Missing Commit stops delivery without a Core fallback; a refusal or uncertain Git effects grants no replacement delivery authority.
+[Delivery closeout](closeout.md) owns checkpoint/final classification, the ask/auto/manual closure decision, Group-close sequence and exact Git handoff. Ordinary completion leaves work open. Reuse applicable evidence, and never infer Git authority from closure.

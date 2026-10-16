@@ -4,7 +4,7 @@ description: Resolve bounded design questions read-only or clarify material choi
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.11.3"
+  version: "2026.10.15.2"
 ---
 
 # RSP Shape
@@ -27,7 +27,7 @@ Route concrete or ready work to implementation only when authorized and no desig
 
 ## Resolve material ambiguity
 
-Inspect the repository before asking. Ask only for an owner decision changing behavior, data, interfaces, compatibility, safety, ownership, migration, or acceptance. Write only authorized answers.
+Inspect the repository before asking. Ask only for an owner decision changing behavior, data, interfaces, compatibility, safety, ownership, migration or acceptance. Reuse settled answers until evidence invalidates them; ordinary implementation choices within that contract need no new planning pass. Write only authorized answers.
 
 Derive requirements and acceptance checks from settled authority, not a preferred implementation. Do not promote an unsettled public behavior, failure contract, default or compatibility choice into an accepted requirement or mandatory check. Keep replaceable internal choices in Design; label material alternatives as proposals and retain any readiness-blocking decision in Blockers. Ordinary implementation details within the accepted contract need no new owner decision.
 
@@ -45,7 +45,7 @@ Never invent a product decision. When a material choice or mutation authority re
 
 For authorized planning-artifact work, read [planning and readiness](references/planning.md) before choosing or naming an owner, writing a Change/Group, or updating the selected Design. It supplies WorkRef naming, Change granularity, the six-section contract and the Shape Ready gate. Read-only design advice needs none of those artifact procedures.
 
-Read [complex shaping](references/complex-shaping.md) for qualified coordinated planning, multi-round clarification, slices sharing a completion contract or independently closable owners converging on terminal delivery.
+Read [complex shaping](references/complex-shaping.md) when authorized planning involves multiple material decisions or independently acceptable outcomes with dependencies/integration. Work shape does not enable agent delegation.
 
 ## Apply the Shape Ready gate
 

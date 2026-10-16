@@ -1,4 +1,4 @@
-import type { ChangeKind, EffectiveLanguagePolicy, ManageActivation, ManageCloseout, ManagePolicy, ProjectLanguageConfig, RspConfig } from '../types.js'
+import type { ChangeKind, CloseoutPolicy, DelegationPolicy, EffectiveLanguagePolicy, ProjectLanguageConfig, RspConfig, WorkflowPolicy } from '../types.js'
 import { readFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -39,19 +39,19 @@ export { pc }
 export const VALID_KINDS: ChangeKind[] = ['feature', 'fix', 'refactor', 'docs', 'ops', 'research']
 /** Built-in required sections in change files. */
 export const DEFAULT_REQUIRED_SECTIONS = getCanonicalSectionHeadings(CHANGE_DOCUMENT_SCHEMA)
-export const LEGACY_MISSING_CONFIG_MANAGE_POLICY: ManagePolicy = { activation: 'explicit', closeout: 'local' }
-export const INVALID_CONFIG_MANAGE_POLICY: ManagePolicy = { activation: 'explicit', closeout: 'manual' }
+export const DEFAULT_WORKFLOW_POLICY: WorkflowPolicy = { delegation: 'off', closeout: 'ask' }
+export const INVALID_CONFIG_WORKFLOW_POLICY: WorkflowPolicy = { delegation: 'off', closeout: 'manual' }
 export const CONFIG_DEFAULTS = {
   kinds: [] as string[],
   decisions: { path: '.rsp/specs/decisions' },
   language: { default: 'en' },
-  manage: { activation: 'auto' as const, closeout: 'local' as const },
+  workflow: { delegation: 'off' as const, closeout: 'ask' as const },
 }
 
 export function generateConfigTemplate(config: RspConfig = {}): string {
   const kinds = config.kinds ?? CONFIG_DEFAULTS.kinds
   const decisions = { ...CONFIG_DEFAULTS.decisions, ...config.decisions }
-  const manage = { ...CONFIG_DEFAULTS.manage, ...config.manage }
+  const workflow = { ...CONFIG_DEFAULTS.workflow, ...config.workflow }
   const language = { ...CONFIG_DEFAULTS.language, ...config.language }
   const kindsYaml = stringify(kinds).trimEnd()
   const renderedKinds = kinds.length === 0
@@ -78,12 +78,12 @@ ${renderedKinds}
 decisions:
   path: ${stringify(decisions.path).trim()}
 
-# New projects default to automatic Manage routing with local closeout.
-# Use activation: explicit to require a named managed request.
-# closeout accepts manual, lifecycle, or local; local routes a qualified clean terminal non-small boundary to one local commit but never push or publication.
-manage:
-  activation: ${manage.activation}
-  closeout: ${manage.closeout}
+# Automatic delegation is off; explicit worker requests remain allowed.
+# Closeout applies only to established final delivery: ask, auto, or manual.
+# Ordinary completion and checkpoint commits keep work open. No setting grants Git authority.
+workflow:
+  delegation: ${workflow.delegation}
+  closeout: ${workflow.closeout}
 
 # Set one shared project default for durable artifact and commit prose.
 # Response language remains user/session-owned and is never read from this project mapping.
@@ -94,8 +94,8 @@ ${commitLine}
 `
 }
 
-const MANAGE_ACTIVATIONS: ManageActivation[] = ['explicit', 'auto']
-const MANAGE_CLOSEOUTS: ManageCloseout[] = ['manual', 'lifecycle', 'local']
+const DELEGATION_POLICIES: DelegationPolicy[] = ['off', 'auto']
+const CLOSEOUT_POLICIES: CloseoutPolicy[] = ['ask', 'auto', 'manual']
 
 export interface RspConfigInspection {
   config: RspConfig
@@ -142,14 +142,14 @@ function collectMissingConfigDefaults(parsed: Record<string, unknown>): string[]
     added.push('decisions.path')
   if (!('language' in parsed))
     added.push('language.default')
-  if (!('manage' in parsed)) {
-    added.push('manage.activation', 'manage.closeout')
+  if (!('workflow' in parsed)) {
+    added.push('workflow.delegation', 'workflow.closeout')
   }
   else {
-    if (!hasNestedKey(parsed.manage, 'activation'))
-      added.push('manage.activation')
-    if (!hasNestedKey(parsed.manage, 'closeout'))
-      added.push('manage.closeout')
+    if (!hasNestedKey(parsed.workflow, 'delegation'))
+      added.push('workflow.delegation')
+    if (!hasNestedKey(parsed.workflow, 'closeout'))
+      added.push('workflow.closeout')
   }
   return added
 }
@@ -163,14 +163,14 @@ function backfillConfigDocument(document: ReturnType<typeof parseYamlDocument>, 
     document.setIn(['decisions', 'path'], CONFIG_DEFAULTS.decisions.path)
   if (!('language' in parsed))
     document.set('language', { default: CONFIG_DEFAULTS.language.default })
-  if (!('manage' in parsed)) {
-    document.set('manage', { ...CONFIG_DEFAULTS.manage })
+  if (!('workflow' in parsed)) {
+    document.set('workflow', { ...CONFIG_DEFAULTS.workflow })
   }
   else {
-    if (!hasNestedKey(parsed.manage, 'activation'))
-      document.setIn(['manage', 'activation'], CONFIG_DEFAULTS.manage.activation)
-    if (!hasNestedKey(parsed.manage, 'closeout'))
-      document.setIn(['manage', 'closeout'], CONFIG_DEFAULTS.manage.closeout)
+    if (!hasNestedKey(parsed.workflow, 'delegation'))
+      document.setIn(['workflow', 'delegation'], CONFIG_DEFAULTS.workflow.delegation)
+    if (!hasNestedKey(parsed.workflow, 'closeout'))
+      document.setIn(['workflow', 'closeout'], CONFIG_DEFAULTS.workflow.closeout)
   }
 }
 
@@ -256,17 +256,17 @@ export async function inspectRspConfig(cwd = process.cwd()): Promise<RspConfigIn
     ? parsed.decisions as Record<string, unknown>
     : undefined
   const decisionPath = decisions?.path
-  const manageValue = parsed.manage && typeof parsed.manage === 'object' && !Array.isArray(parsed.manage)
-    ? parsed.manage as Record<string, unknown>
+  const workflowValue = parsed.workflow && typeof parsed.workflow === 'object' && !Array.isArray(parsed.workflow)
+    ? parsed.workflow as Record<string, unknown>
     : undefined
   const languageValue = parsed.language && typeof parsed.language === 'object' && !Array.isArray(parsed.language)
     ? parsed.language as Record<string, unknown>
     : undefined
-  const activation = MANAGE_ACTIVATIONS.includes(manageValue?.activation as ManageActivation)
-    ? manageValue?.activation as ManageActivation
+  const delegation = DELEGATION_POLICIES.includes(workflowValue?.delegation as DelegationPolicy)
+    ? workflowValue?.delegation as DelegationPolicy
     : undefined
-  const closeout = MANAGE_CLOSEOUTS.includes(manageValue?.closeout as ManageCloseout)
-    ? manageValue?.closeout as ManageCloseout
+  const closeout = CLOSEOUT_POLICIES.includes(workflowValue?.closeout as CloseoutPolicy)
+    ? workflowValue?.closeout as CloseoutPolicy
     : undefined
   const kinds = Array.isArray(parsed.kinds) && parsed.kinds.every(value => typeof value === 'string' && value.trim() !== '')
     ? parsed.kinds.map(value => value.trim())
@@ -279,7 +279,7 @@ export async function inspectRspConfig(cwd = process.cwd()): Promise<RspConfigIn
       decisions: decisionRecordsIssue === null && validateDecisionRecordsPath(decisionPath) === null
         ? { path: normalizeDecisionRecordsPath(String(decisionPath)) }
         : undefined,
-      manage: manageValue ? { activation, closeout } : undefined,
+      workflow: workflowValue ? { delegation, closeout } : undefined,
       language: parseLanguageConfig(languageValue),
     },
     issues,
@@ -292,10 +292,13 @@ export async function inspectRspConfig(cwd = process.cwd()): Promise<RspConfigIn
 /** Validate the complete supported .rsp/config.yaml contract without coercing invalid input. */
 export function validateRspConfig(parsed: Record<string, unknown>): string[] {
   const issues: string[] = []
-  const supported = new Set(['kinds', 'decisions', 'manage', 'language'])
+  const supported = new Set(['kinds', 'decisions', 'workflow', 'language'])
 
   for (const key of Object.keys(parsed)) {
-    if (key === 'required_sections') {
+    if (key === 'manage') {
+      issues.push('config.yaml field "manage" requires explicit migration: remove manage and choose workflow.delegation (off | auto) and workflow.closeout (ask | auto | manual); recommended defaults are off/ask. Old local closeout no longer grants Git authority. rsp update will not convert it automatically')
+    }
+    else if (key === 'required_sections') {
       issues.push('config.yaml field "required_sections" is no longer supported')
     }
     else if (!supported.has(key)) {
@@ -322,21 +325,21 @@ export function validateRspConfig(parsed: Record<string, unknown>): string[] {
   if (decisionRecordsIssue)
     issues.push(decisionRecordsIssue)
 
-  if ('manage' in parsed) {
-    if (!parsed.manage || typeof parsed.manage !== 'object' || Array.isArray(parsed.manage)) {
-      issues.push('config.yaml field "manage" must be a YAML mapping')
+  if ('workflow' in parsed) {
+    if (!parsed.workflow || typeof parsed.workflow !== 'object' || Array.isArray(parsed.workflow)) {
+      issues.push('config.yaml field "workflow" must be a YAML mapping')
     }
     else {
-      const manage = parsed.manage as Record<string, unknown>
-      const supportedManageFields = new Set(['activation', 'closeout'])
-      for (const key of Object.keys(manage)) {
-        if (!supportedManageFields.has(key))
-          issues.push(`config.yaml field "manage.${key}" is not supported`)
+      const workflow = parsed.workflow as Record<string, unknown>
+      const supportedWorkflowFields = new Set(['delegation', 'closeout'])
+      for (const key of Object.keys(workflow)) {
+        if (!supportedWorkflowFields.has(key))
+          issues.push(`config.yaml field "workflow.${key}" is not supported`)
       }
-      if ('activation' in manage && !MANAGE_ACTIVATIONS.includes(manage.activation as ManageActivation))
-        issues.push('config.yaml field "manage.activation" must be one of: explicit, auto')
-      if ('closeout' in manage && !MANAGE_CLOSEOUTS.includes(manage.closeout as ManageCloseout))
-        issues.push('config.yaml field "manage.closeout" must be one of: manual, lifecycle, local')
+      if ('delegation' in workflow && !DELEGATION_POLICIES.includes(workflow.delegation as DelegationPolicy))
+        issues.push('config.yaml field "workflow.delegation" must be one of: off, auto')
+      if ('closeout' in workflow && !CLOSEOUT_POLICIES.includes(workflow.closeout as CloseoutPolicy))
+        issues.push('config.yaml field "workflow.closeout" must be one of: ask, auto, manual')
     }
   }
 
@@ -378,13 +381,13 @@ export function resolveRequiredSections(_config: RspConfig): string[] {
   return [...DEFAULT_REQUIRED_SECTIONS]
 }
 
-/** Resolve effective Manage policy, using the strict fail-closed policy for invalid config. */
-export function resolveManagePolicy(config: RspConfig, options: { configValid?: boolean } = {}): ManagePolicy {
+/** Resolve effective workflow policy, using the strict fail-closed policy for invalid config. */
+export function resolveWorkflowPolicy(config: RspConfig, options: { configValid?: boolean } = {}): WorkflowPolicy {
   if (options.configValid === false)
-    return { ...INVALID_CONFIG_MANAGE_POLICY }
+    return { ...INVALID_CONFIG_WORKFLOW_POLICY }
   return {
-    activation: config.manage?.activation ?? LEGACY_MISSING_CONFIG_MANAGE_POLICY.activation,
-    closeout: config.manage?.closeout ?? LEGACY_MISSING_CONFIG_MANAGE_POLICY.closeout,
+    delegation: config.workflow?.delegation ?? DEFAULT_WORKFLOW_POLICY.delegation,
+    closeout: config.workflow?.closeout ?? DEFAULT_WORKFLOW_POLICY.closeout,
   }
 }
 

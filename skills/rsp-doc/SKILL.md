@@ -4,24 +4,24 @@ description: Write or revise repository documents, Skills and release communicat
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.11.3"
+  version: "2026.10.15.1"
 ---
 
 # RSP Doc
 
 For tracked work, read the [shared work model](../rsp/references/work-model.md) when its identity and ownership definitions are missing from the current context. Use logical WorkRefs in commands and reports; cite file locations separately. Direct invocation needs no prior Core execution.
 
-Write a grounded artifact its reader can use without the author conversation. Whole-record convergence uses the artifact method even when few lines change; already-converged text needs no rewrite. Local wording fixes and mechanical status/evidence updates need no full writing pass when they require no whole-record reconciliation.
+Write a grounded artifact its reader can use without the author conversation. Whole-record convergence uses the artifact method when the complete record needs reconciliation; inspect the final record for consistency, and leave already-converged text unchanged. A no-op decision needs no new artifact or routine report field. Local wording fixes and mechanical status/evidence updates need no full writing pass when they require no whole-record reconciliation.
 
 ## Produce the artifact
 
-1. **Fix the outcome.** Identify the reader, task, authorized target files and expected result. For a multi-document request, identify which artifact owns each fact and which artifacts summarize or link it. Routine execution narration stays in the conversation without a new process-record file; existing tool-owned or explicitly required evidence keeps its retention contract.
+1. **Fix the outcome.** Identify the reader, task, authorized files and expected result. Wording edits preserve meaning, information ownership and heading anchors; structural edits may merge, move or reorder content within scope, preserving completeness and references. Shortening prose grants no behavior change. For multiple documents, distinguish authoritative owners from summaries. Routine narration stays in conversation; retained evidence keeps its existing owner.
 2. **Establish the facts.** Read existing content, relevant callers and the smallest authoritative contract, code or source chain. Use available read/search tools and existing checks to establish commands, defaults, links and behavior. Tool output is an observation to interpret, not permission or proof of semantic correctness. Distinguish current behavior, intended requirements and unknowns; resolve material contradictions before rewriting a promise.
 3. **Draft for the task.** Apply the expression rules below and load only the relevant method:
    - [Artifact lenses](references/artifact-lenses.md): README, CONTEXT, Spec, Change, guides and scoped operating documents.
    - [Skill authoring](references/skill-authoring.md): Skill creation or revision, including descriptions, package resources and invocation policy.
    - [Release communication](references/release-communication.md): changelogs, release notes, migration guidance or authorized release-document reconciliation; not ordinary document writing.
-4. **Verify the result.** Follow the reader's task through the changed artifacts and relevant linked owners. Confirm that prerequisites lead to an actionable next step and a recognizable result, and that revised meaning still matches its sources.
+4. **Verify the result.** Check the edited meaning in context. For structural edits, also follow the affected reading path and references. Use the checks below; reuse traceable unchanged mechanical results. Writing completion does not automatically trigger Review, but separately requested or required judgment remains binding.
 
 ## Check facts and reading paths
 
@@ -47,20 +47,13 @@ For a failed command, inspect cause and actual effects before recovery. Change a
 
 ## Write precisely
 
-- Lead with the useful action or result, including needed prerequisites and success signals. Give each paragraph or item one purpose.
-- Number sequence required by correctness, safety or the contract; leave other method choices to the reader or Agent. Use parallel bullets for peers and short causal paragraphs when helpful.
-- Put prerequisites before use, rules beside actions and exceptions beside conditions. Keep concepts together and link one authoritative owner.
-- Keep useful summaries, local safety conditions and minimum context inline. Branch links state when to read and what they provide; avoid reference chains for necessary guidance.
-- State correct behavior directly. Use a short example or contrast only when it resolves a real misconception or boundary.
-- Remove empty openings, repetitive conclusions, non-informative modifiers and session-attempt narration. Keep general teaching only when the reader's task needs it; preserve useful navigation summaries, purpose-required audit evidence and author voice.
-- Prefer words for ordinary conjunctions. Preserve syntax inside paths, code and links. Use these stable symbol roles:
-  - `|`: closed canonical alternatives.
-  - `/`: established pairs or compact labels.
-  - `→`: defined one-meaning transitions.
-  - `:`: label/value boundaries.
-- In Skills, reserve tables for short fixed mappings whose shared columns remove real repetition. Use lists for branching judgment, exceptions and steps. In other documents, choose tables only when the reader benefits from comparison or lookup.
-
-Shortness removes no-information prose, not substantive qualifiers such as only, default, optional or asynchronous. Preserve meaningful conditions and consistent terms; never invent human experience. A suspected model-default no-op needs behavior evidence before removal is called equivalent.
+- Organize around the reader's task: operations need actions and success signals; contracts need guarantees and exceptions; design needs reasons and tradeoffs. Do not force every artifact into an action list or closing next step.
+- Give each paragraph one useful purpose. Put prerequisites before use and conditions beside actions; keep relevant exceptions and necessary local context together. Link branch-only detail with its reading condition and purpose.
+- Number steps when their order matters; make each step a bounded action. Otherwise use peer bullets or connected prose. Use tables for useful fixed mappings/comparisons, not branching Skill judgments.
+- Remove empty introductions, repeated conclusions, filler and irrelevant chronology. Retain necessary reasoning, author voice and audit evidence. Keep examples that distinguish rules; merge examples repeating the same point. No fixed sentence length, list size or compression ratio defines quality.
+- Preserve negation, conditions, exceptions, permissions, quantities, units and certainty. Do not turn a proposal or unknown into a verified fact. A shorter instruction is not evidence of equivalent behavior.
+- Prose cleanup leaves code blocks, commands, paths, identifiers, links, versions and numeric values unchanged. Necessary technical corrections require their own scope and checks; do not hide them inside a wording edit.
+- Use ordinary words for conjunctions. Preserve technical syntax; reserve | for closed alternatives, / for established pairs, → for defined transitions and : for label/value boundaries.
 
 ## Preserve ownership
 

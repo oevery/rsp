@@ -3,7 +3,7 @@ import type { ProjectStatusRecord, ProjectStatusSnapshot } from './model.js'
 
 import { readFile, stat } from 'node:fs/promises'
 import { inspectChangeGroups } from '../core/change-group.js'
-import { CONFIG_PATH, inspectRspConfig, resolveLanguagePolicy, resolveManagePolicy } from '../core/config.js'
+import { CONFIG_PATH, inspectRspConfig, resolveLanguagePolicy, resolveWorkflowPolicy } from '../core/config.js'
 import { countCheckboxes, hasMeaningfulBlockers, parseFrontmatter, readBlockerEntries } from '../core/content.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
 import { CHANGE_DOCUMENT_SCHEMA, getDocumentSectionMarkdown, getDocumentTitle, parseRspDocument } from '../core/document-model.js'
@@ -18,12 +18,12 @@ import { historyInspectionComplete, inspectArchiveHistory } from '../history/que
 export async function inspectProjectStatus(options: { nowMs?: number } = {}): Promise<ProjectStatusSnapshot> {
   const runtime: RuntimeDiagnostic[] = []
   const diagnostics: CommandDiagnostic[] = []
-  let manage = resolveManagePolicy({})
+  let workflow = resolveWorkflowPolicy({})
   let language = resolveLanguagePolicy({})
   try {
     const configInspection = await inspectRspConfig()
     const configValid = configInspection.issues.length === 0
-    manage = resolveManagePolicy(configInspection.config, { configValid })
+    workflow = resolveWorkflowPolicy(configInspection.config, { configValid })
     language = resolveLanguagePolicy(configInspection.config, { configValid })
     if (!configValid) {
       diagnostics.push({
@@ -35,7 +35,7 @@ export async function inspectProjectStatus(options: { nowMs?: number } = {}): Pr
     }
   }
   catch (error) {
-    manage = resolveManagePolicy({}, { configValid: false })
+    workflow = resolveWorkflowPolicy({}, { configValid: false })
     language = resolveLanguagePolicy({}, { configValid: false })
     diagnostics.push({
       severity: 'error',
@@ -233,7 +233,7 @@ export async function inspectProjectStatus(options: { nowMs?: number } = {}): Pr
   }
 
   return {
-    manage,
+    workflow,
     language,
     focused: [...focusedSet].sort(),
     records,

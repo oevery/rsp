@@ -4,9 +4,9 @@ import type {
   ChangeGroupStatusOutput,
   CommandDiagnostic,
   EffectiveLanguagePolicy,
-  ManagePolicy,
   RuntimeDiagnostic,
   StatusRecordOutput,
+  WorkflowPolicy,
 } from '../types.js'
 
 export interface StatusOptions {
@@ -24,7 +24,7 @@ export interface ProjectStatusRecord {
 }
 
 export interface ProjectStatusSnapshot {
-  manage: ManagePolicy
+  workflow: WorkflowPolicy
   language: EffectiveLanguagePolicy
   focused: string[]
   records: ProjectStatusRecord[]
@@ -36,7 +36,7 @@ export interface ProjectStatusSnapshot {
 }
 
 export interface ProjectStatusView {
-  manage: ManagePolicy
+  workflow: WorkflowPolicy
   language: EffectiveLanguagePolicy
   query: Required<Pick<StatusOptions, 'focused' | 'blocked'>> & { stale: number | null }
   focused: string[]

@@ -1,5 +1,5 @@
-manage:
-  activation: explicit
+workflow:
+  delegation: off
   closeout: manual
 language:
   default: en

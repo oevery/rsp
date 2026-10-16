@@ -18,6 +18,12 @@ recoverable work and evidence-based completion. It is not a project-management
 platform, extensible workflow engine or replacement for Git. Cross-project
 consistency takes precedence over speculative customization.
 
+Core is the logical routing owner; explicit capability calls remain fast paths.
+Direct, Change and Group describe work durability and delivery boundaries, not
+agent counts. Delegation and final-delivery closure are independent policies;
+closure never grants Git authority. Their detailed contracts belong to Workflow
+and Work model below.
+
 ## Modules
 
 Each current contract has one owner. Adjacent documents may summarize and link

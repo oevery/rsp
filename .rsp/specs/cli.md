@@ -35,13 +35,14 @@ bounds and diagnostics; search also bounds excerpts, candidates, file size and
 detail content. Decision Records remain a separate category. Generated indexes
 are compatibility inputs, never authority for current Spec content.
 
-`.rsp/config.yaml` accepts `manage.activation: explicit | auto`,
-`manage.closeout: manual | lifecycle | local` and durable language fields `default`,
-`artifacts` and `commit`. Generated defaults are `auto + local`. Invalid shapes,
-unknown fields and unsafe Decision Record paths fail closed before mutation.
-Settings do not configure WorkRef language, workers, runtime topology or external
-permission. Their qualified workflow effect is owned by
-[Workflow control boundaries](workflow.md#control-boundaries).
+Configuration accepts workflow.delegation: off | auto and workflow.closeout:
+ask | auto | manual, with off/ask defaults for both generated and omitted settings.
+Legacy manage mappings are rejected with explicit migration guidance before update
+mutation; no automatic permission mapping is performed. Effective config and
+internal status policy projections use workflow instead of manage. Language fields
+remain default, artifacts and commit. Invalid shapes, unknown fields and unsafe
+Decision Record paths fail closed. No worker-count field or Git grant exists.
+Workflow owns policy interpretation and final-delivery conditions.
 
 Successful `rsp config --json` returns the effective summary directly, with validated
 defaults and language inheritance; optional `--compact` changes only presentation.

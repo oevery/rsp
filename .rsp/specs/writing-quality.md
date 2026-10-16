@@ -11,8 +11,9 @@ and Review carry standalone guidance rather than a runtime dependency on this fi
 
 - Ground claims, examples, defaults, limits and failures in their authoritative
   owner. Distinguish current behavior, intended requirements and unknowns.
-- Preserve conditions, quantifiers, permissions, terminology and author voice.
-  Clearer prose must not change a promise or invent human experience.
+- Preserve negation, conditions, exceptions, quantifiers, permissions, units,
+  certainty, terminology and author voice. Clearer prose must not change a promise,
+  turn an unknown into a fact or invent human experience.
 - Existing artifacts retain language unless translation is requested. New artifacts
   follow explicit instruction, effective artifact configuration, scoped instructions,
   then conversation language. Resolve response and commit language separately.
@@ -25,9 +26,16 @@ and Review carry standalone guidance rather than a runtime dependency on this fi
 
 ## Information and expression
 
-Give each paragraph or item one useful purpose. Remove empty introductions,
-repetitive conclusions, non-informative modifiers and session-attempt narration,
-while preserving evidence required by an audit or run-record purpose.
+Reduce the reader's effort to understand, act or judge, rather than target a word
+count, sentence length, list size or compression ratio. Give each paragraph or item
+one useful purpose. Remove empty introductions, repetition, non-informative modifiers
+and session-attempt narration; retain necessary reasoning and purpose-required evidence.
+
+Wording edits preserve meaning, information ownership, heading anchors and technical
+literals, including code, commands, paths, identifiers, links, versions and numbers.
+Structural edits may merge, move or reorder content within scope, checking completeness,
+references and reading order. A request to shorten prose alone does not authorize
+behavior changes or technical corrections; those need their own scope and verification.
 
 Put prerequisites before use, conditions beside actions and exceptions beside
 conditions. Include actions and recognizable success signals, not only outcome
@@ -35,10 +43,10 @@ labels. Number a sequence only when correctness, safety or a contract requires
 its order; use peer bullets or causal paragraphs otherwise. Keep a concept's
 rules and caveats together, with substantial branch-only detail linked conditionally.
 
-State correct behavior directly. Examples, comparisons and general teaching need
-a reader-task reason, not a fixed template. Concision removes unnecessary prose,
-not permission boundaries, failure states or substantive qualifiers. Neither a
-word/reference count nor a newer model proves quality or behavioral equivalence.
+State correct behavior directly. Examples, comparisons and teaching need a reader-task
+reason, not a fixed template; retain examples distinguishing different conditions and
+remove those merely repeating the same point. Neither shorter text nor a newer model
+proves quality or behavioral equivalence.
 
 ## Symbols and tables
 
@@ -57,9 +65,12 @@ The [Work model artifact boundaries](work-model.md#boundaries) own placement and
 [evidence/closeout contract](work-model.md#evidence-and-closeout) owns final Change
 convergence. Writing applies those contracts; it does not redefine the workflow.
 
-- Skills provide discriminating descriptions, executable guidance and conditional
-  resources. Procedures state prerequisites, actions and success signals; conceptual
-  explanations state causes and relationships; references state exact contracts.
+- README and procedures help readers start, act and recognize success. Specs help
+  them judge contractual behavior and exceptions. Design explanations and Decisions
+  retain reasons, alternatives and consequences. Do not force every artifact into an
+  action checklist, terse fragments or a closing next-step prompt.
+- Skills provide discriminating descriptions, authorized actions, real stops and
+  conditional resources. Keep enough local context for independent use.
 - CONTEXT supplies vocabulary and navigation, Specs current contracts, and work
   records only their selected delta and evidence summary. A true but misplaced
   statement still needs the correct owner; copying it into several files is not writeback.
@@ -117,11 +128,13 @@ Reader-required choices must have authority or be reported as unresolved.
 
 ## Verification and review
 
-Author checks assess whether readers can find facts, understand conditions, act
-and recognize unknowns. Check affected meaning, examples, metadata, links and anchors;
-distinguish inspection, execution, reuse and missing evidence. Whole-surface work
-inspects the selected documents/resources and callers; adequate surfaces need not
-be edited merely to show coverage.
+Doc owns writing and author checks; Review owns separately requested or required
+judgment, not another copy of the writing procedure. Ordinary wording edits do not
+automatically require Review. Inspect changed meaning in context; for structural
+edits also walk affected reading paths and callers. Check applicable examples,
+metadata, links and anchors, reusing traceable unchanged mechanical evidence.
+Self-checks cannot supply required independent judgment. Adequate surfaces need no edit
+merely to show coverage.
 
 Inspect both the ordinary path and changed conditional paths, including standalone
 use. Check unnecessary reads and handoffs, correct restraint, erroneous stops and

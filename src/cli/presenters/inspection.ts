@@ -35,7 +35,7 @@ export function presentConfig(result: ConfigResult, options: InspectionPresentat
   console.log(`  ${pc.dim('Valid:')} ${pc.green('yes')}`)
   console.log(`  ${pc.dim('Kinds:')} ${result.summary.kinds.join(', ')}`)
   console.log(`  ${pc.dim('Decision Records:')} ${result.summary.decisions.path}`)
-  console.log(`  ${pc.dim('Manage:')} activation ${result.summary.manage.activation} · closeout ${result.summary.manage.closeout}`)
+  console.log(`  ${pc.dim('Workflow:')} delegation ${result.summary.workflow.delegation} · closeout ${result.summary.workflow.closeout}`)
   console.log(`  ${pc.dim('Language:')} artifacts ${result.summary.language.artifacts ?? 'unset'} · commit ${result.summary.language.commit ?? 'unset'}`)
   console.log()
 }

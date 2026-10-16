@@ -4,7 +4,7 @@ description: Collect and report one selected RSP WorkOwner's declared check evid
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.11.3"
+  version: "2026.10.12.1"
 ---
 
 # RSP Verify
@@ -32,7 +32,7 @@ Use the caller's result contract when supplied, otherwise the direct result belo
 
 ## Collect the declared evidence
 
-Inspect existing evidence against the declared baseline. Reuse traceable passes while tested scope and relevant content, dependencies, configuration, tools, inputs and environment apply. Run missing, failed or invalidated named checks, plus explicitly required execution, current-environment observations or independent execution. A phase change alone requires no rerun. Match actual targets, inputs, coverage and completion to the declared check; invocation errors or incomplete observations alone prove no product defect. Retain commands, scope, sources and results, distinguishing reuse from new execution. Interpret tool observations: Required failures remain failures, unavailable checks remain gaps, and exit status alone is not acceptance.
+Inspect existing evidence against the declared baseline. Reuse traceable passes while tested scope and relevant content, dependencies, configuration, tools, inputs and environment apply. Run missing, failed or invalidated named checks, plus explicitly required execution, current-environment observations or independent execution. A phase change alone requires no rerun; correction or integration requires fresh evidence for affected inputs and any enlarged verification boundary. Match actual targets, inputs, coverage and completion to the declared check; invocation errors or incomplete observations alone prove no product defect. Retain commands, scope, sources and results, distinguishing reuse from new execution. Interpret tool observations: Required failures remain failures, unavailable checks remain gaps, and exit status alone is not acceptance.
 
 For a tool-only obstacle, diagnose read-only and inspect actual effects before continuing:
 

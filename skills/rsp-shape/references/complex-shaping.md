@@ -1,8 +1,8 @@
 # Complex shaping
 
-Read only for qualified coordinated planning, multi-round material clarification, slices sharing one completion contract or independently closable owners converging on terminal delivery.
+Read for authorized planning with multiple material decisions or independently acceptable outcomes with dependencies/integration. This method does not select agent topology.
 
-In qualified coordination, existing planning authority covers clear in-scope discovery: retain cohesive corrections in the Change; use a separate Change for an independently closable result or a shallow Group for at least two. Return the ready owner without another authorization round. Configuration grants no planning/product authority; changed behavior, acceptance, interfaces, scope, mutation authority or external action needs an owner decision.
+Existing planning authority covers clear in-scope discovery: retain cohesive corrections in the Change; use a separate Change for an independently closable result or a shallow Group when at least two such results have dependencies or integration obligations. Return the ready owner without another authorization round. Configuration grants no planning/product authority; changed behavior, acceptance, interfaces, scope, mutation authority or external action needs an owner decision.
 
 ## Close material decisions
 

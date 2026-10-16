@@ -4,7 +4,7 @@ Load this reference before creating, focusing, planning, or closing grouped or d
 Use the same selected CLI throughout; `rsp` below denotes that invocation, not a request to fetch or install a package.
 
 - Use the [shared work model](work-model.md) for Group and child identities when those definitions are missing from the current context.
-- Use a Change Group only for at least two independently executable Changes sharing a goal or completion contract. Create it with `rsp group create <group> [goal]`, replace placeholders, and declare each direct child under `Slices` before creating it.
+- Use a Change Group only for at least two independently acceptable/deliverable Changes with dependencies or an integration obligation. Create it with `rsp group create <group> [goal]`, replace placeholders, and declare each direct child under `Slices` before creating it.
 - The Brief is not focusable. Read it before a selected child. Its declaration order guides navigation and its blockers are inherited as external blockers, not graph edges.
 - Group-level integration obligations belong in the Brief's `Completion Conditions`. Use a named `Integration:` condition for the durable boundary and record fresh integration evidence before marking it complete. A boundary supplied only by the current request is transient and cannot complete Group closeout until it is written back.
 - Declare an exact prerequisite only as `- requires \`<change-work-ref>\`: <reason>` under the dependent Change's `Blockers`. Targets must be executable Changes.

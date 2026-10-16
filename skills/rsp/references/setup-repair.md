@@ -21,3 +21,12 @@ Fail closed on symlinks, special files, incomplete inspection, unrecognized rese
 ## Generated-index compatibility
 
 Fresh initialization and Spec creation generate no indexes. `rsp update` removes only root `INDEX.md` or any `00-index.md` with exact generated Specs metadata. Require complete preflight, quarantine, direct-query postcheck and rollback; preserve owner-controlled reserved content for explicit review.
+
+## Legacy workflow configuration
+
+A legacy manage mapping requires explicit migration to workflow.delegation (off or
+auto) and workflow.closeout (ask, auto or manual). Recommend off/ask; never map old
+local closeout into Git authority. With configuration-edit authority, remove manage,
+choose new values, check project-owned policy instructions and validate through
+rsp config --json before rsp update. Update refuses legacy or mixed settings without
+rewriting them. Historical evidence is not migrated into current acceptance.

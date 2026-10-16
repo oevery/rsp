@@ -6,7 +6,7 @@ Load only for authorized planning-artifact work, before choosing or naming an ow
 
 When Shape must establish a new WorkRef, preserve an explicit valid user-supplied identity through canonical normalization. Otherwise follow an explicit nearest project or domain WorkRef naming convention. If neither exists, infer ASCII lowercase kebab-case from stable domain or technical vocabulary. Artifact, commit, response, host locale, and TUI language settings never select or translate WorkRef language. Safe Unicode remains available through explicit input or project/domain convention; never rename an existing open or archived identity because language or naming guidance changes.
 
-Prefer one ordinary Change only for one observable outcome sharing a consistency, focused-verification, review, archive, and rollback boundary. Change granularity does not prescribe Git commit count; never split or merge Changes merely to enforce a Change-to-commit mapping. Use a shallow Group for independent outcomes under one goal; an integration gate never merges them. A shared completion contract gates Group closure, not child archive unless declared there. Keep Brief `Slices`, child `Blockers`, and derived readiness. Add no hierarchy.
+Prefer one ordinary Change only for one observable outcome sharing a consistency, focused-verification, review, archive, and rollback boundary. Change granularity does not prescribe Git commit count; never split or merge Changes merely to enforce a Change-to-commit mapping. Use a shallow Group for independently acceptable/deliverable outcomes with dependencies or integration obligations; complexity and worker count alone do not justify it; an integration gate never merges them. A shared completion contract gates Group closure, not child archive unless declared there. Keep Brief `Slices`, child `Blockers`, and derived readiness. Add no hierarchy.
 
 ## Write one outcome
 
@@ -23,7 +23,7 @@ Keep the six sections; small changes need only proportionate content. Plain-pros
 
 Plan a test only when it protects observable behavior or a real boundary, adds distinct future confidence, avoids duplicate or implementation-detail coverage, and costs proportionately. Otherwise prefer smallest sufficient evidence and keep probes temporary.
 
-A Change is a convergent plan and final-result snapshot. Ongoing recovery notes belong in Focus; detailed evidence stays with its owner. Before closeout, distill results and remaining limits into Change, then selectively write stable knowledge to its document owner. Do not append execution history.
+A Change is a convergent plan and final-result snapshot. Ongoing recovery notes belong in Focus; detailed evidence stays with its owner. Before closeout, establish verified outcomes, selectively update stable knowledge at its owner, then reconcile the final Change with those facts and references. These may be one operation and already-accurate text needs no edit. Do not append execution history.
 
 Use domain language. Mention agents only as real product actors or constraints, not authors or execution narrators.
 

@@ -4,7 +4,7 @@ description: Diagnose unexplained symptoms read-only or implement authorized bou
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.11.3"
+  version: "2026.10.16.2"
 ---
 
 # RSP Implement
@@ -13,7 +13,7 @@ For tracked work, read the [shared work model](../rsp/references/work-model.md) 
 
 Carry one bounded authorized task through implementation, minimum sufficient own verification and necessary tracked Change evidence. Choose the mode before loading its method; a method change within the same authority needs no artificial handoff. No mode grants Git, review, lifecycle, external action, or approval authority.
 
-Responses follow explicit instruction, personal instructions, then conversation language. Preserve existing artifact language and canonical identifiers, commands and values. New artifacts follow explicit instruction, effective configuration, scoped project instructions, then conversation language. Resolve needed RSP settings through the selected CLI's successful `rsp config --json` summary, including defaults and inheritance; refresh on relevant drift or recovery. Raw YAML is diagnostic only. Failed projection leaves dependent choices unresolved while independent authorized work continues; resolve material conflicts with the owner. Core execution is not required.
+Responses follow explicit instruction, personal instructions, then conversation language. Preserve existing artifact language and canonical identifiers, commands and values. New artifacts follow explicit instruction, effective configuration, scoped project instructions, then conversation language. Query RSP settings only when an actual decision depends on an unresolved value, through the selected CLI's successful `rsp config --json` summary, including defaults and inheritance; refresh on relevant drift or recovery. Raw YAML is diagnostic only. Failed projection leaves dependent choices unresolved while independent authorized work continues; resolve material conflicts with the owner. Core execution is not required.
 
 ## Select and inspect
 
@@ -24,14 +24,14 @@ Mutation requires one of:
 
 Diagnosis-only investigates a bounded symptom read-only without a ready mutation owner or WorkRef. A suspected cause grants no mutation. For an authorized fix, diagnose an unexplained cause first; after confirmation continue the same request only with settled owner, scope and mutation authority.
 
-Read nearest instructions, relevant Change and Brief when tracked, Specs and decisions, current checkout, then the smallest owning code and test chain. Use normal repository discovery; do not guess owners. Operate only in the execution location supplied by the host.
+Inspect applicable instructions, the selected Change/Brief when tracked, relevant Specs and decisions, and the owning code and tests. Use supplied paths and discover missing context as needed; a dispatch summary does not replace source inspection. Operate only in the execution location supplied by the host.
 
 Select the method from the request and evidence:
 
 - **Diagnosis:** for an unexplained symptom or diagnosis-only request, load [diagnosis](references/diagnosis.md) before any fix. Diagnosis-only remains read-only and ends with cause evidence or an unresolved discriminating check.
 - **Ordinary implementation:** for a clear authorized correction, implement directly; no branch reference is needed.
 - **Test-first:** after the cause and authorized behavior are clear, load [test-first](references/test-first.md) only when explicitly required or a concrete changed risk makes pre-mutation RED safer. Testability or being a fix is insufficient.
-- **Fixed findings:** for a known fixed review report and bounded investigation authority, load [finding-resolution](references/finding-resolution.md). Give each finding an accepted, rejected, or needs-clarification disposition; only an accepted finding with separate correction authority and exact scope may be changed. A report alone grants no mutation.
+- **Fixed findings:** for a known review report and bounded investigation authority, load [finding-resolution](references/finding-resolution.md). Supply dispositions and one authorized correction with checks; Core owns any required cross-capability re-review loop. A report or accepted finding alone grants no mutation.
 
 These are conditional methods, not separate controllers.
 
@@ -66,7 +66,7 @@ Use `rsp-doc` for document/Skill writing and whole-Change convergence within exi
 After final mutation, establish minimum sufficient evidence for tracked Required checks or direct-task acceptance:
 
 - Reuse traceable passing results when the tested boundary and relevant code, dependencies, configuration, tools, inputs and environment still apply. Phase changes and unrelated edits do not invalidate evidence.
-- Run only missing, failed or invalidated checks and additional checks justified by changed risk. Named mandatory checks retain their method and coverage; an explicit rerun requirement still requires execution.
+- Run missing, failed or invalidated checks and risk-justified additions. Changed code, dependencies, configuration, environment or integrated behavior invalidate the evidence they affect, not every unrelated pass. Named checks retain their method and coverage; explicit reruns and independent execution remain binding.
 - For an unfixed method, choose the cheapest decisive existing test, static check, build or acceptance evidence; a new test is not required.
 - Match the actual target, inputs, coverage and completion to the declared check. Invocation errors or incomplete observations do not by themselves prove a product defect. Record command, tested scope, result, source and omissions, distinguishing reused evidence from new execution. Failed, unavailable or untraceable evidence cannot establish completion.
 

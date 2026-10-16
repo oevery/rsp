@@ -2,6 +2,12 @@
 
 Read when selecting, reporting or operating a tracked RSP owner and these definitions are not already available in the current context. Direct untracked work needs no RSP identity. This file defines identities, not a requirement to execute Core.
 
+## Work shapes
+
+Direct work is a clear bounded request without durable continuity needs. Change retains one acceptance/delivery boundary for sustained work or recovery. Group coordinates independently acceptable/deliverable child Changes with dependencies or integration obligations. Complexity, file count and worker count alone select neither Group nor delegation. Agent topology is a separate execution choice.
+
+Ordinary completion and checkpoint commits leave a Change open. Final delivery or an explicit close request uses the closeout policy; reopen is exceptional recovery, not the normal iteration path.
+
 ## Identity and ownership
 
 A WorkOwner is the selected owner of the requested work: a Change, or a Group for its coordination boundary. A direct untracked request retains its explicit scope without inventing a Change, Group or WorkRef.

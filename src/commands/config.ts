@@ -1,5 +1,5 @@
 import type { ConfigResult } from '../types.js'
-import { CONFIG_PATH, inspectRspConfig, resolveKinds, resolveLanguagePolicy, resolveManagePolicy } from '../core/config.js'
+import { CONFIG_PATH, inspectRspConfig, resolveKinds, resolveLanguagePolicy, resolveWorkflowPolicy } from '../core/config.js'
 import { resolveDecisionRecordsPath } from '../core/decisions.js'
 import { toErrorMessage } from '../core/output.js'
 
@@ -29,7 +29,7 @@ export async function showConfig(): Promise<ConfigResult> {
       summary: {
         kinds: resolveKinds(inspection.config),
         decisions: { path: resolveDecisionRecordsPath(inspection.config) },
-        manage: resolveManagePolicy(inspection.config, { configValid: true }),
+        workflow: resolveWorkflowPolicy(inspection.config, { configValid: true }),
         language: resolveLanguagePolicy(inspection.config, { configValid: true }),
       },
       diagnostics: [],
