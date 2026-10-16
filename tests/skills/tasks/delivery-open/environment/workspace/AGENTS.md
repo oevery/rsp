@@ -1,0 +1,2 @@
+# Fixture instructions
+Use host-injected RSP Skills. Work only on value-change. Product and check inputs are already settled; no worker or independent-execution obligation exists. Preserve unrelated notes and draft. Existing setup evidence is real for its recorded inputs, not evidence that the model ran anything. Do not change tests, contracts, configuration or evidence.json. Final delivery alone does not authorize Git. Only the user instruction may authorize a local commit. Temporary output belongs under tmp/ or .cache/. Do not run init/update or install anything.

@@ -1,0 +1,5 @@
+workflow:
+  delegation: off
+  closeout: manual
+language:
+  default: en

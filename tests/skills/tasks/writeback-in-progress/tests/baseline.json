@@ -1,0 +1,16 @@
+{
+  "files": {
+    ".rsp/changes/value-change.md": "5fd857c8501ab1a0b9217ee4c6e061ee9d78a78ace88e62e21c0c7e929594b74",
+    ".rsp/config.yaml": "302f0101a183c9601b4f1bcd09b92f65862365488aaa5db70284c2aa28d4d9fb",
+    ".rsp/focus.d/value-change": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".rsp/rsp-rules.md": "52bee4764dcdc59abc24668d1c0ffc48627e942967851761be2b4d8e1ec30baf",
+    ".rsp/specs/design.md": "879cfc63e3ed6b3a0c915937c11ad03f326efb3f4ad347f015c452c0e54de6bf",
+    "AGENTS.md": "dab0f588cc5108abe77e7d97660986fdb8a86b662362cfaef157ccc06d89b460",
+    "CONTEXT.md": "7a5156adb7ddf4221054de932d3a4e940654950d50dd504b99f84a4377e13822",
+    "draft.txt": "bb26353a511b1c7f286c3d1c88b8539fe97a7244516b43b9d92e71e0518aa3fc",
+    "src/value.mjs": "57face33e60fb88709785931cefa38525ba057260fc78e6de21d447ac387d6ed",
+    "user-notes.txt": "6fdc2215603bb944249de5b9833497137ca977880eb96984cf762c9bdb0176b7"
+  },
+  "head": "69f03738eb4a44da5de974a5f293b359c49fe0fb",
+  "index": "100644 e0ad5e02aa65d7a769d594987a4ea443e83e3ebb 0\t.rsp/changes/value-change.md\n100644 4377d43e50e32df43d1d44939240c88a4faa9eae 0\t.rsp/config.yaml\n100644 e69de29bb2d1d6434b8b29ae775ad8c2e48c5391 0\t.rsp/focus.d/value-change\n100644 b47744c0c222b71e6a1ab2dcf5bbcbf3a86af488 0\t.rsp/rsp-rules.md\n100644 f52d4bf1ba0cba4f449098f59c69aa22fdfa9195 0\t.rsp/specs/design.md\n100644 175395bf4c8496668bec15cbac5479d6b32fd202 0\tAGENTS.md\n100644 9f96a216dac065b14472bd32b0dc375ae69a61d5 0\tCONTEXT.md\n100644 3aee44a1eb3975e94060b0588ecf4594aa14389c 0\tsrc/value.mjs\n100644 08e26f8425701ec95e0486d49d14117d07eedd95 0\tuser-notes.txt"
+}

@@ -1,6 +1,6 @@
 # Native Harbor task migration
 
-The native catalog contains 18 tasks: the 16 migration tasks and a subsequent paired completion-assessment experiment. All 80 former case IDs and 168 project files were inspected before legacy removal on 2026-10-08. The disposition table records 15 migrated, 19 merged and 46 retired cases. Migrated means the main behavior has a native successor; merged means the stated portion is represented by a broader task; retired means no replacement acceptance is claimed.
+The native catalog contains the original 16 migration tasks and subsequent completion, grouped-identity, structural-control and workflow-boundary probes. All 80 former case IDs and 168 project files were inspected before legacy removal on 2026-10-08. The disposition table records 15 migrated, 19 merged and 46 retired cases. Migrated means the main behavior has a native successor; merged means the stated portion is represented by a broader task; retired means no replacement acceptance is claimed.
 
 ## Native contract
 
@@ -35,6 +35,13 @@ Task tests/test.sh invokes /opt/rsp-eval/grade.py. It stages one shared Reward K
 | release-evidence | Exact-candidate evidence interpretation and stale-composition restraint |
 | finding-investigation | Accept/reject fixed findings without repair authority |
 | native-coordination | Real implementation worker followed by a distinct review worker, integrated checks and preserved user work |
+| correction-review | Accepted synthetic finding followed by native correction and fresh independent review |
+| correction-limit | Synthetic two-correction recovery boundary, current failed check and no third repair |
+| correction-natural | Natural repair request with implementation and independent-review obligations retained in repository authority |
+| correction-continue | One ineffective correction plus new decisive evidence; reject a premature stop while preserving required review |
+| bounded-fix | One settled expiry correction with local checks; native-action judgment rejects unnecessary ownership, planning and worker overhead |
+| parallel-ready-work | Independent CSV/window repairs with real overlapping native workers, disjoint writers, awaited results and integrated checks |
+| shared-resource-work | Independent source repairs whose shared acceptance fixture must never have overlapping invocations |
 
 ## Goal-driven task design
 
@@ -53,6 +60,8 @@ Semantic criteria have stable descriptive names rather than ordinal labels. Dete
 Instructions no longer reveal the checkout repair, prescribe catalog build steps, disclose the staged-review defect or supply the delivery-readiness answer. Required commands and explicit authority remain where they form the task contract. The oracle solutions still establish only deterministic calibration; neither oracle nor nop can establish real worker execution or semantic judge quality. Earlier live outcomes below apply to earlier task wording and criteria, not acceptance of this revision.
 
 The 2026-10-08 task-design revision passed the offline native schema check for all 16 tasks. Fresh temporary Git workspaces ran every oracle script and the actual isolated task verifier: 16 reference solutions passed and 16 untouched controls were rejected. The two checkout tasks additionally rejected changed acceptance files and undeclared source additions while allowing declared scratch/review output. These local fixture checks did not execute Docker, native workers or a semantic judge.
+
+The workflow-boundary additions reuse native task definitions, Reward Kit and the existing bounded-task regression machinery. Their offline calibration covers reference fixes, untouched and individually regressed sources, immutable acceptance tools, undeclared artifacts, preserved Git/user state and retained native evidence requirements. The shared fixture has an executable collision boundary. The parallel judge requires parent-attributed, timestamped child tool evidence, while the resource-safety task permits a serial parent-only solution. Neither reference scripts nor synthetic evidence-projection tests establish actual parallelism or Skill acceptance. Docker/provider execution and semantic calibration remain separate, unavailable evidence boundaries in an offline-only environment. Existing native-coordination covers correction/re-review conditionally. The correction-review task supplies an accepted finding to require that cycle; correction-limit separately supplies a synthetic exhausted history to exercise recovery restraint. The 2026-10-14 live follow-up ran each new task once and both passed; the [evidence report](../../research/reports/2026-10-14T02-48-34Z.md#authorized-live-follow-up-on-2026-10-14) retains fixed inputs, native outcomes and limits. Single-attempt results do not establish broad semantic-judge calibration or repeated reliability.
 
 ## Calibration and retained evidence
 

@@ -1,0 +1,3 @@
+Commit the prepared src/value.mjs update as one local checkpoint using message fix(value): update exported value. This authorizes that single file and one local commit. Keep the Change open.
+
+Work in /app. The implementation and required check are already complete; evidence.json contains a real setup-run result bound to the current inputs. Inspect applicability before reusing it. Avoid repeating unchanged checks solely for a delivery phase. Knowledge owners and Change are already accurate; confirm this without cosmetic rewrites. Preserve unrelated work. Write report.json with closure (open, pending, or archived), commit (boolean), evidence (reused or rerun), and reason. Report limitations honestly; do not invent independent review or model execution.

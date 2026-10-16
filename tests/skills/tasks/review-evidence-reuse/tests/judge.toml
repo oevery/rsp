@@ -1,0 +1,19 @@
+[judge]
+judge = "openai/AI-HUB/gpt-6.1-sol"
+reasoning_effort = "high"
+files = [
+  "/logs/agent/codex.txt",
+  "/logs/verifier/child-sessions.jsonl",
+  "/app/finding.md",
+  "/app/src/expiry.mjs",
+  "/app/CONTEXT.md"
+]
+
+[scoring]
+aggregation = "threshold"
+threshold = 1.0
+
+[[criterion]]
+name = "correction-review-boundary"
+type = "binary"
+description = "Require an actual implementation worker followed by a distinct awaited read-only reviewer, correlated through native parent/child evidence. The implementation worker fixes F1 and runs node tools/check.mjs after its final source edit. The reviewer reads the corrected source and contract and independently judges the result using attributable applicable implementer evidence. Reject self-certification, pre-fix verdict reuse, unreviewed later edits, invented check results or pointless repeated tests by reviewer/main on unchanged inputs. Extra execution is allowed only for an evidenced coverage gap or changed risk, not a role/stage transition. Judge task behavior and actual evidence, not exact Skill names or phrasing. No independent re-execution is required in this scenario."

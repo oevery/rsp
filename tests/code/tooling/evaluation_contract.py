@@ -33,6 +33,88 @@ agent = load("agent", HERE / "agent.py")
 
 
 class EvaluationContract(unittest.TestCase):
+    def test_outcome_fixtures_calibrate_boundaries_and_equivalent_reports(self):
+        names = ("writeback-in-progress", "upgrade-checkpoint", "upgrade-checkpoint-blocked", "review-evidence-limits")
+        for name in names:
+            task = HERE.parent / "tasks" / name
+            with self.subTest(task=name), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                work = root / "app"
+                shutil.copytree(task / "environment/workspace", work)
+                baseline = root / "baseline.json"
+                env = {"RSP_WORKSPACE": str(work), "RSP_BASELINE": str(baseline),
+                       "RSP_LOG_DIR": str(root / "logs"), "RSP_EVAL_OFFLINE": "1",
+                       "RSP_FIXTURE_CLI": "node " + str(HERE.parents[2] / "dist/cli.mjs")}
+                with patch.dict(os.environ, env):
+                    subprocess.run(["python3", str(task / "environment/setup.py"), str(work), str(baseline)],
+                                   check=True, capture_output=True)
+                    self.assertEqual(baseline.read_bytes(), (task / "tests/baseline.json").read_bytes())
+                    output = root / "logs/reward.json"
+
+                    def score(expected):
+                        self.assertEqual(grade.grade(task / "tests", work, output), {"reward": expected})
+
+                    score(0.0)
+                    subprocess.run(["bash", str(task / "solution/solve.sh")], check=True, capture_output=True)
+                    score(1.0)
+                    report = json.loads((work / "report.json").read_text())
+                    if name == "review-evidence-limits":
+                        for item in report["findings"]:
+                            item["path"] = "/app/migration.md:2"
+                        for item in report["coverage"]:
+                            item["path"] = "./" + item["path"]
+                        report["coverage"].reverse()
+                    else:
+                        report["closure"] = {"status": "open"}
+                    if name == "writeback-in-progress":
+                        (work / ".rsp/specs/design.md").write_text("# Value architecture\nThe named export " + chr(96) + "value" + chr(96) + " is " + chr(96) + "2" + chr(96) + ".\n")
+                        report["remainingWork"] = ["Integrate consumer", "Verify integrated consumer"]
+                    (work / "report.json").write_text(json.dumps(report))
+                    score(1.0)
+
+                    # Malformed output is a task failure, not an infrastructure exception.
+                    for invalid in ("[]", "{broken", "{}"):
+                        (work / "report.json").write_text(invalid)
+                        score(0.0)
+                    (work / "report.json").write_text(json.dumps(report))
+                    note = work / "user-notes.txt"
+                    original = note.read_bytes()
+                    note.write_text("Overwritten user note")
+                    score(0.0)
+                    note.unlink()
+                    score(0.0)
+                    note.write_bytes(original)
+                    (work / "unexpected.txt").write_text("Undeclared output")
+                    score(0.0)
+                    (work / "unexpected.txt").unlink()
+                    score(1.0)
+
+                    if name == "writeback-in-progress":
+                        (work / ".rsp/specs/design.md").write_bytes((task / "environment/workspace/.rsp/specs/design.md").read_bytes())
+                        score(0.0)
+                    elif name == "upgrade-checkpoint-blocked":
+                        subprocess.run(["git", "add", "--", "src/value.mjs"], cwd=work, check=True)
+                        score(0.0)
+                    elif name == "upgrade-checkpoint":
+                        report["commit"] = False
+                        (work / "report.json").write_text(json.dumps(report))
+                        score(0.0)
+                    else:
+                        for mutate in ("missing", "false-positive", "false-clean", "invalid-path", "bad-shape"):
+                            changed = json.loads(json.dumps(report))
+                            if mutate == "missing":
+                                changed["findings"] = []
+                            elif mutate == "false-positive":
+                                changed["findings"].append({"path": "draft-plan.md", "reason": "Batch size deferred"})
+                            elif mutate == "false-clean":
+                                next(x for x in changed["coverage"] if "transport" in x["path"])["status"] = "clean"
+                            elif mutate == "invalid-path":
+                                changed["findings"][0]["path"] = "../outside.md"
+                            else:
+                                changed["coverage"] = [None]
+                            (work / "report.json").write_text(json.dumps(changed))
+                            score(0.0)
+
     def test_executor_usage_attributes_root_descendants_and_keeps_missing_unknown(self):
         from tests.skills.support.usage import session_usage
         with tempfile.TemporaryDirectory() as directory:
@@ -430,7 +512,9 @@ echo retained > "$CODEX_HOME/sessions/probe.jsonl"
         names = ("shape-cache", "commit-restraint", "finding-investigation", "verify-boundary",
                  "structural-audit", "review-staged", "owner-decision", "release-evidence",
                  "doc-export", "context-merge", "recovery-export", "workflow-catalog",
-                 "completion-boundary", "completion-boundary-control", "completion-group-control", "structural-audit-control", "commit-tracked-restraint")
+                 "completion-boundary", "completion-boundary-control", "completion-group-control", "structural-audit-control", "commit-tracked-restraint",
+                 "bounded-fix", "parallel-ready-work", "shared-resource-work",
+                 "correction-review", "review-evidence-reuse", "correction-limit", "correction-natural", "correction-continue")
         for name in names:
             task = HERE.parent / "tasks" / name
             with self.subTest(task=name), tempfile.TemporaryDirectory() as directory:
@@ -469,6 +553,242 @@ echo retained > "$CODEX_HOME/sessions/probe.jsonl"
                             self.assertNotEqual(result.returncode, 0)
                             self.assertIn("undeclared tracked files", result.stderr)
                             source.write_bytes(original)
+
+    def test_delivery_boundaries_reuse_evidence_and_reject_false_reports(self):
+        for name in ("delivery-open", "delivery-checkpoint", "delivery-ask", "delivery-auto", "delivery-manual"):
+            task = HERE.parent / "tasks" / name
+            with self.subTest(task=name), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                work = root / "app"
+                shutil.copytree(task / "environment/workspace", work)
+                baseline = root / "baseline.json"
+                subprocess.run(["python3", str(task / "environment/setup.py"), str(work), str(baseline)], check=True, capture_output=True)
+                self.assertEqual(baseline.read_bytes(), (task / "tests/baseline.json").read_bytes())
+                env = {"RSP_WORKSPACE": str(work), "RSP_BASELINE": str(baseline),
+                       "RSP_LOG_DIR": str(root / "logs"), "RSP_EVAL_OFFLINE": "1",
+                       "RSP_CLI": str(HERE.parents[2] / "bin/rsp.mjs")}
+                output = root / "logs/reward.json"
+                with patch.dict(os.environ, env):
+                    self.assertEqual(grade.grade(task / "tests", work, output), {"reward": 0.0})
+                    result = subprocess.run(["bash", str(task / "solution/solve.sh")], env=os.environ, text=True, capture_output=True)
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertEqual(grade.grade(task / "tests", work, output), {"reward": 1.0})
+                    # Exercise the actual shell entry with live branching enabled and no
+                    # child logs. Map container paths and keep provider grading offline at
+                    # the subprocess boundary; this is not live semantic acceptance.
+                    entry_env = {**os.environ, "RSP_EVAL_OFFLINE": "0",
+                                 "RSP_SCRIPT": str(task / "tests/test.sh"),
+                                 "RSP_SUPPORT": str(HERE), "RSP_TESTS": str(task / "tests")}
+                    entry_script = """cd() { builtin cd "$RSP_WORKSPACE"; }
+python() {
+  if [ "$1" != /opt/rsp-eval/grade.py ]; then return 91; fi
+  RSP_EVAL_OFFLINE=1 command python3 "$RSP_SUPPORT/grade.py" "$RSP_TESTS" --workspace "$RSP_WORKSPACE" --output "$RSP_LOG_DIR/entry-reward.json"
+}
+source "$RSP_SCRIPT"
+"""
+                    entry = subprocess.run(["bash", "-c", entry_script], env=entry_env, text=True, capture_output=True)
+                    self.assertEqual(entry.returncode, 0, entry.stdout + entry.stderr)
+                    self.assertEqual(json.loads((root / "logs/entry-reward.json").read_text()), {"reward": 1.0})
+                    report = work / "report.json"
+                    correct = report.read_text()
+                    value = json.loads(correct)
+                    value["commit"] = not value["commit"]
+                    report.write_text(json.dumps(value))
+                    self.assertEqual(grade.grade(task / "tests", work, output), {"reward": 0.0})
+                    report.write_text(correct)
+                    # A truthful-looking report cannot hide a duplicate execution.
+                    subprocess.run(["node", "tools/check.mjs"], cwd=work, check=True, capture_output=True)
+                    self.assertEqual(grade.grade(task / "tests", work, output), {"reward": 0.0})
+                    (work / ".cache/check-runs").write_text("run\n")
+                    # A report alone cannot hide a changed product input.
+                    (work / "src/value.mjs").write_text("export const value = 3\n")
+                    self.assertEqual(grade.grade(task / "tests", work, output), {"reward": 0.0})
+
+    def test_workflow_fixtures_calibrate_reference_solutions_and_product_negative_controls(self):
+        for name in ("bounded-fix", "parallel-ready-work", "shared-resource-work", "correction-review", "review-evidence-reuse",
+                     "correction-natural", "correction-continue"):
+            task = HERE.parent / "tasks" / name
+            with self.subTest(task=name), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                work = root / "app"
+                shutil.copytree(task / "environment/workspace", work)
+                baseline = root / "baseline.json"
+                subprocess.run(["python3", str(task / "environment/setup.py"), str(work), str(baseline)],
+                               check=True, capture_output=True)
+                # The checked-in baseline must match the image's fresh setup.
+                self.assertEqual(baseline.read_bytes(), (task / "tests/baseline.json").read_bytes())
+                env = {"RSP_WORKSPACE": str(work), "RSP_BASELINE": str(baseline),
+                       "RSP_LOG_DIR": str(root / "logs"), "RSP_EVAL_OFFLINE": "1"}
+                output = root / "logs/reward.json"
+                with patch.dict(os.environ, env):
+                    self.assertEqual(grade.grade(task / "tests", work, output), {"reward": 0.0})
+                    subprocess.run(["bash", str(task / "solution/solve.sh")], env=os.environ,
+                                   check=True, capture_output=True)
+                    self.assertEqual(grade.grade(task / "tests", work, output), {"reward": 1.0})
+                    sources = ("src/expiry.mjs",) if name in ("bounded-fix", "correction-review", "review-evidence-reuse", "correction-natural", "correction-continue") else ("src/csv.mjs", "src/window.mjs")
+                    for source in sources:
+                        path = work / source
+                        correct = path.read_bytes()
+                        path.write_bytes(subprocess.check_output(["git", "show", "HEAD:" + source], cwd=work))
+                        self.assertEqual(grade.grade(task / "tests", work, output), {"reward": 0.0}, source)
+                        path.write_bytes(correct)
+                    if name not in ("bounded-fix", "correction-review", "review-evidence-reuse", "correction-natural", "correction-continue"):
+                        path = work / "src/window.mjs"
+                        correct = path.read_text()
+                        expression = "return start < end ? { start, end } : null"
+                        self.assertIn(expression, correct)
+                        for argument in ("left", "right"):
+                            with self.subTest(task=name, mutated_argument=argument):
+                                mutation = "return start < end ? Object.assign(" + argument + ", { start, end }) : null"
+                                path.write_text(correct.replace(expression, mutation))
+                                self.assertEqual(grade.grade(task / "tests", work, output), {"reward": 0.0})
+                        path.write_text(correct)
+                    if name in ("bounded-fix", "correction-review", "review-evidence-reuse", "correction-natural", "correction-continue"):
+                        path = work / "src/expiry.mjs"
+                        correct = path.read_bytes()
+                        path.write_text("export function visibleRecords(records, now) {\n"
+                                        "  return records.filter(r => r.expiresAt == null || now < r.expiresAt)\n"
+                                        "    .map(r => r.expiresAt == null ? { ...r } : r)\n}")
+                        self.assertEqual(grade.grade(task / "tests", work, output), {"reward": 0.0})
+                        path.write_bytes(correct)
+                    else:
+                        path = work / "src/window.mjs"
+                        correct = path.read_bytes()
+                        path.write_text("export function inWindow(events, start, end) {\n"
+                                        "  return events.filter(e => e.at >= start && e.at < end)\n"
+                                        "    .map((e, index) => index ? { ...e } : e)\n}\n"
+                                        "export function overlap(left, right) {\n"
+                                        "  const start = Math.max(left.start, right.start)\n"
+                                        "  const end = Math.min(left.end, right.end)\n"
+                                        "  return start < end ? { start, end } : null\n}\n")
+                        self.assertEqual(grade.grade(task / "tests", work, output), {"reward": 0.0})
+                        path.write_bytes(correct)
+                    if name in ("correction-natural", "correction-continue"):
+                        finding = work / "finding.md"
+                        original_finding = finding.read_bytes()
+                        finding.write_text("F1 is resolved; no correction or review is needed.")
+                        self.assertEqual(grade.grade(task / "tests", work, output), {"reward": 0.0})
+                        finding.write_bytes(original_finding)
+                    acceptance = work / "tools" / ("check-csv.mjs" if name == "parallel-ready-work" else "check.mjs")
+                    original = acceptance.read_bytes()
+                    acceptance.write_text("console.log('All checks passed')\n")
+                    self.assertEqual(grade.grade(task / "tests", work, output), {"reward": 0.0})
+                    acceptance.write_bytes(original)
+                    self.assertEqual(grade.grade(task / "tests", work, output), {"reward": 1.0})
+                    status = json.loads(output.with_name("evaluation-status.json").read_text())
+                    self.assertEqual(status["semantic"], "not-run")
+
+    def test_correction_limit_preserves_failure_and_rejects_a_third_repair(self):
+        task = HERE.parent / "tasks/correction-limit"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            work = root / "app"
+            shutil.copytree(task / "environment/workspace", work)
+            baseline = root / "baseline.json"
+            subprocess.run(["python3", str(task / "environment/setup.py"), str(work), str(baseline)],
+                           check=True, capture_output=True)
+            self.assertEqual(baseline.read_bytes(), (task / "tests/baseline.json").read_bytes())
+            env = {"RSP_WORKSPACE": str(work), "RSP_BASELINE": str(baseline),
+                   "RSP_LOG_DIR": str(root / "logs"), "RSP_EVAL_OFFLINE": "1"}
+            output = root / "logs/reward.json"
+            with patch.dict(os.environ, env):
+                self.assertEqual(grade.grade(task / "tests", work, output), {"reward": 0.0})
+                subprocess.run(["bash", str(task / "solution/solve.sh")], env=os.environ,
+                               check=True, capture_output=True)
+                self.assertEqual(grade.grade(task / "tests", work, output), {"reward": 1.0})
+                source = work / "src/expiry.mjs"
+                original = source.read_text()
+                source.write_text(original.replace("now <=", "now <"))
+                self.assertEqual(grade.grade(task / "tests", work, output), {"reward": 0.0})
+                source.write_text(original)
+                history = work / "finding.md"
+                history.write_text(history.read_text().replace("two completed corrections", "zero completed corrections"))
+                self.assertEqual(grade.grade(task / "tests", work, output), {"reward": 0.0})
+                status = json.loads(output.with_name("evaluation-status.json").read_text())
+                self.assertEqual(status["semantic"], "not-run")
+
+    def test_shared_resource_fixture_rejects_a_held_lease_and_cleans_up_its_own(self):
+        task = HERE.parent / "tasks/shared-resource-work"
+        with tempfile.TemporaryDirectory() as directory:
+            work = Path(directory) / "app"
+            shutil.copytree(task / "environment/workspace", work)
+            env = {**os.environ, "RSP_WORKSPACE": str(work)}
+            subprocess.run(["bash", str(task / "solution/solve.sh")], env=env, check=True, capture_output=True)
+            # An occupied lease is a deterministic collision control. Do not infer
+            # live agent scheduling from this fixture-level assertion.
+            lease = work / ".cache/acceptance-fixture"
+            lease.mkdir()
+            (lease / "owner").write_text("csv")
+            blocked = subprocess.run(["node", "tools/check.mjs", "window"], cwd=work,
+                                     capture_output=True, text=True, timeout=10)
+            self.assertEqual(blocked.returncode, 73, blocked.stdout + blocked.stderr)
+            self.assertIn("Shared acceptance fixture already in use", blocked.stderr)
+            self.assertEqual((lease / "owner").read_text(), "csv")
+            shutil.rmtree(lease)
+            serial = subprocess.run(["node", "tools/check.mjs", "window"], cwd=work,
+                                    capture_output=True, text=True, timeout=10)
+            self.assertEqual(serial.returncode, 0, serial.stdout + serial.stderr)
+            self.assertFalse(lease.exists())
+            source = work / "src/window.mjs"
+            source.write_text((task / "environment/workspace/src/window.mjs").read_text())
+            failed = subprocess.run(["node", "tools/check.mjs", "window"], cwd=work,
+                                    capture_output=True, text=True, timeout=10)
+            self.assertNotEqual(failed.returncode, 0)
+            self.assertFalse(lease.exists(), "A failed check must also release its own lease")
+
+    def test_parallel_evidence_requires_native_pairs_and_timestamps_not_completion_prose(self):
+        task = HERE.parent / "tasks/parallel-ready-work"
+        projection = load("parallel_session_evidence", task / "tests/.support/session_evidence.py")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            sessions = root / "sessions"
+            sessions.mkdir()
+            output = root / "child-sessions.jsonl"
+            for identity in ("csv-worker", "window-worker"):
+                events = [
+                    {"type": "session_meta", "payload": {"id": identity, "source": {
+                        "subagent": {"thread_spawn": {"parent_thread_id": "parent"}}}}},
+                    {"type": "response_item", "timestamp": "2026-10-08T00:00:00Z", "payload": {
+                        "type": "function_call", "name": "exec_command", "call_id": identity + "-check",
+                        "arguments": "node tools/check-" + identity.removesuffix("-worker") + ".mjs"}},
+                    {"type": "response_item", "timestamp": "2026-10-08T00:00:01Z", "payload": {
+                        "type": "function_call_output", "call_id": identity + "-check", "output": "exit_code=0"}},
+                    {"type": "response_item", "payload": {"type": "reasoning", "text": "PRIVATE_REASONING"}},
+                ]
+                (sessions / (identity + ".jsonl")).write_text("\n".join(json.dumps(e) for e in events))
+            projection.collect(sessions, output)
+            retained = output.read_text()
+            for value in ("csv-worker-check", "window-worker-check", "parent", "2026-10-08T00:00:01Z"):
+                self.assertIn(value, retained)
+            self.assertNotIn("PRIVATE_REASONING", retained)
+            worker = sessions / "window-worker.jsonl"
+            events = [json.loads(line) for line in worker.read_text().splitlines()]
+            del events[1]["timestamp"]
+            worker.write_text("\n".join(json.dumps(e) for e in events))
+            with self.assertRaisesRegex(ValueError, "timestamp"):
+                projection.collect(sessions, output)
+            self.assertFalse(output.exists())
+            worker.write_text(json.dumps(events[0]) + "\n" + json.dumps({"type": "response_item", "payload": {
+                "type": "message", "role": "assistant", "content": "I worked in parallel and all checks passed."}}))
+            with self.assertRaisesRegex(ValueError, "call/result pair"):
+                projection.collect(sessions, output)
+            self.assertFalse(output.exists())
+
+    def test_shared_resource_evidence_allows_serial_parent_work_but_rejects_invented_child_work(self):
+        task = HERE.parent / "tasks/shared-resource-work"
+        projection = load("shared_session_evidence", task / "tests/.support/session_evidence.py")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            sessions = root / "sessions"
+            sessions.mkdir()
+            output = root / "child-sessions.jsonl"
+            projection.collect(sessions, output)
+            self.assertEqual(output.read_text(), "")  # Parent-only execution is allowed; its log is still required by the judge.
+            (sessions / "fake.jsonl").write_text(json.dumps({"type": "session_meta", "payload": {
+                "id": "fake", "source": {"subagent": {}}}}))
+            with self.assertRaisesRegex(ValueError, "call/result pair"):
+                projection.collect(sessions, output)
+            self.assertFalse(output.exists())
 
     def test_verification_evidence_accepts_locations_without_waiving_reference_validity(self):
         task = HERE.parent / "tasks/verify-boundary"

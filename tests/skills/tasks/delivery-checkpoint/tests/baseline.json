@@ -1,0 +1,19 @@
+{
+  "files": {
+    ".cache/check-runs": "b5004f26a852b0d60ec1237432c1a33c2307ff2458c374d9d99749d045c7feb9",
+    ".rsp/changes/value-change.md": "974a294c78f9a9064d679e7e0a5b3c8263ff09852323c6a88ed0693d56db357e",
+    ".rsp/config.yaml": "825dcaf9f1cbf2b5cc3733b8456936a82ab259e6252a525b6347ce151c66c89d",
+    ".rsp/focus.d/value-change": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".rsp/rsp-rules.md": "353fb609ecb8a27c016c3d309b6dc5555411c6521d88c960c2ea7db01b1870e0",
+    ".rsp/specs/design.md": "296cb8fc9c90b3949eb76be2d7a45786e84ca9ec6d0a02fd9309f3911b5afeac",
+    "AGENTS.md": "5e217423a53c6c04219c47bf076b9bdc18f433990603eed6306af8dafbddc7e4",
+    "CONTEXT.md": "5a2f5c844b3fb44ad0c2e31e5297d16d70c4166029cea3d87ab1a016e24bca6d",
+    "draft.txt": "bb26353a511b1c7f286c3d1c88b8539fe97a7244516b43b9d92e71e0518aa3fc",
+    "evidence.json": "caaa047a09f80ef5a7d91bab8f785d0df618f5144c1a0ce3c4aa4843a8e6e508",
+    "src/value.mjs": "57face33e60fb88709785931cefa38525ba057260fc78e6de21d447ac387d6ed",
+    "tools/check.mjs": "2d5bca29771a64cdbae565f484259d7f3b7b15d5cb4e06dd39583f0bea4edd62",
+    "user-notes.txt": "6fdc2215603bb944249de5b9833497137ca977880eb96984cf762c9bdb0176b7"
+  },
+  "head": "14211118d1d4f7259256dd22a230dd259269d413",
+  "index": "100644 c63d534690ce36edb93a95ebdc9200e6ba80d7f8 0\t.rsp/changes/value-change.md\n100644 7067b2c0f51208abd0ba2764b94f2fe0f1e3a0a5 0\t.rsp/config.yaml\n100644 e69de29bb2d1d6434b8b29ae775ad8c2e48c5391 0\t.rsp/focus.d/value-change\n100644 ba2bf2d188524ceee60c46466a8d57dd35c9a1d6 0\t.rsp/rsp-rules.md\n100644 e122f98debe251a527280244ab42da6fd732143f 0\t.rsp/specs/design.md\n100644 055b9dafebf8936aef62a01fa92f7ade7bf126eb 0\tAGENTS.md\n100644 cc5c3e3f7f68a810b1647175f2568462dce9e7cc 0\tCONTEXT.md\n100644 1d772ee2c05c5e25d3486009461dfb7ec6f18750 0\tsrc/value.mjs\n100644 c313a426e294688d83a8131a58fb6dcf173a6f4c 0\ttools/check.mjs\n100644 8a16a13101d4cca2a23c9f0979bf518a419bc1a2 0\tuser-notes.txt"
+}

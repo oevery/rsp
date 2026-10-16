@@ -1,0 +1,14 @@
+{
+  "files": {
+    "AGENTS.md": "614ccb21223213308590828ca4f4d66b46ca53aed350b14494d40e9f78ba9f25",
+    "CONTEXT.md": "2c0fe6c0e87a27585c9d40a7466090797c9679bb73a533235cceffd1a4669fbd",
+    "draft-plan.md": "385bd1036c67c72f8fa9cb45fa515aef87e7b95220918bb2a7c93b13c07a11cc",
+    "draft.txt": "bb26353a511b1c7f286c3d1c88b8539fe97a7244516b43b9d92e71e0518aa3fc",
+    "migration.md": "f6826f3f9e4b9852ce78b802e44c3055583be34b1bbe0541339d77807941db24",
+    "src/transport.mjs": "47497970e02217dd67224250ce4580e66c4ca8487102ff9786663cac4044eb5d",
+    "tools/check-transport.mjs": "b665719f9a74f7e8c8cfe94a230036b62a6a0df5724b98fc1ec7fc0c2a9855ac",
+    "user-notes.txt": "6fdc2215603bb944249de5b9833497137ca977880eb96984cf762c9bdb0176b7"
+  },
+  "head": "440b1b97acd991871a8e97ec0e42ae9708e9c7b7",
+  "index": "100644 053b826b718703a28303f319cd0f8186440fe78a 0\tAGENTS.md\n100644 e38ac36f9c7fe5f4a9ac2d51e43a3042ffcaa466 0\tCONTEXT.md\n100644 ba5a5b45492f390c9c3a4038fcc1d71d430023d4 0\tdraft-plan.md\n100644 efe43ab0db7826842c24fe7a50cc27fb549bf2ed 0\tmigration.md\n100644 e2cc1fba4a53718fea70733f56cea8bff2dd30ac 0\tsrc/transport.mjs\n100644 44da1ecbbc43bb957b827ea5db5bc7673d9e538d 0\ttools/check-transport.mjs\n100644 08e26f8425701ec95e0486d49d14117d07eedd95 0\tuser-notes.txt"
+}

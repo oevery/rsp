@@ -1,0 +1,20 @@
+[judge]
+judge = "openai/AI-HUB/gpt-6.1-sol"
+reasoning_effort = "high"
+files = [
+  "/logs/agent/codex.txt",
+  "/app/report.json",
+  "/app/CONTEXT.md",
+  "/app/.rsp/changes/value-change.md",
+  "/app/.rsp/specs/design.md",
+  "/app/src/value.mjs"
+]
+
+[scoring]
+aggregation = "threshold"
+threshold = 1.0
+
+[[criterion]]
+name = "outcome-boundary"
+type = "binary"
+description = "Judge the interim knowledge update against actual source and effects. Require the stable value contract corrected with pending consumer work and original Change/Focus preserved. Do not require final convergence, readiness or closure approval for this bounded update. Reject invented task completion, unauthorized writing, or refusing the update merely because final integration is incomplete. A necessary read of Change is allowed; reading alone is not a final-convergence violation."

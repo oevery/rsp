@@ -34,6 +34,33 @@ Choose scope and purpose independently. A partial catalog is an explicit researc
 
 For example, after authorizing model execution, exercise direct implementation with `run --task implement-checkout --allow-live` and the complete suite. Use `run --task implement-checkout --task workflow-catalog --task native-coordination --allow-live` for the three mixed-project scenarios. Prefix both with `mise exec -- uv run --project tests/skills python tests/skills/evaluate.py`. Native coordination requires real workers, so selecting a single unrelated Skill would not establish its contract.
 
+Three focused workflow tasks add complementary boundaries without prescribing Skill choreography:
+
+- `bounded-fix`: one settled expiry correction, existing checks and preserved user work. It requires no report file, tracked owner, planning deliverable or worker. The native-action judge rejects manufactured obligations rather than counting words, tool calls or Skill loads.
+- `parallel-ready-work`: independent CSV and time-window repairs with disjoint writers. Acceptance requires real, attributable worker work that overlaps, both workers awaited, and passing integrated checks. Retained native call/result timestamps and parent dispatch evidence supply the evidence; simultaneous worker names or self-reported parallelism do not.
+- `shared-resource-work`: the same product repairs, but both acceptance commands lease one exclusive fixture. Source work may be parallel or serial; every fixture invocation must stay serial through teardown. Passing after a collision, bypassing the wrapper or presenting an agent-written audit log cannot establish safe scheduling.
+
+Two additional tasks make correction and its stopping boundary explicit:
+
+- `correction-review` supplies an accepted synthetic finding for the expiry defect. Success requires an implementation worker correction followed by a distinct fresh read-only reviewer, executed checks and parent waits. The supplied finding is an input, never evidence of a native reviewer run.
+- `correction-limit` resumes a synthetic history in which the same finding survived two completed corrections. It requires current inspection, the failing declared check and an incomplete outcome without a third repair or counter reset. This tests recovery at the limit, not two freshly executed correction rounds.
+
+The existing `native-coordination` retains conditional correction when its reviewer finds a defect. Offline reference solutions establish product assertions and scope preservation only; actual worker order, self-certification rejection, stopping behavior and semantic-judge discrimination require separately authorized live execution.
+
+The [2026-10-14 evidence report](../../research/reports/2026-10-14T02-48-34Z.md#authorized-live-follow-up-on-2026-10-14) records one live pass each for `correction-review` and `correction-limit`, with native results and fixed inputs. The latter passes by preserving the observed product-check failure and stopping further correction. These single attempts are not matched comparisons, reliability estimates or broad judge calibration.
+
+The 2026-10-15 candidate adds two controls, both using the same natural repair request. `correction-natural` keeps implementation-worker and independent-review obligations in immutable AGENTS.md rather than spelling out the sequence in the user request. `correction-continue` additionally supplies one completed ineffective correction and new decisive evidence, requiring authorized continuation instead of a premature exhausted-budget stop. Both retain real worker attribution, executed checks, immutable inputs and truthful completion criteria. They test routing under less procedural prompting and recovery with remaining budget; they do not prove entirely unprompted delegation or fresh execution of the supplied history.
+
+The Core entry/loading refinement and these controls have no live candidate results yet. Keep the earlier task snapshots and verdicts unchanged. A future authorized comparison should hold task inputs, executor/judge settings and environment fixed between the earlier and refined Skill suites, compare acceptance and restraint before time/usage, and report cached input separately from total input. Resource-load and command counts are diagnostics, not scoring gates.
+
+For no-Docker fixture calibration, the existing bounded-task regression machinery runs reference solutions, untouched and single-regression controls, preservation checks and native-evidence projection tests:
+
+```sh
+LITELLM_LOCAL_MODEL_COST_MAP=True mise exec -- uv run --project tests/skills python tests/code/tooling/evaluation_contract.py EvaluationContract.test_workflow_fixtures_calibrate_reference_solutions_and_product_negative_controls EvaluationContract.test_bounded_tasks_reject_undeclared_changes_but_allow_outputs_and_temporary_files EvaluationContract.test_shared_resource_fixture_rejects_a_held_lease_and_cleans_up_its_own EvaluationContract.test_parallel_evidence_requires_native_pairs_and_timestamps_not_completion_prose EvaluationContract.test_shared_resource_evidence_allows_serial_parent_work_but_rejects_invented_child_work
+```
+
+These checks calibrate deterministic assertions and evidence transport only. The reference scripts deliberately do not manufacture worker histories. Native behavior, actual parallelism, resource scheduling and semantic judgment remain unavailable until separately authorized Harbor execution with Docker and executor/judge access. Offline Reward Kit output retains `semantic: not-run` even when the reference product passes.
+
 The exploratory pair `completion-boundary` and `completion-boundary-control` assesses completion against a settled cache contract when every Task and Required check is already marked passed. Their instructions, contract and smoke check are identical; only the implementation's expiry comparison differs. Both smoke checks pass. The first requires rejecting whole-outcome completion for the omitted expiry boundary, while the control requires accepting the correct implementation without inventing a defect or treating missing dedicated tests as an automatic blocker. The task declares the native Codex log as a verifier artifact; the judge receives an attributed projection of its commands and results, excluding internal reasoning; unavailable native evidence leaves grading unavailable. Select both tasks together; offline oracle/nop controls calibrate report disposition and preservation, while actual Skill behavior and explanation quality require separately authorized agent and semantic-judge execution. See the [research question](../../research/reports/2026-10-08T08-07-58Z.md#candidate-1-test-omitted-acceptance-despite-passing-declared-checks).
 
 Default execution uses `AI-HUB/gpt-6.1-sol` at medium reasoning effort, one attempt and concurrency one. Semantic judges currently use `openai/AI-HUB/gpt-6.1-sol` at high effort. Match execution configuration to actual usage before acceptance. Use `--attempts 3` as an initial stability observation for affected critical tasks, not a universal gate or proof of reliability. Keep model, reasoning effort, task, grader and container resources comparable.
@@ -151,3 +178,61 @@ The source job supplies execution artifacts; the new sibling inputs directory su
 Advanced direct use of native Harbor regrade remains possible. Task templates default RSP_EVAL_OFFLINE to 0 and the optional RSP_JUDGE_HOST to an empty value, so this path does not depend on a prior wrapper invocation. Semantic tasks still require RSP_JUDGE_BASE_URL and RSP_JUDGE_API_KEY. Direct native jobs have no wrapper input snapshot and cannot use wrapper resume; use the documented entry above when retained inputs and recovery are required.
 
 Package release invokes only `evaluate.py check`; it never automatically runs, resumes or regrades jobs. Model results, schema checks and local code success grant no release, publication or human approval.
+
+## Architecture candidate: delivery and evidence reuse
+
+The 2026-10-15 architecture revision uses workflow.delegation/closeout. Existing
+fixture configurations were explicitly migrated to off/manual and their synthetic
+Git baselines regenerated; historical jobs and captured inputs remain unchanged.
+
+- review-evidence-reuse requires an implementation worker and distinct semantic
+  reviewer, permitting applicable implementer check evidence and rejecting
+  unnecessary re-execution. correction-review/natural/continue retain their explicit
+  independent-execution requirements.
+- delivery-open keeps work open even with auto closure configured.
+- delivery-checkpoint makes exactly one authorized source-only checkpoint and keeps
+  Change open, also under auto closure.
+- delivery-ask prepares final delivery and asks for closure without archiving or Git.
+- delivery-auto closes eligible final delivery under policy without inferring Git.
+- delivery-manual makes an authorized final commit while leaving Change open.
+
+Delivery setup actually executes its declared check, records output and relevant
+input hashes, and distinguishes setup evidence from model execution. Deterministic
+checks cover final artifacts, exact Git effects, preservation and redundant unchanged
+check execution. The semantic judge must additionally establish applicability
+inspection, current readiness, authority decisions and honest attribution from the
+native run. Offline reference solutions and negative controls are calibration only.
+No live acceptance or efficiency claim follows from them. Rebuild the evaluation
+image from this candidate before an authorized live run; old CLI images do not
+understand the new configuration. Never rewrite old job inputs or verdicts.
+
+The separately authorized [six-scenario live follow-up](../../research/reports/2026-10-15T09-22-32Z.md#authorized-six-scenario-live-follow-up)
+passed once per task in native job 2026-10-15T15-41-22.013679Z, with no task retry,
+resume or regrade. It used the latest captured suite, including the document-rule
+follow-up; it is not a document-quality evaluation, repeated reliability study or
+matched efficiency comparison. Preparation and intermediate command failures remain
+recorded separately from final task verdicts.
+
+The [2026-10-16 matched-task comparison](../../research/reports/2026-10-15T09-22-32Z.md#2026-10-16-matched-task-live-comparison)
+used the same six tasks and settings with Core/Review 2026.10.16.1. It returned five
+passes and one delivery-open execution error after model HTTP 404, with no task
+retry. Paired successful traces show fewer fallback/status/Document-method loads,
+but more directory discovery and command batches and higher total input tokens.
+The incomplete task is excluded from efficiency totals; the result is not complete
+six-task acceptance or a general efficiency improvement.
+
+The outcome-focused consolidation regression adds four bounded tasks:
+
+- writeback-in-progress updates a stale stable contract while preserving unfinished Change/Focus and Git state.
+- upgrade-checkpoint and upgrade-checkpoint-blocked retain an actual setup CLI upgrade diagnostic and real passing or unavailable check evidence. They distinguish a permitted checkpoint from a missing-evidence stop without authorizing upgrade or archive.
+- review-evidence-limits combines a real unsafe migration claim, an unavailable vendor-contract judgment and a deliberately deferred draft choice. Findings and coverage gaps must remain distinct.
+
+Use the existing correction-review task alongside these for required independent execution and review. New tasks judge outcomes, write scope and truthful evidence, not read counts, exact method loads or incidental repetition. Reference/control calibration is offline; live candidate acceptance remains separate.
+
+The four outcome fixtures share setup and snapshot preservation through the existing
+support/workspace.py module; task checkers retain only their own acceptance logic.
+Report parsing and evidence paths reuse support/outputs.py. Exact assertions follow
+explicit types/enums and file/Git effects; undeclared closure shapes and equivalent
+prose remain semantic judgments. The existing evaluation_contract.py offline suite
+covers equivalent Markdown/report/path forms, malformed outputs, preservation and
+negative outcomes. Its setup also requires byte-identical recorded baselines.
