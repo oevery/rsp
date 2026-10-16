@@ -236,3 +236,13 @@ explicit types/enums and file/Git effects; undeclared closure shapes and equival
 prose remain semantic judgments. The existing evaluation_contract.py offline suite
 covers equivalent Markdown/report/path forms, malformed outputs, preservation and
 negative outcomes. Its setup also requires byte-identical recorded baselines.
+
+The paired commit-prerequisite-failure and commit-prerequisite-success tasks require
+fresh delivery preparation before staging or commit. They use the same request and
+preparation script with an immutable unavailable/ready input. Both retain passing
+setup verification, so only the fresh prerequisite decides whether delivery may
+continue. Programmatic checks cover preparation observations, exact Git outcomes
+and preserved inputs; native-action judging must reject writes after failure even
+when subsequently undone. A receipt alone does not prove model execution. These
+explicitly prompted controls do not measure spontaneous preparation discovery or
+general reliability.

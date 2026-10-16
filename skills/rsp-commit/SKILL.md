@@ -4,7 +4,7 @@ description: Inspect or create one authorized exact-scope local commit for direc
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.15.2"
+  version: "2026.10.16.1"
 ---
 
 # RSP Commit
@@ -43,6 +43,8 @@ Read nearest authority and the selected current owner, relevant Brief/children o
 Stop without changing the index on missing or ambiguous authority, stale evidence, an invalid kind/purpose, unrelated staged work, mixed ownership that cannot be separated without guessing, or active merge, cherry-pick, revert, rebase, mail-apply or sequencer state. Preserve pre-existing owned partial staging unless the exact additional content is authorized. Never broaden paths, unstage unrelated work or reset the index to make a boundary fit.
 
 Before reporting eligibility, establish that verification covers the exact proposed delivery content, not merely filenames or a working tree containing excluded changes. For an already-staged slice, compare evidence with the current index. Unstaged code, configuration, fixtures or generated inputs may make a working-tree pass inapplicable; obtain missing exact-boundary evidence within authority or report the gap, without altering unrelated work.
+
+Before dependent `git add` or `git commit`, run required audits and preparation as separately observed commands by default. If batching, explicitly gate each dependent write on all its prerequisites succeeding; shell newlines and the batch's final exit code do not provide that gate. A failed or unavailable prerequisite blocks its dependent write. Inspect actual index/worktree effects before permitted recovery; later success does not erase an earlier write after failure. Commit's one-attempt rule still applies.
 
 For readiness-only work, report eligibility, gaps and the next owner here; do not stage, prepare files or commit.
 
