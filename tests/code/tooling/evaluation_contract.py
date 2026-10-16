@@ -134,6 +134,119 @@ class EvaluationContract(unittest.TestCase):
                             (work / "report.json").write_text(json.dumps(changed))
                             score(0.0)
 
+    def test_interruption_recovery_uses_real_stop_and_preserves_partial_effects(self):
+        import sys
+        import time
+
+        task = HERE.parent / "tasks/interruption-recovery"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            work = root / "app"
+            shutil.copytree(task / "environment/workspace", work)
+            baseline = root / "baseline.json"
+            subprocess.run([sys.executable, str(task / "environment/setup.py"), str(work), str(baseline)],
+                           check=True, capture_output=True)
+            self.assertEqual(baseline.read_bytes(), (task / "tests/baseline.json").read_bytes())
+            env = {"RSP_WORKSPACE": str(work), "RSP_BASELINE": str(baseline),
+                   "RSP_LOG_DIR": str(root / "logs"), "RSP_EVAL_OFFLINE": "1"}
+            command = [sys.executable, "tools/recovery.py"]
+            cache = work / ".cache"
+            with patch.dict(os.environ, env):
+                def score(expected, label):
+                    self.assertEqual(grade.grade(task / "tests", work, root / "logs/reward.json"),
+                                     {"reward": expected}, label)
+                    status = json.loads((root / "logs/evaluation-status.json").read_text())
+                    self.assertEqual(status["semantic"], "not-run")
+                    print(f"Recovery control {label}: reward={expected}, semantic=not-run")
+                    if expected == 0.0:
+                        print((root / "logs/check.log").read_text().splitlines()[-1])
+
+                score(0.0, "untouched")
+                with (root / "writer.log").open("w") as log:
+                    process = subprocess.Popen([*command, "begin"], cwd=work, stdout=log, stderr=subprocess.STDOUT)
+                    try:
+                        deadline = time.monotonic() + 10
+                        while not (cache / "partial.json").exists():
+                            self.assertIsNone(process.poll())
+                            self.assertLess(time.monotonic(), deadline)
+                            time.sleep(0.02)
+                        self.assertIsNone(process.poll())
+                        self.assertEqual((work / "output.txt").read_bytes(), b"A\n")
+                        self.assertEqual(json.loads((cache / "partial.json").read_text())["pid"], process.pid)
+                        before = {name: (cache / name).read_bytes() for name in ("state.json", "events.jsonl", "partial.json")}
+                        premature = subprocess.run([*command, "resume"], cwd=work, capture_output=True, text=True)
+                        self.assertNotEqual(premature.returncode, 0)
+                        self.assertIn("BlockingIOError", premature.stderr)
+                        self.assertIsNone(process.poll())
+                        for name, content in before.items():
+                            self.assertEqual((cache / name).read_bytes(), content)
+                        self.assertEqual((work / "output.txt").read_bytes(), b"A\n")
+                        subprocess.run([*command, "pause"], cwd=work, check=True, capture_output=True)
+                        self.assertEqual(process.wait(timeout=10), 0)
+                        self.assertEqual((cache / "paused-output.txt").read_bytes(), b"A\n")
+                        self.assertEqual((cache / "paused-state.json").read_bytes(), before["state.json"])
+                        self.assertTrue((cache / "paused-events.jsonl").read_bytes().startswith(before["events.jsonl"]))
+                        retained = {name: (cache / name).read_bytes() for name in
+                                    ("partial.json", "pause.json", "paused-output.txt", "paused-state.json", "paused-events.jsonl")}
+                        restart = subprocess.run([*command, "begin"], cwd=work, capture_output=True, text=True)
+                        self.assertNotEqual(restart.returncode, 0)
+                        self.assertIn("already started", restart.stderr)
+                        subprocess.run([*command, "resume"], cwd=work, check=True, capture_output=True)
+                        for name, content in retained.items():
+                            self.assertEqual((cache / name).read_bytes(), content)
+                        self.assertEqual((work / "output.txt").read_bytes(), b"A\nB\n")
+                        final = {name: (cache / name).read_bytes() for name in ("state.json", "events.jsonl")}
+                        repeated = subprocess.run([*command, "resume"], cwd=work, capture_output=True)
+                        self.assertNotEqual(repeated.returncode, 0)
+                        for name, content in final.items():
+                            self.assertEqual((cache / name).read_bytes(), content)
+                        self.assertEqual((work / "output.txt").read_bytes(), b"A\nB\n")
+                    finally:
+                        if process.poll() is None:
+                            process.terminate()
+                            process.wait(timeout=10)
+                (work / "report.json").write_text(json.dumps({"correctionCount": 1, "completed": True,
+                    "explanation": "Offline real process stopped and awaited; original evidence retained."}))
+                score(1.0, "real-pause-resume")
+                mutations = {
+                    "duplicate-output": ("output.txt", b"A\nA\nB\n"),
+                    "missing-stop-evidence": (".cache/paused-events.jsonl", None),
+                    "lost-partial-effect": (".cache/paused-output.txt", b""),
+                    "reset-count": (".cache/state.json", b'{"correctionCount":0,"completed":true}'),
+                    "reset-pause-count": (".cache/paused-state.json", b'{"correctionCount":0,"completed":false}'),
+                    "false-report-count": ("report.json", b'{"correctionCount":2,"completed":true,"explanation":"restarted"}'),
+                    "malformed-events": (".cache/events.jsonl", b"not-json\n"),
+                    "user-note-write": ("unstaged-note.txt", b"replaced"),
+                }
+                for label, (name, content) in mutations.items():
+                    with self.subTest(control=label):
+                        path = work / name
+                        original = path.read_bytes()
+                        if content is None:
+                            path.unlink()
+                        else:
+                            path.write_bytes(content)
+                        score(0.0, label)
+                        path.write_bytes(original)
+                subprocess.run(["git", "add", "--", "output.txt"], cwd=work, check=True)
+                score(0.0, "index-mutation")
+
+    def test_interruption_recovery_oracle_is_offline_process_evidence(self):
+        task = HERE.parent / "tasks/interruption-recovery"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            work = root / "app"
+            shutil.copytree(task / "environment/workspace", work)
+            baseline = root / "baseline.json"
+            subprocess.run(["python3", str(task / "environment/setup.py"), str(work), str(baseline)],
+                           check=True, capture_output=True)
+            env = {"RSP_WORKSPACE": str(work), "RSP_BASELINE": str(baseline),
+                   "RSP_LOG_DIR": str(root / "logs"), "RSP_EVAL_OFFLINE": "1"}
+            with patch.dict(os.environ, env):
+                subprocess.run(["bash", str(task / "solution/solve.sh")], check=True, capture_output=True)
+                self.assertEqual(grade.grade(task / "tests", work, root / "logs/reward.json"), {"reward": 1.0})
+                self.assertEqual(json.loads((root / "logs/evaluation-status.json").read_text())["semantic"], "not-run")
+
     def test_review_calibration_samples_cover_clean_and_missed_defect(self):
         for name, sample_name in (("structural-audit-control", "reference"),
                                   ("review-staged", "missed-finding")):

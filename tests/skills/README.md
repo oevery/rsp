@@ -132,6 +132,39 @@ Jobs and raw evidence live under ignored `tests/skills/reports/`. Preserve histo
 
 The retired custom runner's raw records, workspaces, preparation probes and temporary archives were removed on 2026-10-08. Selected historical summaries and verdicts remain at their original paths; they cannot supply replay or regrade evidence after raw inputs are removed. Historical retention statements predate this cleanup. The framework comparison experiment remains intact for its research report. Retain native Harbor jobs with their sibling inputs and recovery backups; the local reports/README.md describes the cleanup boundary.
 
+## Interrupted worker recovery fixture
+
+[interruption-recovery](tasks/interruption-recovery/instruction.md) generates partial
+output during execution rather than supplying a synthetic stopped history. A native
+worker runs the task-local writer, which appends A, records correction count one and
+waits for SIGTERM. The parent observes partial effects, pauses the writer and waits
+for both the command exit and native worker completion before dispatching a fresh
+continuation worker. Continuation preserves the partial effect and stop snapshots,
+appends only B and completes the same correction with count one.
+
+The deterministic helper owns a cooperative process workload, not native worker
+lifecycle. Its lock-release receipt does not certify that a model worker stopped.
+The task's semantic judge needs actual parent dispatch/wait and child call/result
+records; correct final files alone cannot establish action order or detect a replay
+subsequently hidden by cleanup. Missing native trajectories leave judging unavailable.
+
+Run only the local subprocess and verifier controls without models:
+
+```sh
+mise exec -- uv run --frozen --project tests/skills python tests/code/tooling/evaluation_contract.py EvaluationContract.test_interruption_recovery_uses_real_stop_and_preserves_partial_effects EvaluationContract.test_interruption_recovery_oracle_is_offline_process_evidence
+```
+
+These tests exercise real process signals, exit, exclusive writer access and retained
+effects, plus negative controls for duplicate writes, lost evidence, reset counts and
+user/Git changes. Offline grading remains semantic: not-run. Native model-worker
+coordination needs separately authorized execution; this fixture does not establish
+forced model cancellation, cross-session continuation, desktop-host equivalence or
+reliability. Existing correction-continue remains the synthetic-history control.
+The separately authorized [single live attempt](../../research/reports/2026-10-16T17-31-06Z.md)
+passed programmatic and semantic checks, including native stop-before-continuation
+evidence. Its intermediate command failures remain retained; one pass does not
+establish the broader recovery claims excluded above.
+
 ## Calibrate semantic judging
 
 The small [calibration corpus](calibration/README.md) supplies reference outputs, equivalent correct wording and plausible failures for document, design, staged-review and structural-review judgments. It runs through native Harbor oracle tasks and the unchanged task verifier, including Reward Kit judges. This differs from oracle/nop controls above: semantic calls remain enabled and require authorization and judge credentials. No executor model is invoked.
