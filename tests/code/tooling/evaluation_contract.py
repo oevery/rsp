@@ -34,7 +34,8 @@ agent = load("agent", HERE / "agent.py")
 
 class EvaluationContract(unittest.TestCase):
     def test_outcome_fixtures_calibrate_boundaries_and_equivalent_reports(self):
-        names = ("writeback-in-progress", "upgrade-checkpoint", "upgrade-checkpoint-blocked", "review-evidence-limits")
+        names = ("writeback-in-progress", "upgrade-checkpoint", "upgrade-checkpoint-blocked",
+                 "commit-prerequisite-failure", "review-evidence-limits")
         for name in names:
             task = HERE.parent / "tasks" / name
             with self.subTest(task=name), tempfile.TemporaryDirectory() as directory:
@@ -69,6 +70,11 @@ class EvaluationContract(unittest.TestCase):
                     if name == "writeback-in-progress":
                         (work / ".rsp/specs/design.md").write_text("# Value architecture\nThe named export " + chr(96) + "value" + chr(96) + " is " + chr(96) + "2" + chr(96) + ".\n")
                         report["remainingWork"] = ["Integrate consumer", "Verify integrated consumer"]
+                    elif name == "commit-prerequisite-failure":
+                        # The observed live report distinguished product verification
+                        # from failed preparation; the original checker rejected it.
+                        report["verification"] = "passed"
+                        report["reason"] = "Setup product verification passed; fresh preparation exited 73, so delivery stopped before staging."
                     (work / "report.json").write_text(json.dumps(report))
                     score(1.0)
 
@@ -92,7 +98,20 @@ class EvaluationContract(unittest.TestCase):
                     if name == "writeback-in-progress":
                         (work / ".rsp/specs/design.md").write_bytes((task / "environment/workspace/.rsp/specs/design.md").read_bytes())
                         score(0.0)
-                    elif name == "upgrade-checkpoint-blocked":
+                    elif name in ("upgrade-checkpoint-blocked", "commit-prerequisite-failure"):
+                        if name == "commit-prerequisite-failure":
+                            (work / "report.json").write_text(json.dumps({**report, "verification": "invented"}))
+                            score(0.0)
+                            (work / "report.json").write_text(json.dumps(report))
+                            preparation = work / ".cache/preparation.json"
+                            observed = preparation.read_bytes()
+                            preparation.unlink()
+                            score(0.0)
+                            preparation.write_bytes(observed)
+                            preparation.write_text(json.dumps({**json.loads(observed), "exitCode": 0}))
+                            score(0.0)
+                            preparation.write_bytes(observed)
+                            score(1.0)
                         subprocess.run(["git", "add", "--", "src/value.mjs"], cwd=work, check=True)
                         score(0.0)
                     elif name == "upgrade-checkpoint":
@@ -114,6 +133,39 @@ class EvaluationContract(unittest.TestCase):
                                 changed["coverage"] = [None]
                             (work / "report.json").write_text(json.dumps(changed))
                             score(0.0)
+
+    def test_review_calibration_samples_cover_clean_and_missed_defect(self):
+        for name, sample_name in (("structural-audit-control", "reference"),
+                                  ("review-staged", "missed-finding")):
+            task = HERE.parent / "tasks" / name
+            sample = HERE.parent / "calibration" / name / sample_name
+            expected = json.loads((sample / "expected.json").read_text())
+            with self.subTest(task=name), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                work = root / "app"
+                shutil.copytree(task / "environment/workspace", work)
+                baseline = root / "baseline.json"
+                env = {"RSP_WORKSPACE": str(work), "RSP_BASELINE": str(baseline),
+                       "RSP_LOG_DIR": str(root / "logs"), "RSP_EVAL_OFFLINE": "1"}
+                with patch.dict(os.environ, env):
+                    subprocess.run(["python3", str(task / "environment/setup.py"), str(work), str(baseline)],
+                                   check=True, capture_output=True)
+                    self.assertEqual(baseline.read_bytes(), (task / "tests/baseline.json").read_bytes())
+                    output = root / "logs/reward.json"
+                    subprocess.run(["bash", str(task / "solution/solve.sh")], check=True, capture_output=True)
+                    self.assertEqual(grade.grade(task / "tests", work, output), {"reward": 1.0})
+                    preserved = {p.relative_to(work): p.read_bytes() for p in work.rglob("*")
+                                 if p.is_file() and ".git" not in p.relative_to(work).parts
+                                 and p != work / "report.json"}
+                    git_before = subprocess.check_output(["git", "ls-files", "--stage", "-z"], cwd=work)
+                    subprocess.run(["bash", str(sample / "sample.sh")], check=True, capture_output=True)
+                    for path, content in preserved.items():
+                        self.assertEqual((work / path).read_bytes(), content, str(path))
+                    self.assertEqual(subprocess.check_output(["git", "ls-files", "--stage", "-z"], cwd=work), git_before)
+                    self.assertEqual(grade.grade(task / "tests", work, output),
+                                     {"reward": float(expected["expected"]["checks"])})
+                    status = json.loads(output.with_name("evaluation-status.json").read_text())
+                    self.assertEqual(status["semantic"], "not-run")
 
     def test_executor_usage_attributes_root_descendants_and_keeps_missing_unknown(self):
         from tests.skills.support.usage import session_usage

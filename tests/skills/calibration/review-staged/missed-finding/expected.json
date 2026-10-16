@@ -1,0 +1,8 @@
+{
+  "label_status": "candidate",
+  "expected": {
+    "checks": 0,
+    "judge": 0
+  },
+  "rationale": "The report mistakes the repaired working file for the staged target, reports clean and omits the real staged calculation/comment defect. Valid report structure and source paths cannot excuse the missed defect."
+}

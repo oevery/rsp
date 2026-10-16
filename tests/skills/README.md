@@ -134,10 +134,10 @@ The retired custom runner's raw records, workspaces, preparation probes and temp
 
 ## Calibrate semantic judging
 
-The small [calibration corpus](calibration/README.md) supplies reference outputs, equivalent correct wording and plausible failures for document, design and staged-review judgments. It runs through native Harbor oracle tasks and the unchanged task verifier, including Reward Kit judges. This differs from oracle/nop controls above: semantic calls remain enabled and require authorization and judge credentials. No executor model is invoked.
+The small [calibration corpus](calibration/README.md) supplies reference outputs, equivalent correct wording and plausible failures for document, design, staged-review and structural-review judgments. It runs through native Harbor oracle tasks and the unchanged task verifier, including Reward Kit judges. This differs from oracle/nop controls above: semantic calls remain enabled and require authorization and judge credentials. No executor model is invoked.
 
 ```sh
-mise exec -- uv run --project tests/skills python tests/skills/evaluate.py calibrate --task doc-export --task shape-cache --task review-staged --allow-live
+mise exec -- uv run --project tests/skills python tests/skills/evaluate.py calibrate --task doc-export --task shape-cache --task review-staged --task structural-audit-control --allow-live
 ```
 
 The wrapper snapshots the task, original oracle solution, sample script and expectations. Harbor installs the reference solution followed by the selected sample and runs the original tests. The report compares programmatic and semantic components independently: a rejected negative sample is a match, not an Agent success. Missing scores and verifier/provider errors are unscored, never matches. Any mismatch or unavailable result makes the command fail. Use `--attempts` to repeat judgment of the same samples; keep this distinct from repeated Agent executions.
