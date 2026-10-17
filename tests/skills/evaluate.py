@@ -93,6 +93,52 @@ def agent_comparison_settings(result):
     return {"config": config, "info": result.get("agent_info")}
 
 
+def saved_comparison_sources(job):
+    """Inspect sibling snapshots, without claiming they identify original execution."""
+    inputs = job.with_name(job.name + ".inputs")
+
+    def files(paths):
+        try:
+            values = {str(p.relative_to(inputs)): hashlib.sha256(p.read_bytes()).hexdigest()
+                      for p in sorted(paths) if p.is_file() and "__pycache__" not in p.parts}
+            return values or None
+        except OSError:
+            return None
+
+    try:
+        source = json.loads((inputs / "source.json").read_text())
+        image = source.get("image")
+        names = source.get("tasks")
+        valid_tasks = (isinstance(names, list) and bool(names)
+                       and all(isinstance(name, str) and name and Path(name).name == name
+                               and name not in (".", "..") for name in names))
+    except (OSError, ValueError, AttributeError):
+        image, names, valid_tasks = None, [], False
+    verifier_dirs = [inputs / "tasks" / name / "tests" for name in names] if valid_tasks else []
+    # Calibration also snapshots transformed sample tasks; include their verifiers.
+    verifier_dirs += sorted((inputs / "samples").glob("*/tests"))
+    verifier = None
+    if valid_tasks and all(directory.is_dir() and any(directory.rglob("*")) for directory in verifier_dirs):
+        verifier = files(p for directory in verifier_dirs for p in directory.rglob("*"))
+    return {
+        "support": files((inputs / "support").rglob("*.py")),
+        "dependency": files([inputs / "uv.lock"]),
+        "image": image if isinstance(image, str) and image.strip() else None,
+        "verifier": verifier,
+        "skills": files((inputs / "skills").rglob("*")),
+    }
+
+
+def saved_source_status(before, after):
+    if before is None or after is None:
+        return "unavailable"
+    # Without an execution-time inventory, different file sets cannot distinguish
+    # intentional additions/removals from lost snapshot evidence.
+    if isinstance(before, dict) and isinstance(after, dict) and before.keys() != after.keys():
+        return "unavailable"
+    return "matched" if before == after else "mismatched"
+
+
 def reward_nodes(detail, name="reward"):
     """Walk Reward Kit's native groups without inventing another score model."""
     if not isinstance(detail, dict):
@@ -233,6 +279,17 @@ def report(job, baseline=None):
         previous = Counter((r["task_name"], verdict(d, r)) for d, r in baseline_rows)
         current = Counter((r["task_name"], s) for _, r, s in rows)
         lines += ["", f"Baseline: {baseline}", "", "Outcome counts only; confirm matching tasks, graders, models and environments before interpreting a change.", ""]
+        old_sources, new_sources = saved_comparison_sources(baseline), saved_comparison_sources(job)
+        lines += ["### Saved snapshot comparison", "",
+                  "These states compare currently saved sibling .inputs evidence, not original execution identity. Matched bytes do not prove snapshot completeness or agreement with execution-time inputs. Different file inventories are unavailable because loss and intentional changes cannot be distinguished here.", "",
+                  "| Saved source | Status |", "| --- | --- |"]
+        for key, label in (("support", "Shared support"), ("dependency", "Dependency lock"),
+                           ("image", "Image identity"), ("verifier", "Task verifier inputs")):
+            lines.append(f"| {label} | {saved_source_status(old_sources[key], new_sources[key])} |")
+        lines += ["", f"Saved Skill content (separate candidate dimension): {saved_source_status(old_sources['skills'], new_sources['skills'])}.",
+                  "Skill variation alone does not make a candidate comparison incompatible; missing evidence does not establish equality.", "",
+                  "### Recorded execution comparison", "",
+                  "The checks below use retained native task checksums and executor settings. They do not authenticate the saved snapshots above or establish full experimental comparability.", ""]
         for task in sorted({k[0] for k in previous} | {k[0] for k in current}):
             before = {s: n for (t, s), n in previous.items() if t == task}
             after = {s: n for (t, s), n in current.items() if t == task}

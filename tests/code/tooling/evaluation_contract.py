@@ -525,6 +525,42 @@ class EvaluationContract(unittest.TestCase):
             self.assertIn("agent model/settings mismatch", summary)
             self.assertIn("must not be attributed to candidate improvement", summary)
 
+    def test_comparison_reports_saved_sources_separately_from_execution_identity(self):
+        probe = load("report_comparison_probe", Path(__file__).with_name("report_comparison_probe.py"))
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            job, inputs = root / "source", root / "source.inputs"
+            (job / "trial").mkdir(parents=True)
+            for name, content in {
+                "source.json": json.dumps({"tasks": ["task"], "image": "fixed-image"}),
+                "support/check.py": "# support\n", "uv.lock": "# dependency\n",
+                "tasks/task/tests/test.sh": "exit 0\n",
+                "tasks/task/tests/judge.toml": "# rubric\n",
+                "skills/rsp/SKILL.md": "Saved candidate Skill.\n",
+            }.items():
+                path = inputs / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(content)
+            result = {"task_name": "task", "task_checksum": "recorded-execution-checksum",
+                      "config": {"agent": {"name": "codex", "model_name": "fixed-model",
+                                             "skills": [str(inputs / "skills/rsp")]}},
+                      "verifier_result": {"rewards": {"reward": 1}}}
+            (job / "trial/result.json").write_text(json.dumps(result))
+            observations = probe.run(job, root / "observations")
+            self.assertEqual(len(observations), 11)
+            self.assertTrue(all(row["statusesMatchExpectations"] and row["recordedExecutionUnchanged"]
+                                for row in observations))
+            self.assertTrue(all(row["actualCounts"] == {"passed": 1} for row in observations))
+            # Legacy jobs with no saved inputs must not turn absence into a match.
+            missing = root / "missing"
+            shutil.copytree(job, missing)
+            evaluate.report(missing, job)
+            summary = (missing / "summary.md").read_text()
+            for label in ("Shared support", "Dependency lock", "Image identity", "Task verifier inputs"):
+                self.assertIn(f"| {label} | unavailable |", summary)
+            self.assertIn("candidate dimension): unavailable", summary)
+            self.assertIn("Recorded task checksum and agent model/settings match", summary)
+
     def test_routed_model_reaches_native_executor_unchanged(self):
         instance = object.__new__(agent.RoutedCodex)
         instance.model_name = "AI-HUB/gpt-6.1-sol"
