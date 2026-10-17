@@ -51,7 +51,7 @@ The [2026-10-14 evidence report](../../research/reports/2026-10-14T02-48-34Z.md#
 
 The 2026-10-15 candidate adds two controls, both using the same natural repair request. `correction-natural` keeps implementation-worker and independent-review obligations in immutable AGENTS.md rather than spelling out the sequence in the user request. `correction-continue` additionally supplies one completed ineffective correction and new decisive evidence, requiring authorized continuation instead of a premature exhausted-budget stop. Both retain real worker attribution, executed checks, immutable inputs and truthful completion criteria. They test routing under less procedural prompting and recovery with remaining budget; they do not prove entirely unprompted delegation or fresh execution of the supplied history.
 
-The Core entry/loading refinement and these controls have no live candidate results yet. Keep the earlier task snapshots and verdicts unchanged. A future authorized comparison should hold task inputs, executor/judge settings and environment fixed between the earlier and refined Skill suites, compare acceptance and restraint before time/usage, and report cached input separately from total input. Resource-load and command counts are diagnostics, not scoring gates.
+Both controls passed once in the [fixed-candidate natural-correction pair](../../research/reports/2026-10-16T14-23-01Z.md), with checks and judge scores of 1.0, native worker attribution and zero automatic retries. Their captured Skill and task files still matched current sources when checked on 2026-10-17. This is bounded behavior evidence, not repeated reliability, real interruption recovery or a matched comparison of the Core entry/loading refinement. Keep the earlier task snapshots and verdicts unchanged. A future authorized comparison should hold task inputs, executor/judge settings and environment fixed between the earlier and refined Skill suites, compare acceptance and restraint before time/usage, and report cached input separately from total input. Resource-load and command counts are diagnostics, not scoring gates.
 
 For no-Docker fixture calibration, the existing bounded-task regression machinery runs reference solutions, untouched and single-regression controls, preservation checks and native-evidence projection tests:
 
@@ -111,7 +111,14 @@ also re-aggregates retained historical sessions without rewriting original nativ
 verdicts; old agent_result totals may describe only the lexically latest child.
 Cumulative input tokens are not simultaneous context-window occupancy.
 
-Report rows separate usage origin from time scope. For regrades, executor tokens
+Report rows show total input, cached input and output tokens separately. Cached
+input is part of total input; do not add the two columns. Cache counts alone do not
+establish fees or a savings percentage, and the report calculates neither. Values
+use retained root/descendant attribution when present, otherwise native recorded
+usage. Missing cached usage remains unknown; an observed zero remains zero.
+
+Report rows separate usage origin from time scope. For regrades, all executor tokens
+(including cached input)
 and executor settings are inherited from the source execution, while seconds
 measure the current regrade trial. The recorded source-trial path or ID is shown;
 missing provenance or token values remain unknown. Do not add inherited tokens

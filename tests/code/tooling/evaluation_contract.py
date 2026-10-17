@@ -400,7 +400,7 @@ class EvaluationContract(unittest.TestCase):
             source = root / "original" / "trial"
             source.mkdir(parents=True)
             original = {"task_name": "task", "agent_info": {"name": "codex"},
-                        "agent_result": {"n_input_tokens": 197943, "n_output_tokens": 1837},
+                        "agent_result": {"n_input_tokens": 197943, "n_cache_tokens": 160000, "n_output_tokens": 1837},
                         "started_at": "2026-10-16T12:58:00Z", "finished_at": "2026-10-16T13:00:00Z",
                         "config": {"agent": {"model_name": "executor", "kwargs": {"reasoning_effort": "medium"}}},
                         "verifier_result": {"rewards": {"reward": 1}}}
@@ -419,7 +419,7 @@ class EvaluationContract(unittest.TestCase):
                 counts = evaluate.report(trial.parent)
                 self.assertEqual(counts, {status: 1})
                 summary = (trial.parent / "summary.md").read_text()
-                self.assertIn("| 197943 | 1837 | inherited source execution (not new) | 28.6 | current regrade trial |", summary)
+                self.assertIn("| 197943 | 160000 | 1837 | inherited source execution (not new) | 28.6 | current regrade trial |", summary)
                 self.assertIn("source executor (inherited)", summary)
                 self.assertIn(f"Source trial: {source}", summary)
                 self.assertIn("not new executor usage or total regrade cost", summary)
@@ -427,7 +427,7 @@ class EvaluationContract(unittest.TestCase):
                 self.assertEqual({p: p.read_bytes() for p in source_bytes}, source_bytes)
             self.assertEqual(evaluate.report(source.parent), {"passed": 1})
             fresh = (source.parent / "summary.md").read_text()
-            self.assertIn("| 197943 | 1837 | current trial | 120.0 | current trial |", fresh)
+            self.assertIn("| 197943 | 160000 | 1837 | current trial | 120.0 | current trial |", fresh)
             self.assertNotIn("source executor (inherited)", fresh)
 
     def test_regrade_report_keeps_missing_usage_and_source_unknown(self):
@@ -442,8 +442,53 @@ class EvaluationContract(unittest.TestCase):
             (trial / "result.json").write_text(json.dumps(result))
             self.assertEqual(evaluate.report(job), {"unscored": 1})
             summary = (job / "summary.md").read_text()
-            self.assertIn("| unknown | 0 | inherited source execution (not new) | unknown | current regrade trial |", summary)
+            self.assertIn("| unknown | unknown | 0 | inherited source execution (not new) | unknown | current regrade trial |", summary)
             self.assertIn("Source trial: unknown", summary)
+
+    def test_report_cached_usage_follows_retained_sessions_and_preserves_unknown(self):
+        with tempfile.TemporaryDirectory() as directory:
+            job = Path(directory) / "job"
+            trial = job / "trial"
+            sessions = trial / "agent/sessions"
+            sessions.mkdir(parents=True)
+            result = {"task_name": "task", "agent_info": {"name": "codex"},
+                      "agent_result": {"n_input_tokens": 999, "n_cache_tokens": 888, "n_output_tokens": 777},
+                      "config": {}, "verifier_result": {"rewards": {"reward": 1}}}
+            source = Path(directory) / "original"
+            source.mkdir()
+            source_bytes = json.dumps(result).encode()
+            (source / "result.json").write_bytes(source_bytes)
+            (trial / "agent/codex.txt").write_text(json.dumps({"type": "thread.started", "thread_id": "root"}))
+            for regrade in (False, True):
+                result["config"] = {"source_trial": {"action": "regrade", "type": "local", "path": str(source)}} if regrade else {}
+                native = json.dumps(result).encode()
+                (trial / "result.json").write_bytes(native)
+                origin = "inherited source execution (not new)" if regrade else "current trial"
+                for cached in (0, 40, None):
+                    for name, parent, inputs in [("root", None, 100), ("child", "root", 50), ("unrelated", None, 1000)]:
+                        meta = {"id": name, "source": {"subagent": {"thread_spawn": {"parent_thread_id": parent}}} if parent else "exec"}
+                        usage = {"input_tokens": inputs, "cached_input_tokens": cached, "output_tokens": 2}
+                        events = [{"type": "session_meta", "payload": meta},
+                                  {"type": "event_msg", "payload": {"type": "token_count", "info": {"total_token_usage": usage}}}]
+                        (sessions / (name + ".jsonl")).write_text("\n".join(json.dumps(e) for e in events))
+                    retained = {p: p.read_bytes() for p in trial.rglob("*") if p.is_file()}
+                    self.assertEqual(evaluate.report(job), {"regrade-pass" if regrade else "passed": 1})
+                    summary = (job / "summary.md").read_text()
+                    expected = f"150 | {cached * 2} | 4" if cached is not None else "unknown | unknown | unknown"
+                    self.assertIn(f"| {expected} | {origin} |", summary)
+                    self.assertIn("Cached input tokens", summary)
+                    self.assertIn("not additional tokens", summary)
+                    self.assertIn("do not establish fees or a savings percentage", summary)
+                    self.assertEqual({p: p.read_bytes() for p in retained}, retained)
+                    self.assertEqual((source / "result.json").read_bytes(), source_bytes)
+            # Native metadata remains usable when there are no retained sessions.
+            shutil.rmtree(trial / "agent")
+            for cached in (0, None):
+                result["agent_result"]["n_cache_tokens"] = cached
+                (trial / "result.json").write_text(json.dumps(result))
+                evaluate.report(job)
+                value = "unknown" if cached is None else "0"
+                self.assertIn(f"| 999 | {value} | 777 |", (job / "summary.md").read_text())
 
     def test_report_labels_comparison_limits_and_unknown_tokens(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -461,7 +506,7 @@ class EvaluationContract(unittest.TestCase):
                 (job / "trial/result.json").write_text(json.dumps(result))
             evaluate.report(jobs[1], jobs[0])
             summary = (jobs[1] / "summary.md").read_text()
-            self.assertIn("| unknown | 0 |", summary)
+            self.assertIn("| unknown | unknown | 0 |", summary)
             self.assertNotIn("mismatch", summary)
             self.assertIn("skill paths are intentionally excluded", summary)
             catalog.write_text('{"models": [{"slug": "model-a", "context_window": 512000}]}')

@@ -176,22 +176,24 @@ def report(job, baseline=None):
     lines = [f"# Evaluation {job.name}", "", "Native Harbor verdicts are authoritative. Executor usage is attributed from root/descendant session identities, excludes judges, and is not context-window occupancy.", "",
              ", ".join(f"{key}: {value}" for key, value in sorted(counts.items())) or "No completed trial records.", "",
              "Regrade tokens are inherited source-execution usage, not new executor usage or total regrade cost. Judge usage is excluded. Seconds measures the current trial, including regrading when applicable.", "",
-             "| Task | Result | Input tokens | Output tokens | Usage origin | Seconds | Time scope | Evidence |", "| --- | --- | ---: | ---: | --- | ---: | --- | --- |"]
+             "Cached input tokens are part of input tokens, not additional tokens. Cache counts alone do not establish fees or a savings percentage; no pricing or savings estimate is calculated.", "",
+             "| Task | Result | Input tokens | Cached input tokens | Output tokens | Usage origin | Seconds | Time scope | Evidence |", "| --- | --- | ---: | ---: | ---: | --- | ---: | --- | --- |"]
     for directory, result, status in rows:
         usage = result.get("agent_result") or {}
         if (directory / "agent/codex.txt").is_file():
             attributed = session_usage(directory / "agent")
             total = attributed["total"] or {}
-            usage = {"n_input_tokens": total.get("input_tokens"), "n_output_tokens": total.get("output_tokens")}
+            usage = {"n_input_tokens": total.get("input_tokens"), "n_cache_tokens": total.get("cached_input_tokens"),
+                     "n_output_tokens": total.get("output_tokens")}
         tokens = [usage.get(key) if usage.get(key) is not None else "unknown"
-                  for key in ("n_input_tokens", "n_output_tokens")]
+                  for key in ("n_input_tokens", "n_cache_tokens", "n_output_tokens")]
         elapsed = "unknown"
         if result.get("started_at") and result.get("finished_at"):
             elapsed = round((datetime.fromisoformat(result["finished_at"]) - datetime.fromisoformat(result["started_at"])).total_seconds(), 1)
         regraded = (result.get("config", {}).get("source_trial") or {}).get("action") == "regrade"
         origin = "inherited source execution (not new)" if regraded else "current trial"
         time_scope = "current regrade trial" if regraded else "current trial"
-        lines.append(f"| {result['task_name']} | {status} | {tokens[0]} | {tokens[1]} | {origin} | {elapsed} | {time_scope} | [{directory.name}]({directory.name}/result.json) |")
+        lines.append(f"| {result['task_name']} | {status} | {tokens[0]} | {tokens[1]} | {tokens[2]} | {origin} | {elapsed} | {time_scope} | [{directory.name}]({directory.name}/result.json) |")
     lines += ["", "## Per-task outcomes", "",
               "Ratios describe returned records, not planned attempts. Returned error/unscored records remain in the denominator; control matches and regrades are not fresh Skill successes.", ""]
     if counts.get("incomplete"):
