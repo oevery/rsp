@@ -13,4 +13,10 @@ The structural clean reference expects both components to accept it. The staged 
 
 All initial labels are author-proposed `candidate` expectations. A human should compare the task contract, sample artifacts and actual grading reasons before marking a label `human-reviewed`; never infer that status from agreement with another model. A disputed expectation may need task clarification, a rubric correction or a sample correction. Keep the original run and record the change through Git.
 
+The [eleven-sample human review packet](../../../research/reports/2026-10-17T07-56-47Z.md)
+places contracts, retained sample contents, candidate expectations and original
+judge reasons together. It distinguishes nine original calibrations and their
+regrades from the two later samples, documents input drift and evidence gaps,
+and leaves every human disposition pending. It does not confirm or promote labels.
+
 Repeated calibration observes judge variability on fixed artifacts. Repeated Agent execution observes task-solving variability. Neither passing code checks nor oracle/nop discrimination substitutes for these observations. The judge sees the resulting artifacts, not the sample scripts, expected scores or rationales.
