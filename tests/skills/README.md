@@ -199,6 +199,29 @@ Labels currently remain `candidate`: the author derived them from the task contr
 
 Harbor owns the child directories inside each job. Native resume deletes child directories lacking `result.json`, including auxiliary input or archive directories placed there. For a job at `tests/skills/reports/<time>`, the wrapper snapshots inputs in sibling `tests/skills/reports/<time>.inputs` and recovery evidence in sibling `tests/skills/reports/<time>.attempts/<retrytime>`. Keep these outside the managed job directory and retain them with the job.
 
+### Select exact calibration samples
+
+Use repeatable `--sample task--sample` IDs to run only named calibration samples:
+
+```sh
+mise exec -- uv run --project tests/skills python tests/skills/evaluate.py calibrate --sample review-staged--missed-finding --sample structural-audit-control--reference --allow-live
+```
+
+This command calls the semantic judge and requires separate execution authority.
+Without `--sample`, selection remains all samples under the selected tasks.
+With it, duplicate IDs select one sample once. Optional `--task` restricts eligible
+samples; an unknown ID or one outside that task scope fails before job creation.
+Task snapshots contain only the owners of selected samples. The calibration
+manifest, prepared sample directories and native job task paths identify the same
+sample set. Labels, rubrics, live authorization and zero automatic retries are unchanged.
+
+Offline regression covers CLI selection, rejection and snapshot agreement with
+simulated native process results; it makes no model or judge calls:
+
+```sh
+mise exec -- uv run --frozen --project tests/skills python tests/code/tooling/evaluation_contract.py EvaluationContract.test_calibration_cli_selects_exact_samples_and_matching_snapshots EvaluationContract.test_calibration_cli_rejects_invalid_samples_and_missing_live_authority_before_jobs
+```
+
 ## Report, resume and regrade
 
 Use a recorded job directory as `JOB`. Reporting reads existing results and writes `JOB/summary.md` without executing agents or judges; an optional baseline compares task outcome counts from native job evidence:

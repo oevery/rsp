@@ -415,10 +415,17 @@ def calibration_samples(selected):
 
 def calibrate(args):
     selected = tasks(args.task)
-    check(selected)
     samples = calibration_samples(selected)
+    if args.sample:
+        unknown = set(args.sample) - samples.keys()
+        if unknown:
+            raise ValueError(f"Unknown calibration samples within selected tasks: {sorted(unknown)}")
+        samples = {name: samples[name] for name in sorted(set(args.sample))}
     if not samples:
         raise ValueError("No judge calibration samples for the selected tasks")
+    owners = {task for task, _, _ in samples.values()}
+    selected = [task for task in selected if task in owners]
+    check(selected)
     prepare_environment(True, args.allow_live)
     job, inputs = snapshot(selected, "judge-calibration")
     definitions = []
@@ -518,6 +525,7 @@ def main():
     execute.add_argument("--concurrency", type=int, default=1)
     calibration = commands.add_parser("calibrate")
     calibration.add_argument("--task", action="append", default=[])
+    calibration.add_argument("--sample", action="append", default=[], help="Exact task--sample ID; repeat to select multiple samples within --task scope")
     calibration.add_argument("--attempts", type=int, default=1)
     calibration.add_argument("--concurrency", type=int, default=1)
     calibration.add_argument("--allow-live", action="store_true")

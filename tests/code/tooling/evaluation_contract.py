@@ -1276,6 +1276,107 @@ source "$RSP_SCRIPT"
                 self.assertNotEqual(subprocess.run(command, env=os.environ, capture_output=True).returncode, 0)
                 self.assertFalse(evidence.exists())
 
+    def test_calibration_cli_selects_exact_samples_and_matching_snapshots(self):
+        from harbor.models.job.config import JobConfig
+        wanted = {"review-staged--missed-finding", "structural-audit-control--reference"}
+        cases = [
+            (["--sample", name] for name in sorted(wanted)),
+            [["--task", "doc-export"], ["--task", "review-staged"], ["--task", "structural-audit-control"],
+             ["--sample", "review-staged--missed-finding"], ["--sample", "structural-audit-control--reference"],
+             ["--sample", "review-staged--missed-finding"]],
+            [["--task", "review-staged"]],
+            [],
+        ]
+        original_output = subprocess.check_output
+        for index, options in enumerate(cases):
+            with self.subTest(case=index), tempfile.TemporaryDirectory() as directory:
+                home = Path(directory)
+                for name in ("support", "jobs", "calibration", "tasks/doc-export", "tasks/review-staged", "tasks/structural-audit-control"):
+                    shutil.copytree(HERE.parent / name, home / name)
+                shutil.copy2(HERE.parent / "uv.lock", home / "uv.lock")
+                owners = ["doc-export", "review-staged", "structural-audit-control"] if index == 3 else ["review-staged"]
+                expected = wanted if index < 2 else {f"{owner}--{p.parent.name}" for owner in owners for p in (home / "calibration" / owner).glob("*/expected.json")}
+                calls = []
+
+                def output(command, **kwargs):
+                    if command[:3] == ["docker", "image", "inspect"]:
+                        return "test-image linux/arm64"
+                    return original_output(command, **kwargs)
+
+                def native(command, **kwargs):
+                    config_path = Path(command[-1])
+                    config = json.loads(config_path.read_text())
+                    JobConfig.model_validate(config)
+                    calls.append(config)
+                    self.assertEqual(kwargs["env"]["RSP_EVAL_OFFLINE"], "0")
+                    self.assertEqual(config["retry"], {"max_retries": 0})
+                    self.assertEqual(config["n_attempts"], 1)
+                    self.assertEqual(config["agents"], [{"name": "oracle"}])
+                    inputs = config_path.parent
+                    metadata = json.loads((inputs / "calibration.json").read_text())
+                    paths = [Path(t["path"]) for t in config["tasks"]]
+                    self.assertEqual(len(paths), len(expected))
+                    self.assertEqual({p.name for p in paths}, expected)
+                    self.assertEqual(set(metadata), expected)
+                    self.assertEqual({p.name for p in (inputs / "samples").iterdir()}, expected)
+                    owners = {case["task"] for case in metadata.values()}
+                    self.assertEqual({p.name for p in (inputs / "tasks").iterdir()}, owners)
+                    self.assertEqual(set(json.loads((inputs / "source.json").read_text())["tasks"]), owners)
+                    job = Path(config["jobs_dir"]) / config["job_name"]
+                    for path in paths:
+                        self.assertEqual(path.parent, inputs / "samples")
+                        case = metadata[path.name]
+                        task = home / "tasks" / case["task"]
+                        for source in task.rglob("*"):
+                            if source.is_file():
+                                self.assertEqual((inputs / "tasks" / case["task"] / source.relative_to(task)).read_bytes(), source.read_bytes())
+                        sample = home / "calibration" / case["task"] / path.name.removeprefix(case["task"] + "--")
+                        self.assertEqual(case, {**json.loads((sample / "expected.json").read_text()), "task": case["task"]})
+                        self.assertEqual(case["label_status"], "candidate")
+                        self.assertEqual((path / "solution/sample.sh").read_bytes(), (sample / "sample.sh").read_bytes())
+                        self.assertEqual((path / "solution/base.sh").read_bytes(), (task / "solution/solve.sh").read_bytes())
+                        for source in (task / "tests").rglob("*"):
+                            if source.is_file():
+                                self.assertEqual((path / source.relative_to(task)).read_bytes(), source.read_bytes())
+                        trial = job / path.name
+                        (trial / "verifier").mkdir(parents=True)
+                        components = [{"name": key, "detail": {"kind": "programmatic" if key == "checks" else "llm", "score": value}}
+                                      for key, value in case["expected"].items()]
+                        (trial / "verifier/reward-details.json").write_text(json.dumps({"reward": {"kind": "group", "components": components}}))
+                        (trial / "result.json").write_text(json.dumps({"task_name": path.name, "agent_info": {"name": "oracle"},
+                                                                      "verifier_result": {"rewards": {"reward": 0}}}))
+                    return 0
+
+                argv = ["evaluate.py", "calibrate", "--allow-live", *[arg for pair in options for arg in pair]]
+                with (patch.object(evaluate, "HOME", home), patch.object(evaluate, "check_image_inputs"),
+                      patch.dict(os.environ, {"RSP_EVAL_OFFLINE": "0"}), patch("sys.argv", argv),
+                      patch.object(subprocess, "check_output", side_effect=output),
+                      patch.object(subprocess, "call", side_effect=native)):
+                    self.assertEqual(evaluate.main(), 0)
+                self.assertEqual(len(calls), 1)
+
+    def test_calibration_cli_rejects_invalid_samples_and_missing_live_authority_before_jobs(self):
+        cases = [
+            (["--sample", "review-staged--absent", "--allow-live"], "0", "Unknown calibration samples"),
+            (["--sample", "review-staged--reference", "--sample", "review-staged--absent", "--allow-live"], "0", "Unknown calibration samples"),
+            (["--task", "doc-export", "--sample", "review-staged--reference", "--allow-live"], "0", "Unknown calibration samples"),
+            (["--sample", "review-staged--reference"], "0", "requires --allow-live"),
+            (["--sample", "review-staged--reference", "--allow-live"], "1", "Offline calibration"),
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            home = Path(directory)
+            for name in ("jobs", "calibration", "tasks/doc-export", "tasks/review-staged"):
+                shutil.copytree(HERE.parent / name, home / name)
+            for options, offline, message in cases:
+                with (self.subTest(options=options, offline=offline), patch.object(evaluate, "HOME", home),
+                      patch.dict(os.environ, {"RSP_EVAL_OFFLINE": offline}),
+                      patch("sys.argv", ["evaluate.py", "calibrate", *options]),
+                      patch.object(subprocess, "call", side_effect=AssertionError("Unexpected Harbor execution")) as native):
+                    with self.assertRaisesRegex(ValueError, message):
+                        evaluate.main()
+                    native.assert_not_called()
+                    self.assertFalse((home / "reports").exists())
+
     def test_judge_calibration_uses_native_oracle_without_disabling_semantic_grading(self):
         from harbor.models.job.config import JobConfig
         original_output = subprocess.check_output
@@ -1315,7 +1416,7 @@ source "$RSP_SCRIPT"
                     (trial / "result.json").write_text(json.dumps({"task_name": path.name, "agent_info": {"name": "oracle"}, "config": trial_config,
                          "verifier_result": {"rewards": {"reward": 0.5}}}))
                 return 0
-            args = argparse_namespace(task=["doc-export"], allow_live=True, attempts=1, concurrency=1)
+            args = argparse_namespace(task=["doc-export"], sample=[], allow_live=True, attempts=1, concurrency=1)
             with (patch.object(evaluate, "HOME", home), patch.dict(os.environ, {"RSP_EVAL_OFFLINE": "0"}),
                   patch.object(evaluate, "check_image_inputs"),
                   patch.object(subprocess, "check_output", side_effect=output),
