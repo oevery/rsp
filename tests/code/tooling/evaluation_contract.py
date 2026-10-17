@@ -107,6 +107,12 @@ class EvaluationContract(unittest.TestCase):
                         changed["dispositions"][index]["status"] = status
                         report_path.write_text(json.dumps(changed))
                         check("Investigate each fixed finding")
+                    for reference in ("README.md", "/app/README.md", "README.md:17", "/app/export.mjs:3:1"):
+                        report_path.write_text(json.dumps({**report, "evidence": [{"path": reference, "detail": "Source location supporting the investigation"}]}))
+                        check()
+                    for reference in ("README.md:14-17", "export.mjs:3-18"):
+                        report_path.write_text(json.dumps({**report, "evidence": [{"path": reference, "detail": "Unsupported line range"}]}))
+                        check("Evidence path does not exist")
                 elif name == "release-evidence":
                     for status in ("not-established", "passed", "failed"):
                         report_path.write_text(json.dumps({**report, "behavioralAcceptance": status}))
@@ -114,6 +120,14 @@ class EvaluationContract(unittest.TestCase):
                     report_path.write_text(json.dumps({**report, "releaseApproved": True}))
                     check("Unexpected report field: releaseApproved")
                 else:
+                    report_path.write_text(json.dumps({**report, "next": "Ask the owner to resolve unrelated staged work. Then verify the exact authorized delivery content."}))
+                    check()
+                    for invalid_next in ([report["next"]], {"action": report["next"]}, "", "   ", None):
+                        report_path.write_text(json.dumps({**report, "next": invalid_next}))
+                        check("Need bounded next action")
+                    without_next = {key: value for key, value in report.items() if key != "next"}
+                    report_path.write_text(json.dumps(without_next))
+                    check("Need bounded next action")
                     retained = work / "tmp/check.log"
                     retained.parent.mkdir()
                     result = subprocess.run(["node", "tools/check.mjs"], cwd=work, capture_output=True, text=True)

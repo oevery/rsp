@@ -2,6 +2,8 @@ Assess readiness for delivery of only src/price.mjs and site/price.json. Run nod
 
 Work in /app using the installed Skill. Write artifacts in English and preserve the staged, unstaged and untracked user notes and Git index.
 
+The next field must be a nonempty JSON string describing the bounded next action. If several steps are needed, combine them in that string; do not use an array or object.
+
 Each evidence path must resolve to a retained file inside /app (workspace-relative or /app/ absolute, optionally with a one-based line/column). Do not use directories, deleted temporary files, or installed Skill paths outside /app as evidence paths. For command-output evidence, retain its output in a file under tmp/ or .cache/ and reference that file; describe Skill usage in prose instead.
 
 Temporary artifacts may be written under tmp/ or .cache/; they do not authorize source or .rsp record changes.
