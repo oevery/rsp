@@ -12,6 +12,10 @@ import tempfile
 import unittest
 from unittest.mock import AsyncMock, patch
 
+# This suite never needs remote pricing metadata, including during imports and
+# verifier subprocess startup. Keep direct invocation offline as well as Vitest.
+os.environ["LITELLM_LOCAL_MODEL_COST_MAP"] = "True"
+
 from harbor.agents.installed.codex import Codex
 from harbor.environments.base import ExecResult
 from harbor.models.agent.context import AgentContext

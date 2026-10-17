@@ -2,11 +2,11 @@ import { spawnSync } from 'node:child_process'
 import { expect, it } from 'vitest'
 
 it('keeps calibration, unavailable grading and retry evidence distinct from acceptance', () => {
-  const result = spawnSync('uv', ['run', '--frozen', '--project', 'tests/skills', 'python', 'tests/code/tooling/evaluation_contract.py'], {
+  const result = spawnSync('uv', ['run', '--frozen', '--project', 'tests/skills', 'python', 'tests/code/tooling/evaluation_contract.py', '-v'], {
     encoding: 'utf8',
-    // Includes all fixture calibrations and negative controls; keep a bounded
-    // budget large enough for cold Python startup and the expanded catalog.
-    timeout: 90000,
+    // The 43-method suite measured 118.5s with local metadata; preserve all
+    // fixture/negative controls and allow bounded cold-start headroom.
+    timeout: 180000,
   })
   expect(result.status, result.stdout + result.stderr).toBe(0)
-}, 95000)
+}, 185000)

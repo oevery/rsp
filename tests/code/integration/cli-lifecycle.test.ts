@@ -186,6 +186,8 @@ describe('public CLI lifecycle', () => {
     expect(existsSync(brief)).toBe(false)
   }, 15000)
 
+  // These multi-process paths exceeded the default 5s in retained full-suite runs.
+  // Match the existing bounded budget for the neighboring Group lifecycle test.
   it('requires fresh visible Group recovery evidence and refuses archive replay', () => {
     const { directory, brief } = groupProject()
     archiveGroupChildren(directory)
@@ -227,7 +229,7 @@ describe('public CLI lifecycle', () => {
     expect(replay.status).not.toBe(0)
     expect(existsSync(brief)).toBe(false)
     expect(readFileSync(archivedBrief, 'utf8')).toBe(retained)
-  })
+  }, 15000)
 
   it('ignores hidden and example Change structure without losing visible required evidence', () => {
     const directory = project()
@@ -350,7 +352,7 @@ describe('public CLI lifecycle', () => {
     run(directory, 'status', '--json')
     expect(readFileSync(join(directory, '.rsp/changes/keep-open.md'), 'utf8')).toBe(before)
     expect(JSON.parse(run(directory, 'config', '--json')).workflow).toEqual({ delegation: 'off', closeout: 'auto' })
-  })
+  }, 15000)
 
   it('blocks unfinished archive, permits completed work with optional coverage, and preserves history on reopen', () => {
     const directory = project()

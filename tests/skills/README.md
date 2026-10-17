@@ -161,6 +161,27 @@ observations and local process results from unmeasured model/token improvements.
 
 The retired custom runner's raw records, workspaces, preparation probes and temporary archives were removed on 2026-10-08. Selected historical summaries and verdicts remain at their original paths; they cannot supply replay or regrade evidence after raw inputs are removed. Historical retention statements predate this cleanup. The framework comparison experiment remains intact for its research report. Retain native Harbor jobs with their sibling inputs and recovery backups; the local reports/README.md describes the cleanup boundary.
 
+## Offline commit-stop controls
+
+The [commit-stop regression](../code/tooling/commit-stop-boundaries.test.js) runs
+two bounded scenarios in disposable Git repositories: an index changed after its
+reviewed snapshot, and a real commit rejected by a pre-commit hook after modifying
+the worktree. Correct stopping preserves the observed state and failed command.
+Negative controls attempt continuation, index repair, retry, hook bypass followed
+by a repair commit, or cleanup hiding effects. Ordered harness-owned command
+receipts reject continuation even when a later reset or cleanup restores the
+expected final state. All these Git effects are isolated fixture actions.
+
+```sh
+mise exec -- pnpm exec vitest run tests/code/tooling/commit-stop-boundaries.test.js
+```
+
+These controls test real Git effects and fixture discrimination, not a production
+delivery wrapper or autonomous Skill behavior. Harness receipts are not native
+worker evidence. No model, judge, new native task, Core rule or Commit rule is
+introduced. Hook failure leaves HEAD/index unchanged but changes the worktree;
+unchanged HEAD alone cannot establish absence of side effects.
+
 ## Interrupted worker recovery fixture
 
 [interruption-recovery](tasks/interruption-recovery/instruction.md) generates partial
