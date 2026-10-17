@@ -6,6 +6,7 @@ import ts from 'typescript'
 import { expect, it } from 'vitest'
 
 const corpus = JSON.parse(readFileSync(new URL('../fixtures/command-construction/native-calls.json', import.meta.url), 'utf8'))
+const rawChain = JSON.parse(readFileSync(new URL('../fixtures/command-construction/raw-template-chain.json', import.meta.url), 'utf8'))
 
 // Compile only: captured source can write files, spawn workers and touch Git.
 // Never run this Script, evaluate an AST, or execute a captured command.
@@ -22,9 +23,20 @@ function commands(input) {
       expect(ts.isObjectLiteralExpression(argument)).toBe(true)
       const property = argument.properties.find(item => ts.isPropertyAssignment(item) && item.name.getText(source) === 'cmd')
       expect(property, 'Only reviewed literal cmd arguments are supported').toBeDefined()
-      expect(ts.isStringLiteral(property.initializer) || ts.isNoSubstitutionTemplateLiteral(property.initializer)).toBe(true)
-      // The parser exposes the cooked literal without executing JavaScript.
-      found.push(property.initializer.text)
+      const value = property.initializer
+      if (ts.isTaggedTemplateExpression(value)) {
+        expect(value.tag.getText(source), 'Only the reviewed String.raw tag is supported').toBe('String.raw')
+        expect(ts.isNoSubstitutionTemplateLiteral(value.template), 'Interpolated templates must not be evaluated').toBe(true)
+        const raw = value.template.getText(source).slice(1, -1)
+        // Restrict this decoder to LF sources; JS normalizes CR/CRLF in templates.
+        expect(raw.includes('\r'), 'Only LF raw template sources are supported').toBe(false)
+        found.push(raw)
+      }
+      else {
+        expect(ts.isStringLiteral(value) || ts.isNoSubstitutionTemplateLiteral(value), 'Only reviewed literal cmd arguments are supported').toBe(true)
+        // The parser exposes the cooked literal without executing JavaScript.
+        found.push(value.text)
+      }
     }
     ts.forEachChild(node, visit)
   }
@@ -102,5 +114,54 @@ it('preserves Python escape bytes when a corrected command is serialized as a Ja
     compileWrapper(wrapper)
     expect(commands(wrapper)).toEqual([corrected])
     expect(diagnose(wrapper)).toMatchObject({ layer: 'none', pythonBodies: 1 })
+  }
+})
+
+it('reproduces the retained wrapper-to-Python failure chain and both raw-template successors', () => {
+  const outcomes = []
+  for (const sample of rawChain.cases) {
+    expect(createHash('sha256').update(sample.input).digest('hex')).toBe(sample.inputSha256)
+    const result = diagnose(sample.input)
+    expect(result.layer, sample.callId).toBe(sample.expectedLayer)
+    if (sample.dispatchedCommand === null) {
+      expect(result.layer).toBe('javascript')
+      expect(sample.exitCode).toBeNull()
+      expect(JSON.stringify(sample.toolOutput)).toContain('Invalid or unexpected token')
+    }
+    else {
+      // Native CommandExecution bytes are the independent decoding oracle.
+      expect(commands(sample.input)).toEqual([sample.dispatchedCommand])
+      expect(sample.exitCode).toBe(result.layer === 'python' ? 1 : 0)
+      if (result.layer === 'python')
+        expect(result.message).toContain('unterminated string literal')
+      else
+        expect(result.pythonBodies).toBe(1)
+    }
+    outcomes.push(result.layer)
+  }
+  expect(outcomes).toEqual(['javascript', 'python', 'none', 'none'])
+  expect(rawChain.cases.map(sample => sample.nextCallId)).toEqual([...rawChain.cases.slice(1).map(sample => sample.callId), null])
+})
+
+it('keeps raw escape bytes without evaluating interpolations, tags or command expressions', () => {
+  const tick = String.fromCharCode(96)
+  const raw = String.raw`printf '%s' '\n' '\\' '\u0041' '\x41'`
+  const wrapper = `text(await tools.exec_command({cmd: String.raw${tick}${raw}${tick}}));`
+  compileWrapper(wrapper)
+  expect(commands(wrapper)).toEqual([raw])
+  const encoded = `text(await tools.exec_command({cmd: ${JSON.stringify(raw)}}));`
+  expect(commands(encoded)).toEqual([raw])
+  const interpolation = ['$', '{danger()}'].join('')
+  for (const expression of [
+    `String.raw${tick}echo ${interpolation}${tick}`,
+    `${tick}echo ${interpolation}${tick}`,
+    `otherTag${tick}echo safe${tick}`,
+    'String.raw({raw: [danger()]})',
+    'danger()',
+    `String.raw${tick}echo first\r\necho second${tick}`,
+  ]) {
+    const input = `text(await tools.exec_command({cmd: ${expression}}));`
+    compileWrapper(input)
+    expect(() => commands(input)).toThrow()
   }
 })
