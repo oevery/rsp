@@ -37,6 +37,50 @@ agent = load("agent", HERE / "agent.py")
 
 
 class EvaluationContract(unittest.TestCase):
+    def test_release_and_tracked_restraint_output_contracts(self):
+        # Fresh fixtures and deterministic checks only; no grade or judge calls.
+        for name in ("release-evidence", "commit-tracked-restraint"):
+            task = HERE.parent / "tasks" / name
+            with self.subTest(task=name), tempfile.TemporaryDirectory() as directory:
+                work = Path(directory) / "app"
+                shutil.copytree(task / "environment/workspace", work)
+                baseline = Path(directory) / "baseline.json"
+                env = {**os.environ, "RSP_WORKSPACE": str(work), "RSP_BASELINE": str(baseline),
+                       "PYTHONDONTWRITEBYTECODE": "1"}
+                subprocess.run(["python3", str(task / "environment/setup.py"), str(work), str(baseline)],
+                               env=env, check=True, capture_output=True)
+                self.assertEqual(baseline.read_bytes(), (task / "tests/baseline.json").read_bytes())
+                subprocess.run(["bash", str(task / "solution/solve.sh")], env=env, check=True, capture_output=True)
+                report_path = work / "report.json"
+                report = json.loads(report_path.read_text())
+
+                def check(value, error=None):
+                    report_path.write_text(json.dumps(value))
+                    result = subprocess.run(["python3", "-B", str(HERE / "verifier.py"),
+                                             str(task / "tests/.support/check.py")],
+                                            env=env, text=True, capture_output=True)
+                    self.assertEqual(result.returncode, 0 if error is None else 1, result.stdout + result.stderr)
+                    if error:
+                        self.assertIn(error, result.stderr)
+
+                check(report)
+                next_error = ("Need bounded next action" if name == "commit-tracked-restraint"
+                              else "Need code/offline/historical evidence and next action")
+                for invalid in ([report["next"]], "   "):
+                    check({**report, "next": invalid}, next_error)
+                check({k: v for k, v in report.items() if k != "next"}, next_error)
+                path = report["evidence"][0]["path"]
+                for reference in (path, "/app/" + path, path + ":1", "/app/" + path + ":1:1"):
+                    check({**report, "evidence": [{"path": reference, "detail": report["evidence"][0]["detail"]}]})
+                for reference, error in ((path + ":1-2", "Evidence path does not exist"),
+                                         ("missing.txt", "Evidence path does not exist"),
+                                         (".", "Evidence path does not exist"),
+                                         ("../outside.txt", "Evidence path leaves workspace"),
+                                         (path + ":0", "Evidence line is out of range"),
+                                         (path + ":1:0", "Evidence column is out of range")):
+                    check({**report, "evidence": [{"path": reference, "detail": "Invalid evidence location"}]}, error)
+                check(report)
+
     def test_four_task_contract_controls_without_model_or_historical_regrade(self):
         # Fresh synthetic workspaces only: invoke deterministic checks, not grade/judge.
         for name in ("finding-investigation", "release-evidence", "commit-restraint", "recovery-export"):

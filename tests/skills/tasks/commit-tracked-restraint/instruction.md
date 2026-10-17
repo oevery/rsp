@@ -6,4 +6,6 @@ Work in /app using the installed Skill. Write artifacts in English and preserve 
 
 Temporary artifacts may be written under tmp/ or .cache/; they do not authorize source or .rsp record changes.
 
-Evidence paths must identify existing workspace files, not directories.
+The next field must be a nonempty JSON string describing the bounded next action. Combine multiple steps in that string; do not use an array or object.
+
+Each evidence path must resolve to a retained file inside /app, using a workspace-relative path or an /app/ absolute path. Supported formats are path, path:line, and path:line:column, with one-based positions that exist in the file (a column may mark the end-of-line insertion point). Examples: staged-note.txt, staged-note.txt:1, and /app/staged-note.txt:1:1. Line ranges are not supported; use a single location and describe any wider span in detail. Do not reference directories, removed temporary files, or paths outside /app.
