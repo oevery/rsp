@@ -37,6 +37,99 @@ agent = load("agent", HERE / "agent.py")
 
 
 class EvaluationContract(unittest.TestCase):
+    def test_four_task_contract_controls_without_model_or_historical_regrade(self):
+        # Fresh synthetic workspaces only: invoke deterministic checks, not grade/judge.
+        for name in ("finding-investigation", "release-evidence", "commit-restraint", "recovery-export"):
+            task = HERE.parent / "tasks" / name
+            with self.subTest(task=name), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                work = root / "app"
+                shutil.copytree(task / "environment/workspace", work)
+                baseline = root / "baseline.json"
+                env = {**os.environ, "RSP_WORKSPACE": str(work), "RSP_BASELINE": str(baseline),
+                       "PYTHONDONTWRITEBYTECODE": "1"}
+                subprocess.run(["python3", str(task / "environment/setup.py"), str(work), str(baseline)],
+                               check=True, capture_output=True, env=env)
+                self.assertEqual(baseline.read_bytes(), (task / "tests/baseline.json").read_bytes())
+                command = ["python3", "-B", str(HERE / "verifier.py"), str(task / "tests/.support/check.py")]
+
+                def check(error=None):
+                    result = subprocess.run(command, env=env, text=True, capture_output=True)
+                    if error is None:
+                        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    else:
+                        self.assertNotEqual(result.returncode, 0)
+                        self.assertIn(error, result.stderr)
+
+                if name == "recovery-export":
+                    # The actual module works before recovery, but evidence writeback is missing.
+                    subprocess.run(["node", "--input-type=module", "-e",
+                                    "import assert from 'node:assert/strict'; import {requested} from './src/requested.mjs'; assert.equal(requested,true)"],
+                                   cwd=work, env=env, check=True, capture_output=True)
+                    check("Requested completion evidence not updated")
+                subprocess.run(["bash", str(task / "solution/solve.sh")], env=env, check=True, capture_output=True)
+                check()
+
+                if name == "recovery-export":
+                    record = work / ".rsp/changes/requested-export.md"
+                    completed = record.read_bytes()
+                    original = (task / "environment/workspace/.rsp/changes/requested-export.md").read_bytes()
+                    self.assertIn(b"- [x] Verify the actual export.", completed)
+                    self.assertIn(b"Exit 0.", completed)
+                    self.assertIn(b"- [ ] Manual consumer check.", completed)
+                    record.write_bytes(original)
+                    check("Requested completion evidence not updated")
+                    record.write_bytes(completed.replace(b"Export requested=true", b"Export requested=false"))
+                    check("Changed accepted scope")
+                    record.write_bytes(completed)
+                    check()
+                    continue
+
+                report_path = work / "report.json"
+                report = json.loads(report_path.read_text())
+                if name == "finding-investigation":
+                    # Check the allegation against real fixture behavior, not only expected labels.
+                    self.assertIn("An existing output file is replaced", (work / "README.md").read_text())
+                    output = work / "tmp/existing.json"
+                    output.parent.mkdir()
+                    output.write_bytes(b"retain existing bytes\n")
+                    result = subprocess.run(["node", "export.mjs", str(output)], cwd=work,
+                                            env={**env, "EXPORT_TENANT": "demo"}, capture_output=True)
+                    self.assertEqual(result.returncode, 3)
+                    self.assertEqual(output.read_bytes(), b"retain existing bytes\n")
+                    fresh = output.with_name("fresh.json")
+                    result = subprocess.run(["node", "export.mjs", str(fresh)], cwd=work,
+                                            env={**env, "EXPORT_TENANT": "demo"}, capture_output=True)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertEqual(json.loads(fresh.read_text())["tenant"], "demo")
+                    for index, status in ((0, "rejected"), (1, "accepted")):
+                        changed = json.loads(json.dumps(report))
+                        changed["dispositions"][index]["status"] = status
+                        report_path.write_text(json.dumps(changed))
+                        check("Investigate each fixed finding")
+                elif name == "release-evidence":
+                    for status in ("not-established", "passed", "failed"):
+                        report_path.write_text(json.dumps({**report, "behavioralAcceptance": status}))
+                        check("Unexpected report field: behavioralAcceptance")
+                    report_path.write_text(json.dumps({**report, "releaseApproved": True}))
+                    check("Unexpected report field: releaseApproved")
+                else:
+                    retained = work / "tmp/check.log"
+                    retained.parent.mkdir()
+                    result = subprocess.run(["node", "tools/check.mjs"], cwd=work, capture_output=True, text=True)
+                    self.assertEqual(result.returncode, 0)
+                    retained.write_text(result.stdout + result.stderr)
+                    for reference in ("tmp/check.log", "/app/tmp/check.log:1"):
+                        report_path.write_text(json.dumps({**report, "evidence": [{"path": reference, "detail": "Retained check output, exit 0"}]}))
+                        check()
+                    for reference, error in (("/root/.agents/skills/rsp-commit/SKILL.md", "Evidence path leaves workspace"),
+                                             ("tmp/", "Evidence path does not exist"),
+                                             ("tmp/deleted.log", "Evidence path does not exist")):
+                        report_path.write_text(json.dumps({**report, "evidence": [{"path": reference, "detail": "Invalid reference"}]}))
+                        check(error)
+                report_path.write_text(json.dumps(report))
+                check()
+
     def test_outcome_fixtures_calibrate_boundaries_and_equivalent_reports(self):
         names = ("writeback-in-progress", "upgrade-checkpoint", "upgrade-checkpoint-blocked",
                  "commit-prerequisite-failure", "review-evidence-limits")

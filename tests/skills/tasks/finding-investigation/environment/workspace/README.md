@@ -14,6 +14,6 @@ From this repository directory, run:
 EXPORT_TENANT=demo node export.mjs snapshot.json
 ```
 
-Success prints `Wrote 1 record.` and creates snapshot.json containing the tenant, daily Job name, and one record. A missing tenant or output argument exits with code 2. An existing file exits with code 3 and remains unchanged; choose a fresh path for a new snapshot. There is no automatic retry.
+Success prints `Wrote 1 record.` and creates snapshot.json containing the tenant, daily Job name, and one record. A missing tenant or output argument exits with code 2. An existing output file is replaced by the new snapshot. There is no automatic retry.
 
 See [domain terms](CONTEXT.md) and the [export contract](spec.md).
