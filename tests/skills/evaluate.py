@@ -175,7 +175,8 @@ def report(job, baseline=None):
             counts["incomplete"] = expected - len(rows)
     lines = [f"# Evaluation {job.name}", "", "Native Harbor verdicts are authoritative. Executor usage is attributed from root/descendant session identities, excludes judges, and is not context-window occupancy.", "",
              ", ".join(f"{key}: {value}" for key, value in sorted(counts.items())) or "No completed trial records.", "",
-             "| Task | Result | Input tokens | Output tokens | Seconds | Evidence |", "| --- | --- | ---: | ---: | ---: | --- |"]
+             "Regrade tokens are inherited source-execution usage, not new executor usage or total regrade cost. Judge usage is excluded. Seconds measures the current trial, including regrading when applicable.", "",
+             "| Task | Result | Input tokens | Output tokens | Usage origin | Seconds | Time scope | Evidence |", "| --- | --- | ---: | ---: | --- | ---: | --- | --- |"]
     for directory, result, status in rows:
         usage = result.get("agent_result") or {}
         if (directory / "agent/codex.txt").is_file():
@@ -187,7 +188,10 @@ def report(job, baseline=None):
         elapsed = "unknown"
         if result.get("started_at") and result.get("finished_at"):
             elapsed = round((datetime.fromisoformat(result["finished_at"]) - datetime.fromisoformat(result["started_at"])).total_seconds(), 1)
-        lines.append(f"| {result['task_name']} | {status} | {tokens[0]} | {tokens[1]} | {elapsed} | [{directory.name}]({directory.name}/result.json) |")
+        regraded = (result.get("config", {}).get("source_trial") or {}).get("action") == "regrade"
+        origin = "inherited source execution (not new)" if regraded else "current trial"
+        time_scope = "current regrade trial" if regraded else "current trial"
+        lines.append(f"| {result['task_name']} | {status} | {tokens[0]} | {tokens[1]} | {origin} | {elapsed} | {time_scope} | [{directory.name}]({directory.name}/result.json) |")
     lines += ["", "## Per-task outcomes", "",
               "Ratios describe returned records, not planned attempts. Returned error/unscored records remain in the denominator; control matches and regrades are not fresh Skill successes.", ""]
     if counts.get("incomplete"):
@@ -203,7 +207,12 @@ def report(job, baseline=None):
         model = config.get("model_name") or (result.get("agent_info") or {}).get("name", "unknown")
         effort = settings.get("reasoning_effort", "unknown")
         skills = ", ".join(Path(p).name for p in config.get("skills", [])) or "none recorded"
-        lines.append(f"- {directory.name}: executor `{model}`, effort `{effort}`; Skills: {skills}.")
+        source = result.get("config", {}).get("source_trial") or {}
+        executor_label = "source executor (inherited)" if source.get("action") == "regrade" else "executor"
+        lines.append(f"- {directory.name}: {executor_label} `{model}`, effort `{effort}`; Skills: {skills}.")
+        if source.get("action") == "regrade":
+            reference = source.get("path") or source.get("trial_id") or "unknown"
+            lines.append(f"  Source trial: {reference}. Executor metadata and usage are inherited; this regrade does not rerun the executor.")
         if case := calibration_case(directory, result):
             lines.append(f"  Judge calibration: {case['label_status']}; expected components {case['expected']}. This is not Skill acceptance or human validation.")
         if exception := result.get("exception_info"):

@@ -390,6 +390,57 @@ class EvaluationContract(unittest.TestCase):
             reward.write_text('[scoring.checks]\naggregation="threshold"\nthreshold=1\n')
             evaluate.check([task])
 
+    def test_report_separates_inherited_usage_from_current_regrade_duration(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "original" / "trial"
+            source.mkdir(parents=True)
+            original = {"task_name": "task", "agent_info": {"name": "codex"},
+                        "agent_result": {"n_input_tokens": 197943, "n_output_tokens": 1837},
+                        "started_at": "2026-10-16T12:58:00Z", "finished_at": "2026-10-16T13:00:00Z",
+                        "config": {"agent": {"model_name": "executor", "kwargs": {"reasoning_effort": "medium"}}},
+                        "verifier_result": {"rewards": {"reward": 1}}}
+            (source / "result.json").write_text(json.dumps(original))
+            (source.parent / "summary.md").write_text("Original report must remain unchanged.\n")
+            source_bytes = {p: p.read_bytes() for p in source.parent.rglob("*") if p.is_file()}
+            trial = root / "regrade" / "trial"
+            trial.mkdir(parents=True)
+            result = json.loads(json.dumps(original))
+            result.update(agent_execution=None, started_at="2026-10-16T14:01:00Z", finished_at="2026-10-16T14:01:28.600000Z")
+            result["config"]["source_trial"] = {"action": "regrade", "type": "local", "path": str(source)}
+            for reward, status in [(1, "regrade-pass"), (0.5, "regrade-fail")]:
+                result["verifier_result"]["rewards"]["reward"] = reward
+                native = json.dumps(result).encode()
+                (trial / "result.json").write_bytes(native)
+                counts = evaluate.report(trial.parent)
+                self.assertEqual(counts, {status: 1})
+                summary = (trial.parent / "summary.md").read_text()
+                self.assertIn("| 197943 | 1837 | inherited source execution (not new) | 28.6 | current regrade trial |", summary)
+                self.assertIn("source executor (inherited)", summary)
+                self.assertIn(f"Source trial: {source}", summary)
+                self.assertIn("not new executor usage or total regrade cost", summary)
+                self.assertEqual((trial / "result.json").read_bytes(), native)
+                self.assertEqual({p: p.read_bytes() for p in source_bytes}, source_bytes)
+            self.assertEqual(evaluate.report(source.parent), {"passed": 1})
+            fresh = (source.parent / "summary.md").read_text()
+            self.assertIn("| 197943 | 1837 | current trial | 120.0 | current trial |", fresh)
+            self.assertNotIn("source executor (inherited)", fresh)
+
+    def test_regrade_report_keeps_missing_usage_and_source_unknown(self):
+        with tempfile.TemporaryDirectory() as directory:
+            job = Path(directory)
+            trial = job / "trial"
+            trial.mkdir()
+            result = {"task_name": "task", "agent_info": {"name": "codex"}, "agent_execution": None,
+                      "agent_result": {"n_input_tokens": None, "n_output_tokens": 0},
+                      "config": {"source_trial": {"action": "regrade", "type": "local"}},
+                      "verifier_result": {"rewards": {"reward": 1}}}
+            (trial / "result.json").write_text(json.dumps(result))
+            self.assertEqual(evaluate.report(job), {"unscored": 1})
+            summary = (job / "summary.md").read_text()
+            self.assertIn("| unknown | 0 | inherited source execution (not new) | unknown | current regrade trial |", summary)
+            self.assertIn("Source trial: unknown", summary)
+
     def test_report_labels_comparison_limits_and_unknown_tokens(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

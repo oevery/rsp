@@ -111,6 +111,15 @@ also re-aggregates retained historical sessions without rewriting original nativ
 verdicts; old agent_result totals may describe only the lexically latest child.
 Cumulative input tokens are not simultaneous context-window occupancy.
 
+Report rows separate usage origin from time scope. For regrades, executor tokens
+and executor settings are inherited from the source execution, while seconds
+measure the current regrade trial. The recorded source-trial path or ID is shown;
+missing provenance or token values remain unknown. Do not add inherited tokens
+again as new executor usage. Judge usage is excluded, so these numbers do not
+establish total regrade cost or imply that regrading is free. Generating a report
+still writes that job's summary; inspect a disposable copy when historical reports
+must remain unchanged.
+
 The suite comparison selects completion-boundary and its control, direct grouped
 Review in completion-group-control, verify-boundary, commit-restraint,
 native-coordination, and structural-audit with structural-audit-control. The
