@@ -130,6 +130,17 @@ Judge, provider and verifier errors are unavailable evidence, not graded task fa
 
 Jobs and raw evidence live under ignored `tests/skills/reports/`. Preserve historical records without translating their verdicts into current acceptance. Private retention is not a secret-scrubbing guarantee. Keep selected sanitized conclusions in time-named Markdown under `research/reports/`.
 
+For command-construction diagnosis, inspect root and descendant native session
+call/results as well as codex.txt: JavaScript wrapper failures can occur before a
+shell command is dispatched. Keep those failures, actual command exits,
+contract-defined expected rejections and output truncation separate; task verdicts
+and executor token accounting are different evidence. The retained
+[offline regression](../code/tooling/command-construction.test.js) parses exact
+failed calls and successful successor controls without executing their contents.
+Run it with `mise exec -- pnpm exec vitest run tests/code/tooling/command-construction.test.js`.
+The [classification report](../../research/reports/2026-10-17T05-52-00Z.md) records
+provenance and limits; syntax passes establish neither safe replay nor model success.
+
 The retired custom runner's raw records, workspaces, preparation probes and temporary archives were removed on 2026-10-08. Selected historical summaries and verdicts remain at their original paths; they cannot supply replay or regrade evidence after raw inputs are removed. Historical retention statements predate this cleanup. The framework comparison experiment remains intact for its research report. Retain native Harbor jobs with their sibling inputs and recovery backups; the local reports/README.md describes the cleanup boundary.
 
 ## Interrupted worker recovery fixture
