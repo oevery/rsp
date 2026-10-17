@@ -141,6 +141,15 @@ Run it with `mise exec -- pnpm exec vitest run tests/code/tooling/command-constr
 The [classification report](../../research/reports/2026-10-17T05-52-00Z.md) records
 provenance and limits; syntax passes establish neither safe replay nor model success.
 
+The [evidence-reading regression](../code/tooling/evidence-reading.test.js) exercises
+two additional offline controls: reconstructing stop/continuation from selected
+native fields with source locations, and attributing a real check's exit code on
+its first separate execution. Full original logs remain retained; selected fields
+do not replace wider review or separately required independent checks.
+Run `mise exec -- pnpm exec vitest run tests/code/tooling/evidence-reading.test.js`.
+The [result record](../../research/reports/2026-10-17T06-38-29Z.md) separates byte-size
+observations and local process results from unmeasured model/token improvements.
+
 The retired custom runner's raw records, workspaces, preparation probes and temporary archives were removed on 2026-10-08. Selected historical summaries and verdicts remain at their original paths; they cannot supply replay or regrade evidence after raw inputs are removed. Historical retention statements predate this cleanup. The framework comparison experiment remains intact for its research report. Retain native Harbor jobs with their sibling inputs and recovery backups; the local reports/README.md describes the cleanup boundary.
 
 ## Interrupted worker recovery fixture
