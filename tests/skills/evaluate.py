@@ -114,12 +114,16 @@ def saved_comparison_sources(job):
                                and name not in (".", "..") for name in names))
     except (OSError, ValueError, AttributeError):
         image, names, valid_tasks = None, [], False
-    verifier_dirs = [inputs / "tasks" / name / "tests" for name in names] if valid_tasks else []
-    # Calibration also snapshots transformed sample tasks; include their verifiers.
-    verifier_dirs += sorted((inputs / "samples").glob("*/tests"))
     verifier = None
-    if valid_tasks and all(directory.is_dir() and any(directory.rglob("*")) for directory in verifier_dirs):
-        verifier = files(p for directory in verifier_dirs for p in directory.rglob("*"))
+    try:
+        verifier_dirs = [inputs / "tasks" / name / "tests" for name in names] if valid_tasks else []
+        # Calibration also snapshots transformed sample tasks; include their verifiers.
+        verifier_dirs += sorted((inputs / "samples").glob("*/tests"))
+        if valid_tasks and all(directory.is_dir() and any(directory.rglob("*")) for directory in verifier_dirs):
+            verifier = files(p for directory in verifier_dirs for p in directory.rglob("*"))
+    except OSError:
+        # Discovery/prechecks can fail before files() handles content-read errors.
+        verifier = None
     return {
         "support": files((inputs / "support").rglob("*.py")),
         "dependency": files([inputs / "uv.lock"]),

@@ -561,6 +561,43 @@ class EvaluationContract(unittest.TestCase):
             self.assertIn("candidate dimension): unavailable", summary)
             self.assertIn("Recorded task checksum and agent model/settings match", summary)
 
+    def test_calibration_source_report_survives_read_and_traversal_errors(self):
+        probe = load("report_source_boundary_probe", Path(__file__).with_name("report_source_boundary_probe.py"))
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            job, inputs = root / "source", root / "source.inputs"
+            trial = job / "trial"
+            (trial / "verifier").mkdir(parents=True)
+            sample = "task--negative"
+            case = {"task": "task", "label_status": "candidate", "expected": {"checks": 0, "judge": 0}}
+            for name, content in {
+                "source.json": json.dumps({"tasks": ["task"], "image": "fixed-image"}),
+                "calibration.json": json.dumps({sample: case}),
+                "support/check.py": "# support\n", "uv.lock": "# dependency\n",
+                "tasks/task/tests/judge.toml": "# rubric\n",
+                f"samples/{sample}/tests/judge.toml": "# rubric\n",
+                f"samples/{sample}/tests/test.sh": "exit 0\n",
+            }.items():
+                path = inputs / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(content)
+            (job / "summary.md").write_text("Original summary, not new output.\n")
+            (trial / "result.json").write_text(json.dumps({"task_name": sample,
+                "task_checksum": "recorded-checksum", "agent_info": {"name": "oracle"},
+                "config": {"agent": {"name": "oracle"}}, "verifier_result": {"rewards": {"reward": 0}}}))
+            components = [{"name": key, "detail": {"kind": "programmatic", "score": 0}}
+                          for key in ("checks", "judge")]
+            (trial / "verifier/reward-details.json").write_text(json.dumps({"reward": {
+                "kind": "group", "score": 0, "components": components}}))
+            self.assertFalse(probe.run(job, root / "controls"))
+            observed = json.loads((root / "controls/observations.json").read_text())
+            self.assertEqual(len(observed), 5)
+            for row in observed:
+                self.assertTrue(row["expectationMet"])
+                self.assertEqual(row["counts"], {"judge-calibration-match": 1})
+                self.assertEqual(row["actualStatuses"]["skills"], "unavailable")
+                self.assertEqual(set(row["jobEffects"]), {"summary.md"})
+
     def test_routed_model_reaches_native_executor_unchanged(self):
         instance = object.__new__(agent.RoutedCodex)
         instance.model_name = "AI-HUB/gpt-6.1-sol"
