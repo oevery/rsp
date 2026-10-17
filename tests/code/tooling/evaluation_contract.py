@@ -637,6 +637,40 @@ echo retained > "$CODEX_HOME/sessions/probe.jsonl"
             self.assertEqual(next(archive.glob("*/incomplete/trace.txt")).read_text(), "partial evidence")
             self.assertFalse(list(archive.glob("*/good")))
 
+    def test_native_resume_lock_preserves_backups_and_rejects_saved_task_or_skill_drift(self):
+        fixture = load("native_resume_fixture", Path(__file__).with_name("native_resume_fixture.py"))
+        for drift in ("none", "task", "skill"):
+            with self.subTest(drift=drift), tempfile.TemporaryDirectory() as directory:
+                observed = fixture.exercise(Path(directory), drift, evaluate)
+                self.assertEqual(observed["goodAfter"], observed["goodBefore"])
+                self.assertEqual(observed["backupFailed"], observed["failedBefore"])
+                self.assertTrue(observed["failedBefore"])
+                self.assertEqual(observed["backupMetadata"], observed["metadataBefore"])
+                self.assertFalse(observed["successfulTrialBackedUp"])
+                self.assertTrue(observed["lockUnchanged"])
+                self.assertTrue(observed["inputMutationRetained"])
+                dispatched = [item for item in observed["dispatches"] if item["phase"] == "resume"]
+                if drift == "none":
+                    self.assertEqual(observed["exitCode"], 0)
+                    self.assertIsNone(observed["nativeError"])
+                    self.assertEqual(dispatched, [{"phase": "resume", "task": "failed-task"}])
+                    self.assertEqual(sorted(observed["resultTasks"]), ["failed-task", "good-task"])
+                    self.assertIn("passed: 2", observed["report"])
+                    self.assertEqual(observed["inputChangedPaths"], [])
+                else:
+                    self.assertEqual(observed["exitCode"], 1)
+                    self.assertEqual(observed["nativeError"]["type"], "FileExistsError")
+                    self.assertIn("lock.json", observed["nativeError"]["message"])
+                    self.assertIn("does not match", observed["nativeError"]["message"])
+                    self.assertEqual(dispatched, [])
+                    self.assertFalse(observed["oldFailedTrialExists"])
+                    self.assertEqual(observed["resultTasks"], ["good-task"])
+                    self.assertIn("incomplete: 1", observed["report"])
+                    expected = "tasks/failed-task/instruction.md" if drift == "task" else "skills/offline-example/SKILL.md"
+                    self.assertEqual(observed["inputChangedPaths"], [expected])
+                print("Native resume control:", drift, "exit", observed["exitCode"],
+                      "dispatches", len(dispatched), "effects", sorted(observed["jobEffects"]))
+
     def test_resume_rejects_drift_before_backup_or_native_mutation(self):
         for drift in ("support", "uv.lock", "image", "missing snapshot"):
             with self.subTest(drift=drift), tempfile.TemporaryDirectory() as directory:
