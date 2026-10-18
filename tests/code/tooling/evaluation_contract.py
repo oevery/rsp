@@ -794,6 +794,50 @@ class EvaluationContract(unittest.TestCase):
                     self.assertIn("Executor usage unavailable: PermissionError: Injected usage evidence read refusal", summary)
                     self.assertIn("native verdict and scores retained", summary)
 
+    def test_report_rejects_stale_usage_after_attributed_session_json_corruption(self):
+        for mode in ("normal", "last-token-invalid-json", "only-token-invalid-json", "unrelated-invalid-json"):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as directory:
+                job = Path(directory) / "job"
+                for name in ("target", "peer"):
+                    trial = job / name
+                    (trial / "agent/sessions").mkdir(parents=True)
+                    (trial / "result.json").write_text(json.dumps({
+                        "task_name": name, "config": {}, "agent_info": {"name": "codex"},
+                        "agent_result": {"n_input_tokens": 999, "n_cache_tokens": 888, "n_output_tokens": 777},
+                        "verifier_result": {"rewards": {"reward": 1}}}))
+                    (trial / "agent/codex.txt").write_text(json.dumps({"type": "thread.started", "thread_id": name}))
+                    events = [{"type": "session_meta", "payload": {"id": name}}]
+                    for amount in (50, 100):
+                        events.append({"type": "event_msg", "payload": {"type": "token_count", "info": {
+                            "total_token_usage": {"input_tokens": amount, "cached_input_tokens": 40, "output_tokens": 2}}}})
+                    lines = [json.dumps(e) for e in events]
+                    if name == "target" and mode in ("last-token-invalid-json", "only-token-invalid-json"):
+                        if mode == "only-token-invalid-json":
+                            lines.pop(1)
+                        lines[-1] = lines[-1][:-1]
+                    (trial / "agent/sessions/root.jsonl").write_text("\n".join(lines))
+                    if name == "target" and mode == "unrelated-invalid-json":
+                        (trial / "agent/sessions/unrelated.jsonl").write_text(
+                            json.dumps({"type": "session_meta", "payload": {"id": "unrelated"}}) + '\n{"broken":')
+                (job / "result.json").write_text('{"n_total_trials":2}')
+                before = {p: p.read_bytes() for p in job.rglob("*") if p.is_file()}
+                counts = evaluate.report(job)
+                self.assertEqual(counts, {"passed": 2})
+                self.assertEqual(evaluate.exit_status(job, counts), 0)
+                self.assertEqual({p: p.read_bytes() for p in before}, before)
+                summary = (job / "summary.md").read_text()
+                affected = mode in ("last-token-invalid-json", "only-token-invalid-json")
+                usage = "unknown | unknown | unknown" if affected else "100 | 40 | 2"
+                self.assertIn(f"| target | passed | {usage} |", summary)
+                self.assertIn("| peer | passed | 100 | 40 | 2 |", summary)
+                self.assertNotIn("| 50 | 40 | 2 |", summary)
+                self.assertNotIn("| 999 | 888 | 777 |", summary)
+                if affected:
+                    self.assertIn("Executor usage unavailable: JSONDecodeError", summary)
+                    self.assertIn("root.jsonl:" + ("2" if mode == "only-token-invalid-json" else "3"), summary)
+                else:
+                    self.assertNotIn("Executor usage unavailable", summary)
+
     def test_report_labels_comparison_limits_and_unknown_tokens(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
