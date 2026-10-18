@@ -324,11 +324,16 @@ def report(job, baseline=None):
              "Regrade tokens are inherited source-execution usage, not new executor usage or total regrade cost. Judge usage is excluded. Seconds measures the current trial, including regrading when applicable.", "",
              "Cached input tokens are part of input tokens, not additional tokens. Cache counts alone do not establish fees or a savings percentage; no pricing or savings estimate is calculated.", "",
              "| Task | Result | Input tokens | Cached input tokens | Output tokens | Usage origin | Seconds | Time scope | Evidence |", "| --- | --- | ---: | ---: | ---: | --- | ---: | --- | --- |"]
+    usage_errors = {}
     for directory, result, status in rows:
         usage = result.get("agent_result") or {}
         if (directory / "agent/codex.txt").is_file():
-            attributed = session_usage(directory / "agent")
-            total = attributed["total"] or {}
+            try:
+                attributed = session_usage(directory / "agent")
+                total = attributed["total"] or {}
+            except OSError as error:
+                usage_errors[directory] = f"{type(error).__name__}: {error}"
+                total = {}
             usage = {"n_input_tokens": total.get("input_tokens"), "n_cache_tokens": total.get("cached_input_tokens"),
                      "n_output_tokens": total.get("output_tokens")}
         tokens = [usage.get(key) if usage.get(key) is not None else "unknown"
@@ -363,6 +368,8 @@ def report(job, baseline=None):
         source = result.get("config", {}).get("source_trial") or {}
         executor_label = "source executor (inherited)" if source.get("action") == "regrade" else "executor"
         lines.append(f"- {directory.name}: {executor_label} `{model}`, effort `{effort}`; Skills: {skills}.")
+        if error := usage_errors.get(directory):
+            lines.append(f"  Executor usage unavailable: {diagnostic_text(error)}. Tokens shown as unknown; native verdict and scores retained.")
         if source.get("action") == "regrade":
             reference = source.get("path") or source.get("trial_id") or "unknown"
             lines.append(f"  Source trial: {reference}. Executor metadata and usage are inherited; this regrade does not rerun the executor.")

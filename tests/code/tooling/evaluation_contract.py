@@ -750,6 +750,50 @@ class EvaluationContract(unittest.TestCase):
                 value = "unknown" if cached is None else "0"
                 self.assertIn(f"| 999 | {value} | 777 |", (job / "summary.md").read_text())
 
+    def test_report_keeps_results_and_peer_when_usage_read_is_denied(self):
+        for mode in ("normal", "main-log-read-denied", "session-read-denied"):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as directory:
+                job = Path(directory) / "job"
+                for name in ("target", "peer"):
+                    trial = job / name
+                    (trial / "agent/sessions").mkdir(parents=True)
+                    (trial / "result.json").write_text(json.dumps({
+                        "task_name": name, "config": {}, "agent_info": {"name": "codex"},
+                        "agent_result": {"n_input_tokens": 999, "n_cache_tokens": 888, "n_output_tokens": 777},
+                        "verifier_result": {"rewards": {"reward": 1}}}))
+                    (trial / "agent/codex.txt").write_text(json.dumps({"type": "thread.started", "thread_id": name}))
+                    events = [{"type": "session_meta", "payload": {"id": name}},
+                              {"type": "event_msg", "payload": {"type": "token_count", "info": {
+                                  "total_token_usage": {"input_tokens": 100, "cached_input_tokens": 40, "output_tokens": 2}}}}]
+                    (trial / "agent/sessions/root.jsonl").write_text("\n".join(json.dumps(e) for e in events))
+                (job / "result.json").write_text('{"n_total_trials":2}')
+                target = job / "target/agent" / ("sessions/root.jsonl" if mode == "session-read-denied" else "codex.txt")
+                original_read, hits = Path.read_text, []
+                before = {p: p.read_bytes() for p in job.rglob("*") if p.is_file()}
+
+                def read(path, *args, **kwargs):
+                    if mode != "normal" and path == target:
+                        hits.append(path)
+                        raise PermissionError("Injected usage evidence read refusal")
+                    return original_read(path, *args, **kwargs)
+
+                with patch.object(Path, "read_text", read):
+                    counts = evaluate.report(job)
+                    self.assertEqual(counts, {"passed": 2})
+                    self.assertEqual(evaluate.exit_status(job, counts), 0)
+                self.assertEqual(hits, [] if mode == "normal" else [target])
+                self.assertEqual({p: p.read_bytes() for p in before}, before)
+                summary = (job / "summary.md").read_text()
+                self.assertIn("| peer | passed | 100 | 40 | 2 |", summary)
+                usage = "100 | 40 | 2" if mode == "normal" else "unknown | unknown | unknown"
+                self.assertIn(f"| target | passed | {usage} |", summary)
+                self.assertNotIn("999 | 888 | 777", summary)
+                if mode == "normal":
+                    self.assertNotIn("Executor usage unavailable", summary)
+                else:
+                    self.assertIn("Executor usage unavailable: PermissionError: Injected usage evidence read refusal", summary)
+                    self.assertIn("native verdict and scores retained", summary)
+
     def test_report_labels_comparison_limits_and_unknown_tokens(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
