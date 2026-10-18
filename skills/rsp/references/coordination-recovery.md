@@ -10,14 +10,16 @@ For an explicit pause, use the host's available interruption mechanism and confi
 
 Preserve the focused owner (`WorkOwner`) and focused child WorkRef when applicable during ordinary pause or blockers. Only an explicit release or unfocus request, archive, or another authorized lifecycle action changes selection. Update the Change only with accepted outcomes, decisive verification, and durable blockers.
 
-When a Focus Capsule exists or is inspected or replaced, or accepted work needs a continuation, read [focus and continuation recovery](focus-continuation.md) for the portable format and handoff. The capsule is a recovery pointer, never worker coordination, authority or acceptance.
+When work needs a durable recovery snapshot, a Focus Capsule needs inspection or replacement, or a portable continuation handoff is required, read [focus and continuation recovery](focus-continuation.md). Same-session worker continuation alone does not require that reference. The capsule is a recovery pointer, never worker coordination, authority or acceptance.
 
 ## Resume from effects, not tool status
+
+On same-session resume, reopen pointers to authority and owned artifacts, inspect drift and replay safety, and reassess decisive evidence applicability; rerun only missing or invalidated checks, not merely because work resumed.
 
 Inspect actual effects before repeating work. An idempotent action may repeat after boundary inspection; an action requiring inspection must first check its prior effects; a non-repeatable action stops for recovery or owner input. An exit code or partial result alone does not prove that nothing happened. Unknown mutation blocks replay, not safe read-only observation.
 
 A permitted method change preserves authority, owner, scope, baseline and required evidence. Named checks, provenance and required independence remain binding. Once effects and host facts are established, [worker coordination](coordination.md) owns reuse or fresh dispatch; preserve the existing correction-loop counts and accepted outcomes across recovery.
 
-For cross-session or cross-device recovery, distrust transient worker and liveness claims. Reread current authority, selected owner, applicable tracking status and Git index, checkout diff, dirty paths, blockers, execution location, and decisive evidence before mutation or delegation. Validate the selected handoff again, revalidate required verification, and re-establish any host evidence needed for worker attribution or independent verification. Host completion without an attributable required worker result keeps acceptance incomplete. Current authority always wins.
+For cross-session or cross-device recovery, distrust transient worker and liveness claims. Reread current authority, selected owner, applicable tracking status and Git index, checkout diff, dirty paths, conflicting resources, blockers, execution location, and decisive evidence before mutation or delegation. Validate the selected handoff again, revalidate required verification, and re-establish coordination qualification and any host evidence needed for worker attribution or independent verification. Host completion without an attributable required worker result keeps acceptance incomplete. Current authority always wins.
 
 For incomplete archived acceptance, read [reopen recovery](reopen-recovery.md) before any lifecycle mutation. It requires separate explicit lifecycle authority and owns exact archive selection and the closed-Group-before-child sequence. Restore neither children nor dependents implicitly.

@@ -1,6 +1,6 @@
 # Focus and continuation recovery
 
-Load when tracked work needs a recovery snapshot, a Capsule is inspected or continuation resumes. Short direct tasks need no new WorkRef or Capsule.
+Load when tracked work needs a recovery snapshot, a Capsule needs inspection or replacement, or a portable continuation handoff is required. Same-session worker continuation alone uses [coordinated interruption and recovery](coordination-recovery.md), not this format. Short direct tasks need no new WorkRef or Capsule.
 
 Core owns the selected WorkRef's replaceable recovery snapshot. Write it only when safe future continuation needs information beyond the existing Change and evidence. At a pause, handoff or recovery-relevant checkpoint, replace the minimum current state, evidence pointers, next action and resume conditions when the existing snapshot is insufficient; ordinary same-session progress needs no update. Use `rsp focus <work-ref> --capsule-file <path|->`; replace, do not append. Respect nearer mutation restrictions. For Group work use the selected child's Capsule, not a Group marker. Empty markers remain valid.
 
