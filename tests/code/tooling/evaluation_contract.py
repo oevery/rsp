@@ -37,6 +37,100 @@ agent = load("agent", HERE / "agent.py")
 
 
 class EvaluationContract(unittest.TestCase):
+    def test_judge_format_retries_and_timeout_preserve_scoring_boundaries(self):
+        from types import SimpleNamespace
+        import litellm
+        import traceback
+
+        task = HERE.parent / "tasks/release-evidence"
+        for scenario, responses, count, reward in (
+            ("valid-low", [False], 1, 0.5),
+            ("format-then-success", ["invalid-format-1", True], 2, 1.0),
+            ("format-exhausted", ["invalid-format-1", "invalid-format-2", "invalid-format-3"], 3, None),
+            ("timeout", ["timeout"], 1, None),
+        ):
+            with self.subTest(scenario=scenario), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                work, tests, logs = root / "app", root / "tests", root / "logs"
+                shutil.copytree(task / "environment/workspace", work)
+                shutil.copytree(task / "tests", tests)
+                baseline = root / "baseline.json"
+                env = {"RSP_WORKSPACE": str(work), "RSP_BASELINE": str(baseline),
+                       "RSP_LOG_DIR": str(logs), "RSP_EVAL_OFFLINE": "0",
+                       "RSP_JUDGE_HOST": "", "RSP_JUDGE_BASE_URL": "",
+                       "RSP_JUDGE_API_KEY": "offline-test", "OPENAI_API_KEY": "offline-test"}
+                subprocess.run(["python3", str(task / "environment/setup.py"), str(work), str(baseline)],
+                               check=True, capture_output=True)
+                self.assertEqual(baseline.read_bytes(), (task / "tests/baseline.json").read_bytes())
+                with patch.dict(os.environ, env):
+                    subprocess.run(["bash", str(task / "solution/solve.sh")], check=True, capture_output=True)
+                rubric = tests / "judge.toml"
+                rubric.write_text(rubric.read_text().replace("/app/", str(work) + "/"))
+                attempts = []
+
+                async def completion(**kwargs):
+                    index = len(attempts)
+                    self.assertLess(index, len(responses), "Unexpected extra SDK call")
+                    value = responses[index]
+                    if value == "timeout":
+                        attempts.append({"attempt": index + 1, "error": "litellm.Timeout"})
+                        raise litellm.Timeout(message="offline timeout control",
+                                              model="openai/test-model", llm_provider="openai")
+                    content = (json.dumps({"score": value, "reasoning": "offline control"})
+                               if isinstance(value, bool) else value)
+                    attempts.append({"attempt": index + 1, "content": content})
+                    return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=content))])
+
+                logs.mkdir()
+                output = logs / "reward.json"
+                output.write_text(json.dumps({"reward": 1.0}))  # Must not survive an unavailable result.
+                observation = {"scenario": scenario, "attempts": attempts, "externalNetworkAllowed": False}
+                try:
+                    with (patch.dict(os.environ, env),
+                          patch.object(litellm, "acompletion", new_callable=AsyncMock, side_effect=completion) as api,
+                          patch("socket.socket.connect", side_effect=AssertionError("Unexpected network connection")),
+                          patch("socket.create_connection", side_effect=AssertionError("Unexpected network connection"))):
+                        if reward is None:
+                            with self.assertRaises(RuntimeError) as caught:
+                                grade.grade(tests, work, output)
+                            observation["propagatedException"] = "".join(traceback.format_exception(caught.exception))
+                        else:
+                            self.assertEqual(grade.grade(tests, work, output), {"reward": reward})
+                        observation["sdkAwaitCount"] = api.await_count
+                        self.assertEqual(api.await_count, count)
+                    status = json.loads((logs / "evaluation-status.json").read_text())
+                    detail = json.loads((logs / "reward-details.json").read_text())
+                    self.assertEqual(status["semantic"], "task-defined")
+                    if reward is None:
+                        self.assertFalse(output.exists())
+                        self.assertTrue(status["errors"])
+                        self.assertTrue(list(grade.errors(detail)))
+                        self.assertEqual(evaluate.verdict(root, {}), "unscored")
+                        if scenario == "timeout":
+                            self.assertIn("timed out", json.dumps(detail))
+                            self.assertTrue((logs / "unscored-reward.json").is_file())
+                        else:
+                            # TaskGroup's JSON summary is coarse; the propagated
+                            # exception chain must still retain the parser cause.
+                            self.assertIn("invalid-format-3", observation["propagatedException"])
+                            self.assertIn("Could not parse JSON", observation["propagatedException"])
+                    else:
+                        self.assertEqual(status["errors"], [])
+                        self.assertEqual(list(grade.errors(detail)), [])
+                        scores = json.loads(output.read_text())
+                        self.assertEqual(scores, {"reward": reward})
+                        self.assertEqual(evaluate.verdict(root, {"verifier_result": {"rewards": scores}}),
+                                         "failed" if reward < 1 else "passed")
+                        components = {name: node["score"] for name, node in evaluate.reward_nodes(detail)
+                                      if name in ("checks", "judge")}
+                        self.assertEqual(components, {"checks": 1.0, "judge": 0.0 if reward < 1 else 1.0})
+                finally:
+                    # Optional evidence export copies only this new synthetic run.
+                    if destination := os.environ.get("RSP_JUDGE_CONTROL_RECORDS"):
+                        target = Path(destination) / scenario
+                        shutil.copytree(logs, target)
+                        (target / "sdk-observation.json").write_text(json.dumps(observation, indent=2))
+
     def test_release_and_tracked_restraint_output_contracts(self):
         # Fresh fixtures and deterministic checks only; no grade or judge calls.
         for name in ("release-evidence", "commit-tracked-restraint"):
