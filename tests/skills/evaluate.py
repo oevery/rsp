@@ -193,6 +193,11 @@ def calibration_case(directory, result, read_errors=None):
             if read_errors is not None:
                 read_errors.append(f"calibration.json: missing expected for {name}")
             return None
+        missing = {"checks", "judge"} - case["expected"].keys()
+        if missing:
+            if read_errors is not None:
+                read_errors.append(f"calibration.json: missing expected components {', '.join(sorted(missing))} for {name}")
+            return None
         return case
     except FileNotFoundError as error:
         # Oracle/nop controls need no manifest. Require explicit saved job

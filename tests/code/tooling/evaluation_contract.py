@@ -2210,7 +2210,9 @@ source "$RSP_SCRIPT"
                     self.assertNotIn("Calibration expectations unavailable", summary)
 
     def test_calibration_manifest_omissions_affect_only_the_incomplete_sample(self):
-        for mode in ("normal", "missing-entry", "missing-expected", "missing-label-status"):
+        for mode in ("normal", "missing-entry", "missing-expected", "missing-label-status",
+                     "empty-expected", "missing-checks", "missing-judge",
+                     "complete-expected-missing-details", "empty-expected-missing-details"):
             with self.subTest(mode=mode), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)
                 job, inputs = root / "job", root / "job.inputs"
@@ -2236,9 +2238,17 @@ source "$RSP_SCRIPT"
                     del cases["target"]["expected"]
                 elif mode == "missing-label-status":
                     del cases["target"]["label_status"]
+                elif mode.startswith("empty-expected"):
+                    cases["target"]["expected"] = {}
+                elif mode == "missing-checks":
+                    del cases["target"]["expected"]["checks"]
+                elif mode == "missing-judge":
+                    del cases["target"]["expected"]["judge"]
+                if mode.endswith("missing-details"):
+                    (job / "target/verifier/reward-details.json").unlink()
                 (inputs / "calibration.json").write_text(json.dumps(cases))
                 before = {p: p.read_bytes() for p in root.rglob("*") if p.is_file()}
-                affected = mode in ("missing-entry", "missing-expected")
+                affected = mode not in ("normal", "missing-label-status")
                 counts = evaluate.report(job)
                 self.assertEqual(counts, {"judge-calibration-match": 1, "unscored": 1} if affected else {"judge-calibration-match": 2})
                 self.assertEqual(evaluate.exit_status(job, counts), int(affected))
@@ -2247,8 +2257,12 @@ source "$RSP_SCRIPT"
                 self.assertIn("| peer | judge-calibration-match |", summary)
                 self.assertIn(f"| target | {'unscored' if affected else 'judge-calibration-match'} |", summary)
                 labels = [line.strip() for line in summary.splitlines() if line.strip().startswith("Judge calibration:")]
-                if affected:
-                    reason = "missing sample entry" if mode == "missing-entry" else "missing expected"
+                if affected and mode != "complete-expected-missing-details":
+                    if mode in ("missing-entry", "missing-expected"):
+                        reason = "missing sample entry" if mode == "missing-entry" else "missing expected"
+                    else:
+                        missing = sorted({"checks", "judge"} - cases["target"]["expected"].keys())
+                        reason = "missing expected components " + ", ".join(missing)
                     self.assertIn(f"calibration.json: {reason} for target", summary)
                     self.assertIn("no expected scores inferred", summary)
                     self.assertEqual(len(labels), 1)
