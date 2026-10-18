@@ -2149,6 +2149,59 @@ source "$RSP_SCRIPT"
                 else:
                     self.assertNotIn("Execution mode unavailable", summary)
 
+    def test_calibration_manifest_omissions_affect_only_the_incomplete_sample(self):
+        for mode in ("normal", "missing-entry", "missing-expected", "missing-label-status"):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                job, inputs = root / "job", root / "job.inputs"
+                job.mkdir()
+                inputs.mkdir()
+                (job / "result.json").write_text('{"n_total_trials":2}')
+                (inputs / "source.json").write_text('{"agent":"judge-calibration"}')
+                cases = {}
+                for name, score in (("target", 0), ("peer", 1)):
+                    trial = job / name
+                    (trial / "verifier").mkdir(parents=True)
+                    (trial / "result.json").write_text(json.dumps({
+                        "task_name": name, "config": {}, "agent_info": {"name": "oracle"},
+                        "verifier_result": {"rewards": {"reward": score}}}))
+                    (trial / "verifier/reward-details.json").write_text(json.dumps({
+                        "reward": {"kind": "group", "score": score, "components": [
+                            {"name": key, "detail": {"kind": "programmatic", "score": score}}
+                            for key in ("checks", "judge")]}}))
+                    cases[name] = {"label_status": "candidate", "expected": {"checks": score, "judge": score}}
+                if mode == "missing-entry":
+                    del cases["target"]
+                elif mode == "missing-expected":
+                    del cases["target"]["expected"]
+                elif mode == "missing-label-status":
+                    del cases["target"]["label_status"]
+                (inputs / "calibration.json").write_text(json.dumps(cases))
+                before = {p: p.read_bytes() for p in root.rglob("*") if p.is_file()}
+                affected = mode in ("missing-entry", "missing-expected")
+                counts = evaluate.report(job)
+                self.assertEqual(counts, {"judge-calibration-match": 1, "unscored": 1} if affected else {"judge-calibration-match": 2})
+                self.assertEqual(evaluate.exit_status(job, counts), int(affected))
+                self.assertEqual({p: p.read_bytes() for p in before}, before)
+                summary = (job / "summary.md").read_text()
+                self.assertIn("| peer | judge-calibration-match |", summary)
+                self.assertIn(f"| target | {'unscored' if affected else 'judge-calibration-match'} |", summary)
+                labels = [line.strip() for line in summary.splitlines() if line.strip().startswith("Judge calibration:")]
+                if affected:
+                    reason = "missing sample entry" if mode == "missing-entry" else "missing expected"
+                    self.assertIn(f"calibration.json: {reason} for target", summary)
+                    self.assertIn("no expected scores inferred", summary)
+                    self.assertEqual(len(labels), 1)
+                    self.assertTrue(labels[0].startswith("Judge calibration: candidate;"))
+                elif mode == "missing-label-status":
+                    self.assertEqual(sum(line.startswith("Judge calibration: unknown;") for line in labels), 1)
+                    self.assertEqual(sum(line.startswith("Judge calibration: candidate;") for line in labels), 1)
+                    self.assertIn("Label status unknown: label_status is missing", summary)
+                    self.assertIn("neither candidate nor human confirmation is inferred", summary)
+                else:
+                    self.assertEqual(len(labels), 2)
+                    self.assertTrue(all(line.startswith("Judge calibration: candidate;") for line in labels))
+
     def test_report_preserves_calibration_identity_when_expectations_are_unavailable(self):
         cases = [("judge-calibration", mode) for mode in ("normal", "missing", "invalid-json", "read-denied")]
         cases += [("oracle", "missing"), ("nop", "missing")]

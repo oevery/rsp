@@ -182,7 +182,18 @@ def calibration_case(directory, result, read_errors=None):
     inputs = directory.parent.with_name(directory.parent.name + ".inputs")
     path = inputs / "calibration.json"
     try:
-        return json.loads(path.read_text())[result["task_name"]]
+        cases = json.loads(path.read_text())
+        name = result["task_name"]
+        if name not in cases:
+            if read_errors is not None:
+                read_errors.append(f"calibration.json: missing sample entry for {name}")
+            return None
+        case = cases[name]
+        if "expected" not in case:
+            if read_errors is not None:
+                read_errors.append(f"calibration.json: missing expected for {name}")
+            return None
+        return case
     except FileNotFoundError as error:
         # Oracle/nop controls need no manifest. Require explicit saved job
         # provenance before treating absence as lost calibration expectations.
@@ -338,7 +349,9 @@ def report(job, baseline=None):
         if calibration_errors:
             lines.append(f"  Calibration expectations unavailable: {diagnostic_text('; '.join(calibration_errors))}. Native scores retained; no expected scores inferred.")
         elif case:
-            lines.append(f"  Judge calibration: {case['label_status']}; expected components {case['expected']}. This is not Skill acceptance or human validation.")
+            lines.append(f"  Judge calibration: {case.get('label_status', 'unknown')}; expected components {case['expected']}. This is not Skill acceptance or human validation.")
+            if "label_status" not in case:
+                lines.append("  Label status unknown: label_status is missing; neither candidate nor human confirmation is inferred.")
         if errors := mode_errors.get(directory):
             lines.append(f"  Execution mode unavailable: {diagnostic_text('; '.join(errors))}. Native scores retained; trial is unscored.")
         if exception := result.get("exception_info"):
