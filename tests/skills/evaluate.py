@@ -201,8 +201,25 @@ def calibration_case(directory, result, read_errors=None):
             source = json.loads((inputs / "source.json").read_text())
         except (OSError, ValueError):
             source = {}
-        if isinstance(source, dict) and source.get("agent") == "judge-calibration" and read_errors is not None:
-            read_errors.append(f"calibration.json: {type(error).__name__}: {error}; saved source.json agent=judge-calibration")
+        identity = None
+        if isinstance(source, dict) and source.get("agent") == "judge-calibration":
+            identity = "saved source.json agent=judge-calibration"
+        elif isinstance(source, dict) and source.get("agent") == "regrade":
+            origin = result.get("config", {}).get("source_trial") or {}
+            if origin.get("action") == "regrade" and origin.get("type") == "local" and isinstance(origin.get("path"), str) and origin["path"]:
+                source_trial = Path(origin["path"])
+                source_inputs = source_trial.parent.with_name(source_trial.parent.name + ".inputs")
+                try:
+                    original = json.loads((source_trial / "result.json").read_text())
+                    provenance = json.loads((source_inputs / "source.json").read_text())
+                except (OSError, ValueError):
+                    pass
+                else:
+                    if (isinstance(original, dict) and original.get("task_name") == result["task_name"]
+                            and isinstance(provenance, dict) and provenance.get("agent") == "judge-calibration"):
+                        identity = f"local regrade source {source_trial}; matching task name and saved source.json agent=judge-calibration"
+        if identity and read_errors is not None:
+            read_errors.append(f"calibration.json: {type(error).__name__}: {error}; {identity}")
     except (OSError, json.JSONDecodeError) as error:
         if read_errors is not None:
             read_errors.append(f"calibration.json: {type(error).__name__}: {error}")

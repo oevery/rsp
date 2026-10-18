@@ -2149,6 +2149,66 @@ source "$RSP_SCRIPT"
                 else:
                     self.assertNotIn("Execution mode unavailable", summary)
 
+    def test_missing_regrade_manifest_uses_matching_source_identity_without_old_expectations(self):
+        cases = (("calibration", True), ("calibration", False), ("ordinary", False), ("wrong-task", False))
+        for kind, manifest_present in cases:
+            with self.subTest(kind=kind, manifest=manifest_present), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                job, inputs = root / "current", root / "current.inputs"
+                source, source_inputs = root / "source", root / "source.inputs"
+                trial, original = job / "trial", source / "trial"
+                (trial / "verifier").mkdir(parents=True)
+                original.mkdir(parents=True)
+                inputs.mkdir()
+                source_inputs.mkdir()
+                (job / "result.json").write_text('{"n_total_trials":1}')
+                (inputs / "source.json").write_text('{"agent":"regrade"}')
+                source_agent = "codex" if kind == "ordinary" else "judge-calibration"
+                native_agent = "codex" if kind == "ordinary" else "oracle"
+                (source_inputs / "source.json").write_text(json.dumps({"agent": source_agent}))
+                (original / "result.json").write_text(json.dumps({
+                    "task_name": "different-task" if kind == "wrong-task" else "task",
+                    "agent_info": {"name": native_agent}}))
+                old_manifest = source_inputs / "calibration.json"
+                if kind != "ordinary":
+                    old_manifest.write_text(json.dumps({"task": {"label_status": "candidate", "expected": {"checks": 0, "judge": 0}}}))
+                (trial / "result.json").write_text(json.dumps({
+                    "task_name": "task", "agent_info": {"name": native_agent},
+                    "config": {"source_trial": {"action": "regrade", "type": "local", "path": str(original)}},
+                    "verifier_result": {"rewards": {"reward": 1}}}))
+                (trial / "verifier/reward-details.json").write_text(json.dumps({
+                    "reward": {"kind": "group", "score": 1, "components": [
+                        {"name": key, "detail": {"kind": "programmatic", "score": 1}}
+                        for key in ("checks", "judge")]}}))
+                if manifest_present:
+                    (inputs / "calibration.json").write_text(json.dumps({"task": {
+                        "label_status": "candidate", "expected": {"checks": 1, "judge": 1}}}))
+                before = {p: p.read_bytes() for p in root.rglob("*") if p.is_file()}
+                original_read = Path.read_text
+
+                def read(path, *args, **kwargs):
+                    if path == old_manifest:
+                        raise AssertionError("Do not recover expected scores from the source manifest")
+                    return original_read(path, *args, **kwargs)
+
+                expected = ("judge-calibration-regrade-match" if manifest_present else
+                            "unscored" if kind == "calibration" else
+                            "regrade-pass" if kind == "ordinary" else "calibration-pass")
+                with patch.object(Path, "read_text", read):
+                    counts = evaluate.report(job)
+                    self.assertEqual(counts, {expected: 1})
+                    self.assertEqual(evaluate.exit_status(job, counts), int(expected == "unscored"))
+                self.assertEqual({p: p.read_bytes() for p in before}, before)
+                self.assertEqual((inputs / "calibration.json").exists(), manifest_present)
+                summary = (job / "summary.md").read_text()
+                if expected == "unscored":
+                    self.assertIn("local regrade source", summary)
+                    self.assertIn("matching task name and saved source.json agent=judge-calibration", summary)
+                    self.assertIn("no expected scores inferred", summary)
+                    self.assertNotIn("expected components", summary)
+                else:
+                    self.assertNotIn("Calibration expectations unavailable", summary)
+
     def test_calibration_manifest_omissions_affect_only_the_incomplete_sample(self):
         for mode in ("normal", "missing-entry", "missing-expected", "missing-label-status"):
             with self.subTest(mode=mode), tempfile.TemporaryDirectory() as directory:
