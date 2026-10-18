@@ -1992,6 +1992,65 @@ source "$RSP_SCRIPT"
                     for text in ("Unscorable", "Unsatisfied", "Root cause", "Grading unavailable"):
                         self.assertNotIn(text, rendered)
 
+    def test_report_keeps_native_results_when_grading_details_cannot_be_read(self):
+        for calibration in (False, True):
+            for mode in ("normal", "missing", "invalid-json", "read-denied"):
+                with self.subTest(calibration=calibration, mode=mode), tempfile.TemporaryDirectory() as directory:
+                    job = Path(directory) / "job"
+                    for name in ("target", "peer"):
+                        trial = job / name
+                        score = 0.5 if name == "target" and not calibration else 1
+                        (trial / "verifier").mkdir(parents=True)
+                        (trial / "result.json").write_text(json.dumps({
+                            "task_name": name, "agent_info": {"name": "oracle" if calibration else "codex"},
+                            "config": {}, "verifier_result": {"rewards": {"reward": score}}}))
+                        (trial / "verifier/reward-details.json").write_text(json.dumps({
+                            "reward": {"kind": "group", "score": score, "components": [
+                                {"name": component, "detail": {"kind": "programmatic", "score": 0 if score < 1 and component == "judge" else 1}}
+                                for component in ("checks", "judge")]}}))
+                    if calibration:
+                        inputs = job.with_name("job.inputs")
+                        inputs.mkdir()
+                        (inputs / "calibration.json").write_text(json.dumps({name: {
+                            "label_status": "candidate", "expected": {"checks": 1, "judge": 1}}
+                            for name in ("target", "peer")}))
+                    target = job / "target/verifier/reward-details.json"
+                    if mode == "missing":
+                        target.unlink()
+                    elif mode == "invalid-json":
+                        target.write_text('{"reward":')
+                    before = {p: p.read_bytes() for p in Path(directory).rglob("*") if p.is_file()}
+                    original_read = Path.read_text
+                    hits = []
+
+                    def read(path, *args, **kwargs):
+                        if mode == "read-denied" and path == target:
+                            hits.append(path)
+                            raise PermissionError("Injected grading-details read refusal")
+                        return original_read(path, *args, **kwargs)
+
+                    with patch.object(Path, "read_text", read):
+                        counts = evaluate.report(job)
+                        code = evaluate.exit_status(job, counts)
+                    if mode == "read-denied":
+                        self.assertTrue(hits)
+                    affected = calibration and mode != "normal"
+                    ordinary = "judge-calibration-match" if calibration else "passed"
+                    target_verdict = "unscored" if affected else ordinary if calibration else "failed"
+                    expected_counts = {ordinary: 2} if target_verdict == ordinary else {ordinary: 1, target_verdict: 1}
+                    self.assertEqual(counts, expected_counts)
+                    self.assertEqual(code, 1 if affected or not calibration else 0)
+                    self.assertEqual({p: p.read_bytes() for p in before}, before)
+                    summary = (job / "summary.md").read_text()
+                    self.assertIn(f"| peer | {ordinary} |", summary)
+                    self.assertIn(f"| target | {target_verdict} |", summary)
+                    if mode in ("invalid-json", "read-denied"):
+                        error_type = "JSONDecodeError" if mode == "invalid-json" else "PermissionError"
+                        self.assertIn("Grading details unavailable: " + error_type, summary)
+                        self.assertIn("Native result retained", summary)
+                    else:
+                        self.assertNotIn("Grading details unavailable", summary)
+
     def test_initial_image_drift_stops_before_job_creation(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

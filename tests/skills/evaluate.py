@@ -75,9 +75,16 @@ def native_results(job):
             yield file.parent, data
 
 
-def reward_details(directory):
+def reward_details(directory, read_errors=None):
     path = directory / "verifier/reward-details.json"
-    return json.loads(path.read_text()) if path.is_file() else {}
+    try:
+        return json.loads(path.read_text()) if path.is_file() else {}
+    except (OSError, json.JSONDecodeError) as error:
+        if read_errors is not None:
+            read_errors.append(f"{type(error).__name__}: {error}")
+        # Native results remain authoritative for execution. Calibration needs
+        # component scores, so its existing missing-score rule yields unscored.
+        return {}
 
 
 def diagnostic_text(value):
@@ -278,8 +285,11 @@ def report(job, baseline=None):
             lines.append(f"  Judge calibration: {case['label_status']}; expected components {case['expected']}. This is not Skill acceptance or human validation.")
         if exception := result.get("exception_info"):
             lines.append(f"  Execution exception: `{exception.get('exception_type', 'unknown')}`; see native result.")
-        details = reward_details(directory)
-        if details:
+        read_errors = []
+        details = reward_details(directory, read_errors)
+        if read_errors:
+            lines.append(f"  Grading details unavailable: {diagnostic_text('; '.join(read_errors))}. Native result retained.")
+        elif details:
             lines.append(f"  [Grading details]({directory.name}/verifier/reward-details.json).")
         if error := details.get("error"):
             lines.append(f"  Grading unavailable: {diagnostic_text(error)}.")
