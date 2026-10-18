@@ -2051,6 +2051,51 @@ source "$RSP_SCRIPT"
                     else:
                         self.assertNotIn("Grading details unavailable", summary)
 
+    def test_report_keeps_peer_when_execution_status_cannot_be_read(self):
+        cases = [("codex", mode) for mode in ("normal", "missing", "invalid-json", "read-denied")]
+        cases += [("oracle", "normal"), ("nop", "normal")]
+        for agent_name, mode in cases:
+            with self.subTest(agent=agent_name, mode=mode), tempfile.TemporaryDirectory() as directory:
+                job = Path(directory)
+                (job / "result.json").write_text('{"n_total_trials":2}')
+                for name in ("target", "peer"):
+                    trial = job / name
+                    (trial / "verifier").mkdir(parents=True)
+                    (trial / "result.json").write_text(json.dumps({
+                        "task_name": name, "config": {}, "agent_info": {"name": agent_name},
+                        "verifier_result": {"rewards": {"reward": int(agent_name != "nop")}}}))
+                    (trial / "verifier/evaluation-status.json").write_text('{"semantic":"task-defined"}')
+                target = job / "target/verifier/evaluation-status.json"
+                if mode == "missing":
+                    target.unlink()
+                elif mode == "invalid-json":
+                    target.write_text('{"semantic":')
+                before = {p: p.read_bytes() for p in job.rglob("*") if p.is_file()}
+                original_read = Path.read_text
+
+                def read(path, *args, **kwargs):
+                    if mode == "read-denied" and path == target:
+                        raise PermissionError("Injected evaluation-status read refusal")
+                    return original_read(path, *args, **kwargs)
+
+                affected = mode in ("invalid-json", "read-denied")
+                ordinary = {"codex": "passed", "oracle": "calibration-pass", "nop": "calibration-fail"}[agent_name]
+                with patch.object(Path, "read_text", read):
+                    counts = evaluate.report(job)
+                    self.assertEqual(counts, {ordinary: 1, "unscored": 1} if affected else {ordinary: 2})
+                    self.assertEqual(evaluate.exit_status(job, counts), int(affected))
+                self.assertEqual({p: p.read_bytes() for p in before}, before)
+                summary = (job / "summary.md").read_text()
+                self.assertIn(f"| peer | {ordinary} |", summary)
+                self.assertIn(f"| target | {'unscored' if affected else ordinary} |", summary)
+                if affected:
+                    self.assertIn("Execution mode unavailable", summary)
+                    self.assertIn("target/verifier/evaluation-status.json", summary)
+                    self.assertIn("JSONDecodeError" if mode == "invalid-json" else "PermissionError", summary)
+                    self.assertIn("Native scores retained; trial is unscored", summary)
+                else:
+                    self.assertNotIn("Execution mode unavailable", summary)
+
     def test_report_preserves_calibration_identity_when_expectations_are_unavailable(self):
         cases = [("judge-calibration", mode) for mode in ("normal", "missing", "invalid-json", "read-denied")]
         cases += [("oracle", "missing"), ("nop", "missing")]

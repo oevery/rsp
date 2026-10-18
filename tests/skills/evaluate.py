@@ -198,15 +198,20 @@ def calibration_case(directory, result, read_errors=None):
     return None
 
 
-def execution_mode(directory, result):
+def execution_mode(directory, result, read_errors=None):
     seen = set()
     while directory.resolve() not in seen:
         seen.add(directory.resolve())
         if (result.get("agent_info") or {}).get("name") in ("oracle", "nop"):
             return "calibration"
-        if any(json.loads(p.read_text()).get("semantic") == "not-run"
-               for p in directory.rglob("evaluation-status.json")):
-            return "calibration"
+        for path in directory.rglob("evaluation-status.json"):
+            try:
+                if json.loads(path.read_text()).get("semantic") == "not-run":
+                    return "calibration"
+            except (OSError, json.JSONDecodeError) as error:
+                if read_errors is not None:
+                    read_errors.append(f"{path}: {type(error).__name__}: {error}")
+                return "unknown"
         source = result.get("config", {}).get("source_trial") or {}
         if source.get("action") != "regrade":
             return "execution"
@@ -220,7 +225,7 @@ def execution_mode(directory, result):
     return "unknown"
 
 
-def verdict(directory, result):
+def verdict(directory, result, mode_errors=None):
     exception = result.get("exception_info") or {}
     if exception:
         kind = exception.get("exception_type", "")
@@ -245,7 +250,7 @@ def verdict(directory, result):
         match = all(scores[name] == value for name, value in case["expected"].items())
         mode = "judge-calibration-regrade" if (result.get("config", {}).get("source_trial") or {}).get("action") == "regrade" else "judge-calibration"
         return mode + ("-match" if match else "-mismatch")
-    mode = execution_mode(directory, result)
+    mode = execution_mode(directory, result, mode_errors)
     if mode == "unknown":
         return "unscored"
     if mode == "calibration":
@@ -257,7 +262,12 @@ def verdict(directory, result):
 
 def report(job, baseline=None):
     read_errors = []
-    rows = [(directory, result, verdict(directory, result)) for directory, result in native_results(job, read_errors)]
+    rows, mode_errors = [], {}
+    for directory, result in native_results(job, read_errors):
+        errors = []
+        rows.append((directory, result, verdict(directory, result, errors)))
+        if errors:
+            mode_errors[directory] = errors
     counts = Counter(status for _, _, status in rows)
     if read_errors:
         counts["incomplete"] = len(read_errors)
@@ -329,6 +339,8 @@ def report(job, baseline=None):
             lines.append(f"  Calibration expectations unavailable: {diagnostic_text('; '.join(calibration_errors))}. Native scores retained; no expected scores inferred.")
         elif case:
             lines.append(f"  Judge calibration: {case['label_status']}; expected components {case['expected']}. This is not Skill acceptance or human validation.")
+        if errors := mode_errors.get(directory):
+            lines.append(f"  Execution mode unavailable: {diagnostic_text('; '.join(errors))}. Native scores retained; trial is unscored.")
         if exception := result.get("exception_info"):
             lines.append(f"  Execution exception: `{exception.get('exception_type', 'unknown')}`; see native result.")
         read_errors = []
