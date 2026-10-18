@@ -304,6 +304,23 @@ For retained calibration jobs without Skills, `tests/code/tooling/report_source_
 
 The summary gives per-task outcome counts, recorded executor and Skill selection, judge configuration, unmet criterion names, trial duration and links to original grading reasons. Ratios use returned records, including failed, unscored, error and cancelled attempts. An incomplete job is explicitly marked; missing results cannot establish a full-run success rate or always be attributed to a task. Unknown usage or timing stays unknown. Oracle/nop controls, judge calibration, regrade and fresh execution retain distinct labels; do not pool them into a Skill success rate. Native results describe retained attempts, while earlier failed attempts remain in recovery backups.
 
+Report regression coverage lives in `tests/code/tooling/evaluation_contract.py`
+and runs with the repository test suite. It covers native result availability,
+current and baseline plan limits, calibration identity and expectations, grading
+diagnostics, saved-source comparisons, and usage attribution. Report-only session
+validation shares the attribution read/parse pass; corrupt attributed JSON leaves
+usage unknown without changing native scores or executor telemetry. Fewer reads
+do not establish a latency improvement without a separate measurement.
+
+Use the retained-job probes only when a concrete question needs their additional
+CLI or preservation evidence. Run them into new output directories; keep original
+jobs, frozen inputs, failed observations and historical reports. Fault-injection
+checks require the fault to occur and verify visible outcomes, not an exact
+number of internal reads. Review related report fixes as one bounded batch with
+the applicable controls and one full-suite run. Once confirmed issues are
+resolved and that batch passes independent review, stop; arbitrary malformed
+schemas, live acceptance and production telemetry require separate scope.
+
 Resume can execute agents and verifiers again and requires execution authority. Codex and regrade jobs require live authorization. Saved support code, dependency lock and local image identity must match before recovery; missing or changed inputs require a new run or regrade. Use the wrapper to preserve existing evidence before native resume removes matching error trials:
 
 ```sh

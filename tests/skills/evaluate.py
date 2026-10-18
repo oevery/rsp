@@ -329,18 +329,7 @@ def report(job, baseline=None):
         usage = result.get("agent_result") or {}
         if (directory / "agent/codex.txt").is_file():
             try:
-                attributed = session_usage(directory / "agent")
-                # Reporting must not use an earlier total after a corrupt event.
-                # Validate only attributed sessions; executor parsing is unchanged.
-                for session in attributed["sessions"]:
-                    path = Path(session["path"])
-                    for number, line in enumerate(path.read_text().splitlines(), 1):
-                        if not line.strip():
-                            continue
-                        try:
-                            json.loads(line)
-                        except json.JSONDecodeError as error:
-                            raise json.JSONDecodeError(f"{path}:{number}: {error.msg}", error.doc, error.pos) from error
+                attributed = session_usage(directory / "agent", validate_sessions=True)
                 total = attributed["total"] or {}
             except (OSError, json.JSONDecodeError) as error:
                 usage_errors[directory] = f"{type(error).__name__}: {error}"

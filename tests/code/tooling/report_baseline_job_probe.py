@@ -125,8 +125,8 @@ def run(source, output):
             assert completed
         accessible_plan = 2 if mode == "normal" else 3 if mode == "planned-more" else None
         state = "complete" if mode == "normal" else "incomplete" if mode == "planned-more" else "unknown"
-        assert completed and len(observed["baselineJobReadAttempts"]) == 1
-        assert len(observed["injectedReadRefusals"]) == (1 if mode == "read-denied" else 0)
+        assert completed and set(observed["baselineJobReadAttempts"]) == {str(target)}
+        assert set(observed["injectedReadRefusals"]) == ({str(target)} if mode == "read-denied" else set())
         plan_line = f"Baseline planned trials: {accessible_plan if accessible_plan is not None else 'unknown'}."
         returned_line = "Baseline returned trials (readable records): 2."
         state_line = f"Baseline completeness: {state} (record counts only)."

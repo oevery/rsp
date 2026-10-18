@@ -102,7 +102,7 @@ def run(source, output):
             assert observed["counts"] == expected
             assert observed["classificationExit"] == (0 if mode == "normal" else 1)
         if mode == "read-denied":
-            assert observed["injectedReads"] == [str(target)]
+            assert set(observed["injectedReads"]) == {str(target)}
         peer_in_report = None
         if completed:
             summary = (job / "summary.md").read_text()

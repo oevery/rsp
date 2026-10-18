@@ -96,7 +96,7 @@ def run(source, output):
                 (case / "exception.log").write_text(traceback.format_exc())
         (case / "stdout.log").write_text(captured.getvalue())
         if "error" in name:
-            assert len(hits) == 1, (name, hits)
+            assert hits, (name, hits)
         actual = {}
         report = (job / "summary.md").read_text() if completed else None
         if report is not None:

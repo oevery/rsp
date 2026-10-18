@@ -137,7 +137,7 @@ def run(source, output):
             assert "classification exit status do not establish baseline completeness" in summary
             assert "Recorded task checksum and agent model/settings match" not in summary
         if mode == "read-denied":
-            assert observed["injectedReads"] == [str(target)]
+            assert set(observed["injectedReads"]) == {str(target)}
         observation = {"case": mode, **observed, "reportCommandExit": result.returncode,
             "currentNativeCountsIndependentlyObserved": dict(current_counts), "currentNativeClassificationExit": current_exit,
             "currentResultsPreserved": True, "baselinePeerVerdict": peer_verdict,

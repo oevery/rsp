@@ -115,7 +115,7 @@ def run(source, output):
             assert "result.json: " + error_type in summary
             assert "Planned trials: 2" not in summary
         if mode == "read-denied":
-            assert observed["injectedReads"] == [str(target)]
+            assert set(observed["injectedReads"]) == {str(target)}
         observation = {"case": mode, **observed, "reportCommandExit": result.returncode,
             "jobResultPlanAvailable": mode == "normal",
             "plannedTotalFromJobResult": 2 if mode == "normal" else None,

@@ -95,7 +95,7 @@ def run(source, output):
         assert observed["independentNativeCounts"] == {"passed": 2}
         assert observed["independentClassificationExit"] == 0
         assert observed["nativeRewards"] == {d.name: r.get("verifier_result") for d, r in rows}
-        assert observed["injectedReads"] == ([] if mode == "normal" else [str(target)])
+        assert set(observed["injectedReads"]) == (set() if mode == "normal" else {str(target)})
         completed = observed["reportCompleted"]
         table_rows, target_unknown, peer_visible, peer_usage_preserved = {}, None, None, None
         if completed:

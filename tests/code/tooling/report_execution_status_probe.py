@@ -135,7 +135,7 @@ def run(execution, oracle, nop, output):
             assert ("JSONDecodeError" if mode == "invalid-json" else "PermissionError") in summary
             assert "Native scores retained; trial is unscored" in summary
         if mode == "read-denied":
-            assert observed["injectedReads"] == [str(target)]
+            assert set(observed["injectedReads"]) == {str(target)}
         observation = {"case": name, **observed, "reportCommandExit": result.returncode,
             "target": str(target_relative), "peer": str(peer_relative),
             "nativeResultsPreserved": True, "frozenInputsPreserved": True,
