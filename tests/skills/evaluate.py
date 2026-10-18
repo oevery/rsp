@@ -178,10 +178,23 @@ def reward_nodes(detail, name="reward"):
         yield from reward_nodes(component.get("detail", {}), component["name"])
 
 
-def calibration_case(directory, result):
-    path = directory.parent.with_name(directory.parent.name + ".inputs") / "calibration.json"
-    if path.is_file():
+def calibration_case(directory, result, read_errors=None):
+    inputs = directory.parent.with_name(directory.parent.name + ".inputs")
+    path = inputs / "calibration.json"
+    try:
         return json.loads(path.read_text())[result["task_name"]]
+    except FileNotFoundError as error:
+        # Oracle/nop controls need no manifest. Require explicit saved job
+        # provenance before treating absence as lost calibration expectations.
+        try:
+            source = json.loads((inputs / "source.json").read_text())
+        except (OSError, ValueError):
+            source = {}
+        if isinstance(source, dict) and source.get("agent") == "judge-calibration" and read_errors is not None:
+            read_errors.append(f"calibration.json: {type(error).__name__}: {error}; saved source.json agent=judge-calibration")
+    except (OSError, json.JSONDecodeError) as error:
+        if read_errors is not None:
+            read_errors.append(f"calibration.json: {type(error).__name__}: {error}")
     return None
 
 
@@ -221,7 +234,11 @@ def verdict(directory, result):
     rewards = (result.get("verifier_result") or {}).get("rewards") or {}
     if not rewards:
         return "unscored"
-    if case := calibration_case(directory, result):
+    calibration_errors = []
+    case = calibration_case(directory, result, calibration_errors)
+    if calibration_errors:
+        return "unscored"
+    if case:
         scores = {name: node.get("score") for name, node in reward_nodes(reward_details(directory))}
         if any(scores.get(name) is None for name in case["expected"]):
             return "unscored"
@@ -306,7 +323,11 @@ def report(job, baseline=None):
         if source.get("action") == "regrade":
             reference = source.get("path") or source.get("trial_id") or "unknown"
             lines.append(f"  Source trial: {reference}. Executor metadata and usage are inherited; this regrade does not rerun the executor.")
-        if case := calibration_case(directory, result):
+        calibration_errors = []
+        case = calibration_case(directory, result, calibration_errors)
+        if calibration_errors:
+            lines.append(f"  Calibration expectations unavailable: {diagnostic_text('; '.join(calibration_errors))}. Native scores retained; no expected scores inferred.")
+        elif case:
             lines.append(f"  Judge calibration: {case['label_status']}; expected components {case['expected']}. This is not Skill acceptance or human validation.")
         if exception := result.get("exception_info"):
             lines.append(f"  Execution exception: `{exception.get('exception_type', 'unknown')}`; see native result.")

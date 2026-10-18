@@ -2051,6 +2051,63 @@ source "$RSP_SCRIPT"
                     else:
                         self.assertNotIn("Grading details unavailable", summary)
 
+    def test_report_preserves_calibration_identity_when_expectations_are_unavailable(self):
+        cases = [("judge-calibration", mode) for mode in ("normal", "missing", "invalid-json", "read-denied")]
+        cases += [("oracle", "missing"), ("nop", "missing")]
+        for kind, mode in cases:
+            with self.subTest(kind=kind, mode=mode), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                job, inputs = root / "job", root / "job.inputs"
+                job.mkdir()
+                inputs.mkdir()
+                (job / "result.json").write_text('{"n_total_trials":2}')
+                (inputs / "source.json").write_text(json.dumps({"agent": kind}))
+                expectations = {}
+                for name in ("positive", "negative"):
+                    score = int(name == "positive") if kind == "judge-calibration" else int(kind == "oracle")
+                    trial = job / name
+                    (trial / "verifier").mkdir(parents=True)
+                    (trial / "result.json").write_text(json.dumps({
+                        "task_name": name, "agent_info": {"name": "nop" if kind == "nop" else "oracle"},
+                        "config": {}, "verifier_result": {"rewards": {"reward": score}}}))
+                    (trial / "verifier/reward-details.json").write_text(json.dumps({
+                        "reward": {"kind": "group", "score": score, "components": [
+                            {"name": key, "detail": {"kind": "programmatic", "score": score}}
+                            for key in ("checks", "judge")]}}))
+                    expectations[name] = {"label_status": "candidate", "expected": {"checks": score, "judge": score}}
+                target = inputs / "calibration.json"
+                if mode != "missing":
+                    target.write_text('{"sample":' if mode == "invalid-json" else json.dumps(expectations))
+                before = {p: p.read_bytes() for p in root.rglob("*") if p.is_file()}
+                original_read = Path.read_text
+
+                def read(path, *args, **kwargs):
+                    if mode == "read-denied" and path == target:
+                        raise PermissionError("Injected calibration manifest read refusal")
+                    return original_read(path, *args, **kwargs)
+
+                affected = kind == "judge-calibration" and mode != "normal"
+                expected = "unscored" if affected else {"judge-calibration": "judge-calibration-match",
+                           "oracle": "calibration-pass", "nop": "calibration-fail"}[kind]
+                with patch.object(Path, "read_text", read):
+                    counts = evaluate.report(job)
+                    self.assertEqual(counts, {expected: 2})
+                    self.assertEqual(evaluate.exit_status(job, counts), int(affected))
+                self.assertEqual({p: p.read_bytes() for p in before}, before)
+                summary = (job / "summary.md").read_text()
+                for name in ("positive", "negative"):
+                    self.assertIn(f"| {name} | {expected} |", summary)
+                if affected:
+                    self.assertIn("Calibration expectations unavailable", summary)
+                    self.assertIn("no expected scores inferred", summary)
+                    self.assertNotIn("expected components", summary)
+                    error = {"missing": "FileNotFoundError", "invalid-json": "JSONDecodeError", "read-denied": "PermissionError"}[mode]
+                    self.assertIn(error, summary)
+                    if mode == "missing":
+                        self.assertIn("source.json agent=judge-calibration", summary)
+                else:
+                    self.assertNotIn("Calibration expectations unavailable", summary)
+
     def test_report_keeps_trials_and_marks_unknown_job_plan(self):
         for mode in ("normal", "missing", "invalid-json", "read-denied"):
             with self.subTest(mode=mode), tempfile.TemporaryDirectory() as directory:
