@@ -2051,6 +2051,55 @@ source "$RSP_SCRIPT"
                     else:
                         self.assertNotIn("Grading details unavailable", summary)
 
+    def test_report_preserves_peer_when_trial_result_is_unreadable(self):
+        for mode in ("normal", "missing", "invalid-json", "read-denied"):
+            for planned in (None, 2):
+                with self.subTest(mode=mode, planned=planned), tempfile.TemporaryDirectory() as directory:
+                    job = Path(directory)
+                    for name in ("target", "peer"):
+                        trial = job / name
+                        trial.mkdir()
+                        (trial / "result.json").write_text(json.dumps({
+                            "task_name": name, "config": {},
+                            "verifier_result": {"rewards": {"reward": 1}}}))
+                    if planned is not None:
+                        (job / "result.json").write_text(json.dumps({"n_total_trials": planned}))
+                    target = job / "target/result.json"
+                    if mode == "missing":
+                        target.unlink()
+                    elif mode == "invalid-json":
+                        target.write_text('{"task_name":')
+                    before = {p: p.read_bytes() for p in job.rglob("*") if p.is_file()}
+                    original_read = Path.read_text
+
+                    def read(path, *args, **kwargs):
+                        if mode == "read-denied" and path == target:
+                            raise PermissionError("Injected trial read refusal")
+                        return original_read(path, *args, **kwargs)
+
+                    with patch.object(Path, "read_text", read):
+                        counts = evaluate.report(job)
+                        code = evaluate.exit_status(job, counts)
+                    incomplete = mode != "normal" and (planned is not None or mode != "missing")
+                    expected = {"passed": 2 if mode == "normal" else 1}
+                    if incomplete:
+                        expected["incomplete"] = 1
+                    self.assertEqual(counts, expected)
+                    self.assertEqual(code, int(incomplete))
+                    self.assertEqual({p: p.read_bytes() for p in before}, before)
+                    summary = (job / "summary.md").read_text()
+                    self.assertIn("| peer | passed |", summary)
+                    if mode != "normal":
+                        self.assertNotIn("| target |", summary)
+                        self.assertNotIn("- target (", summary)
+                    if mode in ("invalid-json", "read-denied"):
+                        self.assertIn("## Unreadable trial results", summary)
+                        self.assertIn("target/result.json", summary)
+                        self.assertIn("JSONDecodeError" if mode == "invalid-json" else "PermissionError", summary)
+                        self.assertIn("task identities and scores are unavailable", summary)
+                    else:
+                        self.assertNotIn("## Unreadable trial results", summary)
+
     def test_initial_image_drift_stops_before_job_creation(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

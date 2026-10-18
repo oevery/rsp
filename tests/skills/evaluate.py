@@ -68,9 +68,15 @@ def check(selected):
     print(f"{len(selected)} native Harbor tasks valid; behavioral acceptance not run")
 
 
-def native_results(job):
+def native_results(job, read_errors=None):
     for file in sorted(job.glob("*/result.json")):
-        data = json.loads(file.read_text())
+        try:
+            data = json.loads(file.read_text())
+        except (OSError, json.JSONDecodeError) as error:
+            if read_errors is None:
+                raise
+            read_errors.append((file, f"{type(error).__name__}: {error}"))
+            continue
         if "task_name" in data:
             yield file.parent, data
 
@@ -233,12 +239,15 @@ def verdict(directory, result):
 
 
 def report(job, baseline=None):
-    rows = [(directory, result, verdict(directory, result)) for directory, result in native_results(job)]
+    read_errors = []
+    rows = [(directory, result, verdict(directory, result)) for directory, result in native_results(job, read_errors)]
     counts = Counter(status for _, _, status in rows)
+    if read_errors:
+        counts["incomplete"] = len(read_errors)
     if (job / "result.json").is_file():
         expected = json.loads((job / "result.json").read_text()).get("n_total_trials", len(rows))
         if expected > len(rows):
-            counts["incomplete"] = expected - len(rows)
+            counts["incomplete"] = max(counts["incomplete"], expected - len(rows))
     lines = [f"# Evaluation {job.name}", "", "Native Harbor verdicts are authoritative. Executor usage is attributed from root/descendant session identities, excludes judges, and is not context-window occupancy.", "",
              ", ".join(f"{key}: {value}" for key, value in sorted(counts.items())) or "No completed trial records.", "",
              "Regrade tokens are inherited source-execution usage, not new executor usage or total regrade cost. Judge usage is excluded. Seconds measures the current trial, including regrading when applicable.", "",
@@ -260,10 +269,15 @@ def report(job, baseline=None):
         origin = "inherited source execution (not new)" if regraded else "current trial"
         time_scope = "current regrade trial" if regraded else "current trial"
         lines.append(f"| {result['task_name']} | {status} | {tokens[0]} | {tokens[1]} | {tokens[2]} | {origin} | {elapsed} | {time_scope} | [{directory.name}]({directory.name}/result.json) |")
+    if read_errors:
+        lines += ["", "## Unreadable trial results", "",
+                  "Counted as incomplete; task identities and scores are unavailable. Original files are retained.", ""]
+        for file, error in read_errors:
+            lines.append(f"- {diagnostic_text(file.relative_to(job))}: {diagnostic_text(error)}")
     lines += ["", "## Per-task outcomes", "",
               "Ratios describe returned records, not planned attempts. Returned error/unscored records remain in the denominator; control matches and regrades are not fresh Skill successes.", ""]
     if counts.get("incomplete"):
-        lines += ["Incomplete run: missing trial results cannot be attributed to tasks here. These ratios cannot establish the full-run success rate.", ""]
+        lines += ["Incomplete run: missing or unreadable trial results cannot be attributed to tasks here. These ratios cannot establish the full-run success rate.", ""]
     for task in sorted({r["task_name"] for _, r, _ in rows}):
         outcomes = Counter(s for _, r, s in rows if r["task_name"] == task)
         total = sum(outcomes.values())
