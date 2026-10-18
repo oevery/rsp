@@ -369,10 +369,17 @@ def report(job, baseline=None):
             if failed:
                 lines.append(f"  Unsatisfied criteria ({name}): " + ", ".join(f"`{c}`" for c in failed) + ". Reasons remain in grading details.")
     if baseline:
-        baseline_rows = list(native_results(baseline))
+        baseline_errors = []
+        baseline_rows = list(native_results(baseline, baseline_errors))
         previous = Counter((r["task_name"], verdict(d, r)) for d, r in baseline_rows)
         current = Counter((r["task_name"], s) for _, r, s in rows)
         lines += ["", f"Baseline: {baseline}", "", "Outcome counts only; confirm matching tasks, graders, models and environments before interpreting a change.", ""]
+        if baseline_errors:
+            lines += ["### Unreadable baseline trial results", "",
+                      "Task identities and scores cannot be inferred from unreadable records. Affected comparisons are unavailable; readable outcome counts are partial and must not be interpreted as improvement. Current-job counts and classification exit status do not establish baseline completeness.", ""]
+            for file, error in baseline_errors:
+                lines.append(f"- {diagnostic_text(file.relative_to(baseline))}: {diagnostic_text(error)}")
+            lines.append("")
         old_sources, new_sources = saved_comparison_sources(baseline), saved_comparison_sources(job)
         lines += ["### Saved snapshot comparison", "",
                   "These states compare currently saved sibling .inputs evidence, not original execution identity. Matched bytes do not prove snapshot completeness or agreement with execution-time inputs. Different file inventories are unavailable because loss and intentional changes cannot be distinguished here.", "",
@@ -387,10 +394,11 @@ def report(job, baseline=None):
         for task in sorted({k[0] for k in previous} | {k[0] for k in current}):
             before = {s: n for (t, s), n in previous.items() if t == task}
             after = {s: n for (t, s), n in current.items() if t == task}
-            lines.append(f"- {task}: {before or 'missing'} → {after or 'missing'}")
+            absent_baseline = "unavailable" if baseline_errors else "missing"
+            lines.append(f"- {task}: {before or absent_baseline} → {after or 'missing'}")
             old = [r for _, r in baseline_rows if r["task_name"] == task]
             new = [r for _, r, _ in rows if r["task_name"] == task]
-            limits = []
+            limits = ["unreadable baseline trial results; per-task coverage unavailable"] if baseline_errors else []
             for label, values in (
                 ("task_checksum", lambda r: r.get("task_checksum")),
                 ("agent model/settings", agent_comparison_settings),

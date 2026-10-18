@@ -2051,6 +2051,59 @@ source "$RSP_SCRIPT"
                     else:
                         self.assertNotIn("Grading details unavailable", summary)
 
+    def test_comparison_preserves_current_and_peer_when_baseline_trial_is_unreadable(self):
+        for mode in ("normal", "missing", "invalid-json", "read-denied"):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                current, baseline = root / "current", root / "baseline"
+                for job in (current, baseline):
+                    job.mkdir()
+                    (job / "result.json").write_text('{"n_total_trials":2}')
+                    for name, folder in (("target", "opaque-id"), ("peer", "other-id")):
+                        trial = job / folder
+                        trial.mkdir()
+                        (trial / "result.json").write_text(json.dumps({
+                            "task_name": name, "task_checksum": "saved-" + name,
+                            "config": {"agent": {"name": "codex", "model_name": "fixed"}},
+                            "verifier_result": {"rewards": {"reward": 1}}}))
+                target = baseline / "opaque-id/result.json"
+                if mode == "missing":
+                    target.unlink()
+                elif mode == "invalid-json":
+                    target.write_text('{"task_name":')
+                before = {p: p.read_bytes() for p in root.rglob("*") if p.is_file()}
+                original_read = Path.read_text
+
+                def read(path, *args, **kwargs):
+                    if mode == "read-denied" and path == target:
+                        raise PermissionError("Injected baseline trial result read refusal")
+                    return original_read(path, *args, **kwargs)
+
+                with patch.object(Path, "read_text", read):
+                    counts = evaluate.report(current, baseline)
+                    self.assertEqual(counts, {"passed": 2})
+                    self.assertEqual(evaluate.exit_status(current, counts), 0)
+                self.assertEqual({p: p.read_bytes() for p in before}, before)
+                summary = (current / "summary.md").read_text()
+                for name in ("target", "peer"):
+                    self.assertIn(f"| {name} | passed |", summary)
+                self.assertIn("- peer: {'passed': 1} → {'passed': 1}", summary)
+                if mode in ("invalid-json", "read-denied"):
+                    self.assertIn("- target: unavailable → {'passed': 1}", summary)
+                    self.assertIn("Unreadable baseline trial results", summary)
+                    self.assertIn("opaque-id/result.json", summary)
+                    self.assertIn("JSONDecodeError" if mode == "invalid-json" else "PermissionError", summary)
+                    self.assertIn("per-task coverage unavailable", summary)
+                    self.assertIn("must not be interpreted as improvement", summary)
+                    self.assertIn("classification exit status do not establish baseline completeness", summary)
+                    self.assertNotIn("Recorded task checksum and agent model/settings match", summary)
+                else:
+                    self.assertNotIn("Unreadable baseline trial results", summary)
+                    label = "missing" if mode == "missing" else "{'passed': 1}"
+                    self.assertIn(f"- target: {label} → {{'passed': 1}}", summary)
+                    if mode == "missing":
+                        self.assertIn("task_checksum unavailable", summary)
+
     def test_report_keeps_peer_when_execution_status_cannot_be_read(self):
         cases = [("codex", mode) for mode in ("normal", "missing", "invalid-json", "read-denied")]
         cases += [("oracle", "normal"), ("nop", "normal")]
