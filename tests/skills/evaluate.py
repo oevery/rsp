@@ -244,12 +244,23 @@ def report(job, baseline=None):
     counts = Counter(status for _, _, status in rows)
     if read_errors:
         counts["incomplete"] = len(read_errors)
-    if (job / "result.json").is_file():
-        expected = json.loads((job / "result.json").read_text()).get("n_total_trials", len(rows))
-        if expected > len(rows):
-            counts["incomplete"] = max(counts["incomplete"], expected - len(rows))
+    expected, plan_error = None, None
+    try:
+        expected = json.loads((job / "result.json").read_text()).get("n_total_trials")
+        if expected is None:
+            plan_error = "result.json does not record n_total_trials"
+    except (OSError, json.JSONDecodeError) as error:
+        plan_error = f"result.json: {type(error).__name__}: {error}"
+    if expected is not None and expected > len(rows):
+        counts["incomplete"] = max(counts["incomplete"], expected - len(rows))
+    plan = ("Planned trials: unknown. Run completeness: unknown. "
+            "Returned-trial classification exit 0 does not confirm run completeness; "
+            "report command exit 0 only confirms report generation. "
+            f"Plan unavailable: {diagnostic_text(plan_error)}." if expected is None else
+            f"Planned trials: {expected} (from job result.json).")
     lines = [f"# Evaluation {job.name}", "", "Native Harbor verdicts are authoritative. Executor usage is attributed from root/descendant session identities, excludes judges, and is not context-window occupancy.", "",
              ", ".join(f"{key}: {value}" for key, value in sorted(counts.items())) or "No completed trial records.", "",
+             plan, "",
              "Regrade tokens are inherited source-execution usage, not new executor usage or total regrade cost. Judge usage is excluded. Seconds measures the current trial, including regrading when applicable.", "",
              "Cached input tokens are part of input tokens, not additional tokens. Cache counts alone do not establish fees or a savings percentage; no pricing or savings estimate is calculated.", "",
              "| Task | Result | Input tokens | Cached input tokens | Output tokens | Usage origin | Seconds | Time scope | Evidence |", "| --- | --- | ---: | ---: | ---: | --- | ---: | --- | --- |"]

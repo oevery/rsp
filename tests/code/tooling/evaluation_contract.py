@@ -2051,6 +2051,47 @@ source "$RSP_SCRIPT"
                     else:
                         self.assertNotIn("Grading details unavailable", summary)
 
+    def test_report_keeps_trials_and_marks_unknown_job_plan(self):
+        for mode in ("normal", "missing", "invalid-json", "read-denied"):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as directory:
+                job = Path(directory)
+                for name in ("first", "second"):
+                    trial = job / name
+                    trial.mkdir()
+                    (trial / "result.json").write_text(json.dumps({
+                        "task_name": name, "config": {},
+                        "verifier_result": {"rewards": {"reward": 1}}}))
+                target = job / "result.json"
+                if mode != "missing":
+                    target.write_text('{"n_total_trials":' if mode == "invalid-json" else '{"n_total_trials":2}')
+                before = {p: p.read_bytes() for p in job.rglob("*") if p.is_file()}
+                read_text = Path.read_text
+
+                def read(path, *args, **kwargs):
+                    if mode == "read-denied" and path == target:
+                        raise PermissionError("Injected job result read refusal")
+                    return read_text(path, *args, **kwargs)
+
+                with patch.object(Path, "read_text", read):
+                    counts = evaluate.report(job)
+                    self.assertEqual(counts, {"passed": 2})
+                    self.assertEqual(evaluate.exit_status(job, counts), 0)
+                self.assertEqual({p: p.read_bytes() for p in before}, before)
+                summary = (job / "summary.md").read_text()
+                for name in ("first", "second"):
+                    self.assertIn(f"| {name} | passed |", summary)
+                if mode == "normal":
+                    self.assertIn("Planned trials: 2 (from job result.json).", summary)
+                    self.assertNotIn("Run completeness: unknown", summary)
+                else:
+                    self.assertIn("Planned trials: unknown. Run completeness: unknown.", summary)
+                    self.assertIn("classification exit 0 does not confirm run completeness", summary)
+                    self.assertIn("report command exit 0 only confirms report generation", summary)
+                    self.assertNotIn("Planned trials: 2", summary)
+                    error_type = {"missing": "FileNotFoundError", "invalid-json": "JSONDecodeError",
+                                  "read-denied": "PermissionError"}[mode]
+                    self.assertIn("result.json: " + error_type, summary)
+
     def test_report_preserves_peer_when_trial_result_is_unreadable(self):
         for mode in ("normal", "missing", "invalid-json", "read-denied"):
             for planned in (None, 2):
