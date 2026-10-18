@@ -168,6 +168,32 @@ observations and local process results from unmeasured model/token improvements.
 
 The retired custom runner's raw records, workspaces, preparation probes and temporary archives were removed on 2026-10-08. Selected historical summaries and verdicts remain at their original paths; they cannot supply replay or regrade evidence after raw inputs are removed. Historical retention statements predate this cleanup. The framework comparison experiment remains intact for its research report. Retain native Harbor jobs with their sibling inputs and recovery backups; the local reports/README.md describes the cleanup boundary.
 
+## Offline native judge-result controls
+
+With Docker running and the evaluation image matching current source, explicitly
+run the [native probe](../code/tooling/judge_native_probe.py) into a new directory:
+
+~~~bash
+mise exec -- uv run --frozen --project tests/skills python tests/code/tooling/judge_native_probe.py tests/skills/reports/judge-native-NEW
+~~~
+
+This opt-in probe runs four native Harbor oracle jobs with zero task retries:
+valid low score, one malformed response then success, three malformed responses,
+and an immediate injected SDK timeout. It copies release-evidence, keeps its
+checks/rubric, and substitutes only the judge SDK boundary using a hidden test
+fixture. Both native phases use no-network policy and dummy credentials.
+The probe retains a local image tag pinned to the inspected ID; task images add
+only fixture workspace/setup. The production image and dependencies are unchanged.
+
+The reference solution is deterministic, not model execution. Expected report
+labels are calibration-fail, calibration-pass, unscored and unscored. Records
+separate original verifier-shell exit, native CLI exit and RSP classification
+exit, and retain native results, grading details, summaries and frozen inputs.
+The probe exits zero only when all four controls meet their expectations; an
+expected unavailable result is not itself a failed regression. No real model,
+judge, historical regrade, human label confirmation or Skill acceptance follows.
+Do not reuse an existing evidence directory or replace a failed run.
+
 ## Offline commit-stop controls
 
 The [commit-stop regression](../code/tooling/commit-stop-boundaries.test.js) runs
