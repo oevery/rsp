@@ -110,8 +110,23 @@ class EvaluationContract(unittest.TestCase):
                             self.assertIn("timed out", json.dumps(detail))
                             self.assertTrue((logs / "unscored-reward.json").is_file())
                         else:
-                            # TaskGroup's JSON summary is coarse; the propagated
-                            # exception chain must still retain the parser cause.
+                            # Keep the original summary and propagated cause, while
+                            # exposing the root location in both new JSON records.
+                            self.assertEqual(detail["error"], "unhandled errors in a TaskGroup (1 sub-exception)")
+                            self.assertEqual(status["errors"], [detail["error"]])
+                            self.assertEqual(list(grade.errors(detail)), [detail["error"]])
+                            self.assertEqual(detail["root_causes"], status["root_causes"])
+                            causes = detail["root_causes"]
+                            self.assertTrue(causes)
+                            for cause in causes:
+                                self.assertEqual(cause["type"], "builtins.ValueError")
+                                self.assertIn("invalid-format-3", cause["message"])
+                                self.assertIn("exceptions[0]", cause["exception_path"])
+                                self.assertTrue(cause["exception_path"].startswith("exception."))
+                                location = cause["location"]
+                                self.assertEqual(location["function"], "parse_judge_response")
+                                self.assertTrue(Path(location["file"]).is_file())
+                                self.assertIn("raise ValueError", Path(location["file"]).read_text().splitlines()[location["line"] - 1])
                             self.assertIn("invalid-format-3", observation["propagatedException"])
                             self.assertIn("Could not parse JSON", observation["propagatedException"])
                     else:
