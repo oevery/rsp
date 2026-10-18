@@ -1938,6 +1938,60 @@ source "$RSP_SCRIPT"
             self.assertIn("cannot establish the full-run success rate", summary)
             self.assertEqual(evaluate.exit_status(job, counts), 1)
 
+    def test_report_distinguishes_unscorable_diagnostics_from_low_scores(self):
+        root_error = "Could not parse JSON from judge response: invalid-format-3"
+        summary_error = "unhandled errors in a TaskGroup (1 sub-exception)"
+        for scenario, score, expected, exit_code in (
+            ("valid-low", 0.5, "calibration-fail", 1),
+            ("format-then-success", 1.0, "calibration-pass", 0),
+            ("format-exhausted", None, "unscored", 1),
+            ("timeout", None, "unscored", 1),
+        ):
+            with self.subTest(scenario=scenario), tempfile.TemporaryDirectory() as directory:
+                job = Path(directory)
+                trial = job / "trial"
+                logs = trial / "verifier"
+                logs.mkdir(parents=True)
+                result = {"task_name": scenario, "agent_info": {"name": "oracle"},
+                          "config": {}, "verifier_result": {"rewards": {"reward": score}}}
+                criterion = {"name": "candidate-acceptance-boundary", "value": 1 if score == 1 else 0}
+                details = {"judge": {"kind": "llm", "criteria": [criterion]}}
+                if score is None:
+                    result["verifier_result"] = None
+                    result["exception_info"] = {"exception_type": "RewardFileNotFoundError"}
+                if scenario == "format-exhausted":
+                    details = {"error": summary_error, "root_causes": [{
+                        "type": "builtins.ValueError", "message": root_error,
+                        "location": {"file": "/opt/judges.py", "line": 320,
+                                     "function": "parse_judge_response"}}]}
+                elif scenario == "timeout":
+                    criterion.update(raw=None, error="judge timed out after 300s")
+                (trial / "result.json").write_text(json.dumps(result))
+                (logs / "reward-details.json").write_text(json.dumps(details))
+                retained = {p: p.read_bytes() for p in job.rglob("*") if p.is_file()}
+                before_verdict = evaluate.verdict(trial, result)
+                counts = evaluate.report(job)
+                self.assertEqual(counts, {expected: 1})
+                self.assertEqual(evaluate.exit_status(job, counts), exit_code)
+                self.assertEqual(evaluate.verdict(trial, result), before_verdict)
+                self.assertEqual({p: p.read_bytes() for p in retained}, retained)
+                rendered = (job / "summary.md").read_text()
+                self.assertIn("Grading details", rendered)
+                if scenario == "valid-low":
+                    self.assertIn("Unsatisfied criteria (judge)", rendered)
+                    self.assertNotIn("Unscorable criterion", rendered)
+                elif scenario == "timeout":
+                    self.assertIn("Unscorable criterion (judge)", rendered)
+                    self.assertIn("judge timed out after 300s", rendered)
+                    self.assertNotIn("Unsatisfied criteria", rendered)
+                elif scenario == "format-exhausted":
+                    for text in (summary_error, root_error, "builtins.ValueError", "/opt/judges.py:320"):
+                        self.assertIn(text, rendered)
+                    self.assertNotIn("Unsatisfied criteria", rendered)
+                else:
+                    for text in ("Unscorable", "Unsatisfied", "Root cause", "Grading unavailable"):
+                        self.assertNotIn(text, rendered)
+
     def test_initial_image_drift_stops_before_job_creation(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

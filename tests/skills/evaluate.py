@@ -4,6 +4,7 @@ from collections import Counter
 from copy import deepcopy
 from datetime import datetime, timezone
 import hashlib
+import html
 import json
 import os
 from pathlib import Path
@@ -77,6 +78,14 @@ def native_results(job):
 def reward_details(directory):
     path = directory / "verifier/reward-details.json"
     return json.loads(path.read_text()) if path.is_file() else {}
+
+
+def diagnostic_text(value):
+    """Render one-line diagnostic prose; original messages stay in JSON."""
+    text = html.escape(" ".join(str(value).split()))
+    for character in ("\\", chr(96), "*", "_", "[", "]", "|"):
+        text = text.replace(character, "\\" + character)
+    return text
 
 
 def agent_comparison_settings(result):
@@ -272,10 +281,23 @@ def report(job, baseline=None):
         details = reward_details(directory)
         if details:
             lines.append(f"  [Grading details]({directory.name}/verifier/reward-details.json).")
+        if error := details.get("error"):
+            lines.append(f"  Grading unavailable: {diagnostic_text(error)}.")
+        for cause in details.get("root_causes", []):
+            root = f"  Root cause: {diagnostic_text(cause.get('type', 'unknown'))}: {diagnostic_text(cause.get('message', ''))}"
+            if location := cause.get("location"):
+                root += f"; at {diagnostic_text(location.get('file', 'unknown'))}:{diagnostic_text(location.get('line', 'unknown'))} ({diagnostic_text(location.get('function', 'unknown'))})"
+            lines.append(root + ".")
         for name, node in reward_nodes(details):
             if judge := node.get("judge"):
                 lines.append(f"  {name}: judge `{judge.get('model', 'unknown')}`, effort `{judge.get('reasoning_effort', 'unknown')}`, samples {judge.get('samples', 1)}.")
-            failed = [c["name"] for c in node.get("criteria", []) if c.get("value") != 1]
+            criteria = node.get("criteria", [])
+            unavailable = [c for c in criteria if c.get("error") or c.get("value") is None]
+            for criterion in unavailable:
+                reason = criterion.get("error") or "score unavailable"
+                lines.append(f"  Unscorable criterion ({name}): {diagnostic_text(criterion['name'])}; {diagnostic_text(reason)}. Evidence remains in grading details.")
+            failed = [c["name"] for c in criteria
+                      if c.get("value") is not None and c.get("value") != 1 and not c.get("error")]
             if failed:
                 lines.append(f"  Unsatisfied criteria ({name}): " + ", ".join(f"`{c}`" for c in failed) + ". Reasons remain in grading details.")
     if baseline:
