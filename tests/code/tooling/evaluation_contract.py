@@ -2051,6 +2051,62 @@ source "$RSP_SCRIPT"
                     else:
                         self.assertNotIn("Grading details unavailable", summary)
 
+    def test_comparison_reports_baseline_plan_without_changing_current_status(self):
+        for mode in ("normal", "planned-more", "missing", "invalid-json", "read-denied"):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                current, baseline = root / "current", root / "baseline"
+                for job in (current, baseline):
+                    job.mkdir()
+                    (job / "result.json").write_text('{"n_total_trials":2}')
+                    for name in ("target", "peer"):
+                        trial = job / name
+                        trial.mkdir()
+                        (trial / "result.json").write_text(json.dumps({
+                            "task_name": name, "task_checksum": "saved-" + name,
+                            "config": {"agent": {"name": "codex", "model_name": "fixed"}},
+                            "verifier_result": {"rewards": {"reward": 1}}}))
+                target = baseline / "result.json"
+                if mode == "planned-more":
+                    target.write_text('{"n_total_trials":3}')
+                elif mode == "missing":
+                    target.unlink()
+                elif mode == "invalid-json":
+                    target.write_text('{"n_total_trials":')
+                before = {p: p.read_bytes() for p in root.rglob("*") if p.is_file()}
+                original_read = Path.read_text
+                refusals = []
+
+                def read(path, *args, **kwargs):
+                    if mode == "read-denied" and path == target:
+                        refusals.append(path)
+                        raise PermissionError("Injected baseline job result read refusal")
+                    return original_read(path, *args, **kwargs)
+
+                with patch.object(Path, "read_text", read):
+                    counts = evaluate.report(current, baseline)
+                    self.assertEqual(counts, {"passed": 2})
+                    self.assertEqual(evaluate.exit_status(current, counts), 0)
+                self.assertEqual(len(refusals), int(mode == "read-denied"))
+                self.assertEqual({p: p.read_bytes() for p in before}, before)
+                summary = (current / "summary.md").read_text()
+                plan = "2" if mode == "normal" else "3" if mode == "planned-more" else "unknown"
+                state = "complete" if mode == "normal" else "incomplete" if mode == "planned-more" else "unknown"
+                self.assertIn(f"Baseline planned trials: {plan}.", summary)
+                self.assertIn("Baseline returned trials (readable records): 2.", summary)
+                self.assertIn(f"Baseline completeness: {state} (record counts only).", summary)
+                self.assertIn("Current-job classification exit 0 does not confirm baseline completeness", summary)
+                for name in ("target", "peer"):
+                    self.assertIn(f"| {name} | passed |", summary)
+                    self.assertIn(f"- {name}: {{'passed': 1}} → {{'passed': 1}}", summary)
+                if mode != "normal":
+                    self.assertIn(f"Comparison limited: baseline completeness {state}", summary)
+                    self.assertIn("must not be interpreted as improvement", summary)
+                if plan == "unknown":
+                    error = {"missing": "FileNotFoundError", "invalid-json": "JSONDecodeError", "read-denied": "PermissionError"}[mode]
+                    self.assertIn("Baseline plan unavailable:", summary)
+                    self.assertIn(error, summary)
+
     def test_comparison_preserves_current_and_peer_when_baseline_trial_is_unreadable(self):
         for mode in ("normal", "missing", "invalid-json", "read-denied"):
             with self.subTest(mode=mode), tempfile.TemporaryDirectory() as directory:

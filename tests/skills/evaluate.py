@@ -409,6 +409,27 @@ def report(job, baseline=None):
         previous = Counter((r["task_name"], verdict(d, r)) for d, r in baseline_rows)
         current = Counter((r["task_name"], s) for _, r, s in rows)
         lines += ["", f"Baseline: {baseline}", "", "Outcome counts only; confirm matching tasks, graders, models and environments before interpreting a change.", ""]
+        baseline_expected, baseline_plan_error = None, None
+        try:
+            baseline_expected = json.loads((baseline / "result.json").read_text()).get("n_total_trials")
+            if baseline_expected is None:
+                baseline_plan_error = "result.json does not record n_total_trials"
+        except (OSError, json.JSONDecodeError) as error:
+            baseline_plan_error = f"result.json: {type(error).__name__}: {error}"
+        baseline_state = "unknown"
+        if baseline_expected is not None:
+            if len(baseline_rows) < baseline_expected:
+                baseline_state = "incomplete"
+            elif len(baseline_rows) == baseline_expected and not baseline_errors:
+                baseline_state = "complete"
+        lines += [f"Baseline planned trials: {baseline_expected if baseline_expected is not None else 'unknown'}.",
+                  f"Baseline returned trials (readable records): {len(baseline_rows)}.",
+                  f"Baseline completeness: {baseline_state} (record counts only).",
+                  "Current-job classification exit 0 does not confirm baseline completeness. Equal record counts do not establish task coverage or candidate improvement.", ""]
+        if baseline_plan_error:
+            lines += [f"Baseline plan unavailable: {diagnostic_text(baseline_plan_error)}", ""]
+        if baseline_state != "complete":
+            lines += [f"Comparison limited: baseline completeness {baseline_state}; retained outcome counts must not be interpreted as improvement.", ""]
         if baseline_errors:
             lines += ["### Unreadable baseline trial results", "",
                       "Task identities and scores cannot be inferred from unreadable records. Affected comparisons are unavailable; readable outcome counts are partial and must not be interpreted as improvement. Current-job counts and classification exit status do not establish baseline completeness.", ""]
