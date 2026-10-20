@@ -1,0 +1,11 @@
+{
+  "label_status": "candidate",
+  "expected": {
+    "checks": 0,
+    "judge": 0
+  },
+  "expected_criteria": {
+    "contract-and-scope": 0
+  },
+  "rationale": "Skipping unknown targets sends packets to valid targets instead of rejecting the entire request. Passing retained tests cannot excuse this observable contract violation."
+}

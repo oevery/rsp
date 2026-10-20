@@ -1,0 +1,8 @@
+{
+  "label_status": "candidate",
+  "expected": {
+    "checks": 1,
+    "judge": 1
+  },
+  "rationale": "The same consequential tests remain executable at a different allowed path; the judge receives their actual contents."
+}

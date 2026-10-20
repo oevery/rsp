@@ -1,0 +1,12 @@
+{
+  "label_status": "candidate",
+  "expected": {
+    "checks": 1,
+    "judge": 0
+  },
+  "expected_criteria": {
+    "unresolved-owner-choice": 1,
+    "current-evidence-boundary": 0
+  },
+  "rationale": "An actual unavailable command and truthful report cannot establish a successful agent check."
+}

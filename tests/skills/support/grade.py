@@ -5,6 +5,7 @@ import os
 import shutil
 import tempfile
 import sys
+import tomllib
 from pathlib import Path
 
 from rewardkit.runner import run
@@ -59,7 +60,25 @@ def root_causes(error):
     return roots
 
 
-def grade(tests, workspace, output):
+def require_judge_evidence(tests, workspace):
+    """Missing host/verifier inputs are unavailable, unlike missing task output."""
+    # Ownership follows the declared location, not an output symlink's target.
+    workspace = Path(os.path.abspath(workspace))
+    for config in tests.rglob("*.toml"):
+        rubric = tomllib.loads(config.read_text())
+        references = list(rubric.get("judge", {}).get("files", ()))
+        for criterion in rubric.get("criterion", ()):
+            references.extend(criterion.get("files", ()))
+        for reference in set(references):
+            path = Path(reference)
+            if path.is_absolute() and not Path(os.path.abspath(path)).is_relative_to(workspace):
+                if path.is_dir():
+                    list(path.iterdir())
+                else:
+                    path.read_bytes()
+
+
+def grade(tests, workspace, output, source_areas=()):
     if host := os.environ.get("RSP_JUDGE_HOST"):
         import litellm
         litellm.headers = {"Host": host}
@@ -75,7 +94,6 @@ def grade(tests, workspace, output):
         if offline:
             # Calibration runs exercise deterministic criteria only. Keep support
             # files and remove judge declarations, never invent a semantic pass.
-            import tomllib
             for file in selected.rglob("*.toml"):
                 if "judge" in tomllib.loads(file.read_text()):
                     file.unlink()
@@ -83,6 +101,10 @@ def grade(tests, workspace, output):
         details_path.unlink(missing_ok=True)
         sys.path.insert(0, str(Path(__file__).parent))
         try:
+            if source_areas:
+                from verifier import source_evidence
+                source_evidence(workspace.resolve(), output.with_name("source-evidence.json"), *source_areas)
+            require_judge_evidence(selected, workspace)
             scores = run(selected, workspace=workspace, output=output)
         except Exception as error:
             # Programmatic exceptions can abort Reward Kit before it writes
@@ -110,5 +132,6 @@ if __name__ == "__main__":
     parser.add_argument("tests", type=Path)
     parser.add_argument("--workspace", type=Path, default=Path("/app"))
     parser.add_argument("--output", type=Path, default=Path("/logs/verifier/reward.json"))
+    parser.add_argument("--source-area", action="append", default=[], help="Workspace source area retained for semantic judging")
     args = parser.parse_args()
-    grade(args.tests, args.workspace, args.output)
+    grade(args.tests, args.workspace, args.output, args.source_area)

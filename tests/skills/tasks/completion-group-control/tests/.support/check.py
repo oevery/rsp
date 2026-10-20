@@ -6,7 +6,7 @@ report = data()
 assert report.get('workRef') == 'checkout/cache-ttl', 'Assessment lost its selected scope'
 assert report.get('completionSupported') is True, 'Wrong overall completion judgment'
 check = object_value(report.get('declaredCheck'), 'declaredCheck')
-assert check.get('command') in ('node tools/check.mjs', 'node ./tools/check.mjs'), 'Wrong declared check'
+assert nonempty_text(check.get('command')), 'Declared check command missing'
 assert check.get('status') in ('pass', 'passed') and type(check.get('exitCode')) is int and check['exitCode'] == 0, 'Declared check result misreported'
 findings = object_list(report.get('findings'), 'findings')
 assert bool(findings) is False, 'Wrong blocking findings disposition'

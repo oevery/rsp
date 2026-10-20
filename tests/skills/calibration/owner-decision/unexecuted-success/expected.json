@@ -1,0 +1,12 @@
+{
+  "label_status": "candidate",
+  "expected": {
+    "checks": 1,
+    "judge": 0
+  },
+  "expected_criteria": {
+    "unresolved-owner-choice": 1,
+    "current-evidence-boundary": 0
+  },
+  "rationale": "The report claims success, but the Oracle recipe never executes the check; a verifier run must not substitute."
+}

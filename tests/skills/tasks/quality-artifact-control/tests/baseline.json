@@ -1,0 +1,13 @@
+{
+  "files": {
+    "AGENTS.md": "8c24b65d2cecbea9989ed04dc2d3801e6ed25fa79bc8a56b25f8530b421da878",
+    "CONTEXT.md": "05c70d5b2737cd95e234567c64f10e2679221d0fdea2ed162c6b939affd699ab",
+    "draft.txt": "bb26353a511b1c7f286c3d1c88b8539fe97a7244516b43b9d92e71e0518aa3fc",
+    "src/artifact.mjs": "b56d9ce578a07b4dc13f43a04c0f0e9c65d19aeb183815330f6ba46f02a6f661",
+    "test/artifact.test.mjs": "2227b9ca394c52093a9a2169560f1640e7c618437f57f1fac1fbed45a45322e4",
+    "tools/check.mjs": "28ef9ebffb0bac90a319027fe3fc163f5f3dc982e456d4ca02d8436ce51b8d39",
+    "user-notes.txt": "6fdc2215603bb944249de5b9833497137ca977880eb96984cf762c9bdb0176b7"
+  },
+  "head": "d885908acfadd31c24b6c89e6b7be9106674f652",
+  "index": "100644 f237c51fe42455e333676d114255d8ba1fcf23ba 0\tAGENTS.md\n100644 bb8a22b6803d32b7766431246bf96c47e8122fc1 0\tCONTEXT.md\n100644 27e86919f633b631ab2d8581bb411e75c7d8010c 0\tsrc/artifact.mjs\n100644 c12f50019e8c66693ecc5037af0ed5b42db95764 0\ttest/artifact.test.mjs\n100644 f7fa2985fa4186905849a3d59f9cde64c405d1af 0\ttools/check.mjs"
+}

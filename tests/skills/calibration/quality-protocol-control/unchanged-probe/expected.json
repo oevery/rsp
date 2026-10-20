@@ -1,0 +1,13 @@
+{
+  "label_status": "candidate",
+  "expected": {
+    "checks": 1,
+    "judge": 1
+  },
+  "expected_criteria": {
+    "contract-and-scope": 1,
+    "regression-value": 1,
+    "evidence-and-restraint": 1
+  },
+  "rationale": "Correct source and useful tests remain unchanged. An executed unknown-target probe supplies current verification; preserving it permanently is a non-blocking suggestion under this task."
+}

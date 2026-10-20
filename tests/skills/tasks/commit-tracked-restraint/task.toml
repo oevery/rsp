@@ -27,3 +27,6 @@ storage_mb = 4096
 
 [[artifacts]]
 source = "/app"
+
+[[artifacts]]
+source = "/logs/agent/codex.txt"

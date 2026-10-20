@@ -194,6 +194,8 @@
         "docs/architecture.md",
         "docs/defensive-patterns.md",
         "docs/testing.md",
+        "packages/acp/acp/tests/harness.ts",
+        "packages/core/agent-loop/tests/contract-regressions.spec.ts",
         "packages/preset/agent-preset/skills/agent-experience/**",
         "scripts/**"
       ],
@@ -562,6 +564,42 @@
         "README.md"
       ],
       "repository": "https://github.com/prisma/web.git"
+    },
+    "quality-anthropic-evals@20261019T061403435Z": {
+      "limitations": "Primary-source research only; reuse terms not established. No product asset adoption.",
+      "origin": "https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents retrieved 2026-10-19T06:12:36.373808+00:00"
+    },
+    "quality-codex-protocol@20261019T061625780Z": {
+      "limitations": "Primary-source inspection only; no code or Skill adoption.",
+      "origin": "https://raw.githubusercontent.com/openai/codex/5c18cc0acc3734f0e78e422a7fd94ea4a2be652e/codex-rs/app-server-protocol/src/protocol/common.rs retrieved 2026-10-19T06:16:25.715297+00:00"
+    },
+    "quality-codex-review-agents@20261019T061625056Z": {
+      "limitations": "Primary-source inspection only; no code or Skill adoption.",
+      "origin": "https://raw.githubusercontent.com/openai/codex/5c18cc0acc3734f0e78e422a7fd94ea4a2be652e/AGENTS.md retrieved 2026-10-19T06:16:24.975226+00:00"
+    },
+    "quality-google-review@20261019T061403349Z": {
+      "limitations": "Primary-source research only; reuse terms not established. No product asset adoption.",
+      "origin": "https://google.github.io/eng-practices/review/reviewer/looking-for.html retrieved 2026-10-19T06:12:34.189120+00:00"
+    },
+    "quality-google-unit-testing@20261019T061403392Z": {
+      "limitations": "Primary-source research only; reuse terms not established. No product asset adoption.",
+      "origin": "https://abseil.io/resources/swe-book/html/ch12.html retrieved 2026-10-19T06:12:35.024945+00:00"
+    },
+    "quality-homebrew-downloadable@20261019T061635007Z": {
+      "limitations": "Primary-source inspection only; no code or Skill adoption.",
+      "origin": "https://docs.brew.sh/rubydoc/Downloadable.html retrieved 2026-10-19T06:16:34.934951+00:00"
+    },
+    "quality-openai-eval-skills@20261019T061403212Z": {
+      "limitations": "Primary-source research only; reuse terms not established. No product asset adoption.",
+      "origin": "https://developers.openai.com/blog/eval-skills.md retrieved 2026-10-19T06:12:35.518561+00:00"
+    },
+    "quality-openai-maintenance@20261019T061403261Z": {
+      "limitations": "Primary-source research only; reuse terms not established. No product asset adoption.",
+      "origin": "https://developers.openai.com/blog/maintaining-software-with-the-gpt-6-family.md retrieved 2026-10-19T06:12:35.449783+00:00"
+    },
+    "quality-openai-review-rules@20261019T061403306Z": {
+      "limitations": "Primary-source research only; reuse terms not established. No product asset adoption.",
+      "origin": "https://developers.openai.com/blog/custom-code-review-rules-for-codex.md retrieved 2026-10-19T06:12:35.213777+00:00"
     },
     "skill-use-bench@1a80e93479e1a9f5ce4be2e27550edaf7f9d6ffc": {
       "paths": [

@@ -1,0 +1,8 @@
+{
+  "label_status": "candidate",
+  "expected": {
+    "checks": 1,
+    "judge": 1
+  },
+  "rationale": "Two linked code/comment observations identify one underlying payable-price contract defect; array length does not decide deduplication."
+}

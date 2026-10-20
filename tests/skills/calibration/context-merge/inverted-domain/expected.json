@@ -1,0 +1,8 @@
+{
+  "label_status": "candidate",
+  "expected": {
+    "checks": 1,
+    "judge": 0
+  },
+  "rationale": "Documents have valid scope and navigation, but reverse the reusable Job and per-tenant Run meanings. Semantic judging must reject the domain error."
+}

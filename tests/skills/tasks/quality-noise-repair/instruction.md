@@ -1,0 +1,5 @@
+Inspect the receiver setting implementation and regression tests against the agreed contract. Resolve genuine correctness or test gaps and verify the result. If it already satisfies the contract, preserve correct behavior instead of manufacturing changes.
+
+Apply the valid-level contract to published device observations as well as requested settings. An unsuccessful refresh must preserve the confirmed state and any pending recovery quarantine. Retain regression protection for whole write/readback serialization and explicit recovery without replay; reuse existing tests where sufficient. Additional useful test suggestions do not automatically require permanent additions.
+
+Work in /app. CONTEXT.md is the agreed business authority. Follow AGENTS.md for write scope. Run node tools/check.mjs and proportionate additional checks. Write assessment.json with status (corrected or satisfied), findings [{path, reason, consequence}], evidence [{path, detail}], and limits (text). Explain actual changes and verification in your final response. Do not commit or publish.

@@ -27,9 +27,9 @@ def nonempty_text(value):
 
 
 def evidence_file(root, reference):
-    """Resolve workspace evidence, optionally with one-based line/column."""
+    """Resolve workspace evidence with an optional line, column or line range."""
     assert nonempty_text(reference), "Evidence path must be nonempty text"
-    match = re.fullmatch(r"(.+?):([0-9]+)(?::([0-9]+))?", reference)
+    match = re.fullmatch(r"(.+?):L?([0-9]+)(?::([0-9]+)|-L?([0-9]+))?", reference)
     path = match[1] if match else reference
     if path.startswith("/app/"):
         path = path[len("/app/"):]
@@ -43,11 +43,13 @@ def evidence_file(root, reference):
     if match:
         line = int(match[2])
         column = int(match[3]) if match[3] else None
+        end = int(match[4]) if match[4] else line
         try:
             lines = target.read_text().splitlines()
         except UnicodeError as error:
             raise AssertionError(f"Evidence location requires a text file: {reference}") from error
         assert 1 <= line <= len(lines), f"Evidence line is out of range: {reference}"
+        assert line <= end <= len(lines), f"Evidence range is out of order or range: {reference}"
         if column is not None:
             assert 1 <= column <= len(lines[line - 1]) + 1, f"Evidence column is out of range: {reference}"
     return target

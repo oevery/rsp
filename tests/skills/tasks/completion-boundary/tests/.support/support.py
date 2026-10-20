@@ -1,4 +1,4 @@
-from outputs import read_object, object_value, object_list, nonempty_text
+from outputs import read_object, object_value, object_list, nonempty_text, evidence_file
 from workspace import readonly_changes
 from pathlib import Path
 import json,os,subprocess
@@ -23,9 +23,4 @@ def readonly_product(output="report.json"):
  readonly_changes(ROOT, BASE['diff'], (output,), ('draft.txt',))
 
 def reference_file(reference):
- # Reports may cite relative files or /app files, with a line/column suffix.
- import re
- path = re.sub(r':\d+(?::\d+)?$', '', reference)
- if path.startswith('/app/'):
-  path = path[len('/app/'):]
- return ROOT / path
+ return evidence_file(ROOT, reference)

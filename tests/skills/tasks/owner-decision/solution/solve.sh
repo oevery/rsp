@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "${RSP_WORKSPACE:-/app}"
-node tools/check.mjs
+set +e
+python3 "$(dirname "$0")/check-evidence.py" node tools/check.mjs
+code=$?
+set -e
+if [ "$code" -ne 0 ]; then
+  exit "$code"
+fi
 cat > report.json <<'REPORT'
 {
   "workRef": "catalog-refresh",

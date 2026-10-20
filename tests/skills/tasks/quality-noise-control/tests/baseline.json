@@ -1,0 +1,14 @@
+{
+  "files": {
+    "AGENTS.md": "8c24b65d2cecbea9989ed04dc2d3801e6ed25fa79bc8a56b25f8530b421da878",
+    "CONTEXT.md": "80eb22ac743a854e885bdafb68d4a8953bf5c9701b5ded6f887f6cfb2903a05a",
+    "draft.txt": "bb26353a511b1c7f286c3d1c88b8539fe97a7244516b43b9d92e71e0518aa3fc",
+    "src/link.mjs": "f2a17e43ddc29aa169908455de67062be32c59ed624f307b0fefc8eb6745539b",
+    "src/noise.mjs": "fe86cb0532ef2b8b608f573eb4476579f91356c1d1dc7a42c6457a8d3bd1cdee",
+    "test/noise.test.mjs": "dc0b5509041daccb1891272eb489b161e66604be53c3cf681aec082c3b746403",
+    "tools/check.mjs": "28ef9ebffb0bac90a319027fe3fc163f5f3dc982e456d4ca02d8436ce51b8d39",
+    "user-notes.txt": "6fdc2215603bb944249de5b9833497137ca977880eb96984cf762c9bdb0176b7"
+  },
+  "head": "2e491b1db5b678e68caaa42659098399b5a142d2",
+  "index": "100644 f237c51fe42455e333676d114255d8ba1fcf23ba 0\tAGENTS.md\n100644 359a0ba7adab15f21e494cd217e6b007ec38d0c3 0\tCONTEXT.md\n100644 8da10c9f2afefd0f7be8e42cf9f1fb61f18ca8ce 0\tsrc/link.mjs\n100644 2f592d7d4b1fc55cb550b71cabc684a39c13ed04 0\tsrc/noise.mjs\n100644 e043bd4f271a4fef5191bc5a89552b811ab18e2c 0\ttest/noise.test.mjs\n100644 f7fa2985fa4186905849a3d59f9cde64c405d1af 0\ttools/check.mjs"
+}

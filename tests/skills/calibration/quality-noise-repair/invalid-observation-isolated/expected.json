@@ -1,0 +1,12 @@
+{
+  "label_status": "candidate",
+  "expected": {
+    "checks": 0,
+    "judge": 0
+  },
+  "expected_criteria": {
+    "contract-and-scope": 0,
+    "regression-value": 1
+  },
+  "rationale": "Recovery publishes an invalid observation and its unchanged retained tests expose that defect. Reject product correctness while accepting useful regression protection; a different quality failure cannot supply the contract rejection."
+}

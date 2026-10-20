@@ -1,0 +1,13 @@
+{
+  "label_status": "candidate",
+  "expected": {
+    "checks": 1,
+    "judge": 0
+  },
+  "expected_criteria": {
+    "contract-and-scope": 1,
+    "regression-value": 0,
+    "evidence-and-restraint": 1
+  },
+  "rationale": "The implementation is correct and the report truthfully describes its smoke-only retained test. Reject the explicit missing transaction/recovery protection without relying on fabricated coverage."
+}

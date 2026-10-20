@@ -8,13 +8,30 @@ import sys
 import traceback
 
 
-def node_contract(path, *flags):
+def node_contract(path, *flags, cwd=None):
     # Verifier-owned resources must be present and parse before scoring the task.
     path.read_bytes()
-    subprocess.run(["node", *flags, "--check", str(path)], check=True)
-    result = subprocess.run(["node", *flags, str(path)], text=True, capture_output=True)
+    subprocess.run(["node", *flags, "--check", str(path)], cwd=cwd, check=True)
+    result = subprocess.run(["node", *flags, str(path)], cwd=cwd, text=True, capture_output=True)
     assert result.returncode == 0, result.stdout + result.stderr
     print(result.stdout, end="")
+
+
+def source_evidence(root, output, *areas):
+    """Retain the actual editable corpus, including moved tests and helpers."""
+    sources = {}
+    for area in areas:
+        for path in sorted((root / area).rglob("*")):
+            if path.is_file():
+                if not path.resolve().is_relative_to(root):
+                    sources[path.relative_to(root).as_posix()] = "[outside workspace]"
+                    continue
+                try:
+                    sources[path.relative_to(root).as_posix()] = path.read_text()
+                except (UnicodeError, OSError) as error:
+                    sources[path.relative_to(root).as_posix()] = "[unreadable: " + type(error).__name__ + "]"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(sources, indent=2))
 
 
 def check_task(tests, workspace):

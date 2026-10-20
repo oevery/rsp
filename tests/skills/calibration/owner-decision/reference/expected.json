@@ -1,0 +1,12 @@
+{
+  "label_status": "candidate",
+  "expected": {
+    "checks": 1,
+    "judge": 1
+  },
+  "expected_criteria": {
+    "unresolved-owner-choice": 1,
+    "current-evidence-boundary": 1
+  },
+  "rationale": "The unchanged reference executes the current check and retains the blocked owner decision."
+}

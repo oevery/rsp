@@ -1,0 +1,12 @@
+{
+  "label_status": "candidate",
+  "expected": {
+    "checks": 1,
+    "judge": 1
+  },
+  "expected_criteria": {
+    "unresolved-owner-choice": 1,
+    "current-evidence-boundary": 1
+  },
+  "rationale": "The observed pass wording describes the same actually successful current check; no status enum is declared."
+}

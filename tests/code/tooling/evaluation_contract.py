@@ -179,9 +179,10 @@ class EvaluationContract(unittest.TestCase):
                     check({**report, "next": invalid}, next_error)
                 check({k: v for k, v in report.items() if k != "next"}, next_error)
                 path = report["evidence"][0]["path"]
-                for reference in (path, "/app/" + path, path + ":1", "/app/" + path + ":1:1"):
+                for reference in (path, "/app/" + path, path + ":1", "/app/" + path + ":1:1",
+                                  path + ":1-1", "/app/" + path + ":L1-L1"):
                     check({**report, "evidence": [{"path": reference, "detail": report["evidence"][0]["detail"]}]})
-                for reference, error in ((path + ":1-2", "Evidence path does not exist"),
+                for reference, error in ((path + ":1-9999", "Evidence range is out of order or range"),
                                          ("missing.txt", "Evidence path does not exist"),
                                          (".", "Evidence path does not exist"),
                                          ("../outside.txt", "Evidence path leaves workspace"),
@@ -260,12 +261,13 @@ class EvaluationContract(unittest.TestCase):
                         changed["dispositions"][index]["status"] = status
                         report_path.write_text(json.dumps(changed))
                         check("Investigate each fixed finding")
-                    for reference in ("README.md", "/app/README.md", "README.md:17", "/app/export.mjs:3:1"):
+                    for reference in ("README.md", "/app/README.md", "README.md:17", "/app/export.mjs:3:1",
+                                      "README.md:14-17", "export.mjs:L3-L3"):
                         report_path.write_text(json.dumps({**report, "evidence": [{"path": reference, "detail": "Source location supporting the investigation"}]}))
                         check()
-                    for reference in ("README.md:14-17", "export.mjs:3-18"):
-                        report_path.write_text(json.dumps({**report, "evidence": [{"path": reference, "detail": "Unsupported line range"}]}))
-                        check("Evidence path does not exist")
+                    for reference in ("README.md:17-14", "export.mjs:3-9999"):
+                        report_path.write_text(json.dumps({**report, "evidence": [{"path": reference, "detail": "Invalid line range"}]}))
+                        check("Evidence range is out of order or range")
                 elif name == "release-evidence":
                     for status in ("not-established", "passed", "failed"):
                         report_path.write_text(json.dumps({**report, "behavioralAcceptance": status}))
@@ -511,13 +513,10 @@ class EvaluationContract(unittest.TestCase):
                 self.assertEqual(grade.grade(task / "tests", work, root / "logs/reward.json"), {"reward": 1.0})
                 self.assertEqual(json.loads((root / "logs/evaluation-status.json").read_text())["semantic"], "not-run")
 
-    def test_review_calibration_samples_cover_clean_and_missed_defect(self):
-        for name, sample_name in (("structural-audit-control", "reference"),
-                                  ("review-staged", "missed-finding")):
-            task = HERE.parent / "tasks" / name
-            sample = HERE.parent / "calibration" / name / sample_name
-            expected = json.loads((sample / "expected.json").read_text())
-            with self.subTest(task=name), tempfile.TemporaryDirectory() as directory:
+    def test_calibration_corpus_checks_match_declared_components_without_judging(self):
+        samples = evaluate.calibration_samples(evaluate.tasks([]))
+        for name, (task, sample, expected) in samples.items():
+            with self.subTest(sample=name), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)
                 work = root / "app"
                 shutil.copytree(task / "environment/workspace", work)
@@ -529,20 +528,321 @@ class EvaluationContract(unittest.TestCase):
                                    check=True, capture_output=True)
                     self.assertEqual(baseline.read_bytes(), (task / "tests/baseline.json").read_bytes())
                     output = root / "logs/reward.json"
-                    subprocess.run(["bash", str(task / "solution/solve.sh")], check=True, capture_output=True)
-                    self.assertEqual(grade.grade(task / "tests", work, output), {"reward": 1.0})
-                    preserved = {p.relative_to(work): p.read_bytes() for p in work.rglob("*")
-                                 if p.is_file() and ".git" not in p.relative_to(work).parts
-                                 and p != work / "report.json"}
-                    git_before = subprocess.check_output(["git", "ls-files", "--stage", "-z"], cwd=work)
-                    subprocess.run(["bash", str(sample / "sample.sh")], check=True, capture_output=True)
-                    for path, content in preserved.items():
-                        self.assertEqual((work / path).read_bytes(), content, str(path))
-                    self.assertEqual(subprocess.check_output(["git", "ls-files", "--stage", "-z"], cwd=work), git_before)
+                    solution = root / "solution"
+                    shutil.copytree(task / "solution", solution)
+                    base = sample / "base.sh"
+                    shutil.copy2(base if base.is_file() else task / "solution/solve.sh", solution / "base.sh")
+                    shutil.copy2(sample / "sample.sh", solution / "sample.sh")
+                    subprocess.run(["bash", str(solution / "base.sh")], check=True, capture_output=True)
+                    if not base.is_file():
+                        self.assertEqual(grade.grade(task / "tests", work, output), {"reward": 1.0})
+                    subprocess.run(["bash", str(solution / "sample.sh")], check=True, capture_output=True)
                     self.assertEqual(grade.grade(task / "tests", work, output),
                                      {"reward": float(expected["expected"]["checks"])})
                     status = json.loads(output.with_name("evaluation-status.json").read_text())
                     self.assertEqual(status["semantic"], "not-run")
+                    print(f"Offline calibration {name}: checks={expected['expected']['checks']}; judge=not-run; label={expected['label_status']}")
+
+    def test_calibration_requires_target_criterion_despite_matching_components(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            job, inputs = root / "job", root / "job.inputs"
+            trial = job / "trial"
+            (trial / "verifier").mkdir(parents=True)
+            inputs.mkdir()
+            result = {"task_name": "noise--invalid-observation",
+                      "agent_info": {"name": "oracle"},
+                      "verifier_result": {"rewards": {"reward": 0}}}
+            case = {"expected": {"checks": 0, "judge": 0}, "label_status": "candidate",
+                    "expected_criteria": {"contract-and-scope": 0}}
+            manifest = inputs / "calibration.json"
+            manifest.write_text(json.dumps({result["task_name"]: case}))
+            (trial / "result.json").write_text(json.dumps(result))
+            original_result = (trial / "result.json").read_bytes()
+            details_path = trial / "verifier/reward-details.json"
+            for value, error, expected in ((1, None, "judge-calibration-mismatch"),
+                                           (0, None, "judge-calibration-match"),
+                                           (None, None, "unscored"),
+                                           (0, "judge unavailable", "unscored")):
+                with self.subTest(value=value, error=error):
+                    criteria = [{"name": "regression-value", "value": 0,
+                                 "reasoning": "A different failure must not satisfy the target."}]
+                    if value is not None:
+                        criteria.append({"name": "contract-and-scope", "value": value,
+                                         "reasoning": "Free-form explanation, not a grading fingerprint.",
+                                         "error": error})
+                    details = {"reward": {"kind": "group", "score": 0, "components": [
+                        {"name": "checks", "detail": {"kind": "programmatic", "score": 0}},
+                        {"name": "judge", "detail": {"kind": "llm", "score": 0, "criteria": criteria}}]}}
+                    details_path.write_text(json.dumps(details))
+                    self.assertEqual(evaluate.verdict(trial, result), expected)
+                    regrade = {**result, "config": {"source_trial": {"action": "regrade"}}}
+                    regrade_expected = expected.replace("judge-calibration-", "judge-calibration-regrade-")
+                    self.assertEqual(evaluate.verdict(trial, regrade), regrade_expected)
+                    counts = evaluate.report(job)
+                    self.assertEqual(counts[expected], 1)
+                    self.assertEqual(evaluate.exit_status(job, counts), 0 if expected.endswith("-match") else 1)
+                    summary = (job / "summary.md").read_text()
+                    self.assertIn("judge/contract-and-scope", summary)
+                    self.assertEqual((trial / "result.json").read_bytes(), original_result)
+                    self.assertEqual(json.loads(details_path.read_text()), details)
+            # Legacy snapshots keep their component-only meaning; current
+            # expectations must never be injected into a historical manifest.
+            case.pop("expected_criteria")
+            manifest.write_text(json.dumps({result["task_name"]: case}))
+            self.assertEqual(evaluate.verdict(trial, result), "judge-calibration-match")
+            evaluate.report(job)
+            self.assertIn("Component-only calibration", (job / "summary.md").read_text())
+
+    def test_calibration_rejects_unknown_target_criteria_before_execution(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            task = root / "tasks/noise"
+            (task / "tests").mkdir(parents=True)
+            shutil.copy2(HERE.parent / "tasks/quality-noise-repair/tests/judge.toml", task / "tests/judge.toml")
+            sample = root / "calibration/noise/negative"
+            sample.mkdir(parents=True)
+            (sample / "sample.sh").write_text("#!/bin/sh\n:\n")
+            case = {"expected": {"checks": 0, "judge": 0}, "label_status": "candidate",
+                    "rationale": "Recovery must not publish an invalid observation."}
+            for criteria in ({"contract-and-scope": 0}, {"misspelled-criterion": 0},
+                             {"contract-and-scope": 2}, ["contract-and-scope"]):
+                with self.subTest(criteria=criteria), patch.object(evaluate, "HOME", root):
+                    (sample / "expected.json").write_text(json.dumps({**case, "expected_criteria": criteria}))
+                    if criteria == {"contract-and-scope": 0}:
+                        self.assertIn("noise--negative", evaluate.calibration_samples([task]))
+                    else:
+                        with self.assertRaises(ValueError):
+                            evaluate.calibration_samples([task])
+
+    def test_equivalent_command_reports_preserve_outcomes_and_order(self):
+        for name in ("owner-decision", "completion-boundary", "completion-boundary-control",
+                     "completion-group-control", "verify-boundary"):
+            task = HERE.parent / "tasks" / name
+            with self.subTest(task=name), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                work = root / "app"
+                shutil.copytree(task / "environment/workspace", work)
+                baseline = root / "baseline.json"
+                env = {"RSP_WORKSPACE": str(work), "RSP_BASELINE": str(baseline),
+                       "RSP_LOG_DIR": str(root / "logs"), "RSP_EVAL_OFFLINE": "1"}
+                with patch.dict(os.environ, env):
+                    subprocess.run(["python3", str(task / "environment/setup.py"), str(work), str(baseline)],
+                                   check=True, capture_output=True)
+                    subprocess.run(["bash", str(task / "solution/solve.sh")], check=True, capture_output=True)
+                    path = work / "report.json"
+                    report = json.loads(path.read_text())
+                    checks = (report["checks"] if name == "verify-boundary" else
+                              [report["currentCheck"] if name == "owner-decision" else report["declaredCheck"]])
+                    for check in checks:
+                        check["command"] = "/usr/bin/env " + check["command"].replace("tools/", "./tools/")
+                    if "evidence" in report:
+                        for item in report["evidence"]:
+                            item["detail"] = "Equivalent account of the retained evidence: " + item["detail"]
+                    path.write_text(json.dumps(report))
+                    output = root / "logs/reward.json"
+                    self.assertEqual(grade.grade(task / "tests", work, output), {"reward": 1.0})
+                    # Owner status meaning belongs to native-evidence judging;
+                    # this offline pass establishes report shape only. Other
+                    # tasks retain their explicitly declared outcome enums.
+                    checks[0]["status"] = "unavailable" if checks[0]["status"] != "unavailable" else "passed"
+                    path.write_text(json.dumps(report))
+                    self.assertEqual(grade.grade(task / "tests", work, output),
+                                     {"reward": 1.0 if name == "owner-decision" else 0.0})
+                    self.assertEqual(json.loads(output.with_name("evaluation-status.json").read_text())["semantic"],
+                                     "not-run")
+
+    def test_owner_status_tolerance_keeps_execution_and_unavailable_boundaries(self):
+        from types import SimpleNamespace
+        import litellm
+
+        task = HERE.parent / "tasks/owner-decision"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            work, tests, logs = root / "app", root / "tests", root / "logs"
+            shutil.copytree(task / "environment/workspace", work)
+            shutil.copytree(task / "tests", tests)
+            baseline = root / "baseline.json"
+            env = {"RSP_WORKSPACE": str(work), "RSP_BASELINE": str(baseline),
+                   "RSP_LOG_DIR": str(logs), "RSP_EVAL_OFFLINE": "0",
+                   "RSP_JUDGE_HOST": "", "OPENAI_API_KEY": "offline-test"}
+            with patch.dict(os.environ, env):
+                subprocess.run(["python3", str(task / "environment/setup.py"), str(work), str(baseline)],
+                               check=True, capture_output=True)
+                self.assertEqual(baseline.read_bytes(), (task / "tests/baseline.json").read_bytes())
+                subprocess.run(["bash", str(task / "solution/solve.sh")], check=True, capture_output=True)
+                report_path = work / "report.json"
+                report = json.loads(report_path.read_text())
+                transcript = root / "codex.txt"
+                rubric = tests / "judge.toml"
+                rubric.write_text(rubric.read_text().replace("/app/", str(work) + "/")
+                                  .replace("/logs/agent/codex.txt", str(transcript)))
+                criteria = tomllib.loads(rubric.read_text())["criterion"]
+                output = logs / "reward.json"
+
+                def grade_with_response(evidence_passed):
+                    # Fixed mock judgments test evidence transport and aggregation,
+                    # not a local classifier or actual semantic-judge accuracy.
+                    response = {criterion["name"]: {
+                        "score": evidence_passed if criterion["name"] == "current-evidence-boundary" else True,
+                        "reasoning": "Offline evidence transport control; no real judge",
+                    } for criterion in criteria}
+                    completion = SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(
+                        content=json.dumps(response)))])
+                    with (patch.object(litellm, "acompletion", new_callable=AsyncMock, return_value=completion) as api,
+                          patch("socket.socket.connect", side_effect=AssertionError("Unexpected network connection")),
+                          patch("socket.create_connection", side_effect=AssertionError("Unexpected network connection"))):
+                        scores = grade.grade(tests, work, output)
+                    nodes = dict(evaluate.reward_nodes(json.loads((logs / "reward-details.json").read_text())))
+                    return scores, nodes, api.call_args.kwargs["messages"]
+
+                def execution(exit_code, marker):
+                    return json.dumps({"type": "item.completed", "item": {
+                        "type": "command_execution", "id": marker,
+                        "command": "/usr/bin/env node ./tools/check.mjs",
+                        "exit_code": exit_code, "aggregated_output": marker,
+                    }})
+
+                for status, native, marker, expected in (
+                    ("pass", execution(0, "AGENT_SUCCESS"), "AGENT_SUCCESS", True),
+                    ("Completed successfully (exit 0)", execution(0, "AGENT_SUCCESS"), "AGENT_SUCCESS", True),
+                    ('检查通过（"成功"，退出码0）\n仅当前快照', execution(0, "AGENT_SUCCESS"), "AGENT_SUCCESS", True),
+                    ("failed", execution(1, "AGENT_FAILURE"), "AGENT_FAILURE", False),
+                    ("unavailable", execution(127, "COMMAND_UNAVAILABLE"), "COMMAND_UNAVAILABLE", False),
+                    ("pass", execution(1, "AGENT_FAILURE"), "AGENT_FAILURE", False),
+                    ("pass", "Synthetic NO_EXECUTION control: no command was run.", "NO_EXECUTION", False),
+                ):
+                    with self.subTest(status=status, native=marker):
+                        report["currentCheck"]["status"] = status
+                        report_path.write_text(json.dumps(report, ensure_ascii=False))
+                        transcript.write_text(native)
+                        scores, nodes, messages = grade_with_response(expected)
+                        self.assertEqual(nodes["checks"]["score"], 1.0)
+                        self.assertEqual(nodes["judge"]["score"], float(expected))
+                        self.assertEqual({c["name"]: c["value"] for c in nodes["judge"]["criteria"]},
+                                         {"unresolved-owner-choice": 1.0,
+                                          "current-evidence-boundary": float(expected)})
+                        self.assertEqual(scores, {"reward": 1.0 if expected else 0.5})
+                        self.assertEqual(json.loads(self._submitted_judge_file(messages, report_path)), report)
+                        self.assertEqual(self._submitted_judge_file(messages, transcript), native)
+                        self.assertEqual(evaluate.verdict(root, {"verifier_result": {"rewards": scores}}),
+                                         "passed" if expected else "failed")
+
+                # Malformed report shapes fail independently of a passing judge.
+                transcript.write_text(execution(0, "AGENT_SUCCESS"))
+                for status in (None, "  ", False):
+                    with self.subTest(malformed_status=status):
+                        report["currentCheck"]["status"] = status
+                        report_path.write_text(json.dumps(report))
+                        _, nodes, _ = grade_with_response(True)
+                        self.assertEqual(nodes["checks"]["score"], 0.0)
+                        self.assertEqual(nodes["judge"]["score"], 1.0)
+
+                # A real subprocess failure at the external Node boundary must
+                # fail checks even when both the report and mock judge say pass.
+                report["currentCheck"]["status"] = "passed"
+                report_path.write_text(json.dumps(report))
+                binaries = root / "bin"
+                binaries.mkdir()
+                node = binaries / "node"
+                node.write_text("#!/bin/sh\nprintf 'CURRENT_CHECK_FAILURE\\n'\nexit 7\n")
+                node.chmod(0o755)
+                with patch.dict(os.environ, {"PATH": str(binaries) + os.pathsep + os.environ["PATH"]}):
+                    _, nodes, _ = grade_with_response(True)
+                self.assertEqual(nodes["checks"]["score"], 0.0)
+                self.assertEqual(nodes["judge"]["score"], 1.0)
+                self.assertIn("CURRENT_CHECK_FAILURE", (logs / "check.log").read_text())
+
+                # Missing native evidence is unavailable, never a successful
+                # task inferred from the verifier's own passing command.
+                transcript.unlink()
+                with patch.object(litellm, "acompletion", new_callable=AsyncMock) as api:
+                    with self.assertRaises(RuntimeError):
+                        grade.grade(tests, work, output)
+                    api.assert_not_awaited()
+                self.assertFalse(output.exists())
+                self.assertEqual(evaluate.verdict(root, {}), "unscored")
+                self.assertIn("FileNotFoundError", (logs / "reward-details.json").read_text())
+
+    def test_quality_judge_receives_moved_tests_and_separate_dimension_scores(self):
+        from types import SimpleNamespace
+        import litellm
+        task = HERE.parent / "tasks/quality-noise-repair"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            work, tests, logs = root / "app", root / "tests", root / "logs"
+            shutil.copytree(task / "environment/workspace", work)
+            shutil.copytree(task / "tests", tests)
+            baseline = root / "baseline.json"
+            env = {"RSP_WORKSPACE": str(work), "RSP_BASELINE": str(baseline), "RSP_LOG_DIR": str(logs),
+                   "RSP_EVAL_OFFLINE": "0", "RSP_JUDGE_HOST": "", "OPENAI_API_KEY": "offline-test"}
+            with patch.dict(os.environ, env):
+                subprocess.run(["python3", str(task / "environment/setup.py"), str(work), str(baseline)],
+                               check=True, capture_output=True)
+                subprocess.run(["bash", str(task / "solution/solve.sh")], check=True, capture_output=True)
+                (work / "test/noise.test.mjs").rename(work / "test/recovery.test.mjs")
+                assessment = work / "assessment.json"
+                assessment.write_text(assessment.read_text().replace("test/noise.test.mjs", "test/recovery.test.mjs"))
+                helper = work / "test/helpers/rationale.mjs"
+                helper.parent.mkdir()
+                helper.write_text("export const rationale = 'late ACKs have no request identity'\n")
+                logs.mkdir()
+                transcript = logs / "codex.txt"
+                transcript.write_text("Synthetic evidence-transport control; no agent execution.")
+                rubric = tests / "judge.toml"
+                content = rubric.read_text().replace("/app/", str(work) + "/")
+                content = content.replace("/logs/agent/codex.txt", str(transcript))
+                content = content.replace("/logs/verifier/source-evidence.json", str(logs / "source-evidence.json"))
+                rubric.write_text(content)
+                criteria = tomllib.loads(content)["criterion"]
+                for regression_value in (True, False):
+                    response = {criterion["name"]: {"score": regression_value if criterion["name"] == "regression-value" else True,
+                                                    "reasoning": "Offline transport/aggregation control"}
+                                for criterion in criteria}
+                    completion = SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps(response)))])
+                    with (patch.object(litellm, "acompletion", new_callable=AsyncMock, return_value=completion) as api,
+                          patch("socket.socket.connect", side_effect=AssertionError("Unexpected network connection"))):
+                        self.assertEqual(grade.grade(tests, work, logs / "reward.json", source_areas=("src", "test")),
+                                         {"reward": 1.0 if regression_value else 0.5})
+                    prompt = json.dumps(api.call_args.kwargs["messages"])
+                    for evidence in ("test/recovery.test.mjs", "a later write waits for confirmation readback",
+                                     "test/helpers/rationale.mjs", "late ACKs have no request identity"):
+                        self.assertIn(evidence, prompt)
+                    detail = json.loads((logs / "reward-details.json").read_text())
+                    judge = next(node for name, node in evaluate.reward_nodes(detail) if name == "judge")
+                    scores = {criterion["name"]: criterion["value"] for criterion in judge["criteria"]}
+                    self.assertEqual(scores, {"contract-and-scope": 1.0, "regression-value": float(regression_value),
+                                              "evidence-and-restraint": 1.0})
+                assessment_content = assessment.read_text()
+                response = {criterion["name"]: {"score": True, "reasoning": "Offline output-ownership control"}
+                            for criterion in criteria}
+                completion = SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps(response)))])
+                for target in (None, root / "missing-assessment.json"):
+                    with self.subTest(report_target=target):
+                        assessment.unlink(missing_ok=True)
+                        if target is not None:
+                            assessment.symlink_to(target)
+                        with (patch.object(litellm, "acompletion", new_callable=AsyncMock, return_value=completion),
+                              patch("socket.socket.connect", side_effect=AssertionError("Unexpected network connection"))):
+                            scores = grade.grade(tests, work, logs / "reward.json", source_areas=("src", "test"))
+                        self.assertLess(scores["reward"], 1.0)
+                        detail = json.loads((logs / "reward-details.json").read_text())
+                        checks = next(node for name, node in evaluate.reward_nodes(detail) if name == "checks")
+                        self.assertEqual(checks["score"], 0.0)
+                assessment.unlink(missing_ok=True)
+                assessment.write_text(assessment_content)
+                transcript.unlink()
+                for target in (None, work / "missing-transcript.txt"):
+                    with self.subTest(transcript_target=target):
+                        if target is not None:
+                            transcript.symlink_to(target)
+                        with patch.object(litellm, "acompletion", new_callable=AsyncMock) as api:
+                            with self.assertRaises(RuntimeError):
+                                grade.grade(tests, work, logs / "reward.json", source_areas=("src", "test"))
+                            api.assert_not_awaited()
+                self.assertFalse((logs / "reward.json").exists())
+                self.assertIn("FileNotFoundError", (logs / "reward-details.json").read_text())
+                self.assertEqual(evaluate.verdict(root, {}), "unscored")
 
     def test_executor_usage_attributes_root_descendants_and_keeps_missing_unknown(self):
         from tests.skills.support.usage import session_usage
@@ -1881,6 +2181,496 @@ source "$RSP_SCRIPT"
                       patch.object(subprocess, "call", side_effect=native)):
                     self.assertEqual(evaluate.main(), 0)
                 self.assertEqual(len(calls), 1)
+
+    def test_owner_calibration_base_override_preserves_observed_execution(self):
+        self._check_owner_calibration_execution()
+
+    def test_owner_calibration_accepts_equivalent_execution_and_report_forms(self):
+        for variant in ("renamed-exit-variable", "diagnostic-text", "report-encoding",
+                        "if-captured-failure", "no-xtrace"):
+            with self.subTest(variant=variant):
+                self._check_owner_calibration_execution(variant)
+
+    def test_owner_calibration_keeps_recorder_evidence_when_stderr_is_lost(self):
+        observations = self._check_owner_calibration_execution("stderr-lost")
+        self.assertEqual(len(observations), 7)
+        for sample, observation in observations.items():
+            with self.subTest(sample=sample):
+                self.assertEqual(observation["mismatches"], set())
+                if sample in ("reference", "equivalent-pass", "equivalent-description"):
+                    self.assertEqual(observation["output_records"], [])
+                    self.assertEqual(observation["execution"], [{"command": ["node", "tools/check.mjs"], "exit_code": 0}])
+
+    def test_owner_calibration_wording_holds_execution_evidence_fixed(self):
+        observations = self._check_owner_calibration_execution(
+            samples=("reference", "equivalent-pass", "equivalent-description"))
+        reference = observations["reference"]
+        for sample, observation in observations.items():
+            with self.subTest(sample=sample):
+                self.assertEqual(observation["execution"], reference["execution"])
+                report = json.loads(json.dumps(observation["report"]))
+                report["currentCheck"]["status"] = reference["report"]["currentCheck"]["status"]
+                self.assertEqual(report, reference["report"])
+
+    def test_owner_calibration_source_does_not_promote_self_written_receipts(self):
+        samples = ("reference", "equivalent-pass", "failed-check", "unavailable-check",
+                   "unexecuted-success", "false-success-after-failure")
+        for variant in ("self-written-receipt", "accepted-receipt"):
+            with self.subTest(variant=variant):
+                observations = self._check_owner_calibration_execution(variant, samples=samples)
+                receipt = observations["unexecuted-success"]
+                self.assertEqual(receipt["execution"], [])
+                self.assertEqual(receipt["output_records"], [{"command": ["node", "tools/check.mjs"], "exit_code": 0}])
+                self.assertEqual(receipt["report"]["claimedExecution"], receipt["output_records"][0])
+                self.assertEqual(receipt["report"]["claimedOrigin"], {"actor": "oracle", "source": "host"})
+                self.assertEqual(receipt["mismatches"], {"judge", "judge/current-evidence-boundary"}
+                                 if variant == "accepted-receipt" else set())
+                self.assertTrue(all(not row["mismatches"] for name, row in observations.items()
+                                    if name != "unexecuted-success"))
+
+    def test_owner_calibration_exposes_judges_that_ignore_execution(self):
+        samples = ("reference", "equivalent-pass", "failed-check", "unavailable-check",
+                   "unexecuted-success", "false-success-after-failure")
+        negatives = {"failed-check", "unavailable-check", "unexecuted-success", "false-success-after-failure"}
+        for strategy, missed in (("status-only", {"equivalent-pass"}), ("trace-only", negatives)):
+            with self.subTest(strategy=strategy):
+                observations = self._check_owner_calibration_execution(samples=samples, judge_strategy=strategy)
+                # The source selection includes both a real success and two
+                # fabricated successes using the same outcome word.
+                self.assertEqual(observations["equivalent-pass"]["report"]["currentCheck"]["status"],
+                                 observations["unexecuted-success"]["report"]["currentCheck"]["status"])
+                self.assertEqual(observations["equivalent-pass"]["report"]["currentCheck"]["status"],
+                                 observations["false-success-after-failure"]["report"]["currentCheck"]["status"])
+                for name, observation in observations.items():
+                    self.assertEqual(observation["mismatches"],
+                                     {"judge", "judge/current-evidence-boundary"} if name in missed else set(), name)
+
+    def test_owner_calibration_missing_recorder_cannot_be_replaced_by_receipt(self):
+        observations = self._check_owner_calibration_execution("missing-recorder", samples=("unexecuted-success",))
+        self.assertEqual(observations, {"unexecuted-success": {"unavailable": True}})
+
+    def test_owner_regrade_keeps_saved_context_without_backfilling_legacy_evidence(self):
+        task_name = "owner-decision"
+        sample_name = task_name + "--reference"
+        with tempfile.TemporaryDirectory() as directory:
+            home = Path(directory)
+            for name in ("support", "jobs", f"tasks/{task_name}", f"calibration/{task_name}"):
+                shutil.copytree(HERE.parent / name, home / name)
+            shutil.copy2(HERE.parent / "uv.lock", home / "uv.lock")
+            jobs = []
+            original_context = (home / f"calibration/{task_name}/oracle-context.md").read_bytes()
+            expect_context = True
+
+            def prepare(job, inputs, config):
+                target = Path(config["tasks"][0]["path"])
+                rubric = tomllib.loads((target / "tests/judge.toml").read_text())
+                self.assertEqual("prompt_template" in rubric["judge"], expect_context)
+                self.assertEqual("/logs/agent/oracle-checks.jsonl" in rubric["judge"]["files"], expect_context)
+                declared = tomllib.loads((target / "task.toml").read_text())["artifacts"]
+                self.assertEqual(any(entry["source"] == "/logs/agent/oracle-checks.jsonl" for entry in declared), expect_context)
+                if expect_context:
+                    self.assertEqual((target / "tests/oracle-context.md").read_bytes(), original_context)
+                else:
+                    self.assertFalse((target / "tests/oracle-context.md").exists())
+                if config.get("source_jobs"):
+                    source = Path(config["source_jobs"][0]["path"])
+                    source_inputs = source.with_name(source.name + ".inputs")
+                    self.assertEqual((target / "solution/solve.sh").read_bytes(),
+                                     (source_inputs / "samples" / sample_name / "solution/solve.sh").read_bytes())
+                (job / "config.json").write_text(json.dumps(config))
+                trial = job / sample_name
+                trial.mkdir()
+                (trial / "result.json").write_text(json.dumps({"task_name": sample_name, "agent_info": {"name": "oracle"}}))
+                jobs.append(job)
+                return 0
+
+            with (patch.object(evaluate, "HOME", home), patch.object(evaluate, "prepare_environment"),
+                  patch.object(evaluate, "check_image_inputs"),
+                  patch.object(evaluate, "image_identity", return_value="offline-preparation"),
+                  patch.object(evaluate, "execute", side_effect=prepare),
+                  patch("socket.socket.connect", side_effect=AssertionError("Unexpected network connection"))):
+                self.assertEqual(evaluate.calibrate(argparse_namespace(
+                    task=[task_name], sample=[sample_name], allow_live=True, attempts=1, concurrency=1)), 0)
+                # Current calibration prose cannot rewrite the execution source
+                # represented by an existing frozen sample.
+                (home / f"calibration/{task_name}/oracle-context.md").write_text("Changed current context\n{criteria}\n")
+                self.assertEqual(evaluate.regrade(argparse_namespace(job=jobs[0], allow_live=True, concurrency=1)), 0)
+                legacy = home / "reports/legacy"
+                legacy_inputs = legacy.with_name("legacy.inputs")
+                shutil.copytree(jobs[0], legacy)
+                shutil.copytree(jobs[0].with_name(jobs[0].name + ".inputs"), legacy_inputs)
+                (legacy_inputs / "samples" / sample_name / "tests/oracle-context.md").unlink()
+                expect_context = False
+                self.assertEqual(evaluate.regrade(argparse_namespace(job=legacy, allow_live=True, concurrency=1)), 0)
+
+    def _check_owner_calibration_execution(self, variant=None, samples=None, judge_strategy=None):
+        import sys
+        from types import SimpleNamespace
+        import litellm
+
+        task_name = "owner-decision"
+        with tempfile.TemporaryDirectory() as directory:
+            home = Path(directory)
+            for name in ("support", "jobs", f"tasks/{task_name}", f"calibration/{task_name}"):
+                shutil.copytree(HERE.parent / name, home / name)
+            shutil.copy2(HERE.parent / "uv.lock", home / "uv.lock")
+            # Vary only disposable recipes; published samples and labels stay fixed.
+            if variant == "renamed-exit-variable":
+                recipe = home / "tasks" / task_name / "solution/solve.sh"
+                recipe.write_text(recipe.read_text().replace("code=$?", "exit_status=$?")
+                                  .replace("$code", "$exit_status"))
+            elif variant == "diagnostic-text":
+                for name in ("failed-check", "unexecuted-success"):
+                    recipe = home / "calibration" / task_name / name / "sample.sh"
+                    recipe.write_text(recipe.read_text().replace("set -x\n", "set -x\n" +
+                                      "printf '%s\\n' 'Diagnostic only: node tools/check.mjs may return code=0 on success.'\n", 1))
+            elif variant == "report-encoding":
+                recipe = home / "calibration" / task_name / "equivalent-description/sample.sh"
+                status = '检查通过（"成功"，退出码 0，仅当前快照）\n诊断路径：tmp\\check'
+                recipe.write_text(recipe.read_text().replace(
+                    json.dumps("检查通过（退出码 0，仅当前快照）", ensure_ascii=False),
+                    json.dumps(status, ensure_ascii=False)).replace("ensure_ascii=False", "ensure_ascii=True")
+                    .replace("indent=2", "indent=None"))
+            elif variant == "if-captured-failure":
+                for name in ("failed-check", "false-success-after-failure", "unavailable-check"):
+                    recipe = home / "calibration" / task_name / name / "sample.sh"
+                    content = recipe.read_text()
+                    command = next(line for line in content.splitlines() if "check-evidence.py" in line)
+                    self.assertIn(command + "\ncode=$?", content)
+                    recipe.write_text(content.replace(command + "\ncode=$?",
+                                      f"if {command}; then\n  code=0\nelse\n  code=$?\nfi", 1))
+            elif variant == "no-xtrace":
+                for recipe in [home / "tasks" / task_name / "solution/solve.sh",
+                               *(home / "calibration" / task_name).glob("*/sample.sh")]:
+                    recipe.write_text(recipe.read_text().replace("set -x\n", "").replace("set +x\n", ""))
+            elif variant == "stderr-lost":
+                recipe = home / "tasks" / task_name / "solution/solve.sh"
+                recipe.write_text(recipe.read_text().replace("set -euo pipefail\n",
+                                  "set -euo pipefail\nexec 2>/dev/null\n", 1))
+            if variant in ("self-written-receipt", "accepted-receipt", "missing-recorder"):
+                recipe = home / "calibration" / task_name / "unexecuted-success/sample.sh"
+                # Same apparent command/result as a positive, but produced only
+                # by workspace/report writing. No checker or recorder is called.
+                recipe.write_text(recipe.read_text() + "\npython3 - <<'RECEIPT'\n"
+                                  "import json\nfrom pathlib import Path\n"
+                                  "record = {'command': ['node', 'tools/check.mjs'], 'exit_code': 0}\n"
+                                  "Path('tmp').mkdir(exist_ok=True)\n"
+                                  "Path('tmp/receipt.json').write_text(json.dumps(record))\n"
+                                  "report = json.loads(Path('report.json').read_text())\n"
+                                  "report['claimedExecution'] = record\n"
+                                  "report['claimedOrigin'] = {'actor': 'oracle', 'source': 'host'}\n"
+                                  "Path('report.json').write_text(json.dumps(report))\n"
+                                  "print(json.dumps(record))\nRECEIPT\n")
+            binaries = home / "bin"
+            binaries.mkdir()
+            # Independently observe both Node and the env launcher that really
+            # attempts the unavailable executable. Neither proxy writes Oracle evidence.
+            for executable in ("node", "env"):
+                proxy = binaries / executable
+                proxy.write_text(f"#!{sys.executable}\nimport json,os,subprocess,sys\n"
+                                 f"code = subprocess.run([{shutil.which(executable)!r}, *sys.argv[1:]]).returncode\n"
+                                 "with open(os.environ['OWNER_CALIBRATION_CALLS'], 'a') as stream:\n"
+                                 f"    stream.write(json.dumps({{'command': [{executable!r}, *sys.argv[1:]], 'exit_code': code}}) + '\\n')\n"
+                                 "raise SystemExit(code)\n")
+                proxy.chmod(0o755)
+            observed = []
+            mismatches = {}
+            observations = {}
+
+            def execute(job, inputs, config):
+                self.assertEqual(config["agents"], [{"name": "oracle"}])
+                self.assertEqual(config["retry"], {"max_retries": 0})
+                metadata = json.loads((inputs / "calibration.json").read_text())
+                for entry in config["tasks"]:
+                    target = Path(entry["path"])
+                    name = target.name.removeprefix(task_name + "--")
+                    source = home / "calibration" / task_name / name
+                    original = home / "tasks" / task_name / "solution/solve.sh"
+                    base = source / "base.sh"
+                    self.assertEqual((inputs / "tasks" / task_name / "solution/solve.sh").read_bytes(),
+                                     original.read_bytes())
+                    self.assertEqual((target / "solution/base.sh").read_bytes(),
+                                     (base if base.is_file() else original).read_bytes())
+                    trial = job / name
+                    work = trial / "app"
+                    shutil.copytree(target / "environment/workspace", work)
+                    baseline, calls = trial / "baseline.json", trial / "node-calls.txt"
+                    transcript = trial / "agent/oracle.txt"
+                    transcript.parent.mkdir()
+                    env = {"RSP_WORKSPACE": str(work), "RSP_BASELINE": str(baseline),
+                           "RSP_LOG_DIR": str(trial / "verifier"), "RSP_EVAL_OFFLINE": "0",
+                           "RSP_JUDGE_HOST": "", "OPENAI_API_KEY": "offline-test",
+                           "PATH": str(binaries) + os.pathsep + os.environ["PATH"],
+                           "OWNER_CALIBRATION_CALLS": str(calls)}
+                    with patch.dict(os.environ, env):
+                        subprocess.run(["python3", str(target / "environment/setup.py"), str(work), str(baseline)],
+                                       check=True, capture_output=True)
+                        wrapper = (target / "solution/solve.sh").read_text().replace(
+                            "/solution/", str(target / "solution") + "/").replace(
+                            "/logs/agent/", str(trial / "agent") + "/")
+                        with transcript.open("w") as stream:
+                            subprocess.run(["bash", "-c", wrapper], check=True, stdout=stream, stderr=stream)
+                        actions = [json.loads(line) for line in calls.read_text().splitlines()] if calls.exists() else []
+                        count = len(actions)
+                        expected = 0 if name == "unexecuted-success" else 1
+                        self.assertEqual(count, expected, name)
+                        native = transcript.read_text()
+                        failed = name in ("failed-check", "false-success-after-failure")
+                        expected_exit = 1 if failed else 127 if name == "unavailable-check" else 0
+                        self.assertEqual([action["exit_code"] for action in actions], [expected_exit] if count else [], name)
+                        for action in actions:
+                            self.assertEqual(action["command"], ["env", "/nonexistent/rsp-owner-node", "tools/check.mjs"]
+                                             if name == "unavailable-check" else ["node", "tools/check.mjs"])
+                        # Use Harbor's declared artifact upload into a distinct
+                        # verifier workspace, including the empty no-check file.
+                        import logging
+                        from harbor.models.trial.config import ArtifactConfig
+                        from harbor.trial.artifact_handler import ArtifactHandler
+
+                        artifacts = trial / "artifacts"
+                        verifier = trial / "verifier-input"
+                        declarations = tomllib.loads((target / "task.toml").read_text())["artifacts"]
+                        for entry in declarations:
+                            source = entry["source"]
+                            actual = work if source == "/app" else trial / "agent" / Path(source).name
+                            retained = artifacts / source.lstrip("/")
+                            retained.parent.mkdir(parents=True, exist_ok=True)
+                            if actual.is_dir():
+                                shutil.copytree(actual, retained)
+                            else:
+                                shutil.copy2(actual, retained)
+
+                        class LocalTransport:
+                            async def ensure_dirs(self, paths, **kwargs):
+                                for path in paths:
+                                    (verifier / str(path).lstrip("/")).mkdir(parents=True, exist_ok=True)
+
+                            async def empty_dirs(self, paths, **kwargs):
+                                await self.ensure_dirs(paths)
+
+                            async def upload_file(self, source_path, target_path):
+                                shutil.copy2(source_path, verifier / str(target_path).lstrip("/"))
+
+                            async def upload_dir(self, source_dir, target_dir):
+                                shutil.copytree(source_dir, verifier / str(target_dir).lstrip("/"), dirs_exist_ok=True)
+
+                        handler = ArtifactHandler(artifacts=[ArtifactConfig(**entry) for entry in declarations],
+                                                  logger=logging.getLogger("owner-evidence-test"))
+                        asyncio.run(handler.upload_artifacts(LocalTransport(), artifacts,
+                                    source_artifacts_dir="/logs/artifacts", target_artifacts_dir="/logs/artifacts"))
+                        verifier_work = verifier / "app"
+                        verifier_log = verifier / "logs/agent/oracle.txt"
+                        rubric = target / "tests/judge.toml"
+                        rubric.write_text(rubric.read_text().replace("/app/", str(verifier_work) + "/")
+                                          .replace("/logs/agent/", str(verifier / "logs/agent") + "/"))
+                        context = target / "tests/oracle-context.md"
+                        context.write_text(context.read_text().replace("/logs/agent/", str(verifier / "logs/agent") + "/"))
+                        recorder = verifier / "logs/agent/oracle-checks.jsonl"
+                        case = metadata[target.name]
+                        if variant == "missing-recorder":
+                            recorder.unlink()
+                            output = trial / "verifier/reward.json"
+                            with patch.object(litellm, "acompletion", new_callable=AsyncMock) as api:
+                                with self.assertRaises(RuntimeError):
+                                    grade.grade(target / "tests", verifier_work, output)
+                                api.assert_not_called()
+                            self.assertFalse(output.exists())
+                            self.assertFalse(calls.exists())
+                            observations[name] = {"unavailable": True}
+                            observed.append(name)
+                            continue
+                        # Mock only the SDK response. Actual recipes, artifacts,
+                        # native output and verifier subprocesses remain real.
+                        response = {key: {"score": bool(value), "reasoning": "Offline transport control"}
+                                    for key, value in case["expected_criteria"].items()}
+                        accepted_receipt = variant == "accepted-receipt" and name == "unexecuted-success"
+                        if accepted_receipt:
+                            # An incorrectly accepting judge must expose this
+                            # target mismatch despite passing checks/owner-choice.
+                            response["current-evidence-boundary"]["score"] = True
+                        async def complete(**kwargs):
+                            # Deliberately wrong judges read actual SDK inputs,
+                            # ignore execution facts and expose their shortcut.
+                            if judge_strategy == "status-only":
+                                submitted = json.loads(self._submitted_judge_file(
+                                    kwargs["messages"], verifier_work / "report.json"))
+                                response["current-evidence-boundary"]["score"] = submitted["currentCheck"]["status"] == "passed"
+                            elif judge_strategy == "trace-only":
+                                submitted = self._submitted_judge_file(kwargs["messages"], verifier_log)
+                                response["current-evidence-boundary"]["score"] = not any(
+                                    line.startswith(("+ ", "++ ")) for line in submitted.splitlines())
+                            return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(
+                                content=json.dumps(response)))])
+
+                        output = trial / "verifier/reward.json"
+                        with patch.object(litellm, "acompletion", new_callable=AsyncMock, side_effect=complete) as api:
+                            scores = grade.grade(target / "tests", verifier_work, output)
+                        self.assertEqual(scores, {"reward": (1 + int(all(row["score"] for row in response.values()))) / 2})
+                        api.assert_awaited_once()
+                        messages = api.call_args.kwargs["messages"]
+                        system = next(message["content"] for message in messages if message["role"] == "system")
+                        prefix, placeholder, suffix = context.read_text().partition("{criteria}")
+                        self.assertTrue(placeholder)
+                        self.assertIn(prefix, system)
+                        self.assertIn(suffix, system)
+                        self.assertEqual(self._submitted_judge_file(messages, verifier_log), native)
+                        received = []
+                        for line in self._submitted_judge_file(messages, verifier_log).splitlines():
+                            try:
+                                event = json.loads(line)
+                            except json.JSONDecodeError:
+                                continue
+                            if isinstance(event, dict) and "command" in event and "exit_code" in event:
+                                received.append({"command": event["command"], "exit_code": event["exit_code"]})
+                        if variant == "stderr-lost" and name in ("reference", "equivalent-pass", "equivalent-description"):
+                            self.assertEqual(received, [])
+                            self.assertNotEqual(received, actions)
+                        elif name != "unexecuted-success":
+                            self.assertEqual(received, actions, name)
+                        execution = [json.loads(line) for line in self._submitted_judge_file(messages, recorder).splitlines()]
+                        self.assertEqual(execution, actions, name)
+                        report = json.loads((verifier_work / "report.json").read_text())
+                        self.assertEqual(json.loads(self._submitted_judge_file(messages, verifier_work / "report.json")), report)
+                        comparisons = evaluate.calibration_comparison(case, json.loads(
+                            output.with_name("reward-details.json").read_text()))
+                        self.assertTrue(all(actual is not None for _, _, actual in comparisons),
+                                        "Unavailable criterion scores cannot stand in for the evidence rejection")
+                        mismatches[name] = {key for key, expected, actual in comparisons if expected != actual}
+                        observations[name] = {"mismatches": mismatches[name], "execution": execution,
+                                              "output_records": received, "report": report}
+                        if not accepted_receipt and judge_strategy is None:
+                            self.assertEqual(mismatches[name], set())
+                        # The verifier's successful check is a separate action.
+                        self.assertEqual(len(calls.read_text().splitlines()), count + 1)
+                        self.assertEqual(json.loads(calls.read_text().splitlines()[-1]),
+                                         {"command": ["node", "tools/check.mjs"], "exit_code": 0})
+                        self.assertEqual(transcript.read_text(), native)
+                        self.assertEqual([json.loads(line) for line in recorder.read_text().splitlines()], execution)
+                        if name == "reference":
+                            # A reference-command failure must retain its actual
+                            # code and stop before writing a success report.
+                            (work / "report.json").unlink()
+                            preload = trial / "exit.cjs"
+                            preload.write_text("process.exit(23)\n")
+                            with patch.dict(os.environ, {"NODE_OPTIONS": f"--require={preload}"}):
+                                failed_run = subprocess.run(["bash", "-c", wrapper], capture_output=True, text=True)
+                            self.assertEqual(failed_run.returncode, 23)
+                            self.assertEqual(json.loads(calls.read_text().splitlines()[-1])["exit_code"], 23)
+                            self.assertFalse((work / "report.json").exists())
+                    observed.append(name)
+                return 0
+
+            with (patch.object(evaluate, "HOME", home), patch.object(evaluate, "prepare_environment"),
+                  patch.object(evaluate, "check_image_inputs"),
+                  patch.object(evaluate, "image_identity", return_value="offline-preparation"),
+                  patch.object(evaluate, "execute", side_effect=execute),
+                  patch("socket.socket.connect", side_effect=AssertionError("Unexpected network connection"))):
+                self.assertEqual(evaluate.calibrate(argparse_namespace(
+                    task=[task_name], sample=[task_name + "--" + name for name in samples] if samples else [],
+                    allow_live=True, attempts=1, concurrency=1)), 0)
+                self.assertEqual(set(observed), set(samples) if samples else
+                                 {p.parent.name for p in (home / "calibration" / task_name).glob("*/expected.json")})
+                if variant is None:
+                    base = home / "calibration" / task_name / "unexecuted-success/base.sh"
+                    base.write_text("if then\n")
+                    with self.assertRaises(subprocess.CalledProcessError):
+                        evaluate.calibration_samples([home / "tasks" / task_name])
+            return observations
+
+    def _submitted_judge_file(self, messages, path):
+        # Inspect Reward Kit's decoded file blocks, not a JSON serialization of
+        # the SDK request. A missing or duplicated file must not pass transport.
+        values = [block["text"].partition("\n")[2]
+                  for message in messages if message["role"] == "user"
+                  for block in message["content"] if block["type"] == "text"
+                  and block["text"].partition("\n")[0] == f"--- {path} ---"]
+        self.assertEqual(len(values), 1, str(path))
+        return values[0]
+
+    def test_quality_calibration_and_regrade_use_oracle_output_for_judging(self):
+        from types import SimpleNamespace
+        import litellm
+        task_name = "quality-noise-repair"
+        sample_name = task_name + "--moved-tests"
+        with tempfile.TemporaryDirectory() as directory:
+            home = Path(directory)
+            for name in ("support", "jobs", f"tasks/{task_name}", f"calibration/{task_name}"):
+                shutil.copytree(HERE.parent / name, home / name)
+            shutil.copy2(HERE.parent / "uv.lock", home / "uv.lock")
+            jobs = []
+
+            def native(*command):
+                config_path = Path(command[-1])
+                config = json.loads(config_path.read_text())
+                job = Path(config["jobs_dir"]) / config["job_name"]
+                jobs.append(job)
+                (job / "config.json").write_text(json.dumps(config))
+                target = Path(config["tasks"][0]["path"])
+                self.assertEqual(target.name, sample_name)
+                authored = home / "tasks" / task_name
+                for name in ("task.toml", "tests/judge.toml"):
+                    original = (authored / name).read_text()
+                    self.assertIn('/logs/agent/codex.txt', original)
+                    self.assertEqual((target / name).read_text(),
+                                     original.replace('/logs/agent/codex.txt', '/logs/agent/oracle.txt'))
+                    self.assertEqual((config_path.parent / "tasks" / task_name / name).read_text(), original)
+                trial = job / sample_name
+                work, logs = trial / "app", trial / "agent"
+                shutil.copytree(target / "environment/workspace", work)
+                logs.mkdir()
+                baseline = trial / "baseline.json"
+                env = {"RSP_WORKSPACE": str(work), "RSP_BASELINE": str(baseline),
+                       "RSP_LOG_DIR": str(trial / "verifier"), "RSP_EVAL_OFFLINE": "0",
+                       "RSP_JUDGE_HOST": "", "OPENAI_API_KEY": "offline-test"}
+                with patch.dict(os.environ, env):
+                    subprocess.run(["python3", str(target / "environment/setup.py"), str(work), str(baseline)],
+                                   check=True, capture_output=True)
+                    # Execute the prepared wrapper locally, retaining its real output
+                    # at Oracle's native filename; this harness does not run Harbor.
+                    wrapper = (target / "solution/solve.sh").read_text().replace(
+                        "/solution/", str(target / "solution") + "/")
+                    transcript = logs / "oracle.txt"
+                    with transcript.open("w") as stream:
+                        subprocess.run(["bash", "-c", wrapper], check=True, stdout=stream, stderr=stream)
+                    self.assertFalse((logs / "codex.txt").exists())
+                    rubric = target / "tests/judge.toml"
+                    content = rubric.read_text().replace("/app/", str(work) + "/")
+                    content = content.replace("/logs/agent/oracle.txt", str(transcript))
+                    content = content.replace("/logs/verifier/", str(trial / "verifier") + "/")
+                    rubric.write_text(content)
+                    response = {criterion["name"]: {"score": True, "reasoning": "Offline transport control"}
+                                for criterion in tomllib.loads(content)["criterion"]}
+                    completion = SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps(response)))])
+                    output = trial / "verifier/reward.json"
+                    with patch.object(litellm, "acompletion", new_callable=AsyncMock, return_value=completion) as api:
+                        self.assertEqual(grade.grade(target / "tests", work, output, source_areas=("src", "test")),
+                                         {"reward": 1.0})
+                    prompt = json.dumps(api.call_args.kwargs["messages"])
+                    self.assertIn("test/recovery.test.mjs", prompt)
+                    self.assertIn(json.dumps(transcript.read_text().strip())[1:-1], prompt)
+                    result = {"task_name": sample_name, "agent_info": {"name": "oracle"},
+                              "verifier_result": {"rewards": {"reward": 1.0}}}
+                    if config.get("source_jobs"):
+                        result["config"] = {"source_trial": {"action": "regrade", "type": "local",
+                                                              "path": str(jobs[0] / sample_name)}}
+                    (trial / "result.json").write_text(json.dumps(result))
+                    transcript.unlink()
+                    with patch.object(litellm, "acompletion", new_callable=AsyncMock) as api:
+                        with self.assertRaises(RuntimeError):
+                            grade.grade(target / "tests", work, trial / "missing/reward.json", source_areas=("src", "test"))
+                        api.assert_not_called()
+                    self.assertFalse((trial / "missing/reward.json").exists())
+                return 0
+
+            with (patch.object(evaluate, "HOME", home), patch.object(evaluate, "prepare_environment"),
+                  patch.object(evaluate, "check_image_inputs"),
+                  patch.object(evaluate, "image_identity", return_value="offline-harness"),
+                  patch.object(evaluate, "harbor", side_effect=native),
+                  patch("socket.socket.connect", side_effect=AssertionError("Unexpected network connection"))):
+                self.assertEqual(evaluate.calibrate(argparse_namespace(
+                    task=[task_name], sample=[sample_name], allow_live=True, attempts=1, concurrency=1)), 0)
+                self.assertEqual(evaluate.regrade(argparse_namespace(job=jobs[0], allow_live=True, concurrency=1)), 0)
+            self.assertEqual(len(jobs), 2)
 
     def test_calibration_cli_rejects_invalid_samples_and_missing_live_authority_before_jobs(self):
         cases = [

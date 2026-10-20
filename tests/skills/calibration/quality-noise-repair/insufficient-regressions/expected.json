@@ -1,0 +1,11 @@
+{
+  "label_status": "candidate",
+  "expected": {
+    "checks": 1,
+    "judge": 0
+  },
+  "expected_criteria": {
+    "regression-value": 0
+  },
+  "rationale": "Source behavior is correct and its smoke test passes, but retained tests omit the specifically requested transaction and recovery regressions. Test value is a semantic judgment."
+}

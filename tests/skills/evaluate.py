@@ -13,6 +13,7 @@ import subprocess
 import sys
 import tomllib
 
+import toml
 import yaml
 
 from harbor.models.job.config import JobConfig
@@ -178,6 +179,28 @@ def reward_nodes(detail, name="reward"):
         yield from reward_nodes(component.get("detail", {}), component["name"])
 
 
+def calibration_targets(case):
+    targets = case.get("expected_criteria", {})
+    if (not isinstance(targets, dict)
+            or any(not isinstance(name, str) or not name.strip() or value not in (0, 1)
+                   for name, value in targets.items())):
+        raise ValueError("expected_criteria must map judge criterion names to binary scores")
+    return targets
+
+
+def calibration_comparison(case, details):
+    nodes = dict(reward_nodes(details))
+    comparisons = [(name, expected, None if nodes.get(name, {}).get("error")
+                    else nodes.get(name, {}).get("score"))
+                   for name, expected in case["expected"].items()]
+    criteria = {item["name"]: item for item in nodes.get("judge", {}).get("criteria", [])}
+    for name, expected in calibration_targets(case).items():
+        item = criteria.get(name, {})
+        actual = None if item.get("error") else item.get("value")
+        comparisons.append((f"judge/{name}", expected, actual))
+    return comparisons
+
+
 def calibration_case(directory, result, read_errors=None):
     inputs = directory.parent.with_name(directory.parent.name + ".inputs")
     path = inputs / "calibration.json"
@@ -198,6 +221,7 @@ def calibration_case(directory, result, read_errors=None):
             if read_errors is not None:
                 read_errors.append(f"calibration.json: missing expected components {', '.join(sorted(missing))} for {name}")
             return None
+        calibration_targets(case)
         return case
     except FileNotFoundError as error:
         # Oracle/nop controls need no manifest. Require explicit saved job
@@ -225,7 +249,7 @@ def calibration_case(directory, result, read_errors=None):
                         identity = f"local regrade source {source_trial}; matching task name and saved source.json agent=judge-calibration"
         if identity and read_errors is not None:
             read_errors.append(f"calibration.json: {type(error).__name__}: {error}; {identity}")
-    except (OSError, json.JSONDecodeError) as error:
+    except (OSError, ValueError) as error:
         if read_errors is not None:
             read_errors.append(f"calibration.json: {type(error).__name__}: {error}")
     return None
@@ -277,10 +301,10 @@ def verdict(directory, result, mode_errors=None):
     if calibration_errors:
         return "unscored"
     if case:
-        scores = {name: node.get("score") for name, node in reward_nodes(reward_details(directory))}
-        if any(scores.get(name) is None for name in case["expected"]):
+        comparisons = calibration_comparison(case, reward_details(directory))
+        if any(actual is None for _, _, actual in comparisons):
             return "unscored"
-        match = all(scores[name] == value for name, value in case["expected"].items())
+        match = all(actual == expected for _, expected, actual in comparisons)
         mode = "judge-calibration-regrade" if (result.get("config", {}).get("source_trial") or {}).get("action") == "regrade" else "judge-calibration"
         return mode + ("-match" if match else "-mismatch")
     mode = execution_mode(directory, result, mode_errors)
@@ -379,6 +403,15 @@ def report(job, baseline=None):
             lines.append(f"  Calibration expectations unavailable: {diagnostic_text('; '.join(calibration_errors))}. Native scores retained; no expected scores inferred.")
         elif case:
             lines.append(f"  Judge calibration: {case.get('label_status', 'unknown')}; expected components {case['expected']}. This is not Skill acceptance or human validation.")
+            if not calibration_targets(case):
+                lines.append("  Component-only calibration: detection of a named criterion was not assessed.")
+            for name, expected, actual in calibration_comparison(case, reward_details(directory)):
+                if actual is None:
+                    lines.append(f"  Calibration score unavailable: {diagnostic_text(name)}; expected {expected}.")
+                elif actual != expected:
+                    lines.append(f"  Calibration mismatch: {diagnostic_text(name)}; expected {expected}, observed {actual}.")
+                elif name.startswith("judge/"):
+                    lines.append(f"  Calibration target matched: {diagnostic_text(name)}; expected {expected}, observed {actual}.")
             if "label_status" not in case:
                 lines.append("  Label status unknown: label_status is missing; neither candidate nor human confirmation is inferred.")
         if errors := mode_errors.get(directory):
@@ -641,9 +674,40 @@ def calibration_samples(selected):
                     or case["label_status"] not in ("candidate", "human-reviewed")
                     or not case.get("rationale")):
                 raise ValueError(f"Invalid calibration expectations: {manifest}")
+            targets = calibration_targets(case)
+            if targets:
+                declared = {criterion["name"] for rubric in (task / "tests").rglob("*.toml")
+                            for criterion in tomllib.loads(rubric.read_text()).get("criterion", [])
+                            if "name" in criterion}
+                if unknown := targets.keys() - declared:
+                    raise ValueError(f"Unknown judge criteria {sorted(unknown)}: {manifest}")
             subprocess.run(["bash", "-n", manifest.parent / "sample.sh"], check=True)
+            if (manifest.parent / "base.sh").is_file():
+                subprocess.run(["bash", "-n", manifest.parent / "base.sh"], check=True)
             samples[f"{task.name}--{manifest.parent.name}"] = (task, manifest.parent, case)
     return samples
+
+
+def use_oracle_evidence(task, context=None):
+    """Bind a copied calibration task to Harbor Oracle's actual execution log."""
+    for path in [task / "task.toml", *(task / "tests").rglob("*.toml")]:
+        content = path.read_text()
+        updated = content.replace('"/logs/agent/codex.txt"', '"/logs/agent/oracle.txt"')
+        if updated != content:
+            path.write_text(updated)
+    if context is not None:
+        # This is runner-owned calibration context, never workspace testimony.
+        shutil.copy2(context, task / "tests/oracle-context.md")
+        rubric_path = task / "tests/judge.toml"
+        rubric = tomllib.loads(rubric_path.read_text())
+        rubric["judge"]["prompt_template"] = "oracle-context.md"
+        evidence = "/logs/agent/oracle-checks.jsonl"
+        rubric["judge"]["files"].append(evidence)
+        rubric_path.write_text(toml.dumps(rubric))
+        config_path = task / "task.toml"
+        config = tomllib.loads(config_path.read_text())
+        config["artifacts"].append({"source": evidence})
+        config_path.write_text(toml.dumps(config))
 
 
 def calibrate(args):
@@ -665,10 +729,22 @@ def calibrate(args):
     for name, (task, source, _) in samples.items():
         target = inputs / "samples" / name
         shutil.copytree(inputs / "tasks" / task.name, target)
+        context = HOME / "calibration" / task.name / "oracle-context.md"
+        use_oracle_evidence(target, context if context.is_file() else None)
         solution = target / "solution"
         (solution / "solve.sh").rename(solution / "base.sh")
+        if (source / "base.sh").is_file():
+            shutil.copy2(source / "base.sh", solution / "base.sh")
         shutil.copy2(source / "sample.sh", solution / "sample.sh")
-        (solution / "solve.sh").write_text("#!/usr/bin/env bash\nset -euo pipefail\nbash /solution/base.sh\nbash /solution/sample.sh\n")
+        # Initialize before either script so no execution is an observed empty
+        # recorder, distinct from an unavailable artifact. Raw output is separate.
+        # Keep trace rendering from identifying negative labels. Route only Bash
+        # xtrace away; command stdout, stderr and recorder facts still reach grading.
+        setup = ("exec 3>/dev/null\nexport BASH_XTRACEFD=3\n"
+                 "export RSP_ORACLE_CHECKS=/logs/agent/oracle-checks.jsonl\n"
+                 ': > "$RSP_ORACLE_CHECKS"\n') if context.is_file() else ""
+        (solution / "solve.sh").write_text("#!/usr/bin/env bash\nset -euo pipefail\n" + setup +
+                                           "bash /solution/base.sh\nbash /solution/sample.sh\n")
         definitions.append({"path": str(target)})
     write_json(inputs / "calibration.json", {name: {**case, "task": task.name} for name, (task, _, case) in samples.items()})
     config = {"job_name": job.name, "jobs_dir": str(job.parent),
@@ -698,6 +774,10 @@ def regrade(args):
         for name in names:
             target = inputs / "samples" / name
             shutil.copytree(inputs / "tasks" / cases[name]["task"], target)
+            # A historical output-only Oracle has no separately recorded facts.
+            # Never grant it the context of a newer producer during regrading.
+            context = source_inputs / "samples" / name / "tests/oracle-context.md"
+            use_oracle_evidence(target, context if context.is_file() else None)
             shutil.rmtree(target / "solution")
             shutil.copytree(source_inputs / "samples" / name / "solution", target / "solution")
             definitions.append({"path": str(target)})

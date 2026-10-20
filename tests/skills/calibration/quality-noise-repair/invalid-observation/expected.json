@@ -1,0 +1,11 @@
+{
+  "label_status": "candidate",
+  "expected": {
+    "checks": 0,
+    "judge": 0
+  },
+  "expected_criteria": {
+    "contract-and-scope": 0
+  },
+  "rationale": "Recovery publishes an out-of-range observation. Passing smoke checks do not excuse the violation of the agreed state contract."
+}

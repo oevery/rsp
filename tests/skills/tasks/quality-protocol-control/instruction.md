@@ -1,0 +1,6 @@
+Assess the receiver session against the supported hardware model. Apply any justified simplification or correction and verify supported behavior. If it already satisfies the contract, preserve correct behavior instead of manufacturing changes.
+
+Preserve useful existing tests. For unchanged behavior, grounded source inspection or executed focused probes may establish current verification without permanent additions. Retain additional regression protection only for a concrete material gap tied to behavior changed by this task. Other worthwhile test additions are non-blocking suggestions; exhaustive branch coverage is not required.
+Different protocol groups may be sent in either order; preserve each group's target IDs and encoding.
+
+Work in /app. CONTEXT.md is the agreed business authority. Follow AGENTS.md for write scope. Run node tools/check.mjs and proportionate additional checks. Write assessment.json with status (corrected or satisfied), findings [{path, reason, consequence}], evidence [{path, detail}], and limits (text). Explain actual changes and verification in your final response. Do not commit or publish.

@@ -1,0 +1,12 @@
+{
+  "label_status": "candidate",
+  "expected": {
+    "checks": 1,
+    "judge": 1
+  },
+  "expected_criteria": {
+    "unresolved-owner-choice": 1,
+    "current-evidence-boundary": 1
+  },
+  "rationale": "A descriptive Chinese success status preserves actual execution and current-snapshot-only scope."
+}

@@ -1,6 +1,6 @@
 # Skill evaluation
 
-RSP uses Harbor 0.24.0 for native tasks, jobs, agents and retained execution, with `harbor-rewardkit==0.2.2` for verification. `evaluate.py` prepares native jobs and presents their evidence through `check`, `run`, `calibrate`, `regrade`, `resume` and `report`. Task definitions live in `tasks/`; `jobs/default.yaml` supplies native job configuration and agent skills. See [task migration](migration.md) for coverage mapping and gaps.
+RSP uses Harbor 0.24.0 for native tasks, jobs, agents and retained execution, with `harbor-rewardkit==0.2.2` for verification. `evaluate.py` prepares native jobs and presents their evidence through `check`, `run`, `calibrate`, `regrade`, `resume` and `report`. Task definitions live in `tasks/`; `jobs/default.yaml` supplies native job configuration and agent skills. Use the [assessment contract](assessment.md) for grading responsibility and equivalent outcomes, the [coverage matrix](matrices/evaluation.md) to select current task families, and [task migration](migration.md) for historical mapping and gaps.
 
 ## Prepare from the repository root
 
@@ -23,6 +23,8 @@ RSP_EVAL_CONTAINER_TESTS=1 mise exec -- uv run --frozen --project tests/skills p
 ```
 
 ## Select and run tasks
+
+The exploratory [code-quality matrix](matrices/code-quality.md) pairs receiver test and protocol simplification cases with preservation controls, plus redundant Git capture identity and necessary external digest validation. It defines the six-case baseline boundary and focused offline calibration.
 
 `--task ID` is repeatable; `--attempts N` controls attempts per selected task. `--agent` selects `codex`, `oracle` or `nop`. Choose tasks for the changed risk, including restraint and preservation where relevant; catalog size is not a quality gate. Native job `agents[].skills` supplies package paths. Prepared internal packages use the same mechanism; see the maintainer [internal-target guide](../../.agents/skills/author-rsp-skills/references/internal-targets.md). There is no parallel composition-hash or matrix model.
 
@@ -101,6 +103,8 @@ RSP_EVAL_OFFLINE=1 mise exec -- uv run --project tests/skills python tests/skill
 Use `RSP_EVAL_OFFLINE=1` only with `oracle` or `nop`, never for Codex acceptance. The wrapper also enables this mode automatically for oracle/nop. These results calibrate verifier discrimination and environment behavior, not Skill quality. Run and resume return zero only when every oracle trial passes or every nop trial is rejected; an unexpected control outcome, missing score or infrastructure error returns nonzero. Native verifier regrade can call judges and requires separate authority.
 
 ## Scoring and evidence
+
+Acceptance follows the [assessment contract](assessment.md). Keep observable behavior, declared report structure, semantic quality and unavailable evidence distinct. Prefer contract-equivalent alternatives over command/prose fingerprints; retain actual state, side-effect, scope and authority checks. The quality tasks prepare actual source/test evidence before scoring and expose three semantic dimensions rather than one mixed judgment. Changed baked support requires an image rebuild before a later native job.
 
 Executor usage is derived from the root identity in codex.txt and session_meta
 parent links, including retained descendants once each. The adapter converts the
@@ -250,13 +254,13 @@ establish the broader recovery claims excluded above.
 
 ## Calibrate semantic judging
 
-The small [calibration corpus](calibration/README.md) supplies reference outputs, equivalent correct wording and plausible failures for document, design, staged-review and structural-review judgments. It runs through native Harbor oracle tasks and the unchanged task verifier, including Reward Kit judges. This differs from oracle/nop controls above: semantic calls remain enabled and require authorization and judge credentials. No executor model is invoked.
+The [calibration corpus](calibration/README.md) supplies reference outputs, equivalent correct forms and consequential failures for document, design, review and code-quality judgments. It runs through native Harbor oracle tasks and the selected task verifier, including Reward Kit judges. This differs from oracle/nop controls above: semantic calls remain enabled and require authorization and judge credentials. No executor model is invoked. Offline code tests separately exercise the same samples' deterministic components; they do not call judges or confirm candidate labels.
 
 ```sh
 mise exec -- uv run --project tests/skills python tests/skills/evaluate.py calibrate --task doc-export --task shape-cache --task review-staged --task structural-audit-control --allow-live
 ```
 
-The wrapper snapshots the task, original oracle solution, sample script and expectations. Harbor installs the reference solution followed by the selected sample and runs the original tests. The report compares programmatic and semantic components independently: a rejected negative sample is a match, not an Agent success. Missing scores and verifier/provider errors are unscored, never matches. Any mismatch or unavailable result makes the command fail. Use `--attempts` to repeat judgment of the same samples; keep this distinct from repeated Agent executions.
+The wrapper snapshots the task, original oracle solution, sample script and expectations. Harbor installs the reference solution followed by the selected sample and runs the task verifier. Calibration sample copies, including regrades, bind declared Codex log inputs and artifacts to Harbor Oracle's actual `/logs/agent/oracle.txt`; authored tasks and original task snapshots keep their Codex evidence contract. Missing Oracle evidence remains unavailable. The report compares programmatic and semantic components independently and, when declared, the named `expected_criteria` targets. A rejected negative sample is a match only if its targeted criteria also match; rejection for an unrelated problem cannot substitute. Missing scores, errored targets and verifier/provider errors are unscored, never matches. Any mismatch or unavailable result makes the command fail. Component-only snapshots retain their original narrower meaning. Use `--attempts` to repeat judgment of the same samples; keep this distinct from repeated Agent executions.
 
 Labels currently remain `candidate`: the author derived them from the task contract, but no human has confirmed them. Inspect false acceptance/rejection with a human before changing a label to `human-reviewed`. A matching candidate label is implementation evidence, not human calibration. Add samples for observed judgment failures; do not duplicate every task mechanically. Run a fresh calibration after changing sample artifacts or expected labels. For rubric-only corrections, `regrade JOB --allow-live` reuses the retained sample artifacts and original expectations with the current task verifier; its results are labeled `judge-calibration-regrade-*`. Resume of a calibration job needs `--allow-live` because its oracle still calls judges.
 
