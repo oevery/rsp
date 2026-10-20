@@ -2012,13 +2012,32 @@ source "$RSP_SCRIPT"
             report = work / "report.json"
             data = json.loads(report.read_text())
             command = ["python3", "-B", str(HERE / "verifier.py"), str(task / "tests/.support/check.py")]
+
+            def check(finding, expected):
+                report.write_text(json.dumps({**data, "findings": [finding]}))
+                result = subprocess.run(command, env=env, text=True, capture_output=True)
+                self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
+                return result.stdout + result.stderr
+
+            finding = data["findings"][0]
             for example, expected in (({"input": 2.349, "expectedCents": 235, "actualCents": 234}, 0),
                                       ({"input": 2.349, "expectedCents": 235, "actualCents": 233}, 1),
                                       ({"input": 2, "expectedCents": 200, "actualCents": 200}, 1)):
-                data["findings"][0]["example"] = example
-                report.write_text(json.dumps(data))
-                result = subprocess.run(command, env=env, text=True, capture_output=True)
-                self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
+                check({**finding, "example": example}, expected)
+
+            # Equivalent paths and additional explanation retain the same identities.
+            check({**finding, "bypass": "./src/export.mjs",
+                   "reachableChain": ["src/main.mjs", "src/export.mjs"]}, 0)
+            for field, value in (("bypass", "src/export.mjs:1 computes Math.trunc directly"),
+                                 ("entrypoint", ["src/main.mjs", "src/export.mjs"]),
+                                 ("owner", None), ("bypass", "missing.mjs")):
+                with self.subTest(field=field, value=value):
+                    output = check({**finding, field: value}, 1)
+                    self.assertIn(f"Invalid report path findings[0].{field}:", output)
+                    self.assertNotIn("Reachable pricing-owner bypass missing", output)
+            output = check({**finding, "bypass": "src/route.mjs"}, 1)
+            self.assertIn("Reachable pricing-owner bypass missing", output)
+            self.assertNotIn("Invalid report path", output)
 
     def test_child_tool_evidence_reaches_the_rewardkit_judge_with_session_identity(self):
         from types import SimpleNamespace

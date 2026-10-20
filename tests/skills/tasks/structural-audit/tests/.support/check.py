@@ -2,7 +2,23 @@ from support import *
 import math
 readonly_product()
 findings=object_list(data().get('findings',[]),'findings')
-matching=[f for f in findings if f.get('owner')=='src/pricing.mjs' and f.get('bypass')=='src/export.mjs' and f.get('entrypoint')=='src/main.mjs']
+identified=[]
+for index,finding in enumerate(findings):
+ paths={}
+ for field in ('owner','bypass','entrypoint'):
+  value=finding.get(field)
+  label=f'findings[{index}].{field}'
+  assert isinstance(value,str),f'Invalid report path {label}: expected one repository-relative file-path string'
+  path=Path(value)
+  assert value.strip() and not path.is_absolute(),f'Invalid report path {label}: expected a nonempty repository-relative file path'
+  try:
+   target=(ROOT/path).resolve()
+  except ValueError as error:
+   raise AssertionError(f'Invalid report path {label}: invalid file path') from error
+  assert target.is_relative_to(ROOT) and target.is_file(),f'Invalid report path {label}: must name an existing file inside the repository'
+  paths[field]=target.relative_to(ROOT).as_posix()
+ identified.append((finding,paths))
+matching=[f for f,paths in identified if paths['owner']=='src/pricing.mjs' and paths['bypass']=='src/export.mjs' and paths['entrypoint']=='src/main.mjs']
 assert matching,'Reachable pricing-owner bypass missing'
 f=matching[0]
 example=object_value(f.get('example',{}),'example')
