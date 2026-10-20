@@ -79,8 +79,10 @@ convergence. Writing applies those contracts; it does not redefine the workflow.
   Consolidate duplicate check summaries without merging different candidates or
   changing original verdicts. Execution details stay in their report, not the Change.
 - API comments explain actual inputs, returns, failures and usage. Ordinary inline
-  comments need local accuracy and clarity, not an invented document scaffold;
-  behavior-affecting tool/compiler annotations retain implementation ownership.
+  comments retain accurate constraints, rationale or usage that nearby code does
+  not make clear; remove restatement that adds no useful information, without an
+  invented document scaffold. Behavior-affecting tool/compiler annotations retain
+  implementation ownership.
 - Copyable examples state real prerequisites and consequences. Label pseudocode
   and incomplete snippets; writing authority or a code fence grants no execution,
   dependency installation or external effects.

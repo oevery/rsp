@@ -31,7 +31,7 @@ Use the checks relevant to the change:
 - Check affected links, anchors, examples and metadata with existing tools. Execute examples only within safe authorized scope.
 - For linked artifacts, compare shared claims, terminology, defaults and handoffs against their authoritative owner. Correct authorized summaries and links without copying full definitions or changing unassigned owners. Report out-of-scope contradictions to their owner.
 - Recheck facts, quantifiers, defaults, failures, permissions and terminology after editing. Report actual checks and remaining gaps.
-- API comments and embedded guidance: compare claims with their contract and implementation without assuming either side correct. Ordinary inline comments need local checks, not a full writing workflow; compiler/tool annotations retain implementation ownership.
+- API comments and embedded guidance: compare claims with their contract and implementation without assuming either side correct. Keep ordinary inline comments locally accurate and useful: retain constraints, rationale or usage that nearby code does not make clear, and remove restatement that adds no information; no full writing workflow is needed. Compiler/tool annotations retain implementation ownership.
 - Examples: label illustrative pseudocode or incomplete snippets; check copyable commands against real prerequisites, outcomes and safe use without inferring execution or installation authority.
 
 For agent-facing instructions, trace the relevant branch and its targets. Distinguish local reading-path reasoning from actual agent execution and required independent evidence; retain background human co-readers need.

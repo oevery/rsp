@@ -47,8 +47,8 @@ Prefer existing behavior and seams that satisfy the accepted outcome. Add a vali
 
 Before creating or extending a permanent test:
 
-- Reuse sufficient existing test, type/static, build or acceptance evidence first. Otherwise name the observable consequence, distinct plausible regression at the owning production seam, evidence gap and proportionate maintenance cost.
-- For consumer-owned behavior with covered downstream adapters or forwarding hops, exercise the consumer through those seams to the consequence. Merely re-proving a hop with a nearest-spy, emitted-message, shared-constant or forwarding assertion is insufficient, even in an existing test file.
+- Reuse sufficient existing test, type/static, build or acceptance evidence first. Otherwise name the observable consequence, distinct plausible regression at the owning production seam, evidence gap and proportionate maintenance cost. Derive expected outcomes from the agreed contract or an independently worked example, rather than repeat the tested computation.
+- For consumer-owned behavior with covered downstream adapters or forwarding hops, exercise the consumer through those seams to the consequence. Merely re-proving a covered forwarding hop with a nearest-spy, emitted-message or forwarding assertion is insufficient, even in an existing test file. A single final-message assertion can suffice when it proves the consumer's agreed outcome. Pin error details or interaction counts/order only when the contract needs them; otherwise test outcomes and effects, including rejection.
 - Do not allocate tests per touched file, wrapper, forwarding hop, branch or constant. Keep multiple nearby tests when each protects an independent consequence.
 
 ## Continue within the evidence boundary
@@ -72,7 +72,7 @@ After final mutation, establish minimum sufficient evidence for tracked Required
 
 Before completion, apply the same admission criteria to retained tests. Remove disposable probes, fixtures and helpers that add no distinct future confidence unless retention is required by user, Change or project authority; establish sufficient evidence for the final retained state.
 
-Before returning, check changed comments, test names, documents and handoff prose against the accepted result and authoritative baseline. Report the outcome, actual paths, verification and material limits, external effects or pre-existing user work. Omit Tasks/log repetition and discarded session attempts. Keep negative facts needed for removals, safety, compatibility, migration, audit, failures, unresolved risks or requested comparisons. This prose check changes no behavior, public contract, test, snapshot or diagnostic.
+Before returning, check changed comments, test names, documents and handoff prose against the accepted result and authoritative baseline. For comments, retain accurate information that nearby code does not make clear, such as constraints, rationale or usage; remove restatement that adds no useful information. Report the outcome, actual paths, verification and material limits, external effects or pre-existing user work. Omit Tasks/log repetition and discarded session attempts. Keep negative facts needed for removals, safety, compatibility, migration, audit, failures, unresolved risks or requested comparisons. This prose check changes no behavior, public contract, test, snapshot or diagnostic.
 
 ## Return ownership
 
