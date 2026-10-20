@@ -23,7 +23,7 @@ Missing Required evidence, active blockers or contradictory contracts prevent cl
 
 ## Close only when authorized
 
-Use rsp archive <work-ref>, then inspect the exact resulting archive and entire lifecycle diff, including Focus removal and any cleanup warning. Use the returned archive filename with the selected WorkRef's archive directory (.rsp/archives/ for an ungrouped Change, .rsp/archives/<group>/ for a child); do not guess a date, suffix or directory. Expand read-only discovery only if output or effects are incomplete or contradictory, without replaying the mutation.
+Run rsp archive <work-ref>. Inspect the resulting archive and entire lifecycle diff, including Focus removal and cleanup warnings. Use the returned filename in the selected WorkRef's archive directory: .rsp/archives/ for an ungrouped Change, .rsp/archives/<group>/ for a child. Do not guess dates, suffixes or directories. Expand read-only discovery only for incomplete or contradictory output/effects; do not replay the mutation.
 
 For a Group, archive eligible authorized children independently, reconcile the Brief and integrated evidence, then run rsp group close <group> after every child and Group gate passes. Request-only integration conditions must first be recorded in the Brief; child passes alone do not prove integration.
 

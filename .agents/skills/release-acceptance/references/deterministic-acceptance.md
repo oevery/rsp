@@ -1,6 +1,6 @@
 # Local checks
 
-Run `mise exec -- pnpm run release:check` serially. This thin package script builds, typechecks, lints, runs `test:code`, checks full Skill project readiness, security and docs. Consult `tests/README.md` for scope.
+Run `mise exec -- pnpm run release:check` serially. This thin package script builds, typechecks, lints, runs `test:code`, validates native Skill task schemas offline, and checks security and docs. Consult `tests/README.md` for scope.
 
 Require execution authority and available shared resources before running it. When interpreting retained records read-only, report only the checks evidenced for the selected candidate. If aggregation stops, retain the failed step and separate completed checks from unrun ones; narrower diagnostics can locate the cause but cannot replace this named release check or establish its pass.
 

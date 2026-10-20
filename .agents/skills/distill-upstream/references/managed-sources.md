@@ -46,7 +46,7 @@ Comparison is offline, independent of materialized captures. A missing cache or 
 
 When the entrypoint selects an authorized research report, write ordinary Markdown under research/reports/<UTC-time>.md, for example 2026-10-07T14-30-00Z.md. Use enough time precision for unique filenames. A report has no required metadata, state, parser, seal or revision chain. Keep editing it during the same investigation; Git records edits. Start another time-named file for a new investigation and cite earlier reports when useful.
 
-Use a descriptive title and source references in prose: repository, full commit and relevant path, or a URL with retrieval date and retained location. State reading limits and missing sources honestly. Read current local RSP directly; note its base commit and relevant dirty scope when local conclusions depend on them. Preserve a patch only when needed for reproduction. Report meaning is not certified by a format checker.
+Use a descriptive title and cite sources in prose: repository, full commit and path, or URL, retrieval date and retained location. State reading limits and missing sources. Read current local RSP; record its base commit and relevant dirty scope when conclusions depend on them. Keep a patch only when needed to reproduce that state. Format checks do not establish semantic validity.
 
 ## Recover and clean
 

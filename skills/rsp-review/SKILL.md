@@ -11,7 +11,7 @@ metadata:
 
 For tracked work, read the [shared work model](../rsp/references/work-model.md) when its identity and ownership definitions are missing from the current context. Use logical WorkRefs in commands and reports; cite file locations separately. Direct invocation needs no prior Core execution.
 
-Review one fixed change/file set or explicitly bounded structural scope without modifying it. Apply only perspectives relevant to the judged target and emit one concise, deduplicated report. Checks supporting the requested judgment stay within this review; do not add a separate verification pass merely because checks are named. Explicit combined requests and independent-evidence obligations still apply. A judgment about implementation completeness grants no overall lifecycle completion or closeout authority.
+Review one fixed change/file set or bounded structural scope read-only. Apply relevant perspectives and report each issue once. Run supporting checks within this review; named checks alone require no separate Verify pass. Honor combined requests and independent-evidence obligations. Judging implementation completeness grants no lifecycle completion or closeout authority.
 
 ## Fix scope and authority
 
@@ -29,7 +29,7 @@ The user request fixes the requested outcome and allowed operations subject to n
 
 ## Select perspectives before loading
 
-For an explicit structural-discovery request, load [structural review](references/structural-review.md) after fixing scope. It supplies ownership, dependency, production-path and verification lenses; no diff is required. Ordinary review does not expand into a repository audit. A concrete structural risk in a fixed change may use those lenses only within the existing boundary. Return evidenced findings and the smallest correction or unresolved design question, not a replacement design or implementation. Keep the report and verdict semantics below.
+After fixing an explicit structural-discovery scope, load [structural review](references/structural-review.md) for ownership, dependency, production-path and verification lenses; no diff is required. Within fixed-change review, use those lenses only for a concrete structural risk in the same boundary; do not expand into a repository audit. Return evidenced findings and the smallest correction or unresolved design question, not a replacement design or implementation. Keep the report and verdict semantics below.
 
 Select methods from the judged content and its risks. Supporting references inform the judgment without becoming additional review targets. Respect narrower requested scope and reuse applicable instructions already in context.
 
@@ -41,24 +41,30 @@ When fixed reviewed artifacts include changelogs, release notes, migration guide
 
 ## Inspect the fixed scope
 
-Inspect in order: checkout state and the selected diff or structural boundary, selected authority, then the smallest direct behavior chain and evidence needed for a concrete question. Apply the checks relevant to each selected perspective and match verification to the actual content and changed risk. A comment/implementation or example/contract discrepancy yields one finding with both sides of the evidence; do not presume either side correct. Stop when applicable judgments are supported; do not broaden scope or execute snippets without authority.
+Inspect checkout state and the selected diff or structural boundary, then authority, then the smallest behavior chain and evidence needed for the question. Match checks to each perspective, actual content and changed risk. Report a comment/implementation or example/contract discrepancy once, with evidence from both sides; presume neither correct. Stop when applicable judgments are supported. Do not broaden scope or execute snippets without authority.
 
-Reuse traceable test evidence whose tested scope and relevant code, dependencies, configuration, tools, inputs and environment remain applicable. For a re-review, inspect the actual correction and affected behavior against the original scope; expand within that scope for evidenced consequences. An earlier clean verdict cannot establish the changed target, while unchanged test evidence need not be rerun merely for this new judgment. Run authorized checks only to fill evidence gaps or cover invalidated results and changed risk, unless execution is explicitly required. Still perform the requested fixed-scope semantic review: passing tests or an implementer summary cannot supply that judgment or required independence. Report reused evidence separately from new observations.
+Reuse traceable test evidence while its tested scope and relevant code, dependencies, configuration, tools, inputs and environment still apply. Run authorized checks only for gaps, invalidated results, changed risk or explicitly required execution. Distinguish reused evidence from new observations.
 
-Choose read/search tools within the fixed scope. Recover a tool-only fault with another read-only method against the same comparison, authority and required evidence, after checking its scope and effects. Missing comparison or authority blocks dependent pipelines; other gaps follow their pipeline's gate. Report affected judgments, not an invented product defect or whole-review blocker. Supported findings remain valid, but an unestablished required judgment is not clean. Preserve named checks and required independence; do not repair through project mutation or unsafe probes.
+For re-review, inspect the actual correction and affected behavior against the original scope, expanding within it for evidenced consequences. Earlier clean verdicts do not establish a changed target; unchanged tests need no rerun solely for a new judgment. Perform the requested semantic review: neither passing tests nor an implementer summary supplies that judgment or required independence.
+
+Recover a tool-only fault within the fixed scope using another permitted read-only method after inspecting its scope and effects. Preserve the comparison, authority, named checks, required evidence and independence; project mutation and unsafe probes remain prohibited.
+
+Missing comparison or authority blocks dependent pipelines; other gaps follow the applicable gate. Keep supported findings and identify affected judgments without inventing a product defect or whole-review blocker. An unestablished required judgment is not clean.
 
 ## Report
 
 Responses follow explicit language instruction, personal instructions, then conversation language, never project artifact-language settings. Preserve paths, commands, identifiers, WorkOwner/WorkRefs, `P0`-`P3` and `issues_found | clean | skipped | blocked`; use localized narration with differing machine values as secondary exact tokens.
 
-Preserve this information, not mandatory headings or one line per field. Use a compact report for a clean bounded review; honor an explicitly required format:
+Preserve the information below without mandatory headings or one line per field. Use a compact report for a clean bounded review, omit empty Findings and unrelated no-op fields, and honor explicitly required formats:
 
 - Scope: WorkOwner or direct request, fixed comparison, authoritative intent, applicable perspectives and material exclusions.
 - Findings when present: severity/title, kind (`code | document | cross-artifact`), review axis, location, authority, evidence, impact, smallest correction and confidence (`high | medium | low`). Combine related information in sentences; report one root issue once even when both perspectives are affected.
 - Coverage: each perspective's checked content, material omissions and unverified scope, including non-actionable gaps; distinguish reused evidence from new observations.
 - Verdict: `blocked | findings | clean`; give the next action only when an issue, blocker or requested follow-up remains. Do not repeat the findings or evidence.
 
-Use `clean` only for an applicable judgment with no actionable issue, `skipped` for an inapplicable perspective when the requested format requires it, and `blocked` when required scope, authority or decisive evidence is missing. Findings require a demonstrated defect or violation of an explicit requirement; missing evidence alone is a coverage limit, not proof of a defect. Retain supported findings while blocking only affected judgments; an unestablished required judgment cannot be clean. Omit empty Findings and unrelated no-op fields. Two perspectives require neither two reports nor two reviewers. Order findings by severity and path: P0 critical security/data/breakage risk; P1 normal-path contract failure; P2 meaningful edge/maintenance risk; P3 narrow actionable improvement.
+Use `clean` only for an applicable judgment with no actionable issue, `skipped` for an inapplicable perspective when the requested format requires it, and `blocked` when required scope, authority or decisive evidence is missing. Findings require a demonstrated defect or explicit-requirement violation; missing evidence alone is a coverage limit. Retain supported findings while blocking only affected judgments. Two perspectives require neither two reports nor two reviewers.
+
+Order findings by severity and path: P0 critical security/data/breakage risk; P1 normal-path contract failure; P2 meaningful edge/maintenance risk; P3 narrow actionable improvement.
 
 Illustrative compact finding, not an observed defect:
 

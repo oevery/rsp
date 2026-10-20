@@ -26,10 +26,17 @@ and Review carry standalone guidance rather than a runtime dependency on this fi
 
 ## Information and expression
 
-Reduce the reader's effort to understand, act or judge, rather than target a word
-count, sentence length, list size or compression ratio. Give each paragraph or item
-one useful purpose. Remove empty introductions, repetition, non-informative modifiers
-and session-attempt narration; retain necessary reasoning and purpose-required evidence.
+State who acts, what they do and what they act on. Prefer short sentences when they
+preserve the same meaning and make the decision easier to follow. Separate independent
+actions; keep conditions, causes and consequences explicit. Give each paragraph or
+item one useful purpose. No word count, sentence length, list size or compression
+ratio defines quality.
+
+Explain unfamiliar concepts through their meaning for the declared reader and task.
+Retain mechanisms needed to reason, troubleshoot or assess guarantees; reference
+entries need no forced tutorial. Remove empty introductions, rhetorical framing,
+repetition, non-informative modifiers and session-attempt narration. Keep explanations
+that change a decision or establish needed reasoning, and evidence required by the task.
 
 Wording edits preserve meaning, information ownership, heading anchors and technical
 literals, including code, commands, paths, identifiers, links, versions and numbers.
@@ -40,13 +47,21 @@ behavior changes or technical corrections; those need their own scope and verifi
 Put prerequisites before use, conditions beside actions and exceptions beside
 conditions. Include actions and recognizable success signals, not only outcome
 labels. Number a sequence only when correctness, safety or a contract requires
-its order; use peer bullets or causal paragraphs otherwise. Keep a concept's
-rules and caveats together, with substantial branch-only detail linked conditionally.
+its order; use peer bullets for independent items and connected prose for reasoning.
+Keep causal and conditional relationships explicit where readers would otherwise
+have to infer them. Keep a concept's rules and caveats together, with substantial
+branch-only detail linked conditionally.
 
-State correct behavior directly. Examples, comparisons and teaching need a reader-task
-reason, not a fixed template; retain examples distinguishing different conditions and
-remove those merely repeating the same point. Neither shorter text nor a newer model
-proves quality or behavioral equivalence.
+State the action directly rather than an abstract aspiration. For prescriptive rules,
+use contrasts or counterexamples only to resolve likely ambiguity. Retain explanatory
+comparisons needed for understanding, decisions or migration. Merge equivalent examples
+and remove those repeating the rule.
+
+Merge failure explanations with the same decision effect; retain conditions that
+change permissions, outcomes, stopping or safe recovery. Keep rare boundaries explicit
+when they prevent unauthorized action, serious harm or unsafe replay. Incident details
+stay with their evidence owner. Neither shorter text nor a newer model proves quality
+or behavioral equivalence.
 
 ## Symbols and tables
 
@@ -93,7 +108,8 @@ convergence. Writing applies those contracts; it does not redefine the workflow.
   loading the body; procedures belong in the body, not exhaustive trigger lists.
 - Make the ordinary task executable from its goal, necessary inputs, authorized
   actions, completion evidence and real stops. Organize these around the reader's
-  decisions, not a mandatory section template. Prefer one coherent decision rule
+  decisions, not a mandatory section template. Keep each conditional decision's
+  action and result with its conditions. Prefer one coherent decision rule
   over repeated qualifications in entry, steps and return. Use a short example
   when it resolves a boundary more directly than another explanation.
 - Link branch-only detail with its reading condition and purpose. Keep common
@@ -105,8 +121,9 @@ convergence. Writing applies those contracts; it does not redefine the workflow.
   Preserve trigger, inputs, authority, actions, outputs, stops, verification and
   conditional loading unless their owning contract intentionally changes. Generic
   teaching or model-compensation guidance needs a current task-specific reason.
-  Failure attribution and candidate comparisons belong to maintainer methods and
-  research evidence, not additional instructions every installed user must load.
+  A failure justifies a new constraint only for a reusable contract gap; noncompliance
+  or tool/environment failure alone does not establish one. Failure attribution and
+  candidate comparisons stay in maintainer methods and research evidence.
 
 ## Content-based review
 
@@ -144,8 +161,15 @@ the final answer as well as successful action. Actual task evidence is required
 for behavioral claims; comparable outcomes and costs are required for efficiency
 claims. Shorter sources and static diagnostics alone establish neither.
 
-Self-checks do not establish independent review or task behavior. Agreed user,
-project and Spec expression rules are contracts; findings identify their violation
-and consequence, not personal taste. Static validity, author checks and independent
+Self-checks do not establish independent review or task behavior. Factual accuracy
+does not establish task usability. Usability findings identify the missing meaning
+or inference, judged against the reader's declared prior knowledge, and its
+demonstrated effect on the task, including unnecessary reconstruction or lookup.
+Agreed user, project and Spec expression rules are contracts. Findings identify the
+violated rule and consequence: an obscured action, scattered conditions, independent
+decisions crowded together or repetition can create avoidable reconstruction. Necessary
+prerequisite reading, alternatives meeting the task and applicable contracts, paragraph
+length and perceived machine style alone establish no defect;
+severity follows the demonstrated consequence. Static validity, author checks and independent
 acceptance remain separate. No regex, length limit, fixed interview or worker count
 establishes writing quality.

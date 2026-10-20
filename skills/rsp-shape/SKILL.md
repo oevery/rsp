@@ -13,9 +13,11 @@ For tracked work, read the [shared work model](../rsp/references/work-model.md) 
 
 Choose the branch before loading detail: bounded design advice is read-only and may have no Change; explicit planning-artifact work shapes or refines a Change/Group. Neither branch implements product behavior.
 
-Shape owns decision clarification and planning artifacts even when their output is Markdown; approval of material choices stays with the authorized DecisionOwner. Doc may support wording settled decisions; final work-record convergence belongs to writing, not replanning. A material unresolved decision returns to Shape rather than being resolved by prose cleanup.
+Shape clarifies decisions and writes planning artifacts, including Markdown. The authorized DecisionOwner approves material choices. Doc may word settled decisions and reconcile final work records. Return unresolved material choices to Shape; prose cleanup cannot settle them.
 
-Responses follow explicit instruction, personal instructions, then conversation language. Preserve existing artifact language and canonical identifiers, commands and values. New artifacts follow explicit instruction, effective configuration, scoped project instructions, then conversation language. Resolve needed RSP settings through the selected CLI's successful `rsp config --json` summary, including defaults and inheritance; refresh on relevant drift or recovery. Raw YAML is diagnostic only. Failed projection leaves dependent choices unresolved while independent authorized work continues; resolve material conflicts with the owner. Core execution is not required.
+Responses follow explicit instruction, personal instructions, then conversation language. Preserve existing artifact language and canonical identifiers, commands and values. For new artifacts, use explicit instruction, effective configuration, scoped project instructions, then conversation language.
+
+Resolve needed RSP settings, including defaults and inheritance, through the selected CLI's successful `rsp config --json` summary; refresh on relevant drift or recovery. Raw YAML is diagnostic only. Projection failure blocks dependent choices, not independent authorized work; return material conflicts to the owner.
 
 ## Establish the boundary
 
@@ -27,9 +29,9 @@ Route concrete or ready work to implementation only when authorized and no desig
 
 ## Resolve material ambiguity
 
-Inspect the repository before asking. Ask only for an owner decision changing behavior, data, interfaces, compatibility, safety, ownership, migration or acceptance. Reuse settled answers until evidence invalidates them; ordinary implementation choices within that contract need no new planning pass. Write only authorized answers.
+Inspect the repository before asking. Ask for unresolved owner decisions affecting behavior, data, interfaces, compatibility, safety, ownership, migration or acceptance. Reuse settled answers until evidence invalidates them. Ordinary implementation choices within that contract need no new decision or planning pass. Write only authorized answers.
 
-Derive requirements and acceptance checks from settled authority, not a preferred implementation. Do not promote an unsettled public behavior, failure contract, default or compatibility choice into an accepted requirement or mandatory check. Keep replaceable internal choices in Design; label material alternatives as proposals and retain any readiness-blocking decision in Blockers. Ordinary implementation details within the accepted contract need no new owner decision.
+Derive requirements and acceptance checks from settled authority. Do not make a preferred implementation or unsettled public behavior, failure contract, default or compatibility choice mandatory. Keep replaceable internal choices in Design, label material alternatives as proposals and put readiness-blocking decisions in Blockers.
 
 Choose permitted methods within the branch. Recover a diagnosed read/search fault against unchanged goal, scope, authority, baseline and evidence. Inspect artifact/focus effects before replaying planning mutations; unknown effects or unsafe replay stop that action. Required RSP commands/checks cannot be replaced by prose or tool status.
 
@@ -43,7 +45,7 @@ Never invent a product decision. When a material choice or mutation authority re
 
 ## Choose the owner
 
-For authorized planning-artifact work, read [planning and readiness](references/planning.md) before choosing or naming an owner, writing a Change/Group, or updating the selected Design. It supplies WorkRef naming, Change granularity, the six-section contract and the Shape Ready gate. Read-only design advice needs none of those artifact procedures.
+For authorized planning-artifact work, read [planning and readiness](references/planning.md) before choosing or naming an owner, writing a Change/Group, or updating the selected Design. Read-only design advice needs none of those artifact procedures.
 
 Read [complex shaping](references/complex-shaping.md) when authorized planning involves multiple material decisions or independently acceptable outcomes with dependencies/integration. Work shape does not enable agent delegation.
 
@@ -53,4 +55,4 @@ For planning, apply the complete [Shape Ready gate](references/planning.md#apply
 
 For read-only design, lead with the recommendation and decisive evidence. Include credible tradeoffs, owner decisions and a next action only when relevant to the current question; do not restate settled context or force a planning report. Create or mutate no plan automatically.
 
-When a material decision prevents readiness, stop with decisive evidence, the DecisionOwner and required answer; resume from fresh relevant evidence after that answer. For other blockers, state the actual missing input, next owner and safe resume condition. Use canonical machine fields such as `StopDisposition` only when a real consumer requires them. Do not relabel unresolved fog as ready work.
+When a material decision prevents readiness, stop with decisive evidence, the DecisionOwner and required answer; resume from fresh relevant evidence after that answer. For other blockers, state the actual missing input, next owner and safe resume condition. Use canonical machine fields such as `StopDisposition` only when a real consumer requires them. Do not report unresolved material decisions as ready work.

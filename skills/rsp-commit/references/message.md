@@ -12,7 +12,7 @@ Derive type from the accepted change and scope from a stable domain or module, n
 
 When project rules permit, omit the body if the subject suffices and no material rationale, compatibility, migration or risk needs explanation. File count and change type alone do not determine that need. Otherwise explain only what a reader without the session needs: the problem and motivation, important old/new behavior differences, consequential tradeoffs or limitations.
 
-For Conventional messages, separate a present body from the subject with a blank line. The body is free-form: prose suits causal explanations and tradeoffs, lists suit related independent points, and a mixture suits both. These are choices, not required shapes; impose no bullet list, Why/What/Testing template or mandatory prose-plus-list sequence. Do not pad the body or repeat the subject.
+For Conventional messages, separate the body from the subject with a blank line. Use prose for causes/tradeoffs, lists for independent points or both as needed. Do not require a bullet list, Why/What/Testing template or prose-plus-list sequence. Omit padding and subject repetition.
 
 Keep real removals, migration constraints and important omissions. Do not copy the Change, execution chronology, routine checks or full path lists. Omit session-only attempts; retain a consequential reason for rejecting an alternative or accepting a tradeoff only when it explains the final design. A decisive measurement or verification limitation may matter, but command success must not imply broader acceptance.
 

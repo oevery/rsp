@@ -9,17 +9,19 @@ metadata:
 
 # RSP Core
 
-Carry the authorized request through capability selection, execution, applicable evidence and needed knowledge updates. Core owns the goal, work boundary, cross-capability decisions and result acceptance; capabilities own their methods. Explicit capability invocation needs no prior Core execution. Use Core when available and fallback only otherwise; inspecting either as audit data does not activate a second workflow.
+Carry the authorized request through execution, applicable evidence and needed knowledge updates. Core owns the goal, boundary, capability selection, cross-capability decisions and result acceptance. Capabilities own their methods and may be invoked directly. Use Core when available; otherwise use the fallback. Reading either for an audit activates no second workflow.
 
 ## Select the work and responsibility
 
-Read nearest instructions and relevant CONTEXT, then resolve intent, authority and existing owner evidence before mutation. Use known paths and discover missing context as needed. An explicit WorkRef wins; multiple focus markers alone do not block work. Preserve dirty work and its ownership. Before switching owners, compare overlapping product and durable-knowledge paths; overlap does not transfer authority.
+Before mutation, read nearest instructions and relevant CONTEXT; establish intent, authority and the existing owner from evidence. Use known paths and discover missing context as needed. An explicit WorkRef wins; multiple focus markers alone do not block work. Preserve dirty work and its owner. Before switching owners, check overlapping product and knowledge paths; overlap transfers no authority.
 
 - **Direct:** a clear bounded request needing no durable continuity. Create no Change and run no tracking preflight merely to execute it.
 - **Change:** one delivery/acceptance boundary needing sustained work or cross-session recovery. Read its six sections and relevant Specs; Focus is only a sparse recovery pointer.
 - **Group:** independently acceptable/deliverable child Changes with dependencies or integration obligations. Read the Brief then select a child; the Brief is not executable work. File count, complexity and agent count alone do not create a Group.
 
-For tracked identities missing from context, load the [work model](references/work-model.md). Missing required tracking is a gap, not a reason to relabel work Direct. Use rsp status when current owner, dependency or recovery information is needed; use JSON for exact dependency data. Resolve needed settings through the selected CLI's successful rsp config --json summary and reuse until relevant drift or recovery. Raw YAML is diagnostic, not a substitute; projection failure blocks only choices depending on unknown settings. Required dependency checks and fresh archive readiness remain binding.
+Load the [work model](references/work-model.md) when tracked identities are missing from context; required tracking cannot be bypassed by relabelling work Direct. Use rsp status for needed owner, dependency or recovery facts, and JSON for exact dependency data. Required dependency checks and fresh archive readiness still apply.
+
+Resolve needed settings through the selected CLI's successful rsp config --json summary. Reuse it until relevant drift or recovery; raw YAML is diagnostic only. Projection failure blocks choices depending on unknown settings, while independent authorized work continues.
 
 Select capabilities from their descriptions and the task contract. Executors load applicable methods and inspect sources; Core consults method details when needed for its own work or a concrete coordination question. Select the responsibility needed now:
 
@@ -30,15 +32,15 @@ Select capabilities from their descriptions and the task contract. Executors loa
 - rsp-review: fixed-scope read-only judgment or explicitly bounded structural discovery. Supporting checks remain within that review.
 - rsp-commit: separately authorized exact local delivery; required for Git execution, with no Core substitute if unavailable.
 
-A phase, role or method change adds no mandatory tool call, worker, review or test run. Continue authorized same-scope work without a generic continuation request. Required review, independent execution and protected operations retain their obligations. For ownerless release checks require the exact candidate, check contract, baseline and effects authority; do not invent a Change or Verify owner.
+Continue authorized same-scope work without another continuation request. A phase, role or method change alone requires no tool call, worker, review or test run. Required review, independent execution and protected operations still apply. For ownerless release checks, establish the exact candidate, check contract, baseline and effects authority; invent no Change or Verify owner.
 
 ## Execute and reconcile evidence
 
 Implement owns ordinary self-checks. Main-agent inspection can assess results, but an implementation participant cannot certify required independent review. Select extra Verify/Review only when requested, required or supported by concrete risk, not per task or per worker automatically.
 
-Reuse traceable observations, checks and reviews while their target, acceptance boundary and relevant inputs remain applicable. Role changes and delivery-scope confirmation alone invalidate nothing; changed code, dependencies, configuration, tools or environment invalidate affected evidence. Excluded worktree changes can invalidate evidence for a staged slice. Normative Specs and executable Skills can change behavior even when stored as Markdown.
+Reuse traceable observations, checks and reviews while their target, acceptance boundary and relevant inputs still apply. Changed code, dependencies, configuration, tools or environment invalidate affected evidence; role changes and delivery-scope confirmation alone do not. Include excluded worktree inputs when assessing a staged slice, and recognize behavior changes in normative Specs or executable Skills even when stored as Markdown.
 
-Core checks actual paths, diff, outcomes, omissions and evidence applicability without routinely replaying executor checks. Independent semantic review may consume implementer test evidence; separately required independent execution must actually run. Keep command, result, tested boundary and decisive source with existing evidence owners. Preserve failures, unavailable checks and superseded results; no new evidence ledger is needed.
+Check paths, diff, outcomes, omissions and evidence applicability. Reuse executor checks when applicable. Independent semantic review may use implementer test evidence; required independent execution must run. Keep commands, results, tested boundaries and decisive sources with their existing owner, including failures, unavailable checks and superseded results. Add no evidence ledger.
 
 For required correction/re-review, load [review convergence](references/coordination-review.md). Batch compatible findings into one correction, run covering checks, then review finding resolution and new risks in the correction. Stop for changed scope/authority, unsafe replay, missing required capability, non-convergence or no new discriminating evidence. Required failures remain incomplete.
 
@@ -56,7 +58,7 @@ Load [interruption recovery](references/coordination-recovery.md) for pause/resu
 
 During execution update Tasks/Verify directly for actual outcomes when scope, contract, design and knowledge remain accurate. Passing checks or recovery alone adds no whole-document rewrite. Routine narration stays in the conversation; retained execution evidence stays with its existing owner. Focus is replaceable recovery guidance, never acceptance or authority.
 
-Ordinary completion leaves Change open. A checkpoint commit also leaves it open. A generic commit request does not establish final delivery. At an established final-delivery boundary or explicit close request, load [delivery closeout](references/closeout.md): workflow.closeout is ask (default), auto or manual. No setting grants Git, push, publication, deployment, approval or human acceptance authority.
+Ordinary completion and checkpoint commits leave Change open; a generic commit request does not establish final delivery. At established final delivery or an explicit close request, load [delivery closeout](references/closeout.md). workflow.closeout is ask (default), auto or manual; no setting grants Git, push, publication, deployment, approval or human acceptance authority.
 
 For necessary stable-knowledge updates, load [durable writeback](references/durable-review.md) to establish facts, update their owners and reconcile affected records. Final delivery or closure additionally requires whole-Change convergence and consistency checks. Reuse applicable evidence and fill missing or invalidated coverage and separately required review. Already-accurate records need no edit; current readiness is a lifecycle observation, not semantic acceptance.
 

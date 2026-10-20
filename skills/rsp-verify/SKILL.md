@@ -11,7 +11,7 @@ metadata:
 
 For tracked work, read the [shared work model](../rsp/references/work-model.md) when its identity and ownership definitions are missing from the current context. Use logical WorkRefs in commands and reports; cite file locations separately. Direct invocation needs no prior Core execution.
 
-Collect evidence and return one bounded read-only result for an existing RSP WorkOwner when declared-check evidence is the requested result or a separate verification obligation. A semantic review may run supporting checks without selecting this capability. Preserve explicit combined requests and required independent evidence; this Skill alone supplies no host independence. Verify is a Discipline, not a router, controller, lifecycle owner, reviewer or Git delivery capability.
+Collect declared-check evidence for one existing RSP WorkOwner when requested or separately required. Return one bounded read-only result. Review may run supporting checks without invoking Verify. Honor combined requests and required independent evidence; this Skill supplies no host independence. Verify is a Discipline for evidence collection, not routing, control, lifecycle, semantic review or Git delivery.
 
 ## Require a declared boundary
 
@@ -32,14 +32,15 @@ Use the caller's result contract when supplied, otherwise the direct result belo
 
 ## Collect the declared evidence
 
-Inspect existing evidence against the declared baseline. Reuse traceable passes while tested scope and relevant content, dependencies, configuration, tools, inputs and environment apply. Run missing, failed or invalidated named checks, plus explicitly required execution, current-environment observations or independent execution. A phase change alone requires no rerun; correction or integration requires fresh evidence for affected inputs and any enlarged verification boundary. Match actual targets, inputs, coverage and completion to the declared check; invocation errors or incomplete observations alone prove no product defect. Retain commands, scope, sources and results, distinguishing reuse from new execution. Interpret tool observations: Required failures remain failures, unavailable checks remain gaps, and exit status alone is not acceptance.
+Compare existing evidence with the declared baseline. Reuse traceable passes while their tested scope and relevant content, dependencies, configuration, tools, inputs and environment still apply. Run missing, failed or invalidated named checks and any explicitly required execution, current-environment observations or independent execution. Corrections and integration need fresh evidence for affected inputs or an enlarged boundary; a phase change alone requires no rerun.
+
+Compare each check's actual targets, inputs, coverage and completion with its declaration. Retain commands, scope, sources and results; distinguish reused evidence from new execution. Invocation errors or incomplete observations alone prove no product defect; exit status alone establishes no acceptance.
 
 For a tool-only obstacle, diagnose read-only and inspect actual effects before continuing:
 
 - Change a permitted collection method only with unchanged goal, owner, scope, baseline, authority and required evidence, and demonstrably safe replay.
 - Run a named mandatory command/check as required; substitutes supply no pass.
 - Do not repair product/workflow state, manually replace command-owned RSP operations, replay one-shot work or continue with unknown mutation effects.
-- This pass cannot supply missing required independent-worker evidence.
 
 ## Return one bounded result
 
@@ -49,7 +50,7 @@ Return exactly one canonical result from the collected evidence, with observed f
 - `unavailable`: no named required check has observed failure, but a required tool, dependency, service, credential, or environment could not be used.
 - `pass`: every named required check passed within the declared boundary.
 
-Retain each check's outcome and every missing or unexecuted check separately. A failed result does not imply complete coverage; unavailable evidence never erases an observed failure. Aggregation does not authorize execution beyond a stop boundary.
+Report each check's outcome, including missing or unexecuted checks. Aggregation changes neither coverage nor stop conditions. Failure does not imply complete coverage; unavailable evidence does not erase observed failures.
 
 Include these independent fields and their evidence:
 
@@ -68,4 +69,4 @@ Long-running verification remains active while its boundary and stop conditions 
 
 Stop when evidence is missing, the environment is unavailable, the boundary changes or a required check cannot be observed. Use the caller's canonical stop reason only when supplied. For direct invocation, identify the missing input or changed boundary and the required next action; do not invent a completed verification result before the declared boundary is established.
 
-On cancellation, wait until the command or owned process is observed stopped before beginning conflicting work. Return the result, decisive evidence, omissions and next action to the caller or user. Never turn an unavailable check into success or retry without new evidence and safe replay inside the declared boundary.
+On cancellation, wait until the command or owned process is observed stopped before beginning conflicting work. Return the result, decisive evidence, omissions and next action to the caller or user. Retry only with new evidence and safe replay inside the declared boundary.

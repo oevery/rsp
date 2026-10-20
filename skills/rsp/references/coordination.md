@@ -6,7 +6,9 @@ Core decides none, preferred or required from the actual obligation. Keep tightl
 
 ## Delegate one bounded task
 
-For grouped or dependent work, use [groups and dependencies](groups-dependencies.md) and the current `rsp status --json` plan. Only children in the first non-empty `plan.waves` wave are eligible; a prerequisite in `plan.blocked` prevents dispatch. Core may run eligible slices in parallel only after checking both write boundaries and shared resources. Different filenames alone prove neither interface compatibility nor isolation: generated outputs, manifests/lockfiles, Git index, test services, databases, browsers and hardware can still conflict. Use host-proven isolation or run those slices serially; unknown required isolation blocks concurrency, not otherwise safe serial work. Recheck dependencies and integrated evidence before the next wave. Child passes alone do not satisfy a Group integration condition.
+For grouped or dependent work, use [groups and dependencies](groups-dependencies.md) and the current `rsp status --json` plan. Only children in the first non-empty `plan.waves` wave are eligible; a prerequisite in `plan.blocked` prevents dispatch. Recheck dependencies and integrated evidence before the next wave. Child passes alone do not satisfy Group integration.
+
+Before parallel work, check write boundaries and shared resources: generated outputs, manifests/lockfiles, Git index, test services, databases, browsers and hardware. Different filenames prove neither interface compatibility nor isolation. Require host-proven isolation or run serially. Unknown required isolation blocks concurrency; otherwise safe serial work may continue.
 
 Send one independently executable vertical slice. Tell the recipient it is already dispatched and must not rerun parent routing or delegate further. Include only what it needs to act safely:
 
@@ -48,7 +50,7 @@ Treat three evidence sources separately:
 - host observations, when available, establish dispatch, attribution, activity, cancellation, completion, and whether different workers participated;
 - Core validates authority, actual changed paths, local diff, declared verification, omissions, and current acceptance.
 
-Host facts are capabilities and observations, not RSP domain objects. Missing observations remain unavailable rather than inferred from prose, handles, elapsed time, topology, or successful tests. A worker never self-certifies identity, independence, resource release, evidence validity, or acceptance.
+Derive host facts from observations, not prose, handles, elapsed time, topology or passing tests. Missing observations remain unavailable. Host facts create no RSP domain objects. Workers cannot certify their own identity, independence, resource release, evidence validity or acceptance.
 
 For required delegation, Core must have an attributable worker-authored result covering the assigned boundary. For required independent Verify or Review, host observations must establish distinct workers from the accepted implementation. If not, acceptance remains `incomplete`. Core cannot author or substitute the missing result.
 

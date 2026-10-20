@@ -5,7 +5,7 @@ description: Maintain RSP's own Skill candidates, source provenance and evaluati
 
 # Author RSP Skills
 
-Audit one authored corpus or prepare one bounded RSP Skill candidate. These maintainer requirements supplement rsp-doc's Skill-authoring branch; they do not apply to ordinary project Skills. Report-only Pre-Change Audit needs no WorkRef. RSP candidates and repairs require a selected Change and explicit mutation authority; this method grants no acceptance, Git, lifecycle or installation authority.
+Audit an authored corpus or prepare one bounded RSP Skill candidate. Apply rsp-doc's Skill-authoring method with these RSP-only maintenance requirements. They do not govern ordinary project Skills or grant acceptance, Git, lifecycle or installation authority.
 
 ## Select mode and target
 
@@ -14,7 +14,7 @@ Require one explicit target package or authored corpus, then establish the autho
 - A report-only Pre-Change Audit is read-only, returns findings with `WorkRef: N/A`, and stops before candidate creation, repair, mutation or acceptance.
 - Every other mode, including audit repair, requires one selected RSP Change and explicit artifact mutation authority.
 
-Read the nearest instructions and selected Change when required. Preserve unrelated work; an unresolved owner, behavioral gap or authority stops the affected work.
+Read nearest instructions and the selected Change when required. Preserve unrelated work; unresolved ownership, behavior or authority stops the affected work.
 
 Choose one primary mode:
 
@@ -37,7 +37,7 @@ Load only the selected reference: [authoring](references/authoring.md) for `crea
 
 ## Preserve the contract
 
-Name the candidate's trigger, inputs, authority, action, output, stop, verification, and conditional-loading behavior before editing. Any intentional change to one of these belongs in the selected Change; otherwise preserve it. Keep one owner for each state, receipt, field, and lifecycle transition.
+Before editing, identify trigger, inputs, authority, action, output, stops, verification and conditional loading. Change them only through an intentional delta in the selected Change. Keep one owner for each state, receipt, field and lifecycle transition.
 
 Use host limits as constraints, never as the definition of quality. Words, lines, bytes, tokens, tool calls, and elapsed time are diagnostics. Do not pass a candidate because it is shorter or fail it because it is longer.
 
@@ -49,8 +49,8 @@ Use rsp-doc's Skill branch for descriptions, instructions, resources and concise
 2. Apply the general authoring method to canonical package sources, not generated projections.
 3. Preserve the declared suite's runtime resource closure; maintainer research and candidate evidence must not become installed dependencies.
 4. When layout, reachability or repetition matters, use `node scripts/scan-skill-context.mjs --package <canonical-path>` from the repository root. Read [context diagnostics](references/authoring.md#context-diagnostics) for selection and interpretation; scan results are clues, not quality gates.
-5. Reuse repository evaluation, security, packaging, and behavior checks. Choose permitted inspection and writing methods within the same goal, scope, authority, baseline and evidence boundary; tools provide observations, not candidate acceptance. Do not duplicate checks inside the Skill or substitute a diagnostic for a named required operation.
-6. For tracked work, keep the authorized candidate delta and approach in Proposal, Spec and Design; record actual outcomes, evidence, knowledge-update references and unresolved limits in Tasks, Verify and Blockers. The durable-decision summary stays in the response, not a new Change section. A report-only Pre-Change Audit writes no artifact and returns its findings to Core or the user for the planning decision.
+5. Reuse repository evaluation, security, packaging and behavior checks. Permitted inspection and writing methods may vary within the same goal, scope, authority, baseline and evidence boundary; observations establish no candidate acceptance. Do not duplicate checks in the Skill or substitute diagnostics for named required operations.
+6. For tracked work, put the authorized candidate delta and approach in Proposal, Spec and Design; record outcomes, evidence, knowledge-update references and limits in Tasks, Verify and Blockers. Keep the durable-decision summary in the response. A report-only Pre-Change Audit returns findings to Core or the user without writing artifacts.
 
 ## Stop and return
 

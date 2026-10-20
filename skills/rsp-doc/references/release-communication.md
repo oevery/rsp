@@ -14,7 +14,7 @@ Use established project tools for inventories or generated drafts when useful. I
 
 Inspect the smallest sufficient net diff, direct public consumers, accepted fragments or work records and verification evidence. Git history and generated notes locate evidence; they are not proof of delivered behavior. Reconcile material disagreements and label historical results with their revision or date.
 
-Group commits into final user or operator outcomes. Omit additions reverted within the range, fold prerelease corrections into final behavior, and exclude internal housekeeping unless it affects compatibility, packaging, security or operations. Do not recount rejected session-only proposals as release exclusions. Keep material removals, deprecations and known limits visible. Each claim needs evidence; inspect coverage for meaningful omissions without forcing a permanent ledger or per-commit transcript.
+Describe final user or operator outcomes. Omit reverted additions, fold prerelease corrections into final behavior and include housekeeping only for compatibility, packaging, security or operational effects. Omit rejected session-only proposals. Retain material removals, deprecations and known limits. Ground each claim and check meaningful omissions; add no permanent ledger or per-commit transcript.
 
 Project only the requested or existing surfaces:
 

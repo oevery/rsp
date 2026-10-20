@@ -2,7 +2,7 @@
 
 Read for authorized planning with multiple material decisions or independently acceptable outcomes with dependencies/integration. This method does not select agent topology.
 
-Existing planning authority covers clear in-scope discovery: retain cohesive corrections in the Change; use a separate Change for an independently closable result or a shallow Group when at least two such results have dependencies or integration obligations. Return the ready owner without another authorization round. Configuration grants no planning/product authority; changed behavior, acceptance, interfaces, scope, mutation authority or external action needs an owner decision.
+Use existing planning authority for clear in-scope discovery. Keep cohesive corrections in the Change. Use a separate Change for an independently closable result, or a shallow Group when at least two results have dependencies or integration obligations. Return the ready owner without another authorization round. Configuration grants no planning/product authority. Changes to behavior, acceptance, interfaces, scope, mutation authority or external action need an owner decision.
 
 ## Close material decisions
 

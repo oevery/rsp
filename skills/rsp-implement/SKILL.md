@@ -11,9 +11,11 @@ metadata:
 
 For tracked work, read the [shared work model](../rsp/references/work-model.md) when its identity and ownership definitions are missing from the current context. Use logical WorkRefs in commands and reports; cite file locations separately. Direct invocation needs no prior Core execution.
 
-Carry one bounded authorized task through implementation, minimum sufficient own verification and necessary tracked Change evidence. Choose the mode before loading its method; a method change within the same authority needs no artificial handoff. No mode grants Git, review, lifecycle, external action, or approval authority.
+Implement one bounded authorized task, run minimum sufficient own checks and retain necessary tracked Change evidence. Select the mode before loading its method. Changing methods within the same authority needs no handoff. No mode grants Git, review, lifecycle, external-action or approval authority.
 
-Responses follow explicit instruction, personal instructions, then conversation language. Preserve existing artifact language and canonical identifiers, commands and values. New artifacts follow explicit instruction, effective configuration, scoped project instructions, then conversation language. Query RSP settings only when an actual decision depends on an unresolved value, through the selected CLI's successful `rsp config --json` summary, including defaults and inheritance; refresh on relevant drift or recovery. Raw YAML is diagnostic only. Failed projection leaves dependent choices unresolved while independent authorized work continues; resolve material conflicts with the owner. Core execution is not required.
+Responses follow explicit instruction, personal instructions, then conversation language. Preserve existing artifact language and canonical identifiers, commands and values. New artifacts follow explicit instruction, effective configuration, scoped project instructions, then conversation language.
+
+Query RSP settings only for a decision depending on an unresolved value. Use the selected CLI's successful `rsp config --json` summary, including defaults and inheritance, and refresh on relevant drift or recovery. Raw YAML is diagnostic only. Projection failure blocks dependent choices, not independent authorized work; resolve material conflicts with the owner.
 
 ## Select and inspect
 
@@ -43,13 +45,19 @@ Git delivery, publication, deployment, approval, and out-of-scope deletion requi
 
 ## Admit boundaries and permanent tests
 
-Prefer existing behavior and seams that satisfy the accepted outcome. Add a validator, fallback, defensive copy, capability, state machine, compatibility path or public option only for an explicit requirement or an evidenced producer, production consumer, trust/lifecycle transition and material consequence. Typed same-process values, imagined callers and test/document-only consumers establish no production boundary.
+Inspect existing owners and callers before adding logic. Reuse behavior and business rules that satisfy the accepted outcome. Keep each rule and its invariants with one clear owner so ordinary changes stay local. Similar code with different responsibilities may stay separate; do not force reuse through unrelated flags or speculative interfaces.
+
+Hide internal representation and coordination behind the necessary caller contract, including ordering and failures. Judge decomposition by what callers and maintainers must understand, not file size or layer count.
+
+Add a validator, fallback, defensive copy, capability, state machine, compatibility path or public option only for an explicit requirement or an evidenced producer, production consumer, trust/lifecycle transition and material consequence. Typed same-process values, imagined callers and test/document-only consumers establish no production boundary.
 
 Before creating or extending a permanent test:
 
-- Reuse sufficient existing test, type/static, build or acceptance evidence first. Otherwise name the observable consequence, distinct plausible regression at the owning production seam, evidence gap and proportionate maintenance cost. Derive expected outcomes from the agreed contract or an independently worked example, rather than repeat the tested computation.
-- For consumer-owned behavior with covered downstream adapters or forwarding hops, exercise the consumer through those seams to the consequence. Merely re-proving a covered forwarding hop with a nearest-spy, emitted-message or forwarding assertion is insufficient, even in an existing test file. A single final-message assertion can suffice when it proves the consumer's agreed outcome. Pin error details or interaction counts/order only when the contract needs them; otherwise test outcomes and effects, including rejection.
-- Do not allocate tests per touched file, wrapper, forwarding hop, branch or constant. Keep multiple nearby tests when each protects an independent consequence.
+- **Value:** reuse sufficient test, type/static, build or acceptance evidence first. Otherwise identify the observable consequence, distinct plausible regression at its production seam, evidence gap and proportionate maintenance cost.
+- **Expectations and setup:** derive outcomes from the agreed contract or an independent example, not the tested computation. If fixture construction, platform behavior, fault injection or scheduling leaves the target condition uncertain, inspect the arranged state or use a targeted probe. This requires no precondition assertion or mutation run for every test.
+- **Real consequence:** use real collaborators when fast, deterministic and practical; otherwise substitute the necessary boundary while preserving the relevant behavior. Exercise consumer-owned behavior through covered downstream adapters or forwarding hops. A nearest-spy, emitted-message or forwarding assertion covering only an already-covered hop adds insufficient evidence, even in an existing test file.
+- **Assertions:** one final-message assertion can suffice for the agreed consumer outcome. Pin error details or interaction counts/order only when the contract needs them; otherwise assert outcomes and effects, including rejection.
+- **Maintenance:** keep scenario-defining inputs and assertions visible; share incidental setup for clarity rather than repetition alone. Keep nearby tests protecting independent consequences, but do not allocate tests per touched file, wrapper, hop, branch or constant.
 
 ## Continue within the evidence boundary
 
@@ -59,24 +67,28 @@ Stop for a repeated failure without new discriminating evidence, non-convergence
 
 ## Implement and verify
 
-Implement the smallest complete slice. For tracked work update authorized Change sections only for necessary plan/contract changes, task outcomes, blockers and scoped verification conclusions. Update Tasks after outcomes exist. Routine execution narration stays in the conversation without a process-record file; retain tool-owned or explicitly required evidence with its existing owner rather than copying its history into Change. Direct work reports outcomes without RSP artifact mutation.
+Implement the smallest complete slice. Update authorized Change sections only for necessary plan/contract changes, outcomes, blockers and scoped verification. Update Tasks after outcomes exist. Keep routine narration in conversation and required or tool-owned evidence with its existing owner; copy no execution history into Change or a new process record. Direct work reports outcomes without RSP artifact mutation.
 
 Use `rsp-doc` for document/Skill writing and whole-Change convergence within existing authority. Local wording fixes and mechanical status/evidence updates needing no whole-record reconciliation remain direct. Without Doc, write grounded guidance and check affected examples/links locally. Author self-checks never certify independent Review.
 
 After final mutation, establish minimum sufficient evidence for tracked Required checks or direct-task acceptance:
 
 - Reuse traceable passing results when the tested boundary and relevant code, dependencies, configuration, tools, inputs and environment still apply. Phase changes and unrelated edits do not invalidate evidence.
-- Run missing, failed or invalidated checks and risk-justified additions. Changed code, dependencies, configuration, environment or integrated behavior invalidate the evidence they affect, not every unrelated pass. Named checks retain their method and coverage; explicit reruns and independent execution remain binding.
+- Run missing, failed or invalidated checks and risk-justified additions, including checks affected by integration. Named checks retain their method and coverage; explicit reruns and independent execution remain binding.
 - For an unfixed method, choose the cheapest decisive existing test, static check, build or acceptance evidence; a new test is not required.
 - Match the actual target, inputs, coverage and completion to the declared check. Invocation errors or incomplete observations do not by themselves prove a product defect. Record command, tested scope, result, source and omissions, distinguishing reused evidence from new execution. Failed, unavailable or untraceable evidence cannot establish completion.
 
 Before completion, apply the same admission criteria to retained tests. Remove disposable probes, fixtures and helpers that add no distinct future confidence unless retention is required by user, Change or project authority; establish sufficient evidence for the final retained state.
 
-Before returning, check changed comments, test names, documents and handoff prose against the accepted result and authoritative baseline. For comments, retain accurate information that nearby code does not make clear, such as constraints, rationale or usage; remove restatement that adds no useful information. Report the outcome, actual paths, verification and material limits, external effects or pre-existing user work. Omit Tasks/log repetition and discarded session attempts. Keep negative facts needed for removals, safety, compatibility, migration, audit, failures, unresolved risks or requested comparisons. This prose check changes no behavior, public contract, test, snapshot or diagnostic.
+Check changed comments, test names, documents and handoff prose against the accepted result and authoritative baseline. For comments, retain accurate information that nearby code leaves unclear, including constraints, rationale or usage; remove restatement. Omit repeated Tasks/logs and discarded session attempts, while keeping negative facts needed for removals, safety, compatibility, migration, audit, failures, unresolved risks or requested comparisons. This prose check changes no behavior, public contract, test, snapshot or diagnostic.
 
 ## Return ownership
 
-Report whether the selected Change or direct task is completed, partial, blocked before implementation, verification-failed, verification-unavailable, or verification-blocked. Use failed for an exercised defect; use unavailable when a missing tool, dependency, service, credential, or environment prevents execution. Use blocked only when scoped checks pass but a required gate fails solely from a confirmed pre-existing or out-of-scope baseline defect; never waive affected gates.
+Report the outcome, actual paths, verification, material limits and any external effects or pre-existing user work. State whether the selected Change or direct task is completed, partial, blocked before implementation, verification-failed, verification-unavailable, or verification-blocked:
+
+- Failed means an exercised defect.
+- Unavailable means a missing tool, dependency, service, credential or environment prevented execution.
+- Blocked applies only when scoped checks pass but a required gate fails solely from a confirmed pre-existing or out-of-scope baseline defect. Affected gates are never waived.
 
 When work remains, report owner (WorkRef for tracked work, direct request otherwise), authority, changed artifacts, reused and new checks, blockers and next action as needed for safe continuation. A non-trivial handoff may use Core's fuller continuation; ordinary same-owner corrections need no template or new request. The response is not durable truth.
 

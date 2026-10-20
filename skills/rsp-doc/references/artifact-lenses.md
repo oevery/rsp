@@ -16,8 +16,6 @@ For a document set, start with the reader's entry point and follow only the link
 - Keep names, useful translations and navigation near each definition. Link one authoritative definition across root and local files.
 - Explain different meanings at domain boundaries; do not silently rename them.
 
-For example, distinguish Task as a reusable definition from Attempt as one execution, then link the lifecycle contract. This example is not a required model for other projects.
-
 ## Spec
 
 - Enable a reader to judge compliance: state what a consumer can rely on, under which conditions, with scope, handoffs, failures and exceptions.
@@ -39,7 +37,7 @@ For example, “retries are safe” is incomplete when deduplication applies onl
 
 - AGENTS: state applicable rules, commands, authority and checks. Changing rules requires explicit scope.
 - Change: retain the six canonical sections and selected delta. Proposal gives the outcome; Spec gives acceptance; Design gives the approach; Tasks state checkable work and completion, with completed items describing the accomplished result; Verify records methods, candidate-bound conclusions, limits and necessary evidence references; Blockers name unresolved dependencies.
-- Work records: keep necessary plan/contract changes, task outcomes, blockers and scoped verification conclusions. Routine narration stays in the conversation; only needed recovery state goes to Focus. Before archive, establish facts and justified knowledge writeback, then check all six sections together for current outcomes, superseded plans and consistency with knowledge owners. Retain only facts affecting the delivered contract, evidence applicability, important failure disposition or remaining limit. Link knowledge and retained evidence owners; keep their detailed records and original verdicts unchanged. A stale authoritative contract requires correction. Return substantive contradictions to the appropriate owner; prose cleanup cannot resolve them.
+- Work records: retain necessary plan/contract changes, outcomes, blockers and scoped verification. Keep routine narration in conversation and needed recovery state in Focus. Before archive, establish facts and justified knowledge writeback; reconcile all six sections with current outcomes, superseded plans and knowledge owners. Retain facts affecting the delivered contract, evidence applicability, important failure disposition or remaining limit. Link knowledge and evidence owners; preserve their detailed records and original verdicts. Correct stale authoritative contracts. Return substantive contradictions to their owner; prose cleanup cannot settle them.
 - Decision Record: let readers understand why a choice was made, its alternatives and consequences, without redefining the contract.
 - Audit/run records: retain required observations, actions and evidence. Remove irrelevant session narration, not the record's purpose.
 - Skill packages: use Doc's Skill-authoring branch. Release communication uses Doc's conditional release method.

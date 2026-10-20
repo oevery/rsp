@@ -14,7 +14,7 @@ Trace where important state or data is created, validated, mutated, persisted, r
 
 Start from a direct consumer and list what it must know about the provider: policy, representation, ordering, failure behavior, configuration, and lifecycle. Look for dependency direction that forces an owner to understand another module's internals, or a boundary that leaks enough decisions to amplify ordinary changes. An import, large module, circular-looking name, or missing interface is not sufficient; establish actual caller burden or invalid-state exposure.
 
-For suspected shallow indirection, reason through removal before calling it redundant. If removal eliminates the apparent complexity, the layer may be pass-through. If required policy, invariants, or failure knowledge instead disperses into callers, the layer may be earning locality. Thinness alone proves neither result; retain a Finding only when the live chain also establishes a reachable trigger and concrete impact.
+Before calling a layer redundant, trace what its removal would do. Eliminated complexity suggests pass-through; policy, invariants or failure knowledge dispersed into callers suggests useful locality. Thinness proves neither. Retain a Finding only with a reachable trigger and concrete impact in the live chain.
 
 ## Production-path reachability
 

@@ -5,7 +5,7 @@ description: Plan and interpret local code checks and proportionate Skill matrix
 
 # Release Acceptance
 
-Select the evidence needed for the current release decision. This maintainer capability plans checks and interprets their results; existing tools supply observations, not approval. It owns no third release test engine.
+Select evidence for the current release decision using existing local checks and the Skill runner. Plan checks and interpret results; add no release test engine. Tool observations establish evidence, not approval.
 
 ## Select the decision and evidence
 
@@ -18,7 +18,9 @@ Establish the exact source/version and composition identity, requested claim, av
 
 ## Execute only the authorized plan
 
-Run shared build/package/terminal resources serially. Choose permitted inspection methods within unchanged goal, scope, authority, baseline and required evidence; keep named release checks and the shared runner's execution/judge operations exact. Diagnose tool-only failures and inspect actual effects before safe read-only or proven repeat-safe continuation. Unknown mutation, unsafe one-shot replay, changed authority or missing required evidence stops the affected operation. No automatic retry or rerun follows from failure.
+Run shared build/package/terminal resources serially. Keep named release checks and the shared runner's execution/judge operations exact. Inspection methods may vary only within unchanged goal, scope, authority, baseline and required evidence.
+
+After a tool-only failure, diagnose the cause and inspect actual effects before read-only or proven repeat-safe continuation. Unknown mutation, unsafe one-shot replay, changed authority or missing required evidence stops the affected operation; failure authorizes no automatic retry or rerun.
 
 Preserve original reports and observed failures; do not replace unknowns with nearby evidence. Missing execution authority, authentication, realistic cases, provider capability or required independent review is an explicit gap, not acceptance from prose or static checks. Updates to execution, inputs or composition require fresh execution before behavioral claims.
 

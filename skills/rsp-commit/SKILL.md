@@ -11,9 +11,11 @@ metadata:
 
 For tracked work, read the [shared work model](../rsp/references/work-model.md) when its identity and ownership definitions are missing from the current context. Use logical WorkRefs in commands and reports; cite file locations separately. Direct invocation needs no prior Core execution.
 
-Own precise local Git delivery, whether invoked directly or routed by Core. This is a default core capability, not an optional extension. Availability grants no authority. A readiness-only request remains read-only; create a commit only with current local authority, one exact owned boundary and applicable passing verification.
+Own exact local Git delivery, invoked directly or through Core. This default core capability grants no authority through availability. Readiness-only work stays read-only. Commit only with current local authority, one exact owned boundary and applicable passing verification.
 
-Responses follow explicit instruction, personal instructions, then conversation language; existing artifacts retain theirs. Commit prose follows explicit commit-language instruction, effective configuration, nearest repository authority, then clear recent non-merge style, not response language. Resolve needed RSP defaults/inheritance through the selected CLI's successful `rsp config --json`; refresh on drift or recovery. Raw YAML is diagnostic only. Failed projection leaves dependent language unresolved before staging, not replaced by history; independent authorized inspection may continue. Preserve commands, identifiers, Conventional types/scopes and trailers. Resolve material conflicts with the owner; Core execution is not required.
+Responses follow explicit instruction, personal instructions, then conversation language; existing artifacts retain theirs. Commit prose follows explicit commit-language instruction, effective configuration, nearest repository authority, then clear recent non-merge style. Response language does not select it. Preserve commands, identifiers, Conventional types/scopes and trailers.
+
+Resolve needed RSP defaults/inheritance through the selected CLI's successful `rsp config --json`, refreshing on drift or recovery. Raw YAML is diagnostic only. Projection failure leaves dependent language unresolved before staging; history cannot replace it, while independent authorized inspection may continue. Resolve material conflicts with the owner.
 
 ## Establish the delivery boundary
 
@@ -38,11 +40,13 @@ A generic commit request is a checkpoint unless final delivery is already establ
 
 ## Audit before staging
 
-Read nearest authority and the selected current owner, relevant Brief/children or archive when needed. Inspect status, the complete staged, unstaged and untracked boundary, cached diff and recent non-merge messages. Reread decisive verification and applicable lifecycle facts instead of trusting copied handoff prose. Reuse traceable passing results when relevant content, dependencies, configuration, tools, inputs and environment remain applicable; entering Commit alone requires no rerun. Run only authorized missing or invalidated checks with settled scope and method, or explicitly required executions. Failed or unavailable required evidence is a stop.
+Read nearest authority and the selected current owner, plus the relevant Brief/children or archive when needed. Inspect status, the complete staged, unstaged and untracked boundary, cached diff and recent non-merge messages. Reread decisive verification and applicable lifecycle facts; copied handoff prose is insufficient.
+
+Reuse traceable passing results while relevant content, dependencies, configuration, tools, inputs and environment still apply. Run only authorized missing or invalidated checks with settled scope and method, or explicitly required executions; entering Commit alone requires no rerun. Failed or unavailable required evidence stops delivery.
 
 Stop without changing the index on missing or ambiguous authority, stale evidence, an invalid kind/purpose, unrelated staged work, mixed ownership that cannot be separated without guessing, or active merge, cherry-pick, revert, rebase, mail-apply or sequencer state. Preserve pre-existing owned partial staging unless the exact additional content is authorized. Never broaden paths, unstage unrelated work or reset the index to make a boundary fit.
 
-Before reporting eligibility, establish that verification covers the exact proposed delivery content, not merely filenames or a working tree containing excluded changes. For an already-staged slice, compare evidence with the current index. Unstaged code, configuration, fixtures or generated inputs may make a working-tree pass inapplicable; obtain missing exact-boundary evidence within authority or report the gap, without altering unrelated work.
+Before reporting eligibility, confirm verification covers the exact proposed content. Matching filenames or a working-tree pass containing excluded changes is insufficient. For a staged slice, compare evidence with the current index. Check excluded code, configuration, fixtures and generated inputs for invalidation. Obtain missing evidence within authority or report the gap; preserve unrelated work.
 
 Before dependent `git add` or `git commit`, run required audits and preparation as separately observed commands by default. If batching, explicitly gate each dependent write on all its prerequisites succeeding; shell newlines and the batch's final exit code do not provide that gate. A failed or unavailable prerequisite blocks its dependent write. Inspect actual index/worktree effects before permitted recovery; later success does not erase an earlier write after failure. Commit's one-attempt rule still applies.
 
