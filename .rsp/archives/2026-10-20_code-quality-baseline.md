@@ -30,7 +30,7 @@ Native tasks reuse Harbor, workspace preservation and Reward Kit. Task-local ass
 
 The two research reports retain the original outcomes and upstream source captures: [initial baseline](../../research/reports/2026-10-19T04-59-01Z.md) and [corrected baseline and recommendations](../../research/reports/2026-10-19T06-05-36Z.md). The source work retained nine new captures and a two-test expansion of the existing DeepSeek capture; no upstream code was executed.
 
-The resulting work is separate: [evaluation-contract-calibration](evaluation-contract-calibration.md) owns evaluator correction, [quality-judgment-clarity](quality-judgment-clarity.md) owns the first test/comment refinements, and the archived [implementation-quality guidance](../archives/2026-10-20_implementation-quality-guidance.md) owns later Skill enhancement and its own live inputs.
+The resulting work is separate: [evaluation-contract-calibration](2026-10-20_evaluation-contract-calibration.md) owns evaluator correction, [quality-judgment-clarity](2026-10-20_quality-judgment-clarity.md) owns the first test/comment refinements, and the archived [implementation-quality guidance](../archives/2026-10-20_implementation-quality-guidance.md) owns later Skill enhancement and its own live inputs.
 
 ## Tasks
 
