@@ -56,7 +56,7 @@ Load [interruption recovery](references/coordination-recovery.md) for pause/resu
 
 ## Maintain records and prepare delivery
 
-During execution update Tasks/Verify directly for actual outcomes when scope, contract, design and knowledge remain accurate. Passing checks or recovery alone adds no whole-document rewrite. Routine narration stays in the conversation; retained execution evidence stays with its existing owner. Focus is replaceable recovery guidance, never acceptance or authority.
+During execution update Tasks/Verify directly for actual outcomes when scope, contract, design and knowledge remain accurate. Consolidate repeated conclusions for the same scope and candidate; retain distinct inputs, outcomes, material failures and evidence references. When changing Blockers, use the [shared work-model syntax](references/work-model.md). Passing checks or recovery alone adds no whole-document rewrite. Routine narration stays in the conversation; retained execution evidence stays with its existing owner. Focus is replaceable recovery guidance, never acceptance or authority.
 
 Ordinary completion and checkpoint commits leave Change open; a generic commit request does not establish final delivery. At established final delivery or an explicit close request, load [delivery closeout](references/closeout.md). workflow.closeout is ask (default), auto or manual; no setting grants Git, push, publication, deployment, approval or human acceptance authority.
 

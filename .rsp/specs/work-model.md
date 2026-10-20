@@ -51,9 +51,11 @@ additional lifecycle states. Git commit count does not select Change granularity
   it on recovery. Ordinary same-session progress needs no update. Group recovery
   uses a selected child's Capsule, not a Brief marker; bounded direct work needs
   no new Capsule.
-- Exact prerequisites use ``- requires `<work-ref>`: <reason>`` entries in a Change's
-  Blockers. Other prose is not guessed into dependency edges. Dependency waves
-  are derived, not a persisted schedule.
+- Blockers contains only unresolved dependencies or decisions preventing required
+  work. Write standalone `None` when none remain; put non-blocking verification
+  limits in Verify. Exact prerequisites use ``- requires `<work-ref>`: <reason>``
+  entries. Other prose remains an external blocker, not an inferred dependency
+  edge. Dependency waves are derived, not a persisted schedule.
 - Artifact order does not prescribe execution order. The
   [Workflow coordination contract](workflow.md#control-boundaries) owns conditional
   sequential or parallel work; Group shape alone does not dispatch workers.
@@ -66,9 +68,11 @@ owned by [Workflow methods and evidence](workflow.md#methods-and-evidence), not 
 separate evidence registry.
 
 Change updates retain necessary plan/contract changes, task outcomes, blockers
-and scoped verification conclusions. Routine execution narration stays in the
-conversation without a new process-record file. Tool-owned or explicitly required
-evidence keeps its existing owner and retention contract.
+and scoped verification conclusions. Consolidate repeated conclusions for the same
+scope and candidate; preserve distinct inputs, outcomes, material failures and
+evidence references. Routine execution narration stays in the conversation without
+a new process-record file. Tool-owned or explicitly required evidence keeps its
+existing owner and retention contract.
 
 Before archive, establish verified outcome facts, distill useful Focus information,
 write necessary stable knowledge to its owner, and converge the entire Change.

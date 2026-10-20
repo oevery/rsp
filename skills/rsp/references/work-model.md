@@ -22,4 +22,6 @@ An explicit user-selected owner wins over default focus discovery. Focus markers
 
 Identity, focus, readiness, dependency state and capability availability grant no action authority. A Group Brief supplies context, not permission to implement every child. A completed check proves only its tested boundary; neither it nor a review report grants lifecycle completion, Git delivery, publication or approval. Each capability retains its own action and stop conditions.
 
+In a Change's Blockers, record only unresolved dependencies or decisions preventing required work. Write standalone `None` when none remain; keep non-blocking verification limits in Verify. Exact prerequisites use ``- requires `<work-ref>`: <reason>``. Other prose, including an explanation after `None`, remains an external blocker declaration.
+
 Use only the selected owner's relevant artifacts and authoritative project context. Installed files are shared across the suite, but separate workers do not inherit one another's loaded instructions. Reuse applicable definitions in the same context; obtain this file before depending on missing definitions. If the shared resource is unavailable, report an incomplete suite and stop identity-dependent actions rather than inventing a substitute or installing implicitly.

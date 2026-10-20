@@ -1,6 +1,6 @@
 ---
 name: author-rsp-skills
-description: Maintain RSP's own Skill candidates, source provenance and evaluation evidence. Use for a repository Skill Change or read-only corpus audit, not general project Skill authoring.
+description: Maintain RSP's own Skills, source provenance and evaluation evidence. Use for repository Skill maintenance or read-only corpus audits, not general project Skill authoring.
 ---
 
 # Author RSP Skills
@@ -9,12 +9,12 @@ Audit an authored corpus or prepare one bounded RSP Skill candidate. Apply rsp-d
 
 ## Select mode and target
 
-Require one explicit target package or authored corpus, then establish the authority for the selected mode:
+Require one explicit target package or authored corpus. Use Core's Direct/Change selection; authoring mode alone requires no Change.
 
 - A report-only Pre-Change Audit is read-only, returns findings with `WorkRef: N/A`, and stops before candidate creation, repair, mutation or acceptance.
-- Every other mode, including audit repair, requires one selected RSP Change and explicit artifact mutation authority.
+- Mutation requires explicit artifact authority; tracked work uses its selected Change.
 
-Read nearest instructions and the selected Change when required. Preserve unrelated work; unresolved ownership, behavior or authority stops the affected work.
+Read nearest instructions and the selected Change when tracked. Preserve unrelated work; unresolved ownership, behavior or authority stops the affected work.
 
 Choose one primary mode:
 
@@ -37,7 +37,7 @@ Load only the selected reference: [authoring](references/authoring.md) for `crea
 
 ## Preserve the contract
 
-Before editing, identify trigger, inputs, authority, action, output, stops, verification and conditional loading. Change them only through an intentional delta in the selected Change. Keep one owner for each state, receipt, field and lifecycle transition.
+Before editing, identify trigger, inputs, authority, action, output, stops, verification and conditional loading. Change them only through an authorized delta; record it in the selected Change when tracked. Keep one owner for each state, receipt, field and lifecycle transition.
 
 Use host limits as constraints, never as the definition of quality. Words, lines, bytes, tokens, tool calls, and elapsed time are diagnostics. Do not pass a candidate because it is shorter or fail it because it is longer.
 
@@ -54,6 +54,6 @@ Use rsp-doc's Skill branch for descriptions, instructions, resources and concise
 
 ## Stop and return
 
-Stop a report-only Pre-Change Audit before any artifact mutation or candidate acceptance. For tracked work, stop before accepting a candidate, independent review, Git delivery, archive, push, tag, release, publication, or installation unless the user separately authorizes the owning workflow. Also stop when provenance, license, containment, current behavior, or evidence explicitly required by the selected experiment is unresolved. Author self-checks cannot replace required independent review; recommendations for the next owner grant no authority.
+Stop a report-only Pre-Change Audit before any artifact mutation or candidate acceptance. Stop before accepting a candidate, independent review, Git delivery, archive, push, tag, release, publication, or installation unless the user separately authorizes the owning workflow. Also stop when provenance, license, containment, current behavior, or evidence explicitly required by the selected experiment is unresolved. Author self-checks cannot replace required independent review; recommendations for the next owner grant no authority.
 
-Return: `WorkRef` (`N/A` for report-only Pre-Change Audit), `Mode`, `Target`, `Contract delta`, `Changed artifacts`, `Fresh verification`, `Diagnostics`, `Blockers`, and `Next owner`. Use natural language; include machine-readable output only when another tool consumes it.
+Return: `WorkRef` (`N/A` for untracked work), `Mode`, `Target`, `Contract delta`, `Changed artifacts`, `Fresh verification`, `Diagnostics`, `Blockers`, and `Next owner`. Use natural language; include machine-readable output only when another tool consumes it.
