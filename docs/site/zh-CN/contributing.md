@@ -1,0 +1,46 @@
+# 维护指南
+
+通过 `mise exec --` 运行仓库命令。[测试指南](https://github.com/oevery/rsp/blob/main/tests/README.md)负责工具准备、离线缓存，以及代码、安装包和 Skill 验证。安装与发布使用 `package.json` 中的身份；维护工具不会改变消费者的 Node.js 要求。
+
+## 检查与工作流入口
+
+`.github/xova.json` 统一声明命令、安装和 Cloudflare 设置。四个事件入口通过五处引用调用 Xova Actions，全部固定到工具库 CI 已通过的同一个完整 SHA。RSP 保留 CLI、安装包、Skill 资源、安全、文档和离线原生任务检查；工具库负责来源门禁、打包发布、文档产物与恢复编排。
+
+| 入口 | 触发方式 | 行为 |
+| --- | --- | --- |
+| CI | main 推送、拉取请求或手动运行 | 检查选定来源。普通纯文档改动运行 lint、文档检查和工作流接线测试。 |
+| Documentation | 相关推送、拉取请求或手动运行 | 检查并构建网站、保存产物；不发布或部署。 |
+| Publish | GitHub Release 发布事件，或在已有标签手动运行 | 对最终标签来源执行全部产品检查，再构建文档、验证并发布同一个 tarball。 |
+| Recover documentation | 在已确认的稳定发布标签手动运行 | 从已确认发布的来源重新构建并恢复 Cloudflare 文档，不发布 npm。 |
+
+`release:check` 构建 CLI，检查类型和 lint，运行代码与安装包测试，校验原生任务 schema，扫描 Skill 安全并检查文档。Schema 校验离线执行，不启动容器、智能体或评判模型。CI 通过 `RSP_INSTALL_ALLOW_NETWORK=1` 明确允许临时 npm 消费项目联网安装；本地检查默认使用离线缓存。这个开关不授予模型执行或发布权限。
+
+安装锁定依赖后，可运行以下本地检查：
+
+```sh
+mise exec -- pnpm release:check
+mise exec -- pnpm docs:build
+mise exec -- pnpm test:pack
+```
+
+`test:pack` 需要已构建的 CLI 产物。未提供 `TARBALL` 时用 npm 打包一次；提供绝对路径 `TARBALL` 时直接消费该归档，检查分发文件、安装后 CLI 行为、Skill 资源、定制内容保护和项目更新，不重新打包候选。修改锁文件后，还应在全新检出中验证冻结安装与检查；已有 `node_modules` 可能掩盖不完整的依赖图。
+
+子进程超时或被信号终止时，安装包校验必须失败；即使命令本来应当拒绝无效输入，也不能将这种异常当作正常拒绝。
+
+## 最终候选与发布
+
+打标签前，先准备目标包版本、发布说明及必要的迁移材料。候选可以包含必要的代码和文档，不要求只改版本。普通 CI 优化、发布提交标题或父提交 CI 成功，都不能免除最终候选的产品检查。
+
+Publish 将已检查的来源 SHA 交给共享发布工作流。来源门禁绑定原生事件、标签、包版本、仓库和已检查提交。同一 SHA 的产品检查通过后，发布器运行 `pnpm build`，关闭 npm 生命周期脚本后打包，将绝对归档路径交给 `test:pack`，再核对来源和 tarball 字节，最终通过锁定的 release-it 21.1.1 npm 发布器发布这些相同字节。共享发布配置关闭项目 hooks 和 Git/GitHub/GitLab 交付；`prepublishOnly` 继续为普通手动 npm 发布提供独立门禁。共享流程不会通过包生命周期脚本重复运行产品检查。
+
+npm Trusted Publishing 需要配置仓库 `oevery/rsp`、工作流 `publish.yml` 和环境 `npm-publish`；`package.json.repository` 必须与该身份一致。为 `npm-publish` 和 `docs-production` 环境配置适当的审批及 `v*` 标签限制。Cloudflare 部署需要 `CLOUDFLARE_API_TOKEN` 和 `CLOUDFLARE_ACCOUNT_ID`，可由文档环境提供，或由薄入口转发仓库 Secrets。代码和文档检查均不接收部署凭据或写权限。
+
+只有稳定 GitHub Release 事件会在 npm 成功后请求部署文档；手动发布不部署。发布与恢复共享 `docs-production` 环境、并发组和 `latest-stable` 策略，策略在部署门禁内判断。现有 `wrangler.jsonc` 决定 Worker 和资源目录。本地 `docs:deploy` 仍是维护者直接部署入口，需要单独授权。
+
+## npm 成功后的恢复
+
+共享发布器仅在 npm 确认成功后生成摘要和 `publication-result.json` 产物，记录来源 SHA、发布标签、版本和 tarball SHA-256。如果 npm 成功后产物记录失败，应先核对 npm job、注册表与 provenance；缺少产物不是重新发布的理由。
+
+若仅文档失败，先确认 npm 版本与来源，再在同一个稳定发布标签手动运行 `docs-recover.yml`，填写 `release-tag` 和准确的 `published-sha`。该来源必须包含这些工作流和 `.github/xova.json`。恢复复用同一文档检查与构建路径，恢复已验证的产物，并执行相同的最新稳定版本部署策略；没有 npm 发布路径或 npm OIDC 权限。保留成功发布的证据和失败部署记录。
+
+本地检查与工具库 CI 只证明各自实际覆盖的边界。消费者仓库的托管 CI、npm OIDC、发布以及 Cloudflare 恢复部署，都需要各自的证据和授权。

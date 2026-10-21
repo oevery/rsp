@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "setup": {
+    "toolchain": "mise",
+    "install-command": "pnpm install --frozen-lockfile"
+  },
+  "code": {
+    "check-command": "uv sync --project tests/skills --frozen && RSP_INSTALL_ALLOW_NETWORK=1 pnpm release:check",
+    "docs-only-command": "pnpm lint && pnpm docs:check && pnpm exec vitest run --no-file-parallelism tests/code/tooling/release-workflows.test.js",
+    "docs-only-paths": [
+      "docs/**",
+      "README.md",
+      "README.zh-CN.md",
+      "AGENTS.md",
+      "tests/README.md"
+    ]
+  },
+  "npm": {
+    "package-manager": "npm",
+    "verify-command": "pnpm build",
+    "package-verify-command": "RSP_INSTALL_ALLOW_NETWORK=1 pnpm test:pack",
+    "environment-name": "npm-publish"
+  },
+  "docs": {
+    "provider": "cloudflare",
+    "check-command": "pnpm docs:check",
+    "build-command": "pnpm docs:build",
+    "site-directory": "docs/.vitepress/dist",
+    "deploy-command": "pnpm exec wrangler deploy",
+    "environment-name": "docs-production",
+    "concurrency-group": "docs-production",
+    "deployment-policy": "latest-stable"
+  }
+}

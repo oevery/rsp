@@ -27,7 +27,7 @@ export function checkInstalledPackage(root, tarball, temporaryRoot) {
   const cli = join(packageRoot, 'bin', 'rsp.mjs')
   function run(args, expectedSuccess = true) {
     const result = spawnSync(process.execPath, [cli, ...args], { cwd: project, env, encoding: 'utf8', timeout: 10000 })
-    if ((result.status === 0) !== expectedSuccess)
+    if (result.status === null || (result.status === 0) !== expectedSuccess)
       throw new Error(`Installed CLI contract failed: ${args.join(' ')}`)
     return result.stdout
   }

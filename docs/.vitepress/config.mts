@@ -75,6 +75,7 @@ function sidebar(locale: 'en' | 'zh-CN') {
       items: [
         { text: zh ? '日常工作流' : 'Daily workflow', link: link('guides/daily-workflow') },
         { text: 'Skills & Manage', link: link('guides/skills') },
+        { text: zh ? '维护指南' : 'Maintainer guide', link: link('contributing') },
       ],
     },
     {

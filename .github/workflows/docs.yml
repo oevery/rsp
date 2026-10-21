@@ -1,0 +1,48 @@
+name: Documentation
+on:
+  pull_request:
+    paths:
+      - docs/**
+      - README.md
+      - README.zh-CN.md
+      - package.json
+      - pnpm-workspace.yaml
+      - pnpm-lock.yaml
+      - mise.toml
+      - wrangler.jsonc
+      - scripts/docs-check.mjs
+      - src/core/markdown.mjs
+      - .github/xova.json
+      - .github/workflows/docs.yml
+      - .github/workflows/publish.yml
+      - .github/workflows/docs-recover.yml
+  push:
+    branches:
+      - main
+    paths:
+      - docs/**
+      - README.md
+      - README.zh-CN.md
+      - package.json
+      - pnpm-workspace.yaml
+      - pnpm-lock.yaml
+      - mise.toml
+      - wrangler.jsonc
+      - scripts/docs-check.mjs
+      - src/core/markdown.mjs
+      - .github/xova.json
+      - .github/workflows/docs.yml
+      - .github/workflows/publish.yml
+      - .github/workflows/docs-recover.yml
+  workflow_dispatch: null
+permissions:
+  contents: read
+concurrency:
+  group: docs-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  check:
+    uses: xova-dev/actions/.github/workflows/check.yml@62e30426bc63933c2d6cf8970c05aad9d150f757
+    with:
+      kind: docs
+      source-sha: ${{ github.sha }}

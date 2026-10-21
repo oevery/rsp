@@ -1,0 +1,23 @@
+name: Recover documentation
+on:
+  workflow_dispatch:
+    inputs:
+      release-tag:
+        description: Confirmed stable release; select this same tag as the workflow ref
+        type: string
+        required: true
+      published-sha:
+        description: Exact commit of the confirmed npm publication
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  recover:
+    uses: xova-dev/actions/.github/workflows/docs-recover.yml@62e30426bc63933c2d6cf8970c05aad9d150f757
+    with:
+      release-tag: ${{ inputs.release-tag }}
+      published-sha: ${{ inputs.published-sha }}
+    secrets:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

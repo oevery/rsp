@@ -1,0 +1,31 @@
+name: Publish
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      release-tag:
+        description: Existing release tag; run this workflow at the same tag
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  check:
+    uses: xova-dev/actions/.github/workflows/check.yml@62e30426bc63933c2d6cf8970c05aad9d150f757
+    with:
+      source-sha: ${{ github.sha }}
+  release:
+    needs: check
+    uses: xova-dev/actions/.github/workflows/release.yml@62e30426bc63933c2d6cf8970c05aad9d150f757
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      release-tag: ${{ github.event.release.tag_name || inputs.release-tag }}
+      expected-sha: ${{ needs.check.outputs.source-sha }}
+      deploy-docs: ${{ github.event_name == 'release' && !github.event.release.prerelease }}
+    secrets:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

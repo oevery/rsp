@@ -52,6 +52,7 @@
     "typecheck": "tsc --noEmit",
     "test": "pnpm run build && pnpm run test:code",
     "test:code": "vitest run --no-file-parallelism",
+    "test:pack": "node tests/code/package/package-check.mjs",
     "test:skills": "uv run --frozen --project tests/skills python tests/skills/evaluate.py",
     "release:check": "pnpm run build && pnpm run typecheck && pnpm run lint && pnpm run test:code && pnpm run test:skills check && pnpm run skills:security-check && pnpm run docs:check"
   },
@@ -76,6 +77,7 @@
     "@types/react": "19.2.17",
     "eslint": "^10.8.0",
     "ink-testing-library": "4.0.0",
+    "release-it": "21.1.1",
     "smol-toml": "1.9.0",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",

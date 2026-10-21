@@ -84,6 +84,13 @@ Task-level reuse and execution obligations belong to [Workflow](workflow.md#meth
 Repository commands and evidence-recovery procedures are documented in
 [Tests](../../tests/README.md) and [Research](../../research/README.md), not duplicated here.
 
+Publication verifies the complete final tagged candidate, including necessary
+release and migration documents. A parent CI result or release commit title cannot
+replace those checks. Package checks consume the exact tarball subsequently
+published; source and archive bytes are checked again before publication. Shared
+workflow references use one verified full toolkit revision. Documentation recovery
+is a separate path bound to confirmed published source and cannot republish npm.
+
 ### Research, provenance and cache
 
 Research supplies pinned source evidence, comparisons and recommendations, never

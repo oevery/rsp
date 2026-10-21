@@ -66,6 +66,7 @@ Focus 是一个集合：project-setup 和 improve-login 可以同时聚焦。使
 - [3.0 迁移指南](./docs/migrations/3.0.md)与 [3.1 迁移指南](./docs/migrations/3.1.md)
 - [发布说明](./docs/releases/3.3.0.md)
 - [维护者测试与 Skill 验证](./tests/README.md)
+- [维护工作流、发布与文档恢复](./docs/site/zh-CN/contributing.md)
 - [仓库上下文与契约导航](./CONTEXT.md)
 - [权威架构与 Specs](./.rsp/specs/design.md)及[维护者研究](./research/README.md)
 

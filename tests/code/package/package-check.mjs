@@ -1,28 +1,36 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, rmSync } from 'node:fs'
+import { mkdtempSync, rmSync, statSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { basename, isAbsolute, join, resolve } from 'node:path'
 import process from 'node:process'
 import { checkInstalledPackage } from './install-check.mjs'
 
 const root = process.cwd()
 const temporaryRoot = mkdtempSync(join(tmpdir(), 'rsp-package-check-'))
 try {
-  const result = spawnSync('npm', ['pack', '--ignore-scripts', '--json', '--pack-destination', temporaryRoot], {
-    cwd: root,
-    encoding: 'utf8',
-    stdio: 'pipe',
-  })
-  if (result.status !== 0)
-    throw new Error(result.stderr.trim() || 'npm pack failed')
-
-  const packed = JSON.parse(result.stdout)
-  const filename = packed[0]?.filename
-  if (!filename)
-    throw new Error('npm pack returned no tarball')
-  const tarball = filename.startsWith('/') ? filename : join(temporaryRoot, filename)
+  let tarball = process.env.TARBALL
+  if (tarball) {
+    if (!isAbsolute(tarball))
+      throw new Error('TARBALL must be an absolute path to the packed candidate')
+    if (!statSync(tarball).isFile())
+      throw new Error('TARBALL must identify a file')
+  }
+  else {
+    const result = spawnSync('npm', ['pack', '--ignore-scripts', '--json', '--pack-destination', temporaryRoot], {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: 'pipe',
+    })
+    if (result.status !== 0)
+      throw new Error(result.stderr.trim() || 'npm pack failed')
+    const filename = JSON.parse(result.stdout)[0]?.filename
+    if (!filename)
+      throw new Error('npm pack returned no tarball')
+    tarball = resolve(temporaryRoot, filename)
+  }
+  const filename = basename(tarball)
   const listing = spawnSync('tar', ['-tf', tarball], { encoding: 'utf8', stdio: 'pipe' })
   if (listing.status !== 0)
     throw new Error(listing.stderr.trim() || 'tar listing failed')
