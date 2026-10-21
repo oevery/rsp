@@ -302,3 +302,14 @@ sources:
       - README.md
       - benchmark/**
       - evaluation/**
+  moyu:
+    repository: https://github.com/uucz/moyu.git
+    ref: main # Maintained restraint guidance, benchmark and lint signals; branch research baseline.
+    paths:
+      - README.md
+      - LICENSE*
+      - CHANGELOG.md
+      - package.json
+      - skills/**
+      - benchmark/**
+      - linter/**

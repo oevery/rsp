@@ -374,6 +374,18 @@
       ],
       "repository": "https://github.com/mattpocock/skills.git"
     },
+    "moyu@f276e3cc8a7fba8a71a6aa2180ffb991c138bbc3": {
+      "paths": [
+        "CHANGELOG.md",
+        "LICENSE*",
+        "README.md",
+        "benchmark/**",
+        "linter/**",
+        "package.json",
+        "skills/**"
+      ],
+      "repository": "https://github.com/uucz/moyu.git"
+    },
     "no-negative-echo@eba9f1d2b4c19e699786a49427189988ad6d8d65": {
       "paths": [
         "BACKGROUND.md",
