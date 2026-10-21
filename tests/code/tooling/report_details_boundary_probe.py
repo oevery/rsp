@@ -83,8 +83,12 @@ def run(ordinary, calibration, output):
         original_rows = list(evaluate.native_results(source))
         assert len(original_rows) >= 2, "Keep an unaffected peer to observe the failure scope"
         original_verdicts = {d.name: evaluate.verdict(d, r) for d, r in original_rows}
-        if kind == "execution":
+        if kind == "calibration":
+            baseline_verdicts = {d.name: "judge-calibration-match" for d, _ in original_rows}
+            assert original_verdicts == baseline_verdicts, "Use a retained calibration job with matching declared expectations"
+        else:
             assert all(v in ("passed", "failed") for v in original_verdicts.values())
+            baseline_verdicts = original_verdicts
         target_relative = original_rows[0][0].relative_to(source) / "verifier/reward-details.json"
         assert (source / target_relative).is_file()
         save(output / (kind + "-source.json"), {"source": str(source), "inputs": str(source_inputs),
@@ -137,7 +141,7 @@ def run(ordinary, calibration, output):
                 assert set(render_observation["injectedReads"]) == {str(target)}
             if not completed:
                 assert after["summary.md"] == before["summary.md"]
-            expected_verdicts = dict(original_verdicts)
+            expected_verdicts = dict(baseline_verdicts)
             if kind == "calibration" and mode != "normal":
                 expected_verdicts[original_rows[0][0].name] = "unscored"
             assert completed and not errors and verdicts == expected_verdicts
