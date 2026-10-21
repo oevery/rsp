@@ -14,7 +14,7 @@
 
 `release:check` 构建 CLI，检查类型和 lint，运行代码与安装包测试，校验原生任务 schema，扫描 Skill 安全并检查文档。Schema 校验离线执行，不启动容器、智能体或评判模型。CI 通过 `RSP_INSTALL_ALLOW_NETWORK=1` 明确允许临时 npm 消费项目联网安装；本地检查默认使用离线缓存。这个开关不授予模型执行或发布权限。
 
-setup.cache 选择以 pnpm-lock.yaml 区分的 pnpm/npm 下载缓存，以及以 tests/skills/uv.lock 区分的 uv 下载缓存；docs.cache 只选择 pnpm。命中与未命中均执行锁定安装及检查。安装包消费项目接受显式 npm_config_cache 或 NPM_CONFIG_CACHE，未指定时保留 .cache/rsp-package-install。本次候选验收不复用已安装的消费项目、虚拟环境、测试结果或发布回执。
+setup.cache 选择以 pnpm-lock.yaml 区分的 pnpm/npm 下载缓存，以及以 tests/skills/uv.lock 区分的 uv 下载缓存；docs.cache 只选择 pnpm。命中与未命中均执行锁定安装及检查。安装包消费项目接受显式 npm_config_cache 或 NPM_CONFIG_CACHE，未指定时保留 .cache/rsp-package-install。指定 tarball 与缓存回归复用一份归档，通过一次成功验证预热默认缓存，再离线拒绝由两种变量分别选择的空缓存。每次安装尝试都使用全新的消费项目，成功验证和冷缓存反例结束后均核对归档字节不变。本次候选验收不复用已安装的消费项目、虚拟环境、测试结果或发布回执。
 
 安装锁定依赖后，可运行以下本地检查：
 
