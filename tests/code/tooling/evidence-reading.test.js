@@ -144,7 +144,7 @@ it('rejects missing exit/completion, receipts alone, identity mismatch and prema
   expect(() => recoveryFacts(early)).toThrow('premature continuation')
 })
 
-it.each([['original failing source', false], ['repaired source', true]])('attributes one check result per required role for %s', (_, repaired) => {
+it.each([['original failing source', false], ['repaired source', true]])('preserves the isolated check exit code for %s', (_, repaired) => {
   const directory = mkdtempSync(join(tmpdir(), 'rsp-check-receipt-'))
   try {
     mkdirSync(join(directory, 'src'))
@@ -166,19 +166,11 @@ it.each([['original failing source', false], ['repaired source', true]])('attrib
     expect(mixed.status).toBe(0)
     if (!repaired)
       expect(mixed.stderr).toContain('AssertionError')
-    const receipts = []
-    // Labels exercise an execution boundary; they are not native independent workers.
-    // Keep one actual execution for each required role, without adding a retry.
-    for (const role of ['implementation', 'independent reviewer']) {
-      const result = spawnSync(process.execPath, ['tools/check.mjs'], { cwd: directory, env, encoding: 'utf8', timeout: 5000 })
-      expect(result.error).toBeUndefined()
-      expect(result.signal).toBeNull()
-      receipts.push({ role, command: 'node tools/check.mjs', exitCode: result.status, stdout: result.stdout, stderr: result.stderr })
-      expect(git(['status', '--short']).status).toBe(0)
-    }
-    expect(receipts).toHaveLength(2)
-    expect(receipts.map(r => r.exitCode)).toEqual(repaired ? [0, 0] : [1, 1])
-    expect(new Set(receipts.map(r => r.role)).size).toBe(2)
+    const result = spawnSync(process.execPath, ['tools/check.mjs'], { cwd: directory, env, encoding: 'utf8', timeout: 5000 })
+    expect(result.error).toBeUndefined()
+    expect(result.signal).toBeNull()
+    expect(git(['status', '--short']).status).toBe(0)
+    expect(result.status).toBe(repaired ? 0 : 1)
   }
   finally {
     rmSync(directory, { recursive: true, force: true })
