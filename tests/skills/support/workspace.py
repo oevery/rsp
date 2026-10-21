@@ -65,8 +65,10 @@ def prepare_upgrade_evidence(root, expected_exit):
         "exitCode": result.returncode, "stdout": result.stdout, "stderr": result.stderr, "inputs": inputs,
     }, indent=2) + "\n")
     cli = shlex.split(os.environ.get("RSP_FIXTURE_CLI", "rsp"))
+    cli_env = {**os.environ, "NO_COLOR": "1"}
+    cli_env.pop("FORCE_COLOR", None)
     result = subprocess.run([*cli, "ready", "value-change", "--json"], cwd=root,
-                            text=True, capture_output=True)
+                            text=True, capture_output=True, env=cli_env)
     assert result.returncode != 0 and "requires an update" in result.stdout + result.stderr
     (root / "inspection.json").write_text(json.dumps({
         "origin": "fixture setup execution", "command": "rsp ready value-change --json",

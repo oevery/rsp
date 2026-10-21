@@ -313,8 +313,10 @@ class EvaluationContract(unittest.TestCase):
                        "RSP_LOG_DIR": str(root / "logs"), "RSP_EVAL_OFFLINE": "1",
                        "RSP_FIXTURE_CLI": "node " + str(HERE.parents[2] / "dist/cli.mjs")}
                 with patch.dict(os.environ, env):
+                    # CI color settings must not change the recorded setup evidence.
                     subprocess.run(["python3", str(task / "environment/setup.py"), str(work), str(baseline)],
-                                   check=True, capture_output=True)
+                                   check=True, capture_output=True,
+                                   env={**os.environ, "CI": "true", "FORCE_COLOR": "1", "NO_COLOR": ""})
                     self.assertEqual(baseline.read_bytes(), (task / "tests/baseline.json").read_bytes())
                     output = root / "logs/reward.json"
 
