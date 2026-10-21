@@ -4,16 +4,17 @@
 
 ## 检查与工作流入口
 
-`.github/xova.json` 统一声明命令、安装和 Cloudflare 设置。四个事件入口通过五处引用调用 Xova Actions，全部固定到工具库 CI 已通过的同一个完整 SHA。RSP 保留 CLI、安装包、Skill 资源、安全、文档和离线原生任务检查；工具库负责来源门禁、打包发布、文档产物与恢复编排。
+`.github/xova.json` 统一声明命令、安装和 Cloudflare 设置。三个事件入口通过五处引用调用 Xova Actions，全部固定到远端 CI 已通过的同一个工具库完整 SHA。RSP 保留 CLI、安装包、Skill 资源、安全、文档和离线原生任务检查；工具库负责来源门禁、打包发布、文档产物与恢复编排。
 
 | 入口 | 触发方式 | 行为 |
 | --- | --- | --- |
-| CI | main 推送、拉取请求或手动运行 | 检查选定来源。普通纯文档改动运行 lint、文档检查和工作流接线测试。 |
-| Documentation | 相关推送、拉取请求或手动运行 | 检查并构建网站、保存产物；不发布或部署。 |
+| CI | main 推送、拉取请求或手动运行 | 在同一 SHA 上并行运行 code、docs。普通纯文档改动的代码路径执行 lint 与接线测试；docs 始终检查、构建网站并保存产物，不发布或部署。 |
 | Publish | GitHub Release 发布事件，或在已有标签手动运行 | 对最终标签来源执行全部产品检查，再构建文档、验证并发布同一个 tarball。 |
 | Recover documentation | 在已确认的稳定发布标签手动运行 | 从已确认发布的来源重新构建并恢复 Cloudflare 文档，不发布 npm。 |
 
 `release:check` 构建 CLI，检查类型和 lint，运行代码与安装包测试，校验原生任务 schema，扫描 Skill 安全并检查文档。Schema 校验离线执行，不启动容器、智能体或评判模型。CI 通过 `RSP_INSTALL_ALLOW_NETWORK=1` 明确允许临时 npm 消费项目联网安装；本地检查默认使用离线缓存。这个开关不授予模型执行或发布权限。
+
+setup.cache 选择以 pnpm-lock.yaml 区分的 pnpm/npm 下载缓存，以及以 tests/skills/uv.lock 区分的 uv 下载缓存；docs.cache 只选择 pnpm。命中与未命中均执行锁定安装及检查。安装包消费项目接受显式 npm_config_cache 或 NPM_CONFIG_CACHE，未指定时保留 .cache/rsp-package-install。本次候选验收不复用已安装的消费项目、虚拟环境、测试结果或发布回执。
 
 安装锁定依赖后，可运行以下本地检查：
 

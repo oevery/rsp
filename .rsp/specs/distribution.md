@@ -88,7 +88,9 @@ Publication verifies the complete final tagged candidate, including necessary
 release and migration documents. A parent CI result or release commit title cannot
 replace those checks. Package checks consume the exact tarball subsequently
 published; source and archive bytes are checked again before publication. Shared
-workflow references use one verified full toolkit revision. Documentation recovery
+workflow references use one verified full toolkit revision. Ordinary CI runs
+read-only code/docs jobs in parallel at the same source SHA. Dependency caches
+never replace candidate execution or tarball verification. Documentation recovery
 is a separate path bound to confirmed published source and cannot republish npm.
 
 ### Research, provenance and cache

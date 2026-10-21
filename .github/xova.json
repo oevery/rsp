@@ -2,11 +2,12 @@
   "schemaVersion": 1,
   "setup": {
     "toolchain": "mise",
-    "install-command": "pnpm install --frozen-lockfile"
+    "install-command": "pnpm install --frozen-lockfile",
+    "cache": { "pnpm": "pnpm-lock.yaml", "npm": "pnpm-lock.yaml", "uv": "tests/skills/uv.lock" }
   },
   "code": {
     "check-command": "uv sync --project tests/skills --frozen && RSP_INSTALL_ALLOW_NETWORK=1 pnpm release:check",
-    "docs-only-command": "pnpm lint && pnpm docs:check && pnpm exec vitest run --no-file-parallelism tests/code/tooling/release-workflows.test.js",
+    "docs-only-command": "pnpm lint && pnpm exec vitest run --no-file-parallelism tests/code/tooling/release-workflows.test.js",
     "docs-only-paths": [
       "docs/**",
       "README.md",
@@ -22,6 +23,7 @@
     "environment-name": "npm-publish"
   },
   "docs": {
+    "cache": { "pnpm": "pnpm-lock.yaml" },
     "provider": "cloudflare",
     "check-command": "pnpm docs:check",
     "build-command": "pnpm docs:build",

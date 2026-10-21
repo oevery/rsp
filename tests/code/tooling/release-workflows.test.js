@@ -1,17 +1,16 @@
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { expect, it } from 'vitest'
 import { parse } from 'yaml'
 
 const read = name => parse(readFileSync(new URL(`../../../.github/workflows/${name}.yml`, import.meta.url), 'utf8'))
 const config = JSON.parse(readFileSync(new URL('../../../.github/xova.json', import.meta.url), 'utf8'))
 const ci = read('ci')
-const docs = read('docs')
 const publish = read('publish')
 const recover = read('docs-recover')
 const expression = value => `$` + `{{ ${value} }}`
 
 it('pins one toolkit revision while keeping RSP checks and packed installation local', () => {
-  const calls = [ci.jobs.check, docs.jobs.check, publish.jobs.check, publish.jobs.release, recover.jobs.recover]
+  const calls = [ci.jobs.code, ci.jobs.docs, publish.jobs.check, publish.jobs.release, recover.jobs.recover]
   const revisions = calls.map((job) => {
     expect(job.uses).toMatch(/^xova-dev\/actions\/\.github\/workflows\/[a-z-]+\.yml@[0-9a-f]{40}$/)
     return job.uses.split('@')[1]
@@ -26,13 +25,13 @@ it('pins one toolkit revision while keeping RSP checks and packed installation l
 })
 
 it('checks the complete final source before publishing regardless of ordinary docs-only skips', () => {
-  for (const job of [ci.jobs.check, publish.jobs.check]) {
+  for (const job of [ci.jobs.code, publish.jobs.check]) {
     expect(job.uses.split('@')[0]).toBe('xova-dev/actions/.github/workflows/check.yml')
     expect(job.with['source-sha']).toBe(expression('github.sha'))
     expect(job.if).toBeUndefined()
     expect(job['continue-on-error']).toBeUndefined()
   }
-  expect(ci.jobs.check.with['detect-changes']).toBe(true)
+  expect(ci.jobs.code.with['detect-changes']).toBe(true)
   expect(publish.jobs.check.with['detect-changes'] ?? false).toBe(false)
   expect(publish.jobs.release.needs).toBe('check')
   expect(publish.jobs.release.with['expected-sha']).toBe(expression('needs.check.outputs.source-sha'))
@@ -42,13 +41,24 @@ it('checks the complete final source before publishing regardless of ordinary do
 })
 
 it('keeps checks read-only and shares Cloudflare policy with isolated documentation recovery', () => {
-  for (const workflow of [ci, docs, publish, recover])
+  for (const workflow of [ci, publish, recover])
     expect(workflow.permissions).toEqual({ contents: 'read' })
-  for (const job of [ci.jobs.check, docs.jobs.check, publish.jobs.check]) {
+  for (const job of [ci.jobs.code, ci.jobs.docs, publish.jobs.check]) {
     expect(job.secrets).toBeUndefined()
     expect(job.permissions).toBeUndefined()
   }
-  expect(docs.jobs.check.with).toEqual({ 'kind': 'docs', 'source-sha': expression('github.sha') })
+  expect(Object.keys(ci.jobs)).toEqual(['code', 'docs'])
+  expect(readdirSync(new URL('../../../.github/workflows/', import.meta.url))).not.toContain('docs.yml')
+  expect(ci.on.pull_request).toBeNull()
+  expect(ci.on.push).toEqual({ branches: ['main'] })
+  for (const job of [ci.jobs.code, ci.jobs.docs]) {
+    expect(job.needs).toBeUndefined()
+    expect(job.if).toBeUndefined()
+    expect(job.environment).toBeUndefined()
+  }
+  expect(ci.jobs.docs.with).toEqual({ 'kind': 'docs', 'source-sha': expression('github.sha') })
+  expect(config.setup.cache).toEqual({ pnpm: 'pnpm-lock.yaml', npm: 'pnpm-lock.yaml', uv: 'tests/skills/uv.lock' })
+  expect(config.docs.cache).toEqual({ pnpm: 'pnpm-lock.yaml' })
   expect(publish.jobs.release.permissions).toEqual({ 'contents': 'read', 'id-token': 'write' })
   expect(publish.jobs.release.with['deploy-docs']).toBe(expression('github.event_name == \'release\' && !github.event.release.prerelease'))
   expect(config.docs).toMatchObject({ 'provider': 'cloudflare', 'environment-name': 'docs-production', 'concurrency-group': 'docs-production', 'deployment-policy': 'latest-stable' })

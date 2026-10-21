@@ -11,8 +11,13 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  check:
-    uses: xova-dev/actions/.github/workflows/check.yml@62e30426bc63933c2d6cf8970c05aad9d150f757
+  code:
+    uses: xova-dev/actions/.github/workflows/check.yml@ef8261ffb66d4593e54a542d035f4684d5124abd
     with:
       source-sha: ${{ github.sha }}
       detect-changes: true
+  docs:
+    uses: xova-dev/actions/.github/workflows/check.yml@ef8261ffb66d4593e54a542d035f4684d5124abd
+    with:
+      kind: docs
+      source-sha: ${{ github.sha }}

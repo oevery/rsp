@@ -17,7 +17,7 @@ export function checkInstalledPackage(root, tarball, temporaryRoot) {
     CI: 'true',
     npm_config_userconfig: '/dev/null',
     npm_config_registry: 'https://registry.npmjs.org/',
-    npm_config_cache: join(root, '.cache', 'rsp-package-install'),
+    npm_config_cache: process.env.npm_config_cache || process.env.NPM_CONFIG_CACHE || join(root, '.cache', 'rsp-package-install'),
   }
   const networkAllowed = process.env.RSP_INSTALL_ALLOW_NETWORK === '1'
   const install = spawnSync('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', ...(networkAllowed ? [] : ['--offline']), tarball], { cwd: consumer, env, encoding: 'utf8', timeout: 120000 })

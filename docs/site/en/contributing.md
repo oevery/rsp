@@ -4,16 +4,17 @@ Run repository commands through `mise exec --`. The [test guide](https://github.
 
 ## Checks and workflow entries
 
-`.github/xova.json` declares commands, installation and Cloudflare settings once. The four event workflows call Xova Actions through five references pinned to one full SHA whose toolkit CI has passed. RSP owns its CLI, installed-package, Skill-resource, security, documentation and offline native task checks. The toolkit owns source guards, packing/publication, documentation artifacts and recovery orchestration.
+`.github/xova.json` declares commands, installation and Cloudflare settings once. The three event workflows call Xova Actions through five references pinned to one full toolkit SHA whose remote CI has passed. RSP owns its CLI, installed-package, Skill-resource, security, documentation and offline native task checks. The toolkit owns source guards, packing/publication, documentation artifacts and recovery orchestration.
 
 | Entry | Trigger | Behavior |
 | --- | --- | --- |
-| CI | Main push, pull request or manual run | Check the selected source. Ordinary documentation-only changes use lint, documentation checks and workflow wiring tests. |
-| Documentation | Relevant push, pull request or manual run | Check and build the site, then save its artifact. No publication or deployment. |
+| CI | Main push, pull request or manual run | Run independent code/docs jobs at the same SHA. Ordinary docs-only code checks use lint and workflow wiring tests; docs always checks/builds the site and saves its artifact. No publication or deployment. |
 | Publish | Published GitHub Release or manual run at an existing tag | Run all product checks on the final tagged source, then build documentation and verify/publish one tarball. |
 | Recover documentation | Manual run at a confirmed stable release tag | Rebuild the confirmed published source and recover Cloudflare documentation without publishing npm. |
 
 `release:check` builds the CLI, checks types and lint, runs code/package tests, validates native task schemas, scans Skill security and checks documentation. Schema validation is offline: it starts no containers, agents or judges. CI explicitly permits network access for temporary npm installation consumers through `RSP_INSTALL_ALLOW_NETWORK=1`; local checks use the offline cache by default. This flag grants no model-execution or publication authority.
+
+setup.cache selects pnpm/npm download caches keyed by pnpm-lock.yaml and uv downloads keyed by tests/skills/uv.lock. docs.cache selects only pnpm. Locked installation and checks still run on hits and misses. Package consumers accept an explicit npm_config_cache or NPM_CONFIG_CACHE; without either they retain .cache/rsp-package-install. No consumer installation, virtual environment, test result or release receipt is reused as candidate acceptance.
 
 Useful local checks after installing locked dependencies:
 

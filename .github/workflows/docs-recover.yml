@@ -14,7 +14,7 @@ permissions:
   contents: read
 jobs:
   recover:
-    uses: xova-dev/actions/.github/workflows/docs-recover.yml@62e30426bc63933c2d6cf8970c05aad9d150f757
+    uses: xova-dev/actions/.github/workflows/docs-recover.yml@ef8261ffb66d4593e54a542d035f4684d5124abd
     with:
       release-tag: ${{ inputs.release-tag }}
       published-sha: ${{ inputs.published-sha }}

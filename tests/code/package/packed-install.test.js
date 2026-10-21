@@ -35,6 +35,31 @@ it('checks the provided candidate without repacking or changing its bytes', () =
   }
 }, 190000)
 
+it('does not fall back to a warm project cache when an empty npm cache is explicitly selected', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'rsp-selected-cache-'))
+  try {
+    const env = { ...process.env, npm_config_cache: undefined, NPM_CONFIG_CACHE: undefined }
+    const baseline = spawnSync(process.execPath, ['tests/code/package/package-check.mjs'], {
+      encoding: 'utf8',
+      timeout: 180000,
+      env,
+    })
+    expect(baseline.status, baseline.stderr || baseline.stdout).toBe(0)
+    for (const field of ['npm_config_cache', 'NPM_CONFIG_CACHE']) {
+      const result = spawnSync(process.execPath, ['tests/code/package/package-check.mjs'], {
+        encoding: 'utf8',
+        timeout: 180000,
+        env: { ...env, RSP_INSTALL_ALLOW_NETWORK: '0', [field]: join(directory, field) },
+      })
+      expect(result.status).toBe(1)
+      expect(result.stderr).toContain('Offline clean install unavailable')
+    }
+  }
+  finally {
+    rmSync(directory, { recursive: true, force: true })
+  }
+}, 190000)
+
 it('rejects an installed CLI terminated during an expected rejection', () => {
   const directory = mkdtempSync(join(tmpdir(), 'rsp-abnormal-cli-'))
   try {
