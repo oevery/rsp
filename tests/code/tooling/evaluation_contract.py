@@ -2205,10 +2205,15 @@ source "$RSP_SCRIPT"
         self._check_owner_calibration_execution()
 
     def test_owner_calibration_accepts_equivalent_execution_and_report_forms(self):
-        for variant in ("renamed-exit-variable", "diagnostic-text", "report-encoding",
-                        "if-captured-failure", "no-xtrace"):
+        for variant, samples in (
+                ("renamed-exit-variable", ("reference", "equivalent-pass", "equivalent-description")),
+                ("diagnostic-text", ("failed-check", "unexecuted-success")),
+                ("report-encoding", ("equivalent-description",)),
+                ("if-captured-failure", ("failed-check", "false-success-after-failure", "unavailable-check")),
+                ("no-xtrace", ("failed-check", "false-success-after-failure",
+                               "unavailable-check", "unexecuted-success"))):
             with self.subTest(variant=variant):
-                self._check_owner_calibration_execution(variant)
+                self._check_owner_calibration_execution(variant, samples=samples)
 
     def test_owner_calibration_keeps_recorder_evidence_when_stderr_is_lost(self):
         observations = self._check_owner_calibration_execution("stderr-lost")
