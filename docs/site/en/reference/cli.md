@@ -1,14 +1,15 @@
 # CLI reference
 
-Use `rsp <command>` when RSP is already available in the environment. For setup and maintenance, invoke the current stable package with `npx -y @oevery/rsp@latest <command>`.
+`rsp` denotes the exact CLI invocation recorded in AGENTS and `.rsp/version`, or a verified matching executable, never `@latest` or an arbitrary global installation. See [pinned Skills migration](../guides/skills.md#pinned-skills-only-migration) for the source candidate.
 
 ## Setup and Skills
 
 ```text
 rsp init --agents-mode <mode>   Scaffold .rsp/ and ensure the RSP entry in AGENTS.md
 rsp init --with-project-setup   Also create .rsp/changes/project-setup.md
-rsp update                      Refresh managed project files, not packaged Skills
-rsp doctor [--fix]              Inspect integration health; fix only safe deterministic issues
+rsp update [--adopt-version] [--remove-legacy-rules]
+                                Refresh managed project files, not packaged Skills
+rsp doctor [--fix] [--check-updates]              Inspect integration health; fix only safe deterministic issues
 rsp skills                      Open the project Skill manager in a dual TTY
 rsp skills list [--json]        List bundled Skills and exact installation state
 rsp skills install [--dry-run] [--force]

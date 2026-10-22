@@ -16,6 +16,14 @@
 
 `rsp-doc` 随核心套件整套安装，可以直接调用。README、CONTEXT、Spec、Change 与指南按产物类型加载方法；Skill 新建或修订使用 Skill 分支；changelog、release notes、迁移指引及已授权的文档对账使用发布说明分支。Review 仅在评审范围包含发布文档时加载发布检查。两者不控制发布，也不据此宣称发布就绪。不需要整份记录对账的局部措辞修正和机械状态／证据回填仍直接完成；整份 Change 收敛在 Doc 可用时使用产物方法，即使最终只改几行，已收敛的文本也无需重写。维护者专用 `author-rsp-skills` 仅叠加本仓库的 Change、溯源与验证要求。
 
+## 固定版本与 Skills-only 迁移
+
+源码候选在 `.rsp/version` 中记录精确 CLI 版本，并在 AGENTS 中生成对应调用。Skill 示例的 `rsp` 表示该选定调用，不表示 `@latest`。更新提示不授予迁移权限；旧的已发布 CLI 不会被补上版本守卫，源码测试应使用构建后的候选。
+
+获授权升级时，先保留本地改动并检查一个精确目标，再用目标 CLI 执行 `update --adopt-version`。Rules 已退役；保留 `.rsp/rsp-rules.md` 与 `.rsp/rules/rsp-rules.md` 中需要的内容，旧文件仍在时再显式添加 `--remove-legacy-rules`。不再生成后备协议，无关旧文件仍归项目所有。随后使用同一精确 CLI，按下文的保护措施更新完整套件，运行 `doctor` 后再恢复依赖 Skills 的工作。缺少必需 Skill 时停止依赖工作，不读取后备协议、不隐式安装。
+
+`doctor` 报告项目版本和安装树差异；仅显式 `doctor --check-updates` 联网检查稳定版本元数据，超时为两秒，元数据不可用只作为信息提示。普通命令保持离线。只改回旧版本记录不能撤销产物迁移，也不证明降级安全。
+
 ## 旧 Skill 名称迁移
 
 对此尚未发布的源码候选，将 `rsp-design` 交给 `rsp-shape`；将 `rsp-diagnose`、`rsp-tdd`、`rsp-resolve-findings` 作为 `rsp-implement` 的按需方法；将 `rsp-manage` 作为 `rsp` 内部的按需协调。更早的 `rsp-address-review` 别名也归 `rsp-implement`。这是职责映射，不是永久兼容 Skill，更不是要求删除项目自有说明。

@@ -1,20 +1,25 @@
 # Five-minute start
 
-RSP requires Node.js 22 (`>=22`). Use the current stable release for setup and maintenance commands.
+RSP requires Node.js 22 (`>=22`). Select one exact package version; existing projects keep their recorded version until an authorized migration.
 
-Run setup from the target project root. Later `rsp` examples assume the command is available; otherwise use `npx -y @oevery/rsp@latest <command>` with the same selected package.
+Run setup from the target project root. Later `rsp` examples denote the exact invocation in AGENTS and `.rsp/version`, or a verified matching executable. For a new project only, resolve stable metadata once:
 
 ## Initialize a project
 
 ```bash
-npx -y @oevery/rsp@latest init --with-project-setup
+npm view @oevery/rsp dist-tags.latest
+# Replace <version> with the inspected exact version.
+RSP_VERSION='<version>'
+npx -y @oevery/rsp@"$RSP_VERSION" init --with-project-setup
 ```
 
 This creates the `.rsp/` foundation, ensures the RSP entry in `AGENTS.md`, and creates `.rsp/changes/project-setup.md`. Fill that Change and `.rsp/specs/design.md`, then inspect the setup:
 
 ```bash
-npx -y @oevery/rsp@latest doctor
-npx -y @oevery/rsp@latest status
+npx -y @oevery/rsp@"$RSP_VERSION" skills install --dry-run
+npx -y @oevery/rsp@"$RSP_VERSION" skills install
+npx -y @oevery/rsp@"$RSP_VERSION" doctor
+npx -y @oevery/rsp@"$RSP_VERSION" status
 ```
 
 Confirm that `doctor` reports the intended setup and `status` shows the expected work. Neither result establishes semantic acceptance or grants further mutation authority.
@@ -52,13 +57,15 @@ Archive does not grant Git, publication, or deployment authority. Reinspect the 
 
 ## Install project Skills
 
-Preview and install the default Skills from the stable package you invoke. These `@latest` commands do not install the unreleased source candidate; see [Skill ownership and candidate migration](./guides/skills.md) before replacing any existing package-owned or customized tree:
+Skills are required, not an optional fallback. Preview and install the complete suite from the same exact package you selected. For an existing project, set `RSP_VERSION` to its recorded version rather than resolving stable metadata again. Registry commands do not install the unreleased source candidate; see [Skill ownership and candidate migration](./guides/skills.md) before replacing any existing package-owned or customized tree:
 
 ```bash
-npx -y @oevery/rsp@latest skills install --dry-run
-npx -y @oevery/rsp@latest skills install
+npx -y @oevery/rsp@"$RSP_VERSION" skills install --dry-run
+npx -y @oevery/rsp@"$RSP_VERSION" skills install
 ```
 
 The current source candidate installs all seven core Skills together and rejects individual named installs. Structural discovery is included in Review; it needs no separate Skill installation. Use the exact candidate CLI described in the migration guide rather than assuming the stable package has this behavior.
+
+The source candidate records `.rsp/version`, rejects a mismatched CLI and no longer generates Rules. See [pinned Skills migration](./guides/skills.md#pinned-skills-only-migration) for explicit upgrades and legacy removal. These source contracts are not proof of publication.
 
 Next, read [core concepts](./concepts.md) or follow the [daily workflow](./guides/daily-workflow.md).

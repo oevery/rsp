@@ -4,11 +4,12 @@ import { mkdir, readFile } from 'node:fs/promises'
 
 import { join } from 'node:path'
 import { generateChangeContent, generateDesignContent, upsertRspAgentsBlock } from '../core/artifacts.js'
-import { CHANGES_DIR, clearConfigCache, CONFIG_PATH, FOCUS_DIR, generateConfigTemplate, inspectRspConfig, PKG_ROOT, reconcileRspConfigDefaults, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
+import { CHANGES_DIR, clearConfigCache, CONFIG_PATH, FOCUS_DIR, generateConfigTemplate, inspectRspConfig, reconcileRspConfigDefaults, RSP_DIR } from '../core/config.js'
 import { ensureDecisionRecordsDirectory, resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { detectProjectName } from '../core/filesystem.js'
 import { withRspLock } from '../core/lock.js'
 import { ensureManagedFile, inspectManagedFile, requireManagedDirectory, writeManagedFile } from '../core/managed-path.js'
+import { readProjectVersion, selectProjectVersion, writeProjectVersion } from '../core/project-version.js'
 import { resolveFocusMarkerPath, resolveWorkRef } from '../core/work-ref.js'
 import { removeLegacyArchiveIndex } from './archive-index-migration.js'
 
@@ -49,6 +50,7 @@ export async function initProject(args: InitArgs = {}): Promise<InitProjectResul
     throw initialAgentsInspection.issue
 
   return withRspLock('init', async () => {
+    const version = await selectProjectVersion()
     const agentsInspection = inspectManagedFile(agentsPath, 'AGENTS.md', { allowMissing: true })
     if (agentsInspection.issue)
       throw agentsInspection.issue
@@ -77,9 +79,10 @@ export async function initProject(args: InitArgs = {}): Promise<InitProjectResul
       await mkdir(directory.path, { recursive: true })
 
     let created = false
-    const bundledRules = await readFile(join(PKG_ROOT, 'rules', 'rsp-rules.md'), 'utf-8')
-
-    created = (await ensureFile(RSP_RULES_PATH, bundledRules)) || created
+    if (await readProjectVersion() === null) {
+      await writeProjectVersion(version)
+      created = true
+    }
     if (existsSync(CONFIG_PATH)) {
       const existing = await readFile(CONFIG_PATH, 'utf-8')
       const reconciled = reconcileRspConfigDefaults(existing)
@@ -116,13 +119,13 @@ export async function initProject(args: InitArgs = {}): Promise<InitProjectResul
     let agentsUpdated = false
 
     if (!agentsInspection.exists) {
-      await writeManagedFile(agentsPath, `# ${title}\n\n${upsertRspAgentsBlock('').content}\n`, 'AGENTS.md')
+      await writeManagedFile(agentsPath, `# ${title}\n\n${upsertRspAgentsBlock('', version).content}\n`, 'AGENTS.md')
       created = true
       agentsUpdated = true
     }
     else {
       const existing = await readFile(agentsPath, 'utf-8')
-      const next = upsertRspAgentsBlock(existing)
+      const next = upsertRspAgentsBlock(existing, version)
       if (next.changed) {
         await writeManagedFile(agentsPath, next.content, 'AGENTS.md')
         created = true

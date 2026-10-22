@@ -3,7 +3,7 @@ import type { InitProjectResult } from '../../commands/init.js'
 import type { UpdateResult } from '../../commands/update.js'
 import { pc } from '../../core/config.js'
 
-const SKILL_REFRESH_HINT = '  Note: if you use package-bundled RSP Skills, refresh them too:\n    rsp skills install --dry-run\n    rsp skills install --force\n'
+const SKILL_REFRESH_HINT = '  Note: use the selected exact CLI to refresh the required Skill suite:\n    rsp skills install --dry-run\n    rsp skills install --force\n'
 
 export function presentAddSpec(result: AddSpecResult): void {
   if (!result.ok) {
@@ -23,10 +23,10 @@ export function presentInit(result: InitProjectResult): void {
   if (result.isNew) {
     const createdProjectSetup = result.withProjectSetup ? '\n           .rsp/changes/project-setup.md\n           .rsp/focus.d/project-setup' : ''
     const createdAgents = result.agentsUpdated ? '\n           AGENTS.md' : ''
-    const next = result.withProjectSetup ? 'fill .rsp/changes/project-setup.md' : 'rsp create project-setup'
+    const next = 'rsp skills install --dry-run; then rsp skills install'
     console.log(`
   ${pc.green('RSP scaffolded.')}\n`)
-    console.log(`  Created: .rsp/rsp-rules.md\n           .rsp/specs/\n           ${result.decisionRecordsPath}/\n           .rsp/changes/\n           .rsp/focus.d/\n           .rsp/archives/\n           .rsp/.gitignore\n           .rsp/config.yaml\n           .rsp/specs/design.md${createdProjectSetup}${createdAgents}\n`)
+    console.log(`  Created: .rsp/version\n           .rsp/specs/\n           ${result.decisionRecordsPath}/\n           .rsp/changes/\n           .rsp/focus.d/\n           .rsp/archives/\n           .rsp/.gitignore\n           .rsp/config.yaml\n           .rsp/specs/design.md${createdProjectSetup}${createdAgents}\n`)
     console.log(`  ${pc.cyan('Next:')} ${next}\n  ${pc.dim('Then:')} fill .rsp/specs/design.md\n  ${pc.dim('Also:')} rsp status  rsp check\n`)
   }
   else if (result.created) {
@@ -66,7 +66,7 @@ export function presentUpdate(result: UpdateResult): void {
     }
     else if (event.type === 'legacy-context-map') {
       console.log(`  ${pc.yellow('Note:')} CONTEXT-MAP.md remains; context migration needs owner review.`)
-      console.log(`  ${pc.dim('Use Core context migration (or the fallback). Keep relevant legacy context until an authorized merge updates CONTEXT.md and active references; update does not migrate or delete it.')}`)
+      console.log(`  ${pc.dim('Use Core context migration. Keep relevant legacy context until an authorized merge updates CONTEXT.md and active references; update does not migrate or delete it.')}`)
     }
     else if (event.type === 'specs-indexes-removed') {
       console.log(`  ${pc.green('✓')} generated Specs indexes removed`)

@@ -33,7 +33,7 @@ if __name__ == "__main__":
     if package.exists():
         shutil.rmtree(package)
     package.mkdir()
-    for name in ("bin", "dist", "rules", "skills"):
+    for name in ("bin", "dist", "skills"):
         shutil.copytree(ROOT / name, package / name)
     shutil.copy2(ROOT / "package.json", package / "package.json")
     shutil.copy2(ROOT / "pnpm-lock.yaml", package / "pnpm-lock.yaml")

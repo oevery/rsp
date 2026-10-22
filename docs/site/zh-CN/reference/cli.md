@@ -1,14 +1,15 @@
 # CLI 参考
 
-环境中已经可以直接调用 RSP 时使用 `rsp <command>`。接入和维护时通过 `npx -y @oevery/rsp@latest <command>` 调用当前稳定包。
+`rsp` 表示 AGENTS 与 `.rsp/version` 指定的精确 CLI 调用，或已核验相同版本的可执行文件，不表示 `@latest` 或任意全局安装。源码候选的迁移见[固定版本与 Skills](../guides/skills.md#固定版本与-skills-only-迁移)。
 
 ## 接入与 Skills
 
 ```text
 rsp init --agents-mode <mode>   搭建 .rsp/ 并确保 AGENTS.md 中有 RSP 入口
 rsp init --with-project-setup   同时创建 .rsp/changes/project-setup.md
-rsp update                      刷新受管项目文件，不更新随包 Skills
-rsp doctor [--fix]              检查接入健康；只修复安全且结果确定的问题
+rsp update [--adopt-version] [--remove-legacy-rules]
+                                刷新受管项目文件，不更新随包 Skills
+rsp doctor [--fix] [--check-updates]              检查接入健康；只修复安全且结果确定的问题
 rsp skills                      在双 TTY 中打开项目 Skill 管理器
 rsp skills list [--json]        列出随包 Skills 与精确安装状态
 rsp skills install [--dry-run] [--force]

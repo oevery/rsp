@@ -52,7 +52,7 @@ it('rejects an installed CLI terminated during an expected rejection', () => {
   try {
     const fixture = join(directory, 'package')
     mkdirSync(fixture)
-    for (const entry of ['package.json', 'bin', 'dist', 'rules', 'skills'])
+    for (const entry of ['package.json', 'bin', 'dist', 'skills'])
       cpSync(join(process.cwd(), entry), join(fixture, entry), { recursive: true })
     writeFileSync(join(fixture, 'bin/rsp.mjs'), `
 if (process.argv.slice(2).join(' ') === 'skills install rsp-review') {

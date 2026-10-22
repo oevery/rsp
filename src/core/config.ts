@@ -16,7 +16,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 export const PKG_ROOT = join(__dirname, '..')
 /** Project-local RSP state directory. */
 export const RSP_DIR = '.rsp'
-/** Canonical consumer path for the minimal tool-agnostic fallback protocol. */
+/** Retired fallback path; used only for explicit removal and diagnostics. */
 export const RSP_RULES_PATH = join(RSP_DIR, 'rsp-rules.md')
 /** Obsolete generated fallback path recognized only by migration diagnostics. */
 export const OBSOLETE_RSP_RULES_PATH = join(RSP_DIR, 'rules', 'rsp-rules.md')

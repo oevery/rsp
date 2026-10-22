@@ -16,6 +16,26 @@ Structural discovery is a conditional method of `rsp-review`. It examines an exp
 
 `rsp-doc` is installed with the complete suite and may be invoked directly. Use artifact lenses for README, CONTEXT, Spec, Change and guides; use the Skill branch for package creation or revision, and release communication for changelogs, release notes, migration or authorized document reconciliation. Review loads release checks only for reviewed release documents. Neither method controls publication or establishes release readiness. Local wording fixes and mechanical status/evidence updates remain direct when they need no whole-record reconciliation. Whole-Change convergence uses the artifact method when Doc is available, even when few lines change; already-converged text needs no rewrite. The maintainer-only `author-rsp-skills` adds local Change, provenance and evaluation requirements.
 
+## Pinned Skills-only migration
+
+The source candidate records an exact CLI version in `.rsp/version` and generates
+its invocation in AGENTS. Skill examples use `rsp` as shorthand for that selection,
+not `@latest`. An available update never authorizes a migration. Older published
+CLIs have no retrofitted guard; use a built candidate for source testing.
+
+For an authorized upgrade, preserve local changes and inspect one exact target.
+Run that target with `update --adopt-version`. Rules are retired: preserve needed
+content from `.rsp/rsp-rules.md` and `.rsp/rules/rsp-rules.md`, then explicitly add
+`--remove-legacy-rules` if those files remain. No fallback is generated; unrelated
+legacy files remain owner-controlled. Use the same exact CLI for the protected
+full-suite install below, then run `doctor` before resuming dependent agent work.
+Missing required Skills stop that work without fallback reading or implicit setup.
+
+`doctor` reports project pin and installed-tree drift. Only explicit
+`doctor --check-updates` checks stable registry metadata with a two-second timeout;
+unavailable metadata is informational. Ordinary commands stay offline. Restoring
+an older pin alone does not reverse an artifact migration or prove downgrade safety.
+
 ## Migrating the earlier Skill names
 
 Retired `rsp-structural-audit` and `rsp-codebase-audit` requests now belong to Review. Suite installation protects both old directories before forced removal; preserve needed custom guidance.

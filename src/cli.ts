@@ -5,6 +5,7 @@ import { supportsCompact } from './cli/capabilities.js'
 import { createRootCommand } from './cli/registry.js'
 import { installPackagedSkills, printSkillInstallResult } from './commands/skills.js'
 import { getVersion } from './core/config.js'
+import { guardProjectVersion } from './core/project-version.js'
 import { isInteractiveTerminal, shouldAutoLaunchUi, shouldLaunchSkillsUi, validateUiArgs } from './tui/route.js'
 
 function validateCompactInvocation(rawArgs: string[]): void {
@@ -34,6 +35,7 @@ function normalizeLegacyCreateOptions(rawArgs: string[]): { rawArgs: string[], d
 }
 
 export async function runCli(rawArgs = process.argv.slice(2)) {
+  await guardProjectVersion(rawArgs)
   const terminalEnvironment = {
     stdinTty: Boolean(process.stdin.isTTY),
     stdoutTty: Boolean(process.stdout.isTTY),
@@ -47,6 +49,8 @@ export async function runCli(rawArgs = process.argv.slice(2)) {
     const { runSkillsTui } = await import('./skills-tui/entry.js')
     const selection = await runSkillsTui(locale)
     if (selection.kind === 'confirmed') {
+      // Confirmation can outlive a project version change.
+      await guardProjectVersion(rawArgs)
       const result = await installPackagedSkills({ names: selection.names, force: selection.force })
       printSkillInstallResult(result)
     }

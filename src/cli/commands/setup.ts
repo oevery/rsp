@@ -68,14 +68,20 @@ const addCommand = defineCommand({
 const updateCommand = defineCommand({
   meta: {
     name: 'update',
-    description: 'Refresh RSP-managed project files after upgrade; does not update packaged Skills',
+    description: 'Refresh pinned project files; explicit options adopt another version or remove retired Rules',
   },
-  async run() {
+  args: {
+    'adopt-version': { type: 'boolean', description: 'Explicitly migrate the project pin to this running CLI version', default: false },
+    'remove-legacy-rules': { type: 'boolean', description: 'Delete the two retired fallback files after preserving custom content', default: false },
+  },
+  async run({ args }) {
+    if (args._.length > 0)
+      throw new Error('rsp update accepts no positional arguments; use --adopt-version=false or --remove-legacy-rules=false to disable a flag')
     await executeCliCommand({
-      execute: () => updateProject(),
+      execute: () => updateProject({ adoptVersion: Boolean(args['adopt-version']), removeLegacyRules: Boolean(args['remove-legacy-rules']) }),
       present: presentUpdate,
       exitCode: result => result.migration.inspectionComplete ? undefined : 1,
-    }, {})
+    }, args)
   },
 })
 

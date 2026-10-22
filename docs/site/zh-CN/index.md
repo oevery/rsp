@@ -31,4 +31,4 @@ features:
 - 选择 AI 智能体能力：阅读 [Skills 与受管工作](./guides/skills.md)。
 - 查询语法：打开 [CLI](./reference/cli.md) 或[配置](./reference/configuration.md)参考。
 
-RSP 的权威行为仍归属于随包 Skills、项目指令与后备规则；这些页面解释契约，但不替代它们。
+RSP 的权威行为仍归属于随包 Skills 与项目指令；这些页面解释契约，但不替代它们。

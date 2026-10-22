@@ -4,7 +4,7 @@ import { basename, join } from 'node:path'
 
 import { inspectChangeDocument } from '../core/change-document-inspection.js'
 import { resolveExecutableChange } from '../core/change-group.js'
-import { CHANGES_DIR, FOCUS_DIR, inspectRspConfig, resolveKinds, resolveRequiredSections, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
+import { CHANGES_DIR, FOCUS_DIR, inspectRspConfig, resolveKinds, resolveRequiredSections, RSP_DIR } from '../core/config.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
 import { CHANGE_DOCUMENT_SCHEMA, parseRspDocument } from '../core/document-model.js'
 import { cleanupEmptyParentDirs } from '../core/filesystem.js'
@@ -102,9 +102,8 @@ export async function archiveChange(name: string): Promise<ArchiveChangeResult> 
 }
 
 function inspectInitialization(): string | undefined {
-  const rules = inspectManagedFile(RSP_RULES_PATH, 'fallback protocol', { allowMissing: true })
   const design = inspectManagedFile(join(RSP_DIR, 'specs', 'design.md'), 'design Spec', { allowMissing: true })
-  if (!rules.issue && !design.issue && rules.exists && design.exists)
+  if (!design.issue && design.exists)
     return undefined
   const initialized = existsSync(RSP_DIR)
   return `${initialized ? 'RSP project requires an update' : 'RSP is not initialized in this project'}\n  ${initialized ? 'Run: rsp update' : 'Run: rsp init'}`

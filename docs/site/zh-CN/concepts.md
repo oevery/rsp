@@ -6,7 +6,7 @@ RSP 把未完成工作、持久化事实、长期理由、作用域指令和已�
 
 ```text
 .rsp/
-├── rsp-rules.md
+├── version
 ├── specs/
 │   ├── design.md
 │   └── decisions/
@@ -15,7 +15,7 @@ RSP 把未完成工作、持久化事实、长期理由、作用域指令和已�
 └── archives/
 ```
 
-- `.rsp/rsp-rules.md` 是生成的、与工具无关的后备协议；Skill 可用时优先使用 `rsp` Skill。
+- `.rsp/version` 固定精确的 CLI 软件包版本；Skills 是唯一工作流，缺少必需 Skill 时停止依赖工作，不读取已退役 Rules。
 - `.rsp/specs/` 保存当前有效的能力与协作契约、边界和必要约束，不是代码清单或未来计划。使用 `rsp specs` 可直接从可读 Markdown 派生当前树、查看一个精确文档，或执行有界字面搜索。
 - `.rsp/specs/decisions/` 是默认的权威 Decision Record 目录，保存长期理由、备选方案、权衡和后果。
 - `.rsp/changes/` 保存未完成工作。每个可执行 Change 都是单个 Markdown 文件。

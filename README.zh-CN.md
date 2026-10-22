@@ -4,7 +4,7 @@
 
 **面向人类与 AI 智能体的仓库原生工程工作流。**
 
-RSP 把模糊意图转化为经过塑造、实现、审查和验证的软件变更，同时让项目知识可持久化、工作可恢复。它使用普通仓库文件——规则、规格和计划——而不是隐藏的工作流状态。
+RSP 把模糊意图转化为经过塑造、实现、审查和验证的软件变更，同时让项目知识可持久化、工作可恢复。它使用普通仓库文件——Skills、规格和计划——而不是隐藏的工作流状态。
 
 ## RSP 帮助你完成什么
 
@@ -18,14 +18,19 @@ RSP 根据任务与证据选择下一项职责，不采用固定阶段流水线�
 
 ## 五分钟入门
 
-RSP 需要 Node.js 22（`>=22`），从目标项目根目录执行初始化。后续 `rsp` 示例要求该命令已可用；否则通过 `npx -y @oevery/rsp@latest <command>` 调用同一选定包。使用当前稳定版本：
+RSP 需要 Node.js 22（`>=22`），从目标项目根目录执行初始化。新项目只解析一次稳定版本，后续始终使用同一精确版本；已有项目使用 `.rsp/version` 和 AGENTS 中记录的版本，不重新解析 `latest`。后续 `rsp` 表示该精确调用或已核验版本一致的可执行文件：
 
 ```bash
-npx -y @oevery/rsp@latest init --with-project-setup
+npm view @oevery/rsp dist-tags.latest
+# 把 <version> 替换为已检查的精确版本。
+RSP_VERSION='<version>'
+npx -y @oevery/rsp@"$RSP_VERSION" init --with-project-setup
 # 填写 .rsp/changes/project-setup.md
 # 填写 .rsp/specs/design.md
-npx -y @oevery/rsp@latest doctor
-npx -y @oevery/rsp@latest status
+npx -y @oevery/rsp@"$RSP_VERSION" skills install --dry-run
+npx -y @oevery/rsp@"$RSP_VERSION" skills install
+npx -y @oevery/rsp@"$RSP_VERSION" doctor
+npx -y @oevery/rsp@"$RSP_VERSION" status
 ```
 
 然后创建并聚焦一个受跟踪变更：
@@ -46,7 +51,7 @@ Focus 是一个集合：project-setup 和 improve-login 可以同时聚焦。使
 
 ```text
 .rsp/
-├── rsp-rules.md       # 最小后备协议
+├── version            # 精确的 CLI 软件包版本
 ├── specs/             # 当前契约、边界与必要约束
 ├── changes/           # 未完成工作
 ├── focus.d/           # 工作选择标记；可附短恢复胶囊
@@ -82,8 +87,8 @@ pnpm docs:build
 
 ## 平台支持
 
-RSP 是与工具无关的文件约定，适用于任何能读取项目文件的助手或编辑器。人类从这里开始；AI 智能体遵循最近的 `AGENTS.md`，通过宿主 Skill discovery 或 `.agents/skills/rsp/SKILL.md` 加载可用的项目 Core，仅在 Skill 不可用时使用 `.rsp/rsp-rules.md` 后备协议。根目录 `skills/` 是 RSP 仓库中的分发源码，不是消费者的安装入口。
+RSP 是与工具无关的文件约定，适用于任何能读取项目文件的助手或编辑器。人类从这里开始；AI 智能体遵循最近的 `AGENTS.md`，通过宿主 Skill discovery 或 `.agents/skills/rsp/SKILL.md` 加载必需的项目 Core。缺少必需 Skill 时停止依赖工作，不再使用 Rules 后备协议。根目录 `skills/` 是 RSP 仓库中的分发源码，不是消费者的安装入口。
 
-当前源码候选使用 `rsp skills install` 整套安装七个核心 Skills，不支持单个安装。各能力可以直接调用，并按需读取 Core 的共享定义；结构审查已并入 Review。旧安装的保护性迁移见 [Skills 指南](docs/site/zh-CN/guides/skills.md)。
+当前源码候选固定项目精确版本、要求显式采用升级，并退役 Rules；参见[固定版本与 Skills 迁移](docs/migrations/pinned-skills.md)。这些源码行为不等于已经发布。它使用 `rsp skills install` 整套安装七个核心 Skills，不支持单个安装。各能力可以直接调用，并按需读取 Core 的共享定义；结构审查已并入 Review。旧安装的保护性迁移见 [Skills 指南](docs/site/zh-CN/guides/skills.md)。
 
 RSP 使用 [MIT 许可证](./LICENSE)。

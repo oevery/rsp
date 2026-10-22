@@ -73,7 +73,7 @@ For substantial authorized writeback, use `rsp-doc` when available. A partial or
 
 Create or update a Decision Record only for a hard-to-reverse or surprising choice with a real tradeoff. It owns rationale, alternatives, tradeoffs and consequences, not duplicated current facts. Choose one exact file under `durableReview.decisionRecordsPath`, not the directory itself.
 
-Never use generated indexes, archives, `.rsp/rsp-rules.md`, or the managed RSP block as ordinary writeback targets. Keep narrative history, debugging notes, task chronology, and transient evidence out of Specs and Decisions.
+Never use generated indexes, archives, or the managed RSP block as ordinary writeback targets. Keep narrative history, debugging notes, task chronology, and transient evidence out of Specs and Decisions.
 
 ## Prepare the Change for archive
 

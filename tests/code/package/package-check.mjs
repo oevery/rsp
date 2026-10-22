@@ -36,11 +36,10 @@ try {
     throw new Error(listing.stderr.trim() || 'tar listing failed')
 
   const files = listing.stdout.split('\n').filter(Boolean).map(path => path.replace(/^package\//, ''))
-  const forbidden = files.filter(path => /^(?:tests|evals|release)(?:\/|$)|^skills\/rsp-release-docs(?:\/|$)/u.test(path))
+  const forbidden = files.filter(path => /^(?:tests|evals|release)(?:\/|$)|^rules(?:\/|$)|^skills\/rsp-release-docs(?:\/|$)/u.test(path))
   const required = [
     'bin/rsp.mjs',
     'dist/cli.mjs',
-    'rules/rsp-rules.md',
     ...['rsp', 'rsp-shape', 'rsp-implement', 'rsp-verify', 'rsp-review', 'rsp-commit', 'rsp-doc']
       .map(name => `skills/${name}/SKILL.md`),
   ]

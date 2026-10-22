@@ -14,7 +14,8 @@ materials; historical versions do not redefine the current source contract.
 
 ### Authored sources and installation
 
-Bundled Rules and Skills are authored under `rules/` and `skills/`. Repository-local
+Bundled workflow Skills are authored under `skills/`. Rules are no longer shipped
+or generated; there is no alternate fallback protocol. Repository-local
 `.agents/skills/` includes discovery projections and maintainer-only packages;
 those maintenance capabilities are not part of the published inventory. The
 [Workflow contract](workflow.md#capability-ownership) owns the default capability set.
@@ -37,6 +38,12 @@ rsp-codebase-audit map to Review. Full-suite installation includes all recognize
 obsolete identities in protected migration. Partial named installation is rejected
 before mutation. Preserve customized obsolete content until explicit forced
 migration; rsp update does not refresh or remove installed Skills.
+
+Project setup records one exact CLI package version in `.rsp/version` and provides
+its exact invocation in the managed AGENTS entry. CLI and the complete Skill suite
+should be selected from that same package; doctor reports actual missing/divergent
+Skill trees rather than inferring consistency from a version string. This does not
+certify model compliance or turn source-candidate metadata into a published release.
 
 ### Skill package boundaries
 

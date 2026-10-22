@@ -3360,7 +3360,7 @@ source "$RSP_SCRIPT"
             root = Path(directory)
             home = root / "tests/skills"
             files = {}
-            for name in ("bin/rsp.mjs", "dist/cli.mjs", "rules/rsp-rules.md", "skills/rsp/SKILL.md",
+            for name in ("bin/rsp.mjs", "dist/cli.mjs", "skills/rsp/SKILL.md",
                          "package.json", "pnpm-lock.yaml"):
                 files[f"/opt/rsp-package/{name}"] = root / name
             for name in ("grade", "checks", "verifier", "workspace", "outputs"):

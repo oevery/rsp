@@ -1,6 +1,7 @@
 import type { IssueRelationship } from '../types.js'
 import { CHANGE_DOCUMENT_SCHEMA, renderDocumentSectionHeading, renderDocumentTitle } from './document-model.js'
 import { markdownTopLevelComments } from './markdown.mjs'
+import { exactInvocation } from './project-version.js'
 
 const RSP_AGENTS_BEGIN = '<!-- rsp:begin -->'
 const RSP_AGENTS_END = '<!-- rsp:end -->'
@@ -164,7 +165,7 @@ function changeSectionHeading(sectionId: typeof CHANGE_DOCUMENT_SCHEMA.sections[
 }
 
 /** Render the managed RSP block for AGENTS.md. */
-export function renderRspAgentsBlock(): string {
+export function renderRspAgentsBlock(version: string): string {
   return `${RSP_AGENTS_BEGIN}
 ## RSP Entry
 
@@ -172,19 +173,21 @@ RSP tracks current work, stable specs, and archives under \`.rsp/\`.
 
 Read in order using supplied or confirmed paths; discover only missing paths or applicable ancestor instructions, without overlapping whole-tree scans:
 1. Nearest \`AGENTS.md\` for project or module instructions.
-2. Root \`CONTEXT.md\` if present, then the relevant nearest \`CONTEXT.md\` for domain language, relationships, and navigation. If a legacy \`CONTEXT-MAP.md\` remains, retain its relevant context and use Core's context-migration branch (or the fallback); discovery alone does not authorize migration.
-3. Use the project \`rsp\` Skill at \`.agents/skills/rsp/SKILL.md\`; hosts may load it through Skill discovery or read it directly. Only when it is absent or cannot be used, read \`.rsp/rsp-rules.md\` as the fallback protocol.
+2. Root \`CONTEXT.md\` if present, then the relevant nearest \`CONTEXT.md\` for domain language, relationships, and navigation. If a legacy \`CONTEXT-MAP.md\` remains, retain its relevant context and use Core's context-migration branch; discovery alone does not authorize migration.
+3. Use the project \`rsp\` Skill at \`.agents/skills/rsp/SKILL.md\`; hosts may load it through Skill discovery or read it directly. Skills are the only workflow: if a required Skill is missing or unusable, stop dependent work and report the incomplete installation. Do not use retired Rules or install implicitly.
 4. \`.rsp/focus.d/\`; marker paths form the open-work candidate set, while optional bounded Markdown content is recovery guidance only. For grouped work read the sibling Group Brief, then the explicitly selected child Change.
 5. Only the relevant Specs and Decision Records under the configured authoritative path.
 
 If \`.rsp/focus.d/\` is empty or has several candidates, use an explicit WorkRef, the user's mentioned Change, or current status/dependency evidence to resolve the default action.
 Do not treat \`.rsp/specs/\` or \`.rsp/changes/\` as replacements for nearest \`AGENTS.md\` or \`CONTEXT.md\`.
+
+This project pins RSP \`${version}\` in \`.rsp/version\`. For every CLI operation use \`${exactInvocation(version)} <command>\` (or a verified executable of that exact version). Skill examples use \`rsp\` as shorthand for this selected invocation. Never substitute \`@latest\`, a version range, or an unverified global CLI. Package fetching requires authority; if unavailable, report the gap. Upgrade notices do not authorize \`update --adopt-version\` or Skill replacement.
 ${RSP_AGENTS_END}`
 }
 
 /** Update AGENTS.md with the managed RSP block while preserving user content. */
-export function upsertRspAgentsBlock(content: string): { content: string, changed: boolean } {
-  const block = renderRspAgentsBlock()
+export function upsertRspAgentsBlock(content: string, version: string): { content: string, changed: boolean } {
+  const block = renderRspAgentsBlock(version)
   const span = rspAgentsBlockSpan(content)
   if (span) {
     const next = content.slice(0, span.start) + block + content.slice(span.end)

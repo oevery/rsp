@@ -4,7 +4,7 @@ import { dirname } from 'node:path'
 
 import { generateChangeContent } from '../core/artifacts.js'
 import { resolveExecutableChange } from '../core/change-group.js'
-import { CHANGES_DIR, FOCUS_DIR, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
+import { CHANGES_DIR, FOCUS_DIR, RSP_DIR } from '../core/config.js'
 import { cleanupEmptyParentDirs } from '../core/filesystem.js'
 import { createIssueRelationship } from '../core/issue-relationship.js'
 import { withRspLock } from '../core/lock.js'
@@ -81,9 +81,8 @@ export type CreateChangeResult
     | { ok: false, kind: 'usage' | 'error', message: string, warning?: string }
 
 function inspectInitialization(): string | undefined {
-  const rules = inspectManagedFile(RSP_RULES_PATH, 'fallback protocol', { allowMissing: true })
   const design = inspectManagedFile(`${RSP_DIR}/specs/design.md`, 'design Spec', { allowMissing: true })
-  if (!rules.issue && !design.issue && rules.exists && design.exists)
+  if (!design.issue && design.exists)
     return undefined
   const initialized = existsSync(RSP_DIR)
   return `${initialized ? 'RSP project requires an update' : 'RSP is not initialized in this project'}\n  ${initialized ? 'Run: rsp update' : 'Run: rsp init'}`

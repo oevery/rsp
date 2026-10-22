@@ -31,4 +31,4 @@ features:
 - Choosing an agent capability? Read [Skills and managed work](./guides/skills.md).
 - Looking up syntax? Open the [CLI](./reference/cli.md) or [configuration](./reference/configuration.md) reference.
 
-RSP's authoritative behavior remains in the shipped Skills, project instructions, and fallback rules. These pages explain those contracts without replacing them.
+RSP's authoritative behavior remains in the shipped Skills and project instructions. These pages explain those contracts without replacing them.

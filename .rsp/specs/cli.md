@@ -49,6 +49,28 @@ defaults and language inheritance; optional `--compact` changes only presentatio
 Failure is nonzero with no successful summary. Status does not project these
 settings. Agent consumption belongs to [Workflow](workflow.md#methods-and-evidence).
 
+### Exact CLI selection
+
+Init records the running exact package version in `.rsp/version`; the managed
+AGENTS entry supplies that invocation. Ordinary CLI commands reject a different
+version before dispatch. Help, version, configuration and doctor remain available
+for diagnosis; the version flag exempts only a standalone version query, not a
+prefixed mutation. Skill manager confirmation rechecks the pin before installation.
+`doctor --fix` cannot bypass update selection checks. Only explicit
+`update --adopt-version` changes an existing pin. Update accepts no positional
+arguments: a detached boolean value fails before mutation rather than silently
+enabling adoption or deletion; explicit `--adopt-version=false` remains supported.
+Legacy unpinned projects can be
+inspected and establish their initial pin through authorized setup/update. Invalid
+or symlink pins fail closed; diagnostics report the issue without rewriting it.
+
+Doctor inspects the full installed Skill suite against the selected package. It
+reports missing or divergent trees without installing or replacing them. Explicit
+`doctor --check-updates` reads only public stable registry metadata, with a two-second
+timeout and no authentication forwarding. Unavailable metadata is informational;
+ordinary commands stay offline and update notices grant no mutation authority.
+No mechanism retrofits selection guards into an older published CLI.
+
 ### Managed artifacts and lifecycle
 
 Document inspection recognizes Markdown structure before applying RSP's canonical
@@ -103,8 +125,13 @@ snapshot/result observations and exact-delivery judgment; Git owns execution.
   metadata for its exact owning directory, after complete preflight and rollback-safe
   postchecks. Current `specs` queries read Markdown directly.
 - `doctor --fix` lists only actual mutations in `fixed`; an empty array means none.
-- `.rsp/rsp-rules.md` is the fallback when the published Skill is unavailable,
-  not another full workflow or project-rule owner.
+- Rules are retired: no initialization or repair generates a fallback. Skills are
+  the sole workflow. Explicit `update --remove-legacy-rules` removes only regular
+  files at `.rsp/rsp-rules.md` and `.rsp/rules/rsp-rules.md` after preflight and
+  under rollback protection. Preserve custom content before selecting removal;
+  unrelated `.rsp/rules/` entries remain owner-controlled. Incomplete legacy Rules
+  inspection blocks update before mutation; a later inspection failure triggers
+  rollback rather than adopting a new pin after a failed migration.
 
 ## Boundaries
 

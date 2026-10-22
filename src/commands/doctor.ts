@@ -6,14 +6,17 @@ import { basename, join, relative } from 'node:path'
 
 import { hasRspAgentsBlock } from '../core/artifacts.js'
 import { inspectChangeGroups } from '../core/change-group.js'
-import { clearConfigCache, inspectRspConfig, loadRspConfig, OBSOLETE_RSP_RULES_PATH, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
+import { clearConfigCache, getVersion, inspectRspConfig, loadRspConfig, OBSOLETE_RSP_RULES_PATH, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
 import { DEFAULT_DECISION_RECORDS_PATH, resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
 import { inspectUnsupportedRules, normalizeLogicalPath, walkMarkdownFiles } from '../core/filesystem.js'
 import { inspectManagedFile } from '../core/managed-path.js'
 import { toErrorMessage } from '../core/output.js'
+import { exactInvocation, readProjectVersion } from '../core/project-version.js'
+import { checkForUpdates } from '../core/update-check.js'
 import { GROUP_BRIEF_FILENAME, inspectArchiveTree, inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 import { inspectSpecs, specsInspectionComplete } from '../specs/query.js'
+import { inspectPackagedSkillInventory } from './skills.js'
 import { updateProject, UpdateTransactionError } from './update.js'
 
 export interface DoctorCheck {
@@ -37,6 +40,7 @@ export interface DoctorResult {
 
 export interface DoctorOptions {
   fix?: boolean
+  checkUpdates?: boolean
   testing?: UpdateOptions['testing']
 }
 
@@ -74,7 +78,20 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
 
   const designPath = join(RSP_DIR, 'specs', 'design.md')
   reportCheck(checks, '.rsp exists', existsSync(RSP_DIR), 'Run: rsp init')
-  reportFallbackProtocol(checks)
+  reportRetiredProtocol(checks)
+  await reportProjectRuntime(checks)
+  if (options.checkUpdates) {
+    const notice = await checkForUpdates(await getVersion())
+    checks.push({
+      status: 'info',
+      code: `update_${notice.status}`,
+      label: 'stable package update check',
+      message: notice.status === 'available'
+        ? `RSP ${notice.latest} is available; running ${notice.current}. Project selection is unchanged.`
+        : notice.status === 'current' ? `No newer stable package found for ${notice.current}.` : 'Update metadata is unavailable; local checks are unaffected.',
+      hint: notice.status === 'available' ? 'Inspect migration guidance and choose an exact target. Upgrade notices authorize no adoption or Skill replacement.' : undefined,
+    })
+  }
   await reportUnsupportedRules(checks, reportRuntime)
   reportCheck(checks, 'specs/design.md exists', existsSync(designPath), 'Run: rsp init')
 
@@ -85,7 +102,7 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
       code: 'legacy_context_map',
       label: 'legacy root context map detected',
       message: 'CONTEXT-MAP.md remains; its semantic migration requires owner review.',
-      hint: 'Use Core context migration (or the fallback). Retain relevant legacy context until an authorized merge updates CONTEXT.md and active references; doctor --fix does not migrate or delete it.',
+      hint: 'Use Core context migration. Retain relevant legacy context until an authorized merge updates CONTEXT.md and active references; doctor --fix does not migrate or delete it.',
     })
   }
   await checkSpecsTree(checks, reportRuntime)
@@ -110,36 +127,49 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
   return result
 }
 
-function reportFallbackProtocol(checks: DoctorCheck[]): void {
-  const canonical = inspectManagedFile(RSP_RULES_PATH, 'fallback protocol', { allowMissing: true })
-  const obsoleteExists = existsSync(OBSOLETE_RSP_RULES_PATH)
+async function reportProjectRuntime(checks: DoctorCheck[]): Promise<void> {
+  try {
+    const selected = await readProjectVersion()
+    const running = await getVersion()
+    checks.push({
+      status: selected === running ? 'ok' : 'issue',
+      code: 'project_cli_version',
+      label: 'project CLI version',
+      message: selected ? `Project pins ${selected}; running ${running}.` : 'Project has no exact CLI pin.',
+      hint: selected ? `Use ${exactInvocation(selected)} <command>; only an authorized migration uses update --adopt-version.` : 'Choose an exact CLI version, then run its update command.',
+    })
+  }
+  catch (error) {
+    checks.push({ status: 'issue', code: 'project_cli_version', label: 'project CLI version', message: toErrorMessage(error) })
+  }
+  try {
+    const inventory = await inspectPackagedSkillInventory()
+    const drift = inventory.skills.filter(skill => skill.status !== 'unchanged')
+    checks.push({
+      status: drift.length === 0 ? 'ok' : 'issue',
+      code: 'project_skill_suite',
+      label: 'project Skill suite matches running package',
+      message: drift.length > 0 ? drift.map(skill => `${skill.name}: ${skill.status}`).join(', ') : undefined,
+      hint: drift.length > 0 ? 'Inspect local customizations, then use the selected exact CLI: skills install --dry-run; explicit --force is required for replacement. No Rules fallback exists.' : undefined,
+    })
+  }
+  catch (error) {
+    checks.push({ status: 'issue', code: 'project_skill_suite', label: 'project Skill suite is inspectable', message: toErrorMessage(error) })
+  }
+}
 
-  if (canonical.issue) {
-    checks.push({
-      status: 'issue',
-      label: 'rsp-rules.md is a regular managed file',
-      message: canonical.issue.message,
-      hint: 'Replace the unsupported entry with a project-local regular file, then run: rsp update',
-    })
-  }
-  else if (canonical.exists) {
-    checks.push({ status: 'ok', label: 'rsp-rules.md exists' })
-  }
-  else if (!obsoleteExists) {
-    checks.push({
-      status: 'issue',
-      label: 'rsp-rules.md exists',
-      hint: existsSync(RSP_DIR) ? 'Run: rsp update' : 'Run: rsp init',
-    })
-  }
-
-  if (obsoleteExists) {
-    checks.push({
-      status: 'issue',
-      label: 'obsolete fallback protocol path detected',
-      message: 'obsolete fallback protocol path detected',
-      hint: 'Run: rsp update',
-    })
+function reportRetiredProtocol(checks: DoctorCheck[]): void {
+  for (const path of [RSP_RULES_PATH, OBSOLETE_RSP_RULES_PATH]) {
+    const inspection = inspectManagedFile(path, 'retired Rules file', { allowMissing: true })
+    if (inspection.issue || inspection.exists) {
+      checks.push({
+        status: 'issue',
+        code: 'retired_rules',
+        label: `retired Rules path: ${path}`,
+        message: inspection.issue?.message ?? 'Rules are no longer read or generated.',
+        hint: 'Preserve custom content and plan the complete Skill migration before update --remove-legacy-rules. Symlinks and special files require owner review.',
+      })
+    }
   }
 }
 

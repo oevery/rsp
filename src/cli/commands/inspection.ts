@@ -152,12 +152,17 @@ const doctorCommand = defineCommand({
   },
   args: {
     ...compactJsonArgs,
-    verbose: {
+    'verbose': {
       type: 'boolean',
       description: 'Print runtime diagnostics for suppressed I/O issues',
       default: false,
     },
-    fix: {
+    'check-updates': {
+      type: 'boolean',
+      description: 'Explicitly check stable registry metadata without upgrading; timeout is non-blocking',
+      default: false,
+    },
+    'fix': {
       type: 'boolean',
       description: 'Run safe deterministic repairs before reporting diagnostics',
       default: false,
@@ -165,7 +170,7 @@ const doctorCommand = defineCommand({
   },
   async run({ args }) {
     await executeCliCommand({
-      execute: () => runDoctor({ fix: Boolean(args.fix) }),
+      execute: () => runDoctor({ fix: Boolean(args.fix), checkUpdates: Boolean(args['check-updates']) }),
       present: result => presentDoctor(result, args),
       exitCode: result => result.ok ? undefined : 1,
     }, args)

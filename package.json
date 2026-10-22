@@ -29,7 +29,6 @@
   "files": [
     "bin/",
     "dist/",
-    "rules/",
     "skills/"
   ],
   "engines": {

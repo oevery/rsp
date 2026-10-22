@@ -27,6 +27,7 @@ function project(): string {
   const directory = mkdtempSync(join(tmpdir(), 'rsp-cli-contract-'))
   projects.push(directory)
   run(directory, 'init')
+  run(directory, 'skills', 'install')
   return directory
 }
 
@@ -334,7 +335,7 @@ describe('public CLI lifecycle', () => {
       'manage: {}\nworkflow:\n  delegation: auto\n',
     ]) {
       writeFileSync(config, invalid)
-      const beforeRules = readFileSync(join(directory, '.rsp/rsp-rules.md'), 'utf8')
+      const beforeVersion = readFileSync(join(directory, '.rsp/version'), 'utf8')
       const rejected = spawnSync(process.execPath, [cli, 'config', '--json'], { cwd: directory, encoding: 'utf8' })
       expect(rejected.status).not.toBe(0)
       expect(JSON.parse(rejected.stdout).ok).toBe(false)
@@ -343,7 +344,7 @@ describe('public CLI lifecycle', () => {
       const update = spawnSync(process.execPath, [cli, 'update'], { cwd: directory, encoding: 'utf8' })
       expect(update.status).not.toBe(0)
       expect(readFileSync(config, 'utf8')).toBe(invalid)
-      expect(readFileSync(join(directory, '.rsp/rsp-rules.md'), 'utf8')).toBe(beforeRules)
+      expect(readFileSync(join(directory, '.rsp/version'), 'utf8')).toBe(beforeVersion)
     }
     writeFileSync(config, 'workflow:\n  closeout: auto\n')
     completeChange(directory, 'keep-open')

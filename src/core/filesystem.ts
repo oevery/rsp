@@ -2,7 +2,7 @@ import type { RuntimeDiagnostic } from '../types.js'
 import { existsSync } from 'node:fs'
 import { readdir, readFile, rmdir } from 'node:fs/promises'
 import { basename, dirname, join, relative, sep } from 'node:path'
-import { OBSOLETE_RSP_RULES_PATH, pc, RSP_DIR, RSP_RULES_PATH } from './config.js'
+import { OBSOLETE_RSP_RULES_PATH, pc, RSP_DIR } from './config.js'
 import { inspectManagedFile } from './managed-path.js'
 import { toErrorMessage } from './output.js'
 
@@ -95,9 +95,8 @@ export function isValidSpecName(name: string): boolean {
 
 export function guardRspInitialized(): void {
   const designPath = join(RSP_DIR, 'specs', 'design.md')
-  const rules = inspectManagedFile(RSP_RULES_PATH, 'fallback protocol', { allowMissing: true })
   const design = inspectManagedFile(designPath, 'design Spec', { allowMissing: true })
-  if (rules.issue || design.issue || !rules.exists || !design.exists) {
+  if (design.issue || !design.exists) {
     const initialized = existsSync(RSP_DIR)
     console.error(`  ${pc.red('Error:')} ${initialized ? 'RSP project requires an update' : 'RSP is not initialized in this project'}`)
     console.error(`  ${pc.dim(initialized ? 'Run: rsp update' : 'Run: rsp init')}`)

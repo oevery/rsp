@@ -3,7 +3,7 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
 import { generateDesignContent, generateSpecContent } from '../core/artifacts.js'
-import { inspectRspConfig, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
+import { inspectRspConfig, RSP_DIR } from '../core/config.js'
 import { detectProjectName, isValidSpecName } from '../core/filesystem.js'
 import { withRspLock } from '../core/lock.js'
 import { inspectManagedFile, inspectManagedFileTree, resolveManagedDirectoryChain } from '../core/managed-path.js'
@@ -23,9 +23,8 @@ export async function addSpec(name: string, projectName = 'project'): Promise<Ad
   if (['index', '00-index'].includes(name.split('/').at(-1) || '')) {
     return { ok: false, message: 'spec name "index" is reserved for Specs migration compatibility' }
   }
-  const rules = inspectManagedFile(RSP_RULES_PATH, 'fallback protocol', { allowMissing: true })
   const design = inspectManagedFile(join(RSP_DIR, 'specs', 'design.md'), 'design Spec', { allowMissing: true })
-  if (rules.issue || design.issue || !rules.exists || !design.exists) {
+  if (design.issue || !design.exists) {
     const initialized = existsSync(RSP_DIR)
     return { ok: false, message: `${initialized ? 'RSP project requires an update' : 'RSP is not initialized in this project'}\n  ${initialized ? 'Run: rsp update' : 'Run: rsp init'}` }
   }

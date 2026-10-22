@@ -27,7 +27,7 @@ Writing quality is cross-cutting; it does not own lifecycle or delivery authorit
 ## Source navigation
 
 - `src/` and `bin/`: runtime domains, deterministic commands and presentation.
-- `rules/` and `skills/`: authored distribution assets;
+- `skills/`: authored workflow distribution assets;
   `.agents/skills/` also hosts local projections and maintainer-only capabilities.
 - `scripts/`: deterministic maintenance tools;
   [tests/README.md](tests/README.md) selects code, package and Skill evidence.

@@ -9,7 +9,7 @@ Host Project, tools and Git.
 
 RSP is **Reliable Software Practice**, a repository-native engineering workflow
 for humans and AI agents. Practice is the product promise, composable Skills
-supply the workflow, and Rules, Specs, Plans supply the lightweight file protocol.
+supply the workflow, and Specs and Plans supply the lightweight repository artifact model.
 The [identity decision](decisions/reliable-software-practice-identity.md) owns
 that naming rationale.
 

@@ -8,11 +8,12 @@ import { mkdir, readFile, rm, rmdir } from 'node:fs/promises'
 
 import { join } from 'node:path'
 import { upsertRspAgentsBlock } from '../core/artifacts.js'
-import { CHANGES_DIR, clearConfigCache, CONFIG_PATH, generateConfigTemplate, inspectRspConfig, OBSOLETE_RSP_RULES_PATH, PKG_ROOT, reconcileRspConfigDefaults, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
+import { CHANGES_DIR, clearConfigCache, CONFIG_PATH, generateConfigTemplate, inspectRspConfig, OBSOLETE_RSP_RULES_PATH, reconcileRspConfigDefaults, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
 import { ensureDecisionRecordsDirectory, resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { detectProjectName, inspectUnsupportedRules } from '../core/filesystem.js'
 import { withRspLock } from '../core/lock.js'
 import { ensureManagedFile, inspectManagedDirectory, inspectManagedFile, writeManagedFile } from '../core/managed-path.js'
+import { PROJECT_VERSION_PATH, readProjectVersion, selectProjectVersion, writeProjectVersion } from '../core/project-version.js'
 import { removeLegacyArchiveIndex } from './archive-index-migration.js'
 import {
   inspectGeneratedSpecsIndexMigration,
@@ -24,13 +25,14 @@ import {
 } from './update-transaction.js'
 
 export interface UpdateOptions {
+  adoptVersion?: boolean
+  removeLegacyRules?: boolean
   /** Retained for presentation-neutral doctor compatibility; operations never emit output. */
   quiet?: boolean
   /** Internal deterministic failure hooks used only by production-path tests. */
   testing?: {
     afterPreMutations?: () => Promise<void>
     afterSpecsMigration?: () => Promise<void>
-    packageRoot?: string
     rollback?: UpdateRollbackTestingHooks
   }
 }
@@ -70,7 +72,7 @@ export class UpdateTransactionError extends Error {
 
 /**
  * Refresh RSP project structure after upgrade:
- * - Update bundled rsp-rules.md
+ * - Record the explicitly selected package version and retire selected legacy files
  * - Refresh AGENTS.md managed block
  * - Remove only metadata-recognized generated Specs indexes
  */
@@ -86,6 +88,33 @@ export async function updateProject(options: UpdateOptions = {}): Promise<Update
   }
 
   return withRspLock('update', async () => {
+    const version = await selectProjectVersion(options.adoptVersion)
+    const legacyDirectory = inspectManagedDirectory(join(RSP_DIR, 'rules'), 'legacy Rules root', { allowMissing: true })
+    if (legacyDirectory.issue)
+      throw legacyDirectory.issue
+    const retiredFiles = [RSP_RULES_PATH, OBSOLETE_RSP_RULES_PATH].filter((path) => {
+      const inspection = inspectManagedFile(path, 'retired Rules file', { allowMissing: true })
+      if (inspection.issue)
+        throw inspection.issue
+      return inspection.exists
+    })
+    if (retiredFiles.length > 0 && !options.removeLegacyRules)
+      throw new Error(`Retired Rules files require explicit removal: ${retiredFiles.join(', ')}. Preserve any custom content, then run update --remove-legacy-rules. Skills are now the only workflow.`)
+    const rulesPreflight = await inspectUnsupportedRules()
+    if (rulesPreflight.diagnostics.length > 0) {
+      return {
+        ok: false,
+        actions: [],
+        updated: false,
+        events: [{ type: 'migration-diagnostics', diagnostics: rulesPreflight.diagnostics }],
+        migration: {
+          inspectionComplete: false,
+          manualMigrationRequired: rulesPreflight.directoryRemaining,
+          residualEntries: rulesPreflight.entries.map(entry => entry.path),
+          diagnostics: rulesPreflight.diagnostics,
+        },
+      }
+    }
     const agentsPath = 'AGENTS.md'
     const agentsInspection = inspectManagedFile(agentsPath, 'AGENTS.md', { allowMissing: true })
     if (agentsInspection.issue)
@@ -159,26 +188,12 @@ export async function updateProject(options: UpdateOptions = {}): Promise<Update
       if (archivesInspection.issue)
         throw archivesInspection.issue
 
-      const bundledRules = await readFile(join(options.testing?.packageRoot ?? PKG_ROOT, 'rules', 'rsp-rules.md'), 'utf-8')
-      const rulesInspection = inspectManagedFile(RSP_RULES_PATH, 'fallback protocol', { allowMissing: true })
-      if (rulesInspection.issue)
-        throw rulesInspection.issue
-      const existingRules = rulesInspection.exists ? await readFile(RSP_RULES_PATH, 'utf-8') : null
-      if (existingRules !== bundledRules) {
-        await rollbackJournal.capture(RSP_RULES_PATH)
-        await writeManagedFile(RSP_RULES_PATH, bundledRules, 'fallback protocol')
-        await rollbackJournal.mark(RSP_RULES_PATH)
-        actions.push('rsp-rules.md updated')
-        events.push({ type: 'updated', message: 'rsp-rules.md updated' })
-        updated = true
-      }
-
-      if (existsSync(OBSOLETE_RSP_RULES_PATH)) {
-        await rollbackJournal.capture(OBSOLETE_RSP_RULES_PATH)
-        await rm(OBSOLETE_RSP_RULES_PATH)
-        await rollbackJournal.mark(OBSOLETE_RSP_RULES_PATH)
-        actions.push('obsolete rules/rsp-rules.md removed')
-        events.push({ type: 'updated', message: 'obsolete rules/rsp-rules.md removed' })
+      for (const path of retiredFiles) {
+        await rollbackJournal.capture(path)
+        await rm(path)
+        await rollbackJournal.mark(path)
+        actions.push(`retired Rules file removed: ${path}`)
+        events.push({ type: 'updated', message: `retired Rules file removed: ${path}` })
         updated = true
       }
 
@@ -218,7 +233,7 @@ export async function updateProject(options: UpdateOptions = {}): Promise<Update
 
       const residualEntries = inspection.entries.map(entry => entry.path)
       if (inspection.diagnostics.length > 0)
-        events.push({ type: 'migration-diagnostics', diagnostics: inspection.diagnostics })
+        throw new Error(`Legacy Rules inspection became incomplete during update: ${inspection.diagnostics.map(diagnostic => `${diagnostic.path}: ${diagnostic.message}`).join('; ')}`)
       if (residualEntries.length > 0)
         events.push({ type: 'residual-rules', entries: residualEntries })
 
@@ -228,7 +243,7 @@ export async function updateProject(options: UpdateOptions = {}): Promise<Update
         : `# ${projectName}
 
 `
-      const nextAgents = upsertRspAgentsBlock(baseAgents)
+      const nextAgents = upsertRspAgentsBlock(baseAgents, version)
       if (!agentsInspection.exists || nextAgents.changed) {
         await rollbackJournal.capture(agentsPath)
         await writeManagedFile(agentsPath, nextAgents.content, 'AGENTS.md')
@@ -268,6 +283,15 @@ export async function updateProject(options: UpdateOptions = {}): Promise<Update
       if (removedSpecsIndexes.length > 0) {
         actions.push(`generated Specs indexes removed: ${removedSpecsIndexes.join(', ')}`)
         events.push({ type: 'specs-indexes-removed', paths: removedSpecsIndexes })
+        updated = true
+      }
+
+      if (await readProjectVersion() !== version) {
+        await rollbackJournal.capture(PROJECT_VERSION_PATH)
+        await writeProjectVersion(version)
+        await rollbackJournal.mark(PROJECT_VERSION_PATH)
+        actions.push(`project CLI pinned to ${version}`)
+        events.push({ type: 'updated', message: `project CLI pinned to ${version}` })
         updated = true
       }
 

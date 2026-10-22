@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { checkSkillPackage } from '../../../scripts/skill-package-check.mjs'
 
@@ -57,9 +57,10 @@ export function checkInstalledPackage(root, tarball, temporaryRoot) {
   writeFileSync(agents, `${readFileSync(agents, 'utf8')}\n## Local policy\nPreserve this user section.\n`)
   const note = join(project, '.rsp', 'specs', 'local.md')
   writeFileSync(note, 'User-owned fact.\n')
-  writeFileSync(join(project, '.rsp', 'rsp-rules.md'), 'Outdated generated fallback.\n')
+  if (existsSync(join(project, '.rsp', 'rsp-rules.md')))
+    throw new Error('Init generated a retired Rules fallback')
   run(['update'])
-  if (readFileSync(join(project, '.rsp', 'rsp-rules.md'), 'utf8') !== readFileSync(join(packageRoot, 'rules', 'rsp-rules.md'), 'utf8') || !readFileSync(agents, 'utf8').includes('Preserve this user section.') || readFileSync(note, 'utf8') !== 'User-owned fact.\n')
+  if (readFileSync(join(project, '.rsp', 'version'), 'utf8').trim() !== JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8')).version || !readFileSync(agents, 'utf8').includes('Preserve this user section.') || readFileSync(note, 'utf8') !== 'User-owned fact.\n')
     throw new Error('Project update failed to refresh managed content while preserving user content')
   return {
     cleanInstall: 'passed',

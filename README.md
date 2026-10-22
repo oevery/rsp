@@ -4,7 +4,7 @@ English | [简体中文](./README.zh-CN.md)
 
 **A repository-native engineering workflow for humans and AI agents.**
 
-RSP turns unclear intent into shaped, implemented, reviewed, and verified software changes while keeping project knowledge durable and work recoverable. It uses ordinary repository files—Rules, Specs, and Plans—rather than hidden workflow state.
+RSP turns unclear intent into shaped, implemented, reviewed, and verified software changes while keeping project knowledge durable and work recoverable. It uses ordinary repository files—Skills, Specs, and Plans—rather than hidden workflow state.
 
 ## What RSP helps you do
 
@@ -18,14 +18,19 @@ RSP selects the next responsibility from the task and evidence, not a fixed stag
 
 ## Five-minute start
 
-RSP requires Node.js 22 (`>=22`). Run setup from the target project root. Later `rsp` examples assume that command is available; otherwise invoke the same selected package through `npx -y @oevery/rsp@latest <command>`. Use the current stable release:
+RSP requires Node.js 22 (`>=22`). Run setup from the target project root. For a new project, resolve a stable version once and keep that exact selection. Existing projects use the version in `.rsp/version` and the generated AGENTS entry, not a fresh `latest` resolution. Later `rsp` examples denote that exact invocation or a verified matching executable:
 
 ```bash
-npx -y @oevery/rsp@latest init --with-project-setup
+npm view @oevery/rsp dist-tags.latest
+# Replace <version> with the inspected exact version.
+RSP_VERSION='<version>'
+npx -y @oevery/rsp@"$RSP_VERSION" init --with-project-setup
 # fill .rsp/changes/project-setup.md
 # fill .rsp/specs/design.md
-npx -y @oevery/rsp@latest doctor
-npx -y @oevery/rsp@latest status
+npx -y @oevery/rsp@"$RSP_VERSION" skills install --dry-run
+npx -y @oevery/rsp@"$RSP_VERSION" skills install
+npx -y @oevery/rsp@"$RSP_VERSION" doctor
+npx -y @oevery/rsp@"$RSP_VERSION" status
 ```
 
 Then create and focus one tracked change:
@@ -46,7 +51,7 @@ Confirm that `doctor` reports the intended setup and `status` shows the expected
 
 ```text
 .rsp/
-├── rsp-rules.md       # minimal fallback protocol
+├── version            # exact CLI package selection
 ├── specs/             # current contracts, boundaries, and constraints
 ├── changes/           # open work
 ├── focus.d/           # markers selecting work; optional short recovery capsules
@@ -82,8 +87,8 @@ The site is only a presentation layer over the Markdown in this repository. It a
 
 ## Platform support
 
-RSP is a tool-agnostic file convention and works with any assistant or editor that can read project files. Humans start here; agents follow the nearest `AGENTS.md`, load the project Core through host Skill discovery or `.agents/skills/rsp/SKILL.md` when available, and use `.rsp/rsp-rules.md` only when the Skill is unavailable. Root `skills/` contains authored sources in the RSP repository, not the consumer installation entry.
+RSP is a tool-agnostic file convention and works with any assistant or editor that can read project files. Humans start here; agents follow the nearest `AGENTS.md`, load the required project Core through host Skill discovery or `.agents/skills/rsp/SKILL.md`. Missing required Skills stop dependent work; there is no Rules fallback. Root `skills/` contains authored sources in the RSP repository, not the consumer installation entry.
 
-The current source candidate installs the seven core Skills together with `rsp skills install`. Individual named installs are unsupported; each capability may still be invoked directly and reads shared Core definitions on demand. Structural discovery is now a conditional method of Review. See the [Skill migration guide](docs/site/en/guides/skills.md) for protected upgrades from older installations.
+The current source candidate records exact project versions, requires explicit adoption for upgrades, and retires Rules; see the [pinned Skills migration](docs/migrations/pinned-skills.md). These source changes do not establish publication. It installs the seven core Skills together with `rsp skills install`. Individual named installs are unsupported; each capability may still be invoked directly and reads shared Core definitions on demand. Structural discovery is now a conditional method of Review. See the [Skill migration guide](docs/site/en/guides/skills.md) for protected upgrades from older installations.
 
 RSP is licensed under the [MIT License](./LICENSE).

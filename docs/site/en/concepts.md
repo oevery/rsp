@@ -6,7 +6,7 @@ RSP separates open work, durable truth, lasting rationale, scoped instructions, 
 
 ```text
 .rsp/
-├── rsp-rules.md
+├── version
 ├── specs/
 │   ├── design.md
 │   └── decisions/
@@ -15,7 +15,7 @@ RSP separates open work, durable truth, lasting rationale, scoped instructions, 
 └── archives/
 ```
 
-- `.rsp/rsp-rules.md` is the generated, tool-agnostic fallback protocol. Prefer the `rsp` Skill when it is available.
+- `.rsp/version` pins the exact CLI package version. Skills are the only workflow; missing required Skills stop dependent work rather than reading retired Rules.
 - `.rsp/specs/` stores current capability and collaboration contracts, boundaries, and necessary constraints, not code inventories or future plans. Use `rsp specs` to derive its current tree, inspect one exact document, or run bounded literal search directly from readable Markdown.
 - `.rsp/specs/decisions/` is the default authoritative Decision Record directory. It stores lasting rationale, alternatives, tradeoffs, and consequences.
 - `.rsp/changes/` stores open work. Each executable Change is one Markdown file.

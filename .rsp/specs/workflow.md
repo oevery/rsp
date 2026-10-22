@@ -11,8 +11,8 @@ selection and completion, not a fixed stage machine.
 
 Core owns the shared runtime work-model reference. Direct capabilities read it
 when tracked identities are needed and missing from context; no Core preflight is
-required. Core and fallback are alternative active protocols; audit inspection
-does not activate both. Use known paths and discover necessary context. Workers
+required. Skills are the only executable workflow. Missing or unusable required
+Skills stop dependent work; retired Rules provide no alternative protocol. Use known paths and discover necessary context. Workers
 inspect sources themselves. Status and configuration queries resolve needed facts;
 required dependency/recovery checks and fresh archive readiness remain binding.
 
