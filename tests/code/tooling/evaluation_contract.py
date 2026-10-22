@@ -881,18 +881,26 @@ class EvaluationContract(unittest.TestCase):
             self.assertIsNone(session_usage(logs)["total"])
 
     def test_partial_score_is_not_full_score_acceptance(self):
+        from rewardkit.models import Score
+        from rewardkit.reward import aggregate_scores
+
         with tempfile.TemporaryDirectory() as directory:
             job = Path(directory)
             trial = job / "trial"
             trial.mkdir()
             for score, status in ((0.5, "failed"), (1.0, "passed")):
-                (trial / "result.json").write_text(json.dumps({
-                    "task_name": "task", "agent_info": {"name": "codex"},
-                    "verifier_result": {"rewards": {"reward": score}},
-                }))
-                counts = evaluate.report(job)
-                self.assertEqual(counts, {status: 1})
-                self.assertEqual(evaluate.exit_status(job, counts), 0 if score == 1 else 1)
+                for aggregation in (None, "all-pass", "any-pass", "required-pass", "threshold"):
+                    with self.subTest(score=score, aggregation=aggregation):
+                        reward = score if aggregation is None else aggregate_scores(
+                            [Score(name="correctness", value=score, raw=score)], aggregation, threshold=1,
+                        )
+                        (trial / "result.json").write_text(json.dumps({
+                            "task_name": "task", "agent_info": {"name": "codex"},
+                            "verifier_result": {"rewards": {"reward": reward}},
+                        }))
+                        counts = evaluate.report(job)
+                        self.assertEqual(counts, {status: 1})
+                        self.assertEqual(evaluate.exit_status(job, counts), 0 if score == 1 else 1)
 
     def test_calibration_never_claims_semantic_acceptance(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -934,7 +942,7 @@ class EvaluationContract(unittest.TestCase):
             (source / "result.json").unlink()
             self.assertEqual(evaluate.verdict(current, result), "unscored")
 
-    def test_check_rejects_unsafe_native_reward_aggregations(self):
+    def test_check_preserves_calibrated_reward_aggregation_policy(self):
         with tempfile.TemporaryDirectory() as directory:
             task = Path(directory)
             (task / "tests").mkdir()
@@ -951,7 +959,7 @@ class EvaluationContract(unittest.TestCase):
             for config in configurations:
                 with self.subTest(config=config):
                     reward.write_text(config)
-                    with self.assertRaisesRegex(ValueError, "positive-score aggregation"):
+                    with self.assertRaisesRegex(ValueError, "calibrated full-score policy"):
                         evaluate.check([task])
             reward.write_text('[scoring.checks]\naggregation="threshold"\nthreshold=1\n')
             evaluate.check([task])

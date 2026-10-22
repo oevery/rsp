@@ -15,7 +15,7 @@ Root mise.toml selects Node and pnpm major lines and Python and uv minor lines. 
 
 - `mise exec -- pnpm test` builds and runs observable CLI/domain/TUI, package installation and maintenance-tool checks under `tests/code/`.
 - After building, `mise exec -- pnpm test:pack` checks an isolated installed package. Without `TARBALL` it packs once; an absolute `TARBALL` selects the existing candidate directly. The regression suite checks this path without allowing a replacement pack and verifies unchanged archive bytes.
-- `mise exec -- uv sync --project tests/skills --frozen` installs Harbor 0.24.0 and harbor-rewardkit 0.2.2. Then `mise exec -- uv run --project tests/skills python tests/skills/evaluate.py check` validates native task schemas offline, without containers or models. See [Skill evaluation](skills/README.md) for task selection, calibration and separately authorized execution.
+- `mise exec -- uv sync --project tests/skills --frozen` installs Harbor 0.24.0 and harbor-rewardkit 0.2.3. Then `mise exec -- uv run --project tests/skills python tests/skills/evaluate.py check` validates native task schemas offline, without containers or models. See [Skill evaluation](skills/README.md) for task selection, calibration and separately authorized execution.
 
 For targeted CLI checks, build first: `mise exec -- pnpm run build && mise exec -- pnpm exec vitest run --no-file-parallelism tests/code/integration/cli-lifecycle.test.ts`. The `test:code` entry does not refresh CLI artifacts; appending `-- path` to that package script does not reliably restrict Vitest selection, so use the direct command for a focused run. Skill prose and reading patterns are not code-test assertions; parsed metadata and resource closure remain package contracts.
 

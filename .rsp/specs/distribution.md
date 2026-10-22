@@ -74,7 +74,7 @@ or independent Skill dependency manager is introduced.
 
 There are two verification lanes: observable code/package/tooling checks under
 `tests/code/` and native Harbor 0.24.0 task/job evaluation with harbor-rewardkit
-0.2.2 under `tests/skills/`. Package release aggregates local checks and offline
+0.2.3 under `tests/skills/`. Package release aggregates local checks and offline
 native task schema validation only; it never automatically starts agents or paid
 judges. Native job configuration selects agent skills and execution settings.
 Task environments and verifiers cover individual capabilities and natural

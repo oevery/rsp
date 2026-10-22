@@ -62,7 +62,7 @@ def check(selected):
             else:
                 continue
             if any(normalize_aggregation(item.aggregation) in ("all-pass", "required-pass") for item in scoring):
-                raise ValueError(f"Uncalibrated positive-score aggregation: {file}")
+                raise ValueError(f"Aggregation outside the calibrated full-score policy: {file}")
         subprocess.run(["bash", "-n", path / "tests/test.sh"], check=True)
     calibration_samples(selected)
     JobConfig.model_validate(yaml.safe_load((HOME / "jobs/default.yaml").read_text()))

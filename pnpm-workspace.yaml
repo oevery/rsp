@@ -1,11 +1,10 @@
-shellEmulator: true
-
+minimumReleaseAgeExcludePrune: true
 trustPolicy: no-downgrade
+trustPolicyIgnoreAfter: 10080
+shellEmulator: true
 
 packages:
   - .
-
-trustPolicyIgnoreAfter: 10080
 
 allowBuilds:
   esbuild: false

@@ -120,10 +120,17 @@ function scopeNavigation(scope: DashboardScope, messages: TuiMessages, width: nu
   return truncateDisplay(`${messages.title}  ${navigation}`, width)
 }
 
+function terminalDimensions(stdout: NodeJS.WritableStream) {
+  return {
+    width: 'columns' in stdout && typeof stdout.columns === 'number' ? stdout.columns : 80,
+    height: 'rows' in stdout && typeof stdout.rows === 'number' ? stdout.rows : 24,
+  }
+}
+
 export function DashboardApp({ initialDimensions, initialSnapshot, inspectHistory, inspectHistoryDetail, inspectHistoryDocument, inspectStatus, messages, specsSource, workSource }: DashboardAppProps) {
   const { exit } = useApp()
   const { stdout } = useStdout()
-  const dimensions = initialDimensions ?? { width: stdout.columns ?? 80, height: stdout.rows ?? 24 }
+  const dimensions = initialDimensions ?? terminalDimensions(stdout)
   const [state, dispatch] = useReducer(reduceDashboard, initialDashboardState(initialSnapshot, dimensions))
   const filterRefs = useRef<Record<DashboardScope, string>>({ work: '', specs: '', history: '' })
   const refreshing = useRef(false)
@@ -358,7 +365,7 @@ export function DashboardApp({ initialDimensions, initialSnapshot, inspectHistor
   }, [detailDocumentState, inspectHistoryDocument, selected, state.scope, workSource])
 
   useEffect(() => {
-    const resize = () => dispatch({ type: 'resize', width: stdout.columns ?? 80, height: stdout.rows ?? 24 })
+    const resize = () => dispatch({ type: 'resize', ...terminalDimensions(stdout) })
     stdout.on('resize', resize)
     return () => {
       stdout.off('resize', resize)
