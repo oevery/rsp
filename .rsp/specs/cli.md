@@ -21,7 +21,7 @@ Inspection derives current state without creating another workflow store.
 | `history` | Bounded archive query with date, kind, group, WorkRef and summary filters |
 | `specs` | Current Markdown tree, exact detail and bounded literal search |
 | `config` | Read-only validated effective settings |
-| `doctor` | Diagnostics and separately selected safe repair |
+| `doctor` | Read-only project and managed-asset diagnostics |
 
 Plain output is the default semantic view for humans and agents. JSON is the exact
 machine projection; [TUI](tui.md) is interactive presentation. `status`, `show`,
@@ -51,21 +51,21 @@ settings. Agent consumption belongs to [Workflow](workflow.md#methods-and-eviden
 
 ### Exact CLI selection
 
-Init records the running exact package version in `.rsp/version`; the managed
-AGENTS entry supplies that invocation. Ordinary CLI commands reject a different
-version before dispatch. Help, version, configuration and doctor remain available
-for diagnosis; the version flag exempts only a standalone version query, not a
-prefixed mutation. Skill manager confirmation rechecks the pin before installation.
-`doctor --fix` cannot bypass update selection checks. Only explicit
-`update --adopt-version` changes an existing pin. Update accepts no positional
-arguments: a detached boolean value fails before mutation rather than silently
-enabling adoption or deletion; explicit `--adopt-version=false` remains supported.
-Legacy unpinned projects can be
-inspected and establish their initial pin through authorized setup/update. Invalid
-or symlink pins fail closed; diagnostics report the issue without rewriting it.
+Init records the running exact package version and installs the complete core
+suite. The managed AGENTS entry supplies its ordinary invocation. Ordinary commands
+reject a different version before dispatch; help, standalone version queries,
+configuration and doctor remain available for diagnosis.
+
+Only an explicitly selected target's update reconciles the complete environment
+and changes the pin. Update accepts only optional --dry-run, not adoption, removal
+or force switches or positional arguments. Preview makes no writes. Repeated init
+does not adopt another version. Downgrades and invalid/symlink pins fail closed.
+Projects with retired Rules use authorized update. Init creates only missing
+scaffolding and supports same-target retry after partial setup; existing user files
+are not rewritten. Update does not recreate missing user directories or config.
 
 Doctor inspects the full installed Skill suite against the selected package. It
-reports missing or divergent trees without installing or replacing them. Explicit
+reports missing/divergent trees and known retired names without changing files. Explicit
 `doctor --check-updates` reads only public stable registry metadata, with a two-second
 timeout and no authentication forwarding. Unavailable metadata is informational;
 ordinary commands stay offline and update notices grant no mutation authority.
@@ -118,20 +118,28 @@ snapshot/result observations and exact-delivery judgment; Git owns execution.
   These are writing aids, not an enforced schema or a reason to rewrite existing Specs.
 - Entry reads root/relevant CONTEXT for language and navigation. Context and
   legacy-map ownership remains with the project; `update` reports a root legacy map
-  and `doctor` reports non-blocking `legacy_context_map` even with `--fix`.
+  and `doctor` reports non-blocking `legacy_context_map`.
   Neither command merges, retires or certifies its semantic migration.
-- `init` and `add spec` create no generated Spec index. `update` and `doctor --fix`
-  remove only reserved root `INDEX.md` or `00-index.md` carrying recognized generated
-  metadata for its exact owning directory, after complete preflight and rollback-safe
-  postchecks. Current `specs` queries read Markdown directly.
-- `doctor --fix` lists only actual mutations in `fixed`; an empty array means none.
-- Rules are retired: no initialization or repair generates a fallback. Skills are
-  the sole workflow. Explicit `update --remove-legacy-rules` removes only regular
-  files at `.rsp/rsp-rules.md` and `.rsp/rules/rsp-rules.md` after preflight and
-  under rollback protection. Preserve custom content before selecting removal;
-  unrelated `.rsp/rules/` entries remain owner-controlled. Incomplete legacy Rules
-  inspection blocks update before mutation; a later inspection failure triggers
-  rollback rather than adopting a new pin after a failed migration.
+- Init and add spec create no generated index. Update preflights the entire Specs
+  tree, then deletes only indexes with exact generated ownership metadata. User
+  reserved indexes stop preflight. No quarantine or restoration is performed.
+- Seven named core Skill installation directories and exact retired Skills/Rules
+  are package-owned. Replace divergent trees completely and remove retired names;
+  preserve unknown Skills and canonical maintainer source links. Other managed
+  symlinks and unsupported entries fail validation.
+- User config, Specs, Changes, Archives, Decision Records, Focus and CONTEXT remain
+  untouched by update, except for recognized generated indexes. No missing user
+  scaffold is repaired. Config defaults apply at read time, not by rewriting YAML.
+- Init creates missing user scaffolding without overwriting existing files. Both
+  commands refresh only the managed AGENTS block and publish the version last.
+- Diagnostics distinguish missing scaffolding from access and path-type errors.
+  Missing user content may be restored or scaffolded with init; update is not a
+  user-directory repair. Access and type errors require owner correction.
+- Commands use the project lock and prepare new content before replacement. Failure
+  stops with completed-step information, without whole-update rollback, recovery
+  copies or a recovery command. Correct the cause and rerun the same target CLI;
+  partial managed changes are repeatable. Concurrent external edits and crash-atomic
+  recovery are unsupported.
 
 ## Boundaries
 

@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { getVersion, RSP_DIR } from './config.js'
-import { inspectManagedDirectory, inspectManagedFile, writeManagedFile } from './managed-path.js'
+import { inspectManagedDirectory, inspectManagedFile } from './managed-path.js'
 
 export const PROJECT_VERSION_PATH = '.rsp/version'
 
@@ -33,25 +33,54 @@ export async function readProjectVersion(projectRoot = '.'): Promise<string | nu
   return version
 }
 
-export async function selectProjectVersion(adopt = false): Promise<string> {
+export async function selectProjectVersion(operation: 'ordinary' | 'update' = 'ordinary'): Promise<string> {
   const version = await getVersion()
   exactInvocation(version)
   const selected = await readProjectVersion()
-  if (selected && selected !== version && !adopt) {
-    throw new Error(`Project pins RSP ${selected}; running CLI is ${version}. Use ${exactInvocation(selected)} <command>. To migrate deliberately, inspect the target version and run ${exactInvocation(version)} update --adopt-version.`)
+  if (selected && selected !== version && operation !== 'update') {
+    throw new Error(`Project pins RSP ${selected}; running CLI is ${version}. Use ${exactInvocation(selected)} <command>. To migrate deliberately, inspect the target version and run ${exactInvocation(version)} update.`)
   }
+  if (selected && operation === 'update' && compareVersions(version, selected) < 0)
+    throw new Error(`Downgrading RSP from ${selected} to ${version} is unsupported. Use ${exactInvocation(selected)} <command>.`)
   return version
 }
 
-export async function writeProjectVersion(version: string): Promise<void> {
-  exactInvocation(version)
-  await writeManagedFile(PROJECT_VERSION_PATH, `${version}\n`, 'project CLI version')
+/** SemVer precedence; build metadata does not change upgrade direction. */
+export function compareVersions(left: string, right: string): number {
+  const parts = (value: string) => {
+    const [core, ...pre] = value.split('+', 1)[0]!.split('-')
+    return { core: core!.split('.').map(BigInt), pre: pre.length ? pre.join('-').split('.') : [] }
+  }
+  const a = parts(left)
+  const b = parts(right)
+  for (let i = 0; i < 3; i++) {
+    if (a.core[i] !== b.core[i])
+      return a.core[i]! > b.core[i]! ? 1 : -1
+  }
+  if (!a.pre.length || !b.pre.length)
+    return Number(!a.pre.length) - Number(!b.pre.length)
+  for (let i = 0; i < Math.max(a.pre.length, b.pre.length); i++) {
+    const x = a.pre[i]
+    const y = b.pre[i]
+    if (x === y)
+      continue
+    if (x === undefined || y === undefined)
+      return x === undefined ? -1 : 1
+    const nx = /^\d+$/.test(x)
+    const ny = /^\d+$/.test(y)
+    if (nx && ny)
+      return BigInt(x) > BigInt(y) ? 1 : -1
+    if (nx !== ny)
+      return nx ? -1 : 1
+    return x > y ? 1 : -1
+  }
+  return 0
 }
 
 export async function guardProjectVersion(rawArgs: string[]): Promise<void> {
   if (rawArgs.some(arg => ['--help', '-h'].includes(arg)) || (rawArgs.length === 1 && ['--version', '-v'].includes(rawArgs[0]!)))
     return
-  // Diagnostics must explain drift; update checks its own adoption flag inside the lock.
+  // Diagnostics must explain drift; update selects its target inside the project lock.
   if (['doctor', 'config', 'update'].includes(rawArgs[0] ?? ''))
     return
   await selectProjectVersion()

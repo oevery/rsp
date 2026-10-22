@@ -26,7 +26,7 @@ Stable scoped workflow and validation instructions belong in the nearest project
 
 Root and local `CONTEXT.md` files share one model: canonical vocabulary, domain relationships, and navigation. Create them only when useful; root context links to local owners instead of copying their definitions. `CONTEXT-MAP.md` is a migration input, not a separate model. An authorized migration preserves its meaning in CONTEXT files and updates references before retiring the map; `rsp update` never performs that semantic migration or deletes project context. README remains the introduction and usage entry, not another full specification.
 
-Ordinary entry keeps legacy context discoverable and selects Core's context-migration branch only when a map is found or migration is requested. Until authorized migration, use relevant legacy content without blocking unrelated tasks; resolve conflicting definitions before dependent work. `rsp update` and `rsp doctor` report a root legacy map as guidance, even if CONTEXT already exists. `doctor --fix` does not merge or retire either file. Core owns reconciliation and retirement gates; Doc supplies substantial writing within that authority.
+Ordinary entry keeps legacy context discoverable and selects Core's context-migration branch only when a map is found or migration is requested. Until authorized migration, use relevant legacy content without blocking unrelated tasks; resolve conflicting definitions before dependent work. `rsp update` and `rsp doctor` report a root legacy map as guidance, even if CONTEXT already exists. `update` does not merge or retire either file. Core owns reconciliation and retirement gates; Doc supplies substantial writing within that authority.
 
 ## Spec writing scaffold
 
@@ -34,7 +34,7 @@ New domain Specs start with Purpose, Boundaries, Contracts, Scenarios, and Const
 
 This is a default scaffold, not a required schema. Plain-prose HTML hints may remain or be removed; they do not fill placeholders or provide requirements or evidence. Keep material decisions and limitations visible outside comments. Put test results in the Change and significant rationale in a Decision Record. Prefer contracts that survive replaceable internals, and resolve Spec/code discrepancies rather than automatically documenting the implementation as correct. Update existing Specs when their meaning changes, not merely to normalize headings; historical Changes remain untouched.
 
-Direct Specs queries are read-only and service-independent. They identify Decision Records separately, return checkout and source-path attribution, and never make a query result authoritative over the source file. Fresh initialization and Spec creation generate no Specs indexes. During compatibility migration, `rsp update` and `rsp doctor --fix` remove only metadata-recognized reserved indexes after complete preflight and direct-query postcheck; owner-controlled reserved content fails closed and is preserved.
+Direct Specs queries are read-only and service-independent. They identify Decision Records separately, return checkout and source-path attribution, and never make a query result authoritative over the source file. Fresh initialization and Spec creation generate no Specs indexes. During compatibility migration, `rsp update` deletes only metadata-recognized reserved indexes after preflight and an ownership check; owner-controlled reserved content fails closed and is preserved. Partial deletion is not rolled back; retry the same target after fixing a failure.
 
 ## Repository-native operation
 

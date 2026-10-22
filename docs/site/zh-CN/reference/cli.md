@@ -5,26 +5,21 @@
 ## 接入与 Skills
 
 ```text
-rsp init --agents-mode <mode>   搭建 .rsp/ 并确保 AGENTS.md 中有 RSP 入口
-rsp init --with-project-setup   同时创建 .rsp/changes/project-setup.md
-rsp update [--adopt-version] [--remove-legacy-rules]
-                                刷新受管项目文件，不更新随包 Skills
-rsp doctor [--fix] [--check-updates]              检查接入健康；只修复安全且结果确定的问题
-rsp skills                      在双 TTY 中打开项目 Skill 管理器
-rsp skills list [--json]        列出随包 Skills 与精确安装状态
-rsp skills install [--dry-run] [--force]
-                                安装完整的七个核心 Skills
+rsp init --agents-mode <mode>   创建项目文件和完整核心套件
+rsp init --with-project-setup   同时创建 project-setup Change
+rsp update [--dry-run]          统一更新项目文件、Skills 和版本记录
+rsp doctor [--check-updates]    只读诊断；显式检查稳定版本元数据
+rsp skills list [--json]        查看套件差异和已知退役名称
 ```
 
-`rsp update` 不刷新已安装的包自有 Skills。先用 `rsp skills list` 检查包与精确目标状态，再用 `rsp skills install --dry-run` 预检。内容不一致的已选 Skill 树或已识别的过时包自有标识需要显式 `--force`；强制替换前检查定制树，确认需要保留的内容可恢复，已有包含这些内容的 Git 提交即可，不必再备份。未知 Skills 不作为迁移目标。
+使用选定目标的 update 完成升级；普通命令继续使用项目记录的精确版本。重复 init 不采用新版本，不支持降级。独立 skills install、安装终端及 doctor --fix 已退役。
 
-激活失败会触发已识别替换／移除的回滚。回滚不完整时，命令会报告保留的恢复位置；先检查实际安装树与备份，再决定是否重试或清理。静默升级安全不因此得到保证。尚未发布的源码候选如何映射旧名称，见 [Skills 与受管工作](../guides/skills.md)；`@latest` 仍调用已发布包，不代表这个候选。
+更新替换明确列出的核心 Skills，移除已知旧名称和两处退役 Rules，只刷新 AGENTS 的受管块。更新前自行保存受管资产中需要的定制内容；未知 Skills、用户配置、项目知识及 AGENTS 其他部分保留。可选 --dry-run 预览无需 force，也不会写入。
 
-`rsp doctor --fix` 只报告真实的文件系统修改；健康项目会返回 `fixed: []`，并说明无需安全修复。
+失败停止，不回滚已完成步骤，也不生成恢复副本；排除原因后用同一目标 CLI 重跑。update 不改写 config、不修复用户目录，版本最后写入，不支持崩溃恢复。诊断不授予修改权限；候选职责映射见 [Skills 指南](../guides/skills.md)。
+缺失的用户脚手架可自行恢复，或用 init 创建默认内容；权限及路径类型错误应由用户纠正，update 不修复这些路径。
 
-在生成索引兼容迁移中，`rsp update` 只会移除根 `.rsp/specs/INDEX.md`，或任意 `.rsp/specs/**/00-index.md` 中元数据明确标识为 RSP 生成 Specs 索引、且 `source_dir` 与所在目录精确一致的文件。它会在修改前预检全部候选；如果迁移后的直接 Specs 检查失败，则回滚所有隔离文件。项目自有、不可读或被并发替换的保留路径会让 update 停止，不覆盖也不删除内容。全新初始化与 `rsp add spec` 永远不会创建生成索引。
-
-除非显式使用 `--fix`，`rsp doctor` 始终只读。它会报告接入和文件系统问题，包括仍需 `rsp update` 的可识别索引，并且不会创建隐藏工作流状态。
+生成索引兼容迁移只移除根 INDEX.md 或任意 00-index.md 中带有精确生成元数据的 Specs 索引。预检和所有权检查保护用户内容；全新初始化与 add spec 不生成索引。Doctor 始终只读，报告需要 update 的问题。
 
 ## Specs 与工作创建
 

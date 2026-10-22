@@ -16,13 +16,10 @@ npx -y @oevery/rsp@"$RSP_VERSION" init --with-project-setup
 This creates the `.rsp/` foundation, ensures the RSP entry in `AGENTS.md`, and creates `.rsp/changes/project-setup.md`. Fill that Change and `.rsp/specs/design.md`, then inspect the setup:
 
 ```bash
-npx -y @oevery/rsp@"$RSP_VERSION" skills install --dry-run
-npx -y @oevery/rsp@"$RSP_VERSION" skills install
-npx -y @oevery/rsp@"$RSP_VERSION" doctor
 npx -y @oevery/rsp@"$RSP_VERSION" status
 ```
 
-Confirm that `doctor` reports the intended setup and `status` shows the expected work. Neither result establishes semantic acceptance or grants further mutation authority.
+Confirm that `status` shows the expected work; use read-only `doctor` when diagnosing setup. Neither result establishes semantic acceptance or grants further mutation authority.
 
 Use `init --agents-mode print` when you need RSP to print the resulting `AGENTS.md` content as well as initialize the project. RSP owns only the block between `<!-- rsp:begin -->` and `<!-- rsp:end -->`; surrounding project instructions remain project-owned.
 
@@ -55,17 +52,20 @@ When no Change is focused and the user has not supplied a concrete task, ask wha
 
 Archive does not grant Git, publication, or deployment authority. Reinspect the worktree and obtain those permissions separately.
 
-## Install project Skills
+## Update the project
 
-Skills are required, not an optional fallback. Preview and install the complete suite from the same exact package you selected. For an existing project, set `RSP_VERSION` to its recorded version rather than resolving stable metadata again. Registry commands do not install the unreleased source candidate; see [Skill ownership and candidate migration](./guides/skills.md) before replacing any existing package-owned or customized tree:
+Init installs all seven core Skills. To update, preserve needed custom content in
+managed assets, select one exact target, then run that target's update command:
 
 ```bash
-npx -y @oevery/rsp@"$RSP_VERSION" skills install --dry-run
-npx -y @oevery/rsp@"$RSP_VERSION" skills install
+npx -y @oevery/rsp@"$RSP_VERSION" update
 ```
 
-The current source candidate installs all seven core Skills together and rejects individual named installs. Structural discovery is included in Review; it needs no separate Skill installation. Use the exact candidate CLI described in the migration guide rather than assuming the stable package has this behavior.
-
-The source candidate records `.rsp/version`, rejects a mismatched CLI and no longer generates Rules. See [pinned Skills migration](./guides/skills.md#pinned-skills-only-migration) for explicit upgrades and legacy removal. These source contracts are not proof of publication.
+Here RSP_VERSION is the deliberately selected target, not a freshly resolved tag
+on each operation. Optional update --dry-run previews without writes. No separate
+Skill install, adoption or removal steps are needed. Unknown Skills, user
+configuration and project knowledge remain untouched; local changes inside managed
+Skills are replaced. See [migration details](./guides/skills.md#pinned-skills-only-migration).
+These are source-candidate contracts, not proof of publication.
 
 Next, read [core concepts](./concepts.md) or follow the [daily workflow](./guides/daily-workflow.md).

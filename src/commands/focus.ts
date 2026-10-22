@@ -5,11 +5,11 @@ import { mkdir, open, rename, unlink } from 'node:fs/promises'
 import { basename, dirname, join } from 'node:path'
 
 import { resolveExecutableChange } from '../core/change-group.js'
-import { FOCUS_DIR, MAX_FOCUS_CAPSULE_BYTES, RSP_DIR } from '../core/config.js'
-import { cleanupEmptyParentDirs } from '../core/filesystem.js'
+import { FOCUS_DIR, MAX_FOCUS_CAPSULE_BYTES } from '../core/config.js'
+import { cleanupEmptyParentDirs, inspectRspInitialization as inspectInitialization } from '../core/filesystem.js'
 import { inspectFocusCapsuleBytes } from '../core/focus-capsule.js'
 import { withRspLock } from '../core/lock.js'
-import { ensureManagedFile, inspectManagedFile, requireManagedFile } from '../core/managed-path.js'
+import { ensureManagedFile, requireManagedFile } from '../core/managed-path.js'
 import { resolveFocusMarkerPath, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 
 interface FocusOptions {
@@ -138,12 +138,4 @@ function workRefFailure(error: unknown): FocusResult {
     return { ok: false, kind: 'error', message: error.message }
   }
   throw error
-}
-
-function inspectInitialization(): string | undefined {
-  const design = inspectManagedFile(`${RSP_DIR}/specs/design.md`, 'design Spec', { allowMissing: true })
-  if (!design.issue && design.exists)
-    return undefined
-  const initialized = existsSync(RSP_DIR)
-  return `${initialized ? 'RSP project requires an update' : 'RSP is not initialized in this project'}\n  ${initialized ? 'Run: rsp update' : 'Run: rsp init'}`
 }

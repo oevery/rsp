@@ -15,7 +15,7 @@ Read in order using supplied or confirmed paths; discover only missing paths or 
 If `.rsp/focus.d/` is empty or has several candidates, use an explicit WorkRef, the user's mentioned Change, or current status/dependency evidence to resolve the default action.
 Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENTS.md` or `CONTEXT.md`.
 
-This project pins RSP `3.3.0` in `.rsp/version`. For every CLI operation use `npx -y @oevery/rsp@3.3.0 <command>` (or a verified executable of that exact version). Skill examples use `rsp` as shorthand for this selected invocation. Never substitute `@latest`, a version range, or an unverified global CLI. Package fetching requires authority; if unavailable, report the gap. Upgrade notices do not authorize `update --adopt-version` or Skill replacement.
+This project pins RSP `3.3.0` in `.rsp/version`. For every CLI operation use `npx -y @oevery/rsp@3.3.0 <command>` (or a verified executable of that exact version). Skill examples use `rsp` as shorthand for this selected invocation. Never substitute `@latest`, a version range, or an unverified global CLI. Package fetching requires authority; if unavailable, report the gap. Only an authorized upgrade uses a deliberately selected target CLI with `update`; it updates the complete managed environment. Notices grant no upgrade authority.
 <!-- rsp:end -->
 
 ## Project Development

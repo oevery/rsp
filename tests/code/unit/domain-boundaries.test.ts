@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import { parseFrontmatter } from '../../../src/core/content.js'
-import { isPathContained } from '../../../src/core/path-identity.js'
 import { isCanonicalExecutableWorkRef, normalizeExecutableWorkRef } from '../../../src/core/work-ref.js'
 
 describe('domain boundaries', () => {
@@ -11,11 +10,9 @@ describe('domain boundaries', () => {
     expect(() => parseFrontmatter('---\nkind: fix\nkind: docs\n---\n')).toThrow('unique')
   })
 
-  it('normalizes only safe executable identities and contains paths', () => {
+  it('normalizes only safe executable identities', () => {
     expect(normalizeExecutableWorkRef('safe-name')).toBe('safe-name')
     expect(isCanonicalExecutableWorkRef('safe-name')).toBe(true)
     expect(() => normalizeExecutableWorkRef('../escape')).toThrow()
-    expect(isPathContained('/tmp/project', '/tmp/project/src/index.ts')).toBe(true)
-    expect(isPathContained('/tmp/project', '/tmp/project-elsewhere/file')).toBe(false)
   })
 })

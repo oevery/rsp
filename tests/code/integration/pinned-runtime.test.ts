@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process'
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -9,176 +9,280 @@ const root = fileURLToPath(new URL('../../..', import.meta.url))
 const cli = join(root, 'dist/cli.mjs')
 const version = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version as string
 const projects: string[] = []
-
 afterEach(() => {
   for (const path of projects.splice(0))
     rmSync(path, { recursive: true, force: true })
 })
-
+function fresh() {
+  const path = mkdtempSync(join(tmpdir(), 'rsp-ownership-'))
+  projects.push(path)
+  return path
+}
 function run(project: string, ...args: string[]) {
   return spawnSync(process.execPath, [cli, ...args], { cwd: project, encoding: 'utf8' })
 }
-
 function project() {
-  const directory = mkdtempSync(join(tmpdir(), 'rsp-pinned-runtime-'))
-  projects.push(directory)
-  expect(run(directory, 'init').status).toBe(0)
-  return directory
+  const path = fresh()
+  expect(run(path, 'init').status).toBe(0)
+  return path
+}
+function read(project: string, path: string) {
+  return readFileSync(join(project, path), 'utf8')
+}
+function write(project: string, path: string, content: string) {
+  writeFileSync(join(project, path), content)
+}
+function fail(project: string, command: string, scenario: string, ...args: string[]) {
+  return spawnSync(process.execPath, ['--import', join(root, 'tests/code/fixtures/setup-failure.mjs'), cli, command, ...args], { cwd: project, encoding: 'utf8', env: { ...process.env, RSP_TEST_FAILURE: scenario } })
+}
+function generated(name: string) {
+  return `---\nkind: generated-index\nindex_type: specs\nsource_dir: .rsp/specs\n---\n${name}`
 }
 
-describe('pinned Skills-only runtime', () => {
-  it('pins setup, generates an exact invocation and diagnoses missing or divergent Skills', () => {
-    const directory = project()
-    expect(readFileSync(join(directory, '.rsp/version'), 'utf8')).toBe(`${version}\n`)
-    expect(readFileSync(join(directory, 'AGENTS.md'), 'utf8')).toContain(`npx -y @oevery/rsp@${version} <command>`)
-    expect(existsSync(join(directory, '.rsp/rsp-rules.md'))).toBe(false)
-    const missing = JSON.parse(run(directory, 'doctor', '--json').stdout)
-    expect(missing.checks).toContainEqual(expect.objectContaining({ code: 'project_skill_suite', status: 'issue' }))
-    expect(run(directory, 'skills', 'install').status).toBe(0)
-    const installed = JSON.parse(run(directory, 'doctor', '--json').stdout)
-    expect(installed.checks).toContainEqual(expect.objectContaining({ code: 'project_skill_suite', status: 'ok' }))
-    const skill = join(directory, '.agents/skills/rsp/SKILL.md')
-    writeFileSync(skill, `${readFileSync(skill, 'utf8')}\nLocal customization.\n`)
-    const drift = JSON.parse(run(directory, 'doctor', '--fix', '--json').stdout)
-    expect(drift.checks).toContainEqual(expect.objectContaining({ code: 'project_skill_suite', status: 'issue', message: 'rsp: divergent' }))
-    expect(readFileSync(skill, 'utf8')).toContain('Local customization.')
+describe('ownership-based setup', () => {
+  it.each(['.rsp/specs/decisions', 'docs/adr'])('guides missing Decision Records to explicit scaffold creation (%s)', (directory) => {
+    const path = project()
+    const config = `kinds: []\ndecisions:\n  path: ${directory}\n`
+    write(path, '.rsp/config.yaml', config)
+    rmSync(join(path, '.rsp/specs/decisions'), { recursive: true })
+    const result = run(path, 'doctor', '--json')
+    expect(result.status).not.toBe(0)
+    const check = JSON.parse(result.stdout).checks.find((item: { label: string }) => item.label === `${directory} is the authoritative Decision Record directory`)
+    expect(check.message).toContain('directory is missing')
+    expect(check.hint).toContain('run rsp init')
+    expect(check.hint).not.toContain('Run: rsp update')
+    expect(run(path, 'update').status).toBe(0)
+    expect(existsSync(join(path, directory))).toBe(false)
+    expect(run(path, 'init').status).toBe(0)
+    expect(existsSync(join(path, directory))).toBe(true)
+    expect(read(path, '.rsp/config.yaml')).toBe(config)
+    expect(JSON.parse(run(path, 'doctor', '--json').stdout).ok).toBe(true)
   })
 
-  it('rejects mismatched ordinary commands and repair without mutation, then adopts explicitly', () => {
-    const directory = project()
-    const pin = join(directory, '.rsp/version')
-    const agents = readFileSync(join(directory, 'AGENTS.md'), 'utf8')
-    writeFileSync(pin, '1.0.0\n')
-    for (const args of [['create', 'unsafe'], ['--version', 'create', 'unsafe'], ['-v', 'create', 'unsafe'], ['init'], ['update'], ['update', '--adopt-version=false'], ['update', '--no-adopt-version'], ['skills', 'install']]) {
-      const rejected = run(directory, ...args)
-      expect(rejected.status).not.toBe(0)
-      expect(rejected.stderr).toContain('Project pins RSP 1.0.0')
-      expect(readFileSync(pin, 'utf8')).toBe('1.0.0\n')
-      expect(readFileSync(join(directory, 'AGENTS.md'), 'utf8')).toBe(agents)
-    }
-    expect(existsSync(join(directory, '.rsp/changes/unsafe.md'))).toBe(false)
-    const diagnostics = JSON.parse(run(directory, 'doctor', '--fix', '--json').stdout)
-    expect(diagnostics.ok).toBe(false)
-    expect(readFileSync(pin, 'utf8')).toBe('1.0.0\n')
-    for (const flag of ['--version', '-v'])
-      expect(run(directory, flag).stdout).toContain(version)
-    expect(run(directory, '--help').status).toBe(0)
-    expect(run(directory, 'config', '--json').status).toBe(0)
-    expect(run(directory, 'update', '--adopt-version').status).toBe(0)
-    expect(readFileSync(pin, 'utf8')).toBe(`${version}\n`)
-    expect(run(directory, 'create', 'safe', 'Use selected CLI', '--kind', 'fix').status).toBe(0)
+  it.each(['decision-permissions', 'agents-permissions'])('reports access failures without suggesting scaffold recreation (%s)', (scenario) => {
+    const path = project()
+    const target = scenario === 'decision-permissions' ? '.rsp/specs/decisions/.gitkeep' : 'AGENTS.md'
+    const before = read(path, target)
+    const result = fail(path, 'doctor', scenario, '--json')
+    expect(result.stderr).toContain(`failure-injected:${scenario}`)
+    expect(result.status).not.toBe(0)
+    const diagnostic = JSON.parse(result.stdout)
+    const check = diagnostic.checks.find((item: { label: string }) => item.label === (scenario === 'decision-permissions' ? '.rsp/specs/decisions is the authoritative Decision Record directory' : 'AGENTS.md contains managed RSP block'))
+    expect(check.message).not.toContain('missing')
+    expect(check.hint).toContain('permissions')
+    expect(check.hint).not.toMatch(/Run: rsp|run rsp init|recreate/)
+    expect(diagnostic.runtime.some((item: { message: string }) => item.message.includes('EACCES'))).toBe(true)
+    expect(read(path, target)).toBe(before)
+    expect(JSON.parse(run(path, 'doctor', '--json').stdout).ok).toBe(true)
   })
 
-  it.skipIf(process.platform === 'win32')('rejects a pin changed while the real Skills terminal waits for confirmation', () => {
-    const directory = project()
-    const result = spawnSync('python3', [join(root, 'tests/code/fixtures/pinned-skills-terminal.py'), cli, directory], { encoding: 'utf8', timeout: 15000 })
-    expect(result.status, result.stderr).toBe(0)
-    expect(JSON.parse(result.stdout)).toEqual({ ready: true, status: 1, installed: false })
-    expect(readFileSync(join(directory, '.rsp/version'), 'utf8')).toBe('1.0.0\n')
-  }, 20000)
+  it('preserves a non-directory Decision Record entry and reports its type', () => {
+    const path = project()
+    rmSync(join(path, '.rsp/specs/decisions'), { recursive: true })
+    write(path, '.rsp/specs/decisions', 'User file')
+    const result = run(path, 'doctor', '--json')
+    expect(result.status).not.toBe(0)
+    const check = JSON.parse(result.stdout).checks.find((item: { label: string }) => item.label === '.rsp/specs/decisions is the authoritative Decision Record directory')
+    expect(check.message).toContain('must be a directory')
+    expect(check.hint).not.toMatch(/Run: rsp|run rsp init/)
+    expect(read(path, '.rsp/specs/decisions')).toBe('User file')
+  })
 
-  it('rejects positional boolean values without adopting a version or deleting Rules', () => {
-    const directory = project()
-    const pin = join(directory, '.rsp/version')
-    const fallback = join(directory, '.rsp/rsp-rules.md')
-    const agents = join(directory, 'AGENTS.md')
-    writeFileSync(pin, '1.0.0\n')
-    writeFileSync(fallback, 'Keep customized fallback.\n')
-    const files = [pin, fallback, agents]
-    const before = files.map(path => readFileSync(path, 'utf8'))
+  it('gives consistent missing-design guidance across ordinary entrypoints', () => {
+    const path = project()
+    rmSync(join(path, '.rsp/specs/design.md'))
     for (const args of [
-      ['update', '--adopt-version', 'false', '--remove-legacy-rules'],
-      ['update', '--adopt-version', '--remove-legacy-rules', 'false'],
+      ['create', 'example'],
+      ['add', 'spec', 'example'],
+      ['archive', 'example'],
+      ['focus', 'example'],
+      ['unfocus', 'example'],
+      ['reopen', 'example', '--reason', 'Review'],
+      ['group', 'create', 'example'],
+      ['group', 'close', 'example'],
+      ['group', 'reopen', 'example', '--reason', 'Review'],
+      ['specs'],
+      ['show', 'example'],
+      ['ready', 'example'],
+      ['history'],
+      ['doctor'],
     ]) {
-      expect(run(directory, ...args).status).not.toBe(0)
-      expect(files.map(path => readFileSync(path, 'utf8'))).toEqual(before)
+      const result = run(path, ...args)
+      expect(result.status, args.join(' ')).not.toBe(0)
+      expect(`${result.stdout}${result.stderr}`, args.join(' ')).toContain('Restore your design file, or run rsp init')
+    }
+    expect(existsSync(join(path, '.rsp/specs/design.md'))).toBe(false)
+    expect(run(path, 'init').status).toBe(0)
+    expect(JSON.parse(run(path, 'doctor', '--json').stdout).ok).toBe(true)
+  })
+
+  it.each(['create', 'specs', 'doctor'])('does not misclassify inaccessible design as missing (%s)', (command) => {
+    const path = project()
+    const before = read(path, '.rsp/specs/design.md')
+    const result = fail(path, command, 'design-permissions', ...(command === 'create' ? ['example'] : []))
+    expect(result.stderr).toContain('failure-injected:design-permissions')
+    expect(result.status).not.toBe(0)
+    expect(`${result.stdout}${result.stderr}`).toContain('EACCES')
+    expect(`${result.stdout}${result.stderr}`).not.toContain('Restore your design file')
+    expect(read(path, '.rsp/specs/design.md')).toBe(before)
+  })
+
+  it('creates a complete setup and leaves existing user files unchanged on repeated init', () => {
+    const path = project()
+    expect(JSON.parse(run(path, 'doctor', '--json').stdout).ok).toBe(true)
+    write(path, '.rsp/config.yaml', '# User config\nkinds: []\n')
+    write(path, '.rsp/specs/design.md', 'User design')
+    expect(run(path, 'init').status).toBe(0)
+    expect(read(path, '.rsp/config.yaml')).toBe('# User config\nkinds: []\n')
+    expect(read(path, '.rsp/specs/design.md')).toBe('User design')
+    expect(JSON.parse(run(path, 'config', '--json').stdout).workflow).toEqual({ delegation: 'off', closeout: 'ask' })
+    expect(run(path, 'init').stdout).toContain('nothing changed')
+  })
+
+  it('previews and updates only owned assets while preserving user content', () => {
+    const path = project()
+    write(path, '.rsp/version', '1.0.0\n')
+    write(path, '.rsp/config.yaml', '# User config\nkinds: []\n')
+    write(path, 'AGENTS.md', '# User policy\n\nOutside the managed block.\n')
+    write(path, '.agents/skills/rsp/SKILL.md', 'Old Skill')
+    write(path, '.agents/skills/rsp/.obsolete', 'Stale hidden content')
+    mkdirSync(join(path, '.agents/skills/custom'))
+    write(path, '.agents/skills/custom/SKILL.md', 'User Skill')
+    mkdirSync(join(path, '.rsp/rules'))
+    write(path, '.rsp/rules/rsp-rules.md', 'Retired managed Rules')
+    write(path, '.rsp/rsp-rules.md', 'Retired root Rules')
+    write(path, '.rsp/rules/custom.md', 'User Rules')
+    write(path, '.rsp/specs/INDEX.md', generated('Old generated index'))
+    write(path, '.rsp/archives/INDEX.md', 'User archive index')
+    write(path, '.rsp/changes/.gitkeep', 'User placeholder')
+    const preserved = ['.rsp/config.yaml', '.rsp/specs/design.md', '.rsp/archives/INDEX.md', '.rsp/changes/.gitkeep', '.rsp/focus.d/.gitkeep', '.rsp/rules/custom.md', '.agents/skills/custom/SKILL.md']
+    const before = preserved.map(file => read(path, file))
+    expect(run(path, 'update', '--dry-run').status).toBe(0)
+    expect(read(path, '.rsp/version')).toBe('1.0.0\n')
+    expect(read(path, '.agents/skills/rsp/SKILL.md')).toBe('Old Skill')
+    expect(run(path, 'update').status).toBe(0)
+    expect(preserved.map(file => read(path, file))).toEqual(before)
+    expect(read(path, 'AGENTS.md')).toContain('Outside the managed block.')
+    expect(read(path, '.agents/skills/rsp/SKILL.md')).toBe(read(root, 'skills/rsp/SKILL.md'))
+    for (const file of ['.rsp/rsp-rules.md', '.rsp/rules/rsp-rules.md', '.rsp/specs/INDEX.md', '.agents/skills/rsp/.obsolete']) expect(existsSync(join(path, file))).toBe(false)
+    expect(read(path, '.rsp/version')).toBe(`${version}\n`)
+    expect(run(path, 'update').stdout).toContain('up to date')
+  })
+
+  it('does not recreate missing user directories or config during update', () => {
+    const path = project()
+    const missing = ['.rsp/changes', '.rsp/focus.d', '.rsp/archives', '.rsp/specs/decisions', '.rsp/config.yaml']
+    for (const file of missing) rmSync(join(path, file), { recursive: true })
+    expect(run(path, 'update', '--dry-run').status).toBe(0)
+    expect(run(path, 'update').status).toBe(0)
+    for (const file of missing) expect(existsSync(join(path, file))).toBe(false)
+    expect(JSON.parse(run(path, 'config', '--json').stdout).workflow).toEqual({ delegation: 'off', closeout: 'ask' })
+  })
+
+  it.each(['skill', 'index', 'agents', 'pin'])('stops without rollback and converges on same-target retry (%s)', (scenario) => {
+    const path = project()
+    write(path, '.rsp/version', '1.0.0\n')
+    write(path, '.rsp/config.yaml', '# Keep exact bytes\nkinds: []\n')
+    write(path, 'AGENTS.md', '# User policy\n')
+    write(path, '.agents/skills/rsp/SKILL.md', 'Old Skill')
+    write(path, '.agents/skills/rsp-review/SKILL.md', 'Old Review Skill')
+    for (const name of ['00-index.md', 'INDEX.md']) write(path, `.rsp/specs/${name}`, generated(name))
+    const result = fail(path, 'update', scenario)
+    expect(result.stderr).toContain(`failure-injected:${scenario}`)
+    expect(result.status).not.toBe(0)
+    expect(result.stderr).toContain('No rollback was attempted')
+    expect(read(path, '.rsp/version')).toBe('1.0.0\n')
+    expect(read(path, '.rsp/config.yaml')).toBe('# Keep exact bytes\nkinds: []\n')
+    if (scenario === 'agents')
+      expect(read(path, 'AGENTS.md')).toBe('# User policy\n')
+    expect(read(path, '.agents/skills/rsp/SKILL.md')).toBe(read(root, 'skills/rsp/SKILL.md'))
+    if (scenario === 'index')
+      expect(existsSync(join(path, '.rsp/specs/00-index.md'))).toBe(false)
+    expect(run(path, 'update').status).toBe(0)
+    expect(read(path, '.rsp/version')).toBe(`${version}\n`)
+    expect(read(path, 'AGENTS.md')).toContain('# User policy')
+    expect(JSON.parse(run(path, 'doctor', '--json').stdout).ok).toBe(true)
+    expect(run(path, 'update').stdout).toContain('up to date')
+    expect(readdirSync(join(path, '.agents/skills')).some(name => name.startsWith('.rsp-'))).toBe(false)
+  })
+
+  it.each(['archive-read', 'archive-recheck'])('stops on Archive Index read failure and converges on same-target retry (%s)', (scenario) => {
+    const path = project()
+    const index = '---\nkind: generated-index\nindex_type: archives\n---\nOld archive index\n'
+    write(path, '.rsp/archives/INDEX.md', index)
+    write(path, '.rsp/version', '1.0.0\n')
+    write(path, '.rsp/config.yaml', '# User config\nkinds: []\n')
+    write(path, '.agents/skills/rsp/SKILL.md', 'Old Skill')
+    write(path, 'AGENTS.md', '# User policy\n')
+
+    const result = fail(path, 'update', scenario)
+    expect(result.stderr).toContain(`failure-injected:${scenario}`)
+    expect(result.status).not.toBe(0)
+    expect(read(path, '.rsp/version')).toBe('1.0.0\n')
+    expect(read(path, '.rsp/archives/INDEX.md')).toBe(index)
+    expect(read(path, 'AGENTS.md')).toBe('# User policy\n')
+    expect(read(path, '.rsp/config.yaml')).toBe('# User config\nkinds: []\n')
+    expect(read(path, '.agents/skills/rsp/SKILL.md')).toBe(scenario === 'archive-read' ? 'Old Skill' : read(root, 'skills/rsp/SKILL.md'))
+
+    expect(run(path, 'update').status).toBe(0)
+    expect(existsSync(join(path, '.rsp/archives/INDEX.md'))).toBe(false)
+    expect(read(path, '.rsp/version')).toBe(`${version}\n`)
+    expect(read(path, '.rsp/config.yaml')).toBe('# User config\nkinds: []\n')
+    expect(read(path, 'AGENTS.md')).toContain('# User policy\n')
+    expect(JSON.parse(run(path, 'doctor', '--json').stdout).ok).toBe(true)
+    expect(run(path, 'update').stdout).toContain('up to date')
+  })
+
+  it.each(['prepare', 'pin'])('retries partial fresh initialization without overwriting existing user files (%s)', (scenario) => {
+    const path = fresh()
+    const result = fail(path, 'init', scenario)
+    expect(result.stderr).toContain(`failure-injected:${scenario}`)
+    expect(result.status).not.toBe(0)
+    expect(existsSync(join(path, '.rsp/version'))).toBe(false)
+    expect(existsSync(join(path, '.agents/skills/rsp/SKILL.md'))).toBe(true)
+    write(path, '.rsp/config.yaml', '# User settings after failure\nkinds: []\n')
+    expect(run(path, 'init').status).toBe(0)
+    expect(read(path, '.rsp/config.yaml')).toBe('# User settings after failure\nkinds: []\n')
+    expect(JSON.parse(run(path, 'doctor', '--json').stdout).ok).toBe(true)
+  })
+
+  it('rejects invalid config and owner-controlled indexes before changing assets', () => {
+    const path = project()
+    write(path, '.agents/skills/rsp/SKILL.md', 'Old Skill')
+    for (const config of ['manage: {}\n', 'workflow:\n  delegation: invalid\n']) {
+      write(path, '.rsp/config.yaml', config)
+      expect(run(path, 'update').status).not.toBe(0)
+      expect(read(path, '.rsp/config.yaml')).toBe(config)
+      expect(read(path, '.agents/skills/rsp/SKILL.md')).toBe('Old Skill')
+    }
+    write(path, '.rsp/config.yaml', 'kinds: []\n')
+    write(path, '.rsp/specs/INDEX.md', 'User index')
+    expect(run(path, 'update').status).not.toBe(0)
+    expect(read(path, '.rsp/specs/INDEX.md')).toBe('User index')
+    expect(read(path, '.agents/skills/rsp/SKILL.md')).toBe('Old Skill')
+  })
+
+  it('rejects mismatched ordinary commands, downgrades, invalid pins and retired entrypoints', () => {
+    const path = project()
+    write(path, '.rsp/version', '1.0.0\n')
+    expect(run(path, 'init').status).not.toBe(0)
+    expect(run(path, 'create', 'unsafe').status).not.toBe(0)
+    expect(run(path, 'update').status).toBe(0)
+    for (const args of [['update', '--adopt-version'], ['update', '--remove-legacy-rules'], ['update', '--force'], ['doctor', '--fix'], ['skills', 'install'], ['recover']]) expect(run(path, ...args).status).not.toBe(0)
+    for (const invalid of ['999.0.0', 'latest', '^3.3.0', '3.3.0\n4.0.0']) {
+      write(path, '.rsp/version', invalid)
+      expect(run(path, 'update').status).not.toBe(0)
+      expect(read(path, '.rsp/version')).toBe(invalid)
     }
   })
 
-  it.skipIf(process.platform === 'win32' || process.getuid?.() === 0)('preserves the old pin and files when legacy Rules inspection is incomplete', () => {
-    const directory = project()
-    const pin = join(directory, '.rsp/version')
-    const config = join(directory, '.rsp/config.yaml')
-    const agents = join(directory, 'AGENTS.md')
-    const fallback = join(directory, '.rsp/rsp-rules.md')
-    writeFileSync(pin, '1.0.0\n')
-    writeFileSync(config, 'kinds: []\n')
-    writeFileSync(fallback, 'Keep customized fallback until inspection succeeds.\n')
-    const unreadable = join(directory, '.rsp/rules/unreadable')
-    mkdirSync(unreadable, { recursive: true })
-    const files = [pin, config, agents, fallback]
-    const before = files.map(path => readFileSync(path, 'utf8'))
-    chmodSync(unreadable, 0)
-    try {
-      const rejected = run(directory, 'update', '--adopt-version', '--remove-legacy-rules')
-      expect(rejected.status).not.toBe(0)
-      expect(files.map(path => readFileSync(path, 'utf8'))).toEqual(before)
-    }
-    finally {
-      chmodSync(unreadable, 0o700)
-    }
-  })
-
-  it('restores removed Rules and entry/config changes when a later migration step fails', () => {
-    const directory = project()
-    const fallback = join(directory, '.rsp/rsp-rules.md')
-    const pin = join(directory, '.rsp/version')
-    const config = join(directory, '.rsp/config.yaml')
-    const agents = join(directory, 'AGENTS.md')
-    writeFileSync(fallback, 'Recover this customized fallback.\n')
-    writeFileSync(pin, '1.0.0\n')
-    writeFileSync(config, 'kinds: []\n')
-    writeFileSync(agents, readFileSync(agents, 'utf8').replace('## RSP Entry', '## Old entry'))
-    const before = [fallback, pin, config, agents].map(path => readFileSync(path, 'utf8'))
-    const external = join(directory, 'external-index.md')
-    writeFileSync(external, 'Do not follow this index.\n')
-    symlinkSync(external, join(directory, '.rsp/archives/INDEX.md'))
-    const rejected = run(directory, 'update', '--adopt-version', '--remove-legacy-rules')
-    expect(rejected.status).not.toBe(0)
-    expect([fallback, pin, config, agents].map(path => readFileSync(path, 'utf8'))).toEqual(before)
-    expect(readFileSync(external, 'utf8')).toBe('Do not follow this index.\n')
-  })
-
-  it('refuses ranges and symlink pins without following them', () => {
-    const directory = project()
-    const pin = join(directory, '.rsp/version')
-    for (const invalid of ['latest', '^3.3.0', '3', '3.03.0', '3.3.0-beta.01', '3.3.0\n4.0.0']) {
-      writeFileSync(pin, invalid)
-      expect(run(directory, 'update', '--adopt-version').status).not.toBe(0)
-      expect(run(directory, 'status', '--json').status).not.toBe(0)
-      expect(readFileSync(pin, 'utf8')).toBe(invalid)
-    }
-    rmSync(pin)
-    const external = join(directory, 'external-version')
-    writeFileSync(external, '1.0.0\n')
-    symlinkSync(external, pin)
-    expect(run(directory, 'update', '--adopt-version').status).not.toBe(0)
-    expect(readFileSync(external, 'utf8')).toBe('1.0.0\n')
-  })
-
-  it('preserves retired and unrelated content until exact removal is selected', () => {
-    const directory = project()
-    const fallback = join(directory, '.rsp/rsp-rules.md')
-    const legacy = join(directory, '.rsp/rules/rsp-rules.md')
-    const custom = join(directory, '.rsp/rules/custom.md')
-    mkdirSync(join(directory, '.rsp/rules'))
-    for (const path of [fallback, legacy, custom])
-      writeFileSync(path, `Keep ${path}\n`)
-    const original = readFileSync(fallback, 'utf8')
-    const agents = readFileSync(join(directory, 'AGENTS.md'), 'utf8')
-    for (const args of [['update'], ['doctor', '--fix', '--json']]) {
-      expect(run(directory, ...args).status).not.toBe(0)
-      expect(readFileSync(fallback, 'utf8')).toBe(original)
-      expect(readFileSync(join(directory, 'AGENTS.md'), 'utf8')).toBe(agents)
-    }
-    expect(run(directory, 'update', '--remove-legacy-rules').status).toBe(0)
-    expect(existsSync(fallback)).toBe(false)
-    expect(existsSync(legacy)).toBe(false)
-    expect(readFileSync(custom, 'utf8')).toBe(`Keep ${custom}\n`)
-    const external = join(directory, 'external-rules.md')
-    writeFileSync(external, 'Never remove the target.\n')
-    symlinkSync(external, fallback)
-    expect(run(directory, 'update', '--remove-legacy-rules').status).not.toBe(0)
-    expect(readFileSync(external, 'utf8')).toBe('Never remove the target.\n')
+  it('rejects managed symlinks without changing their external targets', () => {
+    const path = project()
+    const external = join(path, 'external')
+    writeFileSync(external, 'External bytes')
+    rmSync(join(path, 'AGENTS.md'))
+    symlinkSync(external, join(path, 'AGENTS.md'))
+    expect(run(path, 'update').status).not.toBe(0)
+    expect(readFileSync(external, 'utf8')).toBe('External bytes')
   })
 })

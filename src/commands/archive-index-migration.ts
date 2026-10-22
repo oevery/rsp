@@ -1,27 +1,25 @@
-import { readFile, unlink } from 'node:fs/promises'
+import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
 import { ARCHIVES_DIR } from '../core/config.js'
 import { parseFrontmatter } from '../core/content.js'
-import { inspectManagedFile } from '../core/managed-path.js'
+import { requireManagedFile } from '../core/managed-path.js'
 
-/** Remove only the legacy generated Archive Index whose metadata proves RSP ownership. */
-export async function removeLegacyArchiveIndex(): Promise<boolean> {
+/** Recognize the legacy Archive Index by its generated ownership metadata. */
+export async function isLegacyArchiveIndex(): Promise<boolean> {
   const path = join(ARCHIVES_DIR, 'INDEX.md')
-  const inspection = inspectManagedFile(path, 'legacy archive index', { allowMissing: true })
-  if (!inspection.exists || inspection.issue)
+  if (!requireManagedFile(path, 'legacy archive index', { allowMissing: true }))
     return false
 
-  let frontmatter
+  return isLegacyArchiveIndexContent(await readFile(path, 'utf-8'))
+}
+
+export function isLegacyArchiveIndexContent(content: string): boolean {
   try {
-    frontmatter = parseFrontmatter(await readFile(path, 'utf-8'))
+    const frontmatter = parseFrontmatter(content)
+    return frontmatter?.kind === 'generated-index' && frontmatter.index_type === 'archives'
   }
   catch {
     return false
   }
-  if (frontmatter?.kind !== 'generated-index' || frontmatter.index_type !== 'archives')
-    return false
-
-  await unlink(path)
-  return true
 }

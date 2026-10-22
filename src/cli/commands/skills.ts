@@ -1,53 +1,12 @@
 import { defineCommand } from 'citty'
-import { inspectPackagedSkillInventory, installPackagedSkills } from '../../commands/skills.js'
+import { inspectPackagedSkillInventory } from '../../commands/skills.js'
 import { executeCliCommand } from '../adapter.js'
 import { jsonArgs } from '../capabilities.js'
-import { presentPackagedSkillInventory, presentSkillInstallResult } from '../presenters/skills.js'
-
-const skillsInstallCommand = defineCommand({
-  meta: {
-    name: 'install',
-    description: 'Install this package\'s bundled Skills into .agents/skills',
-  },
-  args: {
-    'name': {
-      type: 'positional',
-      description: 'Individual installation is unsupported; omit to install the complete core suite',
-      required: false,
-    },
-    'dry-run': {
-      type: 'boolean',
-      description: 'Preflight the complete core suite without changing files',
-      default: false,
-    },
-    'force': {
-      type: 'boolean',
-      description: 'Explicitly replace divergent and remove named obsolete Skill directories',
-      default: false,
-    },
-  },
-  async run({ args }: { args: { '_': string[], 'dry-run': boolean, 'force': boolean, 'name'?: string } }) {
-    if (args._.length > 1)
-      throw new Error('rsp skills install accepts at most one Skill name')
-    await executeCliCommand({
-      execute: () => installPackagedSkills({
-        dryRun: Boolean(args['dry-run']),
-        force: Boolean(args.force),
-        names: args.name ? [args.name] : undefined,
-      }),
-      present: result => presentSkillInstallResult(result, Boolean(args['dry-run'])),
-    }, args)
-  },
-})
+import { presentPackagedSkillInventory } from '../presenters/skills.js'
 
 const skillsListCommand = defineCommand({
-  meta: {
-    name: 'list',
-    description: 'List package-bundled Skills and their project status',
-  },
-  args: {
-    ...jsonArgs,
-  },
+  meta: { name: 'list', description: 'Inspect the complete package-owned Skill inventory' },
+  args: { ...jsonArgs },
   async run({ args }) {
     await executeCliCommand({
       execute: () => inspectPackagedSkillInventory(),
@@ -56,17 +15,9 @@ const skillsListCommand = defineCommand({
   },
 })
 
-const skillsCommand = defineCommand({
-  meta: {
-    name: 'skills',
-    description: 'Manage package-bundled project Skills',
-  },
-  subCommands: {
-    install: skillsInstallCommand,
-    list: skillsListCommand,
-  },
-})
-
 export const skillsCommands = {
-  skills: skillsCommand,
+  skills: defineCommand({
+    meta: { name: 'skills', description: 'Inspect Skills; use init or update to manage the complete environment' },
+    subCommands: { list: skillsListCommand },
+  }),
 }

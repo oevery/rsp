@@ -1,15 +1,8 @@
-import { randomUUID } from 'node:crypto'
 import { lstatSync, realpathSync } from 'node:fs'
-import { chmod, copyFile, mkdir, readdir, readFile, rename, rm } from 'node:fs/promises'
+import { chmod, copyFile, mkdir, mkdtemp, readdir, readFile, rename, rm } from 'node:fs/promises'
 import { dirname, join, relative } from 'node:path'
 import { PKG_ROOT } from '../core/config.js'
 import { inspectManagedDirectory, inspectManagedFileTree, ManagedPathError, resolveManagedDirectoryChain } from '../core/managed-path.js'
-
-export interface InstallPackagedSkillsArgs {
-  dryRun?: boolean
-  force?: boolean
-  names?: string[]
-}
 
 export const DEFAULT_PACKAGED_SKILL_NAMES = [
   'rsp',
@@ -21,19 +14,19 @@ export const DEFAULT_PACKAGED_SKILL_NAMES = [
   'rsp-commit',
 ] as const
 
-const OBSOLETE_PACKAGED_SKILL_RENAMES = {
-  'rsp-address-review': 'rsp-implement',
-  'rsp-codebase-audit': 'rsp-review',
-  'rsp-structural-audit': 'rsp-review',
-  'rsp-design': 'rsp-shape',
-  'rsp-diagnose': 'rsp-implement',
-  'rsp-manage': 'rsp',
-  'rsp-release-docs': 'rsp-doc',
-  'rsp-resolve-findings': 'rsp-implement',
-  'rsp-tdd': 'rsp-implement',
-} as const
+const RETIRED_PACKAGED_SKILL_NAMES = [
+  'rsp-address-review',
+  'rsp-codebase-audit',
+  'rsp-structural-audit',
+  'rsp-design',
+  'rsp-diagnose',
+  'rsp-manage',
+  'rsp-release-docs',
+  'rsp-resolve-findings',
+  'rsp-tdd',
+] as const
 
-export interface SkillInstallResult {
+export interface SkillUpdateResult {
   installed: string[]
   removed: string[]
   unchanged: string[]
@@ -53,6 +46,7 @@ export interface PackagedSkillInventory {
   package: { name: string, version: string }
   target: string
   skills: PackagedSkillInventoryItem[]
+  retired: string[]
 }
 
 export interface InspectPackagedSkillsOptions {
@@ -60,22 +54,11 @@ export interface InspectPackagedSkillsOptions {
   projectRoot?: string
 }
 
-interface InstallPackagedSkillsOptions {
+interface PackagedSkillsUpdateOptions {
   packageRoot?: string
   projectRoot?: string
-  onMutationStep?: (step: SkillInstallMutationStep) => Promise<void> | void
+  dryRun?: boolean
   renamePath?: (source: string, destination: string) => Promise<void>
-}
-
-type SkillInstallMutationStep
-  = | { phase: 'before-target-root-mutation', targetRoot: string }
-    | { phase: 'before-activate', name: string, target: string }
-    | { phase: 'before-rollback-restore', name: string, target: string, previous: string }
-
-interface DirectoryIdentity {
-  path: string
-  dev: number
-  ino: number
 }
 
 interface SkillTree {
@@ -86,45 +69,6 @@ interface SkillTree {
 
 function unsupportedEntry(path: string, label: string): ManagedPathError {
   return new ManagedPathError(path, `unsupported entry in the ${label} tree: ${path}`)
-}
-
-function inspectDirectoryIdentity(path: string, label: string): DirectoryIdentity {
-  const inspection = inspectManagedDirectory(path, label)
-  if (inspection.issue)
-    throw inspection.issue
-  const stats = lstatSync(path)
-  return { path, dev: stats.dev, ino: stats.ino }
-}
-
-function assertDirectoryIdentities(identities: DirectoryIdentity[], label: string): void {
-  for (const identity of identities) {
-    const current = inspectDirectoryIdentity(identity.path, label)
-    if (current.dev !== identity.dev || current.ino !== identity.ino)
-      throw new ManagedPathError(identity.path, `${label} changed after validation: ${identity.path}`)
-  }
-}
-
-async function prepareTargetRoot(projectRoot: string, targetRoot: string): Promise<DirectoryIdentity[]> {
-  const projectIdentity = inspectDirectoryIdentity(projectRoot, 'project Skills root')
-  const agentsRoot = join(projectRoot, '.agents')
-  const identities = [projectIdentity]
-
-  assertDirectoryIdentities(identities, 'project Skills root')
-  await mkdir(agentsRoot).catch((error: NodeJS.ErrnoException) => {
-    if (error.code !== 'EEXIST')
-      throw error
-  })
-  assertDirectoryIdentities(identities, 'project Skills root')
-  identities.push(inspectDirectoryIdentity(agentsRoot, 'project Skills root'))
-
-  assertDirectoryIdentities(identities, 'project Skills root')
-  await mkdir(targetRoot).catch((error: NodeJS.ErrnoException) => {
-    if (error.code !== 'EEXIST')
-      throw error
-  })
-  assertDirectoryIdentities(identities, 'project Skills root')
-  identities.push(inspectDirectoryIdentity(targetRoot, 'project Skills root'))
-  return identities
 }
 
 async function inspectPackagedSkills(packageRoot: string): Promise<SkillTree[]> {
@@ -141,7 +85,7 @@ async function inspectPackagedSkills(packageRoot: string): Promise<SkillTree[]> 
     const root = join(skillsRoot, entry.name)
     if (!entry.isDirectory())
       throw unsupportedEntry(root, 'packaged Skills')
-    const inspection = await inspectManagedFileTree(root, `packaged Skill ${entry.name}`)
+    const inspection = await inspectManagedFileTree(root, `packaged Skill ${entry.name}`, { includeHidden: true })
     if (inspection.issues.length > 0)
       throw inspection.issues[0]
     skills.push({
@@ -190,7 +134,7 @@ function isCanonicalSourceProjection(sourceRoot: string, targetRoot: string): bo
 }
 
 async function treesEqual(source: SkillTree, targetRoot: string): Promise<boolean> {
-  const target = await inspectManagedFileTree(targetRoot, `installed Skill ${source.name}`)
+  const target = await inspectManagedFileTree(targetRoot, `installed Skill ${source.name}`, { includeHidden: true })
   if (target.issues.length > 0)
     throw target.issues[0]
   const targetFiles = target.files.map(path => relative(targetRoot, path))
@@ -241,7 +185,9 @@ export async function inspectPackagedSkillInventory(
           : await treesEqual(skill, target) ? 'unchanged' : 'divergent',
     })
   }
+  const retired = RETIRED_PACKAGED_SKILL_NAMES.filter(name => inspectInventoryTarget(join(targetRoot, name)) !== 'missing')
   return {
+    retired,
     package: { name: manifest.name, version: manifest.version },
     target: relative(projectRoot, targetRoot) || '.',
     skills,
@@ -262,179 +208,75 @@ async function copySkillTree(source: SkillTree, targetRoot: string): Promise<voi
   }
 }
 
-export async function installPackagedSkills(
-  args: InstallPackagedSkillsArgs = {},
-  options: InstallPackagedSkillsOptions = {},
-): Promise<SkillInstallResult> {
+/** Replace exact package-owned trees; failures keep completed changes for a retry. */
+export async function updatePackagedSkills(options: PackagedSkillsUpdateOptions = {}): Promise<SkillUpdateResult> {
   const packageRoot = options.packageRoot ?? PKG_ROOT
   const projectRoot = options.projectRoot ?? process.cwd()
   const renamePath = options.renamePath ?? rename
-  const packagedSkills = await inspectPackagedSkills(packageRoot)
-  const requestedNames = args.names?.length
-    ? [...new Set(args.names)]
-    : [...DEFAULT_PACKAGED_SKILL_NAMES]
-  const packagedSkillsByName = new Map(packagedSkills.map(skill => [skill.name, skill]))
-  for (const name of requestedNames) {
-    if (!packagedSkillsByName.has(name))
-      throw new Error(`unknown packaged Skill: ${name}`)
-  }
-  if (requestedNames.length !== DEFAULT_PACKAGED_SKILL_NAMES.length || DEFAULT_PACKAGED_SKILL_NAMES.some(name => !requestedNames.includes(name)))
-    throw new Error('RSP core Skills must be installed together; use rsp skills install without a Skill name')
-  const skills = requestedNames
-    .map(name => packagedSkillsByName.get(name)!)
-    .sort((a, b) => a.name.localeCompare(b.name))
+  const packaged = await inspectPackagedSkills(packageRoot)
+  const skills = DEFAULT_PACKAGED_SKILL_NAMES.map((name) => {
+    const skill = packaged.find(candidate => candidate.name === name)
+    if (!skill)
+      throw new Error(`Packaged Skill missing: ${name}`)
+    return skill
+  }).sort((a, b) => a.name.localeCompare(b.name))
   const targetRoot = resolveManagedDirectoryChain(projectRoot, ['.agents', 'skills'], 'project Skills root')
-
-  const result: SkillInstallResult = { installed: [], removed: [], unchanged: [], replaced: [] }
-  const conflicts: string[] = []
-  const obsoleteConflicts: string[] = []
-  const targetTreeIdentities = new Map<string, DirectoryIdentity>()
+  const result: SkillUpdateResult = { installed: [], removed: [], unchanged: [], replaced: [] }
   for (const skill of skills) {
     const target = join(targetRoot, skill.name)
-    if (inspectTarget(target, skill.name) === 'missing') {
-      result.installed.push(skill.name)
-      continue
-    }
-    const targetIdentity = inspectDirectoryIdentity(target, `installed Skill ${skill.name}`)
-    if (await treesEqual(skill, target)) {
+    if (isCanonicalSourceProjection(skill.root, target))
       result.unchanged.push(skill.name)
-      continue
-    }
-    assertDirectoryIdentities([targetIdentity], `installed Skill ${skill.name}`)
-    if (args.force) {
+    else if (inspectTarget(target, skill.name) === 'missing')
+      result.installed.push(skill.name)
+    else if (await treesEqual(skill, target))
+      result.unchanged.push(skill.name)
+    else
       result.replaced.push(skill.name)
-      targetTreeIdentities.set(skill.name, targetIdentity)
-    }
-    else {
-      conflicts.push(skill.name)
-    }
   }
-
-  const selectedNames = new Set(skills.map(skill => skill.name))
-  const obsoleteTreeIdentities = new Map<string, DirectoryIdentity>()
-  for (const [obsolete, replacement] of Object.entries(OBSOLETE_PACKAGED_SKILL_RENAMES)) {
-    if (!selectedNames.has(replacement))
-      continue
-    const target = join(targetRoot, obsolete)
-    if (inspectTarget(target, obsolete) === 'missing')
-      continue
-    const targetIdentity = inspectDirectoryIdentity(target, `obsolete installed Skill ${obsolete}`)
-    assertDirectoryIdentities([targetIdentity], `obsolete installed Skill ${obsolete}`)
-    if (args.force) {
-      result.removed.push(obsolete)
-      obsoleteTreeIdentities.set(obsolete, targetIdentity)
-    }
-    else {
-      obsoleteConflicts.push(`${obsolete} -> ${replacement}`)
-    }
+  for (const name of RETIRED_PACKAGED_SKILL_NAMES) {
+    if (inspectTarget(join(targetRoot, name), name) !== 'missing')
+      result.removed.push(name)
   }
-
-  const conflictMessages: string[] = []
-  if (conflicts.length > 0)
-    conflictMessages.push(`conflicting packaged Skills: ${conflicts.join(', ')}`)
-  if (obsoleteConflicts.length > 0)
-    conflictMessages.push(`obsolete packaged Skill renames: ${obsoleteConflicts.join(', ')}`)
-  if (conflictMessages.length > 0)
-    throw new Error(`${conflictMessages.join('; ')}; inspect the named directories and rerun with --force to replace or remove them explicitly`)
-  if (args.dryRun)
+  if (options.dryRun || result.installed.length + result.replaced.length + result.removed.length === 0)
     return result
 
-  await options.onMutationStep?.({ phase: 'before-target-root-mutation', targetRoot })
-  const targetIdentities = await prepareTargetRoot(projectRoot, targetRoot)
-  const stagingRoot = join(targetRoot, `.rsp-skills-install-${randomUUID()}`)
-  const nextRoot = join(stagingRoot, 'next')
-  const previousRoot = join(stagingRoot, 'previous')
-  const failedRoot = join(stagingRoot, 'failed')
-  const movedPrevious: string[] = []
-  const activated: string[] = []
-  let removeStaging = true
+  await mkdir(targetRoot, { recursive: true })
+  resolveManagedDirectoryChain(projectRoot, ['.agents', 'skills'], 'project Skills root')
+  const staging = await mkdtemp(join(targetRoot, '.rsp-skills-'))
+  const completed: string[] = []
+  let failure: Error | undefined
   try {
-    assertDirectoryIdentities(targetIdentities, 'project Skills root')
-    await mkdir(nextRoot, { recursive: true })
-    await mkdir(previousRoot)
-    await mkdir(failedRoot)
+    for (const skill of skills) {
+      if (!result.unchanged.includes(skill.name))
+        await copySkillTree(skill, join(staging, skill.name))
+    }
+    for (const name of result.removed) {
+      resolveManagedDirectoryChain(projectRoot, ['.agents', 'skills'], 'project Skills root')
+      inspectTarget(join(targetRoot, name), name)
+      await rm(join(targetRoot, name), { recursive: true, force: true })
+      completed.push(`removed ${name}`)
+    }
     for (const skill of skills) {
       if (result.unchanged.includes(skill.name))
         continue
-      await copySkillTree(skill, join(nextRoot, skill.name))
-    }
-
-    for (const name of result.installed) {
-      const target = join(targetRoot, name)
-      if (inspectTarget(target, name) !== 'missing')
-        throw new ManagedPathError(target, `installed Skill changed after preflight: ${target}`)
-    }
-    for (const name of result.replaced) {
-      assertDirectoryIdentities([targetTreeIdentities.get(name)!], `installed Skill ${name}`)
-    }
-    for (const name of result.removed) {
-      assertDirectoryIdentities([obsoleteTreeIdentities.get(name)!], `obsolete installed Skill ${name}`)
-    }
-
-    for (const name of result.removed) {
-      assertDirectoryIdentities(targetIdentities, 'project Skills root')
-      assertDirectoryIdentities([obsoleteTreeIdentities.get(name)!], `obsolete installed Skill ${name}`)
-      await renamePath(join(targetRoot, name), join(previousRoot, name))
-      movedPrevious.push(name)
-    }
-    for (const name of result.replaced) {
-      assertDirectoryIdentities(targetIdentities, 'project Skills root')
-      assertDirectoryIdentities([targetTreeIdentities.get(name)!], `installed Skill ${name}`)
-      await renamePath(join(targetRoot, name), join(previousRoot, name))
-      movedPrevious.push(name)
-    }
-    for (const name of [...result.installed, ...result.replaced].sort()) {
-      const target = join(targetRoot, name)
-      assertDirectoryIdentities(targetIdentities, 'project Skills root')
-      await options.onMutationStep?.({ phase: 'before-activate', name, target })
-      assertDirectoryIdentities(targetIdentities, 'project Skills root')
-      if (inspectTarget(target, name) !== 'missing')
-        throw new ManagedPathError(target, `installed Skill changed after preflight: ${target}`)
-      await renamePath(join(nextRoot, name), target)
-      activated.push(name)
+      resolveManagedDirectoryChain(projectRoot, ['.agents', 'skills'], 'project Skills root')
+      const target = join(targetRoot, skill.name)
+      inspectTarget(target, skill.name)
+      await rm(target, { recursive: true, force: true })
+      await renamePath(join(staging, skill.name), target)
+      completed.push(`installed ${skill.name}`)
     }
   }
   catch (error) {
-    const rollbackErrors: string[] = []
-    for (const name of activated.reverse()) {
-      const target = join(targetRoot, name)
-      try {
-        assertDirectoryIdentities(targetIdentities, 'project Skills root')
-        if (inspectTarget(target, name) === 'directory')
-          await renamePath(target, join(failedRoot, name))
-      }
-      catch (rollbackError) {
-        rollbackErrors.push(rollbackError instanceof Error ? rollbackError.message : String(rollbackError))
-      }
-    }
-    for (const name of movedPrevious.reverse()) {
-      const target = join(targetRoot, name)
-      const previous = join(previousRoot, name)
-      try {
-        assertDirectoryIdentities(targetIdentities, 'project Skills root')
-        await options.onMutationStep?.({ phase: 'before-rollback-restore', name, target, previous })
-        assertDirectoryIdentities(targetIdentities, 'project Skills root')
-        if (inspectTarget(target, name) !== 'missing')
-          throw new ManagedPathError(target, `cannot restore installed Skill because the target is occupied: ${target}`)
-        await renamePath(previous, target)
-      }
-      catch (rollbackError) {
-        rollbackErrors.push(rollbackError instanceof Error ? rollbackError.message : String(rollbackError))
-      }
-    }
-    if (rollbackErrors.length > 0) {
-      removeStaging = false
-      const message = error instanceof Error ? error.message : String(error)
-      throw new Error(`${message}; rollback incomplete; recover original Skills from ${previousRoot}; ${rollbackErrors.join('; ')}`)
-    }
-    throw error
+    failure = new Error(`Skill update stopped; completed: ${completed.join(', ') || 'none'}. ${error instanceof Error ? error.message : String(error)}`, { cause: error })
   }
-  finally {
-    if (removeStaging)
-      await rm(stagingRoot, { recursive: true, force: true })
+  try {
+    await rm(staging, { recursive: true })
   }
-
+  catch (error) {
+    failure = new Error(`Temporary Skill content cleanup failed: ${staging}`, { cause: failure ?? error })
+  }
+  if (failure)
+    throw failure
   return result
 }
-
-export { presentPackagedSkillInventory as printPackagedSkillInventory, presentSkillInstallResult as printSkillInstallResult } from '../cli/presenters/skills.js'

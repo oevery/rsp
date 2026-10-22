@@ -3,12 +3,11 @@ import { readFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import pc from 'picocolors'
-import { stringify, visit } from 'yaml'
+import { stringify } from 'yaml'
 import { parseYamlText } from './content.js'
 import { getDecisionRecordsConfigIssue, normalizeDecisionRecordsPath, validateDecisionRecordsPath } from './decisions.js'
 import { CHANGE_DOCUMENT_SCHEMA, getCanonicalSectionHeadings } from './document-model.js'
 import { inspectManagedFile } from './managed-path.js'
-import { parseYamlDocument, yamlMapping } from './yaml.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -100,123 +99,6 @@ const CLOSEOUT_POLICIES: CloseoutPolicy[] = ['ask', 'auto', 'manual']
 export interface RspConfigInspection {
   config: RspConfig
   issues: string[]
-}
-
-export interface ConfigDefaultsReconciliation {
-  content: string
-  added: string[]
-  changed: boolean
-}
-
-/**
- * Reconcile a valid config against the canonical template.
- * Generated comments are refreshed; custom comments use conservative append-only repair.
- */
-export function reconcileRspConfigDefaults(raw: string): ConfigDefaultsReconciliation {
-  const document = parseYamlDocument(raw)
-  const parsed = yamlMapping(document)
-  const issues = validateRspConfig(parsed)
-  if (issues.length > 0)
-    throw new Error(issues.join('; '))
-
-  const added = collectMissingConfigDefaults(parsed)
-  const customComments = hasCustomConfigComments(document, parsed)
-  if (customComments) {
-    backfillConfigDocument(document, parsed)
-  }
-
-  if (customComments && added.length === 0)
-    return { content: raw, added, changed: false }
-
-  const content = customComments
-    ? String(document)
-    : generateConfigTemplate(parsed as RspConfig)
-  return { content, added, changed: content !== raw }
-}
-
-function collectMissingConfigDefaults(parsed: Record<string, unknown>): string[] {
-  const added: string[] = []
-  if (!('kinds' in parsed))
-    added.push('kinds')
-  if (!('decisions' in parsed) || !hasNestedKey(parsed.decisions, 'path'))
-    added.push('decisions.path')
-  if (!('language' in parsed))
-    added.push('language.default')
-  if (!('workflow' in parsed)) {
-    added.push('workflow.delegation', 'workflow.closeout')
-  }
-  else {
-    if (!hasNestedKey(parsed.workflow, 'delegation'))
-      added.push('workflow.delegation')
-    if (!hasNestedKey(parsed.workflow, 'closeout'))
-      added.push('workflow.closeout')
-  }
-  return added
-}
-
-function backfillConfigDocument(document: ReturnType<typeof parseYamlDocument>, parsed: Record<string, unknown>): void {
-  if (!('kinds' in parsed))
-    document.set('kinds', [...CONFIG_DEFAULTS.kinds])
-  if (!('decisions' in parsed))
-    document.set('decisions', { path: CONFIG_DEFAULTS.decisions.path })
-  else if (!hasNestedKey(parsed.decisions, 'path'))
-    document.setIn(['decisions', 'path'], CONFIG_DEFAULTS.decisions.path)
-  if (!('language' in parsed))
-    document.set('language', { default: CONFIG_DEFAULTS.language.default })
-  if (!('workflow' in parsed)) {
-    document.set('workflow', { ...CONFIG_DEFAULTS.workflow })
-  }
-  else {
-    if (!hasNestedKey(parsed.workflow, 'delegation'))
-      document.setIn(['workflow', 'delegation'], CONFIG_DEFAULTS.workflow.delegation)
-    if (!hasNestedKey(parsed.workflow, 'closeout'))
-      document.setIn(['workflow', 'closeout'], CONFIG_DEFAULTS.workflow.closeout)
-  }
-}
-
-function hasNestedKey(value: unknown, key: string): boolean {
-  return Boolean(value && typeof value === 'object' && !Array.isArray(value) && key in value)
-}
-
-const LEGACY_GENERATED_CONFIG_COMMENTS = new Set([
-  'Omit kinds or use [] to retain the built-in defaults.',
-  'New projects default to automatic Manage routing with lifecycle-only closeout.',
-  'Self-host automatic Manage routing with bounded deterministic local commits; push and publication stay explicit.',
-  'Set exactly one project-relative authoritative directory when the Host Project already owns Decision Records elsewhere.',
-  'kinds:',
-  'decisions:',
-  'path: docs/adr',
-  ...VALID_KINDS.map(kind => `- ${kind}`),
-])
-
-function hasCustomConfigComments(document: ReturnType<typeof parseYamlDocument>, parsed: Record<string, unknown>): boolean {
-  const generated = new Set(collectConfigComments(parseYamlDocument(generateConfigTemplate(parsed as RspConfig))))
-  for (const comment of LEGACY_GENERATED_CONFIG_COMMENTS)
-    generated.add(comment)
-  return collectConfigComments(document).some(comment => !generated.has(comment))
-}
-
-function collectConfigComments(document: ReturnType<typeof parseYamlDocument>): string[] {
-  const comments: string[] = []
-  const append = (value: string | null | undefined) => {
-    if (!value)
-      return
-    for (const line of value.split('\n')) {
-      const comment = line.trim()
-      if (comment)
-        comments.push(comment)
-    }
-  }
-
-  append(document.commentBefore)
-  append(document.comment)
-  visit(document, {
-    Node(_key, node) {
-      append(node.commentBefore)
-      append(node.comment)
-    },
-  })
-  return comments
 }
 
 /** Cached parsed config inspection to avoid repeated file reads. */

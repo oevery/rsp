@@ -2,6 +2,11 @@
 
 RSP uses **Reliable Software Practice** as its product expansion because the 3.0 product is a composable engineering workflow, not only the Rules, Specs, Plans file protocol. The name expresses the product promise while the category statement—repository-native engineering workflow for humans and AI agents—states where and for whom it operates. Rules, Specs, Plans remains the lightweight artifact foundation, preserving continuity for existing projects without presenting the repositioning as a breaking protocol rename.
 
+The naming decision remains valid. Its original Rules artifact foundation has since
+been superseded by the Skills-only contracts in [Architecture](../design.md) and
+[Distribution](../distribution.md); the historical compatibility statements below
+apply to that naming decision, not current update behavior.
+
 ## Considered Options
 
 - Keep Rules, Specs, Plans as the product expansion: rejected because it describes storage artifacts but underrepresents shaping, design, implementation, diagnosis, TDD, review, release documentation, and durable review.

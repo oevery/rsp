@@ -3,10 +3,9 @@ import { fileURLToPath } from 'node:url'
 import { runMain } from 'citty'
 import { supportsCompact } from './cli/capabilities.js'
 import { createRootCommand } from './cli/registry.js'
-import { installPackagedSkills, printSkillInstallResult } from './commands/skills.js'
 import { getVersion } from './core/config.js'
 import { guardProjectVersion } from './core/project-version.js'
-import { isInteractiveTerminal, shouldAutoLaunchUi, shouldLaunchSkillsUi, validateUiArgs } from './tui/route.js'
+import { isInteractiveTerminal, shouldAutoLaunchUi, validateUiArgs } from './tui/route.js'
 
 function validateCompactInvocation(rawArgs: string[]): void {
   if (!rawArgs.includes('--compact'))
@@ -43,22 +42,6 @@ export async function runCli(rawArgs = process.argv.slice(2)) {
     ci: process.env.CI,
   }
   const explicitUi = rawArgs[0] === 'ui'
-  if (shouldLaunchSkillsUi(rawArgs, terminalEnvironment)) {
-    const { resolveUiLocale } = await import('./tui/i18n/locale.js')
-    const locale = resolveUiLocale('auto', process.env.RSP_UI_LANG, process.env.LC_ALL ?? process.env.LC_MESSAGES ?? process.env.LANG ?? new Intl.DateTimeFormat().resolvedOptions().locale)
-    const { runSkillsTui } = await import('./skills-tui/entry.js')
-    const selection = await runSkillsTui(locale)
-    if (selection.kind === 'confirmed') {
-      // Confirmation can outlive a project version change.
-      await guardProjectVersion(rawArgs)
-      const result = await installPackagedSkills({ names: selection.names, force: selection.force })
-      printSkillInstallResult(result)
-    }
-    else if (selection.kind === 'error') {
-      process.exitCode = 1
-    }
-    return
-  }
   if (explicitUi || shouldAutoLaunchUi(rawArgs, terminalEnvironment)) {
     const { lang } = validateUiArgs(explicitUi ? rawArgs.slice(1) : [])
     if (!isInteractiveTerminal(terminalEnvironment)) {

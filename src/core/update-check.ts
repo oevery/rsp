@@ -1,4 +1,4 @@
-import { isExactVersion } from './project-version.js'
+import { compareVersions, isExactVersion } from './project-version.js'
 
 export interface UpdateNotice {
   status: 'current' | 'available' | 'unavailable'
@@ -21,16 +21,7 @@ export async function checkForUpdates(current: string): Promise<UpdateNotice> {
     const latest: unknown = JSON.parse(body)?.latest
     if (typeof latest !== 'string' || !isExactVersion(latest) || !/^\d+\.\d+\.\d+$/.test(latest))
       throw new Error('invalid stable version')
-    const selected = current.split(/[+-]/, 1)[0]!.split('.').map(BigInt)
-    const stable = latest.split('.').map(BigInt)
-    let newer = current.split('+', 1)[0]!.includes('-')
-    for (let index = 0; index < 3; index++) {
-      if (stable[index] !== selected[index]) {
-        newer = stable[index]! > selected[index]!
-        break
-      }
-    }
-    return { status: newer ? 'available' : 'current', current, latest }
+    return { status: compareVersions(latest, current) > 0 ? 'available' : 'current', current, latest }
   }
   catch {
     return { status: 'unavailable', current }

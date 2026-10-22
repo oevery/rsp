@@ -5,26 +5,33 @@
 ## Setup and Skills
 
 ```text
-rsp init --agents-mode <mode>   Scaffold .rsp/ and ensure the RSP entry in AGENTS.md
-rsp init --with-project-setup   Also create .rsp/changes/project-setup.md
-rsp update [--adopt-version] [--remove-legacy-rules]
-                                Refresh managed project files, not packaged Skills
-rsp doctor [--fix] [--check-updates]              Inspect integration health; fix only safe deterministic issues
-rsp skills                      Open the project Skill manager in a dual TTY
-rsp skills list [--json]        List bundled Skills and exact installation state
-rsp skills install [--dry-run] [--force]
-                                Install the complete seven-Skill core suite
+rsp init --agents-mode <mode>   Create project files and the complete core suite
+rsp init --with-project-setup   Also create the project-setup Change
+rsp update [--dry-run]          Update project files, Skills and the pin together
+rsp doctor [--check-updates]    Read-only diagnostics; explicit stable metadata check
+rsp skills list [--json]        Inspect suite drift and known retired names
 ```
 
-`rsp update` does not refresh installed package-owned Skills. `rsp skills list` inspects the package and exact target state; `rsp skills install --dry-run` previews before mutation. Differing selected Skill trees or recognized obsolete package-owned identities require explicit `--force`. Inspect customized trees before force and confirm that any content you need to retain is recoverable; a Git commit containing that content suffices without another backup. Unknown Skills are not migration targets.
+Use the selected target's update for an upgrade; ordinary commands keep the exact
+project selection. Repeated init does not adopt another version; downgrades are
+unsupported. Standalone skills install, its terminal and doctor --fix are retired.
 
-Activation failure triggers rollback of recognized replacements/removals. Incomplete rollback retains and reports a recovery location; inspect actual installed trees and backups before retrying or cleanup. Silent upgrade safety is not guaranteed. For the unreleased source candidate's old-name routing, see [Skills and managed work](../guides/skills.md); `@latest` still invokes the published package, not this candidate.
+Update replaces exact core Skill names, removes known retired names and the two
+retired Rules files, and refreshes only the managed AGENTS block. Preserve needed
+customizations in managed assets before updating. Unknown Skills, user configuration,
+project knowledge and other AGENTS content remain intact. Optional --dry-run previews
+without force or writes.
 
-`rsp doctor --fix` reports only real filesystem mutations; a healthy project returns `fixed: []` and explains that no safe repair was needed.
+Failures stop without rollback or recovery copies. Fix the cause and rerun the same
+target CLI; completed managed changes remain applied. Update does not modify config
+or repair user directories. The pin is written last; crash recovery is unsupported.
+Diagnostics grant no mutation authority. See [Skill mappings](../guides/skills.md).
+Missing user scaffolding may be restored or created with init; access and path-type
+errors require owner correction. Update does not repair these paths.
 
-For the generated-index compatibility migration, `rsp update` removes only root `.rsp/specs/INDEX.md` or any `.rsp/specs/**/00-index.md` whose metadata identifies an RSP-generated Specs index and whose `source_dir` exactly matches the owning directory. It preflights all candidates before mutation and rolls quarantined files back if post-migration direct Specs inspection fails. Owner-controlled, unreadable, or replaced reserved content stops the update without overwrite or deletion. Fresh initialization and `rsp add spec` never create generated indexes.
-
-`rsp doctor` remains read-only unless `--fix` is explicit. It reports integration and filesystem issues, including recognized indexes that still require `rsp update`, without creating hidden workflow state.
+Generated-index compatibility removes only root INDEX.md or 00-index.md Specs indexes
+with exact generated metadata. Preflight and ownership checks protect owner-controlled
+content; init and add spec generate no indexes. Doctor always remains read-only.
 
 ## Specs and work creation
 

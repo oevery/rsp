@@ -27,9 +27,6 @@ RSP_VERSION='<version>'
 npx -y @oevery/rsp@"$RSP_VERSION" init --with-project-setup
 # fill .rsp/changes/project-setup.md
 # fill .rsp/specs/design.md
-npx -y @oevery/rsp@"$RSP_VERSION" skills install --dry-run
-npx -y @oevery/rsp@"$RSP_VERSION" skills install
-npx -y @oevery/rsp@"$RSP_VERSION" doctor
 npx -y @oevery/rsp@"$RSP_VERSION" status
 ```
 
@@ -43,7 +40,7 @@ rsp show improve-login
 
 Focus is a set: the setup Change may still be focused alongside improve-login. Use the explicit name to inspect it; show --focused requires exactly one marker.
 
-Confirm that `doctor` reports the intended setup and `status` shows the expected work. These are deterministic observations, not semantic acceptance. Follow the nearest `AGENTS.md`, keep the selected Change current and establish applicable required verification, reusing traceable passing evidence when its tested boundary and relevant inputs still apply. Before authorized archive, decide necessary knowledge updates, converge the whole Change and check current readiness.
+Confirm that `status` shows the expected work; use read-only `doctor` when diagnosing setup. These are deterministic observations, not semantic acceptance. Follow the nearest `AGENTS.md`, keep the selected Change current and establish applicable required verification, reusing traceable passing evidence when its tested boundary and relevant inputs still apply. Before authorized archive, decide necessary knowledge updates, converge the whole Change and check current readiness.
 
 [Read the full getting-started guide](./docs/site/en/getting-started.md).
 
@@ -89,6 +86,6 @@ The site is only a presentation layer over the Markdown in this repository. It a
 
 RSP is a tool-agnostic file convention and works with any assistant or editor that can read project files. Humans start here; agents follow the nearest `AGENTS.md`, load the required project Core through host Skill discovery or `.agents/skills/rsp/SKILL.md`. Missing required Skills stop dependent work; there is no Rules fallback. Root `skills/` contains authored sources in the RSP repository, not the consumer installation entry.
 
-The current source candidate records exact project versions, requires explicit adoption for upgrades, and retires Rules; see the [pinned Skills migration](docs/migrations/pinned-skills.md). These source changes do not establish publication. It installs the seven core Skills together with `rsp skills install`. Individual named installs are unsupported; each capability may still be invoked directly and reads shared Core definitions on demand. Structural discovery is now a conditional method of Review. See the [Skill migration guide](docs/site/en/guides/skills.md) for protected upgrades from older installations.
+The current source candidate uses `init` for a complete setup and the selected target CLI's `update` for the complete environment. It pins exact versions and retires Rules and separate Skill installation; see [unified update migration](docs/migrations/pinned-skills.md). These source changes do not establish publication. The seven core Skills remain independently invocable; see [Skill ownership](docs/site/en/guides/skills.md).
 
 RSP is licensed under the [MIT License](./LICENSE).

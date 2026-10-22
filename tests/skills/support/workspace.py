@@ -69,7 +69,9 @@ def prepare_upgrade_evidence(root, expected_exit):
     cli_env.pop("FORCE_COLOR", None)
     result = subprocess.run([*cli, "ready", "value-change", "--json"], cwd=root,
                             text=True, capture_output=True, env=cli_env)
-    assert result.returncode != 0 and "requires an update" in result.stdout + result.stderr
+    diagnostic = result.stdout + result.stderr
+    assert result.returncode != 0 and ".rsp/specs/design.md is missing" in diagnostic, diagnostic
+    assert "run rsp init" in diagnostic and "Run: rsp update" not in diagnostic, diagnostic
     (root / "inspection.json").write_text(json.dumps({
         "origin": "fixture setup execution", "command": "rsp ready value-change --json",
         "exitCode": result.returncode, "stdout": result.stdout, "stderr": result.stderr,

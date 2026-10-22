@@ -4,7 +4,7 @@ description: Coordinate authorized direct, Change or Group work; select capabili
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.22.1"
+  version: "2026.10.22.4"
 ---
 
 # RSP Core
@@ -21,7 +21,7 @@ Before mutation, read nearest instructions and relevant CONTEXT; establish inten
 
 Load the [work model](references/work-model.md) when tracked identities are missing from context; required tracking cannot be bypassed by relabelling work Direct. Use rsp status for needed owner, dependency or recovery facts, and JSON for exact dependency data. Required dependency checks and fresh archive readiness still apply.
 
-Use the exact CLI invocation in the project AGENTS entry and `.rsp/version`; `rsp` in these Skills denotes that selection, never `@latest` or an unverified global binary. Upgrade notices grant no migration authority. Resolve needed settings through the selected CLI's successful rsp config --json summary. Reuse it until relevant drift or recovery; raw YAML is diagnostic only. Projection failure blocks choices depending on unknown settings, while independent authorized work continues.
+Use the exact CLI invocation in the project AGENTS entry and `.rsp/version`; `rsp` in these Skills denotes that selection, never `@latest` or an unverified global binary. Only an authorized upgrade selects another exact target and runs its `update` command for the complete environment. Upgrade notices grant no migration authority. Resolve needed settings through the selected CLI's successful rsp config --json summary. Reuse it until relevant drift or recovery; raw YAML is diagnostic only. Projection failure blocks choices depending on unknown settings, while independent authorized work continues.
 
 Select capabilities from their descriptions and the task contract. Executors load applicable methods and inspect sources; Core consults method details when needed for its own work or a concrete coordination question. Select the responsibility needed now:
 

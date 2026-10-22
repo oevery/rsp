@@ -7,9 +7,9 @@ import { generateGroupBriefContent, getGroupReopenEvidence, GROUP_REOPEN_COMPLET
 import { CHANGES_DIR, FOCUS_DIR, RSP_DIR } from '../core/config.js'
 import { getVisibleBodyLines } from '../core/content.js'
 import { appendDocumentSectionItem, getDocumentSectionMarkdown, getDocumentSections, getDocumentTitles, GROUP_BRIEF_DOCUMENT_SCHEMA, parseRspDocument } from '../core/document-model.js'
-import { cleanupEmptyParentDirs } from '../core/filesystem.js'
+import { cleanupEmptyParentDirs, inspectRspInitialization as inspectInitialization } from '../core/filesystem.js'
 import { withRspLock } from '../core/lock.js'
-import { inspectManagedFile, ManagedPathError, requireManagedDirectory, resolveManagedDirectoryChain } from '../core/managed-path.js'
+import { ManagedPathError, requireManagedDirectory, resolveManagedDirectoryChain } from '../core/managed-path.js'
 import { markdownText, parseMarkdown } from '../core/markdown.mjs'
 import { toErrorMessage } from '../core/output.js'
 import { normalizeWorkRefSegment, resolveArchiveDirectory, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
@@ -232,14 +232,6 @@ export async function reopenChangeGroup(name: string, options: ReopenChangeGroup
 
 function failure(kind: 'usage' | 'error', message: string, candidates: string[] = [], remainingCandidates = 0): ChangeGroupResult {
   return { ok: false, kind, message, candidates, remainingCandidates }
-}
-
-function inspectInitialization(): string | undefined {
-  const design = inspectManagedFile(join(RSP_DIR, 'specs', 'design.md'), 'design Spec', { allowMissing: true })
-  if (!design.issue && design.exists)
-    return undefined
-  const initialized = existsSync(RSP_DIR)
-  return `${initialized ? 'RSP project requires an update' : 'RSP is not initialized in this project'}\n  ${initialized ? 'Run: rsp update' : 'Run: rsp init'}`
 }
 
 async function requireEmptyGroupRecoverySubtree(path: string, label: string): Promise<void> {

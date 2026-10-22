@@ -1,5 +1,4 @@
 import type { RuntimeDiagnostic } from '../types.js'
-import type { UpdateOptions } from './update.js'
 import { existsSync } from 'node:fs'
 import { readdir, readFile, stat } from 'node:fs/promises'
 import { basename, join, relative } from 'node:path'
@@ -9,7 +8,7 @@ import { inspectChangeGroups } from '../core/change-group.js'
 import { clearConfigCache, getVersion, inspectRspConfig, loadRspConfig, OBSOLETE_RSP_RULES_PATH, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
 import { DEFAULT_DECISION_RECORDS_PATH, resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { inspectChangeDependencies } from '../core/dependency-plan.js'
-import { inspectUnsupportedRules, normalizeLogicalPath, walkMarkdownFiles } from '../core/filesystem.js'
+import { inspectRspInitialization, inspectUnsupportedRules, normalizeLogicalPath, walkMarkdownFiles } from '../core/filesystem.js'
 import { inspectManagedFile } from '../core/managed-path.js'
 import { toErrorMessage } from '../core/output.js'
 import { exactInvocation, readProjectVersion } from '../core/project-version.js'
@@ -17,7 +16,6 @@ import { checkForUpdates } from '../core/update-check.js'
 import { GROUP_BRIEF_FILENAME, inspectArchiveTree, inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 import { inspectSpecs, specsInspectionComplete } from '../specs/query.js'
 import { inspectPackagedSkillInventory } from './skills.js'
-import { updateProject, UpdateTransactionError } from './update.js'
 
 export interface DoctorCheck {
   status: 'ok' | 'issue' | 'info'
@@ -30,7 +28,6 @@ export interface DoctorCheck {
 export interface DoctorResult {
   command: 'doctor'
   ok: boolean
-  fixed: string[]
   checks: DoctorCheck[]
   runtime: RuntimeDiagnostic[]
   summary: {
@@ -39,44 +36,14 @@ export interface DoctorResult {
 }
 
 export interface DoctorOptions {
-  fix?: boolean
   checkUpdates?: boolean
-  testing?: UpdateOptions['testing']
 }
 
 export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResult> {
-  const fixed: string[] = []
-  let repairIssue: string | null = null
-
-  if (options.fix && existsSync(RSP_DIR)) {
-    try {
-      const update = await updateProject({ testing: options.testing })
-      fixed.push(...update.actions)
-    }
-    catch (error) {
-      if (error instanceof UpdateTransactionError) {
-        fixed.push(
-          ...error.rollback.retainedMutations.map(path => `partial update mutation retained: ${path}`),
-          ...error.rollback.recoveryPaths.map(path => `update recovery copy retained: ${path}`),
-        )
-      }
-      repairIssue = `safe deterministic repair could not run: ${toErrorMessage(error)}`
-    }
-  }
-
   const checks: DoctorCheck[] = []
-  if (repairIssue) {
-    checks.push({
-      status: 'issue',
-      label: 'safe deterministic repairs completed',
-      message: repairIssue,
-      hint: 'Resolve the reported configuration or filesystem issue, then run rsp doctor --fix again.',
-    })
-  }
   const runtime: RuntimeDiagnostic[] = []
   const reportRuntime = (diagnostic: RuntimeDiagnostic) => runtime.push(diagnostic)
 
-  const designPath = join(RSP_DIR, 'specs', 'design.md')
   reportCheck(checks, '.rsp exists', existsSync(RSP_DIR), 'Run: rsp init')
   reportRetiredProtocol(checks)
   await reportProjectRuntime(checks)
@@ -89,11 +56,12 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
       message: notice.status === 'available'
         ? `RSP ${notice.latest} is available; running ${notice.current}. Project selection is unchanged.`
         : notice.status === 'current' ? `No newer stable package found for ${notice.current}.` : 'Update metadata is unavailable; local checks are unaffected.',
-      hint: notice.status === 'available' ? 'Inspect migration guidance and choose an exact target. Upgrade notices authorize no adoption or Skill replacement.' : undefined,
+      hint: notice.status === 'available' ? 'Inspect migration guidance and choose an exact target. Upgrade notices authorize no update.' : undefined,
     })
   }
   await reportUnsupportedRules(checks, reportRuntime)
-  reportCheck(checks, 'specs/design.md exists', existsSync(designPath), 'Run: rsp init')
+  const initialization = inspectRspInitialization()
+  checks.push({ status: initialization ? 'issue' : 'ok', label: 'specs/design.md exists', message: initialization })
 
   await checkAgents(checks, reportRuntime)
   if (existsSync('CONTEXT-MAP.md')) {
@@ -102,7 +70,7 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
       code: 'legacy_context_map',
       label: 'legacy root context map detected',
       message: 'CONTEXT-MAP.md remains; its semantic migration requires owner review.',
-      hint: 'Use Core context migration. Retain relevant legacy context until an authorized merge updates CONTEXT.md and active references; doctor --fix does not migrate or delete it.',
+      hint: 'Use Core context migration. Retain relevant legacy context until an authorized merge updates CONTEXT.md and active references; update does not migrate or delete it.',
     })
   }
   await checkSpecsTree(checks, reportRuntime)
@@ -116,7 +84,6 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
   const result: DoctorResult = {
     command: 'doctor',
     ok: checks.every(check => check.status !== 'issue'),
-    fixed,
     checks,
     runtime,
     summary: {
@@ -136,7 +103,7 @@ async function reportProjectRuntime(checks: DoctorCheck[]): Promise<void> {
       code: 'project_cli_version',
       label: 'project CLI version',
       message: selected ? `Project pins ${selected}; running ${running}.` : 'Project has no exact CLI pin.',
-      hint: selected ? `Use ${exactInvocation(selected)} <command>; only an authorized migration uses update --adopt-version.` : 'Choose an exact CLI version, then run its update command.',
+      hint: selected ? `Use ${exactInvocation(selected)} <command>; only an authorized migration uses update.` : 'Choose an exact CLI version, then run its update command.',
     })
   }
   catch (error) {
@@ -144,13 +111,16 @@ async function reportProjectRuntime(checks: DoctorCheck[]): Promise<void> {
   }
   try {
     const inventory = await inspectPackagedSkillInventory()
-    const drift = inventory.skills.filter(skill => skill.status !== 'unchanged')
+    const drift = [
+      ...inventory.skills.filter(skill => skill.status !== 'unchanged').map(skill => `${skill.name}: ${skill.status}`),
+      ...inventory.retired.map(name => `${name}: retired`),
+    ]
     checks.push({
       status: drift.length === 0 ? 'ok' : 'issue',
       code: 'project_skill_suite',
       label: 'project Skill suite matches running package',
-      message: drift.length > 0 ? drift.map(skill => `${skill.name}: ${skill.status}`).join(', ') : undefined,
-      hint: drift.length > 0 ? 'Inspect local customizations, then use the selected exact CLI: skills install --dry-run; explicit --force is required for replacement. No Rules fallback exists.' : undefined,
+      message: drift.length > 0 ? drift.join(', ') : undefined,
+      hint: drift.length > 0 ? 'Preserve needed custom content in managed Skills, then run the selected exact CLI: update.' : undefined,
     })
   }
   catch (error) {
@@ -167,7 +137,7 @@ function reportRetiredProtocol(checks: DoctorCheck[]): void {
         code: 'retired_rules',
         label: `retired Rules path: ${path}`,
         message: inspection.issue?.message ?? 'Rules are no longer read or generated.',
-        hint: 'Preserve custom content and plan the complete Skill migration before update --remove-legacy-rules. Symlinks and special files require owner review.',
+        hint: 'Preserve needed custom content, then run update. Symlinks and special files require owner review.',
       })
     }
   }
@@ -217,7 +187,7 @@ async function checkAgents(checks: DoctorCheck[], reportRuntime: (diagnostic: Ru
       status: 'issue',
       label: 'AGENTS.md is a regular managed file',
       message: inspection.issue.message,
-      hint: 'Replace the unsupported entry with a project-local regular file, then run: rsp update',
+      hint: 'Check AGENTS.md path type and permissions; preserve user content before correcting the entry. Then run: rsp update',
     })
     return
   }
@@ -238,7 +208,7 @@ async function checkAgents(checks: DoctorCheck[], reportRuntime: (diagnostic: Ru
       path: 'AGENTS.md',
       message: toErrorMessage(error),
     })
-    checks.push({ status: 'issue', label: 'AGENTS.md contains managed RSP block', message: 'AGENTS.md could not be read', hint: 'Check AGENTS.md permissions or recreate it with rsp init' })
+    checks.push({ status: 'issue', label: 'AGENTS.md contains managed RSP block', message: 'AGENTS.md could not be read', hint: 'Check AGENTS.md permissions and filesystem access; init/update do not repair unreadable user content.' })
     return
   }
 
@@ -320,7 +290,7 @@ async function checkArchiveNaming(checks: DoctorCheck[]): Promise<void> {
     status: 'issue',
     label: 'archived change files follow the date_name.md convention',
     message: `archived change files with invalid names: ${invalidFiles.join(', ')}`,
-    hint: 'Rename archive files to YYYY-MM-DD_name.md and run: rsp update',
+    hint: 'Rename archive files to YYYY-MM-DD_name.md, then rerun rsp doctor',
   })
 }
 
@@ -375,7 +345,7 @@ async function checkDecisionRecordsDirectory(checks: DoctorCheck[], reportRuntim
         status: 'issue',
         label: `${decisionRecordsPath} is the authoritative Decision Record directory`,
         message: filesystemError,
-        hint: 'Choose a project-relative directory that does not escape through a symlink.',
+        hint: 'Correct decisions.path or its filesystem entry; it must resolve to a project-local directory. Preserve existing user content.',
       })
       return
     }
@@ -386,11 +356,13 @@ async function checkDecisionRecordsDirectory(checks: DoctorCheck[], reportRuntim
       checks,
       `${decisionRecordsPath} is the authoritative Decision Record directory`,
       info.isDirectory(),
-      'Run: rsp update',
+      'Correct the path type; init/update do not replace existing user content.',
     )
   }
   catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+    const code = (error as NodeJS.ErrnoException).code
+    const missing = code === 'ENOENT'
+    if (!missing) {
       reportRuntime({
         code: 'decision_records_path_stat_failed',
         operation: 'stat',
@@ -401,8 +373,14 @@ async function checkDecisionRecordsDirectory(checks: DoctorCheck[], reportRuntim
     checks.push({
       status: 'issue',
       label: `${decisionRecordsPath} is the authoritative Decision Record directory`,
-      message: `${decisionRecordsPath} Decision Record directory is missing or unreadable`,
-      hint: 'Run: rsp update',
+      message: missing
+        ? `${decisionRecordsPath} Decision Record directory is missing`
+        : `Unable to inspect Decision Record directory ${decisionRecordsPath}: ${toErrorMessage(error)}`,
+      hint: missing
+        ? 'Create the directory yourself, or run rsp init to create missing scaffolding. Update does not create user directories.'
+        : code === 'EACCES' || code === 'EPERM'
+          ? 'Check directory and parent permissions; init/update do not repair filesystem access.'
+          : 'Resolve the filesystem error or correct decisions.path, then rerun rsp doctor.',
     })
   }
 }

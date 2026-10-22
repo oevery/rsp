@@ -33,11 +33,10 @@ export async function inspectUnsupportedRules(): Promise<UnsupportedRulesInspect
   const entries = rawEntries
     .filter(entry => entry.path !== OBSOLETE_RSP_RULES_PATH)
     .map(entry => ({ path: normalizeLogicalPath(relative(rulesDir, entry.path)), kind: entry.kind }))
-  const obsoleteFallbackPresent = existsSync(OBSOLETE_RSP_RULES_PATH)
   return {
     entries,
     diagnostics,
-    directoryRemaining: existsSync(rulesDir) && (!obsoleteFallbackPresent || entries.length > 0),
+    directoryRemaining: entries.length > 0,
   }
 }
 
@@ -93,13 +92,22 @@ export function isValidSpecName(name: string): boolean {
   return SPEC_NAME_RE.test(name)
 }
 
-export function guardRspInitialized(): void {
+export function inspectRspInitialization(): string | undefined {
   const designPath = join(RSP_DIR, 'specs', 'design.md')
   const design = inspectManagedFile(designPath, 'design Spec', { allowMissing: true })
-  if (design.issue || !design.exists) {
-    const initialized = existsSync(RSP_DIR)
-    console.error(`  ${pc.red('Error:')} ${initialized ? 'RSP project requires an update' : 'RSP is not initialized in this project'}`)
-    console.error(`  ${pc.dim(initialized ? 'Run: rsp update' : 'Run: rsp init')}`)
+  if (design.issue)
+    return `${design.issue.message}\n  Check path types and permissions; init/update do not repair existing user content.`
+  if (design.exists)
+    return undefined
+  return existsSync(RSP_DIR)
+    ? `${designPath} is missing.\n  Restore your design file, or run rsp init to create missing scaffolding.`
+    : 'RSP is not initialized in this project\n  Run: rsp init'
+}
+
+export function guardRspInitialized(): void {
+  const issue = inspectRspInitialization()
+  if (issue) {
+    console.error(`  ${pc.red('Error:')} ${issue}`)
     process.exit(1)
   }
 }

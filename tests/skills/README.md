@@ -392,7 +392,7 @@ six-task acceptance or a general efficiency improvement.
 The outcome-focused consolidation regression adds four bounded tasks:
 
 - writeback-in-progress updates a stale stable contract while preserving unfinished Change/Focus and Git state.
-- upgrade-checkpoint and upgrade-checkpoint-blocked retain an actual setup CLI upgrade diagnostic and real passing or unavailable check evidence. They distinguish a permitted checkpoint from a missing-evidence stop without authorizing upgrade or archive.
+- upgrade-checkpoint and upgrade-checkpoint-blocked retain an actual setup CLI missing-design diagnostic and real passing or unavailable check evidence. They distinguish a permitted checkpoint from a missing-evidence stop without authorizing scaffold creation, upgrade or archive.
 - review-evidence-limits combines a real unsafe migration claim, an unavailable vendor-contract judgment and a deliberately deferred draft choice. Findings and coverage gaps must remain distinct.
 
 Use the existing correction-review task alongside these for required independent execution and review. New tasks judge outcomes, write scope and truthful evidence, not read counts, exact method loads or incidental repetition. Reference/control calibration is offline; live candidate acceptance remains separate.

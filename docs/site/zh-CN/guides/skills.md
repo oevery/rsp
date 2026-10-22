@@ -18,27 +18,19 @@
 
 ## 固定版本与 Skills-only 迁移
 
-源码候选在 `.rsp/version` 中记录精确 CLI 版本，并在 AGENTS 中生成对应调用。Skill 示例的 `rsp` 表示该选定调用，不表示 `@latest`。更新提示不授予迁移权限；旧的已发布 CLI 不会被补上版本守卫，源码测试应使用构建后的候选。
+源码候选在 .rsp/version 中记录精确 CLI。init 创建项目文件并安装完整套件；普通命令沿用该版本，只有获授权升级才主动选择另一个精确目标。源码改动不等于发布，旧 CLI 也不会被补上版本守卫。
 
-获授权升级时，先保留本地改动并检查一个精确目标，再用目标 CLI 执行 `update --adopt-version`。Rules 已退役；保留 `.rsp/rsp-rules.md` 与 `.rsp/rules/rsp-rules.md` 中需要的内容，旧文件仍在时再显式添加 `--remove-legacy-rules`。不再生成后备协议，无关旧文件仍归项目所有。随后使用同一精确 CLI，按下文的保护措施更新完整套件，运行 `doctor` 后再恢复依赖 Skills 的工作。缺少必需 Skill 时停止依赖工作，不读取后备协议、不隐式安装。
+先保存受管资产中需要的本地修改，再运行目标 CLI 的 update。它一次更新完整套件和受管项目文件，并清理退役 Rules 与已知旧 Skills。可选 update --dry-run 只读预览；无需独立采用版本、删除、强制或安装步骤。持续定制应放在项目自有说明或单独命名的 Skills 中；未知名称、配置值和项目知识保持不动。
 
-`doctor` 报告项目版本和安装树差异；仅显式 `doctor --check-updates` 联网检查稳定版本元数据，超时为两秒，元数据不可用只作为信息提示。普通命令保持离线。只改回旧版本记录不能撤销产物迁移，也不证明降级安全。
+Doctor 与 skills list 均只读。Doctor 报告版本、套件差异和退役名称；仅 doctor --check-updates 联网检查稳定元数据，超时两秒。提示不授予升级权限。缺少必需 Skill 时停止依赖工作，不读取后备协议，也不隐式安装。
 
 ## 旧 Skill 名称迁移
 
-对此尚未发布的源码候选，将 `rsp-design` 交给 `rsp-shape`；将 `rsp-diagnose`、`rsp-tdd`、`rsp-resolve-findings` 作为 `rsp-implement` 的按需方法；将 `rsp-manage` 作为 `rsp` 内部的按需协调。更早的 `rsp-address-review` 别名也归 `rsp-implement`。这是职责映射，不是永久兼容 Skill，更不是要求删除项目自有说明。
+update 移除明确识别的退役名称：rsp-address-review、rsp-codebase-audit、rsp-structural-audit、rsp-design、rsp-diagnose、rsp-manage、rsp-release-docs、rsp-resolve-findings 和 rsp-tdd。设计归 Shape，诊断、测试先行和修正归 Implement，协调归 Core，写作归 Doc，审查归 Review。这些映射不授予修改未知自定义 Skills 的权限。
 
-`rsp-release-docs` 已移除，写作由 Doc 负责，审查由 Review 负责。`rsp-structural-audit` 与 `rsp-codebase-audit` 的结构审查能力归入 Review。整套安装会检查这些旧目录，显式强制迁移前应确认需要保留的定制内容可恢复。单个核心 Skill 的安装请求会在写入前被拒绝。
+update 只替换或删除包自有资产，不改写 config，也不修复用户知识与工作目录；缺失配置使用读取时默认值。AGENTS 只更新受管块，版本最后写入。维护仓库中指向包源码的规范链接保留，其他受管路径的异常符号链接会被拒绝。
 
-待精确候选 CLI 可用后，全程使用同一个已选候选 CLI；`@latest` 不代表此未发布候选。获得安装权限后：
-
-1. 查看 `rsp skills list`，并用 `rsp skills install --dry-run` 预检。已选树内容不一致或存在已识别的过时包自有名称时，普通 dry-run 会停止，不展示完整替换／移除预览。
-2. 检查指定的定制目录，并用 `rsp skills install --dry-run --force` 查看精确替换／移除范围。未知 Skill 保持不动。
-3. 确认范围及需要保留的定制内容可恢复后，用同一个 CLI 运行 `rsp skills install --force`，并检查安装后的实际状态。
-
-已有包含所需定制内容的 Git 提交即可，不必再备份。未提交或未跟踪的内容，仅在需要保留时另行保存。安装器的临时备份用于回滚，不是长期留存。
-
-激活失败会触发已识别替换／移除的回滚。回滚可能不完整，此时命令会报告保留的恢复位置；先检查实际安装树与备份，再决定是否重试或清理。这不意味着静默更新安全。`rsp update` 不刷新 Skills。这里不声称候选已有版本、发布、外部安装或行为验收。
+失败立即停止，不进行整次升级回滚，也不生成恢复副本。已完成的替换和删除保留；排除原因后，用同一个精确目标 CLI 重跑。失败的全新初始化也可以重跑 init，不覆盖已有用户文件。没有恢复命令、任意降级或崩溃恢复保证；接入期间避免并发编辑。重复 init 不采用不同的已固定版本。
 
 安装方式、运行时角色和调用方式彼此独立：
 

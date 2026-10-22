@@ -20,30 +20,33 @@ or generated; there is no alternate fallback protocol. Repository-local
 those maintenance capabilities are not part of the published inventory. The
 [Workflow contract](workflow.md#capability-ownership) owns the default capability set.
 
-Installation validates package-owned files and preserves unrelated/unknown Skills.
-A dry run previews differences; replacing or removing recognized package-owned
-identities requires explicit `--force`. Customized trees need inspection before
-force, which replaces or removes their local customizations. Confirm that any
-content you need to retain is recoverable; a Git commit containing that content
-suffices, without another backup. Activation failure rolls back; incomplete
-rollback retains and reports a recovery location. Temporary installation backups
-support rollback, not permanent retention. Inspect actual trees and backups before
-retry or cleanup. Installation grants no workflow or action authority.
-Interactive installation uses the installer's read-only preflight to list exact
-replacement and deletion directories. Either action requires a separate confirmation
-that warns about lost local customizations; cancellation leaves files unchanged.
+Init installs the complete environment. Update reconciles project files and the
+seven core Skills from one selected package, including recognized retired names.
+Optional dry run previews changes; differences from the target package are normal
+updates, not local conflicts requiring force. There is no standalone Skill install
+or installation terminal. Diagnostics remain read-only.
 
-The retired rsp-release-docs identity maps to Doc; rsp-structural-audit and
-rsp-codebase-audit map to Review. Full-suite installation includes all recognized
-obsolete identities in protected migration. Partial named installation is rejected
-before mutation. Preserve customized obsolete content until explicit forced
-migration; rsp update does not refresh or remove installed Skills.
+Only exact package-owned Skill names, retired Rules files and the managed AGENTS
+block are replacement/removal targets. Unknown Skills and project-owned content
+remain untouched. Users preserve needed local modifications inside managed assets
+before update and keep ongoing customizations in project-owned instructions or
+separately named Skills. No installation baseline, merge engine or first-migration
+backup workflow is introduced.
 
-Project setup records one exact CLI package version in `.rsp/version` and provides
-its exact invocation in the managed AGENTS entry. CLI and the complete Skill suite
-should be selected from that same package; doctor reports actual missing/divergent
-Skill trees rather than inferring consistency from a version string. This does not
-certify model compliance or turn source-candidate metadata into a published release.
+Init creates missing user scaffolding; update never rewrites config or repairs
+user directories. Runtime defaults do not require YAML migration. Only the managed
+AGENTS block changes; the version pin is written last.
+
+New file and Skill content is prepared before publication. No old-content backups,
+whole-update rollback or recovery entry exist. A failed update leaves completed
+managed changes in place and reports the failure; retry the same target CLI after
+fixing the cause. Concurrent external edits and crash recovery are unsupported.
+Installation grants no further workflow, Git or external-action authority.
+
+Doctor reports actual missing/divergent trees and recognized obsolete names rather
+than inferring consistency from version strings. Canonical maintainer source links
+are recognized as current projections, not replaced. Source metadata does not prove
+publication or model compliance.
 
 ### Skill package boundaries
 
@@ -118,7 +121,7 @@ relocation and disposal procedures stay with their repository maintenance owners
 
 - Distribution owns the shipped inventory, protected installation and release checks.
 - Maintainer Skills own research preparation, source interpretation and candidate methods.
-- [CLI](cli.md) owns project update/repair, not installed Skill migration.
+- [CLI](cli.md) owns the complete project update, including installed Skill reconciliation.
 - Research completion, packaging and evaluation grant no product promotion or publication.
 
 ## Constraints

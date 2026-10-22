@@ -18,41 +18,41 @@ Structural discovery is a conditional method of `rsp-review`. It examines an exp
 
 ## Pinned Skills-only migration
 
-The source candidate records an exact CLI version in `.rsp/version` and generates
-its invocation in AGENTS. Skill examples use `rsp` as shorthand for that selection,
-not `@latest`. An available update never authorizes a migration. Older published
-CLIs have no retrofitted guard; use a built candidate for source testing.
+The source candidate records an exact CLI in .rsp/version. Init creates project
+files and installs the complete suite. Ordinary commands keep that selection;
+only an authorized update deliberately selects another exact target. Source
+changes do not establish publication, and older CLIs have no retrofitted guard.
 
-For an authorized upgrade, preserve local changes and inspect one exact target.
-Run that target with `update --adopt-version`. Rules are retired: preserve needed
-content from `.rsp/rsp-rules.md` and `.rsp/rules/rsp-rules.md`, then explicitly add
-`--remove-legacy-rules` if those files remain. No fallback is generated; unrelated
-legacy files remain owner-controlled. Use the same exact CLI for the protected
-full-suite install below, then run `doctor` before resuming dependent agent work.
-Missing required Skills stop that work without fallback reading or implicit setup.
+Preserve needed local modifications in managed assets, then run the target CLI's
+update. It reconciles the complete suite, refreshes managed project files and
+removes retired Rules and known obsolete Skills. Optional update --dry-run previews
+without writes. No separate adoption, deletion, force or Skill installation steps
+are required. Keep ongoing customizations in project-owned instructions or separately
+named Skills; unknown names, configuration values and project knowledge remain intact.
 
-`doctor` reports project pin and installed-tree drift. Only explicit
-`doctor --check-updates` checks stable registry metadata with a two-second timeout;
-unavailable metadata is informational. Ordinary commands stay offline. Restoring
-an older pin alone does not reverse an artifact migration or prove downgrade safety.
+Doctor and skills list are read-only. Doctor reports actual pin/suite drift and
+retired names; only doctor --check-updates queries stable metadata, with a two-second
+timeout. Notices grant no upgrade authority. Missing required Skills stop dependent
+work without fallback reading or implicit installation.
 
 ## Migrating the earlier Skill names
 
-Retired `rsp-structural-audit` and `rsp-codebase-audit` requests now belong to Review. Suite installation protects both old directories before forced removal; preserve needed custom guidance.
+Known retired identities are removed during update: rsp-address-review,
+rsp-codebase-audit, rsp-structural-audit, rsp-design, rsp-diagnose, rsp-manage,
+rsp-release-docs, rsp-resolve-findings and rsp-tdd. Route design to Shape,
+diagnosis/test-first/correction to Implement, coordination to Core, writing to Doc
+and review to Review. These mappings grant no authority over unknown custom Skills.
 
-For this unreleased source candidate, route `rsp-design` to `rsp-shape`; route `rsp-diagnose`, `rsp-tdd`, and `rsp-resolve-findings` to methods within `rsp-implement`; route `rsp-manage` to conditional coordination within `rsp`. The older `rsp-address-review` alias also resolves to `rsp-implement`. These are responsibility mappings, not permanent compatibility Skills or a request to erase project-owned guidance.
+Update replaces only package-owned assets. User config and knowledge/work directories
+are not rewritten or repaired; missing settings use read-time defaults. AGENTS changes
+are confined to its managed block, and the version is written last. Canonical maintainer
+links to package sources are preserved; unexpected managed symlinks are rejected.
 
-`rsp-release-docs` is removed: writing belongs to Doc and fixed-scope read-only checks to Review. Full-suite installation checks the obsolete installed directory before replacement. Individual named installs are rejected before mutation. Update explicit old-name calls to the appropriate owner. Before an authorized forced migration, confirm that any custom release guidance you need to retain is recoverable.
-
-When the exact candidate CLI becomes available, use that same selected CLI throughout; `@latest` is not a synonym for this unreleased source. With installation authority:
-
-1. Inspect `rsp skills list` and run `rsp skills install --dry-run`. Differing selected trees or recognized obsolete package-owned names stop ordinary dry-run before a full replacement/removal preview.
-2. Inspect the named customized trees and use `rsp skills install --dry-run --force` to preview the exact replacement/removal scope. Unknown Skills must remain untouched.
-3. After confirming that scope and the recoverability of any custom content you need to retain, run `rsp skills install --force` with the same CLI and inspect the resulting installation state.
-
-A Git commit containing the needed custom content suffices; no additional backup is required. Save uncommitted or untracked content only if you need to retain it. Temporary installation backups support rollback, not permanent retention.
-
-Activation failure triggers rollback of recognized replacements/removals. If rollback is incomplete, the command reports a retained recovery location; inspect actual installed trees and backups before retrying or cleanup. This does not make a silent update safe. `rsp update` is not a Skill refresh. No candidate version, release, external install, or behavior acceptance is claimed here.
+Failure stops without whole-update rollback or recovery copies. Completed replacements
+and deletions remain applied. Fix the cause and rerun the same exact target CLI.
+Incomplete fresh initialization can likewise retry init without overwriting user files.
+There is no recovery command, arbitrary downgrade or crash-recovery guarantee; avoid
+concurrent edits during setup. Repeated init does not adopt another pinned version.
 
 Installation, runtime role, and invocation are separate:
 

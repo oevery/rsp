@@ -1,146 +1,87 @@
 import type { InitArgs } from '../types.js'
+import type { SkillUpdateResult } from './skills.js'
 import { existsSync } from 'node:fs'
-import { mkdir, readFile } from 'node:fs/promises'
-
+import { mkdir, readdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { generateChangeContent, generateDesignContent, upsertRspAgentsBlock } from '../core/artifacts.js'
-import { CHANGES_DIR, clearConfigCache, CONFIG_PATH, FOCUS_DIR, generateConfigTemplate, inspectRspConfig, reconcileRspConfigDefaults, RSP_DIR } from '../core/config.js'
-import { ensureDecisionRecordsDirectory, resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
+import { CHANGES_DIR, clearConfigCache, CONFIG_PATH, FOCUS_DIR, generateConfigTemplate, inspectRspConfig, OBSOLETE_RSP_RULES_PATH, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
+import { resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } from '../core/decisions.js'
 import { detectProjectName } from '../core/filesystem.js'
 import { withRspLock } from '../core/lock.js'
-import { ensureManagedFile, inspectManagedFile, requireManagedDirectory, writeManagedFile } from '../core/managed-path.js'
-import { readProjectVersion, selectProjectVersion, writeProjectVersion } from '../core/project-version.js'
+import { requireManagedDirectory, requireManagedFile, resolveManagedDirectoryChain } from '../core/managed-path.js'
+import { PROJECT_VERSION_PATH, selectProjectVersion } from '../core/project-version.js'
+import { updateSetupFile } from '../core/setup-files.js'
 import { resolveFocusMarkerPath, resolveWorkRef } from '../core/work-ref.js'
-import { removeLegacyArchiveIndex } from './archive-index-migration.js'
+import { updatePackagedSkills } from './skills.js'
 
 export { generateConfigTemplate }
 
-async function ensureFile(path: string, content: string): Promise<boolean> {
-  return ensureManagedFile(path, content, 'managed file')
-}
-
-function toTitle(projectName: string): string {
-  return projectName.startsWith('@') ? projectName.split('/')[1] || projectName : projectName
-}
-
 export type InitProjectResult
   = | { ok: false, message: string }
-    | {
-      ok: true
-      isNew: boolean
-      created: boolean
-      decisionRecordsPath: string
-      withProjectSetup: boolean
-      agentsUpdated: boolean
-      managedAgents?: string
-    }
+    | { ok: true, isNew: boolean, created: boolean, decisionRecordsPath: string, withProjectSetup: boolean, agentsUpdated: boolean, skills: SkillUpdateResult, managedAgents?: string }
 
 export async function initProject(args: InitArgs = {}): Promise<InitProjectResult> {
   const isNew = !existsSync(RSP_DIR)
   const projectName = await detectProjectName()
-
   const mode = args.agentsMode ?? 'managed'
-  if (mode !== 'managed' && mode !== 'print') {
-    return { ok: false, message: `unsupported --agents-mode "${mode}". Use: managed or print` }
-  }
-
-  const agentsPath = 'AGENTS.md'
-  const initialAgentsInspection = inspectManagedFile(agentsPath, 'AGENTS.md', { allowMissing: true })
-  if (initialAgentsInspection.issue)
-    throw initialAgentsInspection.issue
+  if (mode !== 'managed' && mode !== 'print')
+    return { ok: false, message: 'unsupported --agents-mode; use managed or print' }
 
   return withRspLock('init', async () => {
     const version = await selectProjectVersion()
-    const agentsInspection = inspectManagedFile(agentsPath, 'AGENTS.md', { allowMissing: true })
-    if (agentsInspection.issue)
-      throw agentsInspection.issue
-
-    if (existsSync(CONFIG_PATH)) {
-      clearConfigCache()
-      const existingConfig = await inspectRspConfig()
-      if (existingConfig.issues.length > 0)
-        throw new Error(existingConfig.issues.join('; '))
-      const existingDecisionRecordsPath = resolveDecisionRecordsPath(existingConfig.config)
-      const filesystemIssue = await validateDecisionRecordsFilesystemPath(existingDecisionRecordsPath)
-      if (filesystemIssue)
-        throw new Error(filesystemIssue)
-    }
-
-    const dirs = [
-      { path: join(RSP_DIR, 'specs'), label: 'specs root' },
-      { path: CHANGES_DIR, label: 'open work root' },
-      { path: FOCUS_DIR, label: 'focus root' },
-      { path: join(RSP_DIR, 'archives'), label: 'archive root' },
-    ]
-
-    for (const directory of dirs)
-      requireManagedDirectory(directory.path, directory.label, { allowMissing: true })
-    for (const directory of dirs)
-      await mkdir(directory.path, { recursive: true })
-
-    let created = false
-    if (await readProjectVersion() === null) {
-      await writeProjectVersion(version)
-      created = true
-    }
-    if (existsSync(CONFIG_PATH)) {
-      const existing = await readFile(CONFIG_PATH, 'utf-8')
-      const reconciled = reconcileRspConfigDefaults(existing)
-      if (reconciled.changed) {
-        await writeManagedFile(CONFIG_PATH, reconciled.content, 'config file')
-        created = true
-      }
-    }
-    else {
-      created = (await ensureFile(join(RSP_DIR, 'config.yaml'), generateConfigTemplate())) || created
-    }
+    const retiredRules = [RSP_RULES_PATH, OBSOLETE_RSP_RULES_PATH].map(path => requireManagedFile(path, 'retired Rules', { allowMissing: true })).some(Boolean)
+    if (retiredRules)
+      return { ok: false as const, message: 'Retired RSP assets require migration; use the selected target CLI: rsp update' }
+    requireManagedFile('AGENTS.md', 'AGENTS.md', { allowMissing: true })
     clearConfigCache()
-    const configInspection = await inspectRspConfig()
-    if (configInspection.issues.length > 0)
-      throw new Error(configInspection.issues.join('; '))
-    const decisionRecordsPath = resolveDecisionRecordsPath(configInspection.config)
-    created = (await ensureDecisionRecordsDirectory(decisionRecordsPath)) || created
-    const createdDesign = await ensureFile(join(RSP_DIR, 'specs', 'design.md'), generateDesignContent(projectName))
-    created = createdDesign || created
-    created = (await removeLegacyArchiveIndex()) || created
-    created = (await ensureFile(join(CHANGES_DIR, '.gitkeep'), '')) || created
-    created = (await ensureFile(join(FOCUS_DIR, '.gitkeep'), '')) || created
-    created = (await ensureFile(join(RSP_DIR, '.gitignore'), '# Transient files that should not be committed\n.lock\n')) || created
-
-    if (args.withProjectSetup) {
-      const projectSetupRef = resolveWorkRef('project-setup', { executable: true })
-      const changePath = projectSetupRef.path
-      const focusMarker = resolveFocusMarkerPath(projectSetupRef)
-      created = (await ensureFile(changePath, generateChangeContent('project-setup'))) || created
-      created = (await ensureFile(focusMarker, '')) || created
+    const inspection = await inspectRspConfig()
+    if (inspection.issues.length)
+      throw new Error(inspection.issues.join('; '))
+    const decisionRecordsPath = resolveDecisionRecordsPath(inspection.config)
+    const pathIssue = await validateDecisionRecordsFilesystemPath(decisionRecordsPath)
+    if (pathIssue)
+      throw new Error(pathIssue)
+    const dirs = [join(RSP_DIR, 'specs'), CHANGES_DIR, FOCUS_DIR, join(RSP_DIR, 'archives'), decisionRecordsPath]
+    for (const path of dirs)
+      resolveManagedDirectoryChain(process.cwd(), path.split('/'), 'project directory')
+    const completed: string[] = []
+    async function ensureFile(path: string, content: string) {
+      if (await updateSetupFile(path, current => current ?? content))
+        completed.push(`created ${path}`)
     }
-
-    const title = toTitle(projectName)
-    let agentsUpdated = false
-
-    if (!agentsInspection.exists) {
-      await writeManagedFile(agentsPath, `# ${title}\n\n${upsertRspAgentsBlock('', version).content}\n`, 'AGENTS.md')
-      created = true
-      agentsUpdated = true
-    }
-    else {
-      const existing = await readFile(agentsPath, 'utf-8')
-      const next = upsertRspAgentsBlock(existing, version)
-      if (next.changed) {
-        await writeManagedFile(agentsPath, next.content, 'AGENTS.md')
-        created = true
-        agentsUpdated = true
+    try {
+      const skills = await updatePackagedSkills()
+      completed.push(...skills.installed.map(name => `installed ${name}`), ...skills.replaced.map(name => `updated ${name}`), ...skills.removed.map(name => `removed ${name}`))
+      for (const path of dirs) {
+        if (!requireManagedDirectory(path, 'project directory', { allowMissing: true })) {
+          await mkdir(path, { recursive: true })
+          requireManagedDirectory(path, 'project directory')
+          completed.push(`created ${path}`)
+        }
       }
+      await ensureFile(CONFIG_PATH, generateConfigTemplate())
+      clearConfigCache()
+      await ensureFile(join(RSP_DIR, 'specs/design.md'), generateDesignContent(projectName))
+      if ((await readdir(decisionRecordsPath)).length === 0)
+        await ensureFile(join(decisionRecordsPath, '.gitkeep'), '')
+      await ensureFile(join(CHANGES_DIR, '.gitkeep'), '')
+      await ensureFile(join(FOCUS_DIR, '.gitkeep'), '')
+      await ensureFile(join(RSP_DIR, '.gitignore'), '# Transient files that should not be committed\n.lock\n')
+      if (args.withProjectSetup) {
+        const work = resolveWorkRef('project-setup', { executable: true })
+        await ensureFile(work.path, generateChangeContent('project-setup'))
+        await ensureFile(resolveFocusMarkerPath(work), '')
+      }
+      const title = projectName.startsWith('@') ? projectName.split('/')[1] || projectName : projectName
+      const agentsUpdated = await updateSetupFile('AGENTS.md', current => upsertRspAgentsBlock(current ?? `# ${title}\n\n`, version).content)
+      if (agentsUpdated)
+        completed.push('updated AGENTS.md managed block')
+      if (await updateSetupFile(PROJECT_VERSION_PATH, () => `${version}\n`))
+        completed.push(`pinned ${version}`)
+      return { ok: true as const, isNew, created: completed.length > 0, decisionRecordsPath, withProjectSetup: Boolean(args.withProjectSetup), agentsUpdated, skills, managedAgents: mode === 'print' ? await readFile('AGENTS.md', 'utf8') : undefined }
     }
-
-    return {
-      ok: true,
-      isNew,
-      created,
-      decisionRecordsPath,
-      withProjectSetup: Boolean(args.withProjectSetup),
-      agentsUpdated,
-      managedAgents: mode === 'print' ? await readFile(agentsPath, 'utf-8') : undefined,
+    catch (error) {
+      throw new Error(`Init stopped; completed: ${completed.join(', ') || 'none'}. No rollback was attempted. Fix the cause and rerun init with the same target CLI. ${error instanceof Error ? error.message : String(error)}`, { cause: error })
     }
   })
 }

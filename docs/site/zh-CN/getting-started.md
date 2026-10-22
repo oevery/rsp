@@ -16,13 +16,10 @@ npx -y @oevery/rsp@"$RSP_VERSION" init --with-project-setup
 该命令创建 `.rsp/` 基础结构、确保 `AGENTS.md` 中存在 RSP 入口，并创建 `.rsp/changes/project-setup.md`。填写该 Change 和 `.rsp/specs/design.md`，然后检查接入：
 
 ```bash
-npx -y @oevery/rsp@"$RSP_VERSION" skills install --dry-run
-npx -y @oevery/rsp@"$RSP_VERSION" skills install
-npx -y @oevery/rsp@"$RSP_VERSION" doctor
 npx -y @oevery/rsp@"$RSP_VERSION" status
 ```
 
-确认 `doctor` 报告的接入与预期一致，`status` 显示预期工作。这些结果不建立语义验收，也不授予后续修改权限。
+确认 `status` 显示预期工作；接入有疑问时使用只读的 `doctor` 诊断。这些结果不建立语义验收，也不授予后续修改权限。
 
 如果除了初始化项目还需要打印最终的 `AGENTS.md` 内容，使用 `init --agents-mode print`。RSP 只拥有 `<!-- rsp:begin -->` 与 `<!-- rsp:end -->` 之间的区块；周围的项目指令仍归项目所有。
 
@@ -55,17 +52,14 @@ Focus 是集合，project-setup 可以与 improve-login 同时聚焦。使用明
 
 归档不授予 Git、发布或部署权限。应重新检查工作树，并分别取得这些权限。
 
-## 安装项目 Skills
+## 更新项目
 
-Skills 是必需工作流，不是可选后备。使用之前选定的同一精确版本预览并安装完整套件；已有项目应把 `RSP_VERSION` 设为记录的版本，不重新解析稳定标签。这些 registry 命令不安装尚未发布的源码候选；替换已有包自有或用户定制树前请阅读 [Skill 职责与候选迁移](./guides/skills.md)：
+init 已安装全部七个核心 Skills。更新前保存受管资产中需要保留的定制内容，选定一个精确目标，再运行该目标 CLI：
 
 ```bash
-npx -y @oevery/rsp@"$RSP_VERSION" skills install --dry-run
-npx -y @oevery/rsp@"$RSP_VERSION" skills install
+npx -y @oevery/rsp@"$RSP_VERSION" update
 ```
 
-当前源码候选整套安装七个核心 Skills，拒绝单个按名安装。结构审查已包含在 Review 中，无需额外安装 Skill。请使用迁移指南所指的精确候选 CLI，不要假定稳定包已经具备此行为。
-
-源码候选记录 `.rsp/version`、拒绝不匹配的 CLI，并不再生成 Rules；显式升级及旧文件清理参见[固定版本与 Skills 迁移](./guides/skills.md#固定版本与-skills-only-迁移)。这些源码契约不等于已经发布。
+这里的 RSP_VERSION 是主动选择的目标，不是每次重新解析的稳定标签。可选的 update --dry-run 只预览，不写入；无需独立安装 Skills、采用版本或删除旧文件的步骤。未知 Skills、用户配置与项目知识保持不动，受管 Skills 内的本地修改会被替换。迁移细节见[固定版本与 Skills](./guides/skills.md#固定版本与-skills-only-迁移)。这些源码契约不证明已经发布。
 
 接下来阅读[核心概念](./concepts.md)，或直接遵循[日常工作流](./guides/daily-workflow.md)。

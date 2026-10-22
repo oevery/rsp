@@ -131,7 +131,7 @@ export function resolveManagedDirectoryChain(root: string, segments: string[], l
 }
 
 /** Recursively collect regular files without following symlinked entries. */
-export async function inspectManagedFileTree(root: string, label: string, options: { allowMissing?: boolean } = {}): Promise<ManagedFileTreeInspection> {
+export async function inspectManagedFileTree(root: string, label: string, options: { allowMissing?: boolean, includeHidden?: boolean } = {}): Promise<ManagedFileTreeInspection> {
   const result: ManagedFileTreeInspection = { rootExists: false, files: [], issues: [] }
   const rootInspection = inspectManagedDirectory(root, `${label} root`, options)
   if (rootInspection.issue) {
@@ -141,12 +141,12 @@ export async function inspectManagedFileTree(root: string, label: string, option
   if (!rootInspection.exists)
     return result
   result.rootExists = true
-  await collectManagedFiles(root, label, result)
+  await collectManagedFiles(root, label, result, options.includeHidden)
   result.files.sort()
   return result
 }
 
-async function collectManagedFiles(directory: string, label: string, result: ManagedFileTreeInspection): Promise<void> {
+async function collectManagedFiles(directory: string, label: string, result: ManagedFileTreeInspection, includeHidden = false): Promise<void> {
   let entries
   try {
     entries = await readdir(directory, { withFileTypes: true })
@@ -158,11 +158,11 @@ async function collectManagedFiles(directory: string, label: string, result: Man
   }
 
   for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
-    if (entry.name.startsWith('.'))
+    if (!includeHidden && entry.name.startsWith('.'))
       continue
     const path = join(directory, entry.name)
     if (entry.isDirectory()) {
-      await collectManagedFiles(path, label, result)
+      await collectManagedFiles(path, label, result, includeHidden)
       continue
     }
     if (entry.isFile()) {

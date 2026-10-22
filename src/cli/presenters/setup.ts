@@ -3,8 +3,6 @@ import type { InitProjectResult } from '../../commands/init.js'
 import type { UpdateResult } from '../../commands/update.js'
 import { pc } from '../../core/config.js'
 
-const SKILL_REFRESH_HINT = '  Note: use the selected exact CLI to refresh the required Skill suite:\n    rsp skills install --dry-run\n    rsp skills install --force\n'
-
 export function presentAddSpec(result: AddSpecResult): void {
   if (!result.ok) {
     console.error(`  ${pc.red('Error:')} ${result.message}`)
@@ -23,10 +21,10 @@ export function presentInit(result: InitProjectResult): void {
   if (result.isNew) {
     const createdProjectSetup = result.withProjectSetup ? '\n           .rsp/changes/project-setup.md\n           .rsp/focus.d/project-setup' : ''
     const createdAgents = result.agentsUpdated ? '\n           AGENTS.md' : ''
-    const next = 'rsp skills install --dry-run; then rsp skills install'
+    const next = result.withProjectSetup ? 'fill .rsp/changes/project-setup.md' : 'rsp status'
     console.log(`
   ${pc.green('RSP scaffolded.')}\n`)
-    console.log(`  Created: .rsp/version\n           .rsp/specs/\n           ${result.decisionRecordsPath}/\n           .rsp/changes/\n           .rsp/focus.d/\n           .rsp/archives/\n           .rsp/.gitignore\n           .rsp/config.yaml\n           .rsp/specs/design.md${createdProjectSetup}${createdAgents}\n`)
+    console.log(`  Created: complete core Skill suite\n           .rsp/version\n           .rsp/specs/\n           ${result.decisionRecordsPath}/\n           .rsp/changes/\n           .rsp/focus.d/\n           .rsp/archives/\n           .rsp/.gitignore\n           .rsp/config.yaml\n           .rsp/specs/design.md${createdProjectSetup}${createdAgents}\n`)
     console.log(`  ${pc.cyan('Next:')} ${next}\n  ${pc.dim('Then:')} fill .rsp/specs/design.md\n  ${pc.dim('Also:')} rsp status  rsp check\n`)
   }
   else if (result.created) {
@@ -39,7 +37,13 @@ export function presentInit(result: InitProjectResult): void {
   }
 }
 
-export function presentUpdate(result: UpdateResult): void {
+export function presentUpdate(result: UpdateResult, dryRun = false): void {
+  if (dryRun && result.ok) {
+    console.log('  Update preview (no files changed):')
+    for (const action of result.actions)
+      console.log(`    ${action}`)
+    return
+  }
   if (!result.ok && result.events.some(event => event.type === 'not-initialized')) {
     console.error(`  ${pc.red('Error:')} RSP is not initialized in this project`)
     console.error(`  ${pc.dim('Run: rsp init')}`)
@@ -68,11 +72,6 @@ export function presentUpdate(result: UpdateResult): void {
       console.log(`  ${pc.yellow('Note:')} CONTEXT-MAP.md remains; context migration needs owner review.`)
       console.log(`  ${pc.dim('Use Core context migration. Keep relevant legacy context until an authorized merge updates CONTEXT.md and active references; update does not migrate or delete it.')}`)
     }
-    else if (event.type === 'specs-indexes-removed') {
-      console.log(`  ${pc.green('✓')} generated Specs indexes removed`)
-      for (const path of event.paths)
-        console.log(`    ${path}`)
-    }
   }
   if (!result.migration.inspectionComplete)
     console.log(`  ${pc.red('Managed update incomplete; migration inspection failed.')}\n`)
@@ -82,5 +81,4 @@ export function presentUpdate(result: UpdateResult): void {
     console.log(`  ${pc.dim('Already up to date.')}\n`)
   else
     console.log(`  ${pc.green('Update complete.')}\n`)
-  console.log(SKILL_REFRESH_HINT)
 }

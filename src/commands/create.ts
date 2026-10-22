@@ -4,11 +4,11 @@ import { dirname } from 'node:path'
 
 import { generateChangeContent } from '../core/artifacts.js'
 import { resolveExecutableChange } from '../core/change-group.js'
-import { CHANGES_DIR, FOCUS_DIR, RSP_DIR } from '../core/config.js'
-import { cleanupEmptyParentDirs } from '../core/filesystem.js'
+import { CHANGES_DIR, FOCUS_DIR } from '../core/config.js'
+import { cleanupEmptyParentDirs, inspectRspInitialization as inspectInitialization } from '../core/filesystem.js'
 import { createIssueRelationship } from '../core/issue-relationship.js'
 import { withRspLock } from '../core/lock.js'
-import { inspectManagedFile, writeManagedFile } from '../core/managed-path.js'
+import { writeManagedFile } from '../core/managed-path.js'
 import { resolveFocusMarkerPath, WorkRefError } from '../core/work-ref.js'
 
 /** Create a new single-file change under .rsp/changes/<name>.md and focus it when newly created. */
@@ -79,11 +79,3 @@ export async function createChange(
 export type CreateChangeResult
   = | { ok: true, existed: boolean, changePath: string, workRef: string, warning?: string }
     | { ok: false, kind: 'usage' | 'error', message: string, warning?: string }
-
-function inspectInitialization(): string | undefined {
-  const design = inspectManagedFile(`${RSP_DIR}/specs/design.md`, 'design Spec', { allowMissing: true })
-  if (!design.issue && design.exists)
-    return undefined
-  const initialized = existsSync(RSP_DIR)
-  return `${initialized ? 'RSP project requires an update' : 'RSP is not initialized in this project'}\n  ${initialized ? 'Run: rsp update' : 'Run: rsp init'}`
-}

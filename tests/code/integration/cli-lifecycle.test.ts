@@ -27,7 +27,6 @@ function project(): string {
   const directory = mkdtempSync(join(tmpdir(), 'rsp-cli-contract-'))
   projects.push(directory)
   run(directory, 'init')
-  run(directory, 'skills', 'install')
   return directory
 }
 
@@ -323,7 +322,7 @@ describe('public CLI lifecycle', () => {
     writeFileSync(config, 'kinds: []\n')
     expect(JSON.parse(run(directory, 'config', '--json')).workflow).toEqual({ delegation: 'off', closeout: 'ask' })
     run(directory, 'update')
-    expect(readFileSync(config, 'utf8')).toContain('delegation: off')
+    expect(readFileSync(config, 'utf8')).toBe('kinds: []\n')
     writeFileSync(config, 'workflow:\n  delegation: auto\n  closeout: manual\n')
     run(directory, 'update')
     expect(JSON.parse(run(directory, 'config', '--json')).workflow).toEqual({ delegation: 'auto', closeout: 'manual' })
@@ -543,11 +542,11 @@ describe('public CLI lifecycle', () => {
     expect(readFileSync(agents, 'utf8')).toContain('CONTEXT-MAP.md')
     const context = join(directory, 'CONTEXT.md')
     expect(existsSync(context)).toBe(false)
-    // Coexistence is not evidence of semantic migration, and --fix must not merge either file.
+    // Coexistence is not evidence of semantic migration, and diagnostics must not merge either file.
     const currentContext = '# Context\nBilling owns invoice issuance.\n'
     writeFileSync(context, currentContext)
-    const doctor = JSON.parse(run(directory, 'doctor', '--fix', '--json'))
-    expect(doctor).toMatchObject({ ok: true, fixed: [], summary: { issues: 0 } })
+    const doctor = JSON.parse(run(directory, 'doctor', '--json'))
+    expect(doctor).toMatchObject({ ok: true, summary: { issues: 0 } })
     expect(doctor.checks).toContainEqual(expect.objectContaining({ code: 'legacy_context_map', status: 'info' }))
     expect(readFileSync(context, 'utf8')).toBe(currentContext)
     expect(readFileSync(legacyMap, 'utf8')).toBe('# Domains\nOrdering hands off to billing.\n')

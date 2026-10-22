@@ -68,18 +68,17 @@ const addCommand = defineCommand({
 const updateCommand = defineCommand({
   meta: {
     name: 'update',
-    description: 'Refresh pinned project files; explicit options adopt another version or remove retired Rules',
+    description: 'Update the complete pinned environment and remove retired managed assets',
   },
   args: {
-    'adopt-version': { type: 'boolean', description: 'Explicitly migrate the project pin to this running CLI version', default: false },
-    'remove-legacy-rules': { type: 'boolean', description: 'Delete the two retired fallback files after preserving custom content', default: false },
+    'dry-run': { type: 'boolean', description: 'Preview the complete update without changing files', default: false },
   },
-  async run({ args }) {
-    if (args._.length > 0)
-      throw new Error('rsp update accepts no positional arguments; use --adopt-version=false or --remove-legacy-rules=false to disable a flag')
+  async run({ args, rawArgs }) {
+    if (args._.length || rawArgs.some(arg => !['--dry-run', '--dry-run=true', '--dry-run=false', '--no-dry-run'].includes(arg)))
+      throw new Error('rsp update accepts only --dry-run; use the selected target CLI to update all managed assets')
     await executeCliCommand({
-      execute: () => updateProject({ adoptVersion: Boolean(args['adopt-version']), removeLegacyRules: Boolean(args['remove-legacy-rules']) }),
-      present: presentUpdate,
+      execute: () => updateProject({ dryRun: Boolean(args['dry-run']) }),
+      present: result => presentUpdate(result, Boolean(args['dry-run'])),
       exitCode: result => result.migration.inspectionComplete ? undefined : 1,
     }, args)
   },

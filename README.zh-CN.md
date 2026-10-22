@@ -27,9 +27,6 @@ RSP_VERSION='<version>'
 npx -y @oevery/rsp@"$RSP_VERSION" init --with-project-setup
 # 填写 .rsp/changes/project-setup.md
 # 填写 .rsp/specs/design.md
-npx -y @oevery/rsp@"$RSP_VERSION" skills install --dry-run
-npx -y @oevery/rsp@"$RSP_VERSION" skills install
-npx -y @oevery/rsp@"$RSP_VERSION" doctor
 npx -y @oevery/rsp@"$RSP_VERSION" status
 ```
 
@@ -89,6 +86,6 @@ pnpm docs:build
 
 RSP 是与工具无关的文件约定，适用于任何能读取项目文件的助手或编辑器。人类从这里开始；AI 智能体遵循最近的 `AGENTS.md`，通过宿主 Skill discovery 或 `.agents/skills/rsp/SKILL.md` 加载必需的项目 Core。缺少必需 Skill 时停止依赖工作，不再使用 Rules 后备协议。根目录 `skills/` 是 RSP 仓库中的分发源码，不是消费者的安装入口。
 
-当前源码候选固定项目精确版本、要求显式采用升级，并退役 Rules；参见[固定版本与 Skills 迁移](docs/migrations/pinned-skills.md)。这些源码行为不等于已经发布。它使用 `rsp skills install` 整套安装七个核心 Skills，不支持单个安装。各能力可以直接调用，并按需读取 Core 的共享定义；结构审查已并入 Review。旧安装的保护性迁移见 [Skills 指南](docs/site/zh-CN/guides/skills.md)。
+当前源码候选用 `init` 完成接入，用选定目标 CLI 的 `update` 一次更新完整环境；固定精确版本，退役 Rules 与独立 Skill 安装流程，参见[统一升级迁移](docs/migrations/pinned-skills.md)。这些源码行为不等于已经发布。七个核心 Skills 仍可独立调用，职责见 [Skills 指南](docs/site/zh-CN/guides/skills.md)。
 
 RSP 使用 [MIT 许可证](./LICENSE)。

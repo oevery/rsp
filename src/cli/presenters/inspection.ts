@@ -7,8 +7,7 @@ import type { SpecsResult } from '../../commands/specs.js'
 import type { SpecsDirectoryNode, SpecsInspection } from '../../specs/model.js'
 import type { ProjectStatusView } from '../../status/model.js'
 import type { ConfigResult, RuntimeDiagnostic, StatusJsonShape } from '../../types.js'
-import { existsSync } from 'node:fs'
-import { pc, RSP_DIR } from '../../core/config.js'
+import { pc } from '../../core/config.js'
 import { emitJson } from '../../core/output.js'
 import { SPECS_DETAIL_CONTENT_CODE_POINTS } from '../../specs/model.js'
 import { printStatusPlain, printStatusRuntimeDiagnostics } from '../../status/plain.js'
@@ -187,7 +186,7 @@ export function presentCheck(result: CheckResult, options: InspectionPresentatio
     console.log(`  ${pc.red(String(result.summary.errors))} error(s), ${pc.yellow(String(result.summary.warnings))} warning(s) in ${result.summary.changeFiles} change file(s).\n`)
 }
 
-export function presentDoctor(result: DoctorResult, options: InspectionPresentationOptions & { fix: boolean }): void {
+export function presentDoctor(result: DoctorResult, options: InspectionPresentationOptions): void {
   if (options.json) {
     emitJson(result, options)
     return
@@ -196,14 +195,6 @@ export function presentDoctor(result: DoctorResult, options: InspectionPresentat
   console.log()
   console.log(`  ${pc.bold('RSP doctor')}`)
   console.log()
-  if (result.fixed.length > 0) {
-    console.log(`  ${pc.green('Fixed:')} ${result.fixed.join(', ')}`)
-    console.log()
-  }
-  else if (options.fix && result.checks.every(check => check.message?.startsWith('safe deterministic repair could not run:') !== true) && existsSync(RSP_DIR)) {
-    console.log(`  ${pc.dim('No safe fixes needed.')}`)
-    console.log()
-  }
   for (const check of result.checks)
     printDoctorCheck(check)
   if (result.summary.issues === 0)

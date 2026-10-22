@@ -162,15 +162,12 @@ const doctorCommand = defineCommand({
       description: 'Explicitly check stable registry metadata without upgrading; timeout is non-blocking',
       default: false,
     },
-    'fix': {
-      type: 'boolean',
-      description: 'Run safe deterministic repairs before reporting diagnostics',
-      default: false,
-    },
   },
-  async run({ args }) {
+  async run({ args, rawArgs }) {
+    if (rawArgs.some(arg => arg === '--fix' || arg.startsWith('--fix=') || arg === '--no-fix'))
+      throw new Error('doctor is read-only; use update to reconcile managed assets')
     await executeCliCommand({
-      execute: () => runDoctor({ fix: Boolean(args.fix), checkUpdates: Boolean(args['check-updates']) }),
+      execute: () => runDoctor({ checkUpdates: Boolean(args['check-updates']) }),
       present: result => presentDoctor(result, args),
       exitCode: result => result.ok ? undefined : 1,
     }, args)
