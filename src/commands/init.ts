@@ -9,7 +9,7 @@ import { resolveDecisionRecordsPath, validateDecisionRecordsFilesystemPath } fro
 import { detectProjectName } from '../core/filesystem.js'
 import { withRspLock } from '../core/lock.js'
 import { requireManagedDirectory, requireManagedFile, resolveManagedDirectoryChain } from '../core/managed-path.js'
-import { PROJECT_VERSION_PATH, selectProjectVersion } from '../core/project-version.js'
+import { PROJECT_VERSION_PATH, selectProjectRuntime } from '../core/project-version.js'
 import { updateSetupFile } from '../core/setup-files.js'
 import { resolveFocusMarkerPath, resolveWorkRef } from '../core/work-ref.js'
 import { updatePackagedSkills } from './skills.js'
@@ -28,7 +28,8 @@ export async function initProject(args: InitArgs = {}): Promise<InitProjectResul
     return { ok: false, message: 'unsupported --agents-mode; use managed or print' }
 
   return withRspLock('init', async () => {
-    const version = await selectProjectVersion()
+    const runtime = await selectProjectRuntime()
+    const { version } = runtime
     const retiredRules = [RSP_RULES_PATH, OBSOLETE_RSP_RULES_PATH].map(path => requireManagedFile(path, 'retired Rules', { allowMissing: true })).some(Boolean)
     if (retiredRules)
       return { ok: false as const, message: 'Retired RSP assets require migration; use the selected target CLI: rsp update' }
@@ -73,10 +74,10 @@ export async function initProject(args: InitArgs = {}): Promise<InitProjectResul
         await ensureFile(resolveFocusMarkerPath(work), '')
       }
       const title = projectName.startsWith('@') ? projectName.split('/')[1] || projectName : projectName
-      const agentsUpdated = await updateSetupFile('AGENTS.md', current => upsertRspAgentsBlock(current ?? `# ${title}\n\n`, version).content)
+      const agentsUpdated = await updateSetupFile('AGENTS.md', current => upsertRspAgentsBlock(current ?? `# ${title}\n\n`, runtime).content)
       if (agentsUpdated)
         completed.push('updated AGENTS.md managed block')
-      if (await updateSetupFile(PROJECT_VERSION_PATH, () => `${version}\n`))
+      if (runtime.mode === 'package' && await updateSetupFile(PROJECT_VERSION_PATH, () => `${version}\n`))
         completed.push(`pinned ${version}`)
       return { ok: true as const, isNew, created: completed.length > 0, decisionRecordsPath, withProjectSetup: Boolean(args.withProjectSetup), agentsUpdated, skills, managedAgents: mode === 'print' ? await readFile('AGENTS.md', 'utf8') : undefined }
     }

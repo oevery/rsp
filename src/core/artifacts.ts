@@ -1,7 +1,8 @@
 import type { IssueRelationship } from '../types.js'
+import type { SelectedRuntime } from './project-version.js'
 import { CHANGE_DOCUMENT_SCHEMA, renderDocumentSectionHeading, renderDocumentTitle } from './document-model.js'
 import { markdownTopLevelComments } from './markdown.mjs'
-import { exactInvocation } from './project-version.js'
+import { exactInvocation, SOURCE_INVOCATION } from './project-version.js'
 
 const RSP_AGENTS_BEGIN = '<!-- rsp:begin -->'
 const RSP_AGENTS_END = '<!-- rsp:end -->'
@@ -165,7 +166,11 @@ function changeSectionHeading(sectionId: typeof CHANGE_DOCUMENT_SCHEMA.sections[
 }
 
 /** Render the managed RSP block for AGENTS.md. */
-export function renderRspAgentsBlock(version: string): string {
+export function renderRspAgentsBlock(runtime: SelectedRuntime): string {
+  const { version } = runtime
+  const selection = runtime.mode === 'source'
+    ? `This RSP development checkout explicitly selects source mode through \`.rsp/source\`. Build the current source with \`mise exec -- pnpm run build\`, then use \`${SOURCE_INVOCATION} <command>\` from this checkout for every CLI operation. Skill examples use \`rsp\` as shorthand for this local invocation. Do not substitute a registry package, global CLI or another checkout, even when its version matches. Package version metadata is not source identity; retain the commit, uncommitted diff and build inputs for candidate evidence. Authorized \`update\` reconciles this checkout's managed environment from its local source and keeps source mode; it does not select a published version.`
+    : `This project pins RSP \`${version}\` in \`.rsp/version\`. For every CLI operation use \`${exactInvocation(version)} <command>\` (or a verified executable of that exact version). Skill examples use \`rsp\` as shorthand for this selected invocation. Never substitute \`@latest\`, a version range, or an unverified global CLI. Package fetching requires authority; if unavailable, report the gap. Only an authorized upgrade uses a deliberately selected target CLI with \`update\`; it updates the complete managed environment. Notices grant no upgrade authority.`
   return `${RSP_AGENTS_BEGIN}
 ## RSP Entry
 
@@ -181,13 +186,13 @@ Read in order using supplied or confirmed paths; discover only missing paths or 
 If \`.rsp/focus.d/\` is empty or has several candidates, use an explicit WorkRef, the user's mentioned Change, or current status/dependency evidence to resolve the default action.
 Do not treat \`.rsp/specs/\` or \`.rsp/changes/\` as replacements for nearest \`AGENTS.md\` or \`CONTEXT.md\`.
 
-This project pins RSP \`${version}\` in \`.rsp/version\`. For every CLI operation use \`${exactInvocation(version)} <command>\` (or a verified executable of that exact version). Skill examples use \`rsp\` as shorthand for this selected invocation. Never substitute \`@latest\`, a version range, or an unverified global CLI. Package fetching requires authority; if unavailable, report the gap. Only an authorized upgrade uses a deliberately selected target CLI with \`update\`; it updates the complete managed environment. Notices grant no upgrade authority.
+${selection}
 ${RSP_AGENTS_END}`
 }
 
 /** Update AGENTS.md with the managed RSP block while preserving user content. */
-export function upsertRspAgentsBlock(content: string, version: string): { content: string, changed: boolean } {
-  const block = renderRspAgentsBlock(version)
+export function upsertRspAgentsBlock(content: string, runtime: SelectedRuntime): { content: string, changed: boolean } {
+  const block = renderRspAgentsBlock(runtime)
   const span = rspAgentsBlockSpan(content)
   if (span) {
     const next = content.slice(0, span.start) + block + content.slice(span.end)

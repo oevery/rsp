@@ -2,9 +2,11 @@
 
 Load before initializing, inspecting or updating RSP-managed assets.
 
-Use the exact CLI in AGENTS and .rsp/version for ordinary work. An authorized
-upgrade deliberately selects its exact target CLI. Never silently resolve @latest;
-package fetching requires separate authority.
+Use the runtime selected in AGENTS: an exact package pin in .rsp/version for
+consumer projects, or this checkout's built CLI when .rsp/source explicitly
+selects source mode. The two markers are mutually exclusive. An authorized package
+upgrade deliberately selects its exact target CLI; source update keeps the local
+selection. Never silently resolve @latest; package fetching requires separate authority.
 
 - **Initialize:** rsp init [--agents-mode managed|print] [--with-project-setup] creates missing scaffolding and the complete core suite. Existing user files remain unchanged. Retry an incomplete init with the same target; repeated init cannot adopt a different pinned version. Retired Rules require update instead.
 - **Update:** rsp update replaces the selected package's owned assets; optional --dry-run previews without writes. No separate installation or migration switches are needed.
@@ -17,7 +19,8 @@ package-owned: replace or delete them, including local changes. Preserve needed
 customizations beforehand. Unknown Skills, config, Specs, work, archives, Decision
 Records and Focus are user-owned; update does not rewrite or repair them. Missing
 config values use read-time defaults. AGENTS changes are confined to its managed
-block; write the pin last. Preserve canonical maintainer links to package sources.
+block; write a consumer pin last, and never create one in source mode. Preserve
+canonical maintainer links to package sources.
 
 Only metadata-recognized generated indexes may be deleted from user knowledge
 directories. Stop for owner-controlled reserved paths, invalid config, unexpected

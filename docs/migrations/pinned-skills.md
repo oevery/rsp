@@ -17,13 +17,34 @@ Use the built candidate for source testing; after publication select an exact re
 | Exact retired Skill and Rules names | Delete |
 | Metadata-recognized generated indexes | Delete; owner-controlled reserved paths stop preflight |
 | AGENTS.md | Refresh only the managed block |
-| .rsp/version | Write last, after managed updates succeed |
+| .rsp/version (consumer projects) | Write last, after managed updates succeed |
+| .rsp/source (RSP development checkout) | Preserve the explicit local-source selection; do not create a version pin |
 | Config, Specs, Changes, Archives, Decision Records, Focus and CONTEXT | Do not rewrite, repair or create user content; recognized generated indexes are the explicit exception |
 
 Missing configuration values use read-time defaults. Invalid configuration stops
 preflight for owner correction; update does not migrate or normalize the file.
 Canonical maintainer Skill links to the package sources are preserved. Other
 symlinks or unsupported managed targets are rejected, not followed or replaced.
+
+## RSP development checkout
+
+This repository selects source mode with `.rsp/source` containing `.` instead of
+`.rsp/version`. This is an explicit maintainer choice, not inferred from the package
+name, directory name or a missing pin. Ordinary consumer projects keep exact pins.
+Both markers together, malformed markers and symlinked markers are rejected.
+
+Build with `mise exec -- pnpm run build`, then run
+`mise exec -- node dist/cli.mjs <command>` from the checkout root. The running
+package must belong to this checkout and its `src/cli.ts` must exist. Another
+checkout's CLI cannot substitute even when versions match. Init/update retain
+source mode and canonical Skill source links; doctor reports the local runtime
+without directing it to a registry version. Mode changes require explicit owner
+edits, not an update flag or automatic adoption.
+
+The package version is metadata, not evidence of exact source contents or build
+freshness. Rebuild after source changes and retain the commit, uncommitted diff
+and build inputs with candidate evidence. Older published CLIs do not gain these
+guards retroactively and must not be used to manage this source checkout.
 
 ## Failure and retry
 

@@ -8,7 +8,7 @@ import { clearConfigCache, inspectRspConfig, OBSOLETE_RSP_RULES_PATH, RSP_DIR, R
 import { detectProjectName, inspectUnsupportedRules } from '../core/filesystem.js'
 import { withRspLock } from '../core/lock.js'
 import { requireManagedFile, resolveManagedDirectoryChain } from '../core/managed-path.js'
-import { PROJECT_VERSION_PATH, readProjectVersion, selectProjectVersion } from '../core/project-version.js'
+import { PROJECT_VERSION_PATH, readProjectVersion, selectProjectRuntime } from '../core/project-version.js'
 import { updateSetupFile } from '../core/setup-files.js'
 import { isLegacyArchiveIndex } from './archive-index-migration.js'
 import { updatePackagedSkills } from './skills.js'
@@ -35,7 +35,8 @@ export async function updateProject(options: UpdateOptions = {}): Promise<Update
     return { ok: false, actions: [], updated: false, events: [{ type: 'not-initialized' }], migration: { inspectionComplete: false, manualMigrationRequired: false, residualEntries: [], diagnostics: [] } }
 
   const execute = async (): Promise<UpdateResult> => {
-    const version = await selectProjectVersion('update')
+    const runtime = await selectProjectRuntime('update')
+    const { version } = runtime
     clearConfigCache()
     const config = await inspectRspConfig()
     if (config.issues.length)
@@ -54,7 +55,7 @@ export async function updateProject(options: UpdateOptions = {}): Promise<Update
       throw new Error(`Generated Specs-index migration requires owner review before update: ${[...plan.ownerControlled, ...plan.diagnostics].join('; ')}`)
     const projectName = await detectProjectName()
     const agents = requireManagedFile('AGENTS.md', 'AGENTS.md', { allowMissing: true }) ? await readFile('AGENTS.md', 'utf8') : null
-    const refreshAgents = (current: string | null) => upsertRspAgentsBlock(current ?? `# ${projectName}\n\n`, version).content
+    const refreshAgents = (current: string | null) => upsertRspAgentsBlock(current ?? `# ${projectName}\n\n`, runtime).content
     const removeArchive = await isLegacyArchiveIndex()
     const actions: string[] = []
     const events: UpdateEvent[] = []
@@ -77,7 +78,7 @@ export async function updateProject(options: UpdateOptions = {}): Promise<Update
           actions.push('legacy Archive Index removed')
         if (refreshAgents(agents) !== agents)
           actions.push('AGENTS.md managed block refreshed')
-        if (await readProjectVersion() !== version)
+        if (runtime.mode === 'package' && await readProjectVersion() !== version)
           actions.push(`project CLI pinned to ${version}`)
         return { ok: true, actions, updated: false, skills, events: [], migration }
       }
@@ -97,7 +98,7 @@ export async function updateProject(options: UpdateOptions = {}): Promise<Update
       }
       if (await updateSetupFile('AGENTS.md', refreshAgents))
         record('AGENTS.md managed block refreshed')
-      if (await updateSetupFile(PROJECT_VERSION_PATH, () => `${version}\n`))
+      if (runtime.mode === 'package' && await updateSetupFile(PROJECT_VERSION_PATH, () => `${version}\n`))
         record(`project CLI pinned to ${version}`)
       return { ok: true, actions, updated: actions.length > 0, skills, events, migration }
     }

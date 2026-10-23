@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -14,7 +14,7 @@ afterEach(() => {
     rmSync(path, { recursive: true, force: true })
 })
 function fresh() {
-  const path = mkdtempSync(join(tmpdir(), 'rsp-ownership-'))
+  const path = realpathSync(mkdtempSync(join(tmpdir(), 'rsp-ownership-')))
   projects.push(path)
   return path
 }
@@ -38,6 +38,128 @@ function fail(project: string, command: string, scenario: string, ...args: strin
 function generated(name: string) {
   return `---\nkind: generated-index\nindex_type: specs\nsource_dir: .rsp/specs\n---\n${name}`
 }
+function sourceProject() {
+  const path = project()
+  for (const directory of ['dist', 'skills'])
+    cpSync(join(root, directory), join(path, directory), { recursive: true })
+  cpSync(join(root, 'package.json'), join(path, 'package.json'))
+  mkdirSync(join(path, 'src'))
+  cpSync(join(root, 'src/cli.ts'), join(path, 'src/cli.ts'))
+  symlinkSync(join(root, 'node_modules'), join(path, 'node_modules'), 'dir')
+  rmSync(join(path, '.rsp/version'))
+  write(path, '.rsp/source', '.\n')
+  return {
+    path,
+    run: (...args: string[]) => spawnSync(process.execPath, [join(path, 'dist/cli.mjs'), ...args], { cwd: path, encoding: 'utf8' }),
+  }
+}
+
+describe('explicit source runtime', () => {
+  it('keeps source selection and canonical Skills across init, update and version changes', () => {
+    const source = sourceProject()
+    const { path } = source
+    rmSync(join(path, '.agents/skills/rsp'), { recursive: true })
+    symlinkSync(join(path, 'skills/rsp'), join(path, '.agents/skills/rsp'), 'dir')
+    write(path, 'AGENTS.md', '# User policy\n')
+    write(path, '.rsp/config.yaml', '# Keep config\nkinds: []\n')
+    const before = read(path, 'AGENTS.md')
+    expect(source.run('update', '--dry-run').status).toBe(0)
+    expect(read(path, 'AGENTS.md')).toBe(before)
+    expect(existsSync(join(path, '.rsp/version'))).toBe(false)
+    for (const nextVersion of [version, '4.0.0-dev.1']) {
+      const manifest = JSON.parse(read(path, 'package.json'))
+      manifest.version = nextVersion
+      write(path, 'package.json', JSON.stringify(manifest))
+      expect(source.run('init').status).toBe(0)
+      expect(source.run('update').status).toBe(0)
+      expect(source.run('status', '--json').status).toBe(0)
+      expect(read(path, '.rsp/source')).toBe('.\n')
+      expect(existsSync(join(path, '.rsp/version'))).toBe(false)
+      expect(read(path, '.rsp/config.yaml')).toBe('# Keep config\nkinds: []\n')
+      expect(lstatSync(join(path, '.agents/skills/rsp')).isSymbolicLink()).toBe(true)
+      expect(read(path, 'AGENTS.md')).toContain('# User policy')
+      expect(read(path, 'AGENTS.md')).toContain('mise exec -- node dist/cli.mjs')
+      expect(read(path, 'AGENTS.md')).not.toContain('npx -y @oevery/rsp@')
+      const diagnostic = source.run('doctor', '--json')
+      expect(diagnostic.status, diagnostic.stderr).toBe(0)
+      const runtime = JSON.parse(diagnostic.stdout).checks.find((item: { code: string }) => item.code === 'project_cli_version')
+      expect(runtime.status).toBe('ok')
+      expect(runtime.message).toContain('Source mode')
+      expect(runtime.hint).not.toContain('npx')
+      expect(source.run('update').stdout).toContain('up to date')
+    }
+  })
+
+  it('keeps explicit registry notices informational for the source runtime', () => {
+    const source = sourceProject()
+    expect(source.run('update').status).toBe(0)
+    const mockRegistry = `globalThis.fetch = async () => new Response(JSON.stringify({ latest: '999.0.0' }))`
+    const result = spawnSync(process.execPath, [
+      '--import',
+      `data:text/javascript,${encodeURIComponent(mockRegistry)}`,
+      join(source.path, 'dist/cli.mjs'),
+      'doctor',
+      '--check-updates',
+      '--json',
+    ], { cwd: source.path, encoding: 'utf8' })
+    expect(result.status, result.stderr).toBe(0)
+    const notice = JSON.parse(result.stdout).checks.find((item: { code: string }) => item.code === 'update_available')
+    expect(notice.hint).toContain('local source CLI')
+    expect(notice.hint).not.toContain('choose an exact target')
+    expect(existsSync(join(source.path, '.rsp/version'))).toBe(false)
+    expect(read(source.path, '.rsp/source')).toBe('.\n')
+  })
+
+  it('rejects another checkout even at the same version before modifying the project', () => {
+    const source = sourceProject()
+    const before = read(source.path, 'AGENTS.md')
+    for (const args of [['status'], ['init'], ['update'], ['update', '--dry-run'], ['create', 'unsafe']]) {
+      const result = run(source.path, ...args)
+      expect(result.status).not.toBe(0)
+      expect(result.stderr).toContain('local CLI')
+    }
+    const doctor = run(source.path, 'doctor', '--json')
+    expect(doctor.status).not.toBe(0)
+    expect(JSON.parse(doctor.stdout).checks).toContainEqual(expect.objectContaining({ code: 'project_cli_version', status: 'issue' }))
+    expect(read(source.path, 'AGENTS.md')).toBe(before)
+    expect(existsSync(join(source.path, '.rsp/version'))).toBe(false)
+    expect(existsSync(join(source.path, '.rsp/changes/unsafe.md'))).toBe(false)
+  })
+
+  it('does not infer source mode from source files, package identity or missing pins', () => {
+    const source = sourceProject()
+    rmSync(join(source.path, '.rsp/source'))
+    expect(source.run('doctor', '--json').status).not.toBe(0)
+    expect(source.run('init').status).toBe(0)
+    expect(read(source.path, '.rsp/version')).toBe(`${version}\n`)
+    expect(read(source.path, 'AGENTS.md')).toContain(`npx -y @oevery/rsp@${version}`)
+    write(source.path, '.rsp/version', '1.0.0\n')
+    expect(source.run('status').status).not.toBe(0)
+    expect(read(source.path, '.rsp/version')).toBe('1.0.0\n')
+  })
+
+  it.each(['conflict', 'invalid', 'symlink', 'missing-source'])('fails closed on invalid source selection (%s)', (scenario) => {
+    const source = sourceProject()
+    const { path } = source
+    if (scenario === 'conflict')
+      write(path, '.rsp/version', `${version}\n`)
+    if (scenario === 'invalid')
+      write(path, '.rsp/source', '../other\n')
+    if (scenario === 'symlink') {
+      write(path, 'external-source', '.\n')
+      rmSync(join(path, '.rsp/source'))
+      symlinkSync(join(path, 'external-source'), join(path, '.rsp/source'))
+    }
+    if (scenario === 'missing-source')
+      rmSync(join(path, 'src/cli.ts'))
+    const before = read(path, 'AGENTS.md')
+    for (const args of [['status'], ['init'], ['update'], ['update', '--dry-run'], ['doctor', '--json']])
+      expect(source.run(...args).status, args.join(' ')).not.toBe(0)
+    expect(read(path, 'AGENTS.md')).toBe(before)
+    expect(source.run('--help').status).toBe(0)
+    expect(source.run('config', '--json').status).toBe(0)
+  })
+})
 
 describe('ownership-based setup', () => {
   it.each(['.rsp/specs/decisions', 'docs/adr'])('guides missing Decision Records to explicit scaffold creation (%s)', (directory) => {

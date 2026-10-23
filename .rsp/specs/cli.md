@@ -49,12 +49,30 @@ defaults and language inheritance; optional `--compact` changes only presentatio
 Failure is nonzero with no successful summary. Status does not project these
 settings. Agent consumption belongs to [Workflow](workflow.md#methods-and-evidence).
 
-### Exact CLI selection
+### Project runtime selection
 
-Init records the running exact package version and installs the complete core
+For ordinary consumer projects, init records the running exact package version in
+`.rsp/version` and installs the complete core
 suite. The managed AGENTS entry supplies its ordinary invocation. Ordinary commands
 reject a different version before dispatch; help, standalone version queries,
 configuration and doctor remain available for diagnosis.
+
+The RSP development checkout explicitly selects source mode with `.rsp/source`
+containing `.`. The source marker and version pin are mutually exclusive; neither
+the package name nor the directory name enables this mode implicitly. The running
+package root must resolve to the current project root, which must contain the RSP
+source entry `src/cli.ts`. Invalid or symlinked markers fail closed. Build here and
+run `mise exec -- node dist/cli.mjs`; an external CLI is rejected even with matching
+version metadata. Help, version and config remain diagnostic exceptions; doctor
+reports invalid selections without adopting or repairing them.
+
+In source mode, init/update preserve the explicit selection without creating a
+version pin. They render the local-source invocation in the managed AGENTS entry
+and reconcile Skills from the local package, preserving canonical source links.
+Doctor identifies the source runtime instead of suggesting a registry upgrade.
+Version metadata is not source identity or freshness evidence: retain the commit,
+uncommitted diff and build inputs, and rebuild after source changes. Switching
+runtime modes is an explicit owner edit, not an automatic update side effect.
 
 Only an explicitly selected target's update reconciles the complete environment
 and changes the pin. Update accepts only optional --dry-run, not adoption, removal

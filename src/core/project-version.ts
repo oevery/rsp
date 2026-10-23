@@ -1,9 +1,13 @@
-import { readFile } from 'node:fs/promises'
+import { readFile, realpath } from 'node:fs/promises'
 import { join } from 'node:path'
-import { getVersion, RSP_DIR } from './config.js'
+import { getVersion, PKG_ROOT, RSP_DIR } from './config.js'
 import { inspectManagedDirectory, inspectManagedFile } from './managed-path.js'
 
 export const PROJECT_VERSION_PATH = '.rsp/version'
+export const PROJECT_SOURCE_PATH = '.rsp/source'
+export const SOURCE_INVOCATION = 'mise exec -- node dist/cli.mjs'
+export type ProjectRuntime = { mode: 'package', version: string | null } | { mode: 'source' }
+export interface SelectedRuntime { mode: 'package' | 'source', version: string }
 
 export function isExactVersion(value: string): boolean {
   return /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:0|[1-9]\d*|\d*[a-z-][\da-z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-z-][\da-z-]*))*)?(?:\+[\da-z-]+(?:\.[\da-z-]+)*)?$/i.test(value)
@@ -33,16 +37,38 @@ export async function readProjectVersion(projectRoot = '.'): Promise<string | nu
   return version
 }
 
-export async function selectProjectVersion(operation: 'ordinary' | 'update' = 'ordinary'): Promise<string> {
+export async function readProjectRuntime(projectRoot = '.'): Promise<ProjectRuntime> {
+  const version = await readProjectVersion(projectRoot)
+  const source = inspectManagedFile(join(projectRoot, PROJECT_SOURCE_PATH), 'project source selection', { allowMissing: true })
+  if (source.issue)
+    throw source.issue
+  if (!source.exists)
+    return { mode: 'package', version }
+  if (version !== null)
+    throw new Error(`${PROJECT_SOURCE_PATH} and ${PROJECT_VERSION_PATH} are mutually exclusive; explicitly select one runtime.`)
+  if ((await readFile(join(projectRoot, PROJECT_SOURCE_PATH), 'utf8')).trim() !== '.')
+    throw new Error(`${PROJECT_SOURCE_PATH} must contain . to select this RSP source checkout.`)
+  if (await realpath(projectRoot) !== await realpath(PKG_ROOT))
+    throw new Error(`Source mode requires this checkout's local CLI. Build here, then use ${SOURCE_INVOCATION} <command>; a registry package or another checkout cannot substitute.`)
+  const sourceDirectory = inspectManagedDirectory(join(projectRoot, 'src'), 'RSP source directory')
+  const sourceEntry = inspectManagedFile(join(projectRoot, 'src/cli.ts'), 'RSP source entry')
+  if (sourceDirectory.issue || sourceEntry.issue)
+    throw sourceDirectory.issue ?? sourceEntry.issue
+  return { mode: 'source' }
+}
+
+export async function selectProjectRuntime(operation: 'ordinary' | 'update' = 'ordinary'): Promise<SelectedRuntime> {
   const version = await getVersion()
   exactInvocation(version)
-  const selected = await readProjectVersion()
-  if (selected && selected !== version && operation !== 'update') {
-    throw new Error(`Project pins RSP ${selected}; running CLI is ${version}. Use ${exactInvocation(selected)} <command>. To migrate deliberately, inspect the target version and run ${exactInvocation(version)} update.`)
+  const selected = await readProjectRuntime()
+  if (selected.mode === 'source')
+    return { mode: 'source', version }
+  if (selected.version && selected.version !== version && operation !== 'update') {
+    throw new Error(`Project pins RSP ${selected.version}; running CLI is ${version}. Use ${exactInvocation(selected.version)} <command>. To migrate deliberately, inspect the target version and run ${exactInvocation(version)} update.`)
   }
-  if (selected && operation === 'update' && compareVersions(version, selected) < 0)
-    throw new Error(`Downgrading RSP from ${selected} to ${version} is unsupported. Use ${exactInvocation(selected)} <command>.`)
-  return version
+  if (selected.version && operation === 'update' && compareVersions(version, selected.version) < 0)
+    throw new Error(`Downgrading RSP from ${selected.version} to ${version} is unsupported. Use ${exactInvocation(selected.version)} <command>.`)
+  return { mode: 'package', version }
 }
 
 /** SemVer precedence; build metadata does not change upgrade direction. */
@@ -83,5 +109,5 @@ export async function guardProjectVersion(rawArgs: string[]): Promise<void> {
   // Diagnostics must explain drift; update selects its target inside the project lock.
   if (['doctor', 'config', 'update'].includes(rawArgs[0] ?? ''))
     return
-  await selectProjectVersion()
+  await selectProjectRuntime()
 }

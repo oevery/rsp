@@ -35,7 +35,10 @@ backup workflow is introduced.
 
 Init creates missing user scaffolding; update never rewrites config or repairs
 user directories. Runtime defaults do not require YAML migration. Only the managed
-AGENTS block changes; the version pin is written last.
+AGENTS block changes; a consumer project's version pin is written last. The RSP
+development checkout instead selects its own local source through `.rsp/source`;
+init/update retain that choice and do not write a published-version pin. The
+[CLI contract](cli.md#project-runtime-selection) owns selection and rejection rules.
 
 New file and Skill content is prepared before publication. No old-content backups,
 whole-update rollback or recovery entry exist. A failed update leaves completed

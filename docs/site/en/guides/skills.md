@@ -18,10 +18,19 @@ Structural discovery is a conditional method of `rsp-review`. It examines an exp
 
 ## Pinned Skills-only migration
 
-The source candidate records an exact CLI in .rsp/version. Init creates project
+For consumer projects, the source candidate records an exact CLI in .rsp/version. Init creates project
 files and installs the complete suite. Ordinary commands keep that selection;
 only an authorized update deliberately selects another exact target. Source
 changes do not establish publication, and older CLIs have no retrofitted guard.
+
+The RSP development repository explicitly selects its own source with `.rsp/source`
+containing `.`, instead of a version pin. Build with `mise exec -- pnpm run build`,
+then use `mise exec -- node dist/cli.mjs <command>` from that checkout. Another
+checkout or registry CLI is not a substitute, even with the same version metadata.
+Init/update preserve this selection without creating `.rsp/version`; doctor reports
+source mode. Conflicting, malformed or symlinked markers fail closed. This mode is
+not inferred for consumer projects. Candidate identity includes the commit, dirty
+diff and build inputs; source mode alone does not establish build freshness.
 
 Preserve needed local modifications in managed assets, then run the target CLI's
 update. It reconciles the complete suite, refreshes managed project files and

@@ -11,7 +11,7 @@ import { inspectChangeDependencies } from '../core/dependency-plan.js'
 import { inspectRspInitialization, inspectUnsupportedRules, normalizeLogicalPath, walkMarkdownFiles } from '../core/filesystem.js'
 import { inspectManagedFile } from '../core/managed-path.js'
 import { toErrorMessage } from '../core/output.js'
-import { exactInvocation, readProjectVersion } from '../core/project-version.js'
+import { exactInvocation, readProjectRuntime, SOURCE_INVOCATION } from '../core/project-version.js'
 import { checkForUpdates } from '../core/update-check.js'
 import { GROUP_BRIEF_FILENAME, inspectArchiveTree, inspectFocusTree, inspectWorkTree, resolveWorkRef, WorkRefError } from '../core/work-ref.js'
 import { inspectSpecs, specsInspectionComplete } from '../specs/query.js'
@@ -46,7 +46,7 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
 
   reportCheck(checks, '.rsp exists', existsSync(RSP_DIR), 'Run: rsp init')
   reportRetiredProtocol(checks)
-  await reportProjectRuntime(checks)
+  const sourceMode = await reportProjectRuntime(checks)
   if (options.checkUpdates) {
     const notice = await checkForUpdates(await getVersion())
     checks.push({
@@ -56,7 +56,9 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
       message: notice.status === 'available'
         ? `RSP ${notice.latest} is available; running ${notice.current}. Project selection is unchanged.`
         : notice.status === 'current' ? `No newer stable package found for ${notice.current}.` : 'Update metadata is unavailable; local checks are unaffected.',
-      hint: notice.status === 'available' ? 'Inspect migration guidance and choose an exact target. Upgrade notices authorize no update.' : undefined,
+      hint: sourceMode
+        ? 'Stable package metadata does not establish source freshness. Keep using the local source CLI; this notice does not select a package runtime.'
+        : notice.status === 'available' ? 'Inspect migration guidance and choose an exact target. Upgrade notices authorize no update.' : undefined,
     })
   }
   await reportUnsupportedRules(checks, reportRuntime)
@@ -94,20 +96,26 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
   return result
 }
 
-async function reportProjectRuntime(checks: DoctorCheck[]): Promise<void> {
+async function reportProjectRuntime(checks: DoctorCheck[]): Promise<boolean> {
+  let sourceMode = false
   try {
-    const selected = await readProjectVersion()
+    const selected = await readProjectRuntime()
+    sourceMode = selected.mode === 'source'
     const running = await getVersion()
     checks.push({
-      status: selected === running ? 'ok' : 'issue',
+      status: selected.mode === 'source' || selected.version === running ? 'ok' : 'issue',
       code: 'project_cli_version',
-      label: 'project CLI version',
-      message: selected ? `Project pins ${selected}; running ${running}.` : 'Project has no exact CLI pin.',
-      hint: selected ? `Use ${exactInvocation(selected)} <command>; only an authorized migration uses update.` : 'Choose an exact CLI version, then run its update command.',
+      label: 'project CLI runtime',
+      message: selected.mode === 'source'
+        ? `Source mode: this checkout's local CLI; package metadata ${running} is not source identity.`
+        : selected.version ? `Project pins ${selected.version}; running ${running}.` : 'Project has no exact CLI pin.',
+      hint: selected.mode === 'source'
+        ? `Build current source, then use ${SOURCE_INVOCATION} <command>. Retain commit, uncommitted diff and build inputs for candidate evidence.`
+        : selected.version ? `Use ${exactInvocation(selected.version)} <command>; only an authorized migration uses update.` : 'Choose an exact CLI version, then run its update command.',
     })
   }
   catch (error) {
-    checks.push({ status: 'issue', code: 'project_cli_version', label: 'project CLI version', message: toErrorMessage(error) })
+    checks.push({ status: 'issue', code: 'project_cli_version', label: 'project CLI runtime', message: toErrorMessage(error) })
   }
   try {
     const inventory = await inspectPackagedSkillInventory()
@@ -126,6 +134,7 @@ async function reportProjectRuntime(checks: DoctorCheck[]): Promise<void> {
   catch (error) {
     checks.push({ status: 'issue', code: 'project_skill_suite', label: 'project Skill suite is inspectable', message: toErrorMessage(error) })
   }
+  return sourceMode
 }
 
 function reportRetiredProtocol(checks: DoctorCheck[]): void {
