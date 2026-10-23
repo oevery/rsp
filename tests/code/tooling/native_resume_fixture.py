@@ -19,12 +19,22 @@ from harbor.job import Job
 from harbor.models.job.config import JobConfig
 from harbor.models.job.lock import build_trial_lock
 from harbor.models.task.task import Task
+from harbor.models.trial.config import TrialConfig
 from harbor.models.trial.paths import TrialPaths
 from harbor.models.trial.result import AgentInfo, ExceptionInfo, TrialResult
 from harbor.models.verifier.result import VerifierResult
 from harbor.tasks.client import TaskDownloadResult
 from harbor.trial.hooks import TrialEvent, TrialHookEvent
 from harbor.trial.trial import Trial
+
+
+def record_task_lock(trial, task):
+    """Use Harbor's real lock producer at the offline execution boundary."""
+    config = TrialConfig(task={"path": task}, agent={"name": "oracle"},
+                         trial_name=trial.name, trials_dir=trial.parent)
+    lock = build_trial_lock(trial_config=config, task_download_result=TaskDownloadResult(
+        path=task, download_time_sec=0, cached=True))
+    (trial / "lock.json").write_text(lock.model_dump_json(indent=2))
 
 
 def hashes(root):

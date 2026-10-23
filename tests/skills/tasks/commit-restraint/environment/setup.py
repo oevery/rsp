@@ -23,4 +23,9 @@ put('unstaged-note.txt','User unstaged note: preserve these bytes.\n');put('untr
 put('src/price.mjs', 'export const priceCents = 1500\n')
 put('site/price.json', '{"currency":"USD","price":"15.00"}\n')
 git('add','--','src/price.mjs')
-baseline.write_text(json.dumps({'head':git('rev-parse','HEAD'),'index':git('ls-files','--stage'),'diff':git('diff','--binary','HEAD')},indent=2)+'\n')
+support = Path('/opt/rsp-eval')
+if not (support / 'workspace.py').is_file():
+    support = Path(__file__).resolve().parents[3] / 'support'
+sys.path.insert(0, str(support))
+from workspace import capture_initial_state
+capture_initial_state(root, baseline)

@@ -48,9 +48,12 @@ def check_task(tests, workspace):
 
 
 def run_check(path):
+    from workspace import initial_file_modes
     workspace = Path(os.environ.get("RSP_WORKSPACE", "/app")).resolve()
     # This is verifier-owned input, not an agent-produced artifact.
-    json.loads(Path(os.environ.get("RSP_BASELINE", str(path.parent.parent / "baseline.json"))).read_text())
+    initial = json.loads(Path(os.environ.get("RSP_BASELINE", str(path.parent.parent / "baseline.json"))).read_text())
+    # Validate verifier-owned metadata before any agent-output assertion can score.
+    initial_file_modes(initial)
     sys.path.insert(0, str(path.parent))
     try:
         runpy.run_path(str(path), run_name="__main__")

@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import shlex
+import stat
 import subprocess
 
 
@@ -83,24 +84,66 @@ def snapshot_fixture(root, baseline):
     root = Path(root).resolve()
     (root / "user-notes.txt").write_text("User working note: preserve.\n")
     (root / "draft.txt").write_text("User draft: preserve.\n")
+    capture_initial_state(root, baseline)
+
+
+def capture_initial_state(root, baseline):
+    """Capture setup effects before execution; business expectations stay separate."""
+    root = Path(root).resolve()
     files = {p.relative_to(root).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
              for p in root.rglob("*") if p.is_file() and ".git" not in p.parts}
+    modes = {name: stat.S_IMODE((root / name).stat().st_mode) for name in files}
     def git(*args):
         return subprocess.check_output(["git", *args], cwd=root, text=True).strip()
     Path(baseline).write_text(json.dumps({"head": git("rev-parse", "HEAD"),
-                                        "index": git("ls-files", "--stage"), "files": files},
+                                        "index": git("ls-files", "--stage"),
+                                        "diff": git("diff", "--binary", "HEAD"), "files": files, "modes": modes},
                                        indent=2, sort_keys=True) + "\n")
+
+
+def initial_file_modes(initial):
+    """Require captured permission metadata without deriving it from current files."""
+    files = initial.get("files") if isinstance(initial, dict) else None
+    modes = initial.get("modes") if isinstance(initial, dict) else None
+    if (not isinstance(files, dict) or not isinstance(modes, dict)
+            or any(name not in modes or type(modes[name]) is not int
+                   or not 0 <= modes[name] <= 0o7777 for name in files)):
+        raise ValueError("Initial file modes unavailable: expected a permission mode for every captured file")
+    return {name: modes[name] for name in files}
+
+
+def preserve_notes(root, baseline, user_note=True):
+    """Preserve pre-existing Git and dirty-note state in mutable fixtures."""
+    root = Path(root).resolve()
+    modes = baseline["modes"]
+    for args, expected in ((("rev-parse", "HEAD"), baseline["head"]),
+                           (("ls-files", "--stage"), baseline["index"])):
+        actual = subprocess.check_output(["git", *args], cwd=root, text=True).strip()
+        assert actual == expected, "Git state changed: " + " ".join(args)
+    notes = ["staged-note.txt", "unstaged-note.txt", "untracked-note.txt"]
+    if user_note:
+        notes.append("user-notes.txt")
+    for name in notes:
+        path = root / name
+        assert path.is_file() and not path.is_symlink(), "User note missing or replaced: " + name
+        assert hashlib.sha256(path.read_bytes()).hexdigest() == baseline["files"][name], "User note changed: " + name
+        assert stat.S_IMODE(path.stat().st_mode) == modes[name], "User note mode changed: " + name
+    untracked = subprocess.check_output(["git", "ls-files", "--others", "--exclude-standard", "-z"],
+                                        cwd=root, text=True).split(chr(0))
+    assert "untracked-note.txt" in untracked, "Untracked draft staged"
 
 
 def preserve_snapshot(root, baseline, allowed=(), git_unchanged=True):
     """Check a snapshot_fixture baseline; temporary output remains allowed."""
     root = Path(root).resolve()
+    modes = baseline["modes"]
     for name, digest in baseline["files"].items():
         if name in allowed or name.startswith(("tmp/", ".cache/")):
             continue
         path = root / name
         assert path.is_file() and not path.is_symlink(), "Preserved input missing or replaced: " + name
         assert hashlib.sha256(path.read_bytes()).hexdigest() == digest, "Input changed: " + name
+        assert stat.S_IMODE(path.stat().st_mode) == modes[name], "Input mode changed: " + name
     check_added(root, allowed, baseline["files"])
     tracked = subprocess.check_output(["git", "ls-files", "-z"], cwd=root, text=True)
     assert not set(tracked.split(chr(0))) - {""} - set(baseline["files"]) - set(allowed), "Undeclared tracked files"

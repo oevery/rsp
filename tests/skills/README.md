@@ -16,6 +16,16 @@ Schema checking needs no Docker daemon or credentials and makes no model calls. 
 
 Before creating a new run, calibration or regrade job, the wrapper compares the actual image bytes with the local CLI package, baked verifier support, dependency lock and Dockerfile. Missing or changed files stop preparation with a rebuild instruction. Rebuild after changing those inputs. This check uses a disposable network-disabled container and makes no model calls; it checks candidate agreement, not task behavior. Resume retains its saved-input and image-identity checks.
 
+All tasks use one shared runtime image; task directories contain no Dockerfiles. Editing a task workspace, setup or private test does not require an image build. Changes to the baked CLI, common verifier support or dependencies still require rebuilding the shared image.
+
+For new runs and calibration, preparation copies each selected workspace into a temporary directory and mounts only that copy, the read-only setup script and a separate initial-state output directory into a network-disabled preparation container. The container uses the selected immutable runtime image ID; it never mounts the repository or private tests. After setup succeeds, the wrapper freezes the initialized workspace (including Git state) as the task's `environment/` and stores the initial state privately in `tests/baseline.json`. Failure stops preparation; timeout cleanup removes only the named preparation container.
+
+Harbor's native prebuilt-image upload copies `environment/` into each independent agent container at `/app`. The separate verifier uses the same runtime image, receives recorded artifacts and uploads private tests through Harbor's normal verifier path. Do not add a task/test Dockerfile or an explicit verifier image: those select Harbor's bundled-test path and disable dynamic private-test upload. The authored workspace is never an agent-writable host mount. Keep the shared image and frozen inputs available for resume; no per-task image cache is required. Business expectations remain independent of captured initial state.
+
+Shared preservation checks compare protected file contents and permission modes with that saved state, alongside Git history/index and write-scope checks. Authorized mutable paths remain exempt from content/mode preservation. Older saved states without mode metadata cannot establish this check: the current verifier reports unavailable evidence rather than guessing permissions from the final workspace. Historical verdicts and frozen inputs remain unchanged.
+
+Before new execution or resume, the wrapper also checks prepared file modes against the same saved initial state for directories Harbor will upload. Drift or unavailable metadata stops before native dispatch; resume stops before creating attempt backups. It never repairs the input or writes another digest ledger. Legacy image-baked tasks do not upload these directories and retain their native path. Regrade and regrade-resume skip this upload check because they consume recorded artifacts, not the prepared agent workspace; existing lock and grading checks still apply.
+
 For the native Codex environment boundary, an explicit offline probe invokes bare `apply_patch` through `bash -lc` and exercises Skill registration, configuration, session copying on resume and cleanup. It also checks that the command remains executable after the transient home is removed. It replaces model execution with a local probe and does not establish model behavior or real conversation continuation:
 
 ```sh
@@ -155,18 +165,18 @@ call/results as well as codex.txt: JavaScript wrapper failures can occur before 
 shell command is dispatched. Keep those failures, actual command exits,
 contract-defined expected rejections and output truncation separate; task verdicts
 and executor token accounting are different evidence. The retained
-[offline regression](../code/tooling/command-construction.test.js) parses exact
+[optional diagnostic](../diagnostics/command-construction.test.js) parses exact
 failed calls and successful successor controls without executing their contents.
-Run it with `mise exec -- pnpm exec vitest run tests/code/tooling/command-construction.test.js`.
+Run it with `mise exec -- pnpm test:diagnostics`. These diagnostics are excluded from default code tests and release gates.
 The [classification report](../../research/reports/2026-10-17T05-52-00Z.md) records
 provenance and limits; syntax passes establish neither safe replay nor model success.
 
-The [evidence-reading regression](../code/tooling/evidence-reading.test.js) exercises
-two additional offline controls: reconstructing stop/continuation from selected
-native fields with source locations, and attributing a real check's exit code on
-its first separate execution. Full original logs remain retained; selected fields
+The [evidence-reading diagnostic](../diagnostics/evidence-reading.test.js) reconstructs
+stop/continuation from selected native fields with source locations. The separate
+[Shell exit-code diagnostic](../diagnostics/check-exit-code.test.js) attributes a
+real check's exit code on its first separate execution. Full original logs remain retained; selected fields
 do not replace wider review or separately required independent checks.
-Run `mise exec -- pnpm exec vitest run tests/code/tooling/evidence-reading.test.js`.
+Run both with `mise exec -- pnpm test:diagnostics`.
 The [result record](../../research/reports/2026-10-17T06-38-29Z.md) separates byte-size
 observations and local process results from unmeasured model/token improvements.
 
@@ -186,8 +196,8 @@ valid low score, one malformed response then success, three malformed responses,
 and an immediate injected SDK timeout. It copies release-evidence, keeps its
 checks/rubric, and substitutes only the judge SDK boundary using a hidden test
 fixture. Both native phases use no-network policy and dummy credentials.
-The probe retains a local image tag pinned to the inspected ID; task images add
-only fixture workspace/setup. The production image and dependencies are unchanged.
+The probe pins both roles to the inspected shared image ID and prepares workspace
+inputs without task image builds. The runtime image and dependencies are unchanged.
 
 The reference solution is deterministic, not model execution. Expected report
 labels are calibration-fail, calibration-pass, unscored and unscored. Records
@@ -200,7 +210,7 @@ Do not reuse an existing evidence directory or replace a failed run.
 
 ## Offline commit-stop controls
 
-The [commit-stop regression](../code/tooling/commit-stop-boundaries.test.js) runs
+The [optional commit-stop diagnostic](../diagnostics/commit-stop-boundaries.test.js) runs
 two bounded scenarios in disposable Git repositories: an index changed after its
 reviewed snapshot, and a real commit rejected by a pre-commit hook after modifying
 the worktree. Correct stopping preserves the observed state and failed command.
@@ -210,7 +220,7 @@ receipts reject continuation even when a later reset or cleanup restores the
 expected final state. All these Git effects are isolated fixture actions.
 
 ```sh
-mise exec -- pnpm exec vitest run tests/code/tooling/commit-stop-boundaries.test.js
+mise exec -- pnpm exec vitest run --config tests/diagnostics/vitest.config.ts tests/diagnostics/commit-stop-boundaries.test.js
 ```
 
 These controls test real Git effects and fixture discrimination, not a production
@@ -339,11 +349,11 @@ For authorized verifier reassessment, the wrapper snapshots the current matching
 mise exec -- uv run --project tests/skills python tests/skills/evaluate.py regrade JOB --allow-live --concurrency 1
 ```
 
-The source job supplies execution artifacts; the new sibling inputs directory supplies the replacement verifier. Resume checks the regrade job's own snapshot, so a corrected grader need not match the original execution's grader. Later working-tree task edits do not change that snapshot. Missing required source artifacts leave reassessment unavailable. Regrade can call task-defined judges and requires runtime judge routing; it is not fresh agent execution or current-candidate Skill acceptance.
+The source job supplies execution artifacts and its image-bound initial state; the new sibling inputs directory supplies the replacement verifier. Before creating a regrade job, the wrapper uses Harbor's task hashing and each source trial's native lock.json to verify the saved task, including coverage of task.toml and tests/baseline.json. Calibration checks the actually executed samples, not their unexecuted base templates, and carries each sample's own initial state. Missing, invalid or mismatched locks stop preparation; another attempt's valid lock cannot cover them. Regrade copies that verified initial state instead of rerunning setup against current sources. The replacement task has an empty environment input directory: Harbor restores original artifacts, not today's setup. `metadata.rsp_initial_image` retains the initialization image identity while `environment.docker_image` selects the current runtime for corrected grading. Both are covered by the native execution lock; older records without this metadata retain their original environment-image binding. Older jobs lacking an image-bound initial state or usable execution lock cannot use this regrade path; retain their original verdicts and evidence, without promoting old fixed tables or agent artifacts into trusted initial state. Resume checks the regrade job's own snapshot, so a corrected grader need not match the original execution's grader. Later working-tree task edits do not change that snapshot. Missing required source artifacts leave reassessment unavailable. Regrade can call task-defined judges and requires runtime judge routing; it is not fresh agent execution or current-candidate Skill acceptance.
 
 Saved task and Skill content is also checked by the native job lock. Offline controls in `tests/code/tooling/native_resume_fixture.py` exercise the real wrapper backup and native resume/lock path: unchanged inputs dispatch only the failed trial once; task or Skill drift raises a lock mismatch before any trial dispatch. Native resume removes the selected failed trial before checking that lock, so refusal is not mutation-free: the failed trial is absent from the job and the wrapper summary reports an incomplete task. Inspect the sibling attempt backup for the original failed trial and prior job metadata; successful trial bytes and the old lock remain unchanged in these controls. The controls replace external readiness and trial execution with local stand-ins and do not establish real model, container or verifier recovery acceptance.
 
-Advanced direct use of native Harbor regrade remains possible. Task templates default RSP_EVAL_OFFLINE to 0 and the optional RSP_JUDGE_HOST to an empty value, so this path does not depend on a prior wrapper invocation. Semantic tasks still require RSP_JUDGE_BASE_URL and RSP_JUDGE_API_KEY. Direct native jobs have no wrapper input snapshot and cannot use wrapper resume; use the documented entry above when retained inputs and recovery are required.
+Advanced direct native Harbor use must consume prepared task copies containing their trusted initial state, not raw authored task directories. Task templates default RSP_EVAL_OFFLINE to 0 and the optional RSP_JUDGE_HOST to an empty value. Semantic tasks still require RSP_JUDGE_BASE_URL and RSP_JUDGE_API_KEY. Direct native jobs without wrapper inputs cannot use wrapper resume; prefer the documented wrapper entrypoints for preparation and retained recovery evidence.
 
 Package release invokes only `evaluate.py check`; it never automatically runs, resumes or regrades jobs. Model results, schema checks and local code success grant no release, publication or human approval.
 
@@ -403,7 +413,7 @@ Report parsing and evidence paths reuse support/outputs.py. Exact assertions fol
 explicit types/enums and file/Git effects; undeclared closure shapes and equivalent
 prose remain semantic judgments. The existing evaluation_contract.py offline suite
 covers equivalent Markdown/report/path forms, malformed outputs, preservation and
-negative outcomes. Its setup also requires byte-identical recorded baselines.
+negative outcomes. Shared initial-state tests discover every task, execute its setup and exercise preservation without comparing against a second versioned baseline.
 
 The paired commit-prerequisite-failure and commit-prerequisite-success tasks require
 fresh delivery preparation before staging or commit. They use the same request and

@@ -23,4 +23,9 @@ put('unstaged-note.txt','User unstaged note: preserve these bytes.\n');put('untr
 put('src/discount.mjs', '/** Returns the discount amount. */\nexport function discount(price, rate) { return price * rate }\n')
 git('add','--','src/discount.mjs')
 put('src/discount.mjs', '/** Returns the final payable price. */\nexport function discount(price, rate) { return price * (1 - rate) }\n')
-baseline.write_text(json.dumps({'head':git('rev-parse','HEAD'),'index':git('ls-files','--stage'),'diff':git('diff','--binary','HEAD')},indent=2)+'\n')
+support = Path('/opt/rsp-eval')
+if not (support / 'workspace.py').is_file():
+    support = Path(__file__).resolve().parents[3] / 'support'
+sys.path.insert(0, str(support))
+from workspace import capture_initial_state
+capture_initial_state(root, baseline)

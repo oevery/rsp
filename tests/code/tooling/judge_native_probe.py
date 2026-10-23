@@ -42,15 +42,11 @@ def run(output):
     spec.loader.exec_module(evaluate)
     evaluate.check_image_inputs()
     image = evaluate.image_identity()
-    pinned_tag = "rsp-eval-agent:offline-" + image.split()[0].split(":")[1][:16]
-    subprocess.run(["docker", "tag", image.split()[0], pinned_tag], check=True)
-    assert subprocess.check_output(["docker", "image", "inspect", pinned_tag,
-                                   "--format", "{{.Id}}"], text=True).strip() == image.split()[0]
     source = HOME / "tasks/release-evidence"
     source_before = hashes(source)
     save(output / "source-before.json", {"head": subprocess.check_output(
         ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
-        "image": image, "pinnedLocalTag": pinned_tag, "task": source_before,
+        "image": image, "task": source_before,
         "support": hashes(HOME / "support"), "probe": hashes(ROOT / "tests/code/fixtures/judge-native")})
     # Do not load evaluation credentials. Both native phases have no network.
     env = {key: os.environ[key] for key in ("PATH", "HOME", "TMPDIR", "DOCKER_HOST",
@@ -83,12 +79,8 @@ def run(output):
         ) + config_text[end:]
         config_text = config_text.replace("[environment]\n", '[environment]\nnetwork_mode = "no-network"\n')
         (task / "task.toml").write_text(config_text)
-        # Separate verifier environments build from tests/Dockerfile, so pin
-        # both roles to the same inspected local base image.
-        for relative in ("environment/Dockerfile", "tests/Dockerfile"):
-            dockerfile = task / relative
-            dockerfile.write_text(dockerfile.read_text().replace(
-                "rsp-eval-agent:2026-10-08", pinned_tag))
+        # Both native roles use this image; private tests upload only to verifier.
+        evaluate.prepare_task_environment(task, runtime_image=image.split()[0])
         config = {"job_name": name, "jobs_dir": str(output), "quiet": True,
                   "n_attempts": 1, "n_concurrent_trials": 1,
                   "retry": {"max_retries": 0}, "agents": [{"name": "oracle"}],

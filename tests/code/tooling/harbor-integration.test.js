@@ -1,6 +1,14 @@
 import { spawnSync } from 'node:child_process'
 import { expect, it } from 'vitest'
 
+it('uses trusted pre-agent initial state and preserves workspace boundaries offline', () => {
+  const result = spawnSync('uv', ['run', '--frozen', '--project', 'tests/skills', 'python', 'tests/code/tooling/workspace_state.py'], {
+    encoding: 'utf8',
+    timeout: 60000,
+  })
+  expect(result.status, result.stdout + result.stderr).toBe(0)
+}, 65000)
+
 it('keeps calibration, unavailable grading and retry evidence distinct from acceptance', () => {
   const result = spawnSync('uv', ['run', '--frozen', '--project', 'tests/skills', 'python', 'tests/code/tooling/evaluation_contract.py', '-v'], {
     encoding: 'utf8',

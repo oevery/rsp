@@ -94,6 +94,22 @@ positive scores as passing. Oracle/nop offline calibration does not establish
 semantic acceptance. Preserve historical evidence; resumed or regraded results do
 not rewrite original verdicts or by themselves establish fresh candidate execution.
 Task-level reuse and execution obligations belong to [Workflow](workflow.md#methods-and-evidence).
+
+Workspace preservation uses trusted initial state captured during isolated setup
+before agent execution, not a separately maintained digest table. One shared runtime
+image serves independent agent and verifier containers; Harbor loads the frozen
+workspace and private tests separately instead of building per-task images. The
+separate verifier receives the saved initial state. Behavioral
+expectations remain independent; regrading retains the original trusted starting
+state and cannot reconstruct it from agent outputs or a newer setup.
+Initial state includes protected file permission modes. Missing or invalid mode
+metadata leaves preservation evidence unavailable. For inputs Harbor uploads,
+new execution and resume reject mode drift or unavailable metadata before
+dispatch; resume checks precede attempt backup. Regrade uses recorded artifacts
+and skips this unused-upload check.
+Before reuse, the saved task must match the source trial's native Harbor execution
+lock, which must cover the initial state and its image binding. Calibration uses
+the executed sample rather than the unexecuted base template.
 Repository commands and evidence-recovery procedures are documented in
 [Tests](../../tests/README.md) and [Research](../../research/README.md), not duplicated here.
 

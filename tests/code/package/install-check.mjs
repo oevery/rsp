@@ -1,5 +1,4 @@
 import { spawnSync } from 'node:child_process'
-import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { checkSkillPackage } from '../../../scripts/skill-package-check.mjs'
@@ -67,7 +66,6 @@ export function checkInstalledPackage(root, tarball, temporaryRoot) {
     skillRefresh: 'passed',
     projectUpdate: 'passed',
     dependencyMode: networkAllowed ? 'network-explicitly-allowed' : 'offline-cache',
-    packageLockHash: createHash('sha256').update(readFileSync(join(consumer, 'package-lock.json'))).digest('hex'),
     nodeVersion: process.version,
   }
 }

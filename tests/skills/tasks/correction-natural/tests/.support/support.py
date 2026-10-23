@@ -1,3 +1,4 @@
+from workspace import preserve_notes
 """Task-local deterministic verifier; parent grade.py owns reward rendering."""
 from pathlib import Path
 import json,os,subprocess
@@ -13,10 +14,4 @@ def require(condition,message):
  if not condition:raise AssertionError(message)
 
 def preserve():
- old=json.loads(BASE.read_text())
- require(git('rev-parse','HEAD')==old['head'],'HEAD changed')
- require(git('ls-files','--stage')==old['index'],'Index changed')
- notes={'staged-note.txt':'User staged note: preserve these bytes.\n', 'unstaged-note.txt':'User unstaged note: preserve these bytes.\n', 'untracked-note.txt':'User untracked draft: preserve these bytes.\n'}
- for name,expected in notes.items():require(text(name)==expected,'User note changed: '+name)
- require('untracked-note.txt' in git('ls-files','--others','--exclude-standard').splitlines(),'Untracked draft staged')
- require((ROOT/'user-notes.txt').read_bytes()==subprocess.check_output(['git','show','HEAD:user-notes.txt'],cwd=ROOT),'Existing user note changed')
+ preserve_notes(ROOT, json.loads(BASE.read_text()))

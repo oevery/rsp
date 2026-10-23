@@ -1,5 +1,0 @@
-{
-  "head": "394722f9d93600dd07fec16ba52e4efd388ea172",
-  "index": "100644 c10eb54402d2fa670e50c371f528e744398d71d8 0\t.rsp/changes/catalog-refresh.md\n100644 8294177a58d3bc7741692f6218237e7956864d26 0\t.rsp/config.yaml\n100644 e69de29bb2d1d6434b8b29ae775ad8c2e48c5391 0\t.rsp/focus.d/catalog-refresh\n100644 120231310a85107eeb56d8b0dcfdd08c03e77e70 0\tAGENTS.md\n100644 1c9fcb8e94bd6a78b9c1ae05ff818f0c5dcb68a4 0\tcatalog.json\n100644 8bf9748edd8cac6e3481ee01ab5641b95a81417d 0\tsite/catalog.json\n100644 5adbd59b07f55708516f66b149e052a7289893ba 0\tstaged-note.txt\n100644 c6d8e85c47541e7fcbab82abc3fcaf53790793fc 0\ttools/check.mjs\n100644 4c1c6b23a6d3b8b43d3cb248492dc6633c803d28 0\tuser-notes.txt",
-  "diff": "diff --git a/staged-note.txt b/staged-note.txt\nindex de5e6af..5adbd59 100644\n--- a/staged-note.txt\n+++ b/staged-note.txt\n@@ -1 +1 @@\n-Original staged note.\n+User staged note: preserve exactly.\ndiff --git a/user-notes.txt b/user-notes.txt\nindex 4c1c6b2..838e5a5 100644\n--- a/user-notes.txt\n+++ b/user-notes.txt\n@@ -1 +1 @@\n-Original user notes.\n+User unstaged notes: preserve exactly."
-}

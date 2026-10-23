@@ -9,21 +9,28 @@ import json
 import os
 from pathlib import Path
 import shutil
+import stat
 import subprocess
 import sys
+import tempfile
 import tomllib
+import uuid
 
 import toml
 import yaml
 
 from harbor.models.job.config import JobConfig
+from harbor.environments.definition import should_upload_environment_dir
+from harbor.models.job.lock import TaskLock
 from harbor.models.task.task import Task
+from harbor.publisher.packager import Packager
 from rewardkit.models import JudgeTomlConfig, RewardTomlConfig, normalize_aggregation
 
 ROOT = Path(__file__).resolve().parents[2]
 HOME = ROOT / "tests/skills"
 sys.path.insert(0, str(ROOT))
 from tests.skills.support.usage import session_usage
+from tests.skills.support.workspace import initial_file_modes
 
 
 def stamp():
@@ -582,8 +589,78 @@ def check_resume_inputs(job):
         raise ValueError(f"Resume image drift: {inputs}; start a new run or regrade")
 
 
-def snapshot(selected, agent):
+def prepare_task_workspace(task, image=None):
+    """Freeze setup output using the shared image, without building a task image."""
+    timeout = Task(task).config.environment.build_timeout_sec
+    image = image or image_identity().split()[0]
+    environment = task / "environment"
+    with tempfile.TemporaryDirectory(prefix="rsp-prepare-", dir=task.parent) as directory:
+        temporary = Path(directory).resolve()
+        workspace, output = temporary / "workspace", temporary / "initial"
+        shutil.copytree(environment / "workspace", workspace, symlinks=True)
+        output.mkdir()
+        container = "rsp-prepare-" + uuid.uuid4().hex
+        try:
+            subprocess.run([
+                "docker", "run", "--rm", "--name", container, "--network", "none",
+                "--mount", f"type=bind,src={workspace},dst=/app",
+                "--mount", f"type=bind,src={(environment / 'setup.py').resolve()},dst=/opt/task-setup.py,readonly",
+                "--mount", f"type=bind,src={output},dst=/rsp-initial",
+                "--workdir", "/app", "--entrypoint", "python3", image,
+                "/opt/task-setup.py", "/app", "/rsp-initial/baseline.json",
+            ], check=True, timeout=timeout)
+        finally:
+            # A timed-out Docker client does not necessarily stop its container.
+            subprocess.run(["docker", "rm", "--force", container],
+                           capture_output=True, timeout=30)
+        initial = json.loads((output / "baseline.json").read_text())
+        shutil.rmtree(environment)
+        shutil.move(workspace, environment)
+    return image, initial
+
+
+def prepare_task_environment(task, initial=None, runtime_image=None):
+    """Load frozen workspace inputs and private tests into separate containers."""
+    if initial is None:
+        image, initial = prepare_task_workspace(task, runtime_image)
+        initial["environment_image"] = image
+    else:
+        image = runtime_image or initial["environment_image"]
+        # Regrade restores the recorded artifacts, never the current raw setup.
+        shutil.rmtree(task / "environment")
+        (task / "environment").mkdir()
+    write_json(task / "tests/baseline.json", initial)
+    config_path = task / "task.toml"
+    config = tomllib.loads(config_path.read_text())
+    config["environment"]["docker_image"] = image
+    config["environment"]["workdir"] = "/app"
+    config.setdefault("metadata", {})["rsp_initial_image"] = initial["environment_image"]
+    config_path.write_text(toml.dumps(config))
+
+
+def original_initial_state(task, trial):
+    """Never reinterpret an old run with a newly generated setup baseline."""
+    try:
+        locked = TaskLock.model_validate(json.loads((trial / "lock.json").read_text())["task"])
+        digest, files = Packager.compute_content_hash(task)
+        covered = {path.relative_to(task.resolve()).as_posix() for path in files}
+        if not {"task.toml", "tests/baseline.json"} <= covered:
+            raise ValueError("execution lock does not cover the initial state and image binding")
+        if locked.name != task.name or locked.digest != "sha256:" + digest:
+            raise ValueError("saved task differs from the source trial execution lock")
+        initial = json.loads((task / "tests/baseline.json").read_text())
+        config = tomllib.loads((task / "task.toml").read_text())
+        image = config.get("metadata", {}).get("rsp_initial_image", config["environment"]["docker_image"])
+        if not image.startswith("sha256:") or initial.get("environment_image") != image:
+            raise ValueError("initial state is not bound to its execution image")
+    except (OSError, ValueError, KeyError, TypeError, AttributeError) as error:
+        raise ValueError(f"Trusted execution initial state unavailable: {task}; retain the original verdict") from error
+    return initial
+
+
+def snapshot(selected, agent, initial_states=None):
     check_image_inputs()
+    runtime = image_identity()
     job = HOME / "reports" / stamp()
     # Harbor owns Job child directories, so inputs and retry backups are siblings.
     inputs = job.with_name(job.name + ".inputs")
@@ -592,11 +669,18 @@ def snapshot(selected, agent):
     shutil.copytree(HOME / "support", inputs / "support", ignore=shutil.ignore_patterns("__pycache__"))
     shutil.copy2(HOME / "uv.lock", inputs / "uv.lock")
     for source in selected:
-        shutil.copytree(source, inputs / "tasks" / source.name)
+        target = inputs / "tasks" / source.name
+        shutil.copytree(source, target)
+        if initial_states is None:
+            prepare_task_environment(target, runtime_image=runtime.split()[0])
+        elif source.name in initial_states:
+            prepare_task_environment(target, initial_states[source.name], runtime.split()[0])
+        # Calibration regrades copy unprepared base templates; each executed
+        # sample receives its own verified state after sample construction.
     commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
     (inputs / "candidate.patch").write_bytes(subprocess.check_output(["git", "diff", "HEAD", "--binary"], cwd=ROOT))
     write_json(inputs / "source.json", {"commit": commit, "captured_at": job.name,
-               "tasks": [p.name for p in selected], "agent": agent, "image": image_identity()})
+               "tasks": [p.name for p in selected], "agent": agent, "image": runtime})
     return job, inputs
 
 
@@ -614,8 +698,27 @@ def exit_status(job, counts):
     return 0
 
 
+def check_workspace_modes(config):
+    """Check only inputs Harbor will upload, never regrade's recorded artifacts."""
+    if config.get("source_jobs"):
+        return
+    for entry in config.get("tasks", []):
+        task = Path(entry["path"])
+        environment = task / "environment"
+        definition = tomllib.loads((task / "task.toml").read_text())
+        if not should_upload_environment_dir(
+                environment, docker_image=definition.get("environment", {}).get("docker_image")):
+            continue
+        initial = json.loads((task / "tests/baseline.json").read_text())
+        for name, expected in initial_file_modes(initial).items():
+            actual = (environment / name).lstat().st_mode
+            if not stat.S_ISREG(actual) or stat.S_IMODE(actual) != expected:
+                raise ValueError(f"Prepared workspace mode drift: {task.name}/{name}; refusing task upload")
+
+
 def execute(job, inputs, config):
     JobConfig.model_validate(config)
+    check_workspace_modes(config)
     write_json(inputs / "job.json", config)
     try:
         code = harbor("run", "-y", "-c", inputs / "job.json")
@@ -758,7 +861,8 @@ def regrade(args):
     source = args.job.resolve()
     if not (source / "config.json").is_file():
         raise ValueError(f"Source job config unavailable: {source}")
-    names = sorted({result["task_name"] for _, result in native_results(source)})
+    trials = list(native_results(source))
+    names = sorted({result["task_name"] for _, result in trials})
     if not names:
         raise ValueError("Source job has no recorded trials to regrade")
     source_inputs = source.with_name(source.name + ".inputs")
@@ -767,13 +871,20 @@ def regrade(args):
     selected = tasks(sorted({cases[name]["task"] for name in names}) if cases else names)
     check(selected)
     prepare_environment(True, args.allow_live)
-    job, inputs = snapshot(selected, "regrade")
+    initial_states = {}
+    for trial, result in trials:
+        name = result["task_name"]
+        task = source_inputs / ("samples" if cases else "tasks") / name
+        initial_states[name] = original_initial_state(task, trial)
+    job, inputs = snapshot(selected, "regrade", {} if cases else initial_states)
     definitions = [{"path": str(inputs / "tasks" / p.name)} for p in selected]
     if cases:
         definitions = []
         for name in names:
             target = inputs / "samples" / name
             shutil.copytree(inputs / "tasks" / cases[name]["task"], target)
+            runtime = json.loads((inputs / "source.json").read_text())["image"].split()[0]
+            prepare_task_environment(target, initial_states[name], runtime)
             # A historical output-only Oracle has no separately recorded facts.
             # Never grant it the context of a newer producer during regrading.
             context = source_inputs / "samples" / name / "tests/oracle-context.md"
@@ -799,6 +910,7 @@ def resume(args):
             or any(a.get("name") not in ("oracle", "nop") for a in config.get("agents", [])))
     prepare_environment(live, args.allow_live)
     check_resume_inputs(job)
+    check_workspace_modes(config)
     archive = job.with_name(job.name + ".attempts") / stamp()
     archive.mkdir(parents=True)
     for directory in job.iterdir():

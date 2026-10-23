@@ -1,3 +1,4 @@
+from workspace import preserve_notes
 from outputs import read_object, object_value, object_list, nonempty_text, evidence_file
 """Task-local deterministic verifier; parent grade.py owns reward rendering."""
 from pathlib import Path
@@ -17,13 +18,7 @@ def command(*args):
  p=run(*args);require(p.returncode==0,p.stdout+p.stderr);return p.stdout
 
 def preserve():
- old=json.loads(BASE.read_text())
- require(git('rev-parse','HEAD')==old['head'],'HEAD changed')
- require(git('ls-files','--stage')==old['index'],'Index changed')
- notes={'staged-note.txt':'User staged note: preserve these bytes.\n', 'unstaged-note.txt':'User unstaged note: preserve these bytes.\n', 'untracked-note.txt':'User untracked draft: preserve these bytes.\n'}
- for name,expected in notes.items():require(text(name)==expected,'User note changed: '+name)
- require('untracked-note.txt' in git('ls-files','--others','--exclude-standard').splitlines(),'Untracked draft staged')
-
+ preserve_notes(ROOT, json.loads(BASE.read_text()), user_note=False)
 
 def evidence_report(report,expected):
  for key,value in expected.items():require(report.get(key)==value,'Unexpected report field: '+key)

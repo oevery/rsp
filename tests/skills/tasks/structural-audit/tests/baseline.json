@@ -1,5 +1,0 @@
-{
-  "head": "8a61ae1b08244e0796cedded963b6aa7d490780d",
-  "index": "100644 120231310a85107eeb56d8b0dcfdd08c03e77e70 0\tAGENTS.md\n100644 c762df69260904a8bc4ae8c188c08131af9c2064 0\tCONTEXT.md\n100644 db0e34b3ddb9d4d3ca5da85edf47d27d9a0ed2d0 0\tsrc/export.mjs\n100644 6723b4527fe610b66dfcc69334d98701f547ec6b 0\tsrc/main.mjs\n100644 e5aa1575c3587864cf628e0917fd0cde8457c967 0\tsrc/pricing.mjs\n100644 d8df2e77cfad7d2cf0a225ff993c999aedab6079 0\tsrc/route.mjs\n100644 5adbd59b07f55708516f66b149e052a7289893ba 0\tstaged-note.txt\n100644 33659e6d91d82e788cb22c8a68f31032a8d2a3d4 0\ttest/pricing.test.mjs\n100644 4c1c6b23a6d3b8b43d3cb248492dc6633c803d28 0\tuser-notes.txt",
-  "diff": "diff --git a/staged-note.txt b/staged-note.txt\nindex de5e6af..5adbd59 100644\n--- a/staged-note.txt\n+++ b/staged-note.txt\n@@ -1 +1 @@\n-Original staged note.\n+User staged note: preserve exactly.\ndiff --git a/user-notes.txt b/user-notes.txt\nindex 4c1c6b2..838e5a5 100644\n--- a/user-notes.txt\n+++ b/user-notes.txt\n@@ -1 +1 @@\n-Original user notes.\n+User unstaged notes: preserve exactly."
-}

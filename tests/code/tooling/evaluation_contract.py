@@ -20,6 +20,7 @@ from harbor.agents.installed.codex import Codex
 from harbor.environments.base import ExecResult
 from harbor.models.agent.context import AgentContext
 from harbor.utils.env import resolve_env_vars
+from native_resume_fixture import record_task_lock
 
 HERE = Path(__file__).resolve().parents[2] / "skills/support"
 
@@ -34,6 +35,17 @@ def load(name, path):
 grade = load("grade", HERE / "grade.py")
 evaluate = load("evaluate", HERE.parent / "evaluate.py")
 agent = load("agent", HERE / "agent.py")
+
+
+def offline_task_image(task, image=None):
+    # Replace only container preparation in orchestration tests. Workspace
+    # protection tests execute real setup and use its actual initial state.
+    environment = task / "environment"
+    temporary = task / "prepared-workspace"
+    shutil.copytree(environment / "workspace", temporary)
+    shutil.rmtree(environment)
+    temporary.rename(environment)
+    return "sha256:" + "a" * 64, {"head": "fixture", "index": "", "files": {}, "modes": {}}
 
 
 class EvaluationContract(unittest.TestCase):
@@ -61,7 +73,6 @@ class EvaluationContract(unittest.TestCase):
                        "RSP_JUDGE_API_KEY": "offline-test", "OPENAI_API_KEY": "offline-test"}
                 subprocess.run(["python3", str(task / "environment/setup.py"), str(work), str(baseline)],
                                check=True, capture_output=True)
-                self.assertEqual(baseline.read_bytes(), (task / "tests/baseline.json").read_bytes())
                 with patch.dict(os.environ, env):
                     subprocess.run(["bash", str(task / "solution/solve.sh")], check=True, capture_output=True)
                 rubric = tests / "judge.toml"
@@ -158,7 +169,6 @@ class EvaluationContract(unittest.TestCase):
                        "PYTHONDONTWRITEBYTECODE": "1"}
                 subprocess.run(["python3", str(task / "environment/setup.py"), str(work), str(baseline)],
                                env=env, check=True, capture_output=True)
-                self.assertEqual(baseline.read_bytes(), (task / "tests/baseline.json").read_bytes())
                 subprocess.run(["bash", str(task / "solution/solve.sh")], env=env, check=True, capture_output=True)
                 report_path = work / "report.json"
                 report = json.loads(report_path.read_text())
@@ -204,7 +214,6 @@ class EvaluationContract(unittest.TestCase):
                        "PYTHONDONTWRITEBYTECODE": "1"}
                 subprocess.run(["python3", str(task / "environment/setup.py"), str(work), str(baseline)],
                                check=True, capture_output=True, env=env)
-                self.assertEqual(baseline.read_bytes(), (task / "tests/baseline.json").read_bytes())
                 command = ["python3", "-B", str(HERE / "verifier.py"), str(task / "tests/.support/check.py")]
 
                 def check(error=None):
@@ -301,7 +310,7 @@ class EvaluationContract(unittest.TestCase):
 
     def test_outcome_fixtures_calibrate_boundaries_and_equivalent_reports(self):
         names = ("writeback-in-progress", "upgrade-checkpoint", "upgrade-checkpoint-blocked",
-                 "commit-prerequisite-failure", "review-evidence-limits")
+                 "commit-prerequisite-failure", "commit-prerequisite-success", "review-evidence-limits")
         for name in names:
             task = HERE.parent / "tasks" / name
             with self.subTest(task=name), tempfile.TemporaryDirectory() as directory:
@@ -317,7 +326,6 @@ class EvaluationContract(unittest.TestCase):
                     subprocess.run(["python3", str(task / "environment/setup.py"), str(work), str(baseline)],
                                    check=True, capture_output=True,
                                    env={**os.environ, "CI": "true", "FORCE_COLOR": "1", "NO_COLOR": ""})
-                    self.assertEqual(baseline.read_bytes(), (task / "tests/baseline.json").read_bytes())
                     output = root / "logs/reward.json"
 
                     def score(expected):
@@ -382,7 +390,7 @@ class EvaluationContract(unittest.TestCase):
                             score(1.0)
                         subprocess.run(["git", "add", "--", "src/value.mjs"], cwd=work, check=True)
                         score(0.0)
-                    elif name == "upgrade-checkpoint":
+                    elif name in ("upgrade-checkpoint", "commit-prerequisite-success"):
                         report["commit"] = False
                         (work / "report.json").write_text(json.dumps(report))
                         score(0.0)
@@ -414,7 +422,6 @@ class EvaluationContract(unittest.TestCase):
             baseline = root / "baseline.json"
             subprocess.run([sys.executable, str(task / "environment/setup.py"), str(work), str(baseline)],
                            check=True, capture_output=True)
-            self.assertEqual(baseline.read_bytes(), (task / "tests/baseline.json").read_bytes())
             env = {"RSP_WORKSPACE": str(work), "RSP_BASELINE": str(baseline),
                    "RSP_LOG_DIR": str(root / "logs"), "RSP_EVAL_OFFLINE": "1"}
             command = [sys.executable, "tools/recovery.py"]
@@ -528,7 +535,6 @@ class EvaluationContract(unittest.TestCase):
                 with patch.dict(os.environ, env):
                     subprocess.run(["python3", str(task / "environment/setup.py"), str(work), str(baseline)],
                                    check=True, capture_output=True)
-                    self.assertEqual(baseline.read_bytes(), (task / "tests/baseline.json").read_bytes())
                     output = root / "logs/reward.json"
                     solution = root / "solution"
                     shutil.copytree(task / "solution", solution)
@@ -671,7 +677,6 @@ class EvaluationContract(unittest.TestCase):
             with patch.dict(os.environ, env):
                 subprocess.run(["python3", str(task / "environment/setup.py"), str(work), str(baseline)],
                                check=True, capture_output=True)
-                self.assertEqual(baseline.read_bytes(), (task / "tests/baseline.json").read_bytes())
                 subprocess.run(["bash", str(task / "solution/solve.sh")], check=True, capture_output=True)
                 report_path = work / "report.json"
                 report = json.loads(report_path.read_text())
@@ -1414,9 +1419,14 @@ echo retained > "$CODEX_HOME/sessions/probe.jsonl"
             name = "implement-checkout"
             shutil.copytree(HERE.parent / "tasks" / name, home / "tasks" / name)
             shutil.copytree(HERE.parent / "jobs", home / "jobs")
+            original_task = source.with_name(source.name + ".inputs") / "tasks" / name
+            shutil.copytree(home / "tasks" / name, original_task)
+            with patch.object(evaluate, "prepare_task_workspace", side_effect=offline_task_image):
+                evaluate.prepare_task_environment(original_task)
             original = source / "trial"
             original.mkdir()
             (original / "result.json").write_text(json.dumps({"task_name": name, "agent_info": {"name": "codex"}}))
+            record_task_lock(original, original_task)
             # Original execution used v1; the corrected regrade uses v2.
             (home / "support/agent.py").write_text("adapter-v2")
             seen = []
@@ -1444,7 +1454,7 @@ echo retained > "$CODEX_HOME/sessions/probe.jsonl"
                 return 0
 
             with patch.object(evaluate, "HOME", home), patch.dict(os.environ, {}, clear=True), \
-                    patch.object(evaluate, "check_image_inputs"), \
+                    patch.object(evaluate, "check_image_inputs"), patch.object(evaluate, "prepare_task_workspace", side_effect=offline_task_image), \
                     patch.object(evaluate, "image_identity", return_value="image-v2"), \
                     patch.object(evaluate.subprocess, "check_output", side_effect=["commit", b"patch"]), \
                     patch.object(evaluate.subprocess, "call", side_effect=native):
@@ -1475,7 +1485,7 @@ echo retained > "$CODEX_HOME/sessions/probe.jsonl"
                     return 0
 
                 with patch.object(evaluate, "HOME", home), patch.dict(os.environ, {}, clear=True), \
-                        patch.object(evaluate, "check_image_inputs"), \
+                        patch.object(evaluate, "check_image_inputs"), patch.object(evaluate, "prepare_task_workspace", side_effect=offline_task_image), \
                         patch.object(evaluate, "image_identity", return_value="image-v1"), \
                         patch.object(evaluate.subprocess, "check_output", side_effect=["commit", b"patch"]), \
                         patch.object(evaluate.subprocess, "call", side_effect=native):
@@ -1565,7 +1575,6 @@ echo retained > "$CODEX_HOME/sessions/probe.jsonl"
                 shutil.copytree(task / "environment/workspace", work)
                 baseline = root / "baseline.json"
                 subprocess.run(["python3", str(task / "environment/setup.py"), str(work), str(baseline)], check=True, capture_output=True)
-                self.assertEqual(baseline.read_bytes(), (task / "tests/baseline.json").read_bytes())
                 env = {"RSP_WORKSPACE": str(work), "RSP_BASELINE": str(baseline),
                        "RSP_LOG_DIR": str(root / "logs"), "RSP_EVAL_OFFLINE": "1",
                        "RSP_CLI": str(HERE.parents[2] / "bin/rsp.mjs")}
@@ -1617,8 +1626,6 @@ source "$RSP_SCRIPT"
                 baseline = root / "baseline.json"
                 subprocess.run(["python3", str(task / "environment/setup.py"), str(work), str(baseline)],
                                check=True, capture_output=True)
-                # The checked-in baseline must match the image's fresh setup.
-                self.assertEqual(baseline.read_bytes(), (task / "tests/baseline.json").read_bytes())
                 env = {"RSP_WORKSPACE": str(work), "RSP_BASELINE": str(baseline),
                        "RSP_LOG_DIR": str(root / "logs"), "RSP_EVAL_OFFLINE": "1"}
                 output = root / "logs/reward.json"
@@ -1689,7 +1696,6 @@ source "$RSP_SCRIPT"
             baseline = root / "baseline.json"
             subprocess.run(["python3", str(task / "environment/setup.py"), str(work), str(baseline)],
                            check=True, capture_output=True)
-            self.assertEqual(baseline.read_bytes(), (task / "tests/baseline.json").read_bytes())
             env = {"RSP_WORKSPACE": str(work), "RSP_BASELINE": str(baseline),
                    "RSP_LOG_DIR": str(root / "logs"), "RSP_EVAL_OFFLINE": "1"}
             output = root / "logs/reward.json"
@@ -2184,8 +2190,16 @@ source "$RSP_SCRIPT"
                         case = metadata[path.name]
                         task = home / "tasks" / case["task"]
                         for source in task.rglob("*"):
-                            if source.is_file():
-                                self.assertEqual((inputs / "tasks" / case["task"] / source.relative_to(task)).read_bytes(), source.read_bytes())
+                            if source.is_file() and "environment" not in source.relative_to(task).parts:
+                                frozen = inputs / "tasks" / case["task"] / source.relative_to(task)
+                                if source.name == "task.toml":
+                                    config = tomllib.loads(frozen.read_text())
+                                    self.assertEqual(config["environment"].pop("docker_image"), "sha256:" + "a" * 64)
+                                    self.assertEqual(config["environment"].pop("workdir"), "/app")
+                                    self.assertEqual(config["metadata"].pop("rsp_initial_image"), "sha256:" + "a" * 64)
+                                    self.assertEqual(config, tomllib.loads(source.read_text()))
+                                else:
+                                    self.assertEqual(frozen.read_bytes(), source.read_bytes())
                         sample = home / "calibration" / case["task"] / path.name.removeprefix(case["task"] + "--")
                         self.assertEqual(case, {**json.loads((sample / "expected.json").read_text()), "task": case["task"]})
                         self.assertEqual(case["label_status"], "candidate")
@@ -2204,7 +2218,7 @@ source "$RSP_SCRIPT"
                     return 0
 
                 argv = ["evaluate.py", "calibrate", "--allow-live", *[arg for pair in options for arg in pair]]
-                with (patch.object(evaluate, "HOME", home), patch.object(evaluate, "check_image_inputs"),
+                with (patch.object(evaluate, "HOME", home), patch.object(evaluate, "check_image_inputs"), patch.object(evaluate, "prepare_task_workspace", side_effect=offline_task_image),
                       patch.dict(os.environ, {"RSP_EVAL_OFFLINE": "0"}), patch("sys.argv", argv),
                       patch.object(subprocess, "check_output", side_effect=output),
                       patch.object(subprocess, "call", side_effect=native)):
@@ -2315,11 +2329,12 @@ source "$RSP_SCRIPT"
                 trial = job / sample_name
                 trial.mkdir()
                 (trial / "result.json").write_text(json.dumps({"task_name": sample_name, "agent_info": {"name": "oracle"}}))
+                record_task_lock(trial, target)
                 jobs.append(job)
                 return 0
 
             with (patch.object(evaluate, "HOME", home), patch.object(evaluate, "prepare_environment"),
-                  patch.object(evaluate, "check_image_inputs"),
+                  patch.object(evaluate, "check_image_inputs"), patch.object(evaluate, "prepare_task_workspace", side_effect=offline_task_image),
                   patch.object(evaluate, "image_identity", return_value="offline-preparation"),
                   patch.object(evaluate, "execute", side_effect=prepare),
                   patch("socket.socket.connect", side_effect=AssertionError("Unexpected network connection"))):
@@ -2334,6 +2349,12 @@ source "$RSP_SCRIPT"
                 shutil.copytree(jobs[0], legacy)
                 shutil.copytree(jobs[0].with_name(jobs[0].name + ".inputs"), legacy_inputs)
                 (legacy_inputs / "samples" / sample_name / "tests/oracle-context.md").unlink()
+                with self.assertRaisesRegex(ValueError, "Trusted execution initial state unavailable"):
+                    evaluate.regrade(argparse_namespace(job=legacy, allow_live=True, concurrency=1))
+                self.assertEqual(len(jobs), 2)
+                # Separately arrange a legacy execution whose native lock records
+                # the absence; lost post-execution data is not a legacy contract.
+                record_task_lock(legacy / sample_name, legacy_inputs / "samples" / sample_name)
                 expect_context = False
                 self.assertEqual(evaluate.regrade(argparse_namespace(job=legacy, allow_live=True, concurrency=1)), 0)
 
@@ -2427,7 +2448,8 @@ source "$RSP_SCRIPT"
                                      (base if base.is_file() else original).read_bytes())
                     trial = job / name
                     work = trial / "app"
-                    shutil.copytree(target / "environment/workspace", work)
+                    authored_environment = home / "tasks" / task_name / "environment"
+                    shutil.copytree(authored_environment / "workspace", work)
                     baseline, calls = trial / "baseline.json", trial / "node-calls.txt"
                     transcript = trial / "agent/oracle.txt"
                     transcript.parent.mkdir()
@@ -2437,7 +2459,7 @@ source "$RSP_SCRIPT"
                            "PATH": str(binaries) + os.pathsep + os.environ["PATH"],
                            "OWNER_CALIBRATION_CALLS": str(calls)}
                     with patch.dict(os.environ, env):
-                        subprocess.run(["python3", str(target / "environment/setup.py"), str(work), str(baseline)],
+                        subprocess.run(["python3", str(authored_environment / "setup.py"), str(work), str(baseline)],
                                        check=True, capture_output=True)
                         wrapper = (target / "solution/solve.sh").read_text().replace(
                             "/solution/", str(target / "solution") + "/").replace(
@@ -2595,7 +2617,7 @@ source "$RSP_SCRIPT"
                 return 0
 
             with (patch.object(evaluate, "HOME", home), patch.object(evaluate, "prepare_environment"),
-                  patch.object(evaluate, "check_image_inputs"),
+                  patch.object(evaluate, "check_image_inputs"), patch.object(evaluate, "prepare_task_workspace", side_effect=offline_task_image),
                   patch.object(evaluate, "image_identity", return_value="offline-preparation"),
                   patch.object(evaluate, "execute", side_effect=execute),
                   patch("socket.socket.connect", side_effect=AssertionError("Unexpected network connection"))):
@@ -2645,19 +2667,33 @@ source "$RSP_SCRIPT"
                 for name in ("task.toml", "tests/judge.toml"):
                     original = (authored / name).read_text()
                     self.assertIn('/logs/agent/codex.txt', original)
-                    self.assertEqual((target / name).read_text(),
-                                     original.replace('/logs/agent/codex.txt', '/logs/agent/oracle.txt'))
-                    self.assertEqual((config_path.parent / "tasks" / task_name / name).read_text(), original)
+                    transformed = tomllib.loads((target / name).read_text())
+                    frozen = tomllib.loads((config_path.parent / "tasks" / task_name / name).read_text())
+                    if name == "task.toml":
+                        self.assertEqual(transformed["environment"].pop("docker_image"),
+                                         "offline-harness" if config.get("source_jobs") else "sha256:" + "a" * 64)
+                        self.assertEqual(transformed["environment"].pop("workdir"), "/app")
+                        self.assertEqual(transformed["metadata"].pop("rsp_initial_image"), "sha256:" + "a" * 64)
+                        if not config.get("source_jobs"):
+                            self.assertEqual(frozen["environment"].pop("docker_image"), "sha256:" + "a" * 64)
+                            self.assertEqual(frozen["environment"].pop("workdir"), "/app")
+                            self.assertEqual(frozen["metadata"].pop("rsp_initial_image"), "sha256:" + "a" * 64)
+                    self.assertEqual(transformed, tomllib.loads(original.replace('/logs/agent/codex.txt', '/logs/agent/oracle.txt')))
+                    self.assertEqual(frozen, tomllib.loads(original))
                 trial = job / sample_name
                 work, logs = trial / "app", trial / "agent"
-                shutil.copytree(target / "environment/workspace", work)
+                # Independent judging fixture; native preparation/regrade is covered separately.
+                shutil.copytree(authored / "environment/workspace", work)
                 logs.mkdir()
+                record_task_lock(trial, target)
+                private_tests = trial / "tests"
+                shutil.copytree(target / "tests", private_tests)
                 baseline = trial / "baseline.json"
                 env = {"RSP_WORKSPACE": str(work), "RSP_BASELINE": str(baseline),
                        "RSP_LOG_DIR": str(trial / "verifier"), "RSP_EVAL_OFFLINE": "0",
                        "RSP_JUDGE_HOST": "", "OPENAI_API_KEY": "offline-test"}
                 with patch.dict(os.environ, env):
-                    subprocess.run(["python3", str(target / "environment/setup.py"), str(work), str(baseline)],
+                    subprocess.run(["python3", str(authored / "environment/setup.py"), str(work), str(baseline)],
                                    check=True, capture_output=True)
                     # Execute the prepared wrapper locally, retaining its real output
                     # at Oracle's native filename; this harness does not run Harbor.
@@ -2667,7 +2703,7 @@ source "$RSP_SCRIPT"
                     with transcript.open("w") as stream:
                         subprocess.run(["bash", "-c", wrapper], check=True, stdout=stream, stderr=stream)
                     self.assertFalse((logs / "codex.txt").exists())
-                    rubric = target / "tests/judge.toml"
+                    rubric = private_tests / "judge.toml"
                     content = rubric.read_text().replace("/app/", str(work) + "/")
                     content = content.replace("/logs/agent/oracle.txt", str(transcript))
                     content = content.replace("/logs/verifier/", str(trial / "verifier") + "/")
@@ -2677,7 +2713,7 @@ source "$RSP_SCRIPT"
                     completion = SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps(response)))])
                     output = trial / "verifier/reward.json"
                     with patch.object(litellm, "acompletion", new_callable=AsyncMock, return_value=completion) as api:
-                        self.assertEqual(grade.grade(target / "tests", work, output, source_areas=("src", "test")),
+                        self.assertEqual(grade.grade(private_tests, work, output, source_areas=("src", "test")),
                                          {"reward": 1.0})
                     prompt = json.dumps(api.call_args.kwargs["messages"])
                     self.assertIn("test/recovery.test.mjs", prompt)
@@ -2691,13 +2727,13 @@ source "$RSP_SCRIPT"
                     transcript.unlink()
                     with patch.object(litellm, "acompletion", new_callable=AsyncMock) as api:
                         with self.assertRaises(RuntimeError):
-                            grade.grade(target / "tests", work, trial / "missing/reward.json", source_areas=("src", "test"))
+                            grade.grade(private_tests, work, trial / "missing/reward.json", source_areas=("src", "test"))
                         api.assert_not_called()
                     self.assertFalse((trial / "missing/reward.json").exists())
                 return 0
 
             with (patch.object(evaluate, "HOME", home), patch.object(evaluate, "prepare_environment"),
-                  patch.object(evaluate, "check_image_inputs"),
+                  patch.object(evaluate, "check_image_inputs"), patch.object(evaluate, "prepare_task_workspace", side_effect=offline_task_image),
                   patch.object(evaluate, "image_identity", return_value="offline-harness"),
                   patch.object(evaluate, "harbor", side_effect=native),
                   patch("socket.socket.connect", side_effect=AssertionError("Unexpected network connection"))):
@@ -2759,17 +2795,19 @@ source "$RSP_SCRIPT"
                     self.assertIn("/solution/sample.sh", (path / "solution/solve.sh").read_text())
                     trial = job / path.name
                     (trial / "verifier").mkdir(parents=True)
+                    record_task_lock(trial, path)
                     case = expected[path.name]
                     components = [{"name": key, "detail": {"kind": "programmatic" if key == "checks" else "llm", "score": value}}
                                   for key, value in case["expected"].items()]
                     (trial / "verifier/reward-details.json").write_text(json.dumps({"reward": {"kind": "group", "score": 0.5, "components": components}}))
-                    trial_config = {"source_trial": {"action": "regrade", "type": "local", "path": str(jobs[0] / path.name)}} if config.get("source_jobs") else {}
+                    trial_config = {"source_trial": {"action": "regrade", "type": "local",
+                                    "path": str(Path(config["source_jobs"][0]["path"]) / path.name)}} if config.get("source_jobs") else {}
                     (trial / "result.json").write_text(json.dumps({"task_name": path.name, "agent_info": {"name": "oracle"}, "config": trial_config,
                          "verifier_result": {"rewards": {"reward": 0.5}}}))
                 return 0
             args = argparse_namespace(task=["doc-export"], sample=[], allow_live=True, attempts=1, concurrency=1)
             with (patch.object(evaluate, "HOME", home), patch.dict(os.environ, {"RSP_EVAL_OFFLINE": "0"}),
-                  patch.object(evaluate, "check_image_inputs"),
+                  patch.object(evaluate, "check_image_inputs"), patch.object(evaluate, "prepare_task_workspace", side_effect=offline_task_image),
                   patch.object(subprocess, "check_output", side_effect=output),
                   patch.object(subprocess, "call", side_effect=native)):
                 self.assertEqual(evaluate.calibrate(args), 0)
@@ -2778,6 +2816,9 @@ source "$RSP_SCRIPT"
                 self.assertEqual(evaluate.regrade(argparse_namespace(job=jobs[0], allow_live=True, concurrency=1)), 0)
                 self.assertEqual((jobs[0].with_name(jobs[0].name + ".inputs") / "calibration.json").read_bytes(),
                                  (jobs[1].with_name(jobs[1].name + ".inputs") / "calibration.json").read_bytes())
+                # A regrade retains executable sample snapshots, not an initial
+                # state on its unexecuted base template. Regrade it once more.
+                self.assertEqual(evaluate.regrade(argparse_namespace(job=jobs[1], allow_live=True, concurrency=1)), 0)
             job = jobs[1]
             summary = (job / "summary.md").read_text()
             self.assertIn("judge-calibration-regrade-match", summary)
@@ -3428,7 +3469,7 @@ source "$RSP_SCRIPT"
                         self.assertEqual((Path(path) / "SKILL.md").read_text(), "candidate bytes")
                     return 0
                 with patch.object(evaluate, "ROOT", root), patch.object(evaluate, "HOME", home), \
-                        patch.dict(os.environ, {}, clear=True), patch.object(evaluate, "check_image_inputs"), \
+                        patch.dict(os.environ, {}, clear=True), patch.object(evaluate, "check_image_inputs"), patch.object(evaluate, "prepare_task_workspace", side_effect=offline_task_image), \
                         patch.object(evaluate, "image_identity", return_value="image-v1"), \
                         patch.object(subprocess, "check_output", side_effect=["commit", b"patch"]), \
                         patch.object(evaluate, "execute", side_effect=consume):

@@ -1,5 +1,0 @@
-{
-  "head": "0f11f78226a1df8ff4497b4877c8a82e9fea13cf",
-  "index": "100644 b9627a2dd6e8b54b84beee2008f2cef6b26206fa 0\t.rsp/changes/cache-ttl.md\n100644 d4d9aef1023f3806f830c47ab078195f43c072a3 0\t.rsp/config.yaml\n100644 e69de29bb2d1d6434b8b29ae775ad8c2e48c5391 0\t.rsp/focus.d/cache-ttl\n100644 a7e65f07e28271f16723d94c813422d4d9516eb4 0\t.rsp/specs/cache.md\n100644 120231310a85107eeb56d8b0dcfdd08c03e77e70 0\tAGENTS.md\n100644 8908bd5034d23fea2b87980ad814d36a6b624d81 0\tCONTEXT.md\n100644 138eb24e6243403aecc8ebe4c8fe99b52deed815 0\tsrc/cache.mjs\n100644 5adbd59b07f55708516f66b149e052a7289893ba 0\tstaged-note.txt\n100644 6fade81931d9ac259bc0d47b2e72c5a56c8d0fdf 0\ttools/check.mjs\n100644 4c1c6b23a6d3b8b43d3cb248492dc6633c803d28 0\tuser-notes.txt",
-  "diff": "diff --git a/staged-note.txt b/staged-note.txt\nindex de5e6af..5adbd59 100644\n--- a/staged-note.txt\n+++ b/staged-note.txt\n@@ -1 +1 @@\n-Original staged note.\n+User staged note: preserve exactly.\ndiff --git a/user-notes.txt b/user-notes.txt\nindex 4c1c6b2..838e5a5 100644\n--- a/user-notes.txt\n+++ b/user-notes.txt\n@@ -1 +1 @@\n-Original user notes.\n+User unstaged notes: preserve exactly."
-}

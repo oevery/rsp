@@ -18,5 +18,9 @@ inputs={name:hashlib.sha256((root/name).read_bytes()).hexdigest() for name in ['
 (root/'evidence.json').write_text(json.dumps({'origin':'fixture setup execution, not model execution','command':'node tools/check.mjs','exitCode':check.returncode,'stdout':check.stdout,'inputs':inputs},indent=2)+'\n')
 (root/'user-notes.txt').write_text('User working note: preserve.\n')
 (root/'draft.txt').write_text('User draft: preserve.\n')
-files={p.relative_to(root).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in root.rglob('*') if p.is_file() and '.git' not in p.parts}
-baseline.write_text(json.dumps({'head':git('rev-parse','HEAD'),'index':git('ls-files','--stage'),'files':files},indent=2,sort_keys=True)+'\n')
+support = Path('/opt/rsp-eval')
+if not (support / 'workspace.py').is_file():
+    support = Path(__file__).resolve().parents[3] / 'support'
+sys.path.insert(0, str(support))
+from workspace import capture_initial_state
+capture_initial_state(root, baseline)
