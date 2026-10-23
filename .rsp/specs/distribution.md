@@ -122,6 +122,14 @@ read-only code/docs jobs in parallel at the same source SHA. Dependency caches
 never replace candidate execution or tarball verification. Documentation recovery
 is a separate path bound to confirmed published source and cannot republish npm.
 
+One local release-it configuration and its official Conventional Changelog plugin
+own version preparation, cumulative CHANGELOG and the current-version GitHub Release
+body. Handwritten version notes retain interpretation, migration and evidence limits.
+Native Git/GitHub delivery remains explicitly authorized; a dry run is only a preview.
+Local npm publication is disabled so the checked CI publisher remains the single
+automatic npm publication path. Release-it generates version and CHANGELOG changes
+in its release commit before tagging and pushing the selected target version.
+
 ### Research, provenance and cache
 
 Research supplies pinned source evidence, comparisons and recommendations, never

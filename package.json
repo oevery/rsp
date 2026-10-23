@@ -39,6 +39,7 @@
     "skills:security-check": "node scripts/skill-security-preflight.mjs",
     "skills:package-check": "node scripts/skill-package-check.mjs",
     "prepublishOnly": "pnpm run release:check",
+    "release": "release-it",
     "build": "tsup",
     "dev": "tsup --watch",
     "docs:build": "vitepress build docs",
@@ -71,6 +72,7 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^9.5.1",
+    "@release-it/conventional-changelog": "12.0.2",
     "@types/hast": "^3.0.5",
     "@types/mdast": "^4.0.4",
     "@types/node": "^22.20.1",
