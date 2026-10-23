@@ -54,6 +54,7 @@ function nav(locale: 'en' | 'zh-CN') {
     { text: zh ? '入门' : 'Get started', link: `${prefix}/getting-started` },
     { text: zh ? '指南' : 'Guides', link: `${prefix}/guides/daily-workflow` },
     { text: zh ? '参考' : 'Reference', link: `${prefix}/reference/cli` },
+    { text: zh ? '变更日志' : 'Changelog', link: `${prefix}/changelog` },
   ]
 }
 
@@ -74,7 +75,7 @@ function sidebar(locale: 'en' | 'zh-CN') {
       text: zh ? '指南' : 'Guides',
       items: [
         { text: zh ? '日常工作流' : 'Daily workflow', link: link('guides/daily-workflow') },
-        { text: 'Skills & Manage', link: link('guides/skills') },
+        { text: zh ? 'Skills 与工作流' : 'Skills and workflow', link: link('guides/skills') },
         { text: zh ? '维护指南' : 'Maintainer guide', link: link('contributing') },
       ],
     },
@@ -83,6 +84,7 @@ function sidebar(locale: 'en' | 'zh-CN') {
       items: [
         { text: zh ? '配置' : 'Configuration', link: link('reference/configuration') },
         { text: 'CLI', link: link('reference/cli') },
+        { text: zh ? '变更日志' : 'Changelog', link: link('changelog') },
       ],
     },
   ]

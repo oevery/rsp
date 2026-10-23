@@ -60,6 +60,6 @@ init 已安装全部七个核心 Skills。更新前保存受管资产中需要�
 npx -y @oevery/rsp@"$RSP_VERSION" update
 ```
 
-这里的 RSP_VERSION 是主动选择的目标，不是每次重新解析的稳定标签。可选的 update --dry-run 只预览，不写入；无需独立安装 Skills、采用版本或删除旧文件的步骤。未知 Skills、用户配置与项目知识保持不动，受管 Skills 内的本地修改会被替换。迁移细节见[固定版本与 Skills](./guides/skills.md#固定版本与-skills-only-迁移)。这些源码契约不证明已经发布。
+这里的 RSP_VERSION 是主动选择的目标，不是每次重新解析的稳定标签。可选的 update --dry-run 只预览，不写入；无需独立安装 Skills、采用版本或删除旧文件的步骤。未知 Skills、用户配置与项目知识保持不动，受管 Skills 内的本地修改会被替换。从 3.3 升级时，先按[迁移说明](./guides/skills.md#固定版本与-skills-only-迁移)明确修改旧配置。
 
 接下来阅读[核心概念](./concepts.md)，或直接遵循[日常工作流](./guides/daily-workflow.md)。

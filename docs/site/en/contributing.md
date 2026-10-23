@@ -37,15 +37,14 @@ A subprocess timeout or signal termination fails package verification, including
 version and `CHANGELOG.md`. The maintainer tools require Node ^22.22.2, ^24.15.0
 or >=26; the published CLI's Node requirement remains unchanged.
 
-`CHANGELOG.md` accumulates generated version history. `docs/releases/<version>.md`
-remains handwritten for release interpretation, upgrade actions and validation
-limits. GitHub Release uses the plugin's current-version changelog, with title
-`v<version>` matching its tag; it does not copy the whole cumulative file or the
-handwritten overview. Keep migration and overview links visible when reviewing
-the generated breaking-change notes.
+`CHANGELOG.md` is the single version-history source. The documentation site
+includes it directly on its [changelog page](./changelog.md). GitHub Release uses
+the plugin's current-version changelog, with title `v<version>` matching its tag.
+Upgrade procedures, compatibility and validation limits belong in migration
+guides; review the generated breaking-change notes against those instructions.
 
-Commit the reviewed source, release tooling and handwritten release/migration
-documents first. Leave the package version and generated CHANGELOG unchanged
+Commit the reviewed source, release tooling and migration guides first.
+Leave the package version and next CHANGELOG entry unchanged
 until release-it runs. From a clean `main` with an upstream, preview the target
 version:
 
@@ -61,10 +60,10 @@ the existing Publish workflow owns npm and stable documentation deployment.
 Automated GitHub creation needs `GITHUB_TOKEN` with appropriate repository access;
 without it, native release-it offers its browser flow.
 
-Older handwritten CHANGELOG entries remain unchanged. Dry runs skip writes and
+Generation preserves existing historical CHANGELOG entries. Dry runs skip writes and
 ordinary hooks, so they are previews, not test evidence.
 
-Prepare release notes and any required migration material before running release-it. Validate the intended version in an isolated candidate without precommitting generated release changes. A candidate may include necessary code and documentation; it need not be a version-only commit. Ordinary CI optimization, a release commit title or successful parent CI never exempts the final candidate from product checks.
+Prepare any required migration material before running release-it. Validate the intended version in an isolated candidate without precommitting generated release changes. A candidate may include necessary code and documentation; it need not be a version-only commit. Ordinary CI optimization, a release commit title or successful parent CI never exempts the final candidate from product checks.
 
 Publish passes the checked source SHA to the shared release workflow. Its source guards bind the native event, tag, package version, repository and checked commit. After successful checks on that exact SHA, the publisher runs `pnpm build` and packs with npm lifecycle scripts disabled. It passes the absolute archive path to `test:pack`, rechecks source and tarball bytes, then publishes those same bytes through the locked release-it 21.1.1 npm publisher. The shared publication configuration disables project hooks and Git/GitHub/GitLab delivery; `prepublishOnly` remains a separate guard for ordinary manual npm publication. Product checks are not repeated through package lifecycle hooks in the shared flow.
 

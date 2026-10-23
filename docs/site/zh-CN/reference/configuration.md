@@ -71,6 +71,6 @@ workflow:
 
 ### 迁移旧 Manage 配置
 
-本未发布候选将 `manage.activation/closeout` 及 JSON 的 `manage` 投影替换为 `workflow.delegation/closeout`。旧值不是别名：原 `local` 混合了生命周期与 Git 权限，新策略不授予 Git 权限。
+RSP 4.0 将 `manage.activation/closeout` 及 JSON 的 `manage` 投影替换为 `workflow.delegation/closeout`。旧值不是别名：原 `local` 混合了生命周期与 Git 权限，新策略不授予 Git 权限。
 
 获授权后，删除整个 `manage` 映射，明确选择两个新设置，建议从 off/ask 开始。同时检查项目自有 AGENTS 说明与 JSON 消费者。`rsp config` 和 `rsp update` 遇到旧配置或新旧混用会拒绝，不自动转换。编辑后用 `rsp config --json` 验证，再用 `rsp update` 刷新受管资产；历史证据保持不变。

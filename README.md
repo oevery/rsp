@@ -66,7 +66,8 @@ A Change is one Markdown file with canonical Proposal, Spec, Design, Tasks, Veri
 - [Configuration reference](./docs/site/en/reference/configuration.md)
 - [CLI reference](./docs/site/en/reference/cli.md)
 - [3.0 migration guide](./docs/migrations/3.0.md) and [3.1 migration guide](./docs/migrations/3.1.md)
-- [Release notes](./docs/releases/3.3.0.md)
+- [4.0 migration guide](./docs/migrations/pinned-skills.md)
+- [Changelog](./CHANGELOG.md)
 - [Maintainer tests and Skill validation](./tests/README.md)
 - [Maintainer workflows, publication and documentation recovery](./docs/site/en/contributing.md)
 - [Repository context and contract navigation](./CONTEXT.md)
@@ -86,6 +87,6 @@ The site is only a presentation layer over the Markdown in this repository. It a
 
 RSP is a tool-agnostic file convention and works with any assistant or editor that can read project files. Humans start here; agents follow the nearest `AGENTS.md`, load the required project Core through host Skill discovery or `.agents/skills/rsp/SKILL.md`. Missing required Skills stop dependent work; there is no Rules fallback. Root `skills/` contains authored sources in the RSP repository, not the consumer installation entry.
 
-The current source candidate uses `init` for a complete setup and the selected target CLI's `update` for the complete environment. It pins exact versions and retires Rules and separate Skill installation; see [unified update migration](docs/migrations/pinned-skills.md). These source changes do not establish publication. The seven core Skills remain independently invocable; see [Skill ownership](docs/site/en/guides/skills.md).
+RSP 4.0 uses `init` for a complete setup and the selected target CLI's `update` for the complete environment. It pins exact versions and retires Rules and separate Skill installation; existing projects must follow the [4.0 migration guide](docs/migrations/pinned-skills.md). The seven core Skills remain independently invocable; see [Skill ownership](docs/site/en/guides/skills.md).
 
 RSP is licensed under the [MIT License](./LICENSE).

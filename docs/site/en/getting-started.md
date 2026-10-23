@@ -66,6 +66,6 @@ on each operation. Optional update --dry-run previews without writes. No separat
 Skill install, adoption or removal steps are needed. Unknown Skills, user
 configuration and project knowledge remain untouched; local changes inside managed
 Skills are replaced. See [migration details](./guides/skills.md#pinned-skills-only-migration).
-These are source-candidate contracts, not proof of publication.
+Projects upgrading from 3.3 must first follow the [migration instructions](./guides/skills.md#pinned-skills-only-migration), including explicit legacy configuration changes.
 
 Next, read [core concepts](./concepts.md) or follow the [daily workflow](./guides/daily-workflow.md).

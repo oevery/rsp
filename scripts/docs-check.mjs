@@ -95,6 +95,7 @@ for (const locale of otherLocales) {
 }
 
 const checkedFiles = [
+  join(repositoryRoot, 'CHANGELOG.md'),
   join(repositoryRoot, 'README.md'),
   join(repositoryRoot, 'README.zh-CN.md'),
   ...markdownFiles(docsRoot),

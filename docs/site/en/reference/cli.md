@@ -1,6 +1,6 @@
 # CLI reference
 
-`rsp` denotes the exact CLI invocation recorded in AGENTS and `.rsp/version`, or a verified matching executable, never `@latest` or an arbitrary global installation. See [pinned Skills migration](../guides/skills.md#pinned-skills-only-migration) for the source candidate.
+`rsp` denotes the exact CLI invocation recorded in AGENTS and `.rsp/version`, or a verified matching executable, never `@latest` or an arbitrary global installation. Existing 3.3 projects must follow the [migration instructions](../guides/skills.md#pinned-skills-only-migration).
 
 ## Setup and Skills
 
@@ -73,10 +73,10 @@ Existing bounded unversioned UTF-8 content remains readable for compatibility. `
 
 ## Local Git delivery
 
-The current source candidate removes `rsp commit --message-file`, including
+RSP 4.0 removes `rsp commit --message-file`, including
 `--expected-head`, `--expected-tree` and the JSON receipt. There is no compatibility
 wrapper. Existing automation must migrate; earlier release records describe their
-original versions, not this source candidate.
+original versions.
 
 Use the `rsp-commit` Skill for authorized exact-scope local delivery. Its ordinary
 execution command is:

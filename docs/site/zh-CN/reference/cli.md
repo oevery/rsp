@@ -1,6 +1,6 @@
 # CLI 参考
 
-`rsp` 表示 AGENTS 与 `.rsp/version` 指定的精确 CLI 调用，或已核验相同版本的可执行文件，不表示 `@latest` 或任意全局安装。源码候选的迁移见[固定版本与 Skills](../guides/skills.md#固定版本与-skills-only-迁移)。
+`rsp` 表示 AGENTS 与 `.rsp/version` 指定的精确 CLI 调用，或已核验相同版本的可执行文件，不表示 `@latest` 或任意全局安装。从 3.3 升级须先阅读[迁移说明](../guides/skills.md#固定版本与-skills-only-迁移)。
 
 ## 接入与 Skills
 
@@ -16,7 +16,7 @@ rsp skills list [--json]        查看套件差异和已知退役名称
 
 更新替换明确列出的核心 Skills，移除已知旧名称和两处退役 Rules，只刷新 AGENTS 的受管块。更新前自行保存受管资产中需要的定制内容；未知 Skills、用户配置、项目知识及 AGENTS 其他部分保留。可选 --dry-run 预览无需 force，也不会写入。
 
-失败停止，不回滚已完成步骤，也不生成恢复副本；排除原因后用同一目标 CLI 重跑。update 不改写 config、不修复用户目录，版本最后写入，不支持崩溃恢复。诊断不授予修改权限；候选职责映射见 [Skills 指南](../guides/skills.md)。
+失败停止，不回滚已完成步骤，也不生成恢复副本；排除原因后用同一目标 CLI 重跑。update 不改写 config、不修复用户目录，版本最后写入，不支持崩溃恢复。诊断不授予修改权限；职责映射见 [Skills 指南](../guides/skills.md)。
 缺失的用户脚手架可自行恢复，或用 init 创建默认内容；权限及路径类型错误应由用户纠正，update 不修复这些路径。
 
 生成索引兼容迁移只移除根 INDEX.md 或任意 00-index.md 中带有精确生成元数据的 Specs 索引。预检和所有权检查保护用户内容；全新初始化与 add spec 不生成索引。Doctor 始终只读，报告需要 update 的问题。
@@ -61,7 +61,7 @@ rsp reopen <name> --reason <text> [--from <archive-path>]
 
 ## 本地 Git 交付
 
-当前源码候选移除 `rsp commit --message-file`，以及 `--expected-head`、`--expected-tree` 和 JSON 回执，不保留兼容包装器。已有自动化调用方需要迁移；历史发布记录仍描述各自原始版本。
+RSP 4.0 移除 `rsp commit --message-file`，以及 `--expected-head`、`--expected-tree` 和 JSON 回执，不保留兼容包装器。已有自动化调用方需要迁移；历史发布记录仍描述各自原始版本。
 
 授权的精确本地交付使用 `rsp-commit` Skill，普通执行命令为：
 

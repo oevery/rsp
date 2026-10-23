@@ -1,6 +1,6 @@
 # Skills 与受管工作
 
-当前源码候选定义七项与宿主无关的默认 Skill，供按需加载；它尚未作为版本发布，也未完成行为验收，已发布稳定包仍以自身清单为准。每项 Skill 有明确的权限边界；普通会话工作不必制造 Change。
+RSP 4.0 定义七项与宿主无关的默认 Skill，整套安装、按需加载。每项 Skill 有明确的权限边界；普通会话工作不必制造 Change。行为证据始终限于实际被测源码和场景。
 
 | Skill | 职责 |
 |---|---|
@@ -18,7 +18,9 @@
 
 ## 固定版本与 Skills-only 迁移
 
-对于普通消费项目，源码候选在 .rsp/version 中记录精确 CLI。init 创建项目文件并安装完整套件；普通命令沿用该版本，只有获授权升级才主动选择另一个精确目标。源码改动不等于发布，旧 CLI 也不会被补上版本守卫。
+对于普通消费项目，RSP 4.0 在 .rsp/version 中记录精确 CLI。init 创建项目文件并安装完整套件；普通命令沿用该版本，只有获授权升级才主动选择另一个精确目标。源码身份不能仅凭版本元数据确认，旧 CLI 也不会被补上版本守卫。
+
+从 3.3 升级前，先保存受管资产中的定制内容，将整个旧 manage 映射替换为明确选择的 workflow 策略。先用目标 CLI 的 config --json 验证，再执行 update；update 不转换配置。策略见[配置参考](../reference/configuration.md#workflow-策略)，命令顺序、移除的接口、成功检查和恢复边界见 [4.0 迁移指南](https://github.com/oevery/rsp/blob/v4.0.0/docs/migrations/pinned-skills.md)。
 
 RSP 开发仓库通过内容为 `.` 的 `.rsp/source` 显式选择自身源码，不使用版本 pin。先运行 `mise exec -- pnpm run build`，再从该 checkout 根目录运行 `mise exec -- node dist/cli.mjs <command>`。即使版本字符串相同，也不能替换为其他 checkout 或注册表 CLI。init/update 保持这一选择，不创建 `.rsp/version`；doctor 报告源码模式。冲突、格式错误或符号链接标记会被拒绝，普通消费项目不会被自动识别为源码模式。候选身份包含 commit、未提交差异和构建输入；源码模式本身不证明构建产物已更新。
 
@@ -29,6 +31,8 @@ Doctor 与 skills list 均只读。Doctor 报告版本、套件差异和退役�
 ## 旧 Skill 名称迁移
 
 update 移除明确识别的退役名称：rsp-address-review、rsp-codebase-audit、rsp-structural-audit、rsp-design、rsp-diagnose、rsp-manage、rsp-release-docs、rsp-resolve-findings 和 rsp-tdd。设计归 Shape，诊断、测试先行和修正归 Implement，协调归 Core，写作归 Doc，审查归 Review。这些映射不授予修改未知自定义 Skills 的权限。
+
+update 保留退役 Rules 目录及未知内容，空目录不影响诊断。若 Doctor 报告 .rsp/rules/ 中存在不支持的条目，先审阅并迁移其中的说明，再运行 Doctor。仅在目录为空时可用 rmdir .rsp/rules 移除。
 
 update 只替换或删除包自有资产，不改写 config，也不修复用户知识与工作目录；缺失配置使用读取时默认值。AGENTS 只更新受管块，版本最后写入。维护仓库中指向包源码的规范链接保留，其他受管路径的异常符号链接会被拒绝。
 
@@ -45,7 +49,7 @@ update 只替换或删除包自有资产，不改写 config，也不修复用户
 | `rsp` 的按需协调 | Core 内部 | 协调分支 | 仅在有效项目策略下存在真实协调义务时选择 |
 | `rsp-doc` | 默认 | 写作 Discipline | 仓库文档、Skill 或发布说明写作 |
 
-“默认”表示属于本源码候选的默认套件，不表示自动调用。Skill 边界不等于 worker 边界。Core 通过资格判断后才可按需组合有界 worker；进入协调分支本身不代表委派。核心 Skills 整套安装、按需调用；工作身份定义从 Core 的共享资源读取，缺失时报告安装不完整。
+“默认”表示属于 4.0 套件，不表示自动调用。Skill 边界不等于 worker 边界。Core 通过资格判断后才可按需组合有界 worker；进入协调分支本身不代表委派。核心 Skills 整套安装、按需调用；工作身份定义从 Core 的共享资源读取，缺失时报告安装不完整。
 
 任务切换职责时，Core 根据当前所需结果与权限选择能力，而不是沿用上一个 Skill 或按修改行数判断；只加载上下文中尚未适用的入口与方法。Shape 负责决策澄清和规划产物，不自行批准实质选择或新增公共要求；Doc 编写已确定事实并收敛最终工作记录。职责切换不授予新权限，也不要求增加 worker、重复检查或再次请求用户继续。
 

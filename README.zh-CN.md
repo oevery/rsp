@@ -66,7 +66,8 @@ Focus 是一个集合：project-setup 和 improve-login 可以同时聚焦。使
 - [配置参考](./docs/site/zh-CN/reference/configuration.md)
 - [CLI 参考](./docs/site/zh-CN/reference/cli.md)
 - [3.0 迁移指南](./docs/migrations/3.0.md)与 [3.1 迁移指南](./docs/migrations/3.1.md)
-- [发布说明](./docs/releases/3.3.0.md)
+- [4.0 迁移指南](./docs/migrations/pinned-skills.md)
+- [变更日志](./CHANGELOG.md)
 - [维护者测试与 Skill 验证](./tests/README.md)
 - [维护工作流、发布与文档恢复](./docs/site/zh-CN/contributing.md)
 - [仓库上下文与契约导航](./CONTEXT.md)
@@ -86,6 +87,6 @@ pnpm docs:build
 
 RSP 是与工具无关的文件约定，适用于任何能读取项目文件的助手或编辑器。人类从这里开始；AI 智能体遵循最近的 `AGENTS.md`，通过宿主 Skill discovery 或 `.agents/skills/rsp/SKILL.md` 加载必需的项目 Core。缺少必需 Skill 时停止依赖工作，不再使用 Rules 后备协议。根目录 `skills/` 是 RSP 仓库中的分发源码，不是消费者的安装入口。
 
-当前源码候选用 `init` 完成接入，用选定目标 CLI 的 `update` 一次更新完整环境；固定精确版本，退役 Rules 与独立 Skill 安装流程，参见[统一升级迁移](docs/migrations/pinned-skills.md)。这些源码行为不等于已经发布。七个核心 Skills 仍可独立调用，职责见 [Skills 指南](docs/site/zh-CN/guides/skills.md)。
+RSP 4.0 用 `init` 完成接入，用选定目标 CLI 的 `update` 一次更新完整环境；固定精确版本，退役 Rules 与独立 Skill 安装流程。已有项目须先阅读 [4.0 迁移指南](docs/migrations/pinned-skills.md)。七个核心 Skills 仍可独立调用，职责见 [Skills 指南](docs/site/zh-CN/guides/skills.md)。
 
 RSP 使用 [MIT 许可证](./LICENSE)。

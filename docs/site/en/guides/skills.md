@@ -1,6 +1,6 @@
 # Skills and managed work
 
-The current source candidate defines seven host-neutral core Skills installed together and loaded on demand. It is not yet a released or behavior-accepted package; the published stable package retains its own inventory. Each Skill has a narrow authority boundary; routine session work does not require inventing a Change.
+RSP 4.0 defines seven host-neutral core Skills installed together and loaded on demand. Each Skill has a narrow authority boundary; routine session work does not require inventing a Change. Behavioral evidence remains specific to its tested source and scenarios.
 
 | Skill | Responsibility |
 |---|---|
@@ -18,10 +18,17 @@ Structural discovery is a conditional method of `rsp-review`. It examines an exp
 
 ## Pinned Skills-only migration
 
-For consumer projects, the source candidate records an exact CLI in .rsp/version. Init creates project
+For consumer projects, RSP 4.0 records an exact CLI in .rsp/version. Init creates project
 files and installs the complete suite. Ordinary commands keep that selection;
 only an authorized update deliberately selects another exact target. Source
-changes do not establish publication, and older CLIs have no retrofitted guard.
+identity includes more than version metadata, and older CLIs have no retrofitted guard.
+
+Before upgrading from 3.3, preserve managed customizations and replace the entire
+legacy manage mapping with an explicitly chosen workflow policy. Validate it with
+the target's config --json before update; update does not convert configuration.
+See [workflow policy](../reference/configuration.md#workflow-policy) and the
+[ordered 4.0 migration guide](https://github.com/oevery/rsp/blob/v4.0.0/docs/migrations/pinned-skills.md)
+for commands, removed interfaces, success checks and recovery boundaries.
 
 The RSP development repository explicitly selects its own source with `.rsp/source`
 containing `.`, instead of a version pin. Build with `mise exec -- pnpm run build`,
@@ -52,6 +59,11 @@ rsp-release-docs, rsp-resolve-findings and rsp-tdd. Route design to Shape,
 diagnosis/test-first/correction to Implement, coordination to Core, writing to Doc
 and review to Review. These mappings grant no authority over unknown custom Skills.
 
+Update leaves the retired Rules directory and unknown contents in place. An empty
+directory is harmless. If Doctor reports unsupported .rsp/rules/ entries, review
+and migrate their instructions, then rerun Doctor. Remove the directory with
+rmdir .rsp/rules only when it is empty.
+
 Update replaces only package-owned assets. User config and knowledge/work directories
 are not rewritten or repaired; missing settings use read-time defaults. AGENTS changes
 are confined to its managed block, and the version is written last. Canonical maintainer
@@ -74,7 +86,7 @@ Installation, runtime role, and invocation are separate:
 | Conditional coordination in `rsp` | within Core | coordination branch | selected under effective project policy only for an actual obligation |
 | `rsp-doc` | default | writing Discipline | repository-document, Skill or release writing |
 
-`default` means included in this source candidate's default suite; it does not mean automatically invoked. A Skill boundary is not a worker boundary. Core's qualified coordination branch can compose bounded worker lanes, but selection alone does not imply delegation. Install/update the seven core Skills together from one package version. Direct invocation does not require executing Core: when tracked work identities are needed, each consumer reads Core references/work-model.md unless already in its context. Independent workers supply their own context. Missing shared resources indicate an incomplete installation; do not invent definitions.
+`default` means included in the 4.0 suite; it does not mean automatically invoked. A Skill boundary is not a worker boundary. Core's qualified coordination branch can compose bounded worker lanes, but selection alone does not imply delegation. Install/update the seven core Skills together from one package version. Direct invocation does not require executing Core: when tracked work identities are needed, each consumer reads Core references/work-model.md unless already in its context. Independent workers supply their own context. Missing shared resources indicate an incomplete installation; do not invent definitions.
 
 At task transitions, Core selects from the current requested result and authority,
 not the last-used Skill or edit size, and loads only the applicable entrypoint

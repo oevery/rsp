@@ -71,6 +71,6 @@ Ordinary completion and checkpoint commits keep Change open. A generic commit re
 
 ### Migrate legacy Manage configuration
 
-This unreleased candidate replaces `manage.activation/closeout` and the JSON `manage` projection with `workflow.delegation/closeout`. Old values are not aliases: `local` previously combined lifecycle and Git permission, while the new policy never grants Git authority.
+RSP 4.0 replaces `manage.activation/closeout` and the JSON `manage` projection with `workflow.delegation/closeout`. Old values are not aliases: `local` previously combined lifecycle and Git permission, while the new policy never grants Git authority.
 
 With authorization, remove the entire `manage` mapping and explicitly choose the two new settings above; off/ask is the recommended starting point. Review project-owned AGENTS instructions and JSON consumers too. `rsp config` and `rsp update` refuse legacy or mixed configuration without converting it. Once edited, validate with `rsp config --json` and run `rsp update` to refresh managed assets. No migration changes historical evidence.
