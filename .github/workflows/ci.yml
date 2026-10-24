@@ -12,12 +12,12 @@ concurrency:
   cancel-in-progress: true
 jobs:
   code:
-    uses: xova-dev/actions/.github/workflows/check.yml@ef8261ffb66d4593e54a542d035f4684d5124abd
+    uses: xova-dev/actions/.github/workflows/check.yml@dc39d052629065714f5fabd978ed16196bdb7a89
     with:
       source-sha: ${{ github.sha }}
       detect-changes: true
   docs:
-    uses: xova-dev/actions/.github/workflows/check.yml@ef8261ffb66d4593e54a542d035f4684d5124abd
+    uses: xova-dev/actions/.github/workflows/check.yml@dc39d052629065714f5fabd978ed16196bdb7a89
     with:
       kind: docs
       source-sha: ${{ github.sha }}

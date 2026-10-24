@@ -12,19 +12,58 @@ on:
 permissions:
   contents: read
 jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    continue-on-error: true
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      source-sha: ${{ steps.ci.outcome == 'success' && steps.ci.outputs.source-sha || '' }}
+      input-error: ${{ steps.ci.outputs.input-error }}
+    steps:
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - id: ci
+        uses: xova-dev/actions/actions/checked-ci@dc39d052629065714f5fabd978ed16196bdb7a89
+        with:
+          expected-sha: ${{ github.sha }}
+  ci-status:
+    needs: ci
+    if: ${{ !cancelled() && (needs.ci.outputs.input-error == 'true' || needs.ci.result != 'success' || needs.ci.outputs.source-sha != github.sha) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: ${{ needs.ci.outputs.input-error != 'true' }}
+    permissions: {}
+    steps:
+      - name: Report CI reuse status
+        env:
+          INPUT_ERROR: ${{ needs.ci.outputs.input-error }}
+        run: |
+          if [ "$INPUT_ERROR" = 'true' ]; then
+            echo '::error::Invalid CI lookup inputs. Publication is blocked.'
+            exit 1
+          fi
+          echo '::warning::CI reuse is unavailable. Running complete source checks.'
   check:
-    uses: xova-dev/actions/.github/workflows/check.yml@ef8261ffb66d4593e54a542d035f4684d5124abd
+    needs: ci
+    if: ${{ !cancelled() && needs.ci.result != 'skipped' && needs.ci.outputs.input-error != 'true' && (needs.ci.result != 'success' || needs.ci.outputs.source-sha != github.sha) }}
+    uses: xova-dev/actions/.github/workflows/check.yml@dc39d052629065714f5fabd978ed16196bdb7a89
     with:
       source-sha: ${{ github.sha }}
   release:
-    needs: check
-    uses: xova-dev/actions/.github/workflows/release.yml@ef8261ffb66d4593e54a542d035f4684d5124abd
+    needs: [ci, check]
+    if: ${{ !cancelled() && needs.ci.result != 'skipped' && needs.ci.outputs.input-error != 'true' && ((needs.check.result == 'success' && needs.check.outputs.source-sha == github.sha) || (needs.ci.result == 'success' && needs.check.result == 'skipped' && needs.ci.outputs.source-sha == github.sha)) }}
+    uses: xova-dev/actions/.github/workflows/release.yml@dc39d052629065714f5fabd978ed16196bdb7a89
     permissions:
       contents: read
       id-token: write
     with:
       release-tag: ${{ github.event.release.tag_name || inputs.release-tag }}
-      expected-sha: ${{ needs.check.outputs.source-sha }}
+      expected-sha: ${{ needs.check.outputs.source-sha || needs.ci.outputs.source-sha }}
       deploy-docs: ${{ github.event_name == 'release' && !github.event.release.prerelease }}
     secrets:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

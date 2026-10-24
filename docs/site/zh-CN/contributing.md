@@ -14,7 +14,7 @@
 
 `release:check` 构建 CLI，检查类型和 lint，运行代码与安装包测试，校验原生任务 schema，扫描 Skill 安全并检查文档。Schema 校验离线执行，不启动容器、智能体或评判模型。CI 通过 `RSP_INSTALL_ALLOW_NETWORK=1` 明确允许临时 npm 消费项目联网安装；本地检查默认使用离线缓存。这个开关不授予模型执行或发布权限。
 
-setup.cache 选择以 pnpm-lock.yaml 区分的 pnpm/npm 下载缓存，以及以 tests/skills/uv.lock 区分的 uv 下载缓存；docs.cache 只选择 pnpm。命中与未命中均执行锁定安装及检查。安装包消费项目接受显式 npm_config_cache 或 NPM_CONFIG_CACHE，未指定时保留 .cache/rsp-package-install。指定 tarball 与缓存回归复用一份归档，通过一次成功验证预热默认缓存，再离线拒绝由两种变量分别选择的空缓存。每次安装尝试都使用全新的消费项目，成功验证和冷缓存反例结束后均核对归档字节不变。本次候选验收不复用已安装的消费项目、虚拟环境、测试结果或发布回执。
+setup.cache 选择以 pnpm-lock.yaml 区分的 pnpm/npm 下载缓存，以及以 tests/skills/uv.lock 区分的 uv 下载缓存；docs.cache 只选择 pnpm。命中与未命中均执行锁定安装及检查。安装包消费项目接受显式 npm_config_cache 或 NPM_CONFIG_CACHE，未指定时保留 .cache/rsp-package-install。指定 tarball 与缓存回归复用一份归档，通过一次成功验证预热默认缓存，再离线拒绝由两种变量分别选择的空缓存。每次安装尝试都使用全新的消费项目，成功验证和冷缓存反例结束后均核对归档字节不变。缓存的安装目录、虚拟环境和历史发布回执不能代替精确候选 SHA 的完整检查，也不能代替实际发布 tarball 的验证。
 
 安装锁定依赖后，可运行以下本地检查：
 
@@ -68,7 +68,9 @@ mise exec -- pnpm release "$RSP_RELEASE_VERSION" --dry-run
 复用下载缓存，不将 `node_modules` 软链接到其他 checkout。若 store 不完整，
 报告缺失缓存，仅在获得网络安装授权后补齐。
 
-Publish 将已检查的来源 SHA 交给共享发布工作流。来源门禁绑定原生事件、标签、包版本、仓库和已检查提交。同一 SHA 的产品检查通过后，发布器运行 `pnpm build`，关闭 npm 生命周期脚本后打包，将绝对归档路径交给 `test:pack`，再核对来源和 tarball 字节，最终通过锁定的 release-it 21.1.1 npm 发布器发布这些相同字节。共享发布配置关闭项目 hooks 和 Git/GitHub/GitLab 交付；`prepublishOnly` 继续为普通手动 npm 发布提供独立门禁。共享流程不会通过包生命周期脚本重复运行产品检查。
+Publish 先通过固定修订的 `checked-ci` action 查询精确原生 SHA 的完整成功 CI。没有合格 CI、纯文档精简 CI、查询失败或超时均执行原有完整源码检查；致命查询输入错误阻断发布。只有查询任务授予 actions:read 并容忍可恢复故障，完整回退和发布不容错，回退必须返回精确原生 SHA。共享工作流和 action 引用统一使用同一个工具库完整修订；CI 也须使用该修订，才能生成完整检查标记。
+
+Publish 将已检查的来源 SHA 交给共享发布工作流。来源门禁绑定原生事件、标签、包版本、仓库和已检查提交。同一 SHA 的合格 CI 或完整回退通过后，发布器运行 `pnpm build`，关闭 npm 生命周期脚本后打包，将绝对归档路径交给 `test:pack`，再核对来源和 tarball 字节，最终通过锁定的 release-it 21.1.1 npm 发布器发布这些相同字节。共享发布配置关闭项目 hooks 和 Git/GitHub/GitLab 交付；`prepublishOnly` 继续为普通手动 npm 发布提供独立门禁。共享流程不会通过包生命周期脚本重复运行产品检查。
 
 npm Trusted Publishing 需要配置仓库 `oevery/rsp`、工作流 `publish.yml` 和环境 `npm-publish`；`package.json.repository` 必须与该身份一致。为 `npm-publish` 和 `docs-production` 环境配置适当的审批及 `v*` 标签限制。Cloudflare 部署需要 `CLOUDFLARE_API_TOKEN` 和 `CLOUDFLARE_ACCOUNT_ID`，可由文档环境提供，或由薄入口转发仓库 Secrets。代码和文档检查均不接收部署凭据或写权限。
 
