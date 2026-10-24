@@ -1,5 +1,88 @@
 # Changelog
 
+## [4.0.0](https://github.com/oevery/rsp/compare/v3.3.0...v4.0.0) (2026-10-24)
+
+### ⚠ BREAKING CHANGES
+
+* **skills:** Individual core Skill installation is no longer supported.
+  Install the complete suite and inspect customized obsolete audit directories
+  before forced migration.
+* **research:** Maintainer research no longer supports sealed-study,
+  coverage or custom bundle commands. Write ordinary timestamped reports and
+  use explicit capture recovery and cleanup commands.
+* **research:** Maintainer studies use brief and --brief in place of question
+  and --question. Historical sealed bytes are preserved without implicit migration.
+* **workflow:** Replace manage configuration with workflow.delegation and
+  workflow.closeout, defaulting to off/ask. Legacy manage mappings require explicit
+  migration; rsp update does not convert them or grant Git authority.
+* **evaluation:** retire the former Skill runner commands and case/suite
+  formats. Use tests/skills/evaluate.py and native Harbor task/job settings.
+* **rsp:** rsp commit, its snapshot flags and JSON receipt are removed.
+  Use rsp-commit with native Git and a prepared message file.
+* **runtime:** RSP requires project Skills. Use an exact target CLI,
+  explicit version adoption and selected legacy Rules removal after preserving
+  custom content, then refresh the complete Skill suite before resuming work.
+* **skills:** rsp-manage moves into rsp; rsp-design moves into rsp-shape; rsp-diagnose, rsp-tdd and rsp-resolve-findings move into rsp-implement. Inspect existing Skill trees before explicitly forcing migration.
+* **setup:** skills install, the Skill installer UI, doctor --fix, and
+  the update adoption/removal switches are retired. Use init for setup and
+  update [--dry-run] for managed upgrades; save managed customizations first.
+
+### Features
+
+* **ci:** integrate pinned xova project workflows ([86f790c](https://github.com/oevery/rsp/commit/86f790c97c568dce0fc1fb0bb414651d97517990))
+* **ci:** unify code and docs checks with shared caches ([44b790a](https://github.com/oevery/rsp/commit/44b790ab85828e152c3e5548e29956fb08d8bdee))
+* **cli:** add config inspection and streamline status output ([ca774af](https://github.com/oevery/rsp/commit/ca774aff9828718830eb807aed9da5a087634ef9))
+* **docs:** add reader-focused documentation workflow ([0cd01fd](https://github.com/oevery/rsp/commit/0cd01fd14f9fd5735b0f79ec223b101d23bb0bfb))
+* **docs:** unify document and skill authoring ([0ab61cb](https://github.com/oevery/rsp/commit/0ab61cb063b3af50460e67abb8a5cfbb809da47e))
+* **eval:** select exact calibration samples ([d966e3c](https://github.com/oevery/rsp/commit/d966e3c69c599ac7ba37a6f6fe0bbe1382c9571e))
+* **runtime:** distinguish source checkouts from pinned projects ([622fcb1](https://github.com/oevery/rsp/commit/622fcb1448e0ae9e520217b7a0c488d966bca691))
+* **runtime:** pin project versions and retire Rules ([74bd852](https://github.com/oevery/rsp/commit/74bd85227def962935f02035f3c87f7c5c14f640))
+* **workflow:** separate delegation from delivery closeout ([178eaaa](https://github.com/oevery/rsp/commit/178eaaae6e5f43eb0b6d196edf98839f578a902d))
+
+### Bug Fixes
+
+* **archive:** check history summary before archiving ([c630a4b](https://github.com/oevery/rsp/commit/c630a4ba0d6c917e9fc51533257c23b480d7526c))
+* **eval:** align four task fixtures with their output contracts ([a85ee98](https://github.com/oevery/rsp/commit/a85ee987bb96c00215ea9107a7ac508f9df4a781))
+* **eval:** distinguish inherited regrade usage from current duration ([0bec0bc](https://github.com/oevery/rsp/commit/0bec0bcf60a3dd993bd6748a69320839b860402a))
+* **eval:** distinguish saved provenance in comparison reports ([cb92ce4](https://github.com/oevery/rsp/commit/cb92ce4af9ab4b6fa83437edd62f70f8e5c543e2))
+* **eval:** distinguish unavailable grading in reports ([fe5ea05](https://github.com/oevery/rsp/commit/fe5ea05a7aba5b9753b517fcad0554ff64a9e978))
+* **eval:** expose cached token usage with source attribution ([fb33f16](https://github.com/oevery/rsp/commit/fb33f16b19c4f9724a947004170058bdff0d57b5))
+* **eval:** handle missing calibration expectations and labels ([4b36217](https://github.com/oevery/rsp/commit/4b36217232440e26600a194d767c0636310203eb))
+* **eval:** preserve comparisons with unreadable baseline trials ([a344d48](https://github.com/oevery/rsp/commit/a344d4871c1c6bf8ad3aa32b6b72434aef6e14cc))
+* **eval:** preserve reports on verifier discovery errors ([f42d2dd](https://github.com/oevery/rsp/commit/f42d2dd87728188edd4fbc680ec3c99663f83add))
+* **eval:** preserve reports when execution status is unreadable ([2c2ad02](https://github.com/oevery/rsp/commit/2c2ad0261c22eb320cc0bebf970cd73e1dc7d713))
+* **eval:** preserve reports when grading details are unreadable ([1042872](https://github.com/oevery/rsp/commit/1042872f941fe3151eae5b6ee4e172ea760a744c))
+* **eval:** preserve reports when job plans are unavailable ([aaf64cb](https://github.com/oevery/rsp/commit/aaf64cbe8ee6615164a02d7684535e475824a688))
+* **eval:** preserve reports when usage evidence is unreadable ([ce6bc98](https://github.com/oevery/rsp/commit/ce6bc985746fa00555fd0de59a2995e1cccb5216))
+* **eval:** preserve reports with unreadable trial results ([62e1592](https://github.com/oevery/rsp/commit/62e159280eca2de22c8b511ea1d0b65580e432e9))
+* **eval:** reject stale usage from corrupt session JSON ([189124f](https://github.com/oevery/rsp/commit/189124f19555dbe0c662f7c7a784f7590a2c8c97))
+* **eval:** report baseline plan completeness ([8550f7e](https://github.com/oevery/rsp/commit/8550f7e75b3e7fb95ab57068b71a5d3e3d2b4e00))
+* **eval:** require complete calibration expectations ([43f31ce](https://github.com/oevery/rsp/commit/43f31ce8c199eb46a8d0d743193cc498976a3de6))
+* **eval:** retain calibration identity for regrades missing manifests ([8dda2aa](https://github.com/oevery/rsp/commit/8dda2aa4e353c6266d30f8c3533498d0f4b62b95))
+* **eval:** retain root-cause locations in exception records ([6976c81](https://github.com/oevery/rsp/commit/6976c81897a75cbcc1bfe2a9b4722e1c07764285))
+* **eval:** retain unscored calibration when manifests are unavailable ([e7bbb19](https://github.com/oevery/rsp/commit/e7bbb191681f87ef81b88004dbc40490125c4b69))
+* **eval:** specify next-action and evidence-reference formats ([598474a](https://github.com/oevery/rsp/commit/598474a402770f08bcf6ac23f36c1bd6047b5ec5))
+* **rsp:** clarify focus writeback and archive evidence boundaries ([1cde234](https://github.com/oevery/rsp/commit/1cde23447d46ccf15375153eeb9dd18cde3a55e7))
+* **rsp:** enforce writeback order and remove evaluation quotas ([a2014ea](https://github.com/oevery/rsp/commit/a2014ea9feafcb8264e7ce7374ab453e6b2099d4))
+* **skills:** align work selection and change record guidance ([1f29dcc](https://github.com/oevery/rsp/commit/1f29dcc5d0dc05da7c92130f89f7fe25685b87de))
+* **skills:** clarify routing and work-record boundaries ([47a5231](https://github.com/oevery/rsp/commit/47a5231f9bcbd637440af16fe58be784686df472))
+* **skills:** clarify test expectations and useful comments ([37b7ec0](https://github.com/oevery/rsp/commit/37b7ec059b91a0605c5e80106d512cc7b006dd34))
+* **skills:** gate commit writes on successful prerequisites ([ca5b6a6](https://github.com/oevery/rsp/commit/ca5b6a68571bf0d259f9e81b353f1ce596222ee5))
+* **skills:** unify core suite identity and review boundaries ([b53390c](https://github.com/oevery/rsp/commit/b53390c433375c9b1c0b16a288a4a6cf5980c892))
+* **testing:** enforce evaluation evidence and acceptance ([1d4cd37](https://github.com/oevery/rsp/commit/1d4cd37e2e56ab3fd4a127fa84bba308b145011c))
+* **tests:** make skill review evidence traceable ([1f50a60](https://github.com/oevery/rsp/commit/1f50a60969861fe45e0ec66a792c91d01f7edd7e))
+* **tests:** preserve task evidence without blanket redaction ([79cb6d2](https://github.com/oevery/rsp/commit/79cb6d2bc6e23aaa52ea90c5f8cdab6d7b146103))
+* **test:** stabilize fixture evidence across CI color settings ([6ae5b10](https://github.com/oevery/rsp/commit/6ae5b10fba703aae57ed18d8d433d185202bc1bc))
+
+### Code Refactoring
+
+* **evaluation:** migrate skill testing to Harbor and Reward Kit ([adbc2ed](https://github.com/oevery/rsp/commit/adbc2ed4d10f4c39e25593b0c3330a7e9e117d97))
+* **research:** simplify capture recovery and dated reports ([d22805e](https://github.com/oevery/rsp/commit/d22805e7ad519ad28bd7a286fd1ef5ed7972ed57))
+* **research:** support upstream discovery and traceable coverage ([8b96947](https://github.com/oevery/rsp/commit/8b9694706263efaaa2e2867cf2c8235958e2173b))
+* **rsp:** streamline delivery and verification evidence ([899e90a](https://github.com/oevery/rsp/commit/899e90a4114524e2df62b4d57136be5127534f8e))
+* **setup:** unify ownership-based project updates ([2a2e7ea](https://github.com/oevery/rsp/commit/2a2e7ea30cf20824db855c89bbdf48f5e09b5495))
+* **skills:** consolidate workflow and stabilize evaluations ([fff714b](https://github.com/oevery/rsp/commit/fff714b6f6cd48918e45a1288f6880978c23166f))
+
 Historical entries through 3.3.0 were rebuilt from tagged Conventional Commits. They retain intermediate changes later revised or removed; the historical compatibility notes and linked migration guides clarify the shipped upgrade requirements. Previously recorded release dates are preserved.
 
 ## [3.3.0](https://github.com/oevery/rsp/compare/v3.2.0...v3.3.0) (2026-08-24)
