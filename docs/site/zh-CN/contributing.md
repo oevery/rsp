@@ -44,12 +44,15 @@ Conventional Changelog 插件 12.0.2 负责更新选定版本和 `CHANGELOG.md`�
 先提交已审阅的源码、发布工具和迁移指南，包版本与下一个 CHANGELOG 条目
 留给 release-it 更新。然后从配置了 upstream 的干净 `main` 预览目标版本：
 
+将 `<version>` 替换为明确选定的目标版本，例如 `4.0.0`。
+
 ```sh
-mise exec -- pnpm release 4.0.0 --dry-run
+RSP_RELEASE_VERSION='<version>'
+mise exec -- pnpm release "$RSP_RELEASE_VERSION" --dry-run
 ```
 
 仅在明确获得提交、标签、推送和发布授权后，才去掉 `--dry-run`。
-显式传入 `4.0.0` 选择下一个发布版本。原生 release-it 更新包版本与 CHANGELOG，
+显式版本参数选择发布目标。原生 release-it 更新包版本与 CHANGELOG，
 提交这些改动后，再创建标签、推送及 GitHub Release。
 本地关闭 npm 发布，继续由现有 Publish 工作流发布 npm 并部署稳定版文档。
 自动创建 GitHub Release 需要具有适当仓库权限的 `GITHUB_TOKEN`；未提供时，
@@ -59,6 +62,11 @@ mise exec -- pnpm release 4.0.0 --dry-run
 只是预览，不是测试证据。
 
 运行 release-it 前，先准备必要的迁移材料。在隔离候选中验证目标版本，不提前提交自动生成的发布改动。候选可以包含必要的代码和文档，不要求只改版本。普通 CI 优化、发布提交标题或父提交 CI 成功，都不能免除最终候选的产品检查。
+
+在隔离 checkout 中，用已填充的 pnpm store 执行
+`mise exec -- pnpm install --offline --frozen-lockfile`，建立该 checkout 自己的依赖目录。
+复用下载缓存，不将 `node_modules` 软链接到其他 checkout。若 store 不完整，
+报告缺失缓存，仅在获得网络安装授权后补齐。
 
 Publish 将已检查的来源 SHA 交给共享发布工作流。来源门禁绑定原生事件、标签、包版本、仓库和已检查提交。同一 SHA 的产品检查通过后，发布器运行 `pnpm build`，关闭 npm 生命周期脚本后打包，将绝对归档路径交给 `test:pack`，再核对来源和 tarball 字节，最终通过锁定的 release-it 21.1.1 npm 发布器发布这些相同字节。共享发布配置关闭项目 hooks 和 Git/GitHub/GitLab 交付；`prepublishOnly` 继续为普通手动 npm 发布提供独立门禁。共享流程不会通过包生命周期脚本重复运行产品检查。
 

@@ -48,12 +48,15 @@ Leave the package version and next CHANGELOG entry unchanged
 until release-it runs. From a clean `main` with an upstream, preview the target
 version:
 
+Replace `<version>` with the explicitly selected target, for example `4.0.0`.
+
 ```sh
-mise exec -- pnpm release 4.0.0 --dry-run
+RSP_RELEASE_VERSION='<version>'
+mise exec -- pnpm release "$RSP_RELEASE_VERSION" --dry-run
 ```
 
 Only after explicit commit/tag/push/release authorization, omit `--dry-run`.
-The explicit `4.0.0` argument selects the next release. Native release-it updates
+The explicit version argument selects the release target. Native release-it updates
 the package version and CHANGELOG, commits those changes, then tags, pushes and
 creates the GitHub Release. npm publication is disabled locally;
 the existing Publish workflow owns npm and stable documentation deployment.
@@ -64,6 +67,11 @@ Generation preserves existing historical CHANGELOG entries. Dry runs skip writes
 ordinary hooks, so they are previews, not test evidence.
 
 Prepare any required migration material before running release-it. Validate the intended version in an isolated candidate without precommitting generated release changes. A candidate may include necessary code and documentation; it need not be a version-only commit. Ordinary CI optimization, a release commit title or successful parent CI never exempts the final candidate from product checks.
+
+In the isolated checkout, run `mise exec -- pnpm install --offline --frozen-lockfile`
+against a populated pnpm store to create its own dependency directory. Reuse download
+caches, not a symlink to another checkout's `node_modules`. If the store is incomplete,
+report the missing cache and populate it only with network installation authorization.
 
 Publish passes the checked source SHA to the shared release workflow. Its source guards bind the native event, tag, package version, repository and checked commit. After successful checks on that exact SHA, the publisher runs `pnpm build` and packs with npm lifecycle scripts disabled. It passes the absolute archive path to `test:pack`, rechecks source and tarball bytes, then publishes those same bytes through the locked release-it 21.1.1 npm publisher. The shared publication configuration disables project hooks and Git/GitHub/GitLab delivery; `prepublishOnly` remains a separate guard for ordinary manual npm publication. Product checks are not repeated through package lifecycle hooks in the shared flow.
 

@@ -6,6 +6,12 @@ shellEmulator: true
 packages:
   - .
 
+# Security fixes scoped to the affected dependency branches.
+overrides:
+  undici@>=7.0.0 <7.30.1: 7.30.1
+  vite@>=8.0.0 <8.1.6: 8.1.6
+  vitepress@1.6.4>vite: 6.4.4
+
 allowBuilds:
   esbuild: false
   workerd: true

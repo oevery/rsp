@@ -11,8 +11,8 @@ The tagged release requires Node.js >=22 and retains `rsp create --lite`, `--lit
 ### ⚠ BREAKING CHANGES
 
 * **manage:** managed Discipline WorkerReceipts no longer accept compound result values, and Verify receipts require evidence_delta.
-* **cli:** rsp create --lite has been removed; use the standard kind-aware Change template.
-* **runtime:** the next major release requires Node.js >=22.13.0, removes rsp create --lite, and replaces generated Specs indexes with direct queries.
+* **cli:** **Reverted before 3.3.0.** The commit removed `rsp create --lite`; final 3.3.0 retained `--lite`, `--lite=true` and `--lite=false` for one compatibility cycle.
+* **runtime:** **Revised before 3.3.0.** The commit proposed Node.js >=22.13.0 and removal of `rsp create --lite`; final 3.3.0 requires Node.js >=22 and retains those compatibility forms. Direct Specs queries did ship.
 
 ### Features
 

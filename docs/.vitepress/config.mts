@@ -14,6 +14,12 @@ export default defineConfig({
   cleanUrls: true,
   ignoreDeadLinks: [/^https?:\/\//],
   themeConfig: shared,
+  vite: {
+    resolve: {
+      // VitePress 1.x accepts its virtual search index by URL during HMR.
+      alias: { '/@localSearchIndex': '@localSearchIndex' },
+    },
+  },
   locales: {
     'root': {
       label: 'English',
