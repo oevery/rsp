@@ -1,4 +1,3 @@
-import { Buffer } from 'node:buffer'
 import { TextDecoder } from 'node:util'
 
 import { MAX_FOCUS_CAPSULE_BYTES } from './config.js'
@@ -37,17 +36,6 @@ export function inspectFocusCapsuleBytes(bytes: Uint8Array): FocusCapsuleInspect
   catch {
     return { kind: 'invalid', code: 'focus_capsule_invalid_utf8', message: 'focus capsule must contain valid UTF-8' }
   }
-
-  if (Buffer.byteLength(content, 'utf-8') > MAX_FOCUS_CAPSULE_BYTES) {
-    return {
-      kind: 'invalid',
-      code: 'focus_capsule_too_large',
-      message: `focus capsule exceeds ${MAX_FOCUS_CAPSULE_BYTES} UTF-8 bytes`,
-    }
-  }
-
-  if (content.length === 0)
-    return { kind: 'empty', content: '' }
 
   return parseFocusCapsule(content)
 }

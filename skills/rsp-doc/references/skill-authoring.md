@@ -6,7 +6,7 @@ Use for creating or revising a Skill. Apply Doc's language, expression and autho
 
 - For creation, resolve the goal, inputs and observable result before choosing structure.
 - Honor an explicit destination; otherwise use project instructions and host constraints. Check for existing content before creating files.
-- For revision, inspect the authored package and its callers. Name the failure or missing capability; preserve unrelated adaptations.
+- For revision, inspect the authored package and its callers. State the revision's purpose and supporting evidence; preserve unrelated adaptations.
 - Start with SKILL.md. Use a host initializer when useful; add resources only for a real task need.
 - Preserve existing packages and global configuration. Creation is not installation or publication.
 
@@ -20,7 +20,7 @@ Use for creating or revising a Skill. Apply Doc's language, expression and autho
 ## Make execution concise
 
 - Organize the ordinary task around its goal, necessary inputs, authorized action, completion evidence and real stops. Choose headings for the task, not a universal template. Continue ordinary authorized checks. Prescribe order only for correctness, safety or contract dependencies.
-- Before adding an instruction, reuse or revise the rule already owning that decision. Merge repeated entry/step/return explanations and failure conditions with the same effect. For example, combine "read the guide" and a later "only for release notes" into "for release notes, read the guide." Add an incident-derived constraint only for a reusable contract gap, not noncompliance or tool/fixture failure alone. Preserve trigger, authority, failure and output meaning.
+- Revise the existing owner before adding a rule for the same decision. Merge repeated conditions and remove instructions no longer needed within the authorized contract delta. An incident warrants a new constraint only for a reusable gap, not noncompliance or tool/fixture failure alone.
 - Keep shared guidance and necessary local safety context visible. Link substantial branch-only knowledge with its reading condition and purpose; ordinary tasks need no unrelated recovery or delivery detail. A short Skill needs no router or extra files. Split or merge resources only when it improves the reading path, not when it merely moves mandatory text. Honor the declared distribution boundary. RSP ships as a suite: shared concepts may reference Core resources directly; independent Skills keep their own resource closure. Never depend on a maintainer repository Spec.
 - Retain generic teaching or old model-compensation instructions only for a current task-specific need. A newer model label alone proves neither redundancy nor safe removal of a constraint.
 - Reuse tools for deterministic work; the Skill owns method selection and interpretation within its authority. Preserve named mandatory commands, provenance, independence and protected operations when replacing a tool-only method. Add a script only when repetition or fragility warrants it, and run changed helpers safely. Check incoming links before moving resources.

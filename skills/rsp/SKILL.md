@@ -4,7 +4,7 @@ description: Coordinate authorized direct, Change or Group work; select capabili
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.22.4"
+  version: "2026.10.27.1"
 ---
 
 # RSP Core
@@ -32,7 +32,7 @@ Select capabilities from their descriptions and the task contract. Executors loa
 - rsp-review: fixed-scope read-only judgment or explicitly bounded structural discovery. Supporting checks remain within that review.
 - rsp-commit: separately authorized exact local delivery; required for Git execution, with no Core substitute if unavailable.
 
-Continue authorized same-scope work without another continuation request. A phase, role or method change alone requires no tool call, worker, review or test run. Required review, independent execution and protected operations still apply. For ownerless release checks, establish the exact candidate, check contract, baseline and effects authority; invent no Change or Verify owner.
+Continue authorized same-scope work without another continuation request. A phase, role or method change alone requires no tool call, worker, review or test run. Required review, independent execution and protected operations still apply. For ownerless release checks, establish the exact candidate, check contract and effects authority, plus a baseline for any comparison; invent no Change or Verify owner.
 
 ## Execute and reconcile evidence
 

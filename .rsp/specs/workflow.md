@@ -55,6 +55,15 @@ Implement cannot certify itself review-clean. Release writing belongs to Doc and
 release-document judgment to Review; verification, Git delivery and publication
 remain separate owners.
 
+Implementation prefers no addition, repository reuse, platform or standard-library
+facilities, existing dependencies, then the smallest complete implementation.
+Permanent tests protect distinct observable behavior through stable public
+boundaries and real internal collaboration by default. Focused unit tests remain
+appropriate for meaningful algorithms, parsers and critical boundaries. Private
+structure, source spelling and self-comparisons are not behavior contracts; public
+defaults can be. Coverage follows risk, not files, functions, branches or a fixed
+unit/integration ratio.
+
 Commit is a required delivery capability: if unavailable, Core does not stage or
 substitute manual Git. An available Commit reviews exact ownership, applicable
 checks and message policy, preserves hooks/signing, and stops on unsafe Git state,
@@ -221,7 +230,10 @@ evidence. Dispatch distinguishes that target from supporting references; inspect
 references does not expand the review. Mixed targets retain applicable Code and
 Document judgments. Reports cover actual judgments and material limits; explicit
 consumer formats retain canonical statuses, including skipped where required.
-Findings establish defects or explicit requirement violations; insufficient evidence
+Findings establish defects, explicit requirement violations or evidenced simplifications.
+A simplification identifies current responsibility and demonstrated burden, and a
+smaller alternative preserving that responsibility and its failure/authority gates;
+it need not invent a wrong-result defect. Insufficient evidence
 limits coverage and blocks affected required judgments without erasing supported
 findings. Declared drafts and narrower review scope do not require every unresolved
 choice to be settled; ambiguity is actionable when it impairs the reviewed task or
@@ -237,6 +249,14 @@ checks and supported passes remain distinct; none proves overall completion or
 independence by itself. Execution, checks, review and acceptance claims remain
 bounded by observed effects. Gaps limit affected claims without erasing supported
 findings; missing Required evidence still prevents completion.
+
+Current-target verification requires the target and check contract; a comparison
+baseline is needed only for a comparative claim or earlier evidence being reused.
+Machine-result fields follow actual consumers or explicit schemas, not a universal
+report template. Backups, snapshots and digests require a real recovery or independent
+identity/integrity consumer rather than routine preflight. Exact Git delivery,
+trusted external digests, content-bound security exemptions and destructive-recovery
+safeguards retain their owning contracts.
 
 ## Control boundaries
 

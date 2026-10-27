@@ -4,7 +4,7 @@ description: Diagnose unexplained symptoms read-only or implement authorized bou
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.16.2"
+  version: "2026.10.27.1"
 ---
 
 # RSP Implement
@@ -45,19 +45,17 @@ Git delivery, publication, deployment, approval, and out-of-scope deletion requi
 
 ## Admit boundaries and permanent tests
 
-Inspect existing owners and callers before adding logic. Reuse behavior and business rules that satisfy the accepted outcome. Keep each rule and its invariants with one clear owner so ordinary changes stay local. Similar code with different responsibilities may stay separate; do not force reuse through unrelated flags or speculative interfaces.
+Inspect existing owners and callers. Prefer, in order, no addition when the outcome is already met, repository reuse, platform or standard-library facilities, existing dependencies, then the smallest complete implementation. Keep rules with their invariants; do not force unrelated responsibilities through flags or speculative interfaces.
 
 Hide internal representation and coordination behind the necessary caller contract, including ordering and failures. Judge decomposition by what callers and maintainers must understand, not file size or layer count.
 
-Add a validator, fallback, defensive copy, capability, state machine, compatibility path or public option only for an explicit requirement or an evidenced producer, production consumer, trust/lifecycle transition and material consequence. Typed same-process values, imagined callers and test/document-only consumers establish no production boundary.
+Add defensive logic or a new boundary only for an explicit requirement or an evidenced producer, production consumer, trust/lifecycle transition and material consequence. Typed same-process values and imagined or test-only consumers do not establish that need. Backups, snapshots and digests likewise need a real recovery or independent identity/integrity consumer; do not create them as routine preflight. Preserve required recovery safeguards and independently trusted integrity checks.
 
-Before creating or extending a permanent test:
+Test stable public behavior with real internal collaborators by default. Substitute external or nondeterministic boundaries as needed. Focused unit tests remain useful for meaningful algorithms, parsers and critical boundaries; choose evidence by risk, not a per-function/file/branch allocation or unit/integration ratio.
 
-- **Value:** reuse sufficient test, type/static, build or acceptance evidence first. Otherwise identify the observable consequence, distinct plausible regression at its production seam, evidence gap and proportionate maintenance cost.
-- **Expectations and setup:** derive outcomes from the agreed contract or an independent example, not the tested computation. If fixture construction, platform behavior, fault injection or scheduling leaves the target condition uncertain, inspect the arranged state or use a targeted probe. This requires no precondition assertion or mutation run for every test.
-- **Real consequence:** use real collaborators when fast, deterministic and practical; otherwise substitute the necessary boundary while preserving the relevant behavior. Exercise consumer-owned behavior through covered downstream adapters or forwarding hops. A nearest-spy, emitted-message or forwarding assertion covering only an already-covered hop adds insufficient evidence, even in an existing test file.
-- **Assertions:** one final-message assertion can suffice for the agreed consumer outcome. Pin error details or interaction counts/order only when the contract needs them; otherwise assert outcomes and effects, including rejection.
-- **Maintenance:** keep scenario-defining inputs and assertions visible; share incidental setup for clarity rather than repetition alone. Keep nearby tests protecting independent consequences, but do not allocate tests per touched file, wrapper, hop, branch or constant.
+Reuse sufficient existing evidence before adding a permanent test. A new test needs a distinct plausible regression, observable consequence and evidence gap worth its maintenance. Exercise the consumer outcome through the relevant production path; an already-covered forwarding hop adds no confidence.
+
+Derive expectations from the contract or independent examples. Assert outcomes and effects, including rejection; pin details, counts or order only when contract-relevant. Private structure, source wording and constants compared with themselves are not contracts; public defaults can be. When setup leaves the target condition uncertain, inspect it or use a targeted probe rather than adding ritual preconditions. Keep scenario-defining inputs and assertions visible and share incidental setup when clearer.
 
 ## Continue within the evidence boundary
 

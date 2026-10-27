@@ -1,4 +1,5 @@
 import type { ChangeDashboardItem } from '../../../src/tui/state.js'
+import { Buffer } from 'node:buffer'
 import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -283,17 +284,32 @@ describe('public CLI lifecycle', () => {
     expect(readFileSync(join(directory, '.rsp/archives', archived), 'utf8')).toBe(completed)
   })
 
-  it('rejects an invalid recovery capsule without replacing the existing focus pointer', () => {
+  it('admits bounded UTF-8 recovery capsules and preserves the pointer on invalid input', () => {
     const directory = project()
     completeChange(directory, 'recovery')
     const capsule = join(directory, 'capsule.md')
-    const valid = '<!-- rsp-focus:v1 -->\nCurrent: Finish verification.\nEvidence: Required checks pass.\nNext: Review durable updates.\n'
+    const header = '<!-- rsp-focus:v1 -->\nCurrent: '
+    const footer = '\nEvidence: Required checks pass.\nNext: Review durable updates.\n'
+    const remainingBytes = 4096 - Buffer.byteLength(header + footer)
+    const valid = header + '\u00E9'.repeat(Math.floor(remainingBytes / 2)) + 'x'.repeat(remainingBytes % 2) + footer
     writeFileSync(capsule, valid)
     run(directory, 'focus', 'recovery', '--capsule-file', capsule)
-    writeFileSync(capsule, '<!-- rsp-focus:v1 -->\nUnknown: unsupported field\n')
-    const rejected = spawnSync(process.execPath, [cli, 'focus', 'recovery', '--capsule-file', capsule], { cwd: directory, encoding: 'utf8' })
-    expect(rejected.status).not.toBe(0)
-    expect(readFileSync(join(directory, '.rsp/focus.d/recovery'), 'utf8')).toBe(valid)
+    const focus = join(directory, '.rsp/focus.d/recovery')
+    expect(readFileSync(focus, 'utf8')).toBe(valid)
+    for (const invalid of [
+      '<!-- rsp-focus:v1 -->\nUnknown: unsupported field\n',
+      // Decoding strips the BOM, but admission must still count its raw bytes.
+      `\uFEFF${valid}`,
+      Buffer.concat([Buffer.from(header), Buffer.from([0xC3, 0x28]), Buffer.from(footer)]),
+    ]) {
+      writeFileSync(capsule, invalid)
+      const rejected = spawnSync(process.execPath, [cli, 'focus', 'recovery', '--capsule-file', capsule], { cwd: directory, encoding: 'utf8' })
+      expect(rejected.status).not.toBe(0)
+      expect(readFileSync(focus, 'utf8')).toBe(valid)
+    }
+    writeFileSync(capsule, '')
+    run(directory, 'focus', 'recovery', '--capsule-file', capsule)
+    expect(readFileSync(focus, 'utf8')).toBe('')
   })
 
   it('searches Specs literally, rejects path escape and reports invalid configuration without repairing it', () => {
@@ -538,8 +554,6 @@ describe('public CLI lifecycle', () => {
     expect(readFileSync(agents, 'utf8').split('<!-- rsp:begin -->')).toHaveLength(3)
     expect(readFileSync(note, 'utf8')).toBe(existingSpec)
     expect(readFileSync(legacyMap, 'utf8')).toBe('# Domains\nOrdering hands off to billing.\n')
-    expect(readFileSync(agents, 'utf8')).toContain('Root `CONTEXT.md`')
-    expect(readFileSync(agents, 'utf8')).toContain('CONTEXT-MAP.md')
     const context = join(directory, 'CONTEXT.md')
     expect(existsSync(context)).toBe(false)
     // Coexistence is not evidence of semantic migration, and diagnostics must not merge either file.

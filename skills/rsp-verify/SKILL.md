@@ -4,7 +4,7 @@ description: Collect and report one selected RSP WorkOwner's declared check evid
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.12.1"
+  version: "2026.10.27.1"
 ---
 
 # RSP Verify
@@ -15,14 +15,14 @@ Collect declared-check evidence for one existing RSP WorkOwner when requested or
 
 ## Require a declared boundary
 
-Require one selected WorkOwner, declared boundary, comparison baseline and authority for the named checks. An explicit reference wins; otherwise resolve one FocusSet candidate from user intent and status. Multiple markers are valid.
+Require one selected WorkOwner, current target, declared check contract and execution authority. A comparison needs its comparison baseline; a current-target check does not need an old revision. An explicit reference wins; otherwise resolve one FocusSet candidate from user intent and status. Multiple markers are valid.
 
 - **Change:** use its WorkRef and its `Verify` section for the declared boundary.
 - **Group:** use its Group reference and named `Integration:` condition in the Brief's `Completion Conditions`; child evidence stays with each child WorkRef. An explicit request may supply an in-progress temporary boundary, which must be written back before Group closeout.
 
-Stop for ambiguous owner, scope, baseline, required evidence or environment, or a Group without a named boundary for the requested verification.
+Stop for ambiguous owner, target, required evidence or environment, a missing required comparison baseline, or a Group without a named boundary for the requested verification.
 
-Read nearest project instructions and the available project protocol, selected Change and Brief, relevant Specs and Decisions, current diff, blockers, and the smallest production path needed to understand the declared check. This package needs no installed Core Skill. Do not invent checks from generic testability or replace an unexplained failure with a guessed assertion; return that symptom for read-only diagnosis.
+Read nearest instructions, selected Change/Brief, relevant contracts, blockers and the smallest production path needed to understand the check. Inspect the diff when the check concerns a change. This package needs no installed Core Skill. Do not invent checks from generic testability or replace an unexplained failure with a guessed assertion; return that symptom for read-only diagnosis.
 
 ## Preserve read-only authority
 
@@ -32,7 +32,9 @@ Use the caller's result contract when supplied, otherwise the direct result belo
 
 ## Collect the declared evidence
 
-Compare existing evidence with the declared baseline. Reuse traceable passes while their tested scope and relevant content, dependencies, configuration, tools, inputs and environment still apply. Run missing, failed or invalidated named checks and any explicitly required execution, current-environment observations or independent execution. Corrections and integration need fresh evidence for affected inputs or an enlarged boundary; a phase change alone requires no rerun.
+Bind evidence to the declared target. For comparison or reuse, establish the earlier target and relevant inputs. Reuse traceable passes while their tested scope and relevant content, dependencies, configuration, tools, inputs and environment still apply. Run missing, failed or invalidated named checks and any explicitly required execution, current-environment observations or independent execution. Corrections and integration need fresh evidence for affected inputs or an enlarged boundary; a phase change alone requires no rerun.
+
+Create no backup, snapshot or digest merely to identify a routine check. Use them only for an actual recovery requirement or independent identity/integrity consumer. Exact Git delivery, trusted external digests and required recovery safeguards retain their own contracts.
 
 Compare each check's actual targets, inputs, coverage and completion with its declaration. Retain commands, scope, sources and results; distinguish reused evidence from new execution. Invocation errors or incomplete observations alone prove no product defect; exit status alone establishes no acceptance.
 
@@ -52,14 +54,7 @@ Return exactly one canonical result from the collected evidence, with observed f
 
 Report each check's outcome, including missing or unexecuted checks. Aggregation changes neither coverage nor stop conditions. Failure does not imply complete coverage; unavailable evidence does not erase observed failures.
 
-Include these independent fields and their evidence:
-
-- `evidence_delta: new | none`: whether the result changes the next diagnosis or correction.
-- `boundary: unchanged | changed`: whether observed owner, paths, baseline, behavior, interface, scope and authority still match the declared boundary.
-- WorkOwner and applicable Change WorkRef or Group `Integration:` condition; lane objective and effective authority.
-- Named checks, comparison baseline, observed diff, decisive evidence with reused versus newly executed results, omissions and stop boundary.
-
-Preserve exact machine values and all required result information. Present them concisely without repeated logs or evidence; a requested machine schema remains exact. Human-facing narration follows a supplied response-language contract; otherwise use explicit user instruction, then personal instructions, then conversation language.
+Report the WorkOwner and applicable WorkRef or Group `Integration:` condition, target, named checks and outcomes, decisive evidence, omissions and any changed boundary. Distinguish reused from new execution; include a comparison baseline only for a comparative claim or reused evidence. Add machine fields only for an actual consumer or explicitly required schema, preserving its exact values. Do not repeat logs. Human-facing narration follows explicit user instruction, then personal instructions, then conversation language.
 
 `pass` proves only declared checks, not semantic review, writeback, archive/commit eligibility, publication, deployment, approval or human acceptance. It grants no lifecycle, Git, external or acceptance authority.
 

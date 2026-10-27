@@ -4,7 +4,7 @@ description: Judge a fixed change or file set, or discover evidenced structural 
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.16.5"
+  version: "2026.10.27.1"
 ---
 
 # RSP Review
@@ -29,11 +29,9 @@ The user request fixes the requested outcome and allowed operations subject to n
 
 ## Select perspectives before loading
 
-After fixing an explicit structural-discovery scope, load [structural review](references/structural-review.md) for ownership, dependency, production-path and verification lenses; no diff is required. Within fixed-change review, use those lenses only for a concrete structural risk in the same boundary; do not expand into a repository audit. Return evidenced findings and the smallest correction or unresolved design question, not a replacement design or implementation. Keep the report and verdict semantics below.
-
 Select methods from the judged content and its risks. Supporting references inform the judgment without becoming additional review targets. Respect narrower requested scope and reuse applicable instructions already in context.
 
-- **[Code](references/code-review.md):** behavior, contracts, safety and failures of reviewed executable instructions/code, runnable recipes, algorithmic logic or tool-interpreted content. A prose behavior claim alone can remain Document grounding.
+- **[Code](references/code-review.md):** behavior, contracts, safety and failures of executable content; also ownership, dependency and verification lenses for explicitly bounded structural discovery. Within change review, structural inspection stays with a concrete risk in the fixed boundary. A prose behavior claim alone can remain Document grounding.
 - **[Document](references/document-review.md):** factual explanation, usability, navigation and maintenance of reviewed content, including API/TSDoc comments, requirements and human- or agent-facing guidance.
 - Mixed targets receive both applicable perspectives; complete Skill instruction reviews normally need both. Ordinary implementation comments need local accuracy/clarity checks, not an automatic full Document pass; bounded wording changes need only affected perspectives. Illustrative pseudocode needs logical consistency, not an invented runtime or production test gate.
 
@@ -58,16 +56,16 @@ Responses follow explicit language instruction, personal instructions, then conv
 Preserve the information below without mandatory headings or one line per field. Use a compact report for a clean bounded review, omit empty Findings and unrelated no-op fields, and honor explicitly required formats:
 
 - Scope: WorkOwner or direct request, fixed comparison, authoritative intent, applicable perspectives and material exclusions.
-- Findings when present: severity/title, kind (`code | document | cross-artifact`), review axis, location, authority, evidence, impact, smallest correction and confidence (`high | medium | low`). Combine related information in sentences; report one root issue once even when both perspectives are affected.
+- Findings when present: severity/title, location, evidence and consequence, and the smallest correction or unresolved owner decision. Cite authority when a contract is violated and state material uncertainty. Report one root issue once even when both perspectives are affected.
 - Coverage: each perspective's checked content, material omissions and unverified scope, including non-actionable gaps; distinguish reused evidence from new observations.
 - Verdict: `blocked | findings | clean`; give the next action only when an issue, blocker or requested follow-up remains. Do not repeat the findings or evidence.
 
-Use `clean` only for an applicable judgment with no actionable issue, `skipped` for an inapplicable perspective when the requested format requires it, and `blocked` when required scope, authority or decisive evidence is missing. Findings require a demonstrated defect or explicit-requirement violation; missing evidence alone is a coverage limit. Retain supported findings while blocking only affected judgments. Two perspectives require neither two reports nor two reviewers.
+Use `clean` only for an applicable judgment with no actionable issue, `skipped` for an inapplicable perspective when the requested format requires it, and `blocked` when required scope, authority or decisive evidence is missing. Findings may establish a defect, an explicit-requirement violation, or an evidenced simplification: a smaller alternative fully carries the current responsibility with less demonstrated maintenance or execution burden. Do not invent a wrong-result bug for that last category. Missing evidence alone is a coverage limit. Retain supported findings while blocking only affected judgments. Two perspectives require neither two reports nor two reviewers.
 
 Order findings by severity and path: P0 critical security/data/breakage risk; P1 normal-path contract failure; P2 meaningful edge/maintenance risk; P3 narrow actionable improvement.
 
 Illustrative compact finding, not an observed defect:
 
-> [P1] Failure is reported as success — `src/save.ts:42` (`code`, failure contract, high confidence). The selected Spec requires rejection, but this catch returns success after a failed write, so callers acknowledge unsaved data. Preserve rejection and verify the failure path.
+> [P1] Failure is reported as success — `src/save.ts:42`. The selected Spec requires rejection, but this catch returns success after a failed write, so callers acknowledge unsaved data. Preserve rejection and verify the failure path.
 
 Return a report only. Do not edit files, apply fixes, change focus, create RSP artifacts, switch branches, stage, commit, push, open a PR, publish, delete, trigger external review, or approve. Later actions require separate explicit authority.

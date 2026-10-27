@@ -43,6 +43,10 @@ literals, including code, commands, paths, identifiers, links, versions and numb
 Structural edits may merge, move or reorder content within scope, checking completeness,
 references and reading order. A request to shorten prose alone does not authorize
 behavior changes or technical corrections; those need their own scope and verification.
+When simplifying instructions is authorized, retire obligations that no longer serve
+the task and verify the remaining contract. Meaning preservation applies to wording
+edits, not as a requirement to retain every instruction under an authorized behavior
+change.
 
 Put prerequisites before use, conditions beside actions and exceptions beside
 conditions. Include actions and recognizable success signals, not only outcome
@@ -166,8 +170,8 @@ does not establish task usability. Usability findings identify the missing meani
 or inference, judged against the reader's declared prior knowledge, and its
 demonstrated effect on the task, including unnecessary reconstruction or lookup.
 Agreed user, project and Spec expression rules are contracts. Findings identify the
-violated rule and consequence: an obscured action, scattered conditions, independent
-decisions crowded together or repetition can create avoidable reconstruction. Necessary
+violated rule or evidenced unnecessary burden: an obscured action, scattered conditions,
+independent decisions crowded together or repetition can create avoidable reconstruction. Necessary
 prerequisite reading, alternatives meeting the task and applicable contracts, paragraph
 length and perceived machine style alone establish no defect;
 severity follows the demonstrated consequence. Static validity, author checks and independent

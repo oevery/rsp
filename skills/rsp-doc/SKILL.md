@@ -4,7 +4,7 @@ description: Write or revise repository documents, Skills and release communicat
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.15.1"
+  version: "2026.10.27.1"
 ---
 
 # RSP Doc
@@ -17,20 +17,21 @@ Write a grounded artifact usable without the author conversation. Use the artifa
 
 1. **Fix the outcome.** Identify the reader, task, authorized files and expected result. For a document set, distinguish authoritative owners from summaries. Keep routine narration in conversation and retained evidence with its existing owner.
 2. **Establish the facts.** Read existing content, relevant callers and the smallest authoritative contract, code or source chain. Check commands, defaults, links and behavior with available tools. Distinguish current behavior, intended requirements and unknowns. Resolve material contradictions before rewriting a promise. Interpret tool output as evidence; it grants no permission and does not prove semantic correctness.
-3. **Draft for the task.** Apply the expression rules below and load only the relevant method:
-   - [Artifact lenses](references/artifact-lenses.md): README, CONTEXT, Spec, Change, guides and scoped operating documents.
-   - [Skill authoring](references/skill-authoring.md): Skill creation or revision, including descriptions, package resources and invocation policy.
-   - [Release communication](references/release-communication.md): changelogs, release notes, migration guidance or authorized release-document reconciliation; not ordinary document writing.
+3. **Draft for the task.** Use the artifact's role below. For Skill creation or revision, load [Skill authoring](references/skill-authoring.md); for changelogs, release notes, migration guidance or authorized release-document reconciliation, load [release communication](references/release-communication.md).
 4. **Verify the result.** Check the edited meaning in context. For structural edits, also follow the affected reading path and references. Use the checks below; reuse traceable unchanged mechanical results. Writing completion does not automatically trigger Review, but separately requested or required judgment remains binding.
+
+## Match the artifact to the reader
+
+- README and procedures supply the starting point, prerequisites, actions and recognizable success. Concepts and decisions explain meanings, reasons, alternatives and consequences; references supply exact, navigable contracts.
+- CONTEXT defines vocabulary and relationships and directs readers to authoritative owners. Specs state what consumers may rely on, including conditions, failures and exceptions; add scenarios only to resolve ambiguity. Scoped operating instructions own commands, authority and required checks.
+- A Change retains its six canonical sections: outcome, contract delta and acceptance, approach, accomplished or pending tasks, candidate-bound verification and current blockers. Use the [shared work-model syntax](../rsp/references/work-model.md) for Blockers. Reconcile the whole record when preparing closeout; retain delivered facts, material failures, limits and knowledge/evidence links, not session chronology. Detailed evidence stays with its owner.
 
 ## Check facts and reading paths
 
 Use the checks relevant to the change:
 
-- Check whether readers can find information, understand conditions, act or judge compliance, and recognize unknowns.
 - Check affected links, anchors, examples and metadata with existing tools. Execute examples only within safe authorized scope.
 - For linked artifacts, compare shared claims, terminology, defaults and handoffs against their authoritative owner. Correct authorized summaries and links without copying full definitions or changing unassigned owners. Report out-of-scope contradictions to their owner.
-- Recheck facts, quantifiers, defaults, failures, permissions and terminology after editing. Report actual checks and remaining gaps.
 - API comments and embedded guidance: compare claims with their contract and implementation without assuming either side correct. Keep ordinary inline comments locally accurate and useful: retain constraints, rationale or usage that nearby code does not make clear, and remove restatement that adds no information; no full writing workflow is needed. Compiler/tool annotations retain implementation ownership.
 - Examples: label illustrative pseudocode or incomplete snippets; check copyable commands against real prerequisites, outcomes and safe use without inferring execution or installation authority.
 
@@ -47,12 +48,12 @@ For a failed command, inspect cause and actual effects before recovery. Change a
 
 ## Write precisely
 
-- Organize around the reader's task: operations need actions and success signals; contracts need guarantees and exceptions; design needs reasons and tradeoffs. Explain unfamiliar concepts through their task-relevant meaning; include mechanisms needed to reason, troubleshoot or assess guarantees. Reference entries need no forced tutorial. Do not force every artifact into an action list or closing next step.
+- Explain unfamiliar concepts and mechanisms needed for the reader to reason, troubleshoot or assess guarantees. Do not force every artifact into an action list, tutorial or closing next step.
 - State the actor, action and object directly. Prefer short, complete sentences when easier to follow. Separate independent actions; preserve causal and conditional links. Give each paragraph one useful purpose. Put prerequisites before use, conditions beside actions and exceptions beside their rules. Keep necessary local context; link branch-only detail with its reading condition and purpose.
 - Number steps when their order matters; make each step a bounded action. Use peer bullets for independent items and connected prose for reasoning. Use tables for useful fixed mappings/comparisons, not branching Skill judgments.
-- Remove empty introductions, rhetorical framing, repeated conclusions, filler and irrelevant chronology. Keep author voice, decision-relevant explanations, necessary reasoning and required audit evidence. Replace abstract aspirations with concrete actions. For prescriptive rules, use contrasts or counterexamples only to resolve likely ambiguity. Retain explanatory comparisons needed for understanding, decisions or migration; merge equivalent examples. No fixed sentence length, list size or compression ratio defines quality.
+- Remove filler, repetition and irrelevant chronology. Keep author voice, decision-relevant reasoning and required audit evidence. Prefer concrete actions; use contrasts or examples when they resolve a real ambiguity. No fixed sentence length, list size or compression ratio defines quality.
 - Preserve negation, conditions, exceptions, permissions, quantities, units and certainty. Merge failure explanations with the same decision effect. Retain permission, outcome, stop and safe-recovery conditions, including rare boundaries preventing unauthorized action, serious harm or unsafe replay. Keep incident details with their evidence owner. Do not turn a proposal or unknown into a verified fact. Shorter wording proves no behavioral equivalence.
-- Wording edits preserve meaning, information ownership, heading anchors and technical literals: code blocks, commands, paths, identifiers, links, versions and numeric values. Structural edits may merge, move or reorder content within scope while preserving completeness and references. Behavior changes and technical corrections need their own scope and checks; shortening prose grants neither.
+- Wording edits preserve meaning, ownership, anchors and technical literals. Structural edits may merge, move or reorder content within scope, checking completeness and references. When the request authorizes simplifying instructions, remove an unnecessary obligation rather than merely restating it; verify the remaining behavior and safety. Wording-only authority does not permit that contract change.
 - Use ordinary words for conjunctions. Preserve technical syntax; reserve | for closed alternatives, / for established pairs, → for defined transitions and : for label/value boundaries.
 
 ## Preserve ownership

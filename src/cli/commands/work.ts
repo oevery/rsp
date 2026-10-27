@@ -35,7 +35,7 @@ function createCreateCommand(deprecatedLite: boolean) {
       },
     },
     async run({ args }: { args: CreateChangeArgs }) {
-      const summary = Array.isArray(args._) && args._.length > 1 ? args._.slice(1).join(' ') : ''
+      const summary = args._.slice(1).join(' ')
       await executeCliCommand({
         execute: () => createChange(args.name, summary, args.kind, {
           issue: args.issue,
@@ -62,7 +62,7 @@ const groupCreateCommand = defineCommand({
     },
   },
   async run({ args }: { args: { name: string, _: string[] } }) {
-    const goal = Array.isArray(args._) && args._.length > 1 ? args._.slice(1).join(' ') : ''
+    const goal = args._.slice(1).join(' ')
     await executeCliCommand({ execute: () => createChangeGroup(args.name, goal), present: presentGroup, exitCode: result => result.ok ? undefined : 1 }, args)
   },
 })
