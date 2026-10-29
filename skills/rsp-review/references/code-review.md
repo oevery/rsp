@@ -34,9 +34,3 @@ Use only for a requested repository/subtree audit or a concrete structural risk 
 - **Dependencies:** start from a consumer's required knowledge of provider policy, representation, ordering, failures and lifecycle. Show actual change amplification or invalid-state exposure, not merely an import or large file. Trace a proposed layer removal: eliminating pass-through work may help, but scattering policy or failure knowledge into callers does not.
 - **Repeated knowledge:** trace one representative change across its independently maintained owners. Generated copies, deliberate boundary translation and similar text alone establish no duplication problem.
 - **Verification:** map claimed evidence to the same entry path and public result. A bypassed isolated seam can give false confidence; missing tests alone establish neither a structural finding nor a functional defect.
-
-## Finding gate
-
-Anchor a finding to changed lines or the smallest inspected behavior chain. For a defect, show its reachable trigger and consequence. For a simplification, show the current responsibility, concrete burden and smaller complete alternative, including what remains unchanged. In both cases support the chain with evidence, expose uncertainty and preserve failure, authority and Required gates. Return the smallest correction or unresolved owner/design question, not a replacement design or implementation.
-
-Discard speculative impact and taste-only cleanup. Rank by consequence and confidence, not lines removed or ease of correction. A supported reduction need not change a user-visible result; fewer lines alone are not evidence of lower burden.

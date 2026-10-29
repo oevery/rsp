@@ -138,6 +138,10 @@ snapshot/result observations and exact-delivery judgment; Git owns execution.
   legacy-map ownership remains with the project; `update` reports a root legacy map
   and `doctor` reports non-blocking `legacy_context_map`.
   Neither command merges, retires or certifies its semantic migration.
+- The managed Entry allows an explicit bounded capability with established scope,
+  authority and owner facts to load directly. Core and Focus load conditionally
+  under [Workflow](workflow.md#capability-ownership); invocation changes neither
+  tracked ownership nor required prerequisites, permissions or runtime selection.
 - Init and add spec create no generated index. Update preflights the entire Specs
   tree, then deletes only indexes with exact generated ownership metadata. User
   reserved indexes stop preflight. No quarantine or restoration is performed.

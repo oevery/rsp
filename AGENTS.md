@@ -5,14 +5,13 @@
 
 RSP tracks current work, stable specs, and archives under `.rsp/`.
 
-Read in order using supplied or confirmed paths; discover only missing paths or applicable ancestor instructions, without overlapping whole-tree scans:
+Use supplied or confirmed paths; discover only missing paths or applicable ancestor instructions, without overlapping whole-tree scans:
 1. Nearest `AGENTS.md` for project or module instructions.
 2. Root `CONTEXT.md` if present, then the relevant nearest `CONTEXT.md` for domain language, relationships, and navigation. If a legacy `CONTEXT-MAP.md` remains, retain its relevant context and use Core's context-migration branch; discovery alone does not authorize migration.
-3. Use the project `rsp` Skill at `.agents/skills/rsp/SKILL.md`; hosts may load it through Skill discovery or read it directly. Skills are the only workflow: if a required Skill is missing or unusable, stop dependent work and report the incomplete installation. Do not use retired Rules or install implicitly.
-4. `.rsp/focus.d/`; marker paths form the open-work candidate set, while optional bounded Markdown content is recovery guidance only. For grouped work read the sibling Group Brief, then the explicitly selected child Change.
-5. Only the relevant Specs and Decision Records under the configured authoritative path.
+3. Establish the request's scope, authority and existing owner. A clear bounded request selecting one capability with sufficient owner facts loads that project Skill directly from `.agents/skills/`, without a Core or Focus preflight. For tracked work read the selected Change; for grouped work read its sibling Group Brief first. Read only relevant Specs and Decision Records under the configured authoritative path.
+4. Load `rsp` at `.agents/skills/rsp/SKILL.md` for unresolved routing or ownership, actual cross-capability coordination, or lifecycle operations. Read `.rsp/focus.d/` only when needed to resolve or recover the owner; marker paths are open-work candidates and optional bounded Markdown is recovery guidance, not authority. An explicit WorkRef or the user's mentioned Change selects first; otherwise use current status and dependency evidence.
 
-If `.rsp/focus.d/` is empty or has several candidates, use an explicit WorkRef, the user's mentioned Change, or current status/dependency evidence to resolve the default action.
+Direct capability invocation does not make tracked work untracked. Preserve existing Changes, required tracking prerequisites, Group dependencies, independent review and permission boundaries; missing prerequisites stop dependent work. Skills are the only workflow: hosts may discover them or read them directly, but a missing or unusable required Skill stops dependent work and must be reported as an incomplete installation. Do not use retired Rules or install implicitly.
 Do not treat `.rsp/specs/` or `.rsp/changes/` as replacements for nearest `AGENTS.md` or `CONTEXT.md`.
 
 This RSP development checkout explicitly selects source mode through `.rsp/source`. Build the current source with `mise exec -- pnpm run build`, then use `mise exec -- node dist/cli.mjs <command>` from this checkout for every CLI operation. Skill examples use `rsp` as shorthand for this local invocation. Do not substitute a registry package, global CLI or another checkout, even when its version matches. Package version metadata is not source identity; retain the commit, uncommitted diff and build inputs for candidate evidence. Authorized `update` reconciles this checkout's managed environment from its local source and keeps source mode; it does not select a published version.

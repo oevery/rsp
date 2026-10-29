@@ -11,15 +11,24 @@ selection and completion, not a fixed stage machine.
 
 Core owns the shared runtime work-model reference. Direct capabilities read it
 when tracked identities are needed and missing from context; no Core preflight is
-required. Skills are the only executable workflow. Missing or unusable required
-Skills stop dependent work; retired Rules provide no alternative protocol. Use known paths and discover necessary context. Workers
-inspect sources themselves. Status and configuration queries resolve needed facts;
+required. After applicable project instructions and context, a clear bounded request
+selecting one capability with sufficient scope, authority and owner facts loads it
+directly. Core loads for unresolved routing/ownership, actual cross-capability
+coordination or lifecycle operations. Focus is conditional owner-resolution or
+recovery input, not a preflight for explicit capability invocation. Tracked calls
+still read their selected Change and, for grouped work, its Brief first; existing
+owners, required tracking prerequisites and Group dependencies remain binding.
+Skills are the only executable workflow. Missing or unusable required Skills stop
+dependent work; retired Rules provide no alternative protocol. Use known paths and
+discover necessary context. Workers inspect sources themselves.
+Status and configuration queries resolve needed facts;
 required dependency/recovery checks and fresh archive readiness remain binding.
 
 Review's structural method needs an explicit repository
 or subtree boundary and observed checkout state, not a diff. Ordinary review does
 not widen into a repository audit; structural findings grant no design or repair
-authority. Review uses one severity and report contract across its methods.
+authority. Review's entry owns common finding eligibility, coverage, severity and
+verdict rules; Code and Document methods retain their specialized evidence requirements.
 
 | Capability | Responsibility |
 | --- | --- |

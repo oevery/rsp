@@ -54,9 +54,10 @@ publication or model compliance.
 ### Skill package boundaries
 
 The seven core Skills form one runtime distribution closure and install/update
-together from one package version. A capability can be invoked directly without
-executing Core. Shared work identity definitions belong to Core's
-references/work-model.md; consumers load that file only when the definitions are
+together from one package version. The managed Entry supports direct capability
+invocation under the [Workflow routing contract](workflow.md#capability-ownership),
+without unconditional Core or Focus loading. Shared work identity definitions
+belong to Core's references/work-model.md; consumers load that file only when the definitions are
 needed and missing from their current context. Separate workers have separate
 contexts. Missing shared resources stop dependent operations as an incomplete
 installation, not permission to invent definitions or install implicitly.

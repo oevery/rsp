@@ -1,12 +1,15 @@
 # Setup and repair
 
-Load before initializing, inspecting or updating RSP-managed assets.
+Load before initializing, inspecting or updating RSP-managed assets, including upgrades.
 
 Use the runtime selected in AGENTS: an exact package pin in .rsp/version for
 consumer projects, or this checkout's built CLI when .rsp/source explicitly
-selects source mode. The two markers are mutually exclusive. An authorized package
-upgrade deliberately selects its exact target CLI; source update keeps the local
-selection. Never silently resolve @latest; package fetching requires separate authority.
+selects source mode. The two markers are mutually exclusive. Do not substitute a
+published package for source mode because version strings match. An authorized
+package upgrade deliberately selects its exact target CLI and runs its update for
+the complete managed environment; source update keeps the local selection. Never
+substitute @latest, a version range or an unverified global binary; package fetching
+requires separate authority. Upgrade notices grant no migration authority.
 
 - **Initialize:** rsp init [--agents-mode managed|print] [--with-project-setup] creates missing scaffolding and the complete core suite. Existing user files remain unchanged. Retry an incomplete init with the same target; repeated init cannot adopt a different pinned version. Retired Rules require update instead.
 - **Update:** rsp update replaces the selected package's owned assets; optional --dry-run previews without writes. No separate installation or migration switches are needed.

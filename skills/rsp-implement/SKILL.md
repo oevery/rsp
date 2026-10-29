@@ -22,7 +22,7 @@ Query RSP settings only for a decision depending on an unresolved value. Use the
 Mutation requires one of:
 
 - A bounded direct task with explicit scope and acceptance; no WorkRef or RSP writeback.
-- An explicit or AI-resolved ready Change from the FocusSet, with settled acceptance and exact product authority. Multiple markers are candidates; a Group Brief is context, not executable work.
+- A ready Change selected by explicit WorkRef or resolved from the FocusSet, with settled acceptance and exact product authority. Multiple markers are candidates; a Group Brief is context, not executable work.
 
 Diagnosis-only investigates a bounded symptom read-only without a ready mutation owner or WorkRef. A suspected cause grants no mutation. For an authorized fix, diagnose an unexplained cause first; after confirmation continue the same request only with settled owner, scope and mutation authority.
 
