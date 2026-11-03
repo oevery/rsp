@@ -1,0 +1,207 @@
+import type { ReactNode } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+
+const en = {
+  architecture: 'Architecture',
+  navigation: 'Navigation',
+  architectureNavigation: 'Architecture navigation',
+  closeNavigation: 'Close navigation',
+  workspace: 'Workspace',
+  mainWorktree: 'Main worktree',
+  linkedWorktree: 'Linked worktree',
+  detachedHead: 'Detached HEAD',
+  directoryWorkspace: 'Directory',
+  language: 'Language',
+  searchObjects: 'Search objects',
+  findObject: 'Find an object…',
+  searchResults: 'Search results',
+  noMatches: 'No matching objects.',
+  closeDocumentToSelect: 'Close the document to select an object.',
+  views: 'Views',
+  allNodes: 'All registered nodes',
+  noViews: 'No views declared. The complete registered structure is available.',
+  source: 'Source & diagnostics',
+  referenceExplanation: 'Labeled relationship references point to original objects; they do not change structural ownership.',
+  refresh: 'Refresh',
+  relationshipsOf: '{title} relationships',
+  directRelationships: 'Direct relationships',
+  opening: 'Opening architecture…',
+  emptyArchitecture: 'No objects are registered in this architecture.',
+  emptyView: 'This view contains no objects.',
+  details: 'Details',
+  closeDetails: 'Close details',
+  object: 'Object',
+  relationship: 'Relationship',
+  externalBoundary: 'External boundary · outside this selection',
+  boundaryMarker: '[boundary]',
+  referenceMarker: '[reference]',
+  referenceName: 'relationship reference',
+  referenceDescription: 'Reference to {id}. {description}',
+  partOf: 'Part of',
+  viewInside: 'View inside',
+  nodeViews: 'Node views',
+  focusRelationships: 'Focus relationships',
+  documents: 'Documents',
+  inheritedFrom: 'Inherited from',
+  relationships: 'Relationships',
+  objectRelationships: 'Object relationships',
+  identity: 'Identity',
+  from: 'From',
+  to: 'To',
+  notDrawn: 'Not drawn in this view',
+  notDrawnDetails: 'Not drawn in this view. Exact endpoints are listed here.',
+  undrawnOne: '1 relationship not drawn',
+  undrawnMany: '{count} relationships not drawn',
+  undrawnRelationships: 'Undrawn relationships',
+  canvasControls: 'Canvas controls',
+  zoomIn: 'Zoom in',
+  zoomOut: 'Zoom out',
+  fit: 'Fit',
+  fitHint: 'Fit all visible objects',
+  completeDocument: 'Complete document',
+  readCompleteDocument: 'Read complete document',
+  resizeDocument: 'Resize document',
+  expandReading: 'Expand reading',
+  reduceReading: 'Reduce',
+  returnToGraph: 'Return to graph',
+  onThisPage: 'On this page',
+  tableOfContents: 'Table of contents',
+  openingDocument: 'Opening complete document…',
+  missingChapter: 'The selected chapter is unavailable. The complete document remains readable.',
+  removedView: 'The previous view was removed. Showing all registered nodes.',
+  removedFocus: 'The previous object was removed. Showing all registered nodes.',
+  missingObject: 'The selected object is unavailable.',
+  missingRelationship: 'The selected relationship is unavailable.',
+  architectureError: 'Unable to refresh architecture.',
+  architectureUnavailable: 'Architecture is unavailable.',
+  documentError: 'Unable to refresh the document.',
+  imageError: 'Unable to load an image.',
+  staleContent: 'Displayed content is stale.',
+  staleDocument: 'Displayed document is stale.',
+  staleImage: 'Displayed image is stale.',
+  reopen: 'Reopen with rsp view if disconnected.',
+  technicalDetails: 'Technical details',
+  checkSource: 'Check the source file; repaired content refreshes automatically.',
+  unavailableLink: ' (unavailable link)',
+  unsupportedImage: ' (external/unsupported image)',
+}
+
+const zh: Record<keyof typeof en, string> = {
+  architecture: '架构',
+  navigation: '导航',
+  architectureNavigation: '架构导航',
+  closeNavigation: '关闭导航',
+  workspace: '工作区',
+  mainWorktree: '主工作区',
+  linkedWorktree: '链接工作树',
+  detachedHead: '分离 HEAD',
+  directoryWorkspace: '普通目录',
+  language: '界面语言',
+  searchObjects: '搜索对象',
+  findObject: '查找对象…',
+  searchResults: '搜索结果',
+  noMatches: '没有匹配的对象。',
+  closeDocumentToSelect: '关闭文档后选择对象。',
+  views: '视图',
+  allNodes: '全部已注册对象',
+  noViews: '尚未声明视图，可查看完整的已注册结构。',
+  source: '来源与诊断',
+  referenceExplanation: '带标记的关系引用指向原对象，不改变结构归属。',
+  refresh: '刷新',
+  relationshipsOf: '{title} 的关联关系',
+  directRelationships: '直接关联关系',
+  opening: '正在打开架构…',
+  emptyArchitecture: '此架构尚未注册对象。',
+  emptyView: '此视图未包含对象。',
+  details: '详情',
+  closeDetails: '关闭详情',
+  object: '对象',
+  relationship: '关系',
+  externalBoundary: '外部边界 · 不在当前选择范围内',
+  boundaryMarker: '[边界]',
+  referenceMarker: '[引用]',
+  referenceName: '关系引用',
+  referenceDescription: '指向 {id} 的引用。{description}',
+  partOf: '归属',
+  viewInside: '内部视图',
+  nodeViews: '对象视图',
+  focusRelationships: '聚焦关联关系',
+  documents: '关联文档',
+  inheritedFrom: '继承自',
+  relationships: '关联关系',
+  objectRelationships: '对象的关联关系',
+  identity: '标识',
+  from: '起点',
+  to: '终点',
+  notDrawn: '未在当前视图绘制',
+  notDrawnDetails: '未在当前视图绘制，精确端点列于此处。',
+  undrawnOne: '1 条关系未绘制',
+  undrawnMany: '{count} 条关系未绘制',
+  undrawnRelationships: '未绘制的关系',
+  canvasControls: '画布控制',
+  zoomIn: '放大',
+  zoomOut: '缩小',
+  fit: '适应画布',
+  fitHint: '适应全部可见对象',
+  completeDocument: '完整文档',
+  readCompleteDocument: '阅读完整文档',
+  resizeDocument: '调整文档宽度',
+  expandReading: '展开阅读',
+  reduceReading: '收起阅读',
+  returnToGraph: '返回架构图',
+  onThisPage: '本页目录',
+  tableOfContents: '文档目录',
+  openingDocument: '正在打开完整文档…',
+  missingChapter: '所选章节不可用，仍可阅读完整文档。',
+  removedView: '原视图已移除，现显示全部已注册对象。',
+  removedFocus: '原聚焦对象已移除，现显示全部已注册对象。',
+  missingObject: '所选对象不可用。',
+  missingRelationship: '所选关系不可用。',
+  architectureError: '无法刷新架构。',
+  architectureUnavailable: '架构暂不可用。',
+  documentError: '无法刷新文档。',
+  imageError: '无法加载图片。',
+  staleContent: '当前显示的架构内容已过期。',
+  staleDocument: '当前显示的文档已过期。',
+  staleImage: '当前显示的图片已过期。',
+  reopen: '若连接已断开，请运行 rsp view 重新打开。',
+  technicalDetails: '技术详情',
+  checkSource: '请检查源文件，修复后内容会自动刷新。',
+  unavailableLink: '（链接不可用）',
+  unsupportedImage: '（外部或不支持的图片）',
+}
+
+export type Locale = 'en' | 'zh-CN'
+export type MessageKey = keyof typeof en
+export type Translate = (key: MessageKey, values?: Record<string, string | number>) => string
+const storageKey = 'rsp-viewer-locale'
+const LocaleContext = createContext<{ locale: Locale, setLocale: (locale: Locale) => void, t: Translate }>(null!)
+
+export function LocaleProvider({ children }: { children: ReactNode }) {
+  const [locale, setLocale] = useState<Locale>(() => {
+    try {
+      const saved = localStorage.getItem(storageKey)
+      if (saved === 'en' || saved === 'zh-CN')
+        return saved
+    }
+    catch {}
+    return navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en'
+  })
+  useEffect(() => {
+    document.documentElement.lang = locale
+    try {
+      localStorage.setItem(storageKey, locale)
+    }
+    catch {}
+  }, [locale])
+  const value = useMemo(() => ({
+    locale,
+    setLocale,
+    t: ((key, values = {}) => (locale === 'zh-CN' ? zh[key] : en[key]).replace(/\{(\w+)\}/g, (_, name: string) => String(values[name] ?? `{${name}}`))) as Translate,
+  }), [locale])
+  return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>
+}
+
+export function useLocale() {
+  return useContext(LocaleContext)
+}

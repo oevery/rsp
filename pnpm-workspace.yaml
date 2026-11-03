@@ -13,5 +13,7 @@ overrides:
   vitepress@1.6.4>vite: 6.4.4
 
 allowBuilds:
+  # Tailwind's one-shot compiler uses prebuilt binaries, not the optional watcher build.
+  '@parcel/watcher': false
   esbuild: false
   workerd: true

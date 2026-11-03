@@ -131,3 +131,14 @@ Commands that produce JSON—`status`, `show`, `ready`, `check`, `doctor`, `spec
 - `q`, `Ctrl-C`, or top-level `Esc`: exit.
 
 The dashboard localizes only its own labels. It does not localize CLI help, text output, JSON, paths, commands, Skills, or existing artifacts.
+
+## Architecture viewer
+
+```text
+rsp architecture [--node <id>|--view <id>] [--json [--compact]]
+rsp view [--no-open]
+rsp view status
+rsp view stop
+```
+
+[Model format, complete document reading and local service lifecycle](../guides/architecture.md).

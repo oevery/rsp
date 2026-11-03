@@ -107,3 +107,14 @@ rsp history <work-ref> [--json [--compact]]
 - `q`、`Ctrl-C` 或顶层 `Esc`：退出。
 
 面板只本地化自身标签，不会本地化 CLI 帮助、文本输出、JSON、路径、命令、Skills 或已有产物。
+
+## Architecture viewer
+
+```text
+rsp architecture [--node <id>|--view <id>] [--json [--compact]]
+rsp view [--no-open]
+rsp view status
+rsp view stop
+```
+
+[模型格式、完整文档阅读与本地服务生命周期](../guides/architecture.md)。

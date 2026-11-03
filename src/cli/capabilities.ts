@@ -6,6 +6,7 @@ export interface CliCommandCapabilities {
 }
 
 export const CLI_COMMAND_CAPABILITIES = {
+  'architecture': { json: true, compact: true },
   'config': { json: true, compact: true },
   'status': { json: true, compact: true },
   'show': { json: true, compact: true },

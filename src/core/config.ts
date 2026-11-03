@@ -248,7 +248,7 @@ export function validateRspConfig(parsed: Record<string, unknown>): string[] {
   return issues
 }
 
-/** Clear the config cache (for testing). */
+/** Clear cached settings before a long-lived consumer refreshes project sources. */
 export function clearConfigCache(): void {
   _configCache = null
 }

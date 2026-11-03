@@ -59,8 +59,14 @@ neither the Spec nor observed behavior is silently treated as infallible.
   interpretation owns RSP grammar and constraints; consumers reuse parsed views
   instead of maintaining competing document parsers.
 - Core domain interpretation supports work, status, history and Spec queries.
-- CLI and TUI consume presentation-neutral domain projections; domains do not
-  depend on presenters.
+- CLI, TUI and the local architecture viewer consume presentation-neutral domain
+  projections; domains do not depend on presenters. Architecture interpretation
+  validates the fixed JSON model and document bindings independently of LikeC4.
+  The viewing path alone loads public LikeC4 Builder/layout/React components.
+  Exact view selection and one-object incident focus share a domain projection;
+  focus is not a structural subtree. Sidebar navigation derives from existing views,
+  never another ownership model. Presentation references map to original nodes
+  and do not add architecture identities or aggregate authored relationships.
 - Maintainer tools and research may inspect product artifacts; the distributed
   product never depends on a source checkout, research corpus or upstream cache.
 - Self-hosting applies the same artifact contracts to RSP's own maintenance;
@@ -94,5 +100,7 @@ RSP may prepare exact reviewed inputs but does not infer delivery authority.
 - Add a module, persistent artifact or extension only for a demonstrated consumer
   and material responsibility, not speculative capability.
 - Introduce no hidden runtime, persisted controller or second authority store.
+  The explicit `view` command starts a local reading service; it controls no
+  workflow or agent execution and persists no model or document cache.
 - Published Skills remain usable without repository Specs or another installed
   package; source-level ownership does not create a runtime reference dependency.

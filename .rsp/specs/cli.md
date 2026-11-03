@@ -20,12 +20,14 @@ Inspection derives current state without creating another workflow store.
 | `show` | Exact selected work; `--focused` requires exactly one marker |
 | `history` | Bounded archive query with date, kind, group, WorkRef and summary filters |
 | `specs` | Current Markdown tree, exact detail and bounded literal search |
+| `architecture` | Full or selected neutral structure and document locators without bodies |
+| `view` | Explicit local architecture reading service, status and stop |
 | `config` | Read-only validated effective settings |
 | `doctor` | Read-only project and managed-asset diagnostics |
 
 Plain output is the default semantic view for humans and agents. JSON is the exact
 machine projection; [TUI](tui.md) is interactive presentation. `status`, `show`,
-`ready`, `check`, `doctor`, `specs` and `history` support `--json --compact`:
+`ready`, `check`, `doctor`, `specs`, `architecture` and `history` support `--json --compact`:
 the same value on one LF-terminated line. `--compact` without `--json` fails before
 command behavior. Verbose/filtered outputs add only their declared auxiliary fields.
 
@@ -175,6 +177,164 @@ no absence of effects. Tool switching cannot bypass a safety rejection.
 
 Preflight mutation targets, preserving prior content on validation failure.
 Outputs remain stable, bounded and platform-independent. Expose no Broker,
-SQLite store, managed-runtime controller or Web Observatory. JSON projects
+SQLite store, managed-runtime controller or Web Observatory. The explicit local
+architecture reader is a presentation service, not a workflow controller. JSON projects
 command facts, not host sessions, receipts or runtime history. Local success
 grants no remote action, approval, human acceptance or issue closure.
+
+### Architecture reading
+
+#### Model and selection
+
+The fixed `.rsp/architecture.json` uses `schemaVersion: 1` and contains `nodes`,
+`relations`, `views` and `bindings`. Nodes have stable IDs, titles, descriptions
+and optional parents. Parent means structural composition; it does not encode
+identity, execution order or view membership. Relations have IDs, source and
+target IDs, authored types and descriptions. Views have IDs, titles, an owning
+node and explicit included node IDs. Duplicate identities, missing references,
+cycles and unsupported schemas fail explicitly.
+
+Bindings reference project-relative Markdown files and optional heading hierarchies.
+Scope defaults to `node`; only explicit `subtree` bindings inherit. References
+retain their origin and inheritance. Missing or ambiguous headings are diagnostics,
+not guessed matches. Whole-file bindings need no chapter metadata or stored line
+ranges. Several nodes may share a document; nodes need not have a Spec. Specs
+remain behavioral authority, while the model supplies curated navigation.
+
+`architecture` returns full structure. `--node` selects the node and descendants;
+`--view` selects explicit view members. The selectors are exclusive. Incident
+external endpoints are marked as boundaries without recursive expansion. Text
+and JSON preserve hierarchy, relation IDs, view ownership, binding scope, source
+identity and diagnostics, never document bodies. Named Web views use the same
+selection, including empty views whose owner has children.
+
+There is no count truncation. Files above 16 MiB fail explicitly rather than
+returning incomplete success. Missing architecture reports not configured and
+does not affect unrelated commands. Ordinary and structural CLI commands do not
+load the viewer runtime; init and update do not generate architecture data.
+
+#### Navigation and presentation
+
+##### Views and relationships
+
+The persistent left sidebar contains workspace selection, object search and all
+declared views. Opening selects the first declared view, or full structure when
+none exist. Direct links retain their addressed view or focus. Selecting an object
+opens one compact information card without navigation or relayout. The card shows
+responsibility, structural parent, owned views and bound documents; it omits an
+empty document section. Selecting a relation shows exact endpoints, type and description.
+
+Internal-view actions are explicit: no action for zero views, one action for one
+view, a choice for several. Relationship focus selects only the chosen object's
+direct incident relations and real endpoints, including self-relations. Its display
+is flat, without adding unselected ancestors; original parents remain available
+in details. Focus is distinct from CLI subtree selection. An already-focused
+object does not repeat the focus action.
+
+Local structure views retain hierarchy. Authored relations are not aggregated,
+and arrows do not imply execution order. Explicit reference nodes represent
+unsupported self or hierarchy edges and participating container endpoints without
+changing their original identity. Ancestors never replace descendant endpoints.
+Reference details and native relationship browsing retain each relation. Undrawn
+relations have a visible indication and exact accessible details; a reference edge
+is not a graphical self-loop. Boundary meaning has a text label, not color alone.
+
+Compact left-to-right diagrams use short relation-type labels; complete descriptions
+remain in the card. Native pan/zoom and relationship browsing remain available
+without competing detail layers.
+
+##### Controls and workspace identity
+
+Object search supports Up/Down, Home/End and Enter. Escape clears an open search
+before dismissing its navigation drawer. Workspace and language selection use the
+same keyboard-accessible control. Document and internal-view entries communicate
+navigation rather than text input. Long names retain accessible full text without
+displacing arrows or actions; close controls have consistent hit areas and labels.
+
+Registered workspaces are grouped by Git repository when metadata is available.
+The selector shows branch or detached commit, main or linked worktree status, and
+path. Each root retains separate model and document authorization. Grouping does
+not register more worktrees. Git failures fall back to directory presentation;
+existing refresh updates metadata without a new watcher. The authored RSP icon
+serves as branding and favicon; the browser title identifies view and workspace.
+
+##### Complete Spec reading
+
+A document link replaces the information card with a separate right drawer showing
+complete Markdown at the bound chapter when present. Users can navigate its table
+of contents, resize it or expand it across the canvas. Opening, resizing, expanding
+and closing do not relayout or auto-fit the graph. Closing restores the selected
+object and graph state.
+
+Desktop reading is non-modal: the uncovered canvas retains pan/zoom without a
+backdrop or focus trap. Reading keeps the original selection and disables node
+reselection and native relationship browsing until it closes. Narrow navigation
+and full-width reading use separate modal drawers with focus containment. Escape
+dismisses only the top layer. Closing reading restores focus to the selected object
+when available; closing navigation returns focus to its trigger.
+
+Valid reading position survives document updates and desktop/narrow remounts for
+both chapter and whole-file entries. Tables preserve column headers and declared
+alignment. Inline and reference HTTP(S) links use the same safe new-tab behavior;
+local document links remain in the reader.
+
+Deep links, refresh and back restore valid addressed context and selection.
+In-session viewport restoration is scoped to workspace and graph revision, not
+persisted across browser sessions. Removed views or focused objects explicitly
+fall back to full structure; removed selections remain visibly unavailable.
+
+##### Locale and readability
+
+The host supports `zh-CN` and `en`. Without a saved origin-local preference, a
+primary browser language starting with `zh` selects `zh-CN`; other languages select
+English. Manual choice stays in browser storage, not project configuration. Host
+controls, accessible names, statuses and adapter boundary/reference markers use
+that locale. Authored names, descriptions, Markdown, paths and code stay unchanged;
+raw diagnostics remain available inside expandable details.
+
+LikeC4 1.60.0 has no public locale configuration. Native relationship controls and
+diagram keyboard descriptions remain English; RSP does not patch private DOM or
+remove those functions to conceal this limitation.
+
+At the browser's default text size, captions use at least 12px. Primary controls,
+details and Spec prose, code and tables use 14px in all reader layouts. Prose line
+height is 1.65; code and tables use 1.5. Spec headings use 24/20/16px defaults,
+paragraph spacing is .75em and vertical cell padding is 6px. Relative sizing
+respects text enlargement. Bounded prose width and horizontally scrollable code
+and tables preserve readability without shrinking text or adding density settings.
+
+#### Runtime and document safety
+
+`view` starts or reuses the current runtime and opens the workspace; `--no-open`
+prints its URL without opening a browser. `view status` reports only that runtime;
+`view stop` disconnects all its workspaces. Version, real installation root and
+build identity isolate services. Before listening, the service validates its build
+digest and captures its version and served assets in memory. Later disk replacement
+cannot change that running snapshot; project content still refreshes independently.
+
+The service listens on `127.0.0.1` with an automatically chosen port. Registered
+roots retain separate revisions, navigation and caches. Reading requires local
+credentials; registration and control require separate credentials. Exact Host
+and Origin checks reject foreign requests. Discovery contains only owner-readable
+endpoint and runtime credentials, not content. Late responses and errors cannot
+replace another workspace or document's state.
+
+Pages poll content every five seconds and on reactivation, and send heartbeats
+every 20 seconds. Thirty minutes without valid reading activity exits the service;
+five-minute inactive workspace caches are released and rebuilt on reopening.
+No tab-close signal or system autostart is required. Dirty source and configuration
+changes refresh; document-only changes reuse layout. Errors mark retained content
+stale, and repaired sources recover. Polling uses no filesystem watchers.
+
+Bound documents are authorization entry points, not directory grants. Current
+relative Markdown links authorize reachable documents and PNG/JPEG/GIF/WebP images,
+including sibling directories. Cycles terminate; removing links revokes downstream
+access on the next read. A 16 MiB aggregate Markdown-inspection budget bounds each
+authorization search and fails explicitly when exceeded.
+
+Safe reads reject traversal, symlinks, runtime directories, hidden paths and paths
+named for credentials, secrets or private content. Authored `.rsp/specs/` and
+explicitly bound `.rsp/` document directories are the hidden-path exception.
+Raw HTML, MDX and project scripts do not execute; external images do not load.
+The [user guide](../../docs/site/en/guides/architecture.md) provides the format
+example, operating instructions and precautions for credential-bearing URLs.

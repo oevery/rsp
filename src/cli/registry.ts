@@ -1,4 +1,5 @@
 import { defineCommand } from 'citty'
+import { architectureCommand, viewCommand } from './commands/architecture.js'
 import { inspectionCommands } from './commands/inspection.js'
 import { setupCommands } from './commands/setup.js'
 import { skillsCommands } from './commands/skills.js'
@@ -19,6 +20,8 @@ export function createRootCommand(options: RootCommandOptions) {
       description: 'RSP (Reliable Software Practice), a repository-native engineering workflow for humans and AI agents',
     },
     subCommands: {
+      architecture: architectureCommand,
+      view: viewCommand,
       init: setupCommands.init,
       add: setupCommands.add,
       specs: inspectionCommands.specs,

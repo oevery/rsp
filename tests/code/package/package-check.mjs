@@ -40,12 +40,17 @@ try {
   const required = [
     'bin/rsp.mjs',
     'dist/cli.mjs',
+    'dist/viewer-service.mjs',
+    'dist/viewer-build.json',
+    'dist/viewer/app.js',
+    'dist/viewer/app.css',
+    'dist/viewer/NOTICE.txt',
     ...['rsp', 'rsp-shape', 'rsp-implement', 'rsp-verify', 'rsp-review', 'rsp-commit', 'rsp-doc']
       .map(name => `skills/${name}/SKILL.md`),
   ]
   const missing = required.filter(path => !files.includes(path))
   const installation = forbidden.length === 0 && missing.length === 0 ? checkInstalledPackage(root, tarball, temporaryRoot) : null
-  const report = { status: installation ? 'passed' : 'failed', package: filename, files: files.length, required, missing, forbidden, installation }
+  const report = { status: installation ? 'passed' : 'failed', package: filename, tarballBytes: statSync(tarball).size, files: files.length, required, missing, forbidden, installation }
   process.stdout.write(`${JSON.stringify(report, null, 2)}\n`)
   process.exitCode = report.status === 'passed' ? 0 : 1
 }

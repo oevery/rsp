@@ -159,3 +159,18 @@ Never execute cached upstream code as product behavior, overwrite tracked resear
 automatically, or discard occupied/ambiguous evidence without its required authority
 and preservation. Remote delivery, deployment, approval and human acceptance remain
 outside installation and local release-check authority.
+
+### Packaged architecture reader
+
+The same package includes the viewer service, public LikeC4 dependencies and
+prebuilt browser assets. The release build creates shared assets independently
+of project content and records their source-build identity. Tailwind runs only
+during that build, without Preflight; selected shadcn/ui source adaptations and
+their MIT source/license notice ship with the assets. These build dependencies
+do not create a browser download or a project-local build step. Only `view` lazily
+loads the service client; ordinary/architecture paths do not import layout or
+frontend dependencies. No separate installation, download, project frontend build
+or `.c4` generation is required at runtime. This saves execution work, not installed
+bytes. Package checks exercise the shipped assets and local lifecycle outside
+the source checkout. Discovery stores only owner-readable runtime credentials
+and endpoint metadata under the user cache, never models, documents or history.

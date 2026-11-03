@@ -555,12 +555,13 @@ function excerptAround(line: string, matchStart: number, matchLength: number, li
   return `${before > 0 ? '…' : ''}${value}${before + limit < codePoints.length ? '…' : ''}`
 }
 
-async function readCurrentDocument(
+export async function readCurrentDocument(
   path: string,
   root: string,
   projectPath: string,
   maxFileBytes: number,
-): Promise<{ content: string, bytes: number }> {
+  binary = false,
+): Promise<{ content: string, bytes: number, data?: Buffer }> {
   const changed = () => new SpecsQueryError('specs_file_changed', `Specs document is no longer a readable regular file: ${projectPath}`)
   const sourcePath = resolve(path)
   const sourceRoot = resolve(root)
@@ -618,7 +619,7 @@ async function readCurrentDocument(
     }
     if (opened.size > BigInt(maxFileBytes))
       throw new SpecsQueryError('specs_file_too_large', `Specs document exceeds the ${maxFileBytes}-byte inspection limit: ${projectPath}`)
-    const current = await readBoundedDocument(handle, opened, projectPath, maxFileBytes)
+    const current = await readBoundedDocument(handle, opened, projectPath, maxFileBytes, binary)
     await validateCurrentSpecsPath({
       sourcePath,
       sourceRoot,
@@ -631,6 +632,7 @@ async function readCurrentDocument(
     return {
       content: current.content,
       bytes: current.bytes,
+      ...(current.data ? { data: current.data } : {}),
     }
   }
   catch (error) {
@@ -648,7 +650,8 @@ async function readBoundedDocument(
   opened: BigIntStats,
   projectPath: string,
   maxFileBytes: number,
-): Promise<{ content: string, bytes: number, final: BigIntStats }> {
+  binary: boolean,
+): Promise<{ content: string, bytes: number, final: BigIntStats, data?: Buffer }> {
   const buffer = Buffer.allocUnsafe(maxFileBytes + 1)
   let bytes = 0
   while (bytes < buffer.length) {
@@ -666,7 +669,8 @@ async function readBoundedDocument(
     throw new SpecsQueryError('specs_file_changed', `Specs document is no longer a readable regular file: ${projectPath}`)
   }
   return {
-    content: buffer.subarray(0, bytes).toString('utf-8'),
+    content: binary ? '' : buffer.subarray(0, bytes).toString('utf-8'),
+    ...(binary ? { data: Buffer.from(buffer.subarray(0, bytes)) } : {}),
     bytes,
     final,
   }
