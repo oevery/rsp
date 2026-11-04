@@ -4,7 +4,7 @@ description: Diagnose unexplained symptoms read-only or implement authorized bou
 license: MIT
 metadata:
   author: oevery
-  version: "2026.11.04.2"
+  version: "2026.11.04.3"
 ---
 
 # RSP Implement
@@ -27,6 +27,8 @@ Mutation requires one of:
 Diagnosis-only investigates a bounded symptom read-only without a ready mutation owner or WorkRef. A suspected cause grants no mutation. For an authorized fix, diagnose an unexplained cause first; after confirmation continue the same request only with settled owner, scope and mutation authority.
 
 Inspect applicable instructions, the selected Change/Brief when tracked, relevant Specs and decisions, and the owning code and tests. Use supplied paths and discover missing context as needed; a dispatch summary does not replace source inspection. Operate only in the execution location supplied by the host.
+
+For optional context discovery, distinguish no matches from execution errors: no matches should not block independent subsequent reads, while missing required inputs and actual execution errors still need handling.
 
 Within the confirmed checkout/worktree, prefer paths relative to the command or tool's explicit working directory for repository reads, searches and edits. Reuse the known execution root; do not switch worktrees to make a path resolve. Use absolute paths when the tool requires them, accessing files outside that root, or explicitly locating another authorized root; a path alone does not establish checkout identity or revision.
 
