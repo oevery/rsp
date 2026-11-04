@@ -15,15 +15,15 @@ Keep one observable outcome per Change:
 - `Proposal`: outcome, scope, non-goals;
 - `Spec`: settled contract delta and acceptance, referencing affected existing Specs rather than copying the baseline or inventing public promises;
 - `Design`: approach, responsibility boundaries, and necessary tradeoffs, not repeated requirements or tasks;
-- `Tasks`: checkable work, with prescribed order only where correctness, safety, or migration requires it;
-- `Verify`: methods proving settled acceptance, not adding new public requirements; then actual decisive results, gaps, and limits, not repeated requirements or transcripts;
+- `Tasks`: current checkable work, with prescribed order only where correctness, safety, or migration requires it;
+- `Verify`: required/optional checks proving settled acceptance, not adding new public requirements; then applicable scoped results and gaps;
 - `Blockers`: dependencies and decisions, or `none`.
 
 Keep the six sections; small changes need only proportionate content. Plain-prose HTML scaffold hints may remain or be removed; they guide writing, never supply requirements, evidence, or completed content. Resolve body placeholders and keep all material decisions visible outside comments.
 
 Plan a test only when it protects observable behavior or a real boundary, adds distinct future confidence, avoids duplicate or implementation-detail coverage, and costs proportionately. Otherwise prefer smallest sufficient evidence and keep probes temporary.
 
-A Change is a convergent plan and final-result snapshot. Ongoing recovery notes belong in Focus; detailed evidence stays with its owner. Before closeout, establish verified outcomes, selectively update stable knowledge at its owner, then reconcile the final Change with those facts and references. These may be one operation and already-accurate text needs no edit. Do not append execution history.
+Apply the [current work record rules](../../rsp/references/work-model.md#current-work-records) when shaping or revising tasks and verification; load them when absent from context. Replace obsolete plans within settled authority, keeping unmet obligations visible. A Change records current intent and progress during work, then the delivered result at closeout. Necessary stable knowledge stays with its owner; Focus only supplements missing recovery context.
 
 Use domain language. Mention agents only as real product actors or constraints, not authors or execution narrators.
 

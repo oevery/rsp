@@ -4,7 +4,7 @@ description: Judge a fixed change or file set, or discover evidenced structural 
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.27.1"
+  version: "2026.11.04.1"
 ---
 
 # RSP Review

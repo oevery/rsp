@@ -23,8 +23,8 @@ A Change is one Markdown file with six sections:
 | Proposal | Outcome, scope and non-goals |
 | Spec | Contract delta and acceptance, referencing existing authority |
 | Design | Approach, boundaries and necessary tradeoffs |
-| Tasks | Checkable work and accomplished results |
-| Verify | Applicable results, evidence pointers and remaining limits |
+| Tasks | Current checkable work, actual completion and remaining work |
+| Verify | Declared acceptance checks, applicable scoped results and remaining limits |
 | Blockers | Unresolved dependencies or decisions, or none |
 
 A Change owns one outcome and its acceptance, verification, review, archive and
@@ -45,12 +45,19 @@ additional lifecycle states. Git commit count does not select Change granularity
   Capsules carry bounded recovery snapshots, not ownership or authority. Multiple
   markers are valid; explicit user intent or WorkRef selects first, otherwise
   current status, dependencies and evidence resolve the next owner.
-- Core writes an authorized Capsule only when safe continuation needs information
-  beyond existing Change/evidence. At a pause, handoff or recovery-relevant
-  checkpoint, replace the minimum snapshot when it is insufficient and revalidate
-  it on recovery. Ordinary same-session progress needs no update. Group recovery
-  uses a selected child's Capsule, not a Brief marker; bounded direct work needs
-  no new Capsule.
+- Core writes an authorized Capsule only when information absent from the Change,
+  current workspace and existing evidence is needed for safe continuation or to
+  avoid costly repeated discovery. At a pause, handoff or recovery-relevant
+  checkpoint, create or replace only an insufficient or stale snapshot and
+  revalidate it on recovery; ordinary progress needs no update. Retain unfinished
+  experiments, cleanup obligations or uncertain effects only as needed to resume.
+  No command/attempt timeline or second
+  task, verification or blocker list belongs here. Delivery blockers stay in Change.
+- Remove recovery notes only when their obligations are discharged, obsolete or
+  safely transferred. Unresolved effects cannot be discarded merely for brevity.
+  Empty capsule replacement retains focus; cleanup grants no unfocus or closure.
+  Group recovery uses a selected child's Capsule, not a Brief marker; bounded
+  direct work needs no new Capsule.
 - Blockers contains only unresolved dependencies or decisions preventing required
   work. Write standalone `None` when none remain; put non-blocking verification
   limits in Verify. Exact prerequisites use ``- requires `<work-ref>`: <reason>``
@@ -67,12 +74,34 @@ own bounded semantic judgment. Reuse and independent-execution obligations are
 owned by [Workflow methods and evidence](workflow.md#methods-and-evidence), not a
 separate evidence registry.
 
-Change updates retain necessary plan/contract changes, task outcomes, blockers
-and scoped verification conclusions. Consolidate repeated conclusions for the same
-scope and candidate; preserve distinct inputs, outcomes, material failures and
-evidence references. Routine execution narration stays in the conversation without
-a new process-record file. Tool-owned or explicitly required evidence keeps its
-existing owner and retention contract.
+A Change states current authorized intent, approach and actual progress during
+work, then the delivered outcome at closeout. Update affected content when facts
+change instead of appending dates, rounds or session summaries; dates remain when
+needed for provenance or applicability. Cleanup grants no authority to remove unmet
+scope or acceptance obligations.
+
+Tasks can be replaced, split or merged within authorized scope. Reopen or rewrite
+invalidated completed work; routine attempts, fixes, retries and check runs are not
+new tasks. Task completion establishes neither verification nor independent or
+human acceptance.
+
+Verify retains Required/Optional checks and only the conclusions, conditions,
+references and gaps needed to judge acceptance, evidence applicability or locate
+necessary evidence. Results already expressed by check items are not repeated.
+Commands, counts, candidate/environment details and review steps require that
+decision or lookup purpose; having occurred does not justify retention. Replace
+superseded conclusions only within their covered scope; preserve applicable reused
+evidence and distinguish full review, correction-only re-review and human
+acceptance. Invalidated coverage becomes incomplete. Shared evidence appears once;
+detailed execution/review records stay with their existing owner, without a run
+history or debugging narrative in Change.
+
+Retain useful before/after outcome comparisons, decision rationale and material
+failure dispositions with their existing owner. A resolved ordinary failure needs
+no attempt narrative, but its effect on acceptance or evidence validity remains.
+Routine history stays in conversation; raw evidence keeps its existing owner and
+retention contract. Removing stale prose neither deletes reports, conversation or
+Git history nor requires moving it into Focus, an appendix or a new process record.
 
 Before archive, establish verified outcome facts, distill useful Focus information,
 write necessary stable knowledge to its owner, and converge the entire Change.
@@ -82,8 +111,8 @@ constraints, not persisted stages or mandatory separate tool calls.
 
 No useful knowledge delta requires no writeback; a stale authoritative contract
 still requires correction. Whole-Change convergence retains the delivered delta,
-actual knowledge-update references, important failure dispositions, evidence
-boundaries and unresolved limits. It removes superseded plans, duplicate current
+useful outcome comparisons, actual knowledge-update references, important failure
+dispositions, evidence boundaries and unresolved limits. It removes superseded plans, duplicate current
 Specs, operation permissions, session chronology and response-only handoff blocks.
 Detailed records and original verdicts stay with their evidence owner. A material
 contradiction returns to its decision, implementation or verification owner rather

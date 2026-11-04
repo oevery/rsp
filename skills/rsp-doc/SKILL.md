@@ -4,7 +4,7 @@ description: Write or revise repository documents, Skills and release communicat
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.27.1"
+  version: "2026.11.04.1"
 ---
 
 # RSP Doc
@@ -24,7 +24,7 @@ Write a grounded artifact usable without the author conversation. Use the artifa
 
 - README and procedures supply the starting point, prerequisites, actions and recognizable success. Concepts and decisions explain meanings, reasons, alternatives and consequences; references supply exact, navigable contracts.
 - CONTEXT defines vocabulary and relationships and directs readers to authoritative owners. Specs state what consumers may rely on, including conditions, failures and exceptions; add scenarios only to resolve ambiguity. Scoped operating instructions own commands, authority and required checks.
-- A Change retains its six canonical sections: outcome, contract delta and acceptance, approach, accomplished or pending tasks, candidate-bound verification and current blockers. Use the [shared work-model syntax](../rsp/references/work-model.md) for Blockers. Reconcile the whole record when preparing closeout; retain delivered facts, material failures, limits and knowledge/evidence links, not session chronology. Detailed evidence stays with its owner.
+- Before writing a Change, load the [current work record rules](../rsp/references/work-model.md#current-work-records) when absent from context; the same resource owns Blockers syntax. Keep its six sections current during iteration and reconcile the whole record for closeout. Readers must find the outcome, applicable evidence and remaining work without reconstructing attempts; preserve useful before/after results and decision reasons when removing chronology.
 
 ## Check facts and reading paths
 

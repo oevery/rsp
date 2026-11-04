@@ -4,7 +4,7 @@ description: Coordinate authorized direct, Change or Group work; select capabili
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.27.1"
+  version: "2026.11.04.1"
 ---
 
 # RSP Core
@@ -40,7 +40,7 @@ Implement owns ordinary self-checks. Main-agent inspection can assess results, b
 
 Reuse traceable observations, checks and reviews while their target, acceptance boundary and relevant inputs still apply. Changed code, dependencies, configuration, tools or environment invalidate affected evidence; role changes and delivery-scope confirmation alone do not. Include excluded worktree inputs when assessing a staged slice, and recognize behavior changes in normative Specs or executable Skills even when stored as Markdown.
 
-Check paths, diff, outcomes, omissions and evidence applicability. Reuse executor checks when applicable. Independent semantic review may use implementer test evidence; required independent execution must run. Keep commands, results, tested boundaries and decisive sources with their existing owner, including failures, unavailable checks and superseded results. Add no evidence ledger.
+Check paths, diff, outcomes, omissions and evidence applicability. Reuse executor checks when applicable. Independent semantic review may use implementer test evidence; required independent execution must run. Preserve original evidence and verdicts with their existing owner; Change retains only applicable conclusions and material failure dispositions. Add no evidence ledger.
 
 For required correction/re-review, load [review convergence](references/coordination-review.md). Batch compatible findings into one correction, run covering checks, then review finding resolution and new risks in the correction. Stop for changed scope/authority, unsafe replay, missing required capability, non-convergence or no new discriminating evidence. Required failures remain incomplete.
 
@@ -56,7 +56,7 @@ Load [interruption recovery](references/coordination-recovery.md) for pause/resu
 
 ## Maintain records and prepare delivery
 
-During execution update Tasks/Verify directly for actual outcomes when scope, contract, design and knowledge remain accurate. Consolidate repeated conclusions for the same scope and candidate; retain distinct inputs, outcomes, material failures and evidence references. When changing Blockers, use the [shared work-model syntax](references/work-model.md). Passing checks or recovery alone adds no whole-document rewrite. Routine narration stays in the conversation; retained execution evidence stays with its existing owner. Focus is replaceable recovery guidance, never acceptance or authority.
+During execution apply the [current work record rules](references/work-model.md#current-work-records), loading them when absent from context. Update affected Tasks/Verify directly when scope, contract, design and knowledge remain accurate; do not append attempts or postpone current-state corrections until archive. Use the same work model for Blockers syntax. Passing checks or recovery alone adds no whole-document rewrite. Focus supplies only missing recovery context, never acceptance or authority.
 
 Ordinary completion and checkpoint commits leave Change open; a generic commit request does not establish final delivery. At established final delivery or an explicit close request, load [delivery closeout](references/closeout.md). workflow.closeout is ask (default), auto or manual; no setting grants Git, push, publication, deployment, approval or human acceptance authority.
 

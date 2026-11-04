@@ -4,7 +4,7 @@ description: Diagnose unexplained symptoms read-only or implement authorized bou
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.27.1"
+  version: "2026.11.04.1"
 ---
 
 # RSP Implement
@@ -65,7 +65,7 @@ Stop for a repeated failure without new discriminating evidence, non-convergence
 
 ## Implement and verify
 
-Implement the smallest complete slice. Update authorized Change sections only for necessary plan/contract changes, outcomes, blockers and scoped verification. Update Tasks after outcomes exist. Keep routine narration in conversation and required or tool-owned evidence with its existing owner; copy no execution history into Change or a new process record. Direct work reports outcomes without RSP artifact mutation.
+Implement the smallest complete slice. For authorized Change updates, load the [current work record rules](../rsp/references/work-model.md#current-work-records) when absent from context. Update affected work and evidence as facts change; reopen invalidated results rather than append fix/retry tasks or check history. Plan or contract changes retain their decision authority. Direct work reports outcomes without RSP artifact mutation.
 
 Use `rsp-doc` for document/Skill writing and whole-Change convergence within existing authority. Local wording fixes and mechanical status/evidence updates needing no whole-record reconciliation remain direct. Without Doc, write grounded guidance and check affected examples/links locally. Author self-checks never certify independent Review.
 

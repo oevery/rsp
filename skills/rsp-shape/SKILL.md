@@ -4,7 +4,7 @@ description: Resolve bounded design questions read-only or clarify material choi
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.15.2"
+  version: "2026.11.04.1"
 ---
 
 # RSP Shape

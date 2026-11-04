@@ -1,6 +1,6 @@
 # Shared work model
 
-Read when selecting, reporting or operating a tracked RSP owner and these definitions are not already available in the current context. Direct untracked work needs no RSP identity. This file defines identities, not a requirement to execute Core.
+Read when selecting, reporting or operating a tracked RSP owner, or writing/reviewing its records, and the relevant definitions are not already available in context. Direct untracked work needs no RSP identity. These shared definitions require no Core execution.
 
 ## Work shapes
 
@@ -24,4 +24,14 @@ Identity, focus, readiness, dependency state and capability availability grant n
 
 In a Change's Blockers, record only unresolved dependencies or decisions preventing required work. Write standalone `None` when none remain; keep non-blocking verification limits in Verify. Exact prerequisites use ``- requires `<work-ref>`: <reason>``. Other prose, including an explanation after `None`, remains an external blocker declaration.
 
-Use only the selected owner's relevant artifacts and authoritative project context. Installed files are shared across the suite, but separate workers do not inherit one another's loaded instructions. Reuse applicable definitions in the same context; obtain this file before depending on missing definitions. If the shared resource is unavailable, report an incomplete suite and stop identity-dependent actions rather than inventing a substitute or installing implicitly.
+Use only the selected owner's relevant artifacts and authoritative project context. Installed files are shared across the suite, but separate workers do not inherit one another's loaded instructions. Reuse applicable definitions in the same context; obtain this file before depending on missing definitions. If the shared resource is unavailable, report an incomplete suite and stop dependent actions rather than inventing a substitute or installing implicitly.
+
+## Current work records
+
+A Change retains six sections: Proposal, Spec, Design, Tasks, Verify and Blockers. During work it states the current authorized intent, approach and actual progress; at closeout it records the delivered outcome. Update affected content as facts change instead of appending rounds, dates or session summaries. Keep a date only when it matters to provenance or applicability. Record cleanup never authorizes dropping unmet scope or acceptance obligations.
+
+- **Tasks:** keep current checkable work and completion. Replace, split or merge tasks within authorized scope; reopen or rewrite invalidated results. Routine attempts, fixes, retries and individual check runs are not new tasks. Completion proves neither verification nor independent or human acceptance.
+- **Verify:** keep declared acceptance checks and their required/optional distinction, then retain only information needed to judge acceptance, evidence applicability or locate necessary evidence. Do not restate results already expressed by check items. Commands, counts, candidate/environment details and review steps belong here only when their omission would change those judgments or prevent that lookup; occurrence alone is no reason to retain them. Replace superseded conclusions only within their covered scope, preserve still-applicable reused evidence, and distinguish full review, correction-only re-review and human acceptance. Mark invalidated coverage incomplete. Keep shared evidence once and detailed execution/review records with their existing owner; no run history or debugging narrative.
+- **Focus:** keep only additional context needed to resume safely or avoid costly repeated discovery; refer to Change state without maintaining a second task, verification or blocker list. The conditional [Focus method](focus-continuation.md) owns replacement and cleanup. Ordinary progress needs no snapshot.
+
+Keep decision rationale, useful before/after outcome comparisons and material failure dispositions with their existing owner. For resolved ordinary failures, remove the attempt narrative; preserve any effect on acceptance or evidence validity. Routine history stays in conversation and raw evidence with its existing owner. Removing stale prose does not delete reports, conversation or Git history, require a new log, or move discarded history into Focus or an appendix.

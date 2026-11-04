@@ -81,8 +81,9 @@ or private notation is required.
 ## Artifact differences
 
 The [Work model artifact boundaries](work-model.md#boundaries) own placement and its
-[evidence/closeout contract](work-model.md#evidence-and-closeout) owns final Change
-convergence. Writing applies those contracts; it does not redefine the workflow.
+[evidence/closeout contract](work-model.md#evidence-and-closeout) owns record updates
+through iteration and final convergence. Writing applies those contracts; it does
+not redefine the workflow.
 
 - README and procedures help readers start, act and recognize success. Specs help
   them judge contractual behavior and exceptions. Design explanations and Decisions
@@ -93,10 +94,11 @@ convergence. Writing applies those contracts; it does not redefine the workflow.
 - CONTEXT supplies vocabulary and navigation, Specs current contracts, and work
   records only their selected delta and evidence summary. A true but misplaced
   statement still needs the correct owner; copying it into several files is not writeback.
-- For a final Change, retain a fact only when it affects the delivered contract,
-  evidence applicability, an important failure disposition or remaining risk.
-  Consolidate duplicate check summaries without merging different candidates or
-  changing original verdicts. Execution details stay in their report, not the Change.
+- Work records show current intent and actual progress during work, then delivered
+  outcomes at closeout. Readers must not reconstruct attempt history to find the
+  result. Preserve useful before/after comparisons, decision reasons, evidence
+  applicability and material failure dispositions; brevity cannot erase those
+  distinctions. Cleanup creates no new history store or evidence-deletion authority.
 - API comments explain actual inputs, returns, failures and usage. Ordinary inline
   comments retain accurate constraints, rationale or usage that nearby code does
   not make clear; remove restatement that adds no useful information, without an
