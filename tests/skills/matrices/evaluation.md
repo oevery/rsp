@@ -1,10 +1,11 @@
 # Evaluation coverage and selection
 
-Select tasks for the claim and changed risk, using the [assessment contract](../assessment.md). This inventory groups the current 47 native tasks by observable boundary; it is not a required full cross-product or a score based on catalog size. Existing tasks remain the executable owners of their requirements.
+Select tasks for the claim and changed risk, using the [assessment contract](../assessment.md). This inventory groups the current 49 native tasks by observable boundary; it is not a required full cross-product or a score based on catalog size. Existing tasks remain the executable owners of their requirements.
 
 | Boundary and native tasks | Keep strict | Accept equivalent forms; semantic responsibility |
 | --- | --- | --- |
 | Settled repairs: bounded-fix, implement-checkout | Expiry/rounding behavior, caller inputs and authorized source edits. | Different correct implementations and proportionate own checks; no invented planning or worker obligation. |
+| Architecture: architecture-sync, architecture-review; reuse bounded-fix as the absent-model control | Real pricing-owner consumption, stable model identities and unaffected knowledge; locatable stale-model evidence, healthy doctor and read-only review inputs. | Accurate equivalent descriptions/findings; structure/reference checks do not establish semantic agreement. Existing-model fixtures use the complete installed source suite, not partial/no-Skills comparisons. |
 | Tracked outcomes: workflow-catalog, recovery-export, writeback-in-progress | Functional result, requested knowledge update, preserved unfinished work and write scope. | Wording within authorized sections; source grounding and truthful evidence rather than prose fingerprints. |
 | Corrections: correction-review, correction-natural, correction-continue, correction-limit, review-evidence-reuse | Real required actors, actual correction, preserved budget/history and any required independent execution. | Equivalent commands and evidence reuse when allowed; missing actors or repeated unresolved defects cannot be described away. |
 | Coordination: native-coordination, parallel-ready-work, shared-resource-work | Required native actor attribution, overlaps or exclusive-resource ordering, integrated behavior. | Useful serial work where permitted; no fixed Skill choreography or arbitrary tool-count target. |

@@ -5,6 +5,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import shlex
 import shutil
 import subprocess
 import tomllib
@@ -49,6 +50,138 @@ def offline_task_image(task, image=None):
 
 
 class EvaluationContract(unittest.TestCase):
+    def test_architecture_evaluation_from_checkout_path_with_spaces(self):
+        with tempfile.TemporaryDirectory() as directory:
+            checkout = Path(directory) / "checkout with spaces"
+            (checkout / "dist").mkdir(parents=True)
+            (checkout / "tests").symlink_to(HERE.parents[1], target_is_directory=True)
+            # Use a launcher: the CLI's entry guard does not execute via a
+            # symlink alias. Forward to the real source CLI without mocking it.
+            cli = str(HERE.parents[2] / "dist/cli.mjs")
+            (checkout / "dist/cli.mjs").write_text(
+                "import { spawnSync } from 'node:child_process';\n"
+                f"const result = spawnSync(process.execPath, [{json.dumps(cli)}, ...process.argv.slice(2)], {{stdio: 'inherit'}});\n"
+                "process.exit(result.status ?? 1);\n")
+            with patch.dict(globals(), HERE=checkout / "tests/skills/support"):
+                self.test_architecture_review_real_report_contract_and_evidence_boundaries()
+                self.test_architecture_review_oracle_records_candidate_checks_for_judge()
+                tasks = [HERE.parent / "tasks" / name for name in ("architecture-sync", "architecture-review")]
+                with patch.object(evaluate, "tasks", return_value=tasks):
+                    self.test_calibration_corpus_checks_match_declared_components_without_judging()
+
+    def test_architecture_review_real_report_contract_and_evidence_boundaries(self):
+        # Unmodified report from 2026-11-04T08-40-58.255461Z /
+        # architecture-review__pCZKTj9; replay does not change its historical verdict.
+        report = json.loads((Path(__file__).parent / "fixtures/architecture-review-real-report.json").read_text())
+        task = HERE.parent / "tasks/architecture-review"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            work, baseline = root / "app", root / "baseline.json"
+            shutil.copytree(task / "environment/workspace", work)
+            env = {"RSP_WORKSPACE": str(work), "RSP_BASELINE": str(baseline),
+                   "RSP_LOG_DIR": str(root / "logs"),
+                   "RSP_EVAL_OFFLINE": "1",
+                   "RSP_FIXTURE_CLI": shlex.join(["node", str(HERE.parents[2] / "dist/cli.mjs")])}
+            with patch.dict(os.environ, env):
+                subprocess.run(["python3", str(task / "environment/setup.py"), str(work), str(baseline)],
+                               check=True, capture_output=True)
+                canonical = json.loads(json.dumps(report))
+                canonical["findings"][0]["evidence"] = [
+                    ref.partition(" — ")[0] for ref in report["findings"][0]["evidence"]]
+                canonical["checks"] = [{"command": check["description"], "result": check["result"]}
+                                       for check in report["checks"]]
+                canonical["limitations"] = "\n".join(report["limitations"])
+                cases = [("real-report", report, 1), ("canonical", canonical, 1)]
+                for field in ("findings", "checks", "limitations"):
+                    value = json.loads(json.dumps(canonical))
+                    value[field] = report[field]
+                    cases.append((field, value, 1))
+                outside = root / "outside.txt"
+                outside.write_text("existing outside file\n")
+                for reference in (str(outside), "missing.mjs", "src/export.mjs:999",
+                                  "src/export.mjs:2-1", "src/export.mjs:1:999"):
+                    value = json.loads(json.dumps(report))
+                    value["findings"][0]["evidence"].append(reference + " — explanation")
+                    cases.append((reference, value, 0))
+                for field, invalid in (("checks", [{"description": "", "result": "passed"}]),
+                                       ("checks", [{"command": "node tools/check.mjs", "result": ""}]),
+                                       ("limitations", []), ("limitations", [""]), ("limitations", "")):
+                    value = json.loads(json.dumps(report))
+                    value[field] = invalid
+                    cases.append((str(invalid), value, 0))
+                value = json.loads(json.dumps(report))
+                value["findings"][0]["evidence"] = ["src/export.mjs:1"]
+                cases.append(("missing-required-evidence", value, 0))
+                for name, value, expected in cases:
+                    with self.subTest(case=name):
+                        (work / "report.json").write_text(json.dumps(value))
+                        output = root / "logs/reward.json"
+                        self.assertEqual(grade.grade(task / "tests", work, output), {"reward": float(expected)})
+
+    def test_architecture_review_oracle_records_candidate_checks_for_judge(self):
+        from types import SimpleNamespace
+        import litellm
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            task, work = root / "task", root / "app"
+            shutil.copytree(HERE.parent / "tasks/architecture-review", task)
+            shutil.copytree(task / "environment/workspace", work)
+            context = HERE.parent / "calibration/architecture-review/oracle-context.md"
+            evaluate.use_oracle_evidence(task, context)
+            records, transcript = root / "oracle-checks.jsonl", root / "oracle.txt"
+            env = {"RSP_WORKSPACE": str(work), "RSP_BASELINE": str(root / "baseline.json"),
+                   "RSP_LOG_DIR": str(root / "logs"),
+                   "RSP_ORACLE_CHECKS": str(records), "RSP_EVAL_OFFLINE": "0",
+                   "RSP_FIXTURE_CLI": shlex.join(["node", str(HERE.parents[2] / "dist/cli.mjs")]),
+                   "RSP_JUDGE_API_KEY": "offline-test", "OPENAI_API_KEY": "offline-test",
+                   "RSP_JUDGE_HOST": "", "RSP_JUDGE_BASE_URL": ""}
+            with patch.dict(os.environ, env):
+                subprocess.run(["python3", str(HERE.parent / "tasks/architecture-review/environment/setup.py"), str(work), env["RSP_BASELINE"]],
+                               check=True, capture_output=True)
+                records.write_text("")
+                result = subprocess.run(["bash", str(task / "solution/solve.sh")], check=True, capture_output=True, text=True)
+                transcript.write_text(result.stdout + result.stderr)
+                observations = [json.loads(line) for line in records.read_text().splitlines()]
+                self.assertEqual([row["exit_code"] for row in observations], [0, 0])
+                self.assertEqual(observations[0]["command"], ["node", "tools/check.mjs"])
+                self.assertEqual(observations[1]["command"][-2:], ["doctor", "--json"])
+                rubric = task / "tests/judge.toml"
+                rubric.write_text(rubric.read_text().replace("/app/", str(work) + "/")
+                                  .replace("/logs/agent/oracle-checks.jsonl", str(records))
+                                  .replace("/logs/agent/oracle.txt", str(transcript)))
+                submitted = []
+
+                async def completion(**kwargs):
+                    submitted.append(kwargs["messages"])
+                    return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(
+                        content=json.dumps({name: {"score": True, "reasoning": "offline transport probe"}
+                                            for name in ("semantic-drift", "diagnostic-limits")})))])
+
+                with (patch("socket.socket.connect", side_effect=AssertionError("No network")),
+                      patch.object(litellm, "acompletion", side_effect=completion)):
+                    output = root / "logs/reward.json"
+                    self.assertEqual(grade.grade(task / "tests", work, output), {"reward": 1.0})
+                    self.assertTrue(submitted)
+                    for messages in submitted:
+                        self.assertEqual(self._submitted_judge_file(messages, records), records.read_text())
+                        system = "\n".join(message["content"] for message in messages if message["role"] == "system")
+                        self.assertIn("The execution actor is Harbor's Oracle", system)
+                    self.assertEqual(len(records.read_text().splitlines()), 2)  # Verifier's doctor is not recorded.
+                    submitted.clear()
+                    records.unlink()
+                    with self.assertRaisesRegex(RuntimeError, "Verifier execution failed"):
+                        grade.grade(task / "tests", work, output)
+                    self.assertEqual(submitted, [])
+                # A failed candidate check is retained and stops the recipe before doctor/report.
+                (work / "report.json").unlink()
+                (work / "tools/check.mjs").write_text("process.exit(7);\n")
+                records.write_text("")
+                failed = subprocess.run(["bash", str(task / "solution/solve.sh")], capture_output=True)
+                self.assertEqual(failed.returncode, 7)
+                self.assertEqual([json.loads(line)["exit_code"] for line in records.read_text().splitlines()], [7])
+                self.assertFalse((work / "report.json").exists())
+
     def test_judge_format_retries_and_timeout_preserve_scoring_boundaries(self):
         from types import SimpleNamespace
         import litellm
@@ -531,7 +664,8 @@ class EvaluationContract(unittest.TestCase):
                 shutil.copytree(task / "environment/workspace", work)
                 baseline = root / "baseline.json"
                 env = {"RSP_WORKSPACE": str(work), "RSP_BASELINE": str(baseline),
-                       "RSP_LOG_DIR": str(root / "logs"), "RSP_EVAL_OFFLINE": "1"}
+                       "RSP_LOG_DIR": str(root / "logs"), "RSP_EVAL_OFFLINE": "1",
+                       "RSP_FIXTURE_CLI": shlex.join(["node", str(HERE.parents[2] / "dist/cli.mjs")])}
                 with patch.dict(os.environ, env):
                     subprocess.run(["python3", str(task / "environment/setup.py"), str(work), str(baseline)],
                                    check=True, capture_output=True)

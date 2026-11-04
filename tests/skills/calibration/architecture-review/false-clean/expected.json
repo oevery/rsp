@@ -1,0 +1,6 @@
+{
+  "label_status": "candidate",
+  "expected": { "checks": 0, "judge": 0 },
+  "expected_criteria": { "semantic-drift": 0, "diagnostic-limits": 0 },
+  "rationale": "Otherwise well-formed report with actual successful checks incorrectly treats doctor success as proof of semantic agreement."
+}

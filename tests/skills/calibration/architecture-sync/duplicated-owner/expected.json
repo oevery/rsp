@@ -1,0 +1,6 @@
+{
+  "label_status": "candidate",
+  "expected": { "checks": 0, "judge": 0 },
+  "expected_criteria": { "implemented-architecture": 0 },
+  "rationale": "Public example totals and model look correct, but invoice duplicates the policy instead of consuming its owner."
+}

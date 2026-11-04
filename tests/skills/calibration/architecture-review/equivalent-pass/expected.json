@@ -1,0 +1,5 @@
+{
+  "label_status": "candidate",
+  "expected": { "checks": 1, "judge": 1 },
+  "rationale": "Equivalent wording and evidence notation split the stale node responsibility and dependency into separate findings. Evidence and affected identities cover the mismatch across the report rather than repeating every location in every finding."
+}

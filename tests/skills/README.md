@@ -38,7 +38,7 @@ The exploratory [code-quality matrix](matrices/code-quality.md) pairs receiver t
 
 `--task ID` is repeatable; `--attempts N` controls attempts per selected task. `--agent` selects `codex`, `oracle` or `nop`. Choose tasks for the changed risk, including restraint and preservation where relevant; catalog size is not a quality gate. Native job `agents[].skills` supplies package paths. Prepared internal packages use the same mechanism; see the maintainer [internal-target guide](../../.agents/skills/author-rsp-skills/references/internal-targets.md). There is no parallel composition-hash or matrix model.
 
-Only the selected candidate Skills are registered through native Harbor agent configuration. Harbor copies their files into the native discovery directory; Codex supplies the catalog and decides how to load selected resources. Registration does not promise full-body prompt injection or bypass tool-result limits. Task workspaces contain no baked-in Skills. The CLI package in the image supplies the real `rsp` command; its distribution assets do not select the agent Skills under evaluation.
+Only the selected candidate Skills are registered through native Harbor agent configuration. Harbor copies their files into the native discovery directory; Codex supplies the catalog and decides how to load selected resources. Registration does not promise full-body prompt injection or bypass tool-result limits. Task workspaces normally contain no baked-in Skills. The two installed-project architecture tasks below additionally initialize the image's complete suite so that full `rsp doctor` can pass; use them only with the matching complete source candidate. Other tasks' CLI distribution assets do not select the agent Skills under evaluation.
 
 Use repeated `--skill PATH` to replace the default selection for one run, or `--no-skills` to inject none; these options are mutually exclusive. Selected packages are copied into the job's immutable inputs, including an explicit empty selection in its native configuration. Neither option edits `jobs/default.yaml`. A zero-injection comparison still retains task policy and the RSP CLI; it is not a test without all RSP influence. Use the same neutral prompt in both arms when investigating discovery or contribution, and retain separate authorization for live execution.
 
@@ -64,6 +64,32 @@ The [2026-10-14 evidence report](../../research/reports/2026-10-14T02-48-34Z.md#
 The 2026-10-15 candidate adds two controls, both using the same natural repair request. `correction-natural` keeps implementation-worker and independent-review obligations in immutable AGENTS.md rather than spelling out the sequence in the user request. `correction-continue` additionally supplies one completed ineffective correction and new decisive evidence, requiring authorized continuation instead of a premature exhausted-budget stop. Both retain real worker attribution, executed checks, immutable inputs and truthful completion criteria. They test routing under less procedural prompting and recovery with remaining budget; they do not prove entirely unprompted delegation or fresh execution of the supplied history.
 
 Both controls passed once in the [fixed-candidate natural-correction pair](../../research/reports/2026-10-16T14-23-01Z.md), with checks and judge scores of 1.0, native worker attribution and zero automatic retries. Their captured Skill and task files still matched current sources when checked on 2026-10-17. This is bounded behavior evidence, not repeated reliability, real interruption recovery or a matched comparison of the Core entry/loading refinement. Keep the earlier task snapshots and verdicts unchanged. A future authorized comparison should hold task inputs, executor/judge settings and environment fixed between the earlier and refined Skill suites, compare acceptance and restraint before time/usage, and report cached input separately from total input. Resource-load and command counts are diagnostics, not scoring gates.
+
+The architecture slice selects `architecture-sync`, `architecture-review`, and
+unchanged `bounded-fix` together. Sync repairs a public consumer and its existing
+model; review locates semantic model drift even though the real doctor passes.
+Both new fixtures run source CLI initialization during isolated setup, preserving
+the installed suite as input. Their default native registration must match that
+image's complete suite; do not use them for `--skill` or `--no-skills` comparisons.
+They do not cover first-time model creation, planning-time mutation or worktree
+isolation. `bounded-fix` remains the absent-model restraint control.
+
+Eight architecture calibration samples join the existing corpus: reference and
+equivalent positives, a stale model after correct code repair, duplicated owner
+logic, a false-clean review, and an inverted-meaning review. The last deliberately
+passes deterministic shape/location checks; its rejection requires semantic
+judging. Candidate judge labels are not validated by offline calibration.
+
+```sh
+mise exec -- uv run --project tests/skills python tests/code/tooling/evaluation_contract.py EvaluationContract.test_calibration_corpus_checks_match_declared_components_without_judging
+RSP_EVAL_OFFLINE=1 mise exec -- uv run --project tests/skills python tests/skills/evaluate.py run --task architecture-sync --task architecture-review --task bounded-fix --attempts 1 --agent oracle
+RSP_EVAL_OFFLINE=1 mise exec -- uv run --project tests/skills python tests/skills/evaluate.py run --task architecture-sync --task architecture-review --task bounded-fix --attempts 1 --agent nop
+```
+
+Build the source CLI before local calibration and prepare the matching shared
+image before native runs. These existing offline commands never call an executor
+model or semantic judge. `evaluate.py calibrate` is a separate live judge command
+and is not part of this offline slice.
 
 For no-Docker fixture calibration, the existing bounded-task regression machinery runs reference solutions, untouched and single-regression controls, preservation checks and native-evidence projection tests:
 

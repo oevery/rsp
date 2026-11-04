@@ -1,0 +1,29 @@
+[judge]
+judge = "openai/auto/gpt-6.1-sol"
+reasoning_effort = "high"
+files = [
+  "/logs/agent/codex.txt",
+  "/app/report.json",
+  "/app/CONTEXT.md",
+  "/app/.rsp/architecture.json",
+  "/app/.rsp/specs/design.md",
+  "/app/src/main.mjs",
+  "/app/src/export.mjs",
+  "/app/src/route.mjs",
+  "/app/src/pricing.mjs",
+  "/app/src/audit.mjs"
+]
+
+[scoring]
+aggregation = "threshold"
+threshold = 1.0
+
+[[criterion]]
+name = "semantic-drift"
+type = "binary"
+description = "Findings accurately locate the stale invoice responsibility and invoice-rounding self dependency: current export calls pricing.cents and already obeys the settled contract. Explain the consequence for project understanding, using locatable model, source and contract evidence. Equivalent grouping and wording are accepted. Merely listing the expected IDs and files is insufficient. Do not report a runtime rounding bug or invent problems in correct preview/pricing, public-export or audit relationships."
+
+[[criterion]]
+name = "diagnostic-limits"
+type = "binary"
+description = "The report separates doctor structure/reference validation from semantic agreement and does not conclude the model is correct merely because doctor passes. Checks and results are grounded in actual native execution; verifier-owned runs cannot be claimed as agent checks. Preserve the read-only boundary and avoid unrequested repairs or invented process obligations. No specific Skill read or tool count is required."

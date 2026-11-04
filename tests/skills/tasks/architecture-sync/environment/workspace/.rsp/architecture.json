@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "nodes": [
+    { "id": "checkout", "title": "Checkout", "description": "Exposes preview and invoice entrypoints." },
+    { "id": "pricing", "title": "Pricing", "description": "Owns round-to-nearest conversion to integer cents.", "parent": "checkout" },
+    { "id": "preview", "title": "Preview", "description": "Adapts the pricing result to a public preview.", "parent": "checkout" },
+    { "id": "invoice", "title": "Invoice", "description": "Locally truncates fractional cents for invoice exports.", "parent": "checkout" },
+    { "id": "audit", "title": "Audit", "description": "Formats receipt labels without monetary calculations." }
+  ],
+  "relations": [
+    { "id": "preview-pricing", "source": "preview", "target": "pricing", "type": "calls", "description": "Uses the shared cents conversion." },
+    { "id": "invoice-rounding", "source": "invoice", "target": "invoice", "type": "calls", "description": "Performs local truncation rather than calling pricing." },
+    { "id": "checkout-preview", "source": "checkout", "target": "preview", "type": "exposes", "description": "Exports preview." },
+    { "id": "checkout-invoice", "source": "checkout", "target": "invoice", "type": "exposes", "description": "Exports invoice." }
+  ],
+  "views": [
+    { "id": "checkout", "title": "Checkout consumers", "node": "checkout", "include": ["pricing", "preview", "invoice"] }
+  ],
+  "bindings": [
+    { "node": "checkout", "file": ".rsp/specs/design.md", "scope": "subtree" },
+    { "node": "pricing", "file": ".rsp/specs/design.md", "headings": ["Pricing"] },
+    { "node": "preview", "file": ".rsp/specs/design.md", "headings": ["Transport"] },
+    { "node": "invoice", "file": ".rsp/specs/design.md", "headings": ["Pricing"] },
+    { "node": "audit", "file": ".rsp/specs/design.md", "headings": ["Audit"] }
+  ]
+}

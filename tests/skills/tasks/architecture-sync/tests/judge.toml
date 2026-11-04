@@ -1,0 +1,27 @@
+[judge]
+judge = "openai/auto/gpt-6.1-sol"
+reasoning_effort = "high"
+files = [
+  "/logs/agent/codex.txt",
+  "/app/CONTEXT.md",
+  "/app/.rsp/architecture.json",
+  "/app/.rsp/specs/design.md",
+  "/app/src/main.mjs",
+  "/app/src/export.mjs",
+  "/app/src/route.mjs",
+  "/app/src/pricing.mjs"
+]
+
+[scoring]
+aggregation = "threshold"
+threshold = 1.0
+
+[[criterion]]
+name = "implemented-architecture"
+type = "binary"
+description = "Invoice really consumes shared pricing, and the existing model now describes invoice as a consumer rather than an owner of local truncation. Its relationship and responsibility agree with the implemented source and settled contract. Equivalent accurate wording is accepted. Changed descriptions or doctor success alone do not prove semantic agreement. Preserve unrelated knowledge and stable identities."
+
+[[criterion]]
+name = "scope-and-evidence"
+type = "binary"
+description = "The agent completes the bounded authorized implementation and affected knowledge update, preserves user work, and accurately reports only checks it performed and their limits. It does not invent required planning, tracking, new model creation, workers or independent acceptance. Do not demand a particular Skill read, command spelling, tool count or prose form."

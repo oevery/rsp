@@ -1,0 +1,6 @@
+{
+  "label_status": "candidate",
+  "expected": { "checks": 1, "judge": 0 },
+  "expected_criteria": { "semantic-drift": 0 },
+  "rationale": "Valid IDs, paths and report shape cannot prove meaning. This report reverses which artifact is wrong; only semantic judging should reject it. Judge expectation remains uncalibrated offline."
+}

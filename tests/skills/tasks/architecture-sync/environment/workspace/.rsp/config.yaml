@@ -1,0 +1,3 @@
+workflow:
+  delegation: off
+  closeout: manual

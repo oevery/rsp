@@ -1,0 +1,59 @@
+{
+  "scope": {
+    "authority": "Direct user request for a bounded read-only architecture review; report.json is the authorized output.",
+    "files": [
+      ".rsp/architecture.json",
+      ".rsp/specs/design.md",
+      "CONTEXT.md",
+      "src/"
+    ],
+    "observedHead": "d76760d139bb5f41eb48faa62ff302518c53595c",
+    "perspectives": ["architecture", "code", "document"]
+  },
+  "verdict": "findings",
+  "findings": [
+    {
+      "severity": "P2",
+      "nodeIds": ["invoice", "pricing"],
+      "relationIds": ["invoice-rounding"],
+      "summary": "The model incorrectly assigns local truncation to invoice and represents a self-call instead of its dependency on pricing.",
+      "consequence": "Readers tracing invoice monetary policy are directed to an independent truncation owner even though the contract and implementation share pricing's Math.round conversion. This obscures the real dependency and misstates expected invoice totals: the public invoice(1.239) returns { totalCents: 124 }, whereas the modeled truncation would yield 123. The invoice description and invoice-rounding relation need to describe the implemented invoice-to-pricing call; the evidence does not support changing the implementation or contract.",
+      "evidence": [
+        ".rsp/architecture.json:7 — invoice is described as locally truncating fractional cents.",
+        ".rsp/architecture.json:12 — invoice-rounding is an invoice-to-invoice calls relation that explicitly denies calling pricing.",
+        ".rsp/architecture.json:23 — invoice is bound to the design's Pricing section.",
+        ".rsp/specs/design.md:5 — pricing owns Math.round(value * 100).",
+        ".rsp/specs/design.md:6 — both preview and invoice must consume pricing so entrypoint choice cannot change the total.",
+        "src/main.mjs:2 — the public module exports invoice from export.mjs.",
+        "src/export.mjs:1 — invoice imports cents from pricing.mjs.",
+        "src/export.mjs:2 — invoice returns { totalCents: cents(value) }.",
+        "src/pricing.mjs:1 — cents implements Math.round(value * 100)."
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "description": "Inspected all model nodes, relations, view membership and bindings against the bound design, root CONTEXT and all five src/*.mjs files; traced public exports through their consumers to pricing.",
+      "result": "One supported mismatch: invoice ownership and its modeled call target. Checkout exports, preview's pricing dependency, pricing conversion, audit responsibility, and the context navigation agree with the inspected code and contract."
+    },
+    {
+      "description": "Executed a Node assertion probe importing src/main.mjs, checking the exported names and both public functions for inputs 0, 1.239, 12.345 and -1.239.",
+      "result": "Passed all 9 assertions. Exports are invoice and preview. Both return exactly { totalCents: number }, with expected totals 0, 124, 1235 and -124 respectively."
+    },
+    {
+      "description": "Used Python to parse architecture.json, check unique node IDs and relation endpoints, and resolve every bound document and named heading.",
+      "result": "Passed these direct structural checks. All binding files and headings exist; the semantic invoice mismatch remains despite valid references."
+    },
+    {
+      "description": "Inspected Git HEAD and short status without changing Git state.",
+      "result": "HEAD is d76760d139bb5f41eb48faa62ff302518c53595c. Existing user state was observed as staged staged-note.txt, modified user-notes.txt and untracked draft.txt. No staging, commit, branch change or publication was performed."
+    }
+  ],
+  "limitations": [
+    "The runtime probe covers the inspected checkout's public module and four finite numeric inputs. It does not establish exhaustive floating-point, invalid-input or failure behavior; the design does not specify those additional contracts.",
+    "Direct JSON/reference checks are not full schema validation or rsp doctor execution. No CLI validation, package fetching or broader repository test suite was performed.",
+    "This is a current-checkout review within the requested boundary, not a historical comparison or verification of consumers outside src/.",
+    "The checks are this reviewer's observations and do not establish separate independent acceptance or lifecycle approval.",
+    "No reviewed code, architecture model, design, context, user notes or Git state was repaired. The only authorized output is report.json."
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "label_status": "candidate",
+  "expected": { "checks": 0, "judge": 0 },
+  "expected_criteria": { "implemented-architecture": 0 },
+  "rationale": "Only restore the old valid model after a correct code repair. Doctor and consumer tests still pass; the dependency remains stale."
+}
