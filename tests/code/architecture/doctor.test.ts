@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from 'node:child_process'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -46,21 +46,38 @@ it('keeps models optional and reports valid structure and bindings through docto
   })
 })
 
-it('retains configuration errors without attributing them to an absent architecture model', () => {
+it.each([
+  ['invalid field type', 'kinds: 7\n'],
+  ['malformed YAML', 'kinds: [\n'],
+])('reports %s once and continues configuration-independent checks', (_, config) => {
   const { root, run } = fixture()
-  writeFileSync(join(root, '.rsp/config.yaml'), 'kinds: 7\n')
+  writeFileSync(join(root, '.rsp/config.yaml'), config)
   const result = run('--json')
   expect(result.status, result.stderr).toBe(1)
   const report = JSON.parse(result.stdout)
-  expect(report.ok).toBe(false)
-  expect(report.checks.filter((check: { code?: string }) => check.code === 'invalid_config')).toEqual([
+  expect(report).toMatchObject({ ok: false, summary: { issues: 1 } })
+  expect(report.checks.filter((check: { status: string }) => check.status === 'issue')).toEqual([
     expect.objectContaining({
       status: 'issue',
       code: 'invalid_config',
-      message: expect.stringContaining('kinds'),
+      message: expect.any(String),
     }),
   ])
   expect(report.checks.some((check: { code?: string }) => check.code?.startsWith('architecture_'))).toBe(false)
+  expect(report.runtime.some((diagnostic: { code: string }) => diagnostic.code === 'specs_query_inspection_failed')).toBe(false)
+
+  mkdirSync(join(root, '.rsp/focus.d'), { recursive: true })
+  writeFileSync(join(root, '.rsp/focus.d/missing'), '')
+  const unrelated = run('--json')
+  expect(unrelated.status, unrelated.stderr).toBe(1)
+  expect(JSON.parse(unrelated.stdout)).toMatchObject({
+    ok: false,
+    summary: { issues: 2 },
+    checks: expect.arrayContaining([
+      expect.objectContaining({ code: 'invalid_config', status: 'issue' }),
+      expect.objectContaining({ status: 'issue', message: expect.stringContaining('focus markers without matching change files: missing') }),
+    ]),
+  })
 })
 
 it.each([

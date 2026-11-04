@@ -76,10 +76,10 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
       hint: 'Use Core context migration. Retain relevant legacy context until an authorized merge updates CONTEXT.md and active references; update does not migrate or delete it.',
     })
   }
-  await checkSpecsTree(checks, reportRuntime)
   await checkArchiveNaming(checks)
   const configValid = await checkConfigSemantics(checks, reportRuntime)
   if (configValid) {
+    await checkSpecsTree(checks, reportRuntime)
     await checkDecisionRecordsDirectory(checks, reportRuntime)
     await checkInactiveDefaultDecisionRecords(checks, reportRuntime)
   }
