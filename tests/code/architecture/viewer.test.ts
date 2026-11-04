@@ -441,6 +441,11 @@ describe('local service isolation and updates', () => {
     expect(after.revision).not.toBe(before.revision)
     expect(after.graphRevision).toBe(before.graphRevision)
     expect((await (await read(ids[0], 'document?file=docs/shared.md')).json()).html).toContain('UPDATED COMPLETE BODY')
+    for (const id of [ids[1], ids[2]]) {
+      const document = await (await read(id, 'document?file=docs/shared.md')).json()
+      expect(document.html).toContain('Shared')
+      expect(document.html).not.toContain('UPDATED COMPLETE BODY')
+    }
     await writeFile(join(first, '.rsp/architecture.json'), '{bad')
     expect((await read(ids[0], 'model')).status).toBe(409)
     expect((await read(ids[1], 'model')).status).toBe(200)

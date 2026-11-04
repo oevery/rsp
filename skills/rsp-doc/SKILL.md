@@ -4,7 +4,7 @@ description: Write or revise repository documents, Skills and release communicat
 license: MIT
 metadata:
   author: oevery
-  version: "2026.11.04.1"
+  version: "2026.11.04.2"
 ---
 
 # RSP Doc
@@ -32,6 +32,7 @@ Write a grounded artifact usable without the author conversation. Use the artifa
 Use the checks relevant to the change:
 
 - Check affected links, anchors, examples and metadata with existing tools. Execute examples only within safe authorized scope.
+- Keep repository references portable: use project-root-relative file citations and document-relative Markdown links, following any existing machine-field path contract. Keep execution-root locations separate from durable file references; retain necessary external locations, original evidence and host-required display paths without copying local checkout prefixes into authored repository references.
 - For linked artifacts, compare shared claims, terminology, defaults and handoffs against their authoritative owner. Correct authorized summaries and links without copying full definitions or changing unassigned owners. Report out-of-scope contradictions to their owner.
 - API comments and embedded guidance: compare claims with their contract and implementation without assuming either side correct. Keep ordinary inline comments locally accurate and useful: retain constraints, rationale or usage that nearby code does not make clear, and remove restatement that adds no information; no full writing workflow is needed. Compiler/tool annotations retain implementation ownership.
 - Examples: label illustrative pseudocode or incomplete snippets; check copyable commands against real prerequisites, outcomes and safe use without inferring execution or installation authority.
