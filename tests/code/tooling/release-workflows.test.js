@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { readFileSync, statSync } from 'node:fs'
 import { expect, it } from 'vitest'
 import { parse } from 'yaml'
 
@@ -8,6 +8,14 @@ const ci = read('ci')
 const publish = read('publish')
 const recover = read('docs-recover')
 const expression = value => `$` + `{{ ${value} }}`
+
+it('runs project doctor in full and docs-only CI and retains the self-host architecture model', () => {
+  const { scripts } = JSON.parse(readFileSync(new URL('../../../package.json', import.meta.url), 'utf8'))
+  expect(scripts.doctor).toBe('node dist/cli.mjs doctor')
+  expect(scripts['release:check']).toContain('pnpm run doctor')
+  expect(config.code['docs-only-command']).toContain('pnpm run doctor')
+  expect(statSync(new URL('../../../.rsp/architecture.json', import.meta.url)).isFile()).toBe(true)
+})
 
 it('pins one toolkit revision while keeping RSP checks and packed installation local', () => {
   const calls = [ci.jobs.code, ci.jobs.docs, publish.jobs.check, publish.jobs.release, recover.jobs.recover]

@@ -5,6 +5,17 @@
 
 ## 定义模型
 
+添加模型时，在根 `CONTEXT.md` 中登记一条导航；已有入口则复用。如果文件尚不存在，
+在本次架构接入中创建最小入口。例如：
+
+```md
+架构导航见 [`.rsp/architecture.json`](.rsp/architecture.json)，包含模块关系及关联文档。
+```
+
+仅安装 RSP、尚无模型时不添加链接；普通安装和升级不会为此改写项目上下文。
+模型描述保持简短并反映当前状态，详细契约留在关联文档中；尚未实现的架构留在
+Change 的 Design 中。
+
 ```json
 {
   "schemaVersion": 1,
@@ -43,6 +54,7 @@ Specs 保留行为权威，Decisions 解释理由，CONTEXT 承载词汇与导�
 rsp architecture
 rsp architecture --node api --json
 rsp architecture --view application --json --compact
+rsp doctor
 rsp view
 rsp view --no-open
 rsp view status
@@ -55,6 +67,10 @@ rsp view stop
 Web 中同名视图使用相同的精确选择并标记边界；父容器不会替代子节点成为关系端点。
 完整查询没有数量截断；单个文件超过 16 MiB 会明确失败，不返回截断内容。
 结构和普通命令均不启动服务、不加载布局运行时。
+
+`doctor` 同时检查完整模型及其文档、章节绑定。模型未配置时不阻断；模型非法或绑定
+无法解析时报告问题并使命令失败。使用 `doctor --json` 获取结构化结果。
+检查通过不代表模型与实现的语义一致。
 
 `view` 打开预构建的共享前端，`--no-open` 仅打印地址。每个项目或 Git 工作树应在自己的
 目录中用其选定的 RSP 调用打开。菜单仅列出当前运行时显式打开过的工作区；各自隔离图、

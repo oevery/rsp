@@ -213,6 +213,14 @@ returning incomplete success. Missing architecture reports not configured and
 does not affect unrelated commands. Ordinary and structural CLI commands do not
 load the viewer runtime; init and update do not generate architecture data.
 
+`doctor` includes architecture health in its ordinary project diagnostics using
+the same full-model query. An absent model is informational and non-blocking.
+An unreadable or invalid model, unavailable bound document, or missing/ambiguous
+chapter is an issue, makes `ok` false and yields a nonzero CLI exit status.
+Diagnostics retain the affected file and reason. Inspection failures do not
+prevent other doctor results from being reported. This check neither loads
+graph layout nor establishes semantic agreement between model and implementation.
+
 #### Navigation and presentation
 
 ##### Views and relationships

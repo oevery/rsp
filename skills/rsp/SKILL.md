@@ -66,6 +66,7 @@ Operate command-owned state through RSP commands. Persist only open and archived
 
 Other conditional procedures:
 
+- [Architecture knowledge](references/architecture.md) when coordinating work on modeled structure or responsibilities.
 - [Setup and repair](references/setup-repair.md) before initialization, managed-asset inspection, upgrade or repair.
 - [Groups and dependencies](references/groups-dependencies.md) for grouped work.
 - [Context migration](references/context-migration.md) when a root/relevant legacy CONTEXT-MAP.md is found or migration requested; preserve context, discovery alone grants no migration.

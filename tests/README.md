@@ -31,6 +31,7 @@ Native jobs and preserved historical evidence remain private under ignored `test
 
 Root scripts own deterministic maintenance; `tests/code/tooling/` checks observable CLI results. Diagnostics cannot waive required checks, replace independent evidence or authorize replay of uncertain mutations.
 
+- After building, `mise exec -- pnpm run doctor` runs the local CLI's complete project diagnostics, including architecture structure and document/chapter bindings when a model exists. Use `run` to avoid pnpm's own built-in `doctor` command. It runs in `release:check` and the docs-only CI path (installation's prepare step builds the CLI). Models remain optional for consumer projects; the workflow wiring tests require this repository's model to remain present. Architecture diagnostics establish structural and reference validity, not semantic agreement with implementation.
 - [Skill context scanner](../scripts/scan-skill-context.mjs): `node scripts/scan-skill-context.mjs --root . --package .agents/skills/author-rsp-skills --json`. Repeat `--package` for explicit targets or omit it for discovery. Counts, reachability and repetition are diagnostics, not quality gates.
 - [Internal target preparation](../scripts/prepare-internal-targets.mjs): pass real authored package directories as positional arguments. JSON returns `root`, `composition`, `skills` and `fileCount`. Use the prepared root for security checks and selected package paths for native Harbor agent skills. The helper emits no hash identity. Root tools retain code-test/lint coverage.
 

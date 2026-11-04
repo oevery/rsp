@@ -36,8 +36,10 @@ Concurrent external edits and crash recovery are unsupported. No recovery entry 
 
 ## Project knowledge
 
-Keep architecture in .rsp/specs/design.md, contracts in domain Specs, navigation in
-CONTEXT and scoped instructions outside the managed AGENTS block. Use rsp specs to
+Keep architecture contracts in .rsp/specs/design.md, domain contracts in their Specs, navigation in
+CONTEXT and scoped instructions outside the managed AGENTS block. For an existing
+or explicitly requested architecture model, use [architecture knowledge](architecture.md)
+for its relationship to contracts and its context entry. Use rsp specs to
 query knowledge. A legacy context map selects [context migration](context-migration.md);
 discovery alone grants no merge or deletion. Semantic writeback and archive decisions
 remain outside deterministic setup. Missing required Skills stop dependent work;

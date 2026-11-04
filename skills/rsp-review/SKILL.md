@@ -41,6 +41,8 @@ When fixed reviewed artifacts include changelogs, release notes, migration guide
 
 Inspect checkout state and the selected diff or structural boundary, then authority, then the smallest behavior chain and evidence needed for the question. Match checks to each perspective, actual content and changed risk. Report a comment/implementation or example/contract discrepancy once, with evidence from both sides; presume neither correct. Stop when applicable judgments are supported. Do not broaden scope or execute snippets without authority.
 
+When the reviewed scope affects modeled structure, responsibilities, dependencies or bindings, apply [architecture knowledge](../rsp/references/architecture.md) within that scope.
+
 Reuse traceable test evidence while its tested scope and relevant code, dependencies, configuration, tools, inputs and environment still apply. Run authorized checks only for gaps, invalidated results, changed risk or explicitly required execution. Distinguish reused evidence from new observations.
 
 For re-review, inspect the actual correction and affected behavior against the original scope, expanding within it for evidenced consequences. Earlier clean verdicts do not establish a changed target; unchanged tests need no rerun solely for a new judgment. Perform the requested semantic review: neither passing tests nor an implementer summary supplies that judgment or required independence.

@@ -7,7 +7,7 @@
   },
   "code": {
     "check-command": "uv sync --project tests/skills --frozen && RSP_INSTALL_ALLOW_NETWORK=1 pnpm release:check",
-    "docs-only-command": "pnpm lint && pnpm exec vitest run --no-file-parallelism tests/code/tooling/release-workflows.test.js",
+    "docs-only-command": "pnpm run doctor && pnpm lint && pnpm exec vitest run --no-file-parallelism tests/code/tooling/release-workflows.test.js",
     "docs-only-paths": [
       "docs/**",
       "README.md",

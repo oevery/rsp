@@ -28,6 +28,8 @@ Diagnosis-only investigates a bounded symptom read-only without a ready mutation
 
 Inspect applicable instructions, the selected Change/Brief when tracked, relevant Specs and decisions, and the owning code and tests. Use supplied paths and discover missing context as needed; a dispatch summary does not replace source inspection. Operate only in the execution location supplied by the host.
 
+When work affects modeled structure, responsibilities, dependencies or bindings, use [architecture knowledge](../rsp/references/architecture.md) for reading, synchronization and own checks.
+
 Select the method from the request and evidence:
 
 - **Diagnosis:** for an unexplained symptom or diagnosis-only request, load [diagnosis](references/diagnosis.md) before any fix. Diagnosis-only remains read-only and ends with cause evidence or an unresolved discriminating check.

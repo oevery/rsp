@@ -44,6 +44,7 @@
     "dev": "tsup --watch",
     "docs:build": "vitepress build docs",
     "docs:check": "node scripts/docs-check.mjs",
+    "doctor": "node dist/cli.mjs doctor",
     "docs:deploy": "wrangler deploy",
     "docs:dev": "vitepress dev docs",
     "docs:preview": "vitepress preview docs",
@@ -55,7 +56,7 @@
     "test:diagnostics": "vitest run --config tests/diagnostics/vitest.config.ts",
     "test:pack": "node tests/code/package/package-check.mjs",
     "test:skills": "uv run --frozen --project tests/skills python tests/skills/evaluate.py",
-    "release:check": "pnpm run build && pnpm run typecheck && pnpm run lint && pnpm run test:code && pnpm run test:skills check && pnpm run skills:security-check && pnpm run docs:check",
+    "release:check": "pnpm run build && pnpm run doctor && pnpm run typecheck && pnpm run lint && pnpm run test:code && pnpm run test:skills check && pnpm run skills:security-check && pnpm run docs:check",
     "test:viewer:browser": "node tests/code/architecture/browser-check.mjs"
   },
   "dependencies": {

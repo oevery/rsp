@@ -23,6 +23,8 @@ Resolve needed RSP settings, including defaults and inheritance, through the sel
 
 Read the request, authority, nearest project context, Change and Brief when selected, then only decisive evidence. A direct design question without a Change does not require one. A design question inside a tracked Change retains that WorkRef, but defaults to report-only; only explicit artifact authority permits updating its Design.
 
+For structural or responsibility decisions, use [architecture knowledge](../rsp/references/architecture.md) to inspect any existing model and distinguish current facts from proposed design.
+
 A request to shape, create, or refine a Change grants artifact authority unless no-edit; advice does not. If creation focuses it, preserve the exact prior focus and restore it immediately unless selection was requested. Shaping grants no other authority; preserve unrelated work.
 
 Route concrete or ready work to implementation only when authorized and no design/planning question remains. An explicit read-only design request still ends with its report. Do not rewrite settled work for style or completeness.

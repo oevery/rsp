@@ -6,6 +6,19 @@ is explicitly reported and other commands keep working.
 
 ## Define the model
 
+When adding this model, add one navigation link in the root `CONTEXT.md`, reusing
+an existing entry. If that file is absent, create a minimal entry as part of the
+architecture setup. For example:
+
+```md
+Architecture navigation: [`.rsp/architecture.json`](.rsp/architecture.json), with module relationships and related documents.
+```
+
+Installation alone needs no link when there is no model; ordinary installation
+and updates do not rewrite project context for this purpose. Keep the model's
+descriptions brief and current, with detailed contracts in the linked documents.
+Planned architecture belongs in the Change's Design until implemented.
+
 ```json
 {
   "schemaVersion": 1,
@@ -48,6 +61,7 @@ Decisions rationale, and CONTEXT vocabulary and navigation.
 rsp architecture
 rsp architecture --node api --json
 rsp architecture --view application --json --compact
+rsp doctor
 rsp view
 rsp view --no-open
 rsp view status
@@ -64,6 +78,11 @@ marks boundary nodes; a parent container does not substitute for a relation endp
 The full query has no count truncation. Files larger than 16 MiB fail explicitly
 rather than returning truncated content. Architecture and ordinary commands do
 not start the service or import the layout runtime.
+
+`doctor` also checks the complete model and its document/chapter bindings.
+An absent model is non-blocking; an invalid model or unresolved binding is an
+issue and makes the command fail. Use `doctor --json` for structured results.
+Passing these checks does not establish semantic agreement with implementation.
 
 `view` opens a prebuilt shared frontend; `--no-open` prints its URL. Open each project
 or Git worktree from its own directory using its selected RSP invocation. The

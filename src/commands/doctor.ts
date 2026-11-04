@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs'
 import { readdir, readFile, stat } from 'node:fs/promises'
 import { basename, join, relative } from 'node:path'
 
+import { ARCHITECTURE_FILE, queryArchitecture } from '../architecture/model.js'
 import { hasRspAgentsBlock } from '../core/artifacts.js'
 import { inspectChangeGroups } from '../core/change-group.js'
 import { clearConfigCache, getVersion, inspectRspConfig, loadRspConfig, OBSOLETE_RSP_RULES_PATH, RSP_DIR, RSP_RULES_PATH } from '../core/config.js'
@@ -77,12 +78,14 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
   }
   await checkSpecsTree(checks, reportRuntime)
   await checkArchiveNaming(checks)
-  const decisionRecordsConfigValid = await checkConfigSemantics(checks, reportRuntime)
-  if (decisionRecordsConfigValid) {
+  const configValid = await checkConfigSemantics(checks, reportRuntime)
+  if (configValid) {
     await checkDecisionRecordsDirectory(checks, reportRuntime)
     await checkInactiveDefaultDecisionRecords(checks, reportRuntime)
   }
   await checkActiveChangeConsistency(checks)
+  if (configValid)
+    await checkArchitecture(checks)
   const result: DoctorResult = {
     command: 'doctor',
     ok: checks.every(check => check.status !== 'issue'),
@@ -94,6 +97,46 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<DoctorResu
   }
 
   return result
+}
+
+async function checkArchitecture(checks: DoctorCheck[]): Promise<void> {
+  try {
+    const architecture = await queryArchitecture()
+    if (!architecture.configured) {
+      checks.push({
+        status: 'info',
+        code: 'architecture_not_configured',
+        label: ARCHITECTURE_FILE,
+        message: 'Optional architecture model is not configured.',
+      })
+    }
+    else if (architecture.diagnostics.length) {
+      for (const diagnostic of architecture.diagnostics) {
+        checks.push({
+          status: 'issue',
+          code: `architecture_${diagnostic.code}`,
+          label: `architecture binding: ${diagnostic.file ?? ARCHITECTURE_FILE}`,
+          message: `${diagnostic.file ?? ARCHITECTURE_FILE}: ${diagnostic.message}`,
+        })
+      }
+    }
+    else {
+      checks.push({
+        status: 'ok',
+        code: 'architecture_valid',
+        label: 'architecture structure and document bindings',
+        message: `${architecture.nodes.length} nodes, ${architecture.relations.length} relations, ${architecture.views.length} views. Structural and reference validity does not establish semantic agreement with implementation.`,
+      })
+    }
+  }
+  catch (error) {
+    checks.push({
+      status: 'issue',
+      code: 'architecture_inspection_failed',
+      label: ARCHITECTURE_FILE,
+      message: `${ARCHITECTURE_FILE}: ${toErrorMessage(error)}`,
+    })
+  }
 }
 
 async function reportProjectRuntime(checks: DoctorCheck[]): Promise<boolean> {

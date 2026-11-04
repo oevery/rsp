@@ -4,6 +4,9 @@ This checkout contains the shipped RSP product and its own maintenance workspace
 Use the relevant contract below; research and completed work explain evidence,
 not current behavior.
 
+Architecture navigation: [`.rsp/architecture.json`](.rsp/architecture.json)
+maps modules and Skill collaboration to their related documents.
+
 ## Contract navigation
 
 | Question | Owner |
