@@ -15,7 +15,7 @@ ARG PNPM_VERSION
 RUN npm install -g pnpm@${PNPM_VERSION} --fetch-timeout=60000 --fetch-retries=1
 COPY .build/requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt && rm /tmp/requirements.txt
-COPY .build/package/package.json .build/package/pnpm-lock.yaml /opt/rsp-package/
+COPY .build/package/package.json .build/package/pnpm-lock.yaml .build/package/pnpm-workspace.yaml /opt/rsp-package/
 RUN cd /opt/rsp-package && pnpm install --prod --frozen-lockfile --ignore-scripts
 COPY .build/package /opt/rsp-package
 RUN ln -s /opt/rsp-package/bin/rsp.mjs /usr/local/bin/rsp && chmod +x /opt/rsp-package/bin/rsp.mjs

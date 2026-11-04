@@ -8,7 +8,7 @@ environment:
   delete: true
 agents:
   - import_path: tests.skills.support.agent:RoutedCodex
-    model_name: AI-HUB/gpt-6.1-sol
+    model_name: auto/gpt-6.1-sol
     skills:
       - skills/rsp
       - skills/rsp-shape
@@ -22,16 +22,14 @@ agents:
       reasoning_effort: medium
       web_search: disabled
       config:
-        model_catalog_json: ~/.codex/opencodex-catalog.json
-        model_provider: opencodex
+        model_catalog_json: ~/.codex/magpie-desktop-models.json
+        model_provider: magpie
         model_providers:
-          opencodex:
-            name: OpenCodex
-            base_url: http://host.docker.internal:10100/v1
+          magpie:
+            name: Magpie
+            base_url: http://host.docker.internal:3425/v1
             wire_api: responses
             env_key: OPENAI_API_KEY
-            http_headers:
-              Host: 127.0.0.1:10100
         features:
           memories: false
           plugins: false

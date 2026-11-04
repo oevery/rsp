@@ -1,5 +1,5 @@
 [judge]
-judge = "openai/AI-HUB/gpt-6.1-sol"
+judge = "openai/auto/gpt-6.1-sol"
 reasoning_effort = "high"
 files = [
   "/logs/agent/codex.txt",

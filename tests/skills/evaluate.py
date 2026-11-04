@@ -541,7 +541,7 @@ def check_image_inputs():
     # Compare actual baked bytes, including additions/deletions, before claiming
     # that a fresh job's source snapshot describes its execution environment.
     roots = {f"/opt/rsp-package/{name}": ROOT / name
-             for name in ("bin", "dist", "skills", "package.json", "pnpm-lock.yaml")}
+             for name in ("bin", "dist", "skills", "package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml")}
     roots.update({f"/opt/rsp-eval/{name}.py": HOME / f"support/{name}.py"
                   for name in ("grade", "checks", "verifier", "workspace", "outputs")})
     roots.update({"/opt/rsp-build/uv.lock": HOME / "uv.lock",

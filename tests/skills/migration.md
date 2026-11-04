@@ -8,7 +8,7 @@ Each task supplies task.toml, instruction.md, environment/Dockerfile, tests/test
 
 The workspace is /app. Its artifact includes .git for separate-verifier checks of history and staging. Task-specific checks preserve known user files and inspect Git state where required, without a per-file hash registry or universal path allowlist. Native coordination additionally retains real child-session traces; role-labelled text cannot substitute for workers.
 
-Task tests/test.sh invokes /opt/rsp-eval/grade.py. It stages one shared Reward Kit criterion beside the task assertions, and the shared Python verifier executes those assertions in an isolated process. Check output is retained in /logs/verifier/check.log. Implement, actual-source recovery and exact-scope commit delivery use deterministic criteria. Semantic tasks add a native judge.toml with openai/AI-HUB/gpt-6.1-sol, high reasoning effort and binary criteria aggregated by threshold 1.0. Judge routing uses runtime RSP_JUDGE_BASE_URL, RSP_JUDGE_API_KEY and optional RSP_JUDGE_HOST. Credentials are not stored in task definitions.
+Task tests/test.sh invokes /opt/rsp-eval/grade.py. It stages one shared Reward Kit criterion beside the task assertions, and the shared Python verifier executes those assertions in an isolated process. Check output is retained in /logs/verifier/check.log. Implement, actual-source recovery and exact-scope commit delivery use deterministic criteria. Semantic tasks add a native judge.toml with openai/auto/gpt-6.1-sol, high reasoning effort and binary criteria aggregated by threshold 1.0. Judge routing uses runtime RSP_JUDGE_BASE_URL, RSP_JUDGE_API_KEY and optional RSP_JUDGE_HOST. Credentials are not stored in task definitions.
 
 ## Representative coverage
 

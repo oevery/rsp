@@ -1234,11 +1234,13 @@ class EvaluationContract(unittest.TestCase):
                 self.assertEqual(set(row["jobEffects"]), {"summary.md"})
 
     def test_routed_model_reaches_native_executor_unchanged(self):
-        instance = object.__new__(agent.RoutedCodex)
-        instance.model_name = "AI-HUB/gpt-6.1-sol"
-        with patch.object(Codex, "exec_as_agent", new_callable=AsyncMock) as execute:
-            asyncio.run(instance.exec_as_agent(None, "codex exec --model gpt-6.1-sol --json -- task"))
-            self.assertIn("--model AI-HUB/gpt-6.1-sol ", execute.call_args.args[1])
+        for model in ("AI-HUB/gpt-6.1-sol", "auto/gpt-6.1-sol"):
+            with self.subTest(model=model):
+                instance = object.__new__(agent.RoutedCodex)
+                instance.model_name = model
+                with patch.object(Codex, "exec_as_agent", new_callable=AsyncMock) as execute:
+                    asyncio.run(instance.exec_as_agent(None, "codex exec --model gpt-6.1-sol --json -- task"))
+                    self.assertIn(f"--model {model} ", execute.call_args.args[1])
 
     @unittest.skipUnless(os.environ.get("RSP_EVAL_CONTAINER_TESTS") == "1", "explicit offline Docker probe")
     def test_native_codex_home_supports_helpers_retention_and_cleanup(self):
@@ -3410,7 +3412,7 @@ source "$RSP_SCRIPT"
             home = root / "tests/skills"
             files = {}
             for name in ("bin/rsp.mjs", "dist/cli.mjs", "skills/rsp/SKILL.md",
-                         "package.json", "pnpm-lock.yaml"):
+                         "package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml"):
                 files[f"/opt/rsp-package/{name}"] = root / name
             for name in ("grade", "checks", "verifier", "workspace", "outputs"):
                 files[f"/opt/rsp-eval/{name}.py"] = home / f"support/{name}.py"
@@ -3423,12 +3425,12 @@ source "$RSP_SCRIPT"
             with patch.object(evaluate, "ROOT", root), patch.object(evaluate, "HOME", home):
                 with patch.object(subprocess, "check_output", return_value=json.dumps(baked)):
                     evaluate.check_image_inputs()
-                for kind in ("changed", "missing", "extra"):
+                for kind in ("changed", "missing", "extra", "changed-workspace", "missing-workspace"):
                     actual = dict(baked)
-                    key = "/opt/rsp-eval/grade.py"
-                    if kind == "changed":
+                    key = "/opt/rsp-package/pnpm-workspace.yaml" if kind.endswith("-workspace") else "/opt/rsp-eval/grade.py"
+                    if kind.startswith("changed"):
                         actual[key] = "older-bytes"
-                    elif kind == "missing":
+                    elif kind.startswith("missing"):
                         del actual[key]
                     else:
                         actual["/opt/rsp-package/skills/retired/SKILL.md"] = "retired"

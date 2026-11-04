@@ -37,6 +37,7 @@ if __name__ == "__main__":
         shutil.copytree(ROOT / name, package / name)
     shutil.copy2(ROOT / "package.json", package / "package.json")
     shutil.copy2(ROOT / "pnpm-lock.yaml", package / "pnpm-lock.yaml")
+    shutil.copy2(ROOT / "pnpm-workspace.yaml", package / "pnpm-workspace.yaml")
     versions = resolved_versions()
     print("Evaluation image toolchain: " + json.dumps(versions, sort_keys=True), flush=True)
     build_args = [argument for tool in ("node", "python", "pnpm")
