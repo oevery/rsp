@@ -3,6 +3,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { stripVTControlCharacters } from 'node:util'
 import { afterEach, expect, it } from 'vitest'
 
 const cli = fileURLToPath(new URL('../../../dist/cli.mjs', import.meta.url))
@@ -84,9 +85,10 @@ it.each([
     })]),
   })
   const text = run()
+  const output = stripVTControlCharacters(text.stdout)
   expect(text.status).toBe(1)
-  expect(text.stdout).toContain('contract.md')
-  expect(text.stdout).toContain('1 issue(s)')
+  expect(output).toContain('contract.md')
+  expect(output).toContain('1 issue(s)')
 })
 
 it('reports malformed JSON and invalid relations without losing other doctor results', () => {
