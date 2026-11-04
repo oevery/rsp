@@ -1,5 +1,21 @@
 # Changelog
 
+## [4.1.0](https://github.com/oevery/rsp/compare/v4.0.0...v4.1.0) (2026-11-04)
+
+### Features
+
+* **architecture:** add shared local architecture viewer ([f0dab88](https://github.com/oevery/rsp/commit/f0dab8875b2b207529c512158fc27703978dfe91))
+* **architecture:** integrate project models into doctor and Skills ([cfcdfcb](https://github.com/oevery/rsp/commit/cfcdfcb43d2699e5948cb656b09fcd84b6e35c36))
+
+### Bug Fixes
+
+* **doctor:** avoid duplicate configuration diagnostics ([f92692f](https://github.com/oevery/rsp/commit/f92692f00f18aad336f46d78e6ea5977d62372de))
+* **eval:** align runtime image inputs and Magpie routing ([57c01f4](https://github.com/oevery/rsp/commit/57c01f434a8e9a09f88ff8c66fbf4e4097918669))
+
+### Performance Improvements
+
+* **ci:** reuse complete CI checks before publishing ([f686ca6](https://github.com/oevery/rsp/commit/f686ca6aa7c2285097a51f2129c1a91909bff0a0))
+
 ## [4.0.0](https://github.com/oevery/rsp/compare/v3.3.0...v4.0.0) (2026-10-24)
 
 ### ⚠ BREAKING CHANGES
