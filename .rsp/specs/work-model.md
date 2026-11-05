@@ -85,23 +85,19 @@ invalidated completed work; routine attempts, fixes, retries and check runs are 
 new tasks. Task completion establishes neither verification nor independent or
 human acceptance.
 
-Verify retains Required/Optional checks and only the conclusions, conditions,
-references and gaps needed to judge acceptance, evidence applicability or locate
-necessary evidence. Results already expressed by check items are not repeated.
-Commands, counts, candidate/environment details and review steps require that
-decision or lookup purpose; having occurred does not justify retention. Replace
-superseded conclusions only within their covered scope; preserve applicable reused
-evidence and distinguish full review, correction-only re-review and human
-acceptance. Invalidated coverage becomes incomplete. Shared evidence appears once;
-detailed execution/review records stay with their existing owner, without a run
-history or debugging narrative in Change.
+Verify defaults to Required/Optional checklists only. Supplementary text is
+admitted only for an unresolved acceptance limit, a condition or reference necessary
+to reuse evidence, or an explicitly required audit fact. Delete text meeting none
+of these conditions, including repeated results, test counts, execution narration
+and diagnosis/fix stories. An audit-required resolved failure retains only the
+failure and final disposition. Preserve applicable evidence scope and distinguish
+full review, correction-only re-review and human acceptance. Invalidated coverage
+becomes incomplete. Shared evidence appears once; detailed records keep their owner.
 
-Retain useful before/after outcome comparisons, decision rationale and material
-failure dispositions with their existing owner. A resolved ordinary failure needs
-no attempt narrative, but its effect on acceptance or evidence validity remains.
-Routine history stays in conversation; raw evidence keeps its existing owner and
-retention contract. Removing stale prose neither deletes reports, conversation or
-Git history nor requires moving it into Focus, an appendix or a new process record.
+Decision rationale and useful outcome comparisons stay in their owning sections;
+they do not exempt Verify text from its admission rule. Do not relocate discarded
+narration into another section, Focus, an appendix or a new report. Prose cleanup
+does not remove tests, raw evidence, reports, conversation or Git history.
 
 Before archive, establish verified outcome facts, distill useful Focus information,
 write necessary stable knowledge to its owner, and converge the entire Change.
@@ -111,8 +107,8 @@ constraints, not persisted stages or mandatory separate tool calls.
 
 No useful knowledge delta requires no writeback; a stale authoritative contract
 still requires correction. Whole-Change convergence retains the delivered delta,
-useful outcome comparisons, actual knowledge-update references, important failure
-dispositions, evidence boundaries and unresolved limits. It removes superseded plans, duplicate current
+useful outcome comparisons and actual knowledge-update references, with Verify
+subject to its admission rule above. It removes superseded plans, duplicate current
 Specs, operation permissions, session chronology and response-only handoff blocks.
 Detailed records and original verdicts stay with their evidence owner. A material
 contradiction returns to its decision, implementation or verification owner rather

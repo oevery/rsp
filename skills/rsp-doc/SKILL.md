@@ -25,7 +25,7 @@ Write a grounded artifact usable without the author conversation. Use the artifa
 - README and procedures supply the starting point, prerequisites, actions and recognizable success. Concepts and decisions explain meanings, reasons, alternatives and consequences; references supply exact, navigable contracts.
 - CONTEXT defines vocabulary and relationships and directs readers to authoritative owners. Specs state what consumers may rely on, including conditions, failures and exceptions; add scenarios only to resolve ambiguity. Scoped operating instructions own commands, authority and required checks.
 - For architecture models or changes to their bound documents, use [architecture knowledge](../rsp/references/architecture.md) for synchronization and reference checks.
-- Before writing a Change, load the [current work record rules](../rsp/references/work-model.md#current-work-records) when absent from context; the same resource owns Blockers syntax. Keep its six sections current during iteration and reconcile the whole record for closeout. Readers must find the outcome, applicable evidence and remaining work without reconstructing attempts; preserve useful before/after results and decision reasons when removing chronology.
+- Before writing a Change, load the [current work record rules](../rsp/references/work-model.md#current-work-records) when absent from context; the same resource owns Verify admission and Blockers syntax. Keep its six sections current during iteration and reconcile the whole record for closeout. Apply those rules to existing text as well as additions.
 
 ## Check facts and reading paths
 

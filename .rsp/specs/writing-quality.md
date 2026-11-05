@@ -96,9 +96,8 @@ not redefine the workflow.
   statement still needs the correct owner; copying it into several files is not writeback.
 - Work records show current intent and actual progress during work, then delivered
   outcomes at closeout. Readers must not reconstruct attempt history to find the
-  result. Preserve useful before/after comparisons, decision reasons, evidence
-  applicability and material failure dispositions; brevity cannot erase those
-  distinctions. Cleanup creates no new history store or evidence-deletion authority.
+  result. Apply the work-model contract's Verify admission and record ownership
+  rules to retained text as well as additions.
 - API comments explain actual inputs, returns, failures and usage. Ordinary inline
   comments retain accurate constraints, rationale or usage that nearby code does
   not make clear; remove restatement that adds no useful information, without an

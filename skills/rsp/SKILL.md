@@ -40,7 +40,7 @@ Implement owns ordinary self-checks. Main-agent inspection can assess results, b
 
 Reuse traceable observations, checks and reviews while their target, acceptance boundary and relevant inputs still apply. Changed code, dependencies, configuration, tools or environment invalidate affected evidence; role changes and delivery-scope confirmation alone do not. Include excluded worktree inputs when assessing a staged slice, and recognize behavior changes in normative Specs or executable Skills even when stored as Markdown.
 
-Check paths, diff, outcomes, omissions and evidence applicability. Reuse executor checks when applicable. Independent semantic review may use implementer test evidence; required independent execution must run. Preserve original evidence and verdicts with their existing owner; Change retains only applicable conclusions and material failure dispositions. Add no evidence ledger.
+Check paths, diff, outcomes, omissions and evidence applicability. Reuse executor checks when applicable. Independent semantic review may use implementer test evidence; required independent execution must run. Preserve original evidence and verdicts with their existing owner; apply the current work record rules to Change summaries. Add no evidence ledger.
 
 For required correction/re-review, load [review convergence](references/coordination-review.md). Batch compatible findings into one correction, run covering checks, then review finding resolution and new risks in the correction. Stop for changed scope/authority, unsafe replay, missing required capability, non-convergence or no new discriminating evidence. Required failures remain incomplete.
 
