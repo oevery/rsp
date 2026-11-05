@@ -1,4 +1,4 @@
-"""Project retained native child tool events into the task judge's input."""
+"""Project native child tool and turn events, without inferring completion."""
 import json
 from pathlib import Path
 
@@ -16,12 +16,13 @@ def collect(sessions, output):
         if not identity or identity in children:
             raise ValueError("Missing or ambiguous child session identity")
         tools = [e for e in events if e.get("type") == "response_item" and e.get("payload", {}).get("type") in kinds]
+        turns = [e for e in events if e.get("type") == "event_msg" and e.get("payload", {}).get("type") in ("task_started", "task_complete", "turn_aborted")]
         calls = {e["payload"].get("call_id") for e in tools if e["payload"]["type"] in ("function_call", "custom_tool_call")}
         results = {e["payload"].get("call_id") for e in tools if e["payload"]["type"].endswith("_output")}
         if not (calls & results) - {None}:
             raise ValueError(f"Child {identity} has no attributed tool call/result pair")
         attribution = {key: meta[key] for key in ("id", "source", "timestamp", "cwd", "cli_version") if key in meta}
-        children[identity] = {"session": attribution, "tool_events": tools}
+        children[identity] = {"session": attribution, "tool_events": tools, "turn_events": turns}
     if len(children) < 2:
         raise ValueError("Missing two retained child tool trajectories")
     output.parent.mkdir(parents=True, exist_ok=True)

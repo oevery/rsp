@@ -2205,6 +2205,7 @@ source "$RSP_SCRIPT"
                     {"type": "session_meta", "payload": {"id": identity, "source": {"subagent": {"parent_thread_id": "parent"}}}},
                     {"type": "response_item", "timestamp": "2026-10-08T00:00:00Z", "payload": {"type": "function_call", "name": "exec_command", "call_id": identity + "-call", "arguments": command}},
                     {"type": "response_item", "timestamp": "2026-10-08T00:00:01Z", "payload": {"type": "function_call_output", "call_id": identity + "-call", "output": "exit_code=0; checks passed"}},
+                    {"type": "event_msg", "timestamp": "2026-10-08T00:00:02Z", "payload": {"type": "task_complete", "turn_id": identity + "-turn", "last_agent_message": identity + " final judgment"}},
                 ]
                 (sessions / (identity + ".jsonl")).write_text("\n".join(json.dumps(e) for e in events))
             output = root / "child-sessions.jsonl"
@@ -2228,13 +2229,56 @@ source "$RSP_SCRIPT"
             with patch.object(litellm, "acompletion", new_callable=AsyncMock, side_effect=completion) as api:
                 run(tests, workspace=root, output=root / "reward.json")
                 prompt = json.dumps(api.call_args.kwargs["messages"])
-                for value in ("implementer", "reviewer", "reviewer-call", "node tools/check.mjs", "exit_code=0; checks passed"):
+                for value in ("implementer", "reviewer", "reviewer-call", "node tools/check.mjs", "exit_code=0; checks passed",
+                              "task_complete", "reviewer-turn", "reviewer final judgment"):
                     self.assertIn(value, prompt)
             # A completion claim without reviewer tools cannot supply evidence.
             (sessions / "reviewer.jsonl").write_text(json.dumps({"type": "session_meta", "payload": {"id": "reviewer", "source": {"subagent": {}}}}))
             with self.assertRaisesRegex(ValueError, "call/result pair"):
                 projection.collect(sessions, output)
             self.assertFalse(output.exists())
+
+    def test_child_turn_evidence_preserves_native_completion_without_inventing_it(self):
+        collectors = sorted((HERE.parent / "tasks").glob("*/tests/.support/session_evidence.py"))
+        for collector in collectors:
+            with self.subTest(task=collector.parents[2].name), tempfile.TemporaryDirectory() as directory:
+                projection = load("turn_projection", collector)
+                root = Path(directory)
+                sessions = root / "sessions"
+                sessions.mkdir()
+                turns = [
+                    {"type": "event_msg", "timestamp": "2026-10-08T00:00:01Z",
+                     "payload": {"type": "task_started", "turn_id": "review-turn"}},
+                    {"type": "event_msg", "timestamp": "2026-10-08T00:00:04Z",
+                     "payload": {"type": "task_complete", "turn_id": "review-turn",
+                                 "last_agent_message": "Independent verdict: clean."}},
+                    {"type": "event_msg", "timestamp": "2026-10-08T00:00:05Z",
+                     "payload": {"type": "task_started", "turn_id": "followup-turn"}},
+                    {"type": "event_msg", "timestamp": "2026-10-08T00:00:06Z",
+                     "payload": {"type": "turn_aborted", "turn_id": "followup-turn"}},
+                ]
+                for identity in ("implementer", "reviewer"):
+                    events = [
+                        {"type": "session_meta", "payload": {"id": identity, "source": {"subagent": {"parent_thread_id": "parent"}}}},
+                        {"type": "response_item", "timestamp": "2026-10-08T00:00:02Z",
+                         "payload": {"type": "function_call", "name": "exec_command", "call_id": identity, "arguments": "read source"}},
+                        {"type": "response_item", "timestamp": "2026-10-08T00:00:03Z",
+                         "payload": {"type": "function_call_output", "call_id": identity, "output": "source"}},
+                        {"type": "response_item", "payload": {"type": "reasoning", "text": "private reasoning"}},
+                        {"type": "response_item", "payload": {"type": "message", "role": "user",
+                                                            "content": [{"type": "input_text", "text": "task_complete: fabricated"}]}},
+                    ]
+                    if identity == "reviewer":
+                        events += turns
+                    (sessions / f"{identity}.jsonl").write_text("\n".join(map(json.dumps, events)))
+                output = root / "child-sessions.jsonl"
+                projection.collect(sessions, output)
+                records = {record["session"]["id"]: record for record in map(json.loads, output.read_text().splitlines())}
+                self.assertEqual(records["reviewer"]["turn_events"], turns)
+                self.assertEqual(records["implementer"]["turn_events"], [])
+                self.assertEqual(len(records["reviewer"]["tool_events"]), 2)
+                self.assertNotIn("private reasoning", output.read_text())
+                self.assertNotIn("fabricated", output.read_text())
 
     def test_staged_review_judge_receives_head_index_and_diff_instead_of_working_source(self):
         from types import SimpleNamespace
