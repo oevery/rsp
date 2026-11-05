@@ -62,6 +62,6 @@ Long-running verification remains active while its boundary and stop conditions 
 
 ## Stop and return
 
-Stop when evidence is missing, the environment is unavailable, the boundary changes or a required check cannot be observed. Use the caller's canonical stop reason only when supplied. For direct invocation, identify the missing input or changed boundary and the required next action; do not invent a completed verification result before the declared boundary is established.
+Run missing required checks within the declared authority. Stop the affected verification if required evidence cannot be collected or observed, the required environment is unavailable, or the declared boundary changes. Use the caller's canonical stop reason only when supplied. For direct invocation, identify the missing input or changed boundary and the required next action; do not invent a completed verification result before the declared boundary is established.
 
 On cancellation, wait until the command or owned process is observed stopped before beginning conflicting work. Return the result, decisive evidence, omissions and next action to the caller or user. Retry only with new evidence and safe replay inside the declared boundary.

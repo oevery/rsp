@@ -29,7 +29,7 @@ The user request fixes the requested outcome and allowed operations subject to n
 
 ## Select perspectives before loading
 
-Select methods from the judged content and its risks. Supporting references inform the judgment without becoming additional review targets. Respect narrower requested scope and reuse applicable instructions already in context.
+Select methods from the judged content and its risks. Two perspectives require neither two reports nor two reviewers. Supporting references inform the judgment without becoming additional review targets. Respect narrower requested scope and reuse applicable instructions already in context.
 
 - **[Code](references/code-review.md):** behavior, contracts, safety and failures of executable content; also ownership, dependency and verification lenses for explicitly bounded structural discovery. Within change review, structural inspection stays with a concrete risk in the fixed boundary. A prose behavior claim alone can remain Document grounding.
 - **[Document](references/document-review.md):** factual explanation, usability, navigation and maintenance of reviewed content, including API/TSDoc comments, requirements and human- or agent-facing guidance.
@@ -39,11 +39,11 @@ When fixed reviewed artifacts include changelogs, release notes, migration guide
 
 ## Inspect the fixed scope
 
-Inspect checkout state and the selected diff or structural boundary, then authority, then the smallest behavior chain and evidence needed for the question. Match checks to each perspective, actual content and changed risk. Report a comment/implementation or example/contract discrepancy once, with evidence from both sides; presume neither correct. Stop when applicable judgments are supported. Do not broaden scope or execute snippets without authority.
+Inspect checkout state and the selected diff or structural boundary, then authority, then the smallest behavior chain and evidence needed for the question. Report a comment/implementation or example/contract discrepancy once, with evidence from both sides; presume neither correct. Stop when applicable judgments are supported. Do not broaden scope or execute snippets without authority.
+
+Reuse traceable check evidence while its tested scope and relevant code, dependencies, configuration, tools, inputs and environment still apply. Before running an authorized check, identify the evidence gap, invalidated result, changed risk or explicit execution requirement it addresses. Apply this selection to tests and non-test checks alike; low cost alone does not justify extra execution. Distinguish reused evidence from new observations.
 
 When the reviewed scope affects modeled structure, responsibilities, dependencies or bindings, apply [architecture knowledge](../rsp/references/architecture.md) within that scope.
-
-Reuse traceable test evidence while its tested scope and relevant code, dependencies, configuration, tools, inputs and environment still apply. Run authorized checks only for gaps, invalidated results, changed risk or explicitly required execution. Distinguish reused evidence from new observations.
 
 For re-review, inspect the actual correction and affected behavior against the original scope, expanding within it for evidenced consequences. Earlier clean verdicts do not establish a changed target; unchanged tests need no rerun solely for a new judgment. Perform the requested semantic review: neither passing tests nor an implementer summary supplies that judgment or required independence.
 
@@ -53,7 +53,7 @@ Missing comparison or authority blocks dependent pipelines; other gaps follow th
 
 ## Report
 
-Responses follow explicit language instruction, personal instructions, then conversation language, never project artifact-language settings. Preserve paths, commands, identifiers, WorkOwner/WorkRefs, `P0`-`P3` and `issues_found | clean | skipped | blocked`; use localized narration with differing machine values as secondary exact tokens.
+Responses follow explicit language instruction, personal instructions, then conversation language, never project artifact-language settings. Preserve paths, commands, identifiers, WorkOwner/WorkRefs and `P0`-`P3`; use localized narration with differing machine values as secondary exact tokens. Use `blocked | findings | clean` for the overall verdict. For per-file or per-perspective results, preserve the caller's required schema, including `issues_found` or `skipped` where specified.
 
 Preserve the information below without mandatory headings or one line per field. Use a compact report for a clean bounded review, omit empty Findings and unrelated no-op fields, and honor explicitly required formats:
 
@@ -62,7 +62,7 @@ Preserve the information below without mandatory headings or one line per field.
 - Coverage: each perspective's checked content, material omissions and unverified scope, including non-actionable gaps; distinguish reused evidence from new observations.
 - Verdict: `blocked | findings | clean`; give the next action only when an issue, blocker or requested follow-up remains. Do not repeat the findings or evidence.
 
-Use `clean` only for an applicable judgment with no actionable issue, `skipped` for an inapplicable perspective when the requested format requires it, and `blocked` when required scope, authority or decisive evidence is missing. Findings may establish a defect, an explicit-requirement violation, or an evidenced simplification; fewer lines alone, speculative impact and taste-only cleanup do not qualify. Do not invent a wrong-result bug for a supported simplification. Missing evidence alone is a coverage limit. Retain supported findings while blocking only affected judgments. Two perspectives require neither two reports nor two reviewers.
+Use `clean` only for an applicable judgment with no actionable issue, `skipped` for an inapplicable perspective when the requested format requires it, and `blocked` when required scope, authority or decisive evidence is missing. Findings may establish a defect, an explicit-requirement violation, or an evidenced simplification; fewer lines alone, speculative impact and taste-only cleanup do not qualify. Do not invent a wrong-result bug for a supported simplification. Missing evidence alone is a coverage limit. Retain supported findings while blocking only affected judgments.
 
 Order findings by severity and path: P0 critical security/data/breakage risk; P1 normal-path contract failure; P2 meaningful edge/maintenance risk; P3 narrow actionable improvement. Assess findings by consequence and confidence, not lines removed or ease of correction.
 

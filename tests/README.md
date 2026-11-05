@@ -2,6 +2,14 @@
 
 Choose evidence for the changed boundary. Run commands from the repository root with locked dependencies installed; coordinate shared build and Docker resources before execution.
 
+For document and Skill changes, select checks by their actual inputs:
+
+- `mise exec -- pnpm run skills:package-check` validates Skill metadata and package resources; review instruction meaning and affected reading paths separately.
+- `mise exec -- pnpm run docs:check` checks CHANGELOG, root READMEs and Markdown under `docs/`, including local link targets. It does not check Skill prose or this guide; run it when its checked content, link targets or checker inputs change.
+- The offline Skill check below validates task definitions, scoring configuration, test-shell syntax, calibration samples and job configuration. It does not execute the changed Skills.
+
+Reuse traceable passing results while their relevant inputs and tested boundary remain unchanged. Explicitly required execution and release checks still apply; neither file extension nor a phase change alone selects a check.
+
 Install mise first, inspect the project configuration, then prepare the selected maintainer tools and dependencies:
 
 ```sh

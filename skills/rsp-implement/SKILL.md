@@ -79,7 +79,7 @@ After final mutation, establish minimum sufficient evidence for tracked Required
 
 - Reuse traceable passing results when the tested boundary and relevant code, dependencies, configuration, tools, inputs and environment still apply. Phase changes and unrelated edits do not invalidate evidence.
 - Run missing, failed or invalidated checks and risk-justified additions, including checks affected by integration. Named checks retain their method and coverage; explicit reruns and independent execution remain binding.
-- For an unfixed method, choose the cheapest decisive existing test, static check, build or acceptance evidence; a new test is not required.
+- If no verification method is prescribed, choose the lowest-cost existing test, static check, build or other evidence that decisively establishes acceptance. A new test is not required.
 - Match the actual target, inputs, coverage and completion to the declared check. Invocation errors or incomplete observations do not by themselves prove a product defect. Record command, tested scope, result, source and omissions, distinguishing reused evidence from new execution. Failed, unavailable or untraceable evidence cannot establish completion.
 
 Before completion, apply the same admission criteria to retained tests. Remove disposable probes, fixtures and helpers that add no distinct future confidence unless retention is required by user, Change or project authority; establish sufficient evidence for the final retained state.

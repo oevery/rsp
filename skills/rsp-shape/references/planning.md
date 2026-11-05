@@ -16,7 +16,7 @@ Keep one observable outcome per Change:
 - `Spec`: settled contract delta and acceptance, referencing affected existing Specs rather than copying the baseline or inventing public promises;
 - `Design`: approach, responsibility boundaries, and necessary tradeoffs, not repeated requirements or tasks;
 - `Tasks`: current checkable work, with prescribed order only where correctness, safety, or migration requires it;
-- `Verify`: required/optional checks proving settled acceptance, not adding new public requirements; then applicable scoped results and gaps;
+- `Verify`: Required/Optional checklists for settled acceptance; do not introduce new public requirements. Add supplementary text only as permitted by the current work record rules below;
 - `Blockers`: dependencies and decisions, or `none`.
 
 Keep the six sections; small changes need only proportionate content. Plain-prose HTML scaffold hints may remain or be removed; they guide writing, never supply requirements, evidence, or completed content. Resolve body placeholders and keep all material decisions visible outside comments.
@@ -35,7 +35,7 @@ A Change is ready only when:
 - product and mutation authority are settled;
 - affected boundaries and material constraints are known;
 - no hidden assumption can change implementation or acceptance;
-- Tasks are executable without performing them;
+- Tasks are concrete enough for implementation to begin. Shaping does not execute them;
 - Verify proves the result without process chronology; Blockers are truthful;
 - one Change or a justified shallow Group is the smallest sufficient owner.
 

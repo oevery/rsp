@@ -23,7 +23,7 @@ Load the [work model](references/work-model.md) when tracked identities are miss
 
 Use the CLI invocation selected by the project AGENTS entry; `rsp` in these Skills denotes that selection. Resolve needed settings through the selected CLI's successful `rsp config --json` summary. Reuse it until relevant drift or recovery; raw YAML is diagnostic only. Projection failure blocks choices depending on unknown settings, while independent authorized work continues.
 
-Select capabilities from their descriptions and the task contract. Executors load applicable methods and inspect sources; Core consults method details when needed for its own work or a concrete coordination question. Select the responsibility needed now:
+Select capabilities from their descriptions and the task contract. Executors reuse applicable entrypoint and method text already in context, load missing or changed instructions, and inspect sources; Core consults method details when needed for its own work or a concrete coordination question. Select the responsibility needed now:
 
 - rsp-shape: bounded read-only design or authorized planning; reopen planning only for material unresolved choices.
 - rsp-implement: diagnosis, authorized implementation or accepted-finding correction, including ordinary own checks.
@@ -56,7 +56,7 @@ Load [interruption recovery](references/coordination-recovery.md) for pause/resu
 
 ## Maintain records and prepare delivery
 
-During execution apply the [current work record rules](references/work-model.md#current-work-records), loading them when absent from context. Update affected Tasks/Verify directly when scope, contract, design and knowledge remain accurate; do not append attempts or postpone current-state corrections until archive. Use the same work model for Blockers syntax. Passing checks or recovery alone adds no whole-document rewrite. Focus supplies only missing recovery context, never acceptance or authority.
+For tracked work, apply the [current work record rules](references/work-model.md#current-work-records) during execution. Load them only when absent from context. Update affected Tasks/Verify directly when scope, contract, design and knowledge remain accurate; do not append attempts or postpone current-state corrections until archive. Use the same work model for Blockers syntax. Passing checks or recovery alone adds no whole-document rewrite. Focus supplies only missing recovery context, never acceptance or authority.
 
 Ordinary completion and checkpoint commits leave Change open; a generic commit request does not establish final delivery. At established final delivery or an explicit close request, load [delivery closeout](references/closeout.md). workflow.closeout is ask (default), auto or manual; no setting grants Git, push, publication, deployment, approval or human acceptance authority.
 
