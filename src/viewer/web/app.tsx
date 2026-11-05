@@ -6,14 +6,15 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { selectArchitecture } from '../../architecture/selection.js'
 import { rspIcon } from './branding.js'
+import { renderDiagrams } from './document-diagrams.js'
 import { LocaleProvider, useLocale } from './i18n.js'
 import { localizeLayout } from './presentation.js'
 import { StatusMessage } from './status-message.js'
-import { Button, Chevron, CloseButton, NavigationItem, Sheet, SheetContent, SheetTitle, Tooltip, TooltipProvider } from './ui/primitives.js'
+import { Button, Chevron, CloseButton, NavigationItem, Select, Sheet, SheetContent, SheetTitle, Tooltip, TooltipProvider } from './ui/primitives.js'
 import { WorkspaceSidebar } from './workspace-sidebar.js'
 
-interface Route { workspace: string, mode: string, view: string, focus: string, node: string, relation: string, file: string, anchor: string }
-interface Payload { workspace: string, root: string, revision: string, graphRevision: string, focus?: string, missingFocus?: string, architecture: ArchitectureResult, layout: { data: any, names: Record<string, string>, viewNames: Record<string, string>, references: Record<string, string>, relationIds: Record<string, string>, focusView?: string } }
+interface Route { workspace: string, mode: string, view: string, focus: string, node: string, relation: string, file: string, anchor: string, step?: string, variant?: string }
+interface Payload { workspace: string, root: string, revision: string, graphRevision: string, focus?: string, missingFocus?: string, architecture: ArchitectureResult, layout: { data: any, names: Record<string, string>, viewNames: Record<string, string>, references: Record<string, string>, relationIds: Record<string, string>, focusView?: string, collaborationViews: Record<string, string>, stepIds: Record<string, Record<string, string>> } }
 interface DocumentPayload { workspace: string, file: string, revision: string, html: string, headings: { anchor: string, title: string, depth: number }[] }
 interface WorkspaceError { workspace: string, message: string }
 interface DocumentError extends WorkspaceError { file: string }
@@ -26,7 +27,7 @@ if (tokenFromUrl) {
 const token = sessionStorage.getItem('rsp-reading-token') ?? ''
 function locationRoute(): Route {
   const query = new URLSearchParams(location.search)
-  return { workspace: query.get('workspace') ?? '', mode: query.get('mode') ?? (query.has('focus') ? 'focus' : query.has('view') && query.get('view') ? 'view' : ''), view: query.get('view') ?? '', focus: query.get('focus') ?? '', node: query.get('node') ?? '', relation: query.get('relation') ?? '', file: query.get('file') ?? '', anchor: query.get('anchor') ?? '' }
+  return { workspace: query.get('workspace') ?? '', mode: query.get('mode') ?? (query.has('focus') ? 'focus' : query.has('view') && query.get('view') ? 'view' : ''), view: query.get('view') ?? '', focus: query.get('focus') ?? '', node: query.get('node') ?? '', relation: query.get('relation') ?? '', file: query.get('file') ?? '', anchor: query.get('anchor') ?? '', step: query.get('step') ?? '', variant: query.get('variant') ?? '' }
 }
 async function api(path: string, signal?: AbortSignal) {
   const response = await fetch(path, { headers: { Authorization: `Bearer ${token}` }, signal, cache: 'no-store' })
@@ -44,17 +45,24 @@ function App() {
   const [documentError, setDocumentError] = useState<DocumentError | null>(null)
   const [assetErrors, setAssetErrors] = useState<AssetErrors | null>(null)
   const [navigationOpen, setNavigationOpen] = useState(false)
+  const [panelPinned, setPanelPinned] = useState<boolean | null>(() => {
+    const value = sessionStorage.getItem('rsp-panel-open')
+    return value === null ? null : value === 'true'
+  })
+  const [panelTab, setPanelTab] = useState<'navigation' | 'steps'>('navigation')
   const [narrow, setNarrow] = useState(() => matchMedia('(max-width: 760px)').matches)
   const [cardPosition, setCardPosition] = useState({ left: false, bottom: false })
   const [documentWidth, setDocumentWidth] = useState(580)
   const [documentExpanded, setDocumentExpanded] = useState(false)
   const [refresh, setRefresh] = useState(0)
+  const [refreshing, setRefreshing] = useState(false)
   const reading = useRef<HTMLElement>(null)
   const canvas = useRef<HTMLElement>(null)
   const diagramApi = useRef<any>(null)
   const xyflow = useRef<any>(null)
   const navigationTrigger = useRef<HTMLButtonElement>(null)
   const navigationPane = useRef<HTMLDivElement>(null)
+  const stepsTrigger = useRef<HTMLButtonElement>(null)
   const navigationSelection = useRef(false)
   const details = useRef<HTMLElement>(null)
   const documentPane = useRef<HTMLElement>(null)
@@ -67,7 +75,7 @@ function App() {
   const readingPosition = useRef<{ workspace: string, file: string, anchor?: string, offset: number, scrollTop: number } | null>(null)
   const lastReadingPosition = useRef<typeof readingPosition.current>(null)
   const active = payload?.workspace === route.workspace && (payload.focus ?? '') === (route.mode === 'focus' ? route.focus : '') ? payload : null
-  const contextKey = active ? `${active.workspace}:${active.graphRevision}:${route.mode}:${route.view}:${route.focus}` : ''
+  const contextKey = active ? `${active.workspace}:${active.graphRevision}:${route.mode}:${route.view}:${route.focus}:${route.variant ?? ''}` : ''
   const saveViewport = () => {
     if (contextKey && xyflow.current && route.mode !== 'guide')
       viewports.current.set(contextKey, xyflow.current.getViewport())
@@ -80,6 +88,10 @@ function App() {
     const article = reading.current
     if (!article)
       return null
+    // A queued scroll can arrive after breakpoint CSS reflows the old reader,
+    // before React remounts it. Its geometry no longer describes the saved layout.
+    if (matchMedia('(max-width: 760px)').matches !== narrow)
+      return lastReadingPosition.current
     const top = article.getBoundingClientRect().top
     const heading = Array.from(article.querySelectorAll<HTMLElement>('[id]')).filter(element => element.getBoundingClientRect().top <= top + 40).at(-1)
     return { workspace: currentRoute.current.workspace, file: currentRoute.current.file, anchor: heading?.id, offset: heading ? top - heading.getBoundingClientRect().top : 0, scrollTop: article.scrollTop }
@@ -90,7 +102,7 @@ function App() {
     // resetting reading position or losing independently loaded image blobs.
     element?.querySelectorAll<HTMLElement>('[data-rsp-reading-status]').forEach((status) => {
       const key = status.dataset.rspReadingStatus
-      if (key === 'unavailableLink' || key === 'unsupportedImage')
+      if (key === 'unavailableLink' || key === 'unsupportedImage' || key === 'copySource' || key === 'diagramSource' || key === 'diagramError')
         status.textContent = t(key)
     })
     // Narrow readers mount in a portal, possibly after the parent's layout effects.
@@ -102,6 +114,8 @@ function App() {
     }
     if (element)
       lastReadingPosition.current = captureReadingPosition()
+    if (element)
+      renderDiagrams(element, t)
   }
   const navigate = (next: Route) => {
     saveViewport()
@@ -111,11 +125,17 @@ function App() {
   }
   const focusSelection = () => {
     const nativeEdges = new Set(Object.values(active?.layout.data.views ?? {}).flatMap((view: any) => view.edges.filter((edge: any) => edge.relations.some((relation: string) => active?.layout.relationIds[relation] === route.relation)).map((edge: any) => edge.id)))
+    if (route.step) {
+      for (const [edge, step] of Object.entries(active?.layout.stepIds[active?.layout.viewNames[route.view] ?? ''] ?? {})) {
+        if (step === route.step)
+          nativeEdges.add(edge)
+      }
+    }
     const find = (root: Element | ShadowRoot): HTMLElement | null => {
       for (const element of root.querySelectorAll<HTMLElement>('*')) {
         if (element.matches('.react-flow__node') && (element.dataset.id === active?.layout.names[route.node] || active?.layout.references[element.dataset.id ?? ''] === route.node))
           return element
-        if (route.relation && element.matches('.react-flow__edge') && nativeEdges.has(element.dataset.id))
+        if ((route.relation || route.step) && element.matches('.react-flow__edge') && nativeEdges.has(element.dataset.id))
           return element
         const nested = element.shadowRoot && find(element.shadowRoot)
         if (nested)
@@ -123,7 +143,7 @@ function App() {
       }
       return null
     }
-    const target = ((route.node || route.relation) && canvas.current && find(canvas.current)) || documentTrigger.current || canvas.current
+    const target = ((route.node || route.relation || route.step) && canvas.current && find(canvas.current)) || documentTrigger.current || canvas.current
     if (target?.isConnected)
       target.focus({ preventScroll: true })
     else details.current?.focus({ preventScroll: true })
@@ -171,11 +191,13 @@ function App() {
     if (route.file)
       return
     placeDetails(node, displayName)
-    const next = { ...route, node, relation }
+    diagramApi.current?.unhighlightAll()
+    diagramApi.current?.select()
+    const next = { ...route, node, relation, step: '' }
     history.replaceState(null, '', `/?${new URLSearchParams(Object.fromEntries(Object.entries(next).filter(([, value]) => value)))}`)
     setRoute(next)
   }
-  const openView = (view: string) => navigate({ ...route, mode: view ? 'view' : 'full', view, focus: '', node: '', relation: '', file: '', anchor: '' })
+  const openView = (view: string) => navigate({ ...route, mode: view ? 'view' : 'full', view, focus: '', node: '', relation: '', file: '', anchor: '', step: '', variant: '' })
   useEffect(() => {
     const media = matchMedia('(max-width: 760px)')
     const update = () => {
@@ -204,7 +226,7 @@ function App() {
         event.preventDefault()
         closeDocument()
       }
-      else if (route.node || route.relation) {
+      else if (route.node || route.relation || route.step) {
         event.preventDefault()
         select('')
         requestAnimationFrame(focusSelection)
@@ -304,6 +326,8 @@ function App() {
       }
       finally {
         running = false
+        if (current === generation.current)
+          setRefreshing(false)
       }
     }
     const heartbeat = () => void api(`/api/workspaces/${route.workspace}/heartbeat`, controller.signal).catch(() => {})
@@ -435,10 +459,136 @@ function App() {
   const model = useMemo(() => active ? LikeC4Model.create(localizeLayout(active.architecture, active.layout, active.focus, t)) : null, [active?.workspace, active?.graphRevision, active?.focus, t])
   const selectedView = active && Object.hasOwn(active.layout.viewNames, route.view) ? active.layout.viewNames[route.view] : undefined
   const missingView = !!active && route.mode === 'view' && selectedView === undefined
-  const viewId = route.mode === 'focus' && !active?.missingFocus ? active?.layout.focusView : selectedView ?? active?.layout.viewNames['']
+  const authoredView = route.mode === 'view' ? active?.architecture.views.find(view => view.id === route.view) : undefined
+  const scenario = authoredView?.scenario
+  const viewId = route.mode === 'focus' && !active?.missingFocus ? active?.layout.focusView : scenario && route.variant === 'diagram' ? active?.layout.collaborationViews[route.view] : selectedView ?? active?.layout.viewNames['']
+  const desktopPanelOpen = panelPinned ?? !scenario
+  const activePanelTab = scenario ? panelTab : 'navigation'
+  const panelVisible = narrow ? navigationOpen : desktopPanelOpen
+  const openPanel = (tab: 'navigation' | 'steps') => {
+    setPanelTab(tab)
+    navigationSelection.current = false
+    if (narrow) {
+      setNavigationOpen(true)
+    }
+    else {
+      setPanelPinned(true)
+      sessionStorage.setItem('rsp-panel-open', 'true')
+    }
+  }
+  const closePanel = () => {
+    if (narrow) {
+      setNavigationOpen(false)
+    }
+    else {
+      setPanelPinned(false)
+      sessionStorage.setItem('rsp-panel-open', 'false')
+      requestAnimationFrame(() => (activePanelTab === 'steps' ? stepsTrigger : navigationTrigger).current?.focus())
+    }
+  }
+  const selectedStep = scenario?.steps.find(step => step.id === route.step)
+  const participant = (id: string) => scenario?.participants.find(participant => participant.id === id)
+  const participantTitle = (id: string) => participant(id)?.title ?? active?.architecture.nodes.find(node => node.id === participant(id)?.node)?.title ?? id
+  const diagramElements = (selector: string): Element[] => {
+    const collect = (root: Element | ShadowRoot): Element[] => [
+      ...root.querySelectorAll(selector),
+      ...Array.from(root.querySelectorAll('*')).flatMap(element => element.shadowRoot ? collect(element.shadowRoot) : []),
+    ]
+    return canvas.current ? collect(canvas.current) : []
+  }
+  const fitGraphBounds = (bounds: { x: number, y: number, width: number, height: number }) => {
+    const area = canvas.current?.getBoundingClientRect()
+    if (!area || !xyflow.current)
+      return
+    const zoom = Math.min(1, Math.max(1, area.width - 48) / Math.max(1, bounds.width), Math.max(1, area.height - 48) / Math.max(1, bounds.height))
+    void xyflow.current.setViewport({ x: Math.round(area.width / 2 - (bounds.x + bounds.width / 2) * zoom), y: Math.round(area.height / 2 - (bounds.y + bounds.height / 2) * zoom), zoom }, { duration: 0 })
+  }
+  const fitOverview = () => {
+    const flow = xyflow.current
+    if (!flow)
+      return
+    const boxes = diagramElements('.react-flow__node, .react-flow__edge .likec4-edge__path, .likec4-edge-label').map(element => element.getBoundingClientRect()).filter(box => box.width || box.height)
+    if (!boxes.length)
+      return
+    const start = flow.screenToFlowPosition({ x: Math.min(...boxes.map(box => box.left)), y: Math.min(...boxes.map(box => box.top)) })
+    const end = flow.screenToFlowPosition({ x: Math.max(...boxes.map(box => box.right)), y: Math.max(...boxes.map(box => box.bottom)) })
+    fitGraphBounds({ x: start.x, y: start.y, width: end.x - start.x, height: end.y - start.y })
+  }
+  const revealStep = (id: string, preserveZoom = false) => {
+    const edgeId = Object.entries(active?.layout.stepIds[viewId ?? ''] ?? {}).find(([, step]) => step === id)?.[0]
+    const flow = xyflow.current
+    const area = canvas.current
+    const element = diagramElements('.react-flow__edge').find(element => element.getAttribute('data-id') === edgeId)
+    if (!element || !flow || !area)
+      return
+    // Sequence rendering has different geometry from its underlying graph layout.
+    const edge = (element.querySelector('.likec4-edge__path') ?? element).getBoundingClientRect()
+    if (preserveZoom) {
+      const label = diagramElements('.likec4-edge-label').find(label => label.getAttribute('data-edge-id') === edgeId)?.getBoundingClientRect()
+      const bounds = area.getBoundingClientRect()
+      const card = details.current?.getBoundingClientRect()
+      const left = Math.min(edge.left, label?.left ?? edge.left)
+      const right = Math.max(edge.right, label?.right ?? edge.right)
+      const top = Math.min(edge.top, label?.top ?? edge.top)
+      const bottom = Math.max(edge.bottom, label?.bottom ?? edge.bottom)
+      const overlapsCard = card && right > card.left && left < card.right && bottom > card.top && top < card.bottom
+      const visibleBottom = overlapsCard ? card.top - 16 : bounds.bottom - 16
+      const shift = (start: number, end: number, low: number, high: number) => end - start > high - low ? (low + high - start - end) / 2 : start < low ? low - start : end > high ? high - end : 0
+      const dx = shift(left, right, bounds.left + 16, bounds.right - 16)
+      const dy = shift(top, bottom, bounds.top + 16, visibleBottom)
+      if (dx || dy) {
+        const viewport = flow.getViewport()
+        void flow.setViewport({ ...viewport, x: viewport.x + dx, y: viewport.y + dy }, { duration: 0 })
+      }
+      return
+    }
+    const from = flow.screenToFlowPosition({ x: edge.left, y: edge.top })
+    const to = flow.screenToFlowPosition({ x: edge.right, y: edge.bottom })
+    const xs = [from.x, to.x]
+    const ys = [from.y, to.y]
+    const message = flow.getEdge(edgeId)
+    for (const id of [message?.source, message?.target]) {
+      const node = diagramElements('.react-flow__node').find(node => node.getAttribute('data-id') === id)
+      if (node) {
+        const box = node.getBoundingClientRect()
+        const left = flow.screenToFlowPosition({ x: box.left, y: box.top })
+        const right = flow.screenToFlowPosition({ x: box.right, y: box.top })
+        xs.push(left.x, right.x)
+        ys.push(left.y)
+      }
+    }
+    const bounds = area.getBoundingClientRect()
+    // Keep the selected message above the details card, including on narrow screens.
+    const card = details.current?.getBoundingClientRect()
+    const height = Math.max(100, card ? card.top - bounds.top - 24 : bounds.height * 0.45)
+    const width = Math.max(100, bounds.width - 64)
+    const zoom = Math.min(1, width / Math.max(1, Math.max(...xs) - Math.min(...xs) + 80), height / Math.max(80, Math.max(...ys) - Math.min(...ys) + 80))
+    void flow.setViewport({ x: Math.round(bounds.width / 2 - (Math.min(...xs) + Math.max(...xs)) / 2 * zoom), y: Math.round(height / 2 - (Math.min(...ys) + Math.max(...ys)) / 2 * zoom), zoom }, { duration: 0 })
+  }
+  const highlightStep = (id: string) => {
+    const edge = Object.entries(active?.layout.stepIds[viewId ?? ''] ?? {}).find(([, step]) => step === id)?.[0]
+    if (edge) {
+      diagramApi.current?.select({ edges: [edge] })
+      diagramApi.current?.highlightEdge(edge)
+    }
+  }
+  const selectStep = (id: string) => {
+    if (route.file)
+      return
+    const next = { ...route, node: '', relation: '', step: id }
+    history.replaceState(null, '', `/?${new URLSearchParams(Object.fromEntries(Object.entries(next).filter(([, value]) => value)))}`)
+    setRoute(next)
+    if (narrow && navigationOpen) {
+      navigationSelection.current = true
+      setNavigationOpen(false)
+    }
+    highlightStep(id)
+    setCardPosition({ left: false, bottom: true })
+    requestAnimationFrame(() => revealStep(id))
+  }
   const selectedNode = active?.architecture.nodes.find(node => node.id === route.node)
   const selectedRelation = active?.architecture.relations.find(relation => relation.id === route.relation)
-  const viewsForNode = active?.architecture.views.filter(view => view.node === selectedNode?.id) ?? []
+  const viewsForNode = active?.architecture.views.filter(view => view.node === selectedNode?.id || (!!selectedNode && view.include.includes(selectedNode.id)) || view.scenario?.participants.some(participant => participant.node === selectedNode?.id)) ?? []
   const bindings = selectedNode?.bindings ?? []
   const uniqueBindings = [...new Map(bindings.map(binding => [`${binding.file}:${binding.anchor ?? ''}:${binding.origin}`, binding])).values()]
   const projection = active ? selectArchitecture(active.architecture, route.mode === 'focus' && !active.missingFocus ? { kind: 'focus', id: route.focus } : route.mode === 'view' && !missingView ? { kind: 'view', id: route.view } : { kind: 'full' }) : null
@@ -460,7 +610,37 @@ function App() {
     }
     icon.href = rspIcon
   }, [contextTitle, workspaces, route.workspace])
-  const detailOpen = !!selectedNode || !!selectedRelation
+  useEffect(() => {
+    const area = canvas.current
+    if (!area)
+      return
+    let previous = area.getBoundingClientRect()
+    let windowWidth = innerWidth
+    let windowHeight = innerHeight
+    const observer = new ResizeObserver(() => {
+      const bounds = area.getBoundingClientRect()
+      const before = previous
+      const windowResized = windowWidth !== innerWidth || windowHeight !== innerHeight
+      previous = bounds
+      windowWidth = innerWidth
+      windowHeight = innerHeight
+      if (route.file || !xyflow.current || (bounds.width === before.width && bounds.height === before.height && bounds.left === before.left && bounds.top === before.top))
+        return
+      const viewport = xyflow.current.getViewport()
+      // Window resizing preserves the reading center; panel changes preserve screen position.
+      void xyflow.current.setViewport({
+        ...viewport,
+        x: viewport.x + (windowResized ? (bounds.width - before.width) / 2 : before.left - bounds.left),
+        y: viewport.y + (windowResized ? (bounds.height - before.height) / 2 : before.top - bounds.top),
+      }, { duration: 0 })
+      const step = currentRoute.current.step
+      if (step)
+        requestAnimationFrame(() => revealStep(step, true))
+    })
+    observer.observe(area)
+    return () => observer.disconnect()
+  }, [contextKey, route.file])
+  const detailOpen = !!selectedNode || !!selectedRelation || !!selectedStep
   const relationDetails = (relation: ArchitectureResult['relations'][number]) => (
     <Button className="relationship-row" key={relation.id} onClick={() => select('', relation.id)}>
       <span>
@@ -471,7 +651,7 @@ function App() {
         {active?.architecture.nodes.find(node => node.id === relation.target)?.title}
       </span>
       <small>
-        {relation.type}
+        {relation.label ?? relation.type}
         {' '}
         ·
         {' '}
@@ -481,6 +661,20 @@ function App() {
     </Button>
   )
   const clickDocument = (event: React.MouseEvent<HTMLElement>) => {
+    const source = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-source-locator]')
+    if (source && reading.current?.contains(source)) {
+      const locator = source.dataset.sourceLocator!
+      void navigator.clipboard.writeText(`${active!.root}/${locator}`).then(() => {
+        source.querySelector('span')!.textContent = t('copiedSource')
+      }).catch(() => {
+        const selection = globalThis.getSelection()
+        const range = globalThis.document.createRange()
+        range.selectNodeContents(source.querySelector('code')!)
+        selection?.removeAllRanges()
+        selection?.addRange(range)
+      })
+      return
+    }
     const link = (event.target as HTMLElement).closest('a')
     if (!link || !reading.current?.contains(link))
       return
@@ -504,7 +698,6 @@ function App() {
       view={route.view}
       root={active?.root}
       revision={active?.revision}
-      mobile={narrow}
       selectionDisabled={!!route.file}
       onWorkspace={(workspace) => {
         navigate({ workspace, mode: '', view: '', focus: '', node: '', relation: '', file: '', anchor: '' })
@@ -520,8 +713,56 @@ function App() {
         setNavigationOpen(false)
         requestAnimationFrame(() => details.current?.focus({ preventScroll: true }))
       }}
-      onClose={() => setNavigationOpen(false)}
     />
+  )
+  const sidePanel = (
+    <div className="side-panel">
+      <div className="side-panel-header">
+        {scenario
+          ? (
+              <div
+                role="tablist"
+                aria-label={t('sidePanel')}
+                onKeyDown={(event) => {
+                  if (!scenario || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key))
+                    return
+                  event.preventDefault()
+                  const next = event.key === 'Home' ? 'navigation' : event.key === 'End' ? 'steps' : activePanelTab === 'navigation' ? 'steps' : 'navigation'
+                  setPanelTab(next)
+                  event.currentTarget.querySelector<HTMLButtonElement>(`[data-panel-tab="${next}"]`)?.focus()
+                }}
+              >
+                <Button role="tab" id="navigation-tab" data-panel-tab="navigation" aria-controls="navigation-panel" aria-selected={activePanelTab === 'navigation'} tabIndex={activePanelTab === 'navigation' ? 0 : -1} onClick={() => setPanelTab('navigation')}>{t('navigation')}</Button>
+                {scenario && <Button role="tab" id="steps-tab" data-panel-tab="steps" aria-controls="steps-panel" aria-selected={activePanelTab === 'steps'} tabIndex={activePanelTab === 'steps' ? 0 : -1} onClick={() => setPanelTab('steps')}>{t('steps')}</Button>}
+              </div>
+            )
+          : <span className="side-panel-title" id="navigation-tab">{t('navigation')}</span>}
+        <CloseButton label={t('closePanel')} onClick={closePanel} />
+      </div>
+      <div className="side-panel-content" id="navigation-panel" role={scenario ? 'tabpanel' : 'region'} aria-labelledby="navigation-tab" hidden={activePanelTab !== 'navigation'}>{sidebar}</div>
+      {scenario && (
+        <div className="side-panel-content" id="steps-panel" role="tabpanel" aria-labelledby="steps-tab" hidden={activePanelTab !== 'steps'}>
+          <section className="view-context scenario-context" aria-label={t('scenarioSteps')} key={`${route.workspace}:${route.view}`}>
+            <ol>
+              {scenario.steps.map(step => (
+                <li key={step.id}>
+                  <Button className={route.step === step.id ? 'bg-accent text-accent-foreground' : ''} aria-pressed={route.step === step.id} disabled={!!route.file} onClick={() => selectStep(step.id)}>
+                    <span>{step.label}</span>
+                    <small>
+                      {participantTitle(step.source)}
+                      {' '}
+                      →
+                      {' '}
+                      {participantTitle(step.target)}
+                    </small>
+                  </Button>
+                </li>
+              ))}
+            </ol>
+          </section>
+        </div>
+      )}
+    </div>
   )
   const reader = (
     <section ref={documentPane} aria-busy={!currentDocument} tabIndex={-1} className={`document-pane ${documentExpanded ? 'document-expanded' : ''}`} style={{ width: documentExpanded ? '100%' : `${documentWidth}px` }} aria-label={t('completeDocument')}>
@@ -573,7 +814,10 @@ function App() {
                 className="navigation-sheet left-0"
                 onOpenAutoFocus={(event) => {
                   event.preventDefault()
-                  navigationPane.current?.querySelector<HTMLInputElement>('input')?.focus()
+                  if (activePanelTab === 'navigation')
+                    navigationPane.current?.querySelector<HTMLInputElement>('input')?.focus()
+                  else
+                    navigationPane.current?.querySelector<HTMLButtonElement>('[role=tab][aria-selected=true]')?.focus()
                 }}
                 onCloseAutoFocus={(event) => {
                   event.preventDefault()
@@ -582,7 +826,8 @@ function App() {
                     requestAnimationFrame(() => details.current?.focus({ preventScroll: true }))
                   }
                   else {
-                    navigationTrigger.current?.focus()
+                    const trigger = activePanelTab === 'steps' ? stepsTrigger : navigationTrigger
+                    trigger.current?.focus()
                   }
                 }}
                 onEscapeKeyDown={(event) => {
@@ -593,39 +838,118 @@ function App() {
                 }}
               >
                 <SheetTitle className="sr-only">{t('architectureNavigation')}</SheetTitle>
-                {sidebar}
+                {sidePanel}
               </SheetContent>
             </Sheet>
           )
-        : sidebar}
+        : <div className="desktop-side-panel" hidden={!desktopPanelOpen}>{sidePanel}</div>}
       <section className="workbench">
         <header className="view-toolbar">
-          <Button
-            ref={navigationTrigger}
-            className="navigation-toggle"
-            aria-expanded={navigationOpen}
-            onClick={() => {
-              navigationSelection.current = false
-              setNavigationOpen(value => !value)
-            }}
-          >
-            {t('navigation')}
-          </Button>
-          <h1>{contextTitle}</h1>
+          <Tooltip label={t('openNavigation')}>
+            <Button
+              ref={navigationTrigger}
+              className="navigation-toggle toolbar-icon"
+              aria-label={t('navigation')}
+              aria-expanded={panelVisible && activePanelTab === 'navigation'}
+              onClick={() => openPanel('navigation')}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="16" rx="2" />
+                <path d="M9 4v16M5.5 8h1M5.5 12h1" />
+              </svg>
+            </Button>
+          </Tooltip>
+          <h1 aria-label={contextTitle}>
+            {active
+              ? (
+                  <Select
+                    id="view-picker"
+                    label={t('views')}
+                    value={route.mode === 'view' ? `view:${route.view}` : route.mode === 'focus' ? 'focus' : 'full'}
+                    onValueChange={(value) => {
+                      if (value !== 'focus')
+                        openView(value === 'full' ? '' : value.slice(5))
+                    }}
+                    options={[
+                      ...(route.mode === 'focus' ? [{ value: 'focus', label: contextTitle ?? t('allNodes') }] : []),
+                      { value: 'full', label: t('allNodes'), description: t('allNodesHint') },
+                      ...active.architecture.views.map(view => ({ value: `view:${view.id}`, label: view.title })),
+                    ]}
+                  />
+                )
+              : contextTitle}
+          </h1>
           {route.mode === 'focus' && !active?.missingFocus && <span className="context-label">{t('directRelationships')}</span>}
-          <Button className="refresh" onClick={() => setRefresh(value => value + 1)}>{t('refresh')}</Button>
+          {scenario && <Tooltip label={t('scenarioLegend')}><Button aria-label={t('scenarioLegend')}>?</Button></Tooltip>}
+          <Tooltip label={t('refresh')}>
+            <Button
+              className="refresh toolbar-icon"
+              aria-label={t('refresh')}
+              aria-busy={refreshing}
+              disabled={refreshing}
+              onClick={() => {
+                setRefreshing(true)
+                setRefresh(value => value + 1)
+              }}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M6.1 6.1A8 8 0 0 1 20 12M4 12a8 8 0 0 0 13.9 5.9" /></svg>
+            </Button>
+          </Tooltip>
         </header>
         {currentError && <StatusMessage kind="architecture" stale={!!active} message={currentError} />}
+        {scenario && (
+          <div className="scenario-toolbar">
+            <Button
+              ref={stepsTrigger}
+              aria-expanded={panelVisible && activePanelTab === 'steps'}
+              onClick={() => openPanel('steps')}
+            >
+              {`${t('scenarioSteps')} · ${scenario.steps.length}`}
+            </Button>
+            <Button aria-pressed={route.variant !== 'diagram'} onClick={() => navigate({ ...route, variant: '' })}>{t('sequence')}</Button>
+            <Button aria-pressed={route.variant === 'diagram'} onClick={() => navigate({ ...route, variant: 'diagram' })}>{t('collaboration')}</Button>
+            <div className="step-pagination">
+              <Button aria-label={t('previousStep')} disabled={!selectedStep || scenario.steps.indexOf(selectedStep) === 0 || !!route.file} onClick={() => selectStep(scenario.steps[scenario.steps.indexOf(selectedStep!) - 1]!.id)}>←</Button>
+              <span aria-live="polite">
+                {selectedStep ? scenario.steps.indexOf(selectedStep) + 1 : 0}
+                {' '}
+                /
+                {' '}
+                {scenario.steps.length}
+              </span>
+              <Button aria-label={t('nextStep')} disabled={scenario.steps.indexOf(selectedStep!) === scenario.steps.length - 1 || !!route.file} onClick={() => selectStep(scenario.steps[scenario.steps.indexOf(selectedStep!) + 1]!.id)}>→</Button>
+            </div>
+          </div>
+        )}
         <div className="workspace">
+          {authoredView && !scenario && (
+            <details className="view-context">
+              <summary>{t('viewSelection')}</summary>
+              <p>
+                {t('relationTypes')}
+                :
+                {authoredView.relationTypes?.join(', ') ?? '*'}
+                <br />
+                {t('relationIds')}
+                :
+                {authoredView.relationIds?.join(', ') ?? '*'}
+                <br />
+                {t('boundaries')}
+                :
+                {t(authoredView.boundary === 'exclude' ? 'excluded' : 'included')}
+              </p>
+            </details>
+          )}
           <main className="canvas" tabIndex={-1} aria-label={t('architecture')} ref={canvas}>
             {active && !active.architecture.nodes.length
               ? <p className="opening empty-architecture" role="status">{t('emptyArchitecture')}</p>
               : active && route.mode === 'view' && active.architecture.views.find(view => view.id === route.view)?.include.length === 0 && <p className="opening empty-architecture" role="status">{t('emptyView')}</p>}
-            {active && (missingView || active.missingFocus || (route.node && !selectedNode) || (route.relation && !selectedRelation)) && (
+            {active && (missingView || active.missingFocus || (route.node && !selectedNode) || (route.relation && !selectedRelation) || (route.step && !selectedStep)) && (
               <div className="fallback">
                 {(missingView || active.missingFocus) && <p role="status">{t(active.missingFocus ? 'removedFocus' : 'removedView')}</p>}
                 {route.node && !selectedNode && <p role="status">{t('missingObject')}</p>}
                 {route.relation && !selectedRelation && <p role="status">{t('missingRelationship')}</p>}
+                {route.step && !selectedStep && <p role="status">{t('missingStep')}</p>}
               </div>
             )}
             {active && model && viewId && route.mode && route.mode !== 'guide'
@@ -640,8 +964,8 @@ function App() {
                       pannable
                       zoomable
                       controls={false}
-                      fitView={!savedViewport}
-                      initialZoom={savedViewport?.zoom}
+                      fitView={false}
+                      initialZoom={savedViewport?.zoom ?? 1}
                       showNavigationButtons={false}
                       enableElementDetails={false}
                       enableRelationshipDetails={false}
@@ -653,9 +977,23 @@ function App() {
                         diagramApi.current = diagram
                         xyflow.current = flow
                         const saved = viewports.current.get(contextKey)
-                        if (saved)
+                        if (saved) {
                           requestAnimationFrame(() => void flow.setViewport(saved))
+                        }
+                        else if (scenario) {
+                          requestAnimationFrame(fitOverview)
+                        }
+                        else if (nativeView) {
+                          fitGraphBounds(nativeView.bounds)
+                        }
                         requestAnimationFrame(() => placeDetails(route.node))
+                        if (route.step) {
+                          requestAnimationFrame(() => {
+                            highlightStep(route.step!)
+                            setCardPosition({ left: false, bottom: true })
+                            requestAnimationFrame(() => revealStep(route.step!))
+                          })
+                        }
                       }}
                       onNodeClick={(node) => {
                         if (!route.file)
@@ -664,12 +1002,19 @@ function App() {
                       onEdgeClick={(edge) => {
                         if (route.file)
                           return
+                        const step = active.layout.stepIds[viewId]?.[edge.id]
+                        if (step) {
+                          selectStep(step)
+                          return
+                        }
                         const native = active.layout.data.views[viewId]?.edges.find((candidate: any) => candidate.id === edge.id)
                         const id = native?.relations[0] && active.layout.relationIds[native.relations[0]]
                         if (id)
                           select('', id)
                       }}
-                    />
+                    >
+                      <style>{`.likec4-edge-label-container > div { max-width: 260px !important; } .likec4-edge-label { width: max-content; max-width: 260px; } .likec4-edge-label__text { word-break: keep-all; overflow-wrap: anywhere; }`}</style>
+                    </ReactLikeC4>
                   </LikeC4ModelProvider>
                 )
               : <p className="opening" role="status">{t(currentError ? 'architectureUnavailable' : 'opening')}</p>}
@@ -683,113 +1028,139 @@ function App() {
               <div className="canvas-controls" aria-label={t('canvasControls')}>
                 <Tooltip label={t('zoomIn')}><Button size="icon" aria-label={t('zoomIn')} onClick={() => void xyflow.current?.zoomIn()}>+</Button></Tooltip>
                 <Tooltip label={t('zoomOut')}><Button size="icon" aria-label={t('zoomOut')} onClick={() => void xyflow.current?.zoomOut()}>−</Button></Tooltip>
-                <Tooltip label={t('fitHint')}><Button onClick={() => diagramApi.current?.fitDiagram(0)}>{t('fit')}</Button></Tooltip>
+                <Tooltip label={t('fitHint')}><Button onClick={() => fitOverview()}>{t('fit')}</Button></Tooltip>
               </div>
             )}
-          </main>
-          {active && detailOpen && !route.file && (
-            <aside ref={details} tabIndex={-1} className={`detail-panel ${cardPosition.left ? 'card-left' : ''} ${cardPosition.bottom ? 'card-bottom' : ''}`} aria-label={t('details')}>
-              <div className="detail-heading">
-                <span>{t(selectedRelation ? 'relationship' : 'object')}</span>
-                <CloseButton
-                  label={t('closeDetails')}
-                  onClick={() => {
-                    select('')
-                    requestAnimationFrame(focusSelection)
-                  }}
-                />
-              </div>
-              {selectedNode && (
-                <>
-                  <h2>{selectedNode.title}</h2>
-                  {projection && route.mode !== 'guide' && !projection.selected.has(selectedNode.id) && <p className="boundary-label">{t('externalBoundary')}</p>}
-                  <p>{selectedNode.description}</p>
-                  {selectedNode.parent && (
-                    <p className="structural-parent">
-                      {t('partOf')}
-                      {' '}
-                      <Button className="text-button" onClick={() => select(selectedNode.parent!)}>{active.architecture.nodes.find(node => node.id === selectedNode.parent)?.title}</Button>
-                    </p>
-                  )}
-                  {viewsForNode.length > 0 && (
-                    <section>
-                      <h3>{t('viewInside')}</h3>
-                      <nav aria-label={t('nodeViews')}>
-                        {viewsForNode.map(view => (
-                          <NavigationItem key={view.id} onClick={() => openView(view.id)}>
-                            {view.title}
-                          </NavigationItem>
-                        ))}
-                      </nav>
-                    </section>
-                  )}
-                  {!(route.mode === 'focus' && route.focus === selectedNode.id) && (
-                    <Button className="focus-action" onClick={() => navigate({ ...route, mode: 'focus', focus: selectedNode.id, view: '', node: selectedNode.id, relation: '', file: '', anchor: '' })}>
-                      {t('focusRelationships')}
-                      <Chevron />
-                    </Button>
-                  )}
-                  {uniqueBindings.length > 0 && (
-                    <section>
-                      <h3>{t('documents')}</h3>
-                      <nav aria-label={t('documents')}>
-                        {uniqueBindings.map(binding => (
-                          <NavigationItem document key={`${binding.file}:${binding.anchor ?? ''}:${binding.origin}`} onClick={() => openDocument(binding.file, binding.anchor ?? '')}>
-                            <span className="navigation-title">{binding.file.split('/').pop()}</span>
-                            <small>{binding.file}</small>
-                            {binding.headings && <small>{binding.headings.join(' › ')}</small>}
-                            {binding.inherited && (
-                              <small>
-                                {t('inheritedFrom')}
-                                {' '}
-                                {binding.origin}
-                              </small>
-                            )}
-                          </NavigationItem>
-                        ))}
-                      </nav>
-                    </section>
-                  )}
-                  {relationships.length > 0 && (
-                    <details className="object-relationships">
-                      <summary>
-                        {t('relationships')}
-                        <span>{relationships.length}</span>
-                      </summary>
-                      <nav aria-label={t('objectRelationships')}>{relationships.map(relationDetails)}</nav>
+            {active && detailOpen && !route.file && (
+              <aside ref={details} tabIndex={-1} className={`detail-panel ${cardPosition.left ? 'card-left' : ''} ${cardPosition.bottom ? 'card-bottom' : ''}`} aria-label={t('details')}>
+                <div className="detail-heading">
+                  <span>{t(selectedStep ? 'scenarioStep' : selectedRelation ? 'relationship' : 'object')}</span>
+                  <CloseButton
+                    label={t('closeDetails')}
+                    onClick={() => {
+                      select('')
+                      requestAnimationFrame(focusSelection)
+                    }}
+                  />
+                </div>
+                {selectedStep && (
+                  <>
+                    <h2>{selectedStep.label}</h2>
+                    <p>{t(selectedStep.type)}</p>
+                    {selectedStep.description && <p>{selectedStep.description}</p>}
+                    <dl>
+                      <dt>{t('from')}</dt>
+                      <dd><Button onClick={() => select(participant(selectedStep.source)!.node)}>{participantTitle(selectedStep.source)}</Button></dd>
+                      <dt>{t('to')}</dt>
+                      <dd><Button onClick={() => select(participant(selectedStep.target)!.node)}>{participantTitle(selectedStep.target)}</Button></dd>
+                    </dl>
+                    {selectedStep.replyTo && (
+                      <Button onClick={() => selectStep(selectedStep.replyTo!)}>
+                        {t('replyTo')}
+                        :
+                        {' '}
+                        {scenario!.steps.find(step => step.id === selectedStep.replyTo)!.label}
+                      </Button>
+                    )}
+                    <details>
+                      <summary>{t('identity')}</summary>
+                      <code>{selectedStep.id}</code>
                     </details>
-                  )}
-                  <details>
-                    <summary>{t('identity')}</summary>
-                    <code>{selectedNode.id}</code>
-                  </details>
-                </>
-              )}
-              {selectedRelation && (
-                <>
-                  <h2>{selectedRelation.type}</h2>
-                  <p>{selectedRelation.description}</p>
-                  <dl>
-                    <dt>{t('from')}</dt>
-                    <dd>
-                      <Button className="text-button" onClick={() => select(selectedRelation.source)}>{active.architecture.nodes.find(node => node.id === selectedRelation.source)?.title}</Button>
-                      <code>{selectedRelation.source}</code>
-                    </dd>
-                    <dt>{t('to')}</dt>
-                    <dd>
-                      <Button className="text-button" onClick={() => select(selectedRelation.target)}>{active.architecture.nodes.find(node => node.id === selectedRelation.target)?.title}</Button>
-                      <code>{selectedRelation.target}</code>
-                    </dd>
-                  </dl>
-                  {projection?.relations.includes(selectedRelation) && !drawnRelations.has(selectedRelation.id) && <p className="boundary-label">{t('notDrawnDetails')}</p>}
-                  <details>
-                    <summary>{t('identity')}</summary>
-                    <code>{selectedRelation.id}</code>
-                  </details>
-                </>
-              )}
-            </aside>
-          )}
+                  </>
+                )}
+                {selectedNode && (
+                  <>
+                    <h2>{selectedNode.title}</h2>
+                    {projection && route.mode !== 'guide' && !projection.selected.has(selectedNode.id) && <p className="boundary-label">{t('externalBoundary')}</p>}
+                    <p>{selectedNode.description}</p>
+                    {selectedNode.parent && (
+                      <p className="structural-parent">
+                        {t('partOf')}
+                        {' '}
+                        <Button className="text-button" onClick={() => select(selectedNode.parent!)}>{active.architecture.nodes.find(node => node.id === selectedNode.parent)?.title}</Button>
+                      </p>
+                    )}
+                    {viewsForNode.length > 0 && (
+                      <section>
+                        <h3>{t('nodeViews')}</h3>
+                        <nav aria-label={t('nodeViews')}>
+                          {viewsForNode.map(view => (
+                            <NavigationItem key={view.id} aria-current={route.mode === 'view' && route.view === view.id ? 'page' : undefined} onClick={() => openView(view.id)}>
+                              {view.title}
+                            </NavigationItem>
+                          ))}
+                        </nav>
+                      </section>
+                    )}
+                    {!(route.mode === 'focus' && route.focus === selectedNode.id) && (
+                      <Button className="focus-action" onClick={() => navigate({ ...route, mode: 'focus', focus: selectedNode.id, view: '', node: selectedNode.id, relation: '', file: '', anchor: '' })}>
+                        {t('focusRelationships')}
+                        <Chevron />
+                      </Button>
+                    )}
+                    {uniqueBindings.length > 0 && (
+                      <section>
+                        <h3>{t('documents')}</h3>
+                        <nav aria-label={t('documents')}>
+                          {uniqueBindings.map(binding => (
+                            <NavigationItem document key={`${binding.file}:${binding.anchor ?? ''}:${binding.origin}`} onClick={() => openDocument(binding.file, binding.anchor ?? '')}>
+                              <span className="navigation-title">{binding.file.split('/').pop()}</span>
+                              <small>{binding.file}</small>
+                              {binding.headings && <small>{binding.headings.join(' › ')}</small>}
+                              {binding.inherited && (
+                                <small>
+                                  {t('inheritedFrom')}
+                                  {' '}
+                                  {binding.origin}
+                                </small>
+                              )}
+                            </NavigationItem>
+                          ))}
+                        </nav>
+                      </section>
+                    )}
+                    {relationships.length > 0 && (
+                      <details className="object-relationships">
+                        <summary>
+                          {t('relationships')}
+                          <span>{relationships.length}</span>
+                        </summary>
+                        <nav aria-label={t('objectRelationships')}>{relationships.map(relationDetails)}</nav>
+                      </details>
+                    )}
+                    <details>
+                      <summary>{t('identity')}</summary>
+                      <code>{selectedNode.id}</code>
+                    </details>
+                  </>
+                )}
+                {selectedRelation && (
+                  <>
+                    <h2>{selectedRelation.label ?? selectedRelation.type}</h2>
+                    {selectedRelation.label && <p>{selectedRelation.type}</p>}
+                    <p>{selectedRelation.description}</p>
+                    <dl>
+                      <dt>{t('from')}</dt>
+                      <dd>
+                        <Button className="text-button" onClick={() => select(selectedRelation.source)}>{active.architecture.nodes.find(node => node.id === selectedRelation.source)?.title}</Button>
+                        <code>{selectedRelation.source}</code>
+                      </dd>
+                      <dt>{t('to')}</dt>
+                      <dd>
+                        <Button className="text-button" onClick={() => select(selectedRelation.target)}>{active.architecture.nodes.find(node => node.id === selectedRelation.target)?.title}</Button>
+                        <code>{selectedRelation.target}</code>
+                      </dd>
+                    </dl>
+                    {projection?.relations.includes(selectedRelation) && !drawnRelations.has(selectedRelation.id) && <p className="boundary-label">{t('notDrawnDetails')}</p>}
+                    <details>
+                      <summary>{t('identity')}</summary>
+                      <code>{selectedRelation.id}</code>
+                    </details>
+                  </>
+                )}
+              </aside>
+            )}
+          </main>
           {route.file && (narrow
             ? (
                 <Sheet open onOpenChange={open => !open && closeDocument()}>

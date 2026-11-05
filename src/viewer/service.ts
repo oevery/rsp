@@ -170,7 +170,7 @@ export async function createViewerService(options: { identity: string, root: str
         send(200, 'text/html; charset=utf-8', '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>RSP Architecture</title><link rel="stylesheet" href="/app.css"></head><body><div id="root"></div><script type="module" src="/app.js"></script></body></html>')
         return
       }
-      if (['/app.js', '/app.css'].includes(url.pathname)) {
+      if (['/app.js', '/app.css', '/mermaid.js'].includes(url.pathname)) {
         send(200, url.pathname.endsWith('.css') ? 'text/css' : 'text/javascript', runtime.assets.get(url.pathname)!)
         return
       }

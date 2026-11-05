@@ -36,6 +36,13 @@ export async function layoutArchitecture(architecture: ArchitectureResult, works
     ? [{ id: '', title: `${nodeById.get(focus)?.title ?? focus} relationships`, node: '', include: [focus] }]
     : [{ id: '', title: 'All registered nodes', node: '', include: architecture.nodes.map(node => node.id) }, ...architecture.views]
   const viewNames = Object.fromEntries(views.map((view, index) => [view.id, `v${index}`]))
+  const scenarioViews = focus ? [] : architecture.views.filter(view => view.scenario)
+  const scenarioNames = Object.fromEntries(scenarioViews.map((view, index) => [
+    view.id,
+    Object.fromEntries(view.scenario!.participants.map((participant, role) => [`p${index}r${role}`, participant])),
+  ]))
+  const scenarioReferences = Object.fromEntries(Object.values(scenarioNames).flatMap(roles => Object.entries(roles).map(([alias, participant]) => [alias, participant.node])))
+  const collaborationViews = Object.fromEntries(scenarioViews.map(view => [view.id, `${viewNames[view.id]}c`]))
   viewNames[''] = 'v0'
   const focusView = focus ? `v${views.length - 1}` : undefined
   const relationTags = new Map(architecture.relations.map((edge, index) => [edge.id, `e${index}`]))
@@ -54,12 +61,39 @@ export async function layoutArchitecture(architecture: ArchitectureResult, works
       return pipe(...diagramNodes.filter(node => !node.parent).map(element), ...Object.entries(references).map(([alias, id]) => {
         const node = nodeById.get(id)!
         return h.component(alias, { ...properties(node), title: `${node.title} (relationship reference)`, description: { txt: `Reference to ${node.id}. ${node.description}` } })
-      }), ...architecture.relations.map(edge => h.rel(sourceName(edge), targetName(edge), { kind: 'relation', title: edge.type, tags: [relationTags.get(edge.id)!], description: { txt: edge.description } })))
+      }), ...Object.values(scenarioNames).flatMap(roles => Object.entries(roles).map(([alias, participant]) => h.component(alias, {
+        ...properties(nodeById.get(participant.node)!),
+        title: participant.title ?? nodeById.get(participant.node)!.title,
+        description: { txt: nodeById.get(participant.node)!.title },
+      }))), ...architecture.relations.map(edge => h.rel(sourceName(edge), targetName(edge), {
+        kind: 'relation',
+        title: edge.label ?? edge.type,
+        tags: [relationTags.get(edge.id)!],
+        description: { txt: edge.description },
+        ...(edge.type === 'return' ? { line: 'dashed' } : edge.type === 'event' ? { line: 'dotted' } : {}),
+      })))
     })
     .views((helpers, compose) => {
       const h = helpers as any
       const pipe = compose as any
-      return pipe(...views.map((view, index) => {
+      return pipe(...views.flatMap((view, index) => {
+        const scenario = architecture.views.find(candidate => candidate.id === view.id)?.scenario
+        if (scenario) {
+          const roles = scenarioNames[view.id]!
+          const aliasFor = (id: string) => Object.entries(roles).find(([, participant]) => participant.id === id)![0]
+          return ['sequence', 'diagram'].map(variant => h.dynamicView(variant === 'sequence' ? viewNames[view.id] : collaborationViews[view.id], { title: view.title, variant }).with(
+            ...Object.keys(roles).map(alias => h.$include(alias, { with: { size: 'sm', padding: 'xs', textSize: 'sm' } })),
+            ...scenario.steps.map(step => (builder: any) => builder.step({
+              source: aliasFor(step.source),
+              target: aliasFor(step.target),
+              astPath: step.id,
+              title: step.label,
+              description: { txt: step.description ?? step.type },
+              line: step.type === 'return' ? 'dashed' : step.type === 'event' ? 'dotted' : 'solid',
+              ...(step.type === 'return' ? { isBackward: true } : step.type === 'event' ? { head: 'open' } : {}),
+            })),
+          ))
+        }
         const isFocus = !!focus && index === views.length - 1
         const projection = selectArchitecture(architecture, isFocus ? { kind: 'focus', id: focus } : view.id ? { kind: 'view', id: view.id } : { kind: 'full' })
         const include = [...projection.visible].map(id => names[id]!)
@@ -81,6 +115,15 @@ export async function layoutArchitecture(architecture: ArchitectureResult, works
       }))
     })
   const data = (await layoutLikeC4Model(builder.toLikeC4Model({ id: workspace }))).$data
-  const relationIds = Object.fromEntries(Object.values(data.relations).map(edge => [edge.id, architecture.relations.find(item => relationTags.get(item.id) === edge.tags?.[0])!.id]))
-  return { data, names, viewNames, references, relationIds, focusView }
+  const relationIds = Object.fromEntries(Object.values(data.relations).flatMap((edge) => {
+    const original = architecture.relations.find(item => relationTags.get(item.id) === edge.tags?.[0])
+    return original ? [[edge.id, original.id]] : []
+  }))
+  const stepIds = Object.fromEntries(scenarioViews.flatMap(view =>
+    [viewNames[view.id]!, collaborationViews[view.id]!].map((alias) => {
+      const edges = data.views[alias as keyof typeof data.views]!.edges
+      return [alias, Object.fromEntries(edges.map(edge => [edge.id, edge.astPath!]))]
+    }),
+  ))
+  return { data, names, viewNames, references: { ...references, ...scenarioReferences }, relationIds, focusView, collaborationViews, scenarioNames, stepIds }
 }

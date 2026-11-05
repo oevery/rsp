@@ -19,8 +19,15 @@ export const architectureCommand = defineCommand({
         console.log(`${node.boundary ? '[boundary] ' : ''}${node.id}: ${node.title} — ${node.description}${node.parent ? ` (parent: ${node.parent})` : ''}`)
         for (const binding of node.bindings) console.log(`  ${binding.file}${binding.headings ? ` > ${binding.headings.join(' > ')}` : ''} (scope: ${binding.scope}; ${binding.inherited ? `inherited from ${binding.origin}` : `direct on ${binding.origin}`})`)
       }
-      for (const edge of result.relations) console.log(`Relation ${edge.id}: ${edge.source} -> ${edge.target} [${edge.type}]: ${edge.description}`)
-      for (const view of result.views) console.log(`View ${view.id}: ${view.title} (owner: ${view.node}; include: ${view.include.join(', ')})`)
+      for (const edge of result.relations) console.log(`Relation ${edge.id}: ${edge.source} -> ${edge.target} [${edge.type}]${edge.label ? ` ${edge.label}` : ''}: ${edge.description}`)
+      for (const view of result.views) {
+        console.log(`View ${view.id}: ${view.title} (owner: ${view.node}; include: ${view.include.join(', ')})`)
+        if (view.relationTypes || view.relationIds || view.boundary)
+          console.log(`  Filters: types=${view.relationTypes?.join(', ') ?? '*'}; relations=${view.relationIds?.join(', ') ?? '*'}; boundary=${view.boundary ?? 'include'}`)
+        for (const participant of view.scenario?.participants ?? [])
+          console.log(`  Participant ${participant.id}: ${participant.node}${participant.title ? ` (${participant.title})` : ''}`)
+        view.scenario?.steps.forEach((step, index) => console.log(`  ${index + 1}. ${step.id}: ${step.source} -> ${step.target} [${step.type}] ${step.label}${step.replyTo ? ` (reply to ${step.replyTo})` : ''}${step.description ? ` — ${step.description}` : ''}`))
+      }
       for (const diagnostic of result.diagnostics) console.log(`${diagnostic.code}: ${diagnostic.message}`)
       if (result.configured)
         console.log(`Source: ${result.source.file} @ ${result.source.revision}`)

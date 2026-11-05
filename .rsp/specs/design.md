@@ -67,6 +67,11 @@ neither the Spec nor observed behavior is silently treated as infallible.
   focus is not a structural subtree. Sidebar navigation derives from existing views,
   never another ownership model. Presentation references map to original nodes
   and do not add architecture identities or aggregate authored relationships.
+  Structural selection filters relations before adding boundaries. Scenario
+  participants reference canonical module identities; ordered steps belong to a
+  view and do not create global dependency edges. CLI and Web share these neutral
+  semantics. LikeC4 aliases and sequence/collaboration presentation remain adapter
+  concerns. Document diagrams render as inert images with source fallback.
 - Maintainer tools and research may inspect product artifacts; the distributed
   product never depends on a source checkout, research corpus or upstream cache.
 - Self-hosting applies the same artifact contracts to RSP's own maintenance;

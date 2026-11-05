@@ -18,7 +18,7 @@
 
 /* Preflight is intentionally omitted: the embedded LikeC4 owns its shadow tree. */
 @layer base {
-  :root { font: 100%/1.5 var(--font-sans); color: var(--color-foreground); background: #f7f8f2; }
+  :root { font: 100%/1.5 var(--font-sans); color: var(--color-foreground); background: #f7f8f2; --motion-fast: 140ms; --motion-panel: 200ms; --motion-ease: cubic-bezier(.2, 0, 0, 1); }
   body { margin: 0; }
   :where(.app, .sheet-content, .tooltip-content, .select-content) { font-family: var(--font-sans); }
   :where(.app, .sheet-content, .tooltip-content, .select-content), :where(.app, .sheet-content, .tooltip-content, .select-content) * { box-sizing: border-box; }
@@ -37,7 +37,17 @@
 /* Application compositions deliberately override the primitives' utility defaults. */
   :where(.app, .sheet-content) nav button { justify-content: flex-start; white-space: normal; }
   .app { @apply flex h-dvh overflow-hidden; }
-  .sidebar { @apply flex shrink-0 flex-col overflow-auto border-r border-border; width: 280px; min-height: 0; padding: 24px 18px 16px; background: linear-gradient(155deg, #f2f3e9, #f9faf5 72%); }
+  .sidebar { @apply flex shrink-0 flex-col overflow-auto; width: 100%; height: 100%; min-height: 0; padding: 18px 16px 16px; background: transparent; }
+  .desktop-side-panel { width: 260px; flex: 0 0 260px; min-height: 0; }
+  .desktop-side-panel[hidden], .side-panel-content[hidden] { display: none; }
+  .side-panel { display: flex; flex-direction: column; height: 100%; min-height: 0; border-right: 1px solid var(--color-border); background: #f3f5ee; }
+  .side-panel-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex: 0 0 65px; padding: 12px; border-bottom: 1px solid var(--color-border); }
+  .side-panel-header [role="tablist"] { display: flex; gap: 2px; padding: 3px; border-radius: 9px; background: #e7ece2; }
+  .side-panel-title { padding: 4px 12px; font-size: .875rem; font-weight: 600; color: var(--color-muted-foreground); }
+  .side-panel-header [role="tab"] { min-height: 30px; padding: 4px 12px; border-color: transparent; background: transparent; color: var(--color-muted-foreground); box-shadow: none; }
+  .side-panel-header [role="tab"][aria-selected="true"] { background: var(--color-background); color: var(--color-primary); box-shadow: 0 1px 2px #233c3810; }
+  .side-panel-content { flex: 1; min-height: 0; overflow: hidden; }
+  .side-panel .sidebar { border-right: 0; }
   .workspace-entry { @apply mb-4 flex min-w-0 items-center gap-2; }
   .brand-mark { @apply grid size-8 shrink-0 place-items-center rounded-lg bg-foreground text-background; font: 24px/1 var(--font-reading); }
   .select-trigger { @apply inline-flex min-h-9 min-w-0 items-center justify-between gap-2 rounded-md border border-border bg-background px-2.5 py-2 text-sm outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50; }
@@ -68,7 +78,7 @@
   .sidebar-section-heading { @apply flex items-center justify-between; margin: 30px 8px 9px; }
   .sidebar-section-heading span { @apply text-xs text-muted-foreground; }
   .view-navigation button { @apply relative min-h-11 justify-start gap-3 rounded-lg px-3 py-2 text-sm; }
-  .view-navigation button[aria-current=page] { @apply border-border bg-background text-primary shadow-xs; }
+  .view-navigation button[aria-current=page] { @apply text-primary; }
   .view-dot { @apply size-1.5 shrink-0 rounded-full bg-border; }
   [aria-current=page] .view-dot { @apply bg-primary; box-shadow: 0 0 0 3px #285e5010; }
   .view-navigation small { @apply mt-0.5 text-xs font-normal; }
@@ -82,10 +92,17 @@
   .source p { margin: 8px; }
   .source code { @apply block px-2 text-xs; }
   .warning { color: #876129; }
-  .navigation-toggle { display: none; }
+  .navigation-toggle { display: inline-flex; }
   .workbench { @apply relative flex min-h-0 min-w-0 flex-1 flex-col; }
   .view-toolbar { @apply flex shrink-0 items-center gap-3 border-b border-border bg-background; height: 65px; padding: 12px 20px; }
   .view-toolbar h1 { @apply min-w-0 flex-1 truncate; font: 1.375rem/1.2 var(--font-reading); letter-spacing: -.35px; }
+  .view-toolbar h1 .select-trigger { width: auto; min-width: 0; max-width: 100%; padding: 4px 8px; border-color: transparent; background: transparent; font: inherit; letter-spacing: inherit; }
+  .view-toolbar h1 .select-trigger:hover { background: var(--color-accent); }
+  .view-toolbar .toolbar-icon { width: 36px; min-width: 36px; padding: 8px; border-color: transparent; background: transparent; color: var(--color-muted-foreground); }
+  .view-toolbar .toolbar-icon:hover { background: var(--color-accent); color: var(--color-primary); }
+  .toolbar-icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+  .refresh[aria-busy="true"] svg { animation: refresh-spin 1s linear infinite; }
+  @keyframes refresh-spin { to { transform: rotate(360deg); } }
   .context-label { @apply rounded-md bg-accent px-2 py-1 text-xs text-muted-foreground; }
   .refresh { margin-left: auto; }
   .workspace { @apply relative flex min-h-0 min-w-0 flex-1; }
@@ -100,6 +117,27 @@
   .error pre { margin-bottom: 0; max-height: 160px; overflow: auto; white-space: pre-wrap; }
   .reading-status { @apply border-b border-border bg-accent px-5 py-3 text-sm; }
   .empty-architecture { @apply absolute top-3 left-4 z-10; }
+  .view-context { @apply absolute top-3 left-4 z-10 rounded-lg border bg-white p-3 text-sm shadow-sm; max-width: min(340px, 80%); max-height: 45%; overflow: auto; }
+  .view-context summary { cursor: pointer; }
+  .scenario-context { position: static; width: 100%; height: 100%; max-width: none; max-height: none; padding: 18px 16px 16px; border: 0; border-radius: 0; background: transparent; box-shadow: none; overflow: auto; }
+  .view-context ol { padding-left: 1.5rem; }
+  .view-context li button { display: flex; flex-direction: column; align-items: start; white-space: normal; height: auto; text-align: left; width: 100%; }
+  .view-context small { color: #52616b; font-size: 12px; }
+  .scenario-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 16px; border-bottom: 1px solid var(--color-border); }
+  .step-pagination { display: flex; align-items: center; gap: 8px; margin-left: auto; font-size: 13px; }
+  .view-toolbar .select-trigger { max-width: 240px; min-width: 100px; }
+  .view-context button[aria-pressed="true"] { background: #e1eee7; }
+  .side-panel :is(.view-navigation button, .scenario-context li button) { position: relative; border-color: transparent; border-radius: 8px; background: transparent; box-shadow: none; padding: 8px 12px; }
+  .scenario-context li + li { margin-top: 4px; }
+  .scenario-context li::marker { color: var(--color-muted-foreground); font-size: 12px; }
+  .side-panel :is(.view-navigation button, .scenario-context li button):hover { background: #e9eee4; }
+  .side-panel :is(.view-navigation button[aria-current="page"], .scenario-context button[aria-pressed="true"]) { background: #dfebe2; color: var(--color-primary); }
+  .side-panel :is(.view-navigation button[aria-current="page"], .scenario-context button[aria-pressed="true"])::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 3px; background: var(--color-primary); }
+  .side-panel .view-navigation .all-nodes { border-top-color: var(--color-border); }
+  .diagram-render-host { position: fixed; left: -100000px; top: 0; width: 1200px; pointer-events: none; }
+  figure[data-rsp-mermaid] { margin: 1rem 0; }
+  figure[data-rsp-mermaid] img { max-width: 100%; height: auto; }
+  [data-source-locator] { cursor: pointer; color: #245b45; }
   .workbench > .error { position: absolute; top: 65px; left: 0; right: 0; z-index: 70; box-shadow: 0 3px 10px #233c3810; }
   .undrawn { @apply absolute top-4 left-4 z-10 overflow-auto rounded-md border px-3 py-2 text-sm; max-width: 80%; max-height: 45%; background: #fffaf0; border-color: #e5d8bb; }
   .undrawn nav { margin-top: 10px; }
@@ -120,6 +158,7 @@
   .navigation-item:hover .navigation-title { @apply decoration-current; }
   .navigation-chevron { @apply text-muted-foreground; }
   .navigation-copy small { @apply mt-1 font-normal; }
+  .detail-panel .navigation-item[aria-current="page"] { background: var(--color-accent); font-weight: 600; }
   .detail-panel small { @apply text-xs; }
   .structural-parent { @apply text-muted-foreground; }
   .text-button { @apply inline min-h-0 border-0 bg-transparent p-0 text-primary; }
@@ -169,14 +208,17 @@
   .sheet-overlay { z-index: 80; }
   .sheet-content { z-index: 90; }
   .navigation-sheet { width: min(320px, 88vw); }
-  .navigation-sheet .sidebar { width: 100%; height: 100%; }
+  .navigation-sheet .side-panel { width: 100%; height: 100%; }
   .reading-sheet .document-pane { width: 100% !important; border: 0; }
 @media (max-width: 760px) {
-  .app > .sidebar { display: none; }
+  .desktop-side-panel { display: none; }
   .navigation-toggle { display: inline-flex; font-size: .875rem; }
   .view-toolbar { height: 58px; padding: 10px 12px; gap: 12px; }
   .view-toolbar h1 { font-size: 1.0625rem; }
-  .context-label, .refresh { display: none; }
+  .view-toolbar .select-trigger { flex: 1; min-width: 0; max-width: 100%; }
+  .scenario-toolbar { gap: 4px; padding: 6px 8px; }
+  .side-panel-header { flex-basis: 58px; padding: 10px 12px; }
+  .context-label { display: none; }
   .detail-panel, .detail-panel.card-left, .detail-panel.card-bottom { left: 12px; right: 12px; top: auto; bottom: 12px; width: auto; max-width: none; max-height: 58%; padding: 14px 17px; }
   .document-resize, .reading-expand { display: none; }
   .document-toolbar { padding: 10px 12px; min-height: 58px; }
@@ -186,4 +228,36 @@
   .document-toc { max-height: 130px; padding: 10px 16px; }
   .canvas-controls { left: 12px; bottom: 12px; }
 }
-@media (prefers-reduced-motion: reduce) { .app *, .sheet-content * { transition: none !important; } }
+/* Animate feedback, never the workbench geometry or the embedded diagram. */
+:is([data-slot="button"], [data-slot="input"], .select-trigger, .select-item, .search-results [role="option"]) {
+  transition-property: color, background-color, border-color;
+  transition-duration: var(--motion-fast);
+  transition-timing-function: var(--motion-ease);
+}
+.detail-panel, .search-results, .select-content, .tooltip-content {
+  animation: surface-in var(--motion-fast) var(--motion-ease);
+}
+:is(.select-content, .tooltip-content)[data-state="closed"] {
+  /* Release the dismissable layer immediately so another Escape reaches its parent. */
+  animation: none;
+  pointer-events: none;
+}
+:is(.sheet-overlay, .sheet-content)[data-state="open"] {
+  animation: surface-in var(--motion-panel) var(--motion-ease);
+}
+:is(.sheet-overlay, .sheet-content)[data-state="closed"] {
+  animation: surface-out var(--motion-fast) ease-in;
+  pointer-events: none;
+}
+.navigation-sheet[data-state="open"] { animation-name: navigation-in; }
+.navigation-sheet[data-state="closed"] { animation-name: navigation-out; }
+@keyframes surface-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes surface-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes navigation-in { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes navigation-out { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(-12px); } }
+@media (prefers-reduced-motion: reduce) {
+  .app *, .sheet-content, .sheet-content *, .sheet-overlay, .select-content, .select-content *, .tooltip-content {
+    transition: none !important;
+    animation: none !important;
+  }
+}

@@ -44,6 +44,7 @@ try {
     'dist/viewer-build.json',
     'dist/viewer/app.js',
     'dist/viewer/app.css',
+    'dist/viewer/mermaid.js',
     'dist/viewer/NOTICE.txt',
     ...['rsp', 'rsp-shape', 'rsp-implement', 'rsp-verify', 'rsp-review', 'rsp-commit', 'rsp-doc']
       .map(name => `skills/${name}/SKILL.md`),

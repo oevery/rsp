@@ -2,6 +2,7 @@ import type { ArchitectureModel, ArchitectureResult } from './model.js'
 
 /** Focus is one object's incident relationships, never its structural subtree. */
 export function selectArchitecture(model: Pick<ArchitectureModel, 'nodes' | 'relations' | 'views'>, selection: ArchitectureResult['selection'] | { kind: 'focus', id: string }) {
+  const view = selection.kind === 'view' ? model.views.find(view => view.id === selection.id) : undefined
   const selected = new Set(model.nodes.map(node => node.id))
   if (selection.kind === 'focus') {
     if (!selected.has(selection.id))
@@ -26,13 +27,19 @@ export function selectArchitecture(model: Pick<ArchitectureModel, 'nodes' | 'rel
     }
   }
   if (selection.kind === 'view') {
-    const view = model.views.find(view => view.id === selection.id)
     if (!view)
       throw new Error(`Unknown architecture view: ${selection.id}`)
     selected.clear()
     view.include.forEach(id => selected.add(id))
   }
-  const relations = model.relations.filter(edge => selected.has(edge.source) || selected.has(edge.target))
+  const relations = view?.scenario
+    ? []
+    : model.relations.filter(edge =>
+        (selected.has(edge.source) || selected.has(edge.target))
+        && (view?.boundary !== 'exclude' || (selected.has(edge.source) && selected.has(edge.target)))
+        && (!view?.relationTypes || view.relationTypes.includes(edge.type))
+        && (!view?.relationIds || view.relationIds.includes(edge.id)),
+      )
   const visible = new Set([...selected, ...relations.flatMap(edge => [edge.source, edge.target])])
   return { selected, visible, relations }
 }

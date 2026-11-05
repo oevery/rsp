@@ -27,11 +27,11 @@ export async function snapshotViewerRuntime(root: string, identity: string) {
       continue
     const content = await readFile(join(root, 'dist', file))
     hash.update(file).update(content)
-    if (file === 'viewer/app.js' || file === 'viewer/app.css')
+    if (file === 'viewer/app.js' || file === 'viewer/app.css' || file === 'viewer/mermaid.js')
       assets.set(`/${file.slice('viewer/'.length)}`, content)
   }
   if (hash.digest('hex') !== JSON.parse(runtime.build).identity
-    || assets.size !== 2
+    || assets.size !== 3
     || (await viewerRuntime(root)).identity !== identity) {
     throw new Error('Viewer assets do not match the startup build; rebuild or reinstall and retry')
   }

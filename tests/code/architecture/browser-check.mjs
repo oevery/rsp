@@ -88,6 +88,7 @@ async function main() {
     assert.ok(await page.locator('.view-navigation button').first().evaluate(element => Number.parseFloat(getComputedStyle(element).fontSize) >= 14))
     assert.ok(await page.locator('.workspace-identity').evaluate(element => Number.parseFloat(getComputedStyle(element).fontSize) >= 12))
     assert.equal(network.some(url => url.includes('/document?')), false)
+    assert.equal(network.some(url => url.endsWith('/mermaid.js')), false)
     assert.equal(await page.title(), 'Landscape · first · RSP')
     const icon = await page.locator('link[rel=icon]').getAttribute('href')
     assert.equal(decodeURIComponent(icon.split(',')[1]), await readFile(join(root, 'docs/site/public/rsp-icon.svg'), 'utf8'))
@@ -135,7 +136,7 @@ async function main() {
     assert.equal(await transform(), beforeSelection)
     await node('r0').click()
     checks.push('Click only selects original-object details without navigation or viewport changes; native relationship browsing remains available')
-    await page.getByRole('navigation', { name: 'Node views', exact: true }).getByRole('button', { name: 'Runtime', exact: false }).click()
+    await page.getByRole('navigation', { name: 'Related views', exact: true }).getByRole('button', { name: 'Runtime', exact: false }).click()
     await node('n0.n1.n2').waitFor({ state: 'visible' })
     await node('n0.n1.n2').click()
     const canvasBounds = await page.locator('.canvas').boundingBox()
@@ -302,6 +303,18 @@ async function main() {
     assert.ok(Math.abs(await chapterOffset() - beforeWideReading) < 2, 'Desktop remount preserves the current chapter offset')
     const wholeDocumentUrl = new URL(page.url())
     wholeDocumentUrl.searchParams.delete('anchor')
+    await page.addInitScript(() => {
+      // Exercise a pending scroll arriving after CSS reflow but before the app's
+      // media listener remounts the reader, rather than relying on browser timing.
+      const media = matchMedia('(max-width: 760px)')
+      let remaining = 2
+      const pendingScroll = () => {
+        document.querySelector('article')?.dispatchEvent(new Event('scroll'))
+        if (--remaining === 0)
+          media.removeEventListener('change', pendingScroll)
+      }
+      media.addEventListener('change', pendingScroll)
+    })
     await page.goto(wholeDocumentUrl.href)
     await article.getByText('END OF COMPLETE DOCUMENT').waitFor()
     await article.evaluate(element => element.scrollTop = 800)
@@ -312,7 +325,8 @@ async function main() {
     assert.ok(Math.abs(await chapterOffset() - wholeDocumentOffset) < 2, 'Whole-file reading does not reset to the top on a narrow remount')
     await page.setViewportSize({ width: 1440, height: 1000 })
     await modal.waitFor({ state: 'hidden' })
-    assert.ok(Math.abs(await chapterOffset() - wholeDocumentOffset) < 2, 'Whole-file reading survives the return to desktop')
+    const returnedOffset = await chapterOffset()
+    assert.ok(Math.abs(returnedOffset - wholeDocumentOffset) < 2, `Whole-file reading survives the return to desktop (${returnedOffset} vs ${wholeDocumentOffset})`)
     checks.push('Reading position survives desktop/mobile remounts in both directions for chapter and whole-file links')
     checks.push('Keyboard object search, top-layer Escape, selected-node focus return, non-modal desktop canvas and trapped narrow-screen sheets work without competing layers')
     checks.push('Node information opens a complete chapter-positioned right drawer; resize, expand and close keep the selection and viewport, with no competing detail card and usable narrow-screen reading')
@@ -405,7 +419,7 @@ async function main() {
     await writeFile(join(first, '.rsp/architecture.json'), JSON.stringify(reduced))
     await page.getByRole('status').filter({ hasText: 'previous view was removed' }).waitFor()
     await page.locator('.canvas .react-flow__node').filter({ hasText: 'Reduced Store' }).waitFor({ state: 'visible' })
-    assert.equal(await page.title(), 'All registered nodes · first · RSP')
+    assert.equal(await page.title(), 'All objects · first · RSP')
     checks.push('Removing a node and the active view falls back explicitly to all registered structure')
     await chooseOption(page, 'Workspace', 'second')
     await openView(page, 'Landscape')
@@ -488,6 +502,135 @@ async function main() {
     await isolationPage.locator('article').getByText('END OF COMPLETE DOCUMENT').waitFor()
     await isolationPage.close()
     checks.push('Workspace, document and image errors never appear in a different workspace/file, including delayed loading intervals')
+    const scenarioRoot = join(temporary, 'runtime-scenarios')
+    await mkdir(join(scenarioRoot, '.rsp'), { recursive: true })
+    await mkdir(join(scenarioRoot, 'docs'))
+    const scenarioModel = architecture('Shared')
+    scenarioModel.views.push({
+      id: 'app-flow',
+      title: 'App operation',
+      node: 'app',
+      scenario: {
+        participants: [{ id: 'caller', node: 'app', title: 'App caller' }, { id: 'runtime', node: 'runtime' }, { id: 'store', node: 'store', title: 'HTTP handler' }],
+        steps: [
+          { id: 'execute', source: 'caller', target: 'runtime', type: 'call', label: 'Execute operation' },
+          { id: 'http', source: 'runtime', target: 'store', type: 'call', label: 'Request page' },
+          { id: 'page', source: 'store', target: 'runtime', type: 'return', label: 'Page response', replyTo: 'http' },
+          { id: 'result', source: 'runtime', target: 'caller', type: 'return', label: 'Operation result', replyTo: 'execute' },
+          { id: 'ready', source: 'caller', target: 'runtime', type: 'event', label: 'Platform ready' },
+        ],
+      },
+    })
+    scenarioModel.views.push({ id: 'filtered', title: 'Only reads', node: 'app', include: ['query'], relationTypes: ['read'] })
+    await writeFile(join(scenarioRoot, '.rsp/architecture.json'), JSON.stringify(scenarioModel))
+    await writeFile(join(scenarioRoot, 'docs/contract.md'), '# Runtime\n\n## Contract\n\n```mermaid\nsequenceDiagram\nApp->>Runtime: Execute\nRuntime-->>App: Result\n```\n\n```mermaid\nnot a valid diagram\n```\n\n[Implementation](../src/runtime.ts#L12)\n\n[Blocked](../.env)\n')
+    const scenarioUrl = await run(scenarioRoot, ['view', '--no-open'])
+    await page.goto(scenarioUrl)
+    await openView(page, 'Only reads')
+    await page.locator('.canvas .react-flow__edge').first().waitFor()
+    assert.equal(await page.locator('.canvas .react-flow__edge').count(), 1)
+    await chooseOption(page, 'Views', 'App operation')
+    assert.equal(await page.locator('.scenario-context').isVisible(), false, 'Scenarios start with the step list collapsed')
+    assert.equal(await page.locator('.desktop-side-panel').isVisible(), false, 'Scenarios default to a full-width canvas')
+    await page.waitForFunction(() => {
+      const area = document.querySelector('.canvas')
+      const root = Array.from(area.querySelectorAll('*')).find(element => element.shadowRoot?.querySelector('.react-flow__edge'))?.shadowRoot
+      const paths = Array.from(root?.querySelectorAll('.react-flow__edge .likec4-edge__path') ?? [])
+      const bounds = area.getBoundingClientRect()
+      return paths.length > 0 && paths.every((path) => {
+        const edge = path.getBoundingClientRect()
+        return edge.left >= bounds.left && edge.right <= bounds.right && edge.top >= bounds.top && edge.bottom <= bounds.bottom
+      })
+    })
+    await page.getByRole('button', { name: 'Scenario steps · 5', exact: true }).click()
+    await page.locator('.scenario-context').waitFor()
+    // Finish the panel-open ResizeObserver adjustment before measuring tab switching.
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(resolve)))))
+    const beforeTabCanvas = await page.locator('.canvas').boundingBox()
+    const beforeTabNode = await page.locator('.canvas .react-flow__node').first().boundingBox()
+    await page.getByRole('tab', { name: 'Navigation', exact: true }).click()
+    await page.getByRole('combobox', { name: 'Search objects', exact: true }).fill('Shared Runtime')
+    await page.getByRole('tab', { name: 'Steps', exact: true }).click()
+    await page.waitForTimeout(200)
+    assert.deepEqual(await page.locator('.canvas').boundingBox(), beforeTabCanvas, 'Tab switching keeps the canvas footprint')
+    const afterTabNode = await page.locator('.canvas .react-flow__node').first().boundingBox()
+    assert.ok(['x', 'y', 'width', 'height'].every(key => Math.abs(beforeTabNode[key] - afterTabNode[key]) < 1), `Tab switching preserves diagram position and zoom within subpixel rounding: ${JSON.stringify({ beforeTabNode, afterTabNode })}`)
+    await page.getByRole('tab', { name: 'Navigation', exact: true }).click()
+    assert.equal(await page.getByRole('combobox', { name: 'Search objects', exact: true }).inputValue(), 'Shared Runtime', 'Navigation search survives switching tabs')
+    await page.getByRole('tab', { name: 'Navigation', exact: true }).press('ArrowRight')
+    assert.equal(await page.getByRole('tab', { name: 'Steps', exact: true }).getAttribute('aria-selected'), 'true')
+    const beforeCollapse = await page.locator('.canvas .react-flow__node').first().boundingBox()
+    await page.getByRole('button', { name: 'Collapse sidebar', exact: true }).click()
+    await page.waitForTimeout(100)
+    const afterCollapse = await page.locator('.canvas .react-flow__node').first().boundingBox()
+    assert.ok(Math.abs(beforeCollapse.x - afterCollapse.x) < 1 && Math.abs(beforeCollapse.y - afterCollapse.y) < 1, 'Collapsing preserves the graph screen position')
+    assert.ok(Math.abs(beforeCollapse.width - afterCollapse.width) < 1, 'Collapsing preserves zoom')
+    await page.getByRole('button', { name: 'Scenario steps · 5', exact: true }).click()
+    await page.locator('.canvas .react-flow__edge').first().waitFor()
+    assert.equal(await page.locator('.canvas .react-flow__node').count(), 3)
+    assert.equal(await page.locator('.canvas .react-flow__edge').count(), 5)
+    const scenarioDetails = page.getByRole('complementary', { name: 'Details', exact: true })
+    await page.locator('.view-context').getByRole('button', { name: /Page response/ }).click()
+    await scenarioDetails.getByRole('heading', { name: 'Page response', exact: true }).waitFor()
+    await page.locator('.canvas .react-flow__edge.selected').waitFor()
+    await page.waitForFunction(() => {
+      const area = document.querySelector('.canvas')
+      const root = Array.from(area.querySelectorAll('*')).find(element => element.shadowRoot?.querySelector('.react-flow__edge.selected'))?.shadowRoot
+      const edge = root?.querySelector('.react-flow__edge.selected .likec4-edge__path')?.getBoundingClientRect()
+      const bounds = area.getBoundingClientRect()
+      const card = document.querySelector('.detail-panel')?.getBoundingClientRect()
+      return edge && card && edge.left >= bounds.left && edge.right <= bounds.right && edge.top >= bounds.top && edge.bottom < card.top
+    })
+    assert.equal(await page.locator('.desktop-side-panel .sidebar').isVisible(), false, 'Steps and project navigation share one panel')
+    await page.getByRole('button', { name: 'Next step', exact: true }).click()
+    await scenarioDetails.getByRole('heading', { name: 'Operation result', exact: true }).waitFor()
+    await page.getByRole('button', { name: 'Previous step', exact: true }).click()
+    await scenarioDetails.getByRole('heading', { name: 'Page response', exact: true }).waitFor()
+    if (process.env.RSP_VIEWER_SCREENSHOT_DIR) {
+      await mkdir(process.env.RSP_VIEWER_SCREENSHOT_DIR, { recursive: true })
+      await page.screenshot({ path: join(process.env.RSP_VIEWER_SCREENSHOT_DIR, 'scenario.png') })
+    }
+    await page.keyboard.press('Escape')
+    await scenarioDetails.waitFor({ state: 'hidden' })
+    await page.locator('.canvas').getByText('Execute operation', { exact: true }).click()
+    await scenarioDetails.getByRole('heading', { name: 'Execute operation', exact: true }).waitFor()
+    await page.locator('.view-context').getByRole('button', { name: /Page response/ }).click()
+    await scenarioDetails.getByRole('button', { name: 'Reply to: Request page', exact: true }).click()
+    await scenarioDetails.getByRole('heading', { name: 'Request page', exact: true }).waitFor()
+    await scenarioDetails.getByRole('button', { name: 'Shared Runtime', exact: true }).click()
+    await scenarioDetails.getByRole('heading', { name: 'Shared Runtime', exact: true }).waitFor()
+    assert.equal(new URL(page.url()).searchParams.get('node'), 'runtime')
+    await page.getByRole('button', { name: 'Collaboration', exact: true }).click()
+    await page.locator('.canvas .react-flow__edge').first().waitFor()
+    assert.equal(await page.locator('.canvas .react-flow__edge').count(), 5)
+    await page.getByRole('button', { name: 'Sequence', exact: true }).click()
+    await page.locator('.view-context').getByRole('button', { name: /Operation result/ }).click()
+    await page.reload()
+    await scenarioDetails.getByRole('heading', { name: 'Operation result', exact: true }).waitFor()
+    await scenarioDetails.getByRole('button', { name: 'Shared Runtime', exact: true }).click()
+    await scenarioDetails.getByRole('navigation', { name: 'Documents', exact: true }).getByRole('button').click()
+    await page.locator('figure[data-rendered="complete"] img').waitFor()
+    assert.ok(await page.locator('figure[data-rendered="complete"] img').evaluate(image => image.complete && image.naturalWidth > 0))
+    await page.locator('figure[data-rendered="error"]').getByRole('status').waitFor()
+    if (process.env.RSP_VIEWER_SCREENSHOT_DIR)
+      await page.screenshot({ path: join(process.env.RSP_VIEWER_SCREENSHOT_DIR, 'document.png') })
+    await page.locator('article').getByRole('button', { name: /Copy source path: src\/runtime.ts#L12/ }).waitFor()
+    const scenarioCli = JSON.parse(await run(scenarioRoot, ['architecture', '--view', 'app-flow', '--json']))
+    assert.equal(scenarioCli.nodes.length, 3)
+    assert.equal(scenarioCli.relations.length, 0)
+    assert.equal(scenarioCli.views.find(view => view.id === 'app-flow').scenario.steps.length, 5)
+    await page.getByRole('button', { name: 'Return to graph', exact: true }).click()
+    await page.keyboard.press('Escape')
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.getByRole('button', { name: 'Scenario steps · 5', exact: true }).click()
+    await page.locator('.view-context').getByRole('button', { name: /Platform ready/ }).click()
+    await scenarioDetails.getByRole('heading', { name: 'Platform ready', exact: true }).waitFor()
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+    await page.setViewportSize({ width: 1440, height: 1000 })
+    scenarioModel.views.find(view => view.id === 'app-flow').scenario.steps.pop()
+    await writeFile(join(scenarioRoot, '.rsp/architecture.json'), JSON.stringify(scenarioModel))
+    await page.getByRole('status').filter({ hasText: 'selected scenario step is unavailable' }).waitFor()
+    checks.push('Filtered views remove unrelated edges; shared navigation/steps panel preserves search, canvas footprint, zoom and screen position; toolbar selection and unobscured messages work; shared-module scenarios render sequence/collaboration, inspect replies, navigate modules and restore selected steps; Mermaid renders with source/error fallback and source locators')
     const shapes = [
       { name: 'single-app', nodes: [
         { id: 'app', title: 'Ledger App', description: 'One application with cohesive modules' },
@@ -561,6 +704,21 @@ async function main() {
         assert.equal(empty.relations.length, 0)
         await openView(page, 'Application modules')
         await page.locator('.canvas .react-flow__node').first().waitFor()
+        const beforeResize = await page.locator('.canvas .react-flow__node').first().boundingBox()
+        await page.setViewportSize({ width: 390, height: 844 })
+        await page.waitForFunction(() => {
+          const area = document.querySelector('.canvas')
+          const bounds = area.getBoundingClientRect()
+          const root = Array.from(area.querySelectorAll('*')).find(element => element.shadowRoot?.querySelector('.react-flow__node'))?.shadowRoot
+          return Array.from(root?.querySelectorAll('.react-flow__node') ?? []).some((node) => {
+            const box = node.getBoundingClientRect()
+            return box.right > bounds.left && box.left < bounds.right && box.bottom > bounds.top && box.top < bounds.bottom
+          })
+        })
+        const afterResize = await page.locator('.canvas .react-flow__node').first().boundingBox()
+        assert.ok(Math.abs(beforeResize.width - afterResize.width) < 1, 'Window resizing keeps the graph visible without changing zoom')
+        await page.setViewportSize({ width: 1440, height: 1000 })
+        await page.getByRole('navigation', { name: 'Views', exact: true }).waitFor()
       }
       assert.deepEqual(nativeView.edges.flatMap(edge => edge.relations.map(id => native.layout.relationIds[id])).sort(), cliSelection.relations.map(edge => edge.id).sort())
       for (const boundary of cliSelection.nodes.filter(node => node.boundary)) {
@@ -575,9 +733,13 @@ async function main() {
       await page.getByRole('listbox', { name: 'Search results', exact: true }).getByRole('option').first().click()
       const details = page.getByRole('complementary', { name: 'Details', exact: true })
       await details.getByRole('heading', { name: chosenNode.title, exact: true }).waitFor()
-      const owned = shape.views.filter(view => view.node === chosen)
+      const expectedRelatedViews = {
+        'single-app': ['Application modules'],
+        'shared-packages': ['Shopping', 'Operations', 'Pricing consumers', 'Pricing contracts'],
+        'async-service': ['Task processing'],
+      }[shape.name]
       assert.equal(await details.getByRole('heading', { name: 'Documents', exact: true }).count(), 0)
-      assert.equal(await details.getByRole('navigation', { name: 'Node views', exact: true }).getByRole('button').count(), owned.length)
+      assert.deepEqual(await details.getByRole('navigation', { name: 'Related views', exact: true }).getByRole('button').evaluateAll(buttons => buttons.map(button => button.getAttribute('aria-label') ?? button.textContent.trim())), expectedRelatedViews)
       if (shape.name === 'shared-packages') {
         assert.equal(await details.getByText('Part of', { exact: false }).count(), 0)
         assert.equal(new URL(page.url()).searchParams.get('node'), 'pricing')
@@ -632,7 +794,8 @@ async function main() {
       await details.getByRole('button', { name: 'Close details', exact: true }).click()
       await page.getByRole('button', { name: 'Navigation', exact: true }).click()
       await page.getByRole('navigation', { name: 'Views', exact: true }).getByRole('button', { name: shape.views[0].title, exact: true }).click()
-      await page.getByRole('heading', { name: shape.views[0].title, exact: true }).waitFor()
+      await page.getByRole('combobox', { name: 'Views', exact: true }).waitFor()
+      assert.equal(await page.getByRole('combobox', { name: 'Views', exact: true }).textContent(), shape.views[0].title)
       await page.setViewportSize({ width: 1440, height: 1000 })
       if (shape.name === 'async-service') {
         await page.getByRole('combobox', { name: 'Search objects', exact: true }).fill(chosenNode.title)
@@ -641,7 +804,7 @@ async function main() {
         await page.getByRole('heading', { name: `${chosenNode.title} relationships`, exact: true }).waitFor()
         await writeFile(join(project, '.rsp/architecture.json'), JSON.stringify({ ...input, nodes: input.nodes.filter(node => node.id !== chosen), relations: input.relations.filter(edge => edge.source !== chosen && edge.target !== chosen), views: input.views.filter(view => view.node !== chosen) }))
         await page.getByRole('status').filter({ hasText: 'previous object was removed' }).waitFor()
-        await page.getByRole('heading', { name: 'All registered nodes', exact: true }).waitFor()
+        await page.getByRole('heading', { name: 'All objects', exact: true }).waitFor()
         assert.equal(await page.locator('.context-label').count(), 0)
       }
       if (shape.name === 'single-app') {
@@ -851,6 +1014,25 @@ async function main() {
     await fallbackLocale.goto(localizedUrl)
     await fallbackLocale.getByRole('navigation', { name: 'Views', exact: true }).waitFor()
     assert.equal(await fallbackLocale.locator('html').getAttribute('lang'), 'en')
+    await fallbackLocale.getByRole('combobox', { name: 'Views', exact: true }).click()
+    const motionMenu = fallbackLocale.getByRole('listbox')
+    await motionMenu.waitFor()
+    assert.notEqual(await motionMenu.evaluate(element => getComputedStyle(element).animationName), 'none')
+    await fallbackLocale.emulateMedia({ reducedMotion: 'reduce' })
+    assert.equal(await motionMenu.evaluate(element => getComputedStyle(element).animationName), 'none', 'Reduced motion applies to portalled menus')
+    await fallbackLocale.keyboard.press('Escape')
+    await motionMenu.waitFor({ state: 'hidden' })
+    await fallbackLocale.setViewportSize({ width: 390, height: 844 })
+    await fallbackLocale.getByRole('button', { name: 'Navigation', exact: true }).click()
+    await fallbackLocale.locator('.navigation-sheet').waitFor()
+    for (const selector of ['.navigation-sheet', '.sheet-overlay']) {
+      assert.equal(await fallbackLocale.locator(selector).evaluate(element => getComputedStyle(element).animationName), 'none')
+    }
+    assert.equal(await fallbackLocale.getByRole('button', { name: 'Collapse sidebar', exact: true }).evaluate(element => getComputedStyle(element).transitionProperty), 'none')
+    await fallbackLocale.keyboard.press('Escape')
+    await fallbackLocale.locator('.navigation-sheet').waitFor({ state: 'hidden' })
+    await fallbackLocale.waitForFunction(() => document.activeElement?.matches('.navigation-toggle'))
+    checks.push('Controls and portalled surfaces respect reduced motion without breaking keyboard dismissal or focus return')
     await fallbackLocale.close()
     await localized.close()
     page = mainPage

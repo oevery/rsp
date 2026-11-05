@@ -3,7 +3,7 @@ import type { WorkspaceSummary } from '../workspaces.js'
 import { useId, useState } from 'react'
 import { rspIcon } from './branding.js'
 import { useLocale } from './i18n.js'
-import { Button, CloseButton, Input, Select } from './ui/primitives.js'
+import { Button, Input, Select } from './ui/primitives.js'
 
 interface Props {
   workspace: string
@@ -13,12 +13,10 @@ interface Props {
   view: string
   root?: string
   revision?: string
-  mobile?: boolean
   selectionDisabled?: boolean
   onWorkspace: (workspace: string) => void
   onView: (view: string) => void
   onSelect: (node: string) => void
-  onClose: () => void
 }
 
 export function WorkspaceSidebar(props: Props) {
@@ -27,6 +25,7 @@ export function WorkspaceSidebar(props: Props) {
   const id = useId()
   const { locale, setLocale, t } = useLocale()
   const currentWorkspace = props.workspaces.find(workspace => workspace.id === props.workspace)
+  const showViewOwners = new Set(props.architecture?.views.map(view => view.node)).size > 1
   const identity = (workspace: WorkspaceSummary) => workspace.git
     ? `${workspace.git.branch ?? `${t('detachedHead')} · ${workspace.git.commit}`} · ${t(workspace.git.linked ? 'linkedWorktree' : 'mainWorktree')}`
     : t('directoryWorkspace')
@@ -61,7 +60,6 @@ export function WorkspaceSidebar(props: Props) {
           />
           {currentWorkspace && <small className="workspace-identity" title={`${identity(currentWorkspace)} · ${currentWorkspace.root}`}>{identity(currentWorkspace)}</small>}
         </div>
-        {props.mobile && <CloseButton label={t('closeNavigation')} onClick={props.onClose} />}
       </div>
       <div className="search">
         <Input
@@ -129,11 +127,11 @@ export function WorkspaceSidebar(props: Props) {
             <span className="view-dot" aria-hidden="true" />
             <span>
               {view.title}
-              <small>{props.architecture?.nodes.find(node => node.id === view.node)?.title}</small>
+              {showViewOwners && <small>{props.architecture?.nodes.find(node => node.id === view.node)?.title}</small>}
             </span>
           </Button>
         ))}
-        <Button variant="ghost" className="all-nodes" aria-current={props.mode === 'full' ? 'page' : undefined} onClick={() => props.onView('')}>{t('allNodes')}</Button>
+        <Button variant="ghost" className="all-nodes" title={t('allNodesHint')} aria-current={props.mode === 'full' ? 'page' : undefined} onClick={() => props.onView('')}>{t('allNodes')}</Button>
       </nav>
       {props.architecture && !props.architecture.views.length && <p className="empty-views">{t('noViews')}</p>}
       <footer className="sidebar-footer">

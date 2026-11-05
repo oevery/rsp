@@ -190,9 +190,32 @@ The fixed `.rsp/architecture.json` uses `schemaVersion: 1` and contains `nodes`,
 `relations`, `views` and `bindings`. Nodes have stable IDs, titles, descriptions
 and optional parents. Parent means structural composition; it does not encode
 identity, execution order or view membership. Relations have IDs, source and
-target IDs, authored types and descriptions. Views have IDs, titles, an owning
+target IDs, authored types and descriptions. Structural views have IDs, titles, an owning
 node and explicit included node IDs. Duplicate identities, missing references,
 cycles and unsupported schemas fail explicitly.
+
+Relations accept an optional non-empty `label` for display, falling back to
+`type`. Types remain authored strings; existing values are not reclassified.
+Structural views optionally declare `relationTypes` and `relationIds`: both
+filters apply when present, and an empty list selects no relations.
+`boundary` is `include` (the compatible default) or `exclude`; exclusion keeps
+only edges whose two endpoints are selected. Filters apply before boundary nodes
+are added. Unknown relation IDs and invalid boundary values fail.
+
+A view can instead declare `scenario: { participants, steps }`, mutually exclusive
+with `include`, `relationTypes`, `relationIds` and `boundary`. Non-empty participants
+have local unique `id`, an existing module `node`, and optional non-empty `title`.
+Several participants can reference the same node. Non-empty ordered steps have local
+unique `id`, participant `source`/`target`, `type` (`call`, `return`, `event`), non-empty
+`label`, optional non-empty `description`, and optional `replyTo`. A `replyTo` is
+valid only on a return and must reference an earlier call with reversed endpoints.
+No global dependency edges are inferred from scenario steps.
+
+Scenario queries include unique participant modules, their document bindings and
+the scenario data, with no structural relations or external expansion. Returned
+view metadata includes a derived `include` list of module IDs; authored scenarios
+omit that field. CLI text exposes participants, ordered steps and reply references.
+JSON preserves the same information without layout aliases or document bodies.
 
 Bindings reference project-relative Markdown files and optional heading hierarchies.
 Scope defaults to `node`; only explicit `subtree` bindings inherit. References
@@ -247,9 +270,31 @@ Reference details and native relationship browsing retain each relation. Undrawn
 relations have a visible indication and exact accessible details; a reference edge
 is not a graphical self-loop. Boundary meaning has a text label, not color alone.
 
-Compact left-to-right diagrams use short relation-type labels; complete descriptions
+Compact left-to-right diagrams use display labels, falling back to relation types; complete descriptions
 remain in the card. Native pan/zoom and relationship browsing remain available
 without competing detail layers.
+
+Scenario views default to a sequence diagram and can switch to a collaboration
+diagram from the same steps. Derived leaf aliases preserve local role identity,
+including container modules and multiple instances of one module; selecting a role
+opens the canonical module. A step list highlights its message, exposes endpoints
+and description, and links returns to their calls. Calls use solid lines, returns
+dashed lines and events dotted lines, accompanied by a textual legend. Module
+cards list related views, including explicit structural membership and scenario participation. URL state retains the
+scenario step and presentation; no layout preferences are written into the model.
+Initial presentation fits the diagram; scenario role cards keep module descriptions in details.
+Navigation and scenario steps share one fixed-width desktop panel and one narrow-screen drawer.
+Tabs retain their mounted content, search, scroll and selected-step state while switching;
+tab changes do not resize or move the canvas. Opening a requested tab does not toggle the panel
+closed; a dedicated collapse control closes it. The desktop open preference lasts for the browser
+session; without a preference, structural views show the panel and scenarios hide it.
+A toolbar keeps view selection, scenario presentation and previous/next steps available.
+Explicit step selection brings its message into view, avoiding the details card, and closes the
+narrow-screen drawer. Panel opening/closing preserves zoom and graph screen position; only an
+obscured selected message causes the necessary pan. Initial presentation and explicit Fit provide
+the overview; panel changes do not auto-fit. Window resizing preserves the graph reading center and zoom.
+Document reading retains its viewport restoration contract.
+Structural views expose their relation filters and boundary policy.
 
 ##### Controls and workspace identity
 
@@ -258,6 +303,9 @@ before dismissing its navigation drawer. Workspace and language selection use th
 same keyboard-accessible control. Document and internal-view entries communicate
 navigation rather than text input. Long names retain accessible full text without
 displacing arrows or actions; close controls have consistent hit areas and labels.
+The current view title is the view selector; navigation and refresh icons retain accessible names
+and tooltips. Feedback motion respects reduced-motion preferences and does not animate canvas or
+desktop panel geometry. Menu and tooltip dismissal releases keyboard interaction immediately.
 
 Registered workspaces are grouped by Git repository when metadata is available.
 The selector shows branch or detached commit, main or linked worktree status, and
@@ -285,6 +333,12 @@ Valid reading position survives document updates and desktop/narrow remounts for
 both chapter and whole-file entries. Tables preserve column headers and declared
 alignment. Inline and reference HTTP(S) links use the same safe new-tab behavior;
 local document links remain in the reader.
+
+Fenced Mermaid diagrams render locally in strict mode and are displayed as inert
+SVG images, retaining expandable escaped source. Parse/render failure exposes the
+source and an error without replacing the document. Safe relative source/config
+links offer copyable project locators (with optional `#L12` or `#L12-L20`);
+they do not grant source-file reads. Clipboard failure selects the visible locator.
 
 Deep links, refresh and back restore valid addressed context and selection.
 In-session viewport restoration is scoped to workspace and graph revision, not

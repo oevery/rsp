@@ -10,8 +10,20 @@ import { selectArchitecture } from './selection.js'
 export { selectArchitecture } from './selection.js'
 
 export interface ArchitectureNode { id: string, title: string, description: string, parent?: string }
-export interface ArchitectureRelation { id: string, source: string, target: string, type: string, description: string }
-export interface ArchitectureView { id: string, title: string, node: string, include: string[] }
+export interface ArchitectureRelation { id: string, source: string, target: string, type: string, label?: string, description: string }
+export interface ScenarioParticipant { id: string, node: string, title?: string }
+export interface ScenarioStep { id: string, source: string, target: string, type: 'call' | 'return' | 'event', label: string, description?: string, replyTo?: string }
+export interface ArchitectureScenario { participants: ScenarioParticipant[], steps: ScenarioStep[] }
+export interface ArchitectureView {
+  id: string
+  title: string
+  node: string
+  include: string[]
+  relationTypes?: string[]
+  relationIds?: string[]
+  boundary?: 'include' | 'exclude'
+  scenario?: ArchitectureScenario
+}
 export interface ArchitectureBinding { node: string, file: string, headings?: string[], scope: 'node' | 'subtree' }
 export interface ArchitectureModel { schemaVersion: 1, nodes: ArchitectureNode[], relations: ArchitectureRelation[], views: ArchitectureView[], bindings: ArchitectureBinding[] }
 export interface Heading { title: string, depth: number, anchor: string, hierarchy: string[] }
@@ -72,8 +84,60 @@ export function parseArchitecture(content: string): ArchitectureModel {
   if (value.schemaVersion !== 1)
     throw new Error(`Unsupported architecture schemaVersion: ${String(value.schemaVersion)}`)
   const nodes = collection(value.nodes, 'nodes').map(node => ({ id: text(node.id, 'node.id'), title: text(node.title, 'node.title'), description: text(node.description, 'node.description'), ...(node.parent === undefined ? {} : { parent: text(node.parent, 'node.parent') }) }))
-  const relations = collection(value.relations, 'relations').map(edge => ({ id: text(edge.id, 'relation.id'), source: text(edge.source, 'relation.source'), target: text(edge.target, 'relation.target'), type: text(edge.type, 'relation.type'), description: text(edge.description, 'relation.description') }))
-  const views = collection(value.views, 'views').map(view => ({ id: text(view.id, 'view.id'), title: text(view.title, 'view.title'), node: text(view.node, 'view.node'), include: strings(view.include, 'view.include') }))
+  const relations = collection(value.relations, 'relations').map(edge => ({ id: text(edge.id, 'relation.id'), source: text(edge.source, 'relation.source'), target: text(edge.target, 'relation.target'), type: text(edge.type, 'relation.type'), ...(edge.label === undefined ? {} : { label: text(edge.label, 'relation.label') }), description: text(edge.description, 'relation.description') }))
+  const views = collection(value.views, 'views').map((view): ArchitectureView => {
+    if (view.boundary !== undefined && view.boundary !== 'include' && view.boundary !== 'exclude')
+      throw new Error('Architecture view.boundary must be include or exclude')
+    const result: ArchitectureView = {
+      id: text(view.id, 'view.id'),
+      title: text(view.title, 'view.title'),
+      node: text(view.node, 'view.node'),
+      include: view.scenario === undefined ? strings(view.include, 'view.include') : [],
+      ...(view.relationTypes === undefined ? {} : { relationTypes: strings(view.relationTypes, 'view.relationTypes') }),
+      ...(view.relationIds === undefined ? {} : { relationIds: strings(view.relationIds, 'view.relationIds') }),
+      ...(view.boundary === undefined ? {} : { boundary: view.boundary }),
+    }
+    if (view.scenario !== undefined) {
+      if (view.include !== undefined || view.relationTypes !== undefined || view.relationIds !== undefined || view.boundary !== undefined)
+        throw new Error('Scenario views use participants instead of structural selectors')
+      const scenario = object(view.scenario)
+      const participants = collection(scenario.participants, 'scenario.participants').map(participant => ({
+        id: text(participant.id, 'participant.id'),
+        node: text(participant.node, 'participant.node'),
+        ...(participant.title === undefined ? {} : { title: text(participant.title, 'participant.title') }),
+      }))
+      const steps = collection(scenario.steps, 'scenario.steps').map((step): ScenarioStep => {
+        if (!['call', 'return', 'event'].includes(String(step.type)))
+          throw new Error('Scenario step.type must be call, return or event')
+        return {
+          id: text(step.id, 'step.id'),
+          source: text(step.source, 'step.source'),
+          target: text(step.target, 'step.target'),
+          type: step.type as ScenarioStep['type'],
+          label: text(step.label, 'step.label'),
+          ...(step.description === undefined ? {} : { description: text(step.description, 'step.description') }),
+          ...(step.replyTo === undefined ? {} : { replyTo: text(step.replyTo, 'step.replyTo') }),
+        }
+      })
+      unique(participants, 'participant')
+      unique(steps, 'step')
+      if (!participants.length || !steps.length)
+        throw new Error('Scenarios require participants and steps')
+      const participantIds = new Set(participants.map(participant => participant.id))
+      steps.forEach((step, index) => {
+        if (!participantIds.has(step.source) || !participantIds.has(step.target))
+          throw new Error(`Missing scenario participant in step: ${step.id}`)
+        if (step.replyTo !== undefined) {
+          const call = steps.slice(0, index).find(candidate => candidate.id === step.replyTo)
+          if (step.type !== 'return' || call?.type !== 'call' || call.source !== step.target || call.target !== step.source)
+            throw new Error(`Invalid earlier call reference in step: ${step.id}`)
+        }
+      })
+      result.scenario = { participants, steps }
+      result.include = [...new Set(participants.map(participant => participant.node))]
+    }
+    return result
+  })
   const bindings = collection(value.bindings, 'bindings').map((binding): ArchitectureBinding => {
     const file = projectPath(text(binding.file, 'binding.file'))
     if (!/\.md$/i.test(file))
@@ -112,6 +176,10 @@ export function parseArchitecture(content: string): ArchitectureModel {
   views.forEach((view) => {
     requireNode(view.node)
     view.include.forEach(requireNode)
+    view.relationIds?.forEach((id) => {
+      if (!relations.some(edge => edge.id === id))
+        throw new Error(`Missing architecture relation: ${id}`)
+    })
   })
   bindings.forEach(binding => requireNode(binding.node))
   return { schemaVersion: 1, nodes, relations, views, bindings }

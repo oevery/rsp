@@ -36,6 +36,93 @@ afterEach(async () => {
   clearConfigCache()
 })
 describe('architecture contract', () => {
+  it('filters relationships before adding boundaries and keeps legacy incident selection', async () => {
+    const root = await fixture()
+    const input: any = model()
+    input.relations.push({ id: 'build', source: 'child', target: 'beyond', type: 'build', label: 'Produces bundle', description: 'Build only' })
+    input.views.push({ id: 'filtered', title: 'Read only', node: 'root', include: ['child'], relationTypes: ['read'] })
+    input.views.push({ id: 'internal', title: 'Internal only', node: 'root', include: ['child'], boundary: 'exclude' })
+    input.views.push({ id: 'none', title: 'No relationships', node: 'root', include: ['child'], relationIds: [] })
+    await writeFile(join(root, '.rsp/architecture.json'), JSON.stringify(input))
+    expect((await queryArchitecture({ root, view: 'root' })).relations.map(edge => edge.id)).toEqual(['read', 'build'])
+    const selected = await queryArchitecture({ root, view: 'filtered' })
+    expect(selected.nodes.map(node => [node.id, node.boundary])).toEqual([['child', false], ['external', true]])
+    expect(selected.relations.map(edge => edge.id)).toEqual(['read'])
+    for (const view of ['internal', 'none']) {
+      const selection = await queryArchitecture({ root, view })
+      expect(selection.nodes.map(node => node.id)).toEqual(['child'])
+      expect(selection.relations).toEqual([])
+    }
+    const architecture = await queryArchitecture({ root })
+    const layout = await layoutArchitecture(architecture, 'filters')
+    const view = layout.data.views[layout.viewNames.filtered! as keyof typeof layout.data.views]!
+    expect(view.nodes.map(node => node.id).sort()).toEqual(selected.nodes.map(node => layout.names[node.id]).sort())
+    expect(view.edges.flatMap(edge => edge.relations.map(id => layout.relationIds[id]))).toEqual(['read'])
+    input.views[0].relationIds = ['missing']
+    expect(() => parseArchitecture(JSON.stringify(input))).toThrow('Missing architecture relation')
+  })
+  it('reuses module identities in ordered scenarios and lays out sequence and collaboration views', async () => {
+    const root = await fixture()
+    const input: any = model()
+    const scenario = {
+      participants: [{ id: 'caller', node: 'root', title: 'App caller' }, { id: 'runtime', node: 'child' }, { id: 'other-instance', node: 'child', title: 'Second runtime' }],
+      steps: [
+        { id: 'execute', source: 'caller', target: 'runtime', type: 'call', label: 'Execute' },
+        { id: 'notify', source: 'runtime', target: 'other-instance', type: 'event', label: 'Ready' },
+        { id: 'response', source: 'runtime', target: 'caller', type: 'return', label: 'Result', replyTo: 'execute' },
+      ],
+    }
+    input.views.push({ id: 'app-flow', title: 'App operation', node: 'root', scenario })
+    await writeFile(join(root, '.rsp/architecture.json'), JSON.stringify(input))
+    const selected = await queryArchitecture({ root, view: 'app-flow' })
+    expect(selected.nodes.map(node => node.id)).toEqual(['root', 'child'])
+    expect(selected.relations).toEqual([])
+    expect(selected.views.find(view => view.id === 'app-flow')!.scenario).toEqual(scenario)
+    const layout = await layoutArchitecture(await queryArchitecture({ root }), 'scenario')
+    const focused = await layoutArchitecture(await queryArchitecture({ root }), 'scenario', 'child')
+    expect(focused.stepIds).toEqual({})
+    for (const id of [layout.viewNames['app-flow'], layout.collaborationViews['app-flow']]) {
+      const view = layout.data.views[id! as keyof typeof layout.data.views]!
+      expect(view._type).toBe('dynamic')
+      expect(view.nodes).toHaveLength(3)
+      expect(view.edges).toHaveLength(3)
+      expect(view.edges.map(edge => [layout.stepIds[id!]![edge.id], edge.label, edge.line])).toEqual([
+        ['execute', 'Execute', 'solid'],
+        ['notify', 'Ready', 'dotted'],
+        ['response', 'Result', 'dashed'],
+      ])
+      expect(view.edges.map(edge => [layout.references[edge.source], layout.references[edge.target]])).toEqual([
+        ['root', 'child'],
+        ['child', 'child'],
+        ['child', 'root'],
+      ])
+      expect(view.nodes.map(node => layout.references[node.id]).sort()).toEqual(['child', 'child', 'root'])
+    }
+    for (const mutate of [
+      (value: any) => value.views.at(-1).scenario.participants[0].node = 'missing',
+      (value: any) => value.views.at(-1).scenario.steps[0].target = 'missing',
+      (value: any) => value.views.at(-1).scenario.steps[2].replyTo = 'notify',
+      (value: any) => value.views.at(-1).scenario.steps[2].source = 'other-instance',
+      (value: any) => value.views.at(-1).include = ['root'],
+      (value: any) => value.views.at(-1).scenario.steps[0].type = 'unknown',
+    ]) {
+      const invalid = structuredClone(input)
+      mutate(invalid)
+      expect(() => parseArchitecture(JSON.stringify(invalid))).toThrow()
+    }
+  })
+  it('retains escaped diagram source and source locators without granting file reads', async () => {
+    const root = await fixture()
+    await writeFile(join(root, 'docs/whole.md'), '# Whole\n\n```mermaid\nsequenceDiagram\nA->>B: <script>alert(1)</script>\n```\n\n[Implementation](../src/runtime.ts#L12)\n\n[Secret](../.env)\n\n[Escape](../../outside.ts)\n\n[Unsafe](javascript:alert(1))\n')
+    const architecture = await queryArchitecture({ root })
+    const document = await renderDocument(root, architecture, 'docs/whole.md')
+    expect(document.html).toContain('data-rsp-mermaid')
+    expect(document.html).toContain('&lt;script&gt;')
+    expect(document.html).not.toContain('<script>')
+    expect(document.html).toContain('data-source-locator="src/runtime.ts#L12"')
+    expect(document.html.match(/data-source-locator=/g)).toHaveLength(1)
+    await expect(renderDocument(root, architecture, 'src/runtime.ts')).rejects.toThrow('Unregistered/unsupported')
+  })
   it('describes main, linked and detached workspaces without merging identities or requiring Git', async () => {
     const root = await fixture()
     const git = (...args: string[]) => execFileSync('git', ['-C', root, ...args], { stdio: 'pipe' })
@@ -89,11 +176,14 @@ describe('architecture contract', () => {
     const base = `http://127.0.0.1:${service.port}`
     const js = await readFile(join(root, 'dist/viewer/app.js'), 'utf8')
     const css = await readFile(join(root, 'dist/viewer/app.css'), 'utf8')
+    const mermaid = await readFile(join(root, 'dist/viewer/mermaid.js'), 'utf8')
     await writeFile(join(root, 'dist/viewer/app.js'), 'replacement')
     await writeFile(join(root, 'dist/viewer/app.css'), 'replacement')
+    await writeFile(join(root, 'dist/viewer/mermaid.js'), 'replacement')
     await writeFile(join(root, 'package.json'), JSON.stringify({ version: '999.0.0' }))
     expect(await (await fetch(`${base}/app.js`)).text()).toBe(js)
     expect(await (await fetch(`${base}/app.css`)).text()).toBe(css)
+    expect(await (await fetch(`${base}/mermaid.js`)).text()).toBe(mermaid)
     const project = await fixture()
     await writeFile(join(project, '.rsp/version'), runtime.version)
     const register = () => fetch(`${base}/control/register`, { method: 'POST', headers: { Authorization: 'Bearer admin-secret' }, body: JSON.stringify({ root: project }) })
@@ -108,6 +198,7 @@ describe('architecture contract', () => {
     await expect(createViewerService({ ...options, identity: changed.identity })).rejects.toThrow('assets do not match')
     await writeFile(join(root, 'dist/viewer/app.js'), js)
     await writeFile(join(root, 'dist/viewer/app.css'), css)
+    await writeFile(join(root, 'dist/viewer/mermaid.js'), mermaid)
     const newer = await createViewerService({ ...options, identity: changed.identity })
     shutdown.push(newer.close)
     expect(newer.port).not.toBe(service.port)

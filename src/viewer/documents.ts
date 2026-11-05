@@ -134,7 +134,9 @@ export async function renderDocument(root: string, model: ArchitectureResult, fi
       case 'emphasis': return `<em>${children()}</em>`
       case 'delete': return `<del>${children()}</del>`
       case 'inlineCode': return `<code>${escape(node.value)}</code>`
-      case 'code': return `<pre><code>${escape(node.value)}</code></pre>`
+      case 'code': return node.lang === 'mermaid'
+        ? `<figure data-rsp-mermaid><pre><code>${escape(node.value)}</code></pre></figure>`
+        : `<pre><code>${escape(node.value)}</code></pre>`
       case 'blockquote': return `<blockquote>${children()}</blockquote>`
       case 'list': return node.ordered ? `<ol start="${node.start ?? 1}">${children()}</ol>` : `<ul>${children()}</ul>`
       case 'listItem': return `<li>${node.checked === null || node.checked === undefined ? '' : node.checked ? '☑ ' : '☐ '}${children()}</li>`
@@ -152,6 +154,17 @@ export async function renderDocument(root: string, model: ArchitectureResult, fi
       case 'linkReference': {
         const value = node.type === 'link' ? node.url : definitions.get(node.identifier.toLowerCase())?.url
         const href = value === undefined ? undefined : url(value)
+        if (!href && value && !/^[a-z][\w+.-]*:|^[/\\#]/i.test(value)) {
+          try {
+            const target = posix.normalize(posix.join(posix.dirname(file), decodeURIComponent(value.split(/[?#]/)[0]!)))
+            if (permitted(model, target) && /\.(?:[cm]?[jt]sx?|vue|svelte|py|rs|go|java|kt|c|cpp|h|hpp|cs|sh|json|ya?ml|toml)$/i.test(target)) {
+              const fragment = new URL(value, 'http://document.local/').hash
+              const locator = `${target}${/^#L\d+(?:-L\d+)?$/.test(fragment) ? fragment : ''}`
+              return `${children()} <button type="button" data-source-locator="${escape(locator)}"><span data-rsp-reading-status="copySource">Copy source path</span>: <code>${escape(locator)}</code></button>`
+            }
+          }
+          catch { /* Invalid local paths remain unavailable. */ }
+        }
         return href ? `<a href="${href}" rel="noopener noreferrer"${/^https?:/i.test(href) ? ' target="_blank"' : ''}>${children()}</a>` : `${children()}<span data-rsp-reading-status="unavailableLink"> (unavailable link)</span>`
       }
       case 'image': {
