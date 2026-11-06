@@ -1,9 +1,9 @@
-import type { ArchitectureResult } from '../../architecture/model.js'
-import type { WorkspaceSummary } from '../workspaces.js'
+import type { ArchitectureResult } from '../../../architecture/model.js'
+import type { WorkspaceSummary } from '../../workspaces.js'
 import { useId, useState } from 'react'
-import { rspIcon } from './branding.js'
-import { useLocale } from './i18n.js'
-import { Button, Input, Select } from './ui/primitives.js'
+import { rspIcon } from '../branding.js'
+import { useLocale } from '../i18n.js'
+import { Button, Input, Select } from '../ui/primitives.js'
 
 interface Props {
   workspace: string

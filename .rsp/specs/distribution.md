@@ -164,7 +164,13 @@ outside installation and local release-check authority.
 
 The same package includes the viewer service, public LikeC4 dependencies and
 prebuilt browser assets. The release build creates shared assets independently
-of project content and records their source-build identity. Tailwind runs only
+of project content and publishes their resource manifest and source-build identity
+only after the CLI, browser bundles and styles succeed. Failed builds leave no
+valid manifest. The maintainer development command watches runtime, frontend and
+build inputs, serializes complete rebuilds and resumes after corrected failures.
+Mermaid's implementation and diagram chunks load on demand from the same package.
+Only manifest-listed browser resources are served, with their bytes captured and
+validated at service startup. Tailwind runs only
 during that build, without Preflight; selected shadcn/ui source adaptations and
 their MIT source/license notice ship with the assets. These build dependencies
 do not create a browser download or a project-local build step. Only `view` lazily

@@ -20,8 +20,8 @@
     { "id": "cli", "parent": "rsp", "title": "CLI", "description": "src/cli and src/commands expose deterministic operations and public projections; observations do not grant semantic approval." },
     { "id": "tui", "parent": "rsp", "title": "Terminal UI", "description": "src/tui presents repository state and owns interactive terminal lifecycle." },
     { "id": "viewer", "parent": "rsp", "title": "Architecture viewer", "description": "src/viewer provides an explicitly started local reading service, graph navigation and complete Spec reading." },
-    { "id": "viewer-service", "parent": "viewer", "title": "Local reading service", "description": "service.ts, runtime.ts and documents.ts enforce workspace isolation, startup asset snapshots and current-link document access." },
-    { "id": "viewer-web", "parent": "viewer", "title": "Graph and document UI", "description": "web/ renders sidebar navigation, object details and the full-document drawer; layout.ts adapts neutral selections through public LikeC4 APIs." },
+    { "id": "viewer-service", "parent": "viewer", "title": "Local reading service", "description": "service.ts, runtime.ts and documents.ts enforce workspace isolation, startup asset snapshots and current-link document access. build-assets.mjs shares resource-manifest validation and build identity with the build coordinator; protocol.ts owns service/web response contracts." },
+    { "id": "viewer-web", "parent": "viewer", "title": "Graph and document UI", "description": "web/app.tsx composes route navigation and workspace/, diagram/ and reader/ features. Feature hooks own data and interaction lifecycles; diagram/ isolates native graph instances and geometry. layout.ts adapts neutral selections through public LikeC4 APIs." },
     { "id": "host", "title": "Host", "description": "Owns execution locations, workers, isolation, cancellation and resource lifecycle." },
     { "id": "git", "title": "Git", "description": "Owns staging, history, branches, remotes, signing and integration. RSP does not infer delivery authority." }
   ],

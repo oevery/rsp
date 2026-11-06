@@ -54,27 +54,42 @@ export function checkInstalledPackage(root, tarball, temporaryRoot) {
     if (viewerStatus.workspaces.length !== 1 || !viewerStatus.workspaces[0].revision)
       throw new Error('Installed viewer did not retain its isolated workspace')
     // Probe the same-package browser assets without installing or compiling a frontend.
-    const assets = spawnSync(process.execPath, ['--input-type=module', '-e', 'for (const file of ["app.js", "app.css"]) { const response = await fetch(new URL(file, process.argv[1])); if (!response.ok || !(await response.text()).length) process.exit(1) }', opened.trim()], { cwd: project, env, encoding: 'utf8', timeout: 10000 })
+    const viewerAssets = JSON.parse(readFileSync(join(packageRoot, 'dist/viewer-build.json'), 'utf8')).assets
+    const chunk = viewerAssets.find(path => path.startsWith('chunks/'))
+    if (!chunk)
+      throw new Error('Installed package omitted dynamic viewer chunks')
+    const assets = spawnSync(process.execPath, ['--input-type=module', '-e', `
+      import assert from 'node:assert/strict'
+      import { readFile } from 'node:fs/promises'
+      import { join } from 'node:path'
+      const root = process.argv[2]
+      const { assets } = JSON.parse(await readFile(join(root, 'dist/viewer-build.json'), 'utf8'))
+      for (const file of assets) {
+        const response = await fetch(new URL(file, process.argv[1]))
+        assert.equal(response.status, 200)
+        assert.ok(Buffer.from(await response.arrayBuffer()).equals(await readFile(join(root, 'dist/viewer', file))))
+      }
+    `, opened.trim(), packageRoot], { cwd: project, env, encoding: 'utf8', timeout: 10000 })
     if (assets.status !== 0)
       throw new Error('Installed frontend assets were unavailable')
-    const paths = ['dist/viewer/app.js', 'dist/viewer/app.css', 'package.json']
+    const browserFiles = ['app.js', 'app.css', chunk]
+    const paths = [...browserFiles.map(file => `dist/viewer/${file}`), 'package.json']
     const originals = paths.map(path => readFileSync(join(packageRoot, path)))
     try {
-      writeFileSync(join(packageRoot, paths[0]), 'replacement JS')
-      writeFileSync(join(packageRoot, paths[1]), 'replacement CSS')
-      writeFileSync(join(packageRoot, paths[2]), JSON.stringify({ ...JSON.parse(originals[2]), version: '999.0.0' }))
+      browserFiles.forEach((_file, index) => writeFileSync(join(packageRoot, paths[index]), 'replacement asset'))
+      writeFileSync(join(packageRoot, paths.at(-1)), JSON.stringify({ ...JSON.parse(originals.at(-1)), version: '999.0.0' }))
       const snapshot = spawnSync(process.execPath, ['--input-type=module', '-e', `
         import assert from 'node:assert/strict'
         import { createHash } from 'node:crypto'
         const url = new URL(process.argv[1])
-        for (const [index, file] of ['app.js', 'app.css'].entries()) {
+        for (const [index, file] of JSON.parse(process.argv[2]).entries()) {
           const content = await (await fetch(new URL(file, url))).text()
-          assert.equal(createHash('sha256').update(content).digest('hex'), process.argv[index + 2])
+          assert.equal(createHash('sha256').update(content).digest('hex'), process.argv[index + 3])
         }
         const token = new URLSearchParams(url.hash.slice(1)).get('token')
         const response = await fetch(new URL('/api/workspaces/' + url.searchParams.get('workspace') + '/model', url), { headers: { Authorization: 'Bearer ' + token } })
         assert.equal(response.status, 200)
-      `, opened.trim(), ...originals.slice(0, 2).map(value => createHash('sha256').update(value).digest('hex'))], { cwd: project, env, encoding: 'utf8', timeout: 10000 })
+      `, opened.trim(), JSON.stringify(browserFiles), ...originals.slice(0, browserFiles.length).map(value => createHash('sha256').update(value).digest('hex'))], { cwd: project, env, encoding: 'utf8', timeout: 10000 })
       if (snapshot.status !== 0)
         throw new Error(`Installed running service did not retain its startup runtime: ${snapshot.stderr}`)
     }

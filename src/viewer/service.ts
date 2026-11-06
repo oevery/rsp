@@ -1,5 +1,6 @@
 import type { Server } from 'node:http'
 import type { ArchitectureResult } from '../architecture/model.js'
+import type { ArchitecturePayload, DocumentPayload } from './protocol.js'
 import { Buffer } from 'node:buffer'
 import { timingSafeEqual } from 'node:crypto'
 import { realpath, rm, writeFile } from 'node:fs/promises'
@@ -7,6 +8,7 @@ import { createServer } from 'node:http'
 import { digest, queryArchitecture } from '../architecture/model.js'
 import { clearConfigCache } from '../core/config.js'
 import { readProjectRuntime } from '../core/project-version.js'
+import { viewerEntries } from './build-assets.mjs'
 import { readAsset, renderDocument } from './documents.js'
 import { layoutArchitecture } from './layout.js'
 import { snapshotViewerRuntime, VIEWER_PROTOCOL, viewerRuntime } from './runtime.js'
@@ -167,11 +169,12 @@ export async function createViewerService(options: { identity: string, root: str
         return
       }
       if (url.pathname === '/') {
-        send(200, 'text/html; charset=utf-8', '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>RSP Architecture</title><link rel="stylesheet" href="/app.css"></head><body><div id="root"></div><script type="module" src="/app.js"></script></body></html>')
+        send(200, 'text/html; charset=utf-8', `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>RSP Architecture</title><link rel="stylesheet" href="/${viewerEntries.style}"></head><body><div id="root"></div><script type="module" src="/${viewerEntries.app}"></script></body></html>`)
         return
       }
-      if (['/app.js', '/app.css', '/mermaid.js'].includes(url.pathname)) {
-        send(200, url.pathname.endsWith('.css') ? 'text/css' : 'text/javascript', runtime.assets.get(url.pathname)!)
+      const asset = runtime.assets.get(url.pathname)
+      if (asset) {
+        send(200, asset.type, asset.content)
         return
       }
       if (!authorized(request.headers.authorization, options.readToken)) {
@@ -200,10 +203,10 @@ export async function createViewerService(options: { identity: string, root: str
         const model = workspace.model!
         const graphRevision = workspace.graphKey!
         const focus = url.searchParams.get('focus')
-        let layout = workspace.layout
+        let layout = workspace.layout!
         if (focus) {
           if (!model.nodes.some(node => node.id === focus)) {
-            json({ workspace: id, root: workspace.root, revision: model.source.revision, graphRevision, architecture: model, layout, missingFocus: focus, focus })
+            json({ workspace: id, root: workspace.root, revision: model.source.revision, graphRevision, architecture: model, layout, missingFocus: focus, focus } satisfies ArchitecturePayload)
             return
           }
           if (workspace.focus?.id !== focus || workspace.focus.graphKey !== workspace.graphKey) {
@@ -213,17 +216,17 @@ export async function createViewerService(options: { identity: string, root: str
           }
           layout = await workspace.focus.pending
         }
-        json({ workspace: id, root: workspace.root, revision: model.source.revision, graphRevision, architecture: model, layout, focus: focus ?? '' })
+        json({ workspace: id, root: workspace.root, revision: model.source.revision, graphRevision, architecture: model, layout, focus: focus ?? '' } satisfies ArchitecturePayload)
         return
       }
       const file = url.searchParams.get('file') ?? ''
       if (match[2] === 'document') {
-        json({ workspace: id, ...await renderDocument(workspace.root, workspace.model!, file) })
+        json({ workspace: id, ...await renderDocument(workspace.root, workspace.model!, file) } satisfies DocumentPayload)
         return
       }
-      const asset = await readAsset(workspace.root, workspace.model!, file)
-      response.setHeader('ETag', `"${asset.revision}"`)
-      send(200, asset.type, asset.content)
+      const image = await readAsset(workspace.root, workspace.model!, file)
+      response.setHeader('ETag', `"${image.revision}"`)
+      send(200, image.type, image.content)
     }
     catch (error) {
       send(409, 'text/plain; charset=utf-8', (error as Error).message)

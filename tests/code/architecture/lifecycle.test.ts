@@ -45,7 +45,7 @@ it('isolates runtime installations/builds and rejects stale discovery without st
       if (/\.(?:mjs|js|css)$/.test(file))
         hash.update(file).update(await readFile(join(installation, 'dist', file)))
     }
-    await writeFile(manifest, JSON.stringify({ identity: hash.digest('hex') }))
+    await writeFile(manifest, JSON.stringify({ ...JSON.parse(original), identity: hash.digest('hex') }))
     await run('view', '--no-open')
     const rebuilt = JSON.parse(await run('view', 'status'))
     expect(rebuilt.runtime).not.toBe(initial.runtime)

@@ -1,8 +1,9 @@
 import { createHash } from 'node:crypto'
-import { readdir, readFile, realpath } from 'node:fs/promises'
+import { readFile, realpath } from 'node:fs/promises'
 import { homedir } from 'node:os'
-import { join, sep } from 'node:path'
+import { join } from 'node:path'
 import { PKG_ROOT } from '../core/config.js'
+import { parseBuildManifest, readBuildSnapshot } from './build-assets.mjs'
 
 export const VIEWER_PROTOCOL = 1
 export interface ServiceRecord { protocol: number, identity: string, port: number, pid: number, adminToken: string, readToken: string }
@@ -19,23 +20,13 @@ export async function snapshotViewerRuntime(root: string, identity: string) {
   const runtime = await viewerRuntime(root)
   if (runtime.identity !== identity)
     throw new Error('Viewer build changed during startup; retry')
-  const hash = createHash('sha256')
-  const assets = new Map<string, Awaited<ReturnType<typeof readFile>>>()
-  // Match the package build digest while retaining only assets actually served.
-  for (const file of (await readdir(join(root, 'dist'), { recursive: true })).map(file => file.split(sep).join('/')).sort()) {
-    if (!/\.(?:mjs|js|css)$/.test(file))
-      continue
-    const content = await readFile(join(root, 'dist', file))
-    hash.update(file).update(content)
-    if (file === 'viewer/app.js' || file === 'viewer/app.css' || file === 'viewer/mermaid.js')
-      assets.set(`/${file.slice('viewer/'.length)}`, content)
-  }
-  if (hash.digest('hex') !== JSON.parse(runtime.build).identity
-    || assets.size !== 3
+  const manifest = parseBuildManifest(runtime.build)
+  const snapshot = await readBuildSnapshot(root, manifest.assets)
+  if (snapshot.identity !== manifest.identity
     || (await viewerRuntime(root)).identity !== identity) {
     throw new Error('Viewer assets do not match the startup build; rebuild or reinstall and retry')
   }
-  return { version: runtime.version, assets }
+  return { version: runtime.version, assets: snapshot.assets }
 }
 export async function serviceRequest(record: ServiceRecord, path: string, body?: unknown, timeoutMs = 2500) {
   const response = await fetch(`http://127.0.0.1:${record.port}${path}`, { method: body === undefined ? 'GET' : 'POST', headers: { Authorization: `Bearer ${record.adminToken}`, ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) }, ...(body === undefined ? {} : { body: JSON.stringify(body) }), signal: AbortSignal.timeout(timeoutMs) })

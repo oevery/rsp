@@ -1,4 +1,4 @@
-import type { Translate } from './i18n.js'
+import type { Translate } from '../i18n.js'
 
 let sequence = 0
 let queue = Promise.resolve()
