@@ -82,7 +82,7 @@
     "@radix-ui/react-slot": "1.5.0",
     "@radix-ui/react-tooltip": "1.4.1",
     "@release-it/conventional-changelog": "12.0.2",
-    "@tailwindcss/cli": "4.3.3",
+    "@tailwindcss/cli": "4.3.4",
     "@types/hast": "^3.0.5",
     "@types/mdast": "^4.0.4",
     "@types/node": "^22.20.1",
@@ -91,19 +91,19 @@
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "esbuild": "^0.28.2",
-    "eslint": "^10.13.0",
+    "eslint": "^10.14.0",
     "ink-testing-library": "^4.0.0",
     "mermaid": "12.3.0",
     "playwright-core": "1.64.1",
     "react-dom": "~19.3.1",
-    "release-it": "21.1.1",
+    "release-it": "21.1.2",
     "smol-toml": "^1.9.1",
     "tailwind-merge": "3.7.0",
-    "tailwindcss": "4.3.3",
+    "tailwindcss": "4.3.4",
     "tsup": "^9.0.0",
     "typescript": "^5.9.3",
     "vitepress": "^1.6.4",
-    "vitest": "^5.0.5",
-    "wrangler": "^4.151.3"
+    "vitest": "^5.1.0",
+    "wrangler": "4.157.0"
   }
 }
