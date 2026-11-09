@@ -46,7 +46,7 @@ RSP decides whether to delegate and which dependency-ready work can run safely i
 
 The parent reads what it needs to route, authorize and assess the work; workers read their execution methods. The parent loads worker-specific detail for its own execution or a concrete boundary/evidence question. This does not remove worker reading, parent result validation or required independent checks.
 
-Automatic delegation defaults off; explicit worker requirements remain binding. When enabled, the user or main agent decides worker count. Workflow closure is independent: ordinary completion and checkpoints stay open; established final delivery uses ask/auto/manual. See [workflow policy](../reference/configuration.md#workflow-policy).
+Automatic delegation defaults off; explicit worker requirements remain binding. When enabled, the user or main agent decides worker count. Workflow closure is independent: ordinary completion without a delivery request and explicit checkpoints stay open. A tracked commit with completed Tasks enters the ask/auto/manual closure decision even when checks are missing or failed; reuse an applicable explicit choice. Task completion does not establish archive eligibility. See [workflow policy](../reference/configuration.md#workflow-policy) for this and other closeout triggers.
 
 ## Keep the Change current
 

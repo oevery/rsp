@@ -113,6 +113,18 @@ or initialization. Missing or broken required tracking remains a gap; it cannot
 be bypassed by calling the work direct. Required configuration is obtained
 independently of status success, including for direct tasks.
 
+Local explicit modifications use Direct even when they touch interfaces or several
+files and require strict verification. A Change holds one outcome whose related
+behavior, responsibility, compatibility or acceptance decisions need a shared
+implementation record; actual staged delivery, handoff or deferred obligations
+can also justify it. Neither session duration nor independently executable slices
+are prerequisites. Group remains for independently deliverable outcomes with
+dependencies or integration obligations. Read-only advice and review create no
+implementation owner. Determine actual impact before classification and reconsider
+on material authorized scope expansion, not routine correction. Match existing
+owners by outcome and remaining obligations, not overlapping paths. Explicit user
+and project tracking requirements remain binding.
+
 Load only the selected entrypoint and active method not already applicable in context:
 
 1. Resolve the goal, direct task or WorkOwner, scope, authority and decisive
@@ -176,11 +188,13 @@ retained migration/compatibility obligations within the selected evidence bounda
 
 Routine stable-knowledge writeback establishes relevant facts, updates their owners
 and reconciles affected records without final whole-Change convergence or readiness.
-At established final delivery or preparation/audit of closure, apply the
+After the closure direction is selected, prepare the final boundary using the
 [Work model's closeout contract](work-model.md#evidence-and-closeout): verified facts,
 necessary knowledge writeback, whole-Change convergence, consistency and required
 Review. Doc owns writing; Review supplies separately required judgment. CLI success
 alone establishes neither. Already-accurate records need no cosmetic rewrite.
+Before an ask-policy decision, inspect existing records and evidence for concrete
+gaps; completing this full preparation is not a prerequisite to asking.
 Unavailable migration evidence blocks only dependent judgments and operations;
 archive still requires current readiness. Commit independently assesses an authorized
 checkpoint against its exact boundary and required evidence; an upgrade notice alone
@@ -280,22 +294,27 @@ agent chooses zero, one or multiple workers; RSP defines no count tiers or maxim
 Hosts enforce resources; Core enforces ownership, dependencies and evidence.
 Workers do not recursively delegate by default.
 
-Ordinary completion and checkpoint commits keep Change open. A generic commit
-request is a checkpoint unless final delivery is already established. Final delivery
-or an explicit close request selects workflow.closeout: ask (default), auto or
-manual. Ask prepares the concrete boundary before requesting closure; prior explicit
-authority is reused. Auto closes only eligible final delivery; manual requires an
-explicit close request. Refusal or manual policy can leave an authorized commit's
-Change open. Neither setting grants Git or external authority.
+Ordinary completion and checkpoint commits keep Change open. Before a tracked
+commit, inspect Tasks and actual remaining scope. Incomplete work selects a
+checkpoint; completed Tasks select workflow.closeout even with missing or failed
+Required verification. Correct stale records and assess included WorkRefs separately;
+child completion does not establish Group completion. Reuse an explicit applicable
+checkpoint or closure choice.
 
-Before closure establish facts and applicable evidence, write necessary knowledge,
-then reconcile the Change. These dependencies may be one operation with no edits
-when records are already accurate. Fill only missing or invalidated checks and
-separately required review; semantic review need not repeat implementer tests.
-Current readiness and exact lifecycle/Git observations remain fresh. Archive precedes
-an authorized terminal commit when closure was selected. If commit fails after
-archive, preserve and report the uncommitted lifecycle diff without automatic reopen.
-Reopen remains explicit exceptional recovery.
+With ask (default), inspect the boundary, existing evidence and gaps, then ask before
+staging whether to complete preparation and archive when eligible, or make only an
+eligible checkpoint. All checks and final records need not be complete before this
+decision. The chosen conditional closeout needs no repeated permission after gates
+pass. Auto prepares completed-task delivery and archives only eligible work; manual
+requires an explicit close request. An established final delivery or explicit close
+request also selects the policy. Refusal keeps work open without blocking an otherwise
+authorized, verified checkpoint. After closeout is selected, unresolved failures stop
+delivery rather than silently downgrade it to a checkpoint. No policy grants Git or
+external authority.
+
+Apply [Completion and delivery](#completion-and-delivery) for closeout preparation,
+archive gates and Git failure handling, using the applicable evidence rules in
+[Methods and evidence](#methods-and-evidence).
 
 Core selects capabilities from their contracts; executors load methods and inspect
 sources. Core consults details for its own work or a concrete coordination question,

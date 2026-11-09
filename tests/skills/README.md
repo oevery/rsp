@@ -397,6 +397,9 @@ Git baselines regenerated; historical jobs and captured inputs remain unchanged.
 - delivery-checkpoint makes exactly one authorized source-only checkpoint and keeps
   Change open, also under auto closure.
 - delivery-ask prepares final delivery and asks for closure without archiving or Git.
+- delivery-task-complete-gap requests a generic commit with completed Tasks and missing external acceptance. It must ask about closeout versus an eligible checkpoint before staging, without inventing acceptance.
+- delivery-task-complete and delivery-task-incomplete contrast the same generic commit intent with complete versus genuinely unfinished Tasks. The former asks before staging; the latter delivers only the verified source slice and retains remaining work.
+- work-selection reviews eight independent requests spanning local parameter/dependency/document work, a coupled foundation, existing ownership, overlapping paths, read-only advice and staged rollout. It tests classification and reasons without authorizing implementation or record creation.
 - delivery-auto closes eligible final delivery under policy without inferring Git.
 - delivery-manual makes an authorized final commit while leaving Change open.
 

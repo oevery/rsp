@@ -16,7 +16,7 @@ Keep one observable outcome per Change:
 - `Spec`: settled contract delta and acceptance, referencing affected existing Specs rather than copying the baseline or inventing public promises;
 - `Design`: approach, responsibility boundaries, and necessary tradeoffs, not repeated requirements or tasks;
 - `Tasks`: current checkable work, with prescribed order only where correctness, safety, or migration requires it;
-- `Verify`: Required/Optional checklists for settled acceptance; do not introduce new public requirements. Add supplementary text only as permitted by the current work record rules below;
+- `Verify`: settled acceptance evidence under the current work record rules below; do not introduce new public requirements;
 - `Blockers`: dependencies and decisions, or `none`.
 
 Keep the six sections; small changes need only proportionate content. Plain-prose HTML scaffold hints may remain or be removed; they guide writing, never supply requirements, evidence, or completed content. Resolve body placeholders and keep all material decisions visible outside comments.

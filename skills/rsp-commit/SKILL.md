@@ -4,7 +4,7 @@ description: Inspect or create one authorized exact-scope local commit for direc
 license: MIT
 metadata:
   author: oevery
-  version: "2026.10.16.1"
+  version: "2026.11.06.1"
 ---
 
 # RSP Commit
@@ -36,7 +36,7 @@ Purpose is separate from kind:
 - A checkpoint keeps the Change open and delivers a verified current slice without claiming completed acceptance, closing an issue or requiring archive.
 - A terminal delivery claims completion only for its selected boundary. Tracked terminal inputs require complete Tasks, decisive Required Verify and no active blocker; legacy unclassified Verify is Required. Optional omissions remain explicit but do not block. Direct work uses its own acceptance, not an invented lifecycle gate.
 
-A generic commit request is a checkpoint unless final delivery is already established. For tracked final delivery, resolve the closure decision through [Core closeout](../rsp/references/closeout.md) before staging, including direct invocation; do not repeat an already settled decision. Commit pauses for its owning capability to perform necessary writing or authorized lifecycle work. Lifecycle authority stays upstream. If terminal delivery includes authorized archive or Group closeout, require that action and its inspected diff before staging. Do not archive, update Specs or clean up a Change inside Commit. A valid explicitly authorized local commit without lifecycle authority does not gain it or require an invented archive.
+Before staging a tracked commit, inspect the selected owner's Tasks and actual remaining scope. Incomplete Tasks select a checkpoint; all Tasks complete selects [Core closeout](../rsp/references/closeout.md), even when Required checks or review are incomplete or failed. Generic commit wording must not bypass that decision. Reuse an explicit applicable checkpoint or closure choice; do not ask twice. For multiple included WorkRefs, assess their boundaries separately rather than infer Group completion. Commit pauses for its owning capability to correct stale records, perform necessary writing or authorized lifecycle work. If terminal delivery includes authorized archive or Group closeout, require that action and its inspected diff before staging. Do not archive, update Specs or clean up a Change inside Commit. A checkpoint still needs its own applicable verification; absent lifecycle authority neither grants closure nor prohibits an otherwise authorized checkpoint.
 
 ## Audit before staging
 

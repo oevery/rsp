@@ -67,8 +67,8 @@ ${changeSectionHeading('verify')}
 ### Optional
 - Manual or environment:
   - [ ] ${placeholder}
-- Coverage:
-  - ${placeholder}
+### Conclusions
+- ${placeholder}
 
 ${changeSectionHeading('blockers')}
 - none
@@ -119,8 +119,8 @@ ${changeSectionHeading('verify')}
 ### Optional
 - Manual or environment:
   - [ ] ${template.manualVerify}
-- Coverage:
-  - ${placeholder}
+### Conclusions
+- ${placeholder}
 
 ${changeSectionHeading('blockers')}
 - none
@@ -158,7 +158,7 @@ function changeSectionHeading(sectionId: typeof CHANGE_DOCUMENT_SCHEMA.sections[
     spec: 'Describe the contract delta and acceptance conditions, referencing affected existing Specs; do not copy the full baseline or implementation steps.',
     design: 'Explain the current approach, boundaries, and necessary tradeoffs; replace obsolete plans while preserving decision reasons and useful outcome comparisons.',
     tasks: 'Keep current checkable work and actual completion; revise or reopen invalidated tasks within authorized scope. Do not append routine attempts, fixes, retries, or check runs.',
-    verify: 'Keep required/optional checks and only details needed to judge acceptance, evidence applicability, or locate necessary evidence. Do not repeat check results or retain commands, counts, or review steps merely because they occurred. Preserve applicable coverage, gaps, and distinct review/human acceptance; no run history.',
+    verify: 'Use Required/Optional checklists and an optional short, non-nested Conclusions list only. Uncheck failed, unrun or invalidated evidence. Keep current limits, applicability conditions or required failure dispositions; replace stale conclusions. No prose paragraphs, tables, repeated results or repair history. Remove Conclusions when unnecessary.',
     blockers: 'Name unresolved decisions or dependencies that prevent progress; use none when there are no blockers.',
   }
   return `${renderDocumentSectionHeading(CHANGE_DOCUMENT_SCHEMA, sectionId)}

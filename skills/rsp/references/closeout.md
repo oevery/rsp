@@ -1,16 +1,16 @@
 # Final delivery and lifecycle closeout
 
-Load for an established final-delivery boundary, an explicit close request, or a delivery question requiring checkpoint classification. Ordinary completion never activates closeout. A generic commit request defaults to a checkpoint unless final delivery is already established; checkpoints keep Change open and require only the authorized slice and applicable evidence.
+Load for an established final-delivery boundary, an explicit close request, or a tracked commit whose Tasks are complete. Inspect actual remaining work and correct inaccurate records before classification. Task completion triggers a closure decision, not archive eligibility; missing or failed checks do not suppress the decision. Ordinary completion without a delivery request leaves work open. Reuse an explicit applicable checkpoint or closure choice. Checkpoints keep Change open and require their own applicable evidence.
 
 ## Decide closure independently of Git
 
 Use the validated workflow.closeout setting from rsp config --json:
 
-- ask (default): prepare a concrete final boundary, applicable evidence and required knowledge/Change updates, then ask whether to close before terminal staging. Reuse explicit closure authority already granted; do not ask twice.
-- auto: close eligible work at established final delivery without another closure request, subject to nearer denial.
+- ask (default): inspect the concrete boundary, existing evidence and specific gaps, then ask before staging whether to finish necessary checks and records, archive when eligible and commit if authorized, or make only an eligible checkpoint and leave work open. Do not require every check or final-record update before asking. A selected conditional closeout authorizes its necessary preparation and eligible archive; do not ask again when gates pass.
+- auto: prepare closeout for a completed-task delivery or established final delivery and close only eligible work, subject to nearer denial.
 - manual: close only on an explicit close request. Authorized final commits may leave work open and must report that fact.
 
-Explicit refusal keeps work open. A decision to leave it open does not block an otherwise authorized commit. Neither policy, readiness nor archive grants Git authority. An explicit standalone close request can close eligible work without a commit. Do not interpret finishing implementation, a pass, a successor task or elapsed time as final delivery.
+Explicit refusal keeps work open. A decision to leave it open does not block an otherwise authorized, verified commit. Neither policy, readiness nor archive grants Git authority. An explicit standalone close request can close eligible work without a commit. A pass, a successor task or elapsed time alone selects no closure. After closeout is selected, resolve failures within existing authority; if blocked, report the gap without silently falling back to a checkpoint commit.
 
 ## Reconcile the final boundary
 

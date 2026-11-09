@@ -1,0 +1,17 @@
+[judge]
+judge = "openai/auto/gpt-6.1-sol"
+reasoning_effort = "high"
+files = [
+  "/app/report.json",
+  "/app/cases.json",
+  "/logs/agent/codex.txt"
+]
+
+[scoring]
+aggregation = "threshold"
+threshold = 1.0
+
+[[criterion]]
+name = "work-selection-reasons"
+type = "binary"
+description = "Require grounded reasons, not labels alone. Parameter edits, compatible dependency maintenance and multi-session diagram corrections remain Direct despite interfaces, tests and duration. Coupled app foundation needs one Change for shared responsibility and acceptance contracts even in one session with no independent slices. Existing assessment/session retains the same outcome; overlapping paths alone must not absorb the typo into platform-migration. Advice creates no implementation owner. Staged flag work needs tracking for actual rollout and deferred obligations despite one-line code. No implementation, new records, focus, archive, Git edits, invented approval or session/line-count thresholds. A report-only recommendation is not creation authority."

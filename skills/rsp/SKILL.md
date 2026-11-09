@@ -4,7 +4,7 @@ description: Coordinate authorized direct, Change or Group work; select capabili
 license: MIT
 metadata:
   author: oevery
-  version: "2026.11.04.1"
+  version: "2026.11.06.1"
 ---
 
 # RSP Core
@@ -15,9 +15,11 @@ Carry the authorized request through execution, applicable evidence and needed k
 
 Before mutation, read nearest instructions and relevant CONTEXT; establish intent, authority and the existing owner from evidence. Use known paths and discover missing context as needed. An explicit WorkRef wins; multiple focus markers alone do not block work. Preserve dirty work and its owner. Before switching owners, check overlapping product and knowledge paths; overlap transfers no authority.
 
-- **Direct:** a clear bounded request needing no durable continuity. Create no Change and run no tracking preflight merely to execute it.
-- **Change:** one delivery/acceptance boundary needing sustained work or cross-session recovery. Read its six sections and relevant Specs; Focus is only a sparse recovery pointer.
+- **Direct:** a local, explicit modification with a clear result and verification boundary. Interface changes, multiple files, strict checks or repeated execution alone require no Change or tracking preflight.
+- **Change:** one delivery/acceptance boundary whose implementation needs a shared record of related behavior, responsibility, compatibility or acceptance decisions. Actual staged delivery, handoff or deferred obligations can also require this record. It need not span sessions or split into independently deliverable parts. Read its six sections and relevant Specs; Focus is only a sparse recovery pointer.
 - **Group:** independently acceptable/deliverable child Changes with dependencies or integration obligations. Read the Brief then select a child; the Brief is not executable work. File count, complexity and agent count alone do not create a Group.
+
+Read-only advice, diagnosis and review create no implementation Change. Establish actual impact before selecting new work; reconsider when authorized scope materially expands, not for routine corrections or failed checks. Continue a matching existing owner only for the same outcome or remaining obligations; shared files or modules alone establish no ownership. A short plan or design discussion alone requires no Change. Preserve explicit user and project tracking requirements.
 
 Load the [work model](references/work-model.md) when tracked identities are missing from context; required tracking cannot be bypassed by relabelling work Direct. Use rsp status for needed owner, dependency or recovery facts, and JSON for exact dependency data. Required dependency checks and fresh archive readiness still apply.
 
@@ -58,7 +60,7 @@ Load [interruption recovery](references/coordination-recovery.md) for pause/resu
 
 For tracked work, apply the [current work record rules](references/work-model.md#current-work-records) during execution. Load them only when absent from context. Update affected Tasks/Verify directly when scope, contract, design and knowledge remain accurate; do not append attempts or postpone current-state corrections until archive. Use the same work model for Blockers syntax. Passing checks or recovery alone adds no whole-document rewrite. Focus supplies only missing recovery context, never acceptance or authority.
 
-Ordinary completion and checkpoint commits leave Change open; a generic commit request does not establish final delivery. At established final delivery or an explicit close request, load [delivery closeout](references/closeout.md). workflow.closeout is ask (default), auto or manual; no setting grants Git, push, publication, deployment, approval or human acceptance authority.
+Ordinary completion and checkpoint commits leave Change open. Before a tracked commit, inspect actual remaining Tasks: incomplete work selects a checkpoint; all Tasks complete selects [delivery closeout](references/closeout.md), even with missing or failed verification. Reuse an explicit applicable checkpoint or closure choice without asking again. Also load closeout for established final delivery or an explicit close request. workflow.closeout is ask (default), auto or manual; no setting grants Git, push, publication, deployment, approval or human acceptance authority.
 
 For necessary stable-knowledge updates, load [durable writeback](references/durable-review.md) to establish facts, update their owners and reconcile affected records. Final delivery or closure additionally requires whole-Change convergence and consistency checks. Reuse applicable evidence and fill missing or invalidated coverage and separately required review. Already-accurate records need no edit; current readiness is a lifecycle observation, not semantic acceptance.
 

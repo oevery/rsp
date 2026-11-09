@@ -23,3 +23,9 @@ The tradeoff is a deliberate configuration migration and a default closure quest
 at final delivery. These costs keep ongoing iteration open and make Git authority
 explicit. Current contracts live in Work model, Workflow and CLI; this record owns
 the rationale, not another policy definition. Model efficiency remains unverified.
+
+Completed-task commit requests now also trigger the closeout decision. Treating
+generic commit wording as a checkpoint hid the choice even after implementation
+was complete. Ask therefore reports existing evidence and gaps before staging,
+without requiring full verification first. This changes the decision trigger,
+not archive eligibility, explicit checkpoint choices or Git authority.

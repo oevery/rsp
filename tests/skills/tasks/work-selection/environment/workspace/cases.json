@@ -1,0 +1,34 @@
+[
+  {
+    "id": "parameter",
+    "request": "Add optional pageSize to the existing query; keep its current default. Update the one known caller and regression test. No other behavior or pending work exists."
+  },
+  {
+    "id": "dependencies",
+    "request": "Refresh compatible tooling dependencies and locks, retain existing behavior, assess remaining audit warnings and run applicable checks. No rollout, new framework or deferred integration is requested."
+  },
+  {
+    "id": "diagram",
+    "request": "Correct the architecture documentation to separate dependency and runtime views and include actual returns. Trace the implementation and verify all views in a browser. This may take several sessions but changes no runtime contract."
+  },
+  {
+    "id": "coupled",
+    "request": "Implement a shared app foundation: define root and route ownership, optional identity integration, application-owned cleanup and stale-response isolation. Deliver these related contracts together against a real consuming fixture. Expect one session; the parts are not independently useful."
+  },
+  {
+    "id": "existing",
+    "request": "Change assessment grade selection and remove new-session school-year input, preserving historical identity snapshots across server, client and reports. Existing open assessment/session owns this same outcome and pending acceptance; update it rather than create another owner."
+  },
+  {
+    "id": "overlap",
+    "request": "Fix a typo in the query helper documentation. An open platform-migration Change touches the same file but owns only runtime migration. This typo has no migration obligation."
+  },
+  {
+    "id": "advice",
+    "request": "Review whether the bridge should join the shared app foundation. Compare responsibilities and report defects and options. Implementation and planning-artifact creation are not authorized."
+  },
+  {
+    "id": "staged",
+    "request": "A one-line flag switch requires an agreed staged client rollout, retaining old behavior until external client acceptance and removing it later. Track those outstanding obligations, not just the flag edit."
+  }
+]

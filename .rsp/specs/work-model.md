@@ -85,14 +85,21 @@ invalidated completed work; routine attempts, fixes, retries and check runs are 
 new tasks. Task completion establishes neither verification nor independent or
 human acceptance.
 
-Verify defaults to Required/Optional checklists only. Supplementary text is
-admitted only for an unresolved acceptance limit, a condition or reference necessary
-to reuse evidence, or an explicitly required audit fact. Delete text meeting none
-of these conditions, including repeated results, test counts, execution narration
-and diagnosis/fix stories. An audit-required resolved failure retains only the
-failure and final disposition. Preserve applicable evidence scope and distinguish
-full review, correction-only re-review and human acceptance. Invalidated coverage
-becomes incomplete. Shared evidence appears once; detailed records keep their owner.
+Verify permits only Required/Optional checklists and an optional `### Conclusions`
+containing short, non-nested bullets. Prose paragraphs, tables, logs and process
+subsections are not permitted. Applicable passes are checked; failures, unrun
+checks and invalidated coverage are unchecked. Check items may be added or revised
+when authorized scope or acceptance changes, without dropping unmet obligations.
+An item may carry a brief result or evidence locator, not repeated results, run
+counts or repair history.
+
+Conclusions retain only current acceptance limits, evidence applicability conditions
+or required failure dispositions that the checklist cannot express, one fact per
+bullet. Replace stale conclusions instead of appending rounds. Preserve full-review,
+correction-only re-review and human-acceptance scope. Remove resolved findings unless
+they still affect acceptance, evidence reuse or required audit. Shared evidence
+appears once; detailed records keep their owner. No numeric item or word limit
+replaces these content rules.
 
 Decision rationale and useful outcome comparisons stay in their owning sections;
 they do not exempt Verify text from its admission rule. Do not relocate discarded
@@ -168,8 +175,11 @@ Direct work needs no durable owner. Change retains one recoverable acceptance an
 delivery boundary. Group needs independently acceptable/deliverable child Changes
 with dependencies or integration; effort and agent count alone do not justify it.
 
-Ordinary completion and checkpoint commits leave Change open. Established final
-delivery or an explicit close request selects the workflow closure policy. Required
+Ordinary completion and checkpoint commits leave Change open. A tracked commit
+whose Tasks are complete selects the workflow closure policy even when verification
+is incomplete or failed; an explicit applicable checkpoint choice is retained.
+Established final delivery or an explicit close request also selects the policy.
+Task completion triggers the decision, not archive eligibility. Required
 checks and reviews must remain applicable; necessary knowledge is written before
 final Change reconciliation. These are dependencies, not mandatory separate calls
 or repeated full tests. Closure never authorizes Git. Reopen is exceptional recovery.

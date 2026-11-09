@@ -21,10 +21,10 @@ If inspection reports only `RSP project requires an update` without update autho
 Apply this sequence only for established final delivery or preparation/audit of closure. Routine knowledge updates use the bounded writeback above.
 
 1. **Verify outcome facts.** Establish the approved delivered result from current implementation, authoritative contracts and decisive evidence. Distinguish passed, failed, unverified and superseded conclusions. This establishes truth, not a preliminary full-document rewrite; plans and recovery notes alone cannot establish current facts.
-2. **Distill Focus as needed.** Integrate only verified outcomes, evidence applicability or material limits missing from Change; no useful addition means no edit. Resolve or safely transfer outstanding recovery obligations before discarding their notes. Recovery state alone supplies no required acceptance evidence.
+2. **Distill Focus as needed.** Integrate only verified outcomes, evidence applicability or material limits missing from Change; no useful addition means no edit. Resolve or safely transfer outstanding recovery obligations before discarding their notes. Recovery state alone supplies no required acceptance evidence; clearing Focus cannot substitute for knowledge writeback.
 3. **Write back knowledge as needed.** Using the verified result and Change delta, decide current facts and lasting rationale independently using the methods below. Update existing owners only when justified. No stable change means no edit; a delivered contract that leaves its authoritative Spec stale requires correction before closeout. Do not copy the whole Change or its verification history into knowledge documents.
 4. **Converge the whole Change.** After necessary writeback, use `rsp-doc`'s artifact method to reconcile all six sections under the [current work record rules](work-model.md#current-work-records), including Verify admission. Retain the delivered delta, relevant design and knowledge-update references; leave already-converged text unchanged. Remove obsolete plans and duplicate or misplaced content. Group integration conclusions stay in the Brief. Without Doc, perform the same bounded convergence locally without installation or replacing required Review.
-5. **Check final consistency, then archive when authorized.** Compare the final Change and knowledge owners with the verified result; an earlier review of another revision or a passing readiness command proves no text quality. Reuse applicable implementation/test evidence, check new knowledge/document edits, and fill only missing or invalidated coverage. Document-only writeback and archive preparation do not themselves invalidate code checks. Complete separately required Review before the archive gate below. Fix prose defects in scope, but return material contract or implementation contradictions to the decision, implementation or verification owner. Unresolved Required failures still block closeout.
+5. **Check final consistency.** Compare the final Change and knowledge owners with the verified result; an earlier review of another revision or a passing readiness command proves no text quality. Reuse applicable implementation/test evidence, check new knowledge/document edits, and fill only missing or invalidated coverage. Document-only writeback and archive preparation do not themselves invalidate code checks. Retain separately required Review as an unresolved obligation until its result is available. Fix prose defects in scope, but return material contract or implementation contradictions to the decision, implementation or verification owner. Return unresolved Required failures with the convergence result.
 
 These are dependency constraints, not persisted phases or mandatory separate tool calls. Edit only what needs writeback; required updates cannot be waived. Resolve stale statements from verified outcomes. Preserve settled planning, unrelated style and original evidence/verdict owners; add no no-op reports. Author checks establish no independent review.
 
@@ -75,10 +75,7 @@ Create or update a Decision Record only for a hard-to-reverse or surprising choi
 
 Never use generated indexes, archives, or the managed RSP block as ordinary writeback targets. Keep narrative history, debugging notes, task chronology, and transient evidence out of Specs and Decisions.
 
-## Prepare the Change for archive
+## Return the convergence result
 
-Before archive, require the converged final Change, completed or unnecessary knowledge writeback, applicable passing verification, current readiness and every separately required Review clean. Authorized archive preserves Change and clears its Focus marker; clearing the Capsule cannot substitute for writeback. Archive grants no local commit authority.
-
-## Deliver with explicit boundaries
-
-[Delivery closeout](closeout.md) owns checkpoint/final classification, the ask/auto/manual closure decision, Group-close sequence and exact Git handoff. Ordinary completion leaves work open. Apply the selected policy and current gates regardless of delegation. Git delivery separately needs explicit authority for one independently reviewable logical commit; closure grants none. Reuse applicable evidence.
+Return the converged records and unresolved gaps to [delivery closeout](closeout.md),
+which owns the closure decision, archive gates and Git handoff.

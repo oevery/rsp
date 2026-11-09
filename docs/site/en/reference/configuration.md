@@ -61,13 +61,13 @@ workflow:
 
 These are also the defaults when settings are omitted. `delegation` accepts `off` or `auto`. Off disables automatic delegation, not an explicitly requested worker or a binding independent-worker requirement. When enabled, the user or main agent chooses zero, one or multiple workers within host limits. RSP defines no worker-count tiers or maximum. Work shape (Direct, Change or Group) is independent of agent topology.
 
-`closeout` applies only to established final delivery or an explicit close request:
+`closeout` applies to a tracked commit with completed Tasks, established final delivery, or an explicit close request. Inspect actual remaining scope; missing or failed verification does not suppress the decision:
 
-- `ask`: prepare the final boundary and evidence, then ask whether to close; reuse closure authority already given.
-- `auto`: close eligible work at final delivery, subject to nearer denial.
+- `ask`: inspect the boundary, existing evidence and gaps, then ask before staging whether to finish preparation and archive when eligible, or make only an eligible checkpoint. Checks need not all pass before asking; reuse an applicable prior choice.
+- `auto`: prepare completed-task delivery and close only eligible work, subject to nearer denial.
 - `manual`: close only on an explicit close request; otherwise an authorized commit can leave work open.
 
-Ordinary completion and checkpoint commits keep Change open. A generic commit request does not establish final delivery. Closure requires accurate records, necessary knowledge updates, applicable Required evidence, separately required review and fresh readiness. These settings never authorize Git, push or publication.
+Ordinary completion without a delivery request and explicit checkpoint choices keep Change open. Incomplete Tasks normally select a checkpoint, which still needs its own applicable verification. Task completion triggers a decision, not permission to archive: closure requires accurate records, necessary knowledge updates, applicable Required evidence, separately required review and fresh readiness. Once closeout is selected, an unresolved failure stops delivery rather than silently reverting to a checkpoint. These settings never authorize Git, push or publication.
 
 ### Migrate legacy Manage configuration
 
