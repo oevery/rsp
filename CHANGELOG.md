@@ -1,5 +1,15 @@
 # Changelog
 
+## [4.2.0](https://github.com/oevery/rsp/compare/v4.1.0...v4.2.0) (2026-11-09)
+
+### Features
+
+* **viewer:** improve architecture and document reading ([00a751b](https://github.com/oevery/rsp/commit/00a751b493f90e523af8a7cdbdf3e0d26f666f1d))
+
+### Bug Fixes
+
+* **evaluation:** retain native child turn events in judge evidence ([f338fa4](https://github.com/oevery/rsp/commit/f338fa4dce9d43466a829f08e806f6bec692cbac))
+
 ## [4.1.0](https://github.com/oevery/rsp/compare/v4.0.0...v4.1.0) (2026-11-04)
 
 ### Features
