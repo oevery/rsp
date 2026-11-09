@@ -32,7 +32,7 @@ mise exec -- pnpm test:pack
 
 ### 原生 release-it 入口
 
-`.release-it.json` 是唯一的本地发布配置。锁定的 release-it 21.1.1 与官方
+`.release-it.json` 是唯一的本地发布配置。锁定的 release-it 21.1.2 与官方
 Conventional Changelog 插件 12.0.2 负责更新选定版本和 `CHANGELOG.md`。
 维护工具需要 Node ^22.22.2、^24.15.0 或 >=26；已发布 CLI 的 Node 要求不变。
 

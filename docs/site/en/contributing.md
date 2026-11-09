@@ -33,7 +33,7 @@ A subprocess timeout or signal termination fails package verification, including
 ### Native release-it entry
 
 `.release-it.json` is the single local release configuration. Locked release-it
-21.1.1 and its official Conventional Changelog plugin 12.0.2 update the selected
+21.1.2 and its official Conventional Changelog plugin 12.0.2 update the selected
 version and `CHANGELOG.md`. The maintainer tools require Node ^22.22.2, ^24.15.0
 or >=26; the published CLI's Node requirement remains unchanged.
 
