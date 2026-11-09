@@ -55,44 +55,25 @@ Keep Harbor, rewardkit, TypeScript and the Node 22 type baseline fixed.
 
 ## Verify
 ### Required
-- Automated:
-  - [x] Fresh frozen Node and Python installation — lock reproducibility.
-  - [x] `mise exec -- pnpm audit --json` — classify residual alerts; zero advisories is not required.
-  - [x] `mise exec -- pnpm run build` — complete runtime and assets.
-  - [x] `mise exec -- pnpm run typecheck` and `mise exec -- pnpm run lint` — API and lint-tool compatibility.
-  - [x] `mise exec -- pnpm run test` — code and build/lifecycle regressions.
-  - [x] `mise exec -- pnpm run test:viewer:browser` — rendered viewer and Mermaid behavior.
-  - [x] `mise exec -- pnpm run test:pack` — installed package behavior.
-  - [x] `mise exec -- pnpm run docs:build` — documentation toolchain compatibility.
-  - [x] `mise exec -- uv run --frozen --project tests/skills python tests/skills/evaluate.py check` — offline evaluation schemas.
-  - [x] `mise exec -- node dist/cli.mjs check dependency-security-refresh` — Change consistency.
+- [x] Frozen Node and Python installation — lock reproducibility.
+- [x] `pnpm audit --json` — classify residual alerts; zero advisories is not required.
+- [x] Build, typecheck, lint and code regression checks.
+- [x] Viewer browser and installed-package checks.
+- [x] Documentation build and Wrangler deployment dry run without upload.
+- [x] Release CLI loading and native evaluation schema checks.
+- [x] Change consistency.
 - [x] Review the affected dependency paths and final compatibility evidence.
-
-Residual Node audit: seven advisories (three high, two moderate, two low) in
-five tooling packages. These remain accepted maintenance risks under the
-requested override reduction, not fixed vulnerabilities or proven-unreachable
-code. Reassess if the following inputs or uses change:
-
-| Package | Exposure and retained tradeoff |
-| --- | --- |
-| basic-ftp | release-it's proxy/PAC dependency chain; the advisory requires FTP directory-list parsing. Repository release configuration does not configure that use, but external proxy settings were not exhaustively inspected. Restore the upstream 5.x API rather than force 6.x. |
-| KaTeX | The affected 0.16 branch belongs to ESLint Markdown tooling and requires existing prototype pollution. Viewer Mermaid retains its separate patched 0.18.10 branch. |
-| Minimatch | Repository lint and Panda/ts-morph tooling; malicious glob patterns can exhaust resources. Accept this tooling-input risk rather than force consumers of 10.x onto 11.x. |
-| Browserslist | Panda CSS tooling; untrusted custom statistics or growing distinct queries can trigger the advisories. The viewer build uses esbuild and Tailwind, not a Panda CLI. |
-| postcss-selector-parser | Panda CSS's selector-processing dependencies; attacker-controlled selectors can exhaust resources. Accept the build-input risk while retaining upstream resolution. |
-
-Additional tooling checks: `mise exec -- pnpm exec wrangler deploy --dry-run`
-validated the generated documentation assets without uploading;
-`mise exec -- pnpm exec release-it --version` loaded the updated release CLI.
-Actual publication and FTP proxy behavior were not exercised.
-
-Residual alerts are expected to remain open; PR #8 disposition and closure of
-fixed alerts remain unverified until delivery and GitHub rescanning.
-Existing DocSearch 3.8.2 peer ranges exclude React 19; those
-packages are unchanged and documentation builds pass. Offline schema checks do
-not establish live model acceptance.
-Python frozen-install and offline-schema evidence is reused because its lock
-and evaluation inputs have not changed during the direct Node tooling refresh.
+### Conclusions
+- Evidence covers the dependency candidate committed as `4313f48c`; record cleanup reuses that coverage.
+- The recorded Node audit retains seven accepted tooling advisories: three high, two moderate and two low; reassess when their inputs or uses change.
+- basic-ftp retains upstream 5.x: FTP listing parsing is not configured by repository release settings, but external proxy use was not exhaustively inspected or exercised.
+- ESLint tooling's KaTeX 0.16 risk requires existing prototype pollution; viewer Mermaid uses the separate patched 0.18.10 branch.
+- Minimatch retains upstream 10.x despite malicious-glob exhaustion risk in lint and Panda/ts-morph tooling.
+- Panda's Browserslist accepts untrusted-statistics/distinct-query risks; the viewer build uses esbuild and Tailwind.
+- Panda's postcss-selector-parser retains attacker-controlled selector exhaustion risk with upstream resolution.
+- Unchanged DocSearch 3.8.2 excludes React 19 in its peer ranges; the documentation build passed.
+- Actual publication, PR #8 disposition and GitHub alert rescanning remain outside this verified local delivery.
+- Offline schema checks alone do not establish live model acceptance.
 
 ## Blockers
 None
